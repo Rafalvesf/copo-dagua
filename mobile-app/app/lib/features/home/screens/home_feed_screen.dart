@@ -20,16 +20,21 @@ class HomeFeedScreen extends ConsumerWidget {
     final profile = ref.watch(authControllerProvider).profile;
     final firstName = profile?.fullName.split(' ').first ?? '';
 
-    // Margem visível entre o fim da saudação e o início do conteúdo.
-    const contentTopMargin = 28.0;
+    // Altura da faixa de desvanecimento logo abaixo do cabeçalho fixo. O
+    // conteúdo só começa a aparecer (opacidade 100%) depois desta faixa —
+    // por isso a margem do topo do conteúdo tem de ser igual ou maior,
+    // senão o topo do primeiro cartão fica "fantasma" (semi-transparente)
+    // mesmo com a lista em repouso, sem scroll nenhum.
+    const topFadeHeight = 64.0;
+    const contentTopMargin = topFadeHeight;
 
     return Scaffold(
       body: wedding == null
           ? const Center(child: CircularProgressIndicator())
           : LayoutBuilder(
               builder: (context, constraints) {
-                // Texto a 30% da altura do ecrã.
-                final headerHeight = constraints.maxHeight * 0.30;
+                // Texto a 40% da altura do ecrã.
+                final headerHeight = constraints.maxHeight * 0.40;
 
                 return Stack(
                   children: [
