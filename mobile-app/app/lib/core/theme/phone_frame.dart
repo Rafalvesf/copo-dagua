@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_theme.dart';
+
 /// Em janelas largas (browser de desktop), limita o conteúdo a uma moldura
 /// do tamanho de um telemóvel — a app é mobile-first e deve parecer-se com
 /// uma quando testada fora de um dispositivo real. A página à volta fica
@@ -32,7 +34,7 @@ class PhoneFrame extends StatelessWidget {
 
         return SizedBox.expand(
           child: ColoredBox(
-            color: const Color(0xFF202124),
+            color: AppTheme.outerBackdrop,
             child: Center(
               child: Container(
                 width: _phoneWidth,

@@ -116,7 +116,7 @@ class _ProgressCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(gradient: AppGradients.checklist, borderRadius: BorderRadius.circular(24)),
+      decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(24)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

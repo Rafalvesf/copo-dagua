@@ -9,18 +9,18 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/support_chat.dart';
 
-Gradient _gradientFor(SupplierCategory category) {
+Color _colorFor(SupplierCategory category) {
   switch (category) {
     case SupplierCategory.photography:
-      return AppGradients.wedding;
+      return AppColors.blue;
     case SupplierCategory.catering:
-      return AppGradients.budget;
+      return AppColors.yellow;
     case SupplierCategory.music:
-      return AppGradients.seating;
+      return AppColors.green;
     case SupplierCategory.decoration:
-      return AppGradients.guests;
+      return AppColors.gray;
     case SupplierCategory.venue:
-      return AppGradients.suppliers;
+      return AppColors.purple;
   }
 }
 
@@ -254,7 +254,7 @@ class _SupplierCardState extends State<_SupplierCard> {
       height: 210,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: _gradientFor(supplier.category),
+        color: _colorFor(supplier.category),
         borderRadius: BorderRadius.circular(28),
       ),
       child: Stack(

@@ -26,72 +26,90 @@ class HomeFeedScreen extends ConsumerWidget {
           : Stack(
               children: [
                 SafeArea(
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 110),
+                  child: Column(
                     children: [
-                      Row(
-                        children: [
-                          CircleIconButton(
-                            icon: Icons.live_help_outlined,
-                            onTap: () => openSupportScreen(context),
-                          ),
-                          const Spacer(),
-                          PopupMenuButton<String>(
-                            icon: const GradientMark(size: 40, icon: Icons.person_outline),
-                            onSelected: (value) {
-                              if (value == 'logout') ref.read(authControllerProvider.notifier).logout();
-                            },
-                            itemBuilder: (context) => const [
-                              PopupMenuItem(value: 'logout', child: Text('Sair')),
-                            ],
-                          ),
-                        ],
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                        child: Row(
+                          children: [
+                            CircleIconButton(
+                              icon: Icons.live_help_outlined,
+                              onTap: () => openSupportScreen(context),
+                            ),
+                            const Spacer(),
+                            PopupMenuButton<String>(
+                              icon: const GradientMark(size: 40, icon: Icons.person_outline),
+                              onSelected: (value) {
+                                if (value == 'logout') ref.read(authControllerProvider.notifier).logout();
+                              },
+                              itemBuilder: (context) => const [
+                                PopupMenuItem(value: 'logout', child: Text('Sair')),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 36),
-                      Text(
-                        firstName.isEmpty
-                            ? 'Olá, o que precisas hoje?'
-                            : 'Olá, $firstName, o que precisas hoje?',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 30, height: 1.15),
+                      // Metade de cima do ecrã: só a saudação.
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              firstName.isEmpty
+                                  ? 'Olá, o que precisas hoje?'
+                                  : 'Olá, $firstName, o que precisas hoje?',
+                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 30, height: 1.15),
+                            ),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                      _HeroTile(
-                        gradient: AppGradients.wedding,
-                        icon: Icons.favorite_outline,
-                        label: 'O nosso casamento',
-                        caption: wedding.displayNames,
-                        onTap: () => context.push('/wedding'),
-                      ),
-                      const SizedBox(height: 14),
-                      GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 14,
-                        crossAxisSpacing: 14,
-                        childAspectRatio: 1.05,
-                        children: [
-                          _FeedTile(
-                            gradient: AppGradients.guests,
-                            icon: Icons.people_outline,
-                            label: 'Convidados',
-                            onTap: () => context.push('/guests'),
-                          ),
-                          _FeedTile(
-                            gradient: AppGradients.checklist,
-                            icon: Icons.checklist_outlined,
-                            label: 'Checklist',
-                            onTap: () => context.push('/checklist'),
-                          ),
-                          const _FeedTile(gradient: AppGradients.budget, icon: Icons.savings_outlined, label: 'Orçamento'),
-                          const _FeedTile(gradient: AppGradients.seating, icon: Icons.event_seat_outlined, label: 'Lugares'),
-                          _FeedTile(
-                            gradient: AppGradients.suppliers,
-                            icon: Icons.storefront_outlined,
-                            label: 'Fornecedores',
-                            onTap: () => context.push('/suppliers'),
-                          ),
-                        ],
+                      // Metade de baixo: o resto do conteúdo, com scroll próprio.
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 110),
+                          children: [
+                            _HeroTile(
+                              color: AppColors.blue,
+                              icon: Icons.favorite_outline,
+                              label: 'O nosso casamento',
+                              caption: wedding.displayNames,
+                              onTap: () => context.push('/wedding'),
+                            ),
+                            const SizedBox(height: 14),
+                            GridView.count(
+                              crossAxisCount: 2,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              mainAxisSpacing: 14,
+                              crossAxisSpacing: 14,
+                              childAspectRatio: 1.05,
+                              children: [
+                                _FeedTile(
+                                  color: AppColors.green,
+                                  icon: Icons.people_outline,
+                                  label: 'Convidados',
+                                  onTap: () => context.push('/guests'),
+                                ),
+                                _FeedTile(
+                                  color: AppColors.yellow,
+                                  icon: Icons.checklist_outlined,
+                                  label: 'Checklist',
+                                  onTap: () => context.push('/checklist'),
+                                ),
+                                const _FeedTile(color: AppColors.gray, icon: Icons.savings_outlined, label: 'Orçamento'),
+                                const _FeedTile(
+                                    color: AppColors.blue, icon: Icons.event_seat_outlined, label: 'Lugares'),
+                                _FeedTile(
+                                  color: AppColors.green,
+                                  icon: Icons.storefront_outlined,
+                                  label: 'Fornecedores',
+                                  onTap: () => context.push('/suppliers'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -109,14 +127,14 @@ class HomeFeedScreen extends ConsumerWidget {
 }
 
 class _HeroTile extends StatelessWidget {
-  final Gradient gradient;
+  final Color color;
   final IconData icon;
   final String label;
   final String? caption;
   final VoidCallback? onTap;
 
   const _HeroTile({
-    required this.gradient,
+    required this.color,
     required this.icon,
     required this.label,
     this.caption,
@@ -130,7 +148,7 @@ class _HeroTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(28)),
+        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(28)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -138,7 +156,7 @@ class _HeroTile extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.55), shape: BoxShape.circle),
+                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
                   child: Icon(icon, color: AppTheme.ink, size: 20),
                 ),
                 const Spacer(),
@@ -162,12 +180,12 @@ class _HeroTile extends StatelessWidget {
 }
 
 class _FeedTile extends StatelessWidget {
-  final Gradient gradient;
+  final Color color;
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
 
-  const _FeedTile({required this.gradient, required this.icon, required this.label, this.onTap});
+  const _FeedTile({required this.color, required this.icon, required this.label, this.onTap});
 
   bool get _enabled => onTap != null;
 
@@ -179,7 +197,7 @@ class _FeedTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: _enabled ? gradient : AppGradients.muted,
+          color: _enabled ? color : AppColors.muted,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Stack(
@@ -193,8 +211,8 @@ class _FeedTile extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                     color: AppTheme.ink.withValues(alpha: _enabled ? 1 : 0.5),
                   ),
                 ),

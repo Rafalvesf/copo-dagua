@@ -51,25 +51,27 @@ class SupportScreen extends ConsumerWidget {
                       childAspectRatio: 1.15,
                       children: [
                         _OptionCard(
-                          gradient: AppGradients.guests,
+                          color: AppColors.yellow,
+                          iconBackground: AppColors.purple,
+                          iconColor: Colors.white,
                           icon: Icons.auto_awesome,
                           label: 'Perguntar à IA',
                           onTap: () => _comingSoon(context),
                         ),
                         _OptionCard(
-                          gradient: AppGradients.checklist,
+                          color: AppColors.green,
                           icon: Icons.support_agent,
                           label: 'Falar com a equipa',
                           onTap: () => _comingSoon(context),
                         ),
                         _OptionCard(
-                          gradient: AppGradients.wedding,
+                          color: AppColors.blue,
                           icon: Icons.storefront_outlined,
                           label: 'Sugestões de fornecedores',
                           onTap: () => _comingSoon(context),
                         ),
                         _OptionCard(
-                          gradient: AppGradients.budget,
+                          color: AppColors.gray,
                           icon: Icons.savings_outlined,
                           label: 'Dicas de orçamento',
                           onTap: () => _comingSoon(context),
@@ -89,6 +91,7 @@ class SupportScreen extends ConsumerWidget {
                       enabled: false,
                       decoration: InputDecoration(
                         hintText: 'Pergunta ou pesquisa qualquer coisa...',
+                        hintStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(999),
@@ -123,12 +126,21 @@ class SupportScreen extends ConsumerWidget {
 }
 
 class _OptionCard extends StatelessWidget {
-  final Gradient gradient;
+  final Color color;
+  final Color? iconBackground;
+  final Color? iconColor;
   final IconData icon;
   final String label;
   final VoidCallback onTap;
 
-  const _OptionCard({required this.gradient, required this.icon, required this.label, required this.onTap});
+  const _OptionCard({
+    required this.color,
+    this.iconBackground,
+    this.iconColor,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -137,20 +149,20 @@ class _OptionCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(24)),
+        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(24)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 36,
               height: 36,
-              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.7), shape: BoxShape.circle),
-              child: Icon(icon, size: 18, color: AppTheme.ink),
+              decoration: BoxDecoration(color: iconBackground ?? Colors.white, shape: BoxShape.circle),
+              child: Icon(icon, size: 18, color: iconColor ?? AppTheme.ink),
             ),
             const Spacer(),
             Text(
               label,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.ink),
             ),
           ],
         ),

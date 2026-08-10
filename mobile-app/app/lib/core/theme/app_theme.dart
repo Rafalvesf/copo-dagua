@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
 /// Placeholder theme — mobile-app/shared/design-system.md ainda não foi
-/// escrito a sério. Estilo inspirado num moodboard partilhado pelo
-/// utilizador: fundo creme quente, cartões com gradientes pastel suaves,
-/// tipografia bold e cantos bem arredondados.
+/// escrito a sério. Paleta extraída pelo utilizador a partir dos
+/// mockups de referência: fundo branco, superfícies pastel planas
+/// (sem gradiente), preto para texto/ícones.
 class AppTheme {
-  static const seedColor = Color(0xFFE0708A);
+  static const seedColor = Color(0xFF141719);
 
-  static const background = Color(0xFFF7F1EA);
-  static const ink = Color(0xFF241F1C);
-  static const inkMuted = Color(0xFF837A73);
+  static const background = Color(0xFFFFFFFF);
+  static const ink = Color(0xFF141719);
+  static const inkMuted = Color(0xFF6E7378);
+
+  /// Fundo geral atrás da moldura de telemóvel, em janelas largas.
+  static const outerBackdrop = Color(0xFFD1D4DA);
 
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(
@@ -42,7 +45,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.gray,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
@@ -62,7 +65,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(54),
           foregroundColor: ink,
-          side: const BorderSide(color: Color(0xFFE2D9CF)),
+          side: const BorderSide(color: Color(0xFFE3E4E7)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
@@ -76,57 +79,23 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: Colors.white,
         selectedColor: ink,
-        side: const BorderSide(color: Color(0xFFE2D9CF)),
+        side: const BorderSide(color: Color(0xFFE3E4E7)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
     );
   }
 }
 
-/// Gradientes pastel usados nos cartões de destaque (feed, cabeçalho do
-/// casamento) — inspirados no moodboard partilhado, sem depender de imagens.
-class AppGradients {
-  static const wedding = LinearGradient(
-    colors: [Color(0xFFFFC9D4), Color(0xFFFFE3A3)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+/// Paleta extraída dos mockups de referência — superfícies planas
+/// (sem gradiente) para os cartões de destaque.
+class AppColors {
+  static const blue = Color(0xFFDEF3FA);
+  static const green = Color(0xFFE1F7DD);
+  static const yellow = Color(0xFFFFF5C0);
+  static const gray = Color(0xFFF2F2F2);
+  static const purple = Color(0xFFB589DF);
 
-  static const guests = LinearGradient(
-    colors: [Color(0xFFC3CCFF), Color(0xFFE7C6FF)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static const checklist = LinearGradient(
-    colors: [Color(0xFFC6F2D6), Color(0xFF9FE6D3)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static const budget = LinearGradient(
-    colors: [Color(0xFFFFDCA6), Color(0xFFFFB19E)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static const seating = LinearGradient(
-    colors: [Color(0xFFAEE6FF), Color(0xFFCFC0FF)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static const suppliers = LinearGradient(
-    colors: [Color(0xFFFFC0B8), Color(0xFFFFDDA6)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static const muted = LinearGradient(
-    colors: [Color(0xFFE9E2D9), Color(0xFFDCD3C8)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  static const muted = Color(0xFFEDEDED);
 }
 
 /// Cores semânticas de estado (ex: RSVP) — usadas em vez de emojis para

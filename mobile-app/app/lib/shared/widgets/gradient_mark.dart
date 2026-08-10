@@ -14,7 +14,7 @@ class GradientMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: const BoxDecoration(
-        gradient: AppGradients.wedding,
+        color: AppTheme.ink,
         shape: BoxShape.circle,
       ),
       child: Icon(icon, size: size * 0.5, color: Colors.white),

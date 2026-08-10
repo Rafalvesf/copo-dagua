@@ -22,7 +22,7 @@ class WeddingCoverHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(gradient: AppGradients.wedding, borderRadius: BorderRadius.circular(28)),
+      decoration: BoxDecoration(color: AppColors.blue, borderRadius: BorderRadius.circular(28)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
