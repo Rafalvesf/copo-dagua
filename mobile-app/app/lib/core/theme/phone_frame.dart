@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
@@ -133,13 +134,71 @@ class _PhoneStatusBarState extends State<_PhoneStatusBar> {
             ),
           ),
           const Spacer(),
-          const Icon(Icons.signal_cellular_alt, size: 15, color: AppTheme.ink),
+          const _IosSignalBars(),
           const SizedBox(width: 5),
-          const Icon(Icons.wifi, size: 15, color: AppTheme.ink),
+          const Icon(CupertinoIcons.wifi, size: 14, color: AppTheme.ink),
           const SizedBox(width: 5),
-          const Icon(Icons.battery_full, size: 16, color: AppTheme.ink),
+          const _IosBatteryIcon(),
         ],
       ),
+    );
+  }
+}
+
+/// As 4 barras ascendentes do indicador de rede do iOS — diferente do
+/// ícone único "signal_cellular_alt" do Android.
+class _IosSignalBars extends StatelessWidget {
+  const _IosSignalBars();
+
+  static const _heights = [4.0, 6.0, 8.0, 10.0];
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        for (var i = 0; i < _heights.length; i++)
+          Container(
+            margin: EdgeInsets.only(right: i == _heights.length - 1 ? 0 : 2),
+            width: 3,
+            height: _heights[i],
+            decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(1)),
+          ),
+      ],
+    );
+  }
+}
+
+/// Pílula com "nub" do indicador de bateria do iOS — diferente do
+/// triângulo de bateria do Android.
+class _IosBatteryIcon extends StatelessWidget {
+  const _IosBatteryIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 22,
+          height: 11,
+          padding: const EdgeInsets.all(1.5),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppTheme.ink, width: 1),
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: const FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: 0.8,
+            child: ColoredBox(color: AppTheme.ink),
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.only(left: 1),
+          width: 1.5,
+          height: 4,
+          decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(1)),
+        ),
+      ],
     );
   }
 }
