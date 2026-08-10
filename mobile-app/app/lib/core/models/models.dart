@@ -50,6 +50,8 @@ class Wedding {
   final String ownerId;
   final String partnerName1;
   final String? partnerName2;
+  final int? partner1Age;
+  final int? partner2Age;
   final DateTime? weddingDate;
   final String? location;
   final String? venue;
@@ -63,6 +65,8 @@ class Wedding {
     required this.ownerId,
     required this.partnerName1,
     this.partnerName2,
+    this.partner1Age,
+    this.partner2Age,
     this.weddingDate,
     this.location,
     this.venue,
@@ -78,6 +82,8 @@ class Wedding {
   Wedding copyWith({
     String? partnerName1,
     String? partnerName2,
+    int? partner1Age,
+    int? partner2Age,
     DateTime? weddingDate,
     String? location,
     String? venue,
@@ -91,6 +97,8 @@ class Wedding {
       ownerId: ownerId,
       partnerName1: partnerName1 ?? this.partnerName1,
       partnerName2: partnerName2 ?? this.partnerName2,
+      partner1Age: partner1Age ?? this.partner1Age,
+      partner2Age: partner2Age ?? this.partner2Age,
       weddingDate: weddingDate ?? this.weddingDate,
       location: location ?? this.location,
       venue: venue ?? this.venue,

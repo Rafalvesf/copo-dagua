@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
-import '../../../shared/widgets/wedding_widgets.dart';
+import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/gradient_mark.dart';
 
 class HomeFeedScreen extends ConsumerWidget {
   const HomeFeedScreen({super.key});
@@ -13,53 +15,81 @@ class HomeFeedScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final weddingState = ref.watch(weddingControllerProvider);
     final wedding = weddingState.wedding;
+    final profile = ref.watch(authControllerProvider).profile;
+    final firstName = profile?.fullName.split(' ').first ?? '';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Copo d'Água"),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'logout') ref.read(authControllerProvider.notifier).logout();
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'logout', child: Text('Sair')),
-            ],
-          ),
-        ],
-      ),
       body: wedding == null
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(24),
+          : Stack(
               children: [
-                WeddingCoverHeader(wedding: wedding),
-                const SizedBox(height: 28),
-                Text('O que precisas hoje?', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1.15,
-                  children: [
-                    _FeedTile(
-                      icon: Icons.favorite_outline,
-                      label: 'O nosso casamento',
-                      onTap: () => context.push('/wedding'),
-                    ),
-                    _FeedTile(
-                      icon: Icons.people_outline,
-                      label: 'Convidados',
-                      onTap: () => context.push('/guests'),
-                    ),
-                    const _FeedTile(icon: Icons.checklist_outlined, label: 'Checklist'),
-                    const _FeedTile(icon: Icons.savings_outlined, label: 'Orçamento'),
-                    const _FeedTile(icon: Icons.event_seat_outlined, label: 'Lugares'),
-                    const _FeedTile(icon: Icons.storefront_outlined, label: 'Fornecedores'),
-                  ],
+                SafeArea(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 110),
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  firstName.isEmpty ? 'Olá! 👋' : 'Olá, $firstName 👋',
+                                  style: Theme.of(context).textTheme.headlineMedium,
+                                ),
+                                Text('O que precisas hoje?', style: Theme.of(context).textTheme.bodyLarge),
+                              ],
+                            ),
+                          ),
+                          PopupMenuButton<String>(
+                            icon: const GradientMark(size: 40, icon: Icons.person_outline),
+                            onSelected: (value) {
+                              if (value == 'logout') ref.read(authControllerProvider.notifier).logout();
+                            },
+                            itemBuilder: (context) => const [
+                              PopupMenuItem(value: 'logout', child: Text('Sair')),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      _HeroTile(
+                        gradient: AppGradients.wedding,
+                        icon: Icons.favorite_outline,
+                        label: 'O nosso casamento',
+                        caption: wedding.displayNames,
+                        onTap: () => context.push('/wedding'),
+                      ),
+                      const SizedBox(height: 14),
+                      GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 14,
+                        crossAxisSpacing: 14,
+                        childAspectRatio: 1.05,
+                        children: [
+                          _FeedTile(
+                            gradient: AppGradients.guests,
+                            icon: Icons.people_outline,
+                            label: 'Convidados',
+                            onTap: () => context.push('/guests'),
+                          ),
+                          const _FeedTile(gradient: AppGradients.checklist, icon: Icons.checklist_outlined, label: 'Checklist'),
+                          const _FeedTile(gradient: AppGradients.budget, icon: Icons.savings_outlined, label: 'Orçamento'),
+                          const _FeedTile(gradient: AppGradients.seating, icon: Icons.event_seat_outlined, label: 'Lugares'),
+                          const _FeedTile(gradient: AppGradients.suppliers, icon: Icons.storefront_outlined, label: 'Fornecedores'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 24,
+                  child: Center(child: FloatingBottomNav(current: AppTab.home)),
                 ),
               ],
             ),
@@ -67,39 +97,123 @@ class HomeFeedScreen extends ConsumerWidget {
   }
 }
 
+class _HeroTile extends StatelessWidget {
+  final Gradient gradient;
+  final IconData icon;
+  final String label;
+  final String? caption;
+  final VoidCallback? onTap;
+
+  const _HeroTile({
+    required this.gradient,
+    required this.icon,
+    required this.label,
+    this.caption,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(28),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(28)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.55), shape: BoxShape.circle),
+                  child: Icon(icon, color: AppTheme.ink, size: 20),
+                ),
+                const Spacer(),
+                const Icon(Icons.favorite_border, color: AppTheme.ink, size: 20),
+              ],
+            ),
+            const SizedBox(height: 28),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink),
+            ),
+            if (caption != null)
+              Text(caption!, style: TextStyle(color: AppTheme.ink.withValues(alpha: 0.7), fontSize: 13)),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(999)),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Ver mais', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+                  SizedBox(width: 6),
+                  Icon(Icons.arrow_forward, color: Colors.white, size: 14),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _FeedTile extends StatelessWidget {
+  final Gradient gradient;
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
 
-  const _FeedTile({required this.icon, required this.label, this.onTap});
+  const _FeedTile({required this.gradient, required this.icon, required this.label, this.onTap});
 
   bool get _enabled => onTap != null;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Opacity(
-      opacity: _enabled ? 1 : 0.45,
-      child: Card(
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: _enabled ? gradient : AppGradients.muted,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Icon(icon, size: 32, color: colorScheme.primary),
+                Icon(icon, color: AppTheme.ink.withValues(alpha: _enabled ? 1 : 0.5), size: 26),
                 const SizedBox(height: 10),
-                Text(label, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
-                if (!_enabled) ...[
-                  const SizedBox(height: 4),
-                  Text('Em breve', style: Theme.of(context).textTheme.bodySmall),
-                ],
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.ink.withValues(alpha: _enabled ? 1 : 0.5),
+                  ),
+                ),
               ],
             ),
-          ),
+            if (!_enabled)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Text('Em breve', style: TextStyle(fontSize: 10, color: AppTheme.inkMuted)),
+                ),
+              ),
+          ],
         ),
       ),
     );

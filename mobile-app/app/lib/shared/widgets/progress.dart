@@ -29,8 +29,9 @@ class StepProgressBar extends StatelessWidget {
 
 class CountdownBadge extends StatelessWidget {
   final DateTime? weddingDate;
+  final bool light;
 
-  const CountdownBadge({super.key, required this.weddingDate});
+  const CountdownBadge({super.key, required this.weddingDate, this.light = false});
 
   @override
   Widget build(BuildContext context) {
@@ -47,12 +48,15 @@ class CountdownBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: colorScheme.secondaryContainer,
+        color: light ? Colors.white.withValues(alpha: 0.6) : colorScheme.secondaryContainer,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         text,
-        style: TextStyle(color: colorScheme.onSecondaryContainer, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: light ? const Color(0xFF241F1C) : colorScheme.onSecondaryContainer,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

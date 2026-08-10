@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/gradient_mark.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -16,11 +17,11 @@ class WelcomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              Icon(Icons.local_drink_outlined, size: 64, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(height: 16),
+              const GradientMark(size: 72, icon: Icons.water_drop_outlined),
+              const SizedBox(height: 20),
               Text(
                 "Copo d'Água",
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 8),
               Text(
@@ -33,7 +34,6 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: () => context.push('/role'),
-                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
                 child: const Text('Criar conta'),
               ),
               const SizedBox(height: 16),
