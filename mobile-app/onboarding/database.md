@@ -38,7 +38,7 @@ create table public.weddings (
 );
 ```
 
-> **Nota de sincronização (pendente):** `partner_name_2`, `partner_1_age` e `partner_2_age` foram acrescentados depois de `database/migrations/002_onboarding.sql` já ter sido implementado e testado contra Postgres (ver `docs/architecture/TESTING_NOTES.md`). A migração real e a suite de testes de RLS ainda **não** foram atualizadas para refletir este novo shape — fazê-lo antes de assumir este schema como validado.
+> **Nota de sincronização:** `partner_name_2`, `partner_1_age` e `partner_2_age` foram acrescentados depois de `database/migrations/002_onboarding.sql` já ter sido implementado e testado uma primeira vez contra Postgres. A migração real e a suite de testes de RLS foram atualizadas e **re-validadas contra Postgres 16** com este novo shape — 11 de 11 testes continuam a passar. Ver `docs/architecture/TESTING_NOTES.md`.
 
 ```sql
 -- Semente do supplier_profile, criada no passo 2 (RN04).

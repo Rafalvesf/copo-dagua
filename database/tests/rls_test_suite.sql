@@ -18,9 +18,9 @@ insert into public.profiles (id, role, full_name) values
   ('33333333-3333-3333-3333-333333333333', 'couple', 'Sofia Martins'),
   ('44444444-4444-4444-4444-444444444444', 'couple', 'Pedro Almeida');
 
-insert into public.weddings (id, owner_id, partner_name) values
-  ('aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Miguel'),
-  ('bbbbbbbb-0000-0000-0000-000000000002', '33333333-3333-3333-3333-333333333333', 'João');
+insert into public.weddings (id, owner_id, partner_name_1) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Ana'),
+  ('bbbbbbbb-0000-0000-0000-000000000002', '33333333-3333-3333-3333-333333333333', 'Sofia');
 
 insert into public.wedding_collaborators (wedding_id, user_id, invited_email, status) values
   ('aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'miguel@example.com', 'active');

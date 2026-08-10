@@ -23,7 +23,10 @@ grant select, insert, update, delete on public.onboarding_progress to app_authen
 create table public.weddings (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.profiles(id),
-  partner_name text,
+  partner_name_1 text not null,
+  partner_name_2 text,
+  partner_1_age integer,
+  partner_2_age integer,
   wedding_date date,
   location text,
   estimated_guests integer,

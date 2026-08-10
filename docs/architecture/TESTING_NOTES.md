@@ -39,12 +39,17 @@ Isto é o valor concreto de passar de documentação para implementação — ne
 
 Nenhum dos documentos `database.md` escritos até agora (Authentication, Onboarding, Wedding, Guests) inclui declarações `GRANT` explícitas para o role `authenticated`. Em Postgres puro isso é obrigatório (RLS não substitui privilégios de tabela). O Supabase **normalmente** já configura privilégios base razoáveis para os roles `anon`/`authenticated`/`service_role` no schema `public`, mas isto deve ser **confirmado explicitamente** no projeto Supabase real antes de assumir que as policies documentadas são suficientes por si só — não confiar apenas na documentação de RLS sem verificar os grants de tabela no ambiente real.
 
+## Atualização — schema `weddings` (nome + idade de cada noivo)
+
+Depois deste teste inicial, `partner_name` (coluna única) foi substituído por `partner_name_1`, `partner_name_2`, `partner_1_age` e `partner_2_age` em `mobile-app/onboarding/database.md` e na migração real (`002_onboarding.sql`), para refletir os campos recolhidos no wizard de Onboarding implementado na app Flutter. As migrações 000-004 e a suite de 11 testes de RLS (`database/tests/rls_test_suite.sql`, com o `insert` de setup ajustado ao novo nome de coluna) foram **re-corridas contra Postgres 16 real** depois desta mudança — **11 de 11 continuam a passar**.
+
 ## O que ainda não foi testado
 
-- A app Flutter em si (sem SDK Flutter neste ambiente de trabalho).
 - Ligação real a um projeto Supabase hospedado (sem acesso de rede a `supabase.co` neste ambiente).
 - Edge Functions como runtime Deno real (a lógica de negócio pode ser validada como TypeScript, mas não no runtime exato do Supabase Edge Functions).
 - Testes de carga / concorrência (ex: dois colaboradores a editar em simultâneo).
+
+**Nota:** a app Flutter (`mobile-app/app/`) já existe e foi testada manualmente num browser (modo web, sem Supabase real — usa um backend mock em memória). Ver `mobile-app/app/README` ou o histórico do repositório para detalhe.
 
 ## Recomendação
 
