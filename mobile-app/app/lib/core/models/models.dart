@@ -1,3 +1,13 @@
+/// Sentinel para distinguir "parâmetro omitido" de "parâmetro passado como
+/// null" em copyWith — necessário para campos int? que precisam de poder
+/// ser limpos explicitamente (ex: idade), ao contrário de String? onde uma
+/// string vazia já serve esse propósito sem ambiguidade.
+class _Unset {
+  const _Unset();
+}
+
+const _unset = _Unset();
+
 enum UserRole { couple, supplier }
 
 enum CeremonyType { civil, religious, both }
@@ -82,8 +92,8 @@ class Wedding {
   Wedding copyWith({
     String? partnerName1,
     String? partnerName2,
-    int? partner1Age,
-    int? partner2Age,
+    Object? partner1Age = _unset,
+    Object? partner2Age = _unset,
     DateTime? weddingDate,
     String? location,
     String? venue,
@@ -97,8 +107,8 @@ class Wedding {
       ownerId: ownerId,
       partnerName1: partnerName1 ?? this.partnerName1,
       partnerName2: partnerName2 ?? this.partnerName2,
-      partner1Age: partner1Age ?? this.partner1Age,
-      partner2Age: partner2Age ?? this.partner2Age,
+      partner1Age: identical(partner1Age, _unset) ? this.partner1Age : partner1Age as int?,
+      partner2Age: identical(partner2Age, _unset) ? this.partner2Age : partner2Age as int?,
       weddingDate: weddingDate ?? this.weddingDate,
       location: location ?? this.location,
       venue: venue ?? this.venue,

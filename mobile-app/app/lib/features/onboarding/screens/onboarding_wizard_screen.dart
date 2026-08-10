@@ -36,6 +36,19 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
   bool _dateUnknown = false;
 
   @override
+  void dispose() {
+    _ownName.dispose();
+    _ownAge.dispose();
+    _partnerName.dispose();
+    _partnerAge.dispose();
+    _location.dispose();
+    _guests.dispose();
+    _budget.dispose();
+    _partnerEmail.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     final profile = auth.profile;
@@ -51,7 +64,14 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
 
     if (profile.role == UserRole.supplier) {
       return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          actions: [
+            TextButton(
+              onPressed: () => ref.read(authControllerProvider.notifier).logout(),
+              child: const Text('Sair'),
+            ),
+          ],
+        ),
         body: const Padding(
           padding: EdgeInsets.all(24),
           child: Center(

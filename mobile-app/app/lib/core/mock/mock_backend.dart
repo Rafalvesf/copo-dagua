@@ -242,7 +242,10 @@ class MockBackend {
       group: guest.group,
       side: guest.side,
       plusOneAllowed: guest.plusOneAllowed,
+      plusOneName: guest.plusOneName,
       rsvpStatus: guest.rsvpStatus,
+      dietaryRestrictions: guest.dietaryRestrictions,
+      note: guest.note,
     );
     guests.add(withId);
     return withId;

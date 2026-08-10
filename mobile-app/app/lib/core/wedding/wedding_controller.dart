@@ -23,9 +23,9 @@ class WeddingController extends Notifier<WeddingState> {
 
   @override
   WeddingState build() {
-    final profile = ref.watch(authControllerProvider).profile;
-    if (profile != null) {
-      Future.microtask(() => load(profile.id));
+    final ownerId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
+    if (ownerId != null) {
+      Future.microtask(() => load(ownerId));
     }
     return const WeddingState();
   }

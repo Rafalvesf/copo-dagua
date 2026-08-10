@@ -9,6 +9,14 @@ class WeddingCoverHeader extends StatelessWidget {
 
   const WeddingCoverHeader({super.key, required this.wedding});
 
+  String? get _agesLabel {
+    final age1 = wedding.partner1Age;
+    final age2 = wedding.partner2Age;
+    if (age1 == null && age2 == null) return null;
+    if (age1 != null && age2 != null) return '$age1 & $age2 anos';
+    return '${age1 ?? age2} anos';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -28,12 +36,21 @@ class WeddingCoverHeader extends StatelessWidget {
             wedding.displayNames,
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.ink),
           ),
+          if (_agesLabel != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              _agesLabel!,
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.ink.withValues(alpha: 0.7)),
+            ),
+          ],
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
             runSpacing: 8,
             children: [
               if (wedding.location != null) _InfoChip(icon: Icons.place_outlined, label: wedding.location!),
+              if (wedding.venue != null && wedding.venue!.isNotEmpty)
+                _InfoChip(icon: Icons.villa_outlined, label: wedding.venue!),
               CountdownBadge(weddingDate: wedding.weddingDate, light: true),
             ],
           ),

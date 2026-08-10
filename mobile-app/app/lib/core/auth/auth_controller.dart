@@ -3,6 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../mock/mock_backend.dart';
 import '../models/models.dart';
 
+class _Unset {
+  const _Unset();
+}
+
+const _unset = _Unset();
+
 enum AuthStatus {
   unauthenticated,
   authenticating,
@@ -21,11 +27,11 @@ class AuthState {
 
   const AuthState.unauthenticated() : this(status: AuthStatus.unauthenticated);
 
-  AuthState copyWith({AuthStatus? status, Profile? profile, String? errorMessage}) {
+  AuthState copyWith({AuthStatus? status, Profile? profile, Object? errorMessage = _unset}) {
     return AuthState(
       status: status ?? this.status,
       profile: profile ?? this.profile,
-      errorMessage: errorMessage,
+      errorMessage: identical(errorMessage, _unset) ? this.errorMessage : errorMessage as String?,
     );
   }
 

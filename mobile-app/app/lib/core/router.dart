@@ -37,8 +37,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       switch (auth.status) {
         case AuthStatus.unauthenticated:
         case AuthStatus.error:
-        case AuthStatus.authenticating:
           if (_authRoutes.contains(location)) return null;
+          return '/welcome';
+        case AuthStatus.authenticating:
+          if (_authRoutes.contains(location) || location == '/verify-email') return null;
           return '/welcome';
         case AuthStatus.emailUnverified:
           if (location == '/verify-email') return null;

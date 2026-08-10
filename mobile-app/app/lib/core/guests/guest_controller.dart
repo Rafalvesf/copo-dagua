@@ -45,10 +45,10 @@ class GuestsController extends Notifier<GuestsState> {
 
   @override
   GuestsState build() {
-    final wedding = ref.watch(weddingControllerProvider).wedding;
-    currentWeddingId = wedding?.id;
-    if (wedding != null) {
-      Future.microtask(() => load(wedding.id));
+    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+    currentWeddingId = weddingId;
+    if (weddingId != null) {
+      Future.microtask(() => load(weddingId));
     }
     return const GuestsState();
   }
