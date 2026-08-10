@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -149,31 +150,56 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
   }
 }
 
-class _CategoryNavBar extends StatelessWidget {
+class _CategoryNavBar extends StatefulWidget {
   final SupplierCategory? selected;
   final ValueChanged<SupplierCategory?> onChanged;
 
   const _CategoryNavBar({required this.selected, required this.onChanged});
 
   @override
+  State<_CategoryNavBar> createState() => _CategoryNavBarState();
+}
+
+class _CategoryNavBarState extends State<_CategoryNavBar> {
+  final _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 44,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-        children: [
-          _CategoryChip(label: 'Todos', selected: selected == null, onTap: () => onChanged(null)),
-          for (final category in SupplierCategory.values)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: _CategoryChip(
-                label: category.label,
-                selected: selected == category,
-                onTap: () => onChanged(category),
+      child: Listener(
+        // Permite scroll com a roda do rato (o gesto é vertical por
+        // omissão, mas esta barra só desliza na horizontal).
+        onPointerSignal: (event) {
+          if (event is PointerScrollEvent && _controller.hasClients) {
+            final target = (_controller.offset + event.scrollDelta.dy)
+                .clamp(0.0, _controller.position.maxScrollExtent);
+            _controller.jumpTo(target);
+          }
+        },
+        child: ListView(
+          controller: _controller,
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          children: [
+            _CategoryChip(label: 'Todos', selected: widget.selected == null, onTap: () => widget.onChanged(null)),
+            for (final category in SupplierCategory.values)
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: _CategoryChip(
+                  label: category.label,
+                  selected: widget.selected == category,
+                  onTap: () => widget.onChanged(category),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -203,52 +229,98 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
-class _SupplierCard extends StatelessWidget {
+class _SupplierCard extends StatefulWidget {
   final Supplier supplier;
   final VoidCallback onTap;
 
   const _SupplierCard({required this.supplier, required this.onTap});
 
   @override
+  State<_SupplierCard> createState() => _SupplierCardState();
+}
+
+class _SupplierCardState extends State<_SupplierCard> {
+  bool _favorited = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final supplier = widget.supplier;
+    return Container(
+      height: 210,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: _gradientFor(supplier.category),
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            right: 0,
+            child: _CircleIconButton(
+              icon: _favorited ? Icons.favorite : Icons.favorite_border,
+              onTap: () => setState(() => _favorited = !_favorited),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.star_rounded, size: 16, color: AppTheme.ink),
+                    const SizedBox(width: 2),
+                    Text(
+                      '${supplier.rating}',
+                      style: const TextStyle(color: AppTheme.ink, fontSize: 13, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '(${supplier.reviewCount} avaliações)',
+                      style: TextStyle(color: AppTheme.ink.withValues(alpha: 0.7), fontSize: 12),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  supplier.name,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink),
+                ),
+                Text(
+                  '${supplier.city} · desde €${supplier.startingPrice.toStringAsFixed(0)}',
+                  style: TextStyle(color: AppTheme.ink.withValues(alpha: 0.75), fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                ArrowCtaButton(label: 'Ver mais', expand: true, onTap: widget.onTap),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CircleIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CircleIconButton({required this.icon, required this.onTap});
+
+  @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(24),
+      customBorder: const CircleBorder(),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: _gradientFor(supplier.category),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    supplier.name,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.ink),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(supplier.city, style: TextStyle(color: AppTheme.ink.withValues(alpha: 0.7), fontSize: 13)),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Icon(Icons.star_rounded, size: 16, color: AppTheme.ink),
-                      const SizedBox(width: 2),
-                      Text('${supplier.rating}', style: const TextStyle(color: AppTheme.ink, fontSize: 13, fontWeight: FontWeight.w600)),
-                      const SizedBox(width: 10),
-                      Text('desde €${supplier.startingPrice.toStringAsFixed(0)}',
-                          style: const TextStyle(color: AppTheme.ink, fontSize: 13, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: AppTheme.ink),
-          ],
-        ),
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.7), shape: BoxShape.circle),
+        child: Icon(icon, size: 18, color: AppTheme.ink),
       ),
     );
   }

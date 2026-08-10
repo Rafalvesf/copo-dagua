@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
+import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 
@@ -152,18 +153,7 @@ class _HeroTile extends StatelessWidget {
             if (caption != null)
               Text(caption!, style: TextStyle(color: AppTheme.ink.withValues(alpha: 0.7), fontSize: 13)),
             const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(999)),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Ver mais', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
-                  SizedBox(width: 6),
-                  Icon(Icons.arrow_forward, color: Colors.white, size: 14),
-                ],
-              ),
-            ),
+            ArrowCtaButton(label: 'Ver mais', expand: true, onTap: onTap),
           ],
         ),
       ),
