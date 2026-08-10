@@ -36,7 +36,7 @@ class AppTheme {
       textTheme: baseText.copyWith(
         // Saudação (headline)
         headlineMedium: baseText.headlineMedium?.copyWith(
-          fontSize: 34,
+          fontSize: 50,
           height: 40 / 34,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.5,

@@ -114,7 +114,7 @@ class HomeFeedScreen extends ConsumerWidget {
                             AppTheme.screenMargin,
                             20,
                             AppTheme.screenMargin,
-                            0,
+                            24,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
