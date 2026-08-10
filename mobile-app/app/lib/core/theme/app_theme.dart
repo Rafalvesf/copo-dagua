@@ -16,6 +16,10 @@ class AppTheme {
   /// Fundo geral atrás da moldura de telemóvel, em janelas largas.
   static const outerBackdrop = Color(0xFFD1D4DA);
 
+  /// Margem lateral partilhada por todos os ecrãs principais — o
+  /// conteúdo e a navbar flutuante alinham-se a esta mesma largura.
+  static const screenMargin = 28.0;
+
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: seedColor,

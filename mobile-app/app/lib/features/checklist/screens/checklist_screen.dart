@@ -28,7 +28,12 @@ class ChecklistScreen extends ConsumerWidget {
           : Stack(
               children: [
                 ListView(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 110),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.screenMargin,
+                    8,
+                    AppTheme.screenMargin,
+                    110,
+                  ),
                   children: [
                     _ProgressCard(done: state.doneCount, total: state.totalCount, progress: progress),
                     const SizedBox(height: 20),
@@ -73,10 +78,10 @@ class ChecklistScreen extends ConsumerWidget {
                   ],
                 ),
                 const Positioned(
-                  left: 0,
-                  right: 0,
+                  left: AppTheme.screenMargin,
+                  right: AppTheme.screenMargin,
                   bottom: 24,
-                  child: Center(child: FloatingBottomNav(current: AppTab.checklist)),
+                  child: FloatingBottomNav(current: AppTab.checklist),
                 ),
                 const Positioned.fill(child: DraggableChatBubble()),
               ],

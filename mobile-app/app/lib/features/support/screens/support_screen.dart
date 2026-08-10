@@ -89,8 +89,8 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                                 children: [
                                   _OptionCard(
                                     color: AppColors.yellow,
-                                    iconBackground: AppColors.purple,
-                                    iconColor: Colors.white,
+                                    iconBackground: Colors.transparent,
+                                    iconColor: AppColors.purple,
                                     icon: Icons.auto_awesome,
                                     label: 'Perguntar à IA',
                                     onTap: _dismissAiCard,

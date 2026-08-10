@@ -22,7 +22,7 @@ class FloatingBottomNav extends StatelessWidget {
         ],
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _NavIcon(icon: Icons.home_rounded, active: current == AppTab.home, onTap: () => context.go('/home')),
           _NavIcon(

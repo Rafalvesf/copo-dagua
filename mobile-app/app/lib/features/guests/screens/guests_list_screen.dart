@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
@@ -24,7 +25,12 @@ class GuestsListScreen extends ConsumerWidget {
           ? const Center(child: CircularProgressIndicator())
           : Stack(children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.screenMargin,
+                  16,
+                  AppTheme.screenMargin,
+                  24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -60,10 +66,10 @@ class GuestsListScreen extends ConsumerWidget {
                 ),
               ),
               const Positioned(
-                left: 0,
-                right: 0,
+                left: AppTheme.screenMargin,
+                right: AppTheme.screenMargin,
                 bottom: 24,
-                child: Center(child: FloatingBottomNav(current: AppTab.guests)),
+                child: FloatingBottomNav(current: AppTab.guests),
               ),
               const Positioned.fill(child: DraggableChatBubble()),
             ]),

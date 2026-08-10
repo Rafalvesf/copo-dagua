@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
@@ -53,7 +54,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
               Builder(builder: (context) {
                 _syncControllers(wedding);
                 return ListView(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
+                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 24, AppTheme.screenMargin, 110),
                   children: [
                   WeddingCoverHeader(wedding: wedding),
                   const SizedBox(height: 24),
@@ -114,10 +115,10 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                 );
               }),
               const Positioned(
-                left: 0,
-                right: 0,
+                left: AppTheme.screenMargin,
+                right: AppTheme.screenMargin,
                 bottom: 24,
-                child: Center(child: FloatingBottomNav(current: AppTab.wedding)),
+                child: FloatingBottomNav(current: AppTab.wedding),
               ),
               const Positioned.fill(child: DraggableChatBubble()),
             ]),

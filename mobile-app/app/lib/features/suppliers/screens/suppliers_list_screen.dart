@@ -52,7 +52,12 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
             children: [
               if (widget.selectionMode)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.screenMargin,
+                    12,
+                    AppTheme.screenMargin,
+                    0,
+                  ),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -79,7 +84,12 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                       grouped.putIfAbsent(s.category, () => []).add(s);
                     }
                     return ListView(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 110),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppTheme.screenMargin,
+                        16,
+                        AppTheme.screenMargin,
+                        110,
+                      ),
                       children: [
                         for (final entry in grouped.entries) ...[
                           if (_filter == null && !widget.selectionMode) ...[
@@ -103,10 +113,10 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           ),
           if (!widget.selectionMode)
             const Positioned(
-              left: 0,
-              right: 0,
+              left: AppTheme.screenMargin,
+              right: AppTheme.screenMargin,
               bottom: 24,
-              child: Center(child: FloatingBottomNav(current: AppTab.suppliers)),
+              child: FloatingBottomNav(current: AppTab.suppliers),
             ),
           const Positioned.fill(child: DraggableChatBubble()),
         ],
@@ -191,7 +201,7 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
         child: ListView(
           controller: _controller,
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin, vertical: 4),
           children: [
             _CategoryChip(label: 'Todos', selected: widget.selected == null, onTap: () => widget.onChanged(null)),
             for (final category in SupplierCategory.values)

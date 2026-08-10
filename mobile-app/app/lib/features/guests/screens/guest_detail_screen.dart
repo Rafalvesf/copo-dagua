@@ -27,7 +27,7 @@ class GuestDetailScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(guest.name), leading: const CircleBackButton()),
       body: Stack(children: [
         ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.screenMargin),
         children: [
           RsvpStatusBadge(status: guest.rsvpStatus),
           const SizedBox(height: 12),
