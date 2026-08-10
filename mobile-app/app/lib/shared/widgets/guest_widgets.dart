@@ -47,28 +47,6 @@ class RsvpStatusFilterTabs extends StatelessWidget {
   }
 }
 
-class RsvpSummaryBar extends StatelessWidget {
-  final int confirmed;
-  final int pending;
-  final int declined;
-
-  const RsvpSummaryBar({super.key, required this.confirmed, required this.pending, required this.declined});
-
-  @override
-  Widget build(BuildContext context) {
-    final total = confirmed + pending + declined;
-    return Row(
-      children: [
-        Text('$total convidados', style: Theme.of(context).textTheme.titleMedium),
-        const Spacer(),
-        Text('✅ $confirmed  '),
-        Text('⏳ $pending  '),
-        Text('❌ $declined'),
-      ],
-    );
-  }
-}
-
 class GuestFormResult {
   final String name;
   final String? email;

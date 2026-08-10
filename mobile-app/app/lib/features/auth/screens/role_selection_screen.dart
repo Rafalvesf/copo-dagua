@@ -26,14 +26,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             Text('Como te vamos ajudar?', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 24),
             RoleSelectorCard(
-              emoji: '💍',
+              icon: Icons.favorite_outline,
               label: 'Vou casar-me',
               selected: _selected == UserRole.couple,
               onTap: () => setState(() => _selected = UserRole.couple),
             ),
             const SizedBox(height: 12),
             RoleSelectorCard(
-              emoji: '🧑‍💼',
+              icon: Icons.storefront_outlined,
               label: 'Sou fornecedor',
               selected: _selected == UserRole.supplier,
               onTap: () => setState(() => _selected = UserRole.supplier),

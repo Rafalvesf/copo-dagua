@@ -127,3 +127,11 @@ class AppGradients {
     end: Alignment.bottomRight,
   );
 }
+
+/// Cores semânticas de estado (ex: RSVP) — usadas em vez de emojis para
+/// comunicar estado, mantendo a app livre de emojis decorativos.
+class AppStatusColors {
+  static const confirmed = Color(0xFF3FA463);
+  static const pending = Color(0xFFDB9A34);
+  static const declined = Color(0xFFD5615A);
+}

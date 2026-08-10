@@ -8,6 +8,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/guest_widgets.dart';
+import '../../../shared/widgets/rsvp_pie_chart.dart';
 import '../../../shared/widgets/support_chat.dart';
 
 class GuestsListScreen extends ConsumerWidget {
@@ -27,10 +28,12 @@ class GuestsListScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    RsvpSummaryBar(
+                    RsvpPieChart(
                       confirmed: state.confirmedCount,
                       pending: state.pendingCount,
                       declined: state.declinedCount,
+                      selected: state.filter,
+                      onChanged: (f) => ref.read(guestsControllerProvider.notifier).setFilter(f),
                     ),
                     const SizedBox(height: 12),
                     RsvpStatusFilterTabs(

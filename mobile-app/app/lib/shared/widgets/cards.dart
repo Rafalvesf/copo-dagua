@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../core/models/models.dart';
+import 'rsvp_status_badge.dart';
 
 class RoleSelectorCard extends StatelessWidget {
-  final String emoji;
+  final IconData icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
   const RoleSelectorCard({
     super.key,
-    required this.emoji,
+    required this.icon,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -34,7 +35,7 @@ class RoleSelectorCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 24)),
+            Icon(icon, size: 24, color: colorScheme.primary),
             const SizedBox(width: 12),
             Expanded(child: Text(label, style: Theme.of(context).textTheme.titleMedium)),
             if (selected) Icon(Icons.check_circle, color: colorScheme.primary),
@@ -53,17 +54,12 @@ class GuestListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = switch (guest.rsvpStatus) {
-      RsvpStatus.confirmed => const Text('✅'),
-      RsvpStatus.pending => const Text('⏳'),
-      RsvpStatus.declined => const Text('❌'),
-    };
     return ListTile(
       onTap: onTap,
       leading: const CircleAvatar(child: Icon(Icons.person_outline)),
       title: Text(guest.name),
       subtitle: Text(guest.group.isEmpty ? 'Sem grupo' : guest.group),
-      trailing: icon,
+      trailing: RsvpStatusBadge(status: guest.rsvpStatus),
     );
   }
 }

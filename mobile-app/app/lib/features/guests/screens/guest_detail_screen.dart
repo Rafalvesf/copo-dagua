@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/guest_widgets.dart';
+import '../../../shared/widgets/rsvp_status_badge.dart';
 import '../../../shared/widgets/support_chat.dart';
 
 class GuestDetailScreen extends ConsumerWidget {
@@ -21,23 +23,33 @@ class GuestDetailScreen extends ConsumerWidget {
       return const Scaffold(body: Center(child: Text('Convidado não encontrado.')));
     }
 
-    final statusLabel = switch (guest.rsvpStatus) {
-      RsvpStatus.confirmed => 'Confirmou presença ✅',
-      RsvpStatus.pending => 'Ainda não respondeu ⏳',
-      RsvpStatus.declined => 'Não vai poder ir ❌',
-    };
-
     return Scaffold(
       appBar: AppBar(title: Text(guest.name), leading: const CircleBackButton()),
       body: Stack(children: [
         ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text(statusLabel, style: Theme.of(context).textTheme.titleMedium),
+          RsvpStatusBadge(status: guest.rsvpStatus),
           const SizedBox(height: 12),
           if (guest.plusOneName != null) Text('+ Acompanhante: ${guest.plusOneName}'),
-          if (guest.dietaryRestrictions != null) Text('🥗 ${guest.dietaryRestrictions}'),
-          if (guest.note != null) Text('💬 "${guest.note}"'),
+          if (guest.dietaryRestrictions != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.restaurant_outlined, size: 16, color: AppTheme.inkMuted),
+                const SizedBox(width: 6),
+                Text(guest.dietaryRestrictions!),
+              ],
+            ),
+          if (guest.note != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.chat_bubble_outline, size: 16, color: AppTheme.inkMuted),
+                const SizedBox(width: 6),
+                Expanded(child: Text('"${guest.note}"')),
+              ],
+            ),
           const SizedBox(height: 20),
           Wrap(
             spacing: 8,
