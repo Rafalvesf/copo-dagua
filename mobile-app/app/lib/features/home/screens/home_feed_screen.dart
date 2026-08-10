@@ -25,8 +25,9 @@ class HomeFeedScreen extends ConsumerWidget {
     // por isso a margem do topo do conteúdo tem de ser igual ou maior,
     // senão o topo do primeiro cartão fica "fantasma" (semi-transparente)
     // mesmo com a lista em repouso, sem scroll nenhum.
-    const topFadeHeight = 64.0;
+    const topFadeHeight = 32.0;
     const contentTopMargin = topFadeHeight;
+    const bottomFadeHeight = 140.0;
 
     return Scaffold(
       body: wedding == null
@@ -35,69 +36,107 @@ class HomeFeedScreen extends ConsumerWidget {
               builder: (context, constraints) {
                 // Texto a 40% da altura do ecrã.
                 final headerHeight = constraints.maxHeight * 0.40;
+                final maxHeight = constraints.maxHeight;
 
                 return Stack(
                   children: [
                     // Camada de trás: conteúdo com scroll próprio, começa por
-                    // baixo do cabeçalho e desliza para trás dele.
+                    // baixo do cabeçalho e desliza para trás dele. O
+                    // ShaderMask aplica o desvanecimento diretamente sobre os
+                    // pixels do conteúdo (em vez de uma caixa sobreposta
+                    // separada), para nunca deixar uma costura/linha visível
+                    // entre camadas — e para o efeito acompanhar o scroll,
+                    // porque a máscara reage à posição real de cada pixel.
                     Positioned.fill(
-                      child: SafeArea(
-                        bottom: false,
-                        child: ListView(
-                          padding: EdgeInsets.fromLTRB(
-                            AppTheme.screenMargin,
-                            headerHeight + contentTopMargin,
-                            AppTheme.screenMargin,
-                            140,
+                      child: ShaderMask(
+                        blendMode: BlendMode.dstIn,
+                        shaderCallback: (rect) {
+                          final topStart = headerHeight / maxHeight;
+                          final topEnd =
+                              (headerHeight + topFadeHeight) / maxHeight;
+                          final bottomStart =
+                              1 - (bottomFadeHeight / maxHeight);
+                          final bottomEnd =
+                              1 - (bottomFadeHeight * 0.35 / maxHeight);
+                          return LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: const [
+                              Colors.transparent,
+                              Colors.transparent,
+                              Colors.black,
+                              Colors.black,
+                              Colors.transparent,
+                              Colors.transparent,
+                            ],
+                            stops: [
+                              0.0,
+                              topStart,
+                              topEnd,
+                              bottomStart,
+                              bottomEnd,
+                              1.0,
+                            ],
+                          ).createShader(rect);
+                        },
+                        child: SafeArea(
+                          bottom: false,
+                          child: ListView(
+                            padding: EdgeInsets.fromLTRB(
+                              AppTheme.screenMargin,
+                              headerHeight + contentTopMargin,
+                              AppTheme.screenMargin,
+                              140,
+                            ),
+                            children: [
+                              _HeroTile(
+                                color: AppColors.blue,
+                                icon: Icons.favorite_outline,
+                                label: 'O nosso casamento',
+                                caption: wedding.displayNames,
+                                onTap: () => context.push('/wedding'),
+                              ),
+                              const SizedBox(height: 14),
+                              GridView.count(
+                                crossAxisCount: 2,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                mainAxisSpacing: 14,
+                                crossAxisSpacing: 14,
+                                childAspectRatio: 1.05,
+                                children: [
+                                  _FeedTile(
+                                    color: AppColors.green,
+                                    icon: Icons.people_outline,
+                                    label: 'Convidados',
+                                    onTap: () => context.push('/guests'),
+                                  ),
+                                  _FeedTile(
+                                    color: AppColors.yellow,
+                                    icon: Icons.checklist_outlined,
+                                    label: 'Checklist',
+                                    onTap: () => context.push('/checklist'),
+                                  ),
+                                  const _FeedTile(
+                                    color: AppColors.gray,
+                                    icon: Icons.savings_outlined,
+                                    label: 'Orçamento',
+                                  ),
+                                  const _FeedTile(
+                                    color: AppColors.blue,
+                                    icon: Icons.event_seat_outlined,
+                                    label: 'Lugares',
+                                  ),
+                                  _FeedTile(
+                                    color: AppColors.green,
+                                    icon: Icons.storefront_outlined,
+                                    label: 'Fornecedores',
+                                    onTap: () => context.push('/suppliers'),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          children: [
-                            _HeroTile(
-                              color: AppColors.blue,
-                              icon: Icons.favorite_outline,
-                              label: 'O nosso casamento',
-                              caption: wedding.displayNames,
-                              onTap: () => context.push('/wedding'),
-                            ),
-                            const SizedBox(height: 14),
-                            GridView.count(
-                              crossAxisCount: 2,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              mainAxisSpacing: 14,
-                              crossAxisSpacing: 14,
-                              childAspectRatio: 1.05,
-                              children: [
-                                _FeedTile(
-                                  color: AppColors.green,
-                                  icon: Icons.people_outline,
-                                  label: 'Convidados',
-                                  onTap: () => context.push('/guests'),
-                                ),
-                                _FeedTile(
-                                  color: AppColors.yellow,
-                                  icon: Icons.checklist_outlined,
-                                  label: 'Checklist',
-                                  onTap: () => context.push('/checklist'),
-                                ),
-                                const _FeedTile(
-                                  color: AppColors.gray,
-                                  icon: Icons.savings_outlined,
-                                  label: 'Orçamento',
-                                ),
-                                const _FeedTile(
-                                  color: AppColors.blue,
-                                  icon: Icons.event_seat_outlined,
-                                  label: 'Lugares',
-                                ),
-                                _FeedTile(
-                                  color: AppColors.green,
-                                  icon: Icons.storefront_outlined,
-                                  label: 'Fornecedores',
-                                  onTap: () => context.push('/suppliers'),
-                                ),
-                              ],
-                            ),
-                          ],
                         ),
                       ),
                     ),
@@ -119,7 +158,7 @@ class HomeFeedScreen extends ConsumerWidget {
                             AppTheme.screenMargin,
                             20,
                             AppTheme.screenMargin,
-                            24,
+                            12,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +176,11 @@ class HomeFeedScreen extends ConsumerWidget {
                                     ),
                                     onSelected: (value) {
                                       if (value == 'logout') {
-                                        ref.read(authControllerProvider.notifier).logout();
+                                        ref
+                                            .read(
+                                              authControllerProvider.notifier,
+                                            )
+                                            .logout();
                                       }
                                     },
                                     itemBuilder: (context) => const [
@@ -163,52 +206,6 @@ class HomeFeedScreen extends ConsumerWidget {
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Desvanecimento logo abaixo do cabeçalho fixo — o
-                    // conteúdo esbate-se ao aproximar-se da saudação, em vez
-                    // de ser cortado a direito quando desliza por trás dela.
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      top: headerHeight,
-                      height: 64,
-                      child: IgnorePointer(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                AppTheme.background,
-                                AppTheme.background.withValues(alpha: 0),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Desvanecimento por cima da navbar — o conteúdo esbate-se
-                    // em vez de ser cortado a direito ao chegar ao fundo.
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: 140,
-                      child: IgnorePointer(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                AppTheme.background.withValues(alpha: 0),
-                                AppTheme.background,
-                              ],
-                              stops: const [0.0, 0.65],
-                            ),
                           ),
                         ),
                       ),
