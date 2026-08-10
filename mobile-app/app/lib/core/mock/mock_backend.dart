@@ -20,6 +20,7 @@ class MockBackend {
   final List<Wedding> weddings = [];
   final List<Collaborator> collaboratorsByWedding = [];
   final List<Guest> guests = [];
+  final List<ChecklistItem> checklistItems = [];
 
   static const Duration _latency = Duration(milliseconds: 400);
 
@@ -108,6 +109,80 @@ class MockBackend {
         group: 'Amigos',
         side: WeddingSide.bride,
         rsvpStatus: RsvpStatus.pending,
+      ),
+    ]);
+
+    final now = DateTime.now();
+    checklistItems.addAll([
+      ChecklistItem(
+        id: 'cl1',
+        weddingId: wedding.id,
+        title: 'Reservar o local da cerimónia',
+        category: 'Local & Data',
+        done: true,
+      ),
+      ChecklistItem(
+        id: 'cl2',
+        weddingId: wedding.id,
+        title: 'Reservar o local da receção',
+        category: 'Local & Data',
+        done: true,
+      ),
+      ChecklistItem(
+        id: 'cl3',
+        weddingId: wedding.id,
+        title: 'Escolher e contratar fotógrafo',
+        category: 'Fornecedores',
+        done: true,
+      ),
+      ChecklistItem(
+        id: 'cl4',
+        weddingId: wedding.id,
+        title: 'Escolher catering e provar o menu',
+        category: 'Fornecedores',
+        dueDate: now.add(const Duration(days: 30)),
+      ),
+      ChecklistItem(
+        id: 'cl5',
+        weddingId: wedding.id,
+        title: 'Contratar música/DJ',
+        category: 'Fornecedores',
+        dueDate: now.add(const Duration(days: 45)),
+      ),
+      ChecklistItem(
+        id: 'cl6',
+        weddingId: wedding.id,
+        title: 'Enviar convites digitais',
+        category: 'Convidados',
+        dueDate: now.add(const Duration(days: 60)),
+      ),
+      ChecklistItem(
+        id: 'cl7',
+        weddingId: wedding.id,
+        title: 'Fechar lista final de convidados',
+        category: 'Convidados',
+        dueDate: now.add(const Duration(days: 90)),
+      ),
+      ChecklistItem(
+        id: 'cl8',
+        weddingId: wedding.id,
+        title: 'Comprar o vestido/fato',
+        category: 'Vestuário',
+        dueDate: now.add(const Duration(days: 120)),
+      ),
+      ChecklistItem(
+        id: 'cl9',
+        weddingId: wedding.id,
+        title: 'Tratar da papelada legal do casamento',
+        category: 'Legal',
+        dueDate: now.add(const Duration(days: 150)),
+      ),
+      ChecklistItem(
+        id: 'cl10',
+        weddingId: wedding.id,
+        title: 'Confirmar cronograma do dia com todos os fornecedores',
+        category: 'No dia',
+        dueDate: now.add(const Duration(days: 210)),
       ),
     ]);
   }
@@ -261,6 +336,36 @@ class MockBackend {
   Future<void> removeGuest(String guestId) async {
     await Future.delayed(_latency ~/ 2);
     guests.removeWhere((g) => g.id == guestId);
+  }
+
+  Future<List<ChecklistItem>> listChecklistItems(String weddingId) async {
+    await Future.delayed(_latency ~/ 2);
+    return checklistItems.where((c) => c.weddingId == weddingId).toList();
+  }
+
+  Future<ChecklistItem> addChecklistItem(ChecklistItem item) async {
+    await Future.delayed(_latency);
+    final withId = ChecklistItem(
+      id: _nextId('checklist'),
+      weddingId: item.weddingId,
+      title: item.title,
+      category: item.category,
+      dueDate: item.dueDate,
+    );
+    checklistItems.add(withId);
+    return withId;
+  }
+
+  Future<ChecklistItem> updateChecklistItem(ChecklistItem item) async {
+    await Future.delayed(_latency ~/ 2);
+    final index = checklistItems.indexWhere((c) => c.id == item.id);
+    if (index != -1) checklistItems[index] = item;
+    return item;
+  }
+
+  Future<void> removeChecklistItem(String itemId) async {
+    await Future.delayed(_latency ~/ 2);
+    checklistItems.removeWhere((c) => c.id == itemId);
   }
 }
 

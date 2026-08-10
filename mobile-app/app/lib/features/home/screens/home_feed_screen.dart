@@ -76,7 +76,12 @@ class HomeFeedScreen extends ConsumerWidget {
                             label: 'Convidados',
                             onTap: () => context.push('/guests'),
                           ),
-                          const _FeedTile(gradient: AppGradients.checklist, icon: Icons.checklist_outlined, label: 'Checklist'),
+                          _FeedTile(
+                            gradient: AppGradients.checklist,
+                            icon: Icons.checklist_outlined,
+                            label: 'Checklist',
+                            onTap: () => context.push('/checklist'),
+                          ),
                           const _FeedTile(gradient: AppGradients.budget, icon: Icons.savings_outlined, label: 'Orçamento'),
                           const _FeedTile(gradient: AppGradients.seating, icon: Icons.event_seat_outlined, label: 'Lugares'),
                           const _FeedTile(gradient: AppGradients.suppliers, icon: Icons.storefront_outlined, label: 'Fornecedores'),

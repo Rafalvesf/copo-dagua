@@ -191,3 +191,37 @@ class Guest {
     );
   }
 }
+
+class ChecklistItem {
+  final String id;
+  final String weddingId;
+  final String title;
+  final String category;
+  final bool done;
+  final DateTime? dueDate;
+
+  const ChecklistItem({
+    required this.id,
+    required this.weddingId,
+    required this.title,
+    this.category = 'Geral',
+    this.done = false,
+    this.dueDate,
+  });
+
+  ChecklistItem copyWith({
+    String? title,
+    String? category,
+    bool? done,
+    DateTime? dueDate,
+  }) {
+    return ChecklistItem(
+      id: id,
+      weddingId: weddingId,
+      title: title ?? this.title,
+      category: category ?? this.category,
+      done: done ?? this.done,
+      dueDate: dueDate ?? this.dueDate,
+    );
+  }
+}

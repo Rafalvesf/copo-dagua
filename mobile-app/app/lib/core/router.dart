@@ -8,6 +8,7 @@ import '../features/auth/screens/register_screen.dart';
 import '../features/auth/screens/role_selection_screen.dart';
 import '../features/auth/screens/verify_email_screen.dart';
 import '../features/auth/screens/welcome_screen.dart';
+import '../features/checklist/screens/checklist_screen.dart';
 import '../features/guests/screens/guest_detail_screen.dart';
 import '../features/guests/screens/guests_list_screen.dart';
 import '../features/home/screens/home_feed_screen.dart';
@@ -73,6 +74,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/guests/:id',
         builder: (context, state) => GuestDetailScreen(guestId: state.pathParameters['id']!),
       ),
+      GoRoute(path: '/checklist', builder: (context, state) => const ChecklistScreen()),
     ],
   );
 });

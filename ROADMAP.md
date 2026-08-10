@@ -48,7 +48,7 @@ Authentication ✅
 | Guests | ✅ | `mobile-app/guests/` |
 | RSVP | ✅ | `mobile-app/guests/` (integrado, ver requirements.md) |
 | Seating Plan | ⏳ | `mobile-app/seating/` |
-| Checklist | ⏳ | `mobile-app/checklist/` |
+| Checklist | 🔄 | `mobile-app/checklist/` — implementado em mock na app, documentação formal por escrever |
 | Budget | ⏳ | `mobile-app/budget/` |
 | Calendar | ⏳ | `mobile-app/shared/` ou módulo próprio (a decidir) |
 

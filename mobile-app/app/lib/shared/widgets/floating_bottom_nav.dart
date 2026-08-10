@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
 
-enum AppTab { home, wedding, guests }
+enum AppTab { home, wedding, guests, checklist }
 
 class FloatingBottomNav extends StatelessWidget {
   final AppTab current;
@@ -34,6 +34,11 @@ class FloatingBottomNav extends StatelessWidget {
             icon: Icons.people_alt_rounded,
             active: current == AppTab.guests,
             onTap: () => context.go('/guests'),
+          ),
+          _NavIcon(
+            icon: Icons.checklist_rounded,
+            active: current == AppTab.checklist,
+            onTap: () => context.go('/checklist'),
           ),
         ],
       ),
