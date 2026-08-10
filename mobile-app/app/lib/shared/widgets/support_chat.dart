@@ -1,61 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
 
-void openSupportSheet(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    builder: (sheetContext) => Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-                child: const Icon(Icons.live_help_outlined, color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Suporte & IA', style: Theme.of(sheetContext).textTheme.titleMedium),
-                    Text('Em breve', style: Theme.of(sheetContext).textTheme.bodySmall),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Esta funcionalidade ainda não está ligada a um assistente real. '
-            'Vai permitir tirar dúvidas com IA ou falar com a equipa de suporte diretamente daqui.',
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            enabled: false,
-            decoration: InputDecoration(
-              hintText: 'Escreve a tua pergunta...',
-              suffixIcon: const Icon(Icons.send_outlined),
-              fillColor: AppTheme.background,
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    ),
-  );
+void openSupportScreen(BuildContext context) {
+  context.push('/support');
 }
 
 /// Bolha de chat flutuante e arrastável — presente na maioria dos ecrãs
@@ -92,7 +41,7 @@ class _DraggableChatBubbleState extends State<DraggableChatBubble> {
                     _position = Offset(newX, newY);
                   });
                 },
-                onTap: () => openSupportSheet(context),
+                onTap: () => openSupportScreen(context),
                 child: Container(
                   width: 56,
                   height: 56,

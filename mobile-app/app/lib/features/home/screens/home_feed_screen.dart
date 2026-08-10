@@ -46,7 +46,7 @@ class HomeFeedScreen extends ConsumerWidget {
                           ),
                           CircleIconButton(
                             icon: Icons.live_help_outlined,
-                            onTap: () => openSupportSheet(context),
+                            onTap: () => openSupportScreen(context),
                           ),
                           const SizedBox(width: 10),
                           PopupMenuButton<String>(

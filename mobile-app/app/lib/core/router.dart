@@ -14,6 +14,7 @@ import '../features/guests/screens/guests_list_screen.dart';
 import '../features/home/screens/home_feed_screen.dart';
 import '../features/onboarding/screens/onboarding_wizard_screen.dart';
 import '../features/suppliers/screens/suppliers_list_screen.dart';
+import '../features/support/screens/support_screen.dart';
 import '../features/wedding/screens/wedding_details_screen.dart';
 import 'auth/auth_controller.dart';
 import 'models/models.dart';
@@ -84,6 +85,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return SuppliersListScreen(category: args?.category, selectionMode: args?.selectionMode ?? false);
         },
       ),
+      GoRoute(path: '/support', builder: (context, state) => const SupportScreen()),
     ],
   );
 });
