@@ -20,95 +20,127 @@ class HomeFeedScreen extends ConsumerWidget {
     final profile = ref.watch(authControllerProvider).profile;
     final firstName = profile?.fullName.split(' ').first ?? '';
 
+    const headerHeight = 300.0;
+
     return Scaffold(
       body: wedding == null
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
-                SafeArea(
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                        child: Row(
+                // Camada de trás: conteúdo com scroll próprio, começa por
+                // baixo do cabeçalho e desliza para trás dele.
+                Positioned.fill(
+                  child: SafeArea(
+                    bottom: false,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(24, headerHeight, 24, 140),
+                      children: [
+                        _HeroTile(
+                          color: AppColors.blue,
+                          icon: Icons.favorite_outline,
+                          label: 'O nosso casamento',
+                          caption: wedding.displayNames,
+                          onTap: () => context.push('/wedding'),
+                        ),
+                        const SizedBox(height: 14),
+                        GridView.count(
+                          crossAxisCount: 2,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          mainAxisSpacing: 14,
+                          crossAxisSpacing: 14,
+                          childAspectRatio: 1.05,
                           children: [
-                            ChatIconButton(onTap: () => openSupportScreen(context)),
-                            const Spacer(),
-                            PopupMenuButton<String>(
-                              icon: const GradientMark(size: 40, icon: Icons.person_outline),
-                              onSelected: (value) {
-                                if (value == 'logout') ref.read(authControllerProvider.notifier).logout();
-                              },
-                              itemBuilder: (context) => const [
-                                PopupMenuItem(value: 'logout', child: Text('Sair')),
-                              ],
+                            _FeedTile(
+                              color: AppColors.green,
+                              icon: Icons.people_outline,
+                              label: 'Convidados',
+                              onTap: () => context.push('/guests'),
+                            ),
+                            _FeedTile(
+                              color: AppColors.yellow,
+                              icon: Icons.checklist_outlined,
+                              label: 'Checklist',
+                              onTap: () => context.push('/checklist'),
+                            ),
+                            const _FeedTile(color: AppColors.gray, icon: Icons.savings_outlined, label: 'Orçamento'),
+                            const _FeedTile(
+                                color: AppColors.blue, icon: Icons.event_seat_outlined, label: 'Lugares'),
+                            _FeedTile(
+                              color: AppColors.green,
+                              icon: Icons.storefront_outlined,
+                              label: 'Fornecedores',
+                              onTap: () => context.push('/suppliers'),
                             ),
                           ],
                         ),
-                      ),
-                      // Metade de cima do ecrã: só a saudação.
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              firstName.isEmpty
-                                  ? 'Olá, o que precisas hoje?'
-                                  : 'Olá, $firstName, o que precisas hoje?',
-                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 30, height: 1.15),
-                            ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Camada da frente: cabeçalho fixo (opaco), fica sempre por
+                // cima do conteúdo que desliza por trás dele.
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Container(
+                      width: double.infinity,
+                      color: AppTheme.background,
+                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              ChatIconButton(onTap: () => openSupportScreen(context)),
+                              const Spacer(),
+                              PopupMenuButton<String>(
+                                icon: const GradientMark(size: 40, icon: Icons.person_outline),
+                                onSelected: (value) {
+                                  if (value == 'logout') ref.read(authControllerProvider.notifier).logout();
+                                },
+                                itemBuilder: (context) => const [
+                                  PopupMenuItem(value: 'logout', child: Text('Sair')),
+                                ],
+                              ),
+                            ],
                           ),
-                        ),
+                          const SizedBox(height: 36),
+                          Text(
+                            firstName.isEmpty
+                                ? 'Olá, o que precisas hoje?'
+                                : 'Olá, $firstName, o que precisas hoje?',
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 30, height: 1.15),
+                          ),
+                        ],
                       ),
-                      // Metade de baixo: o resto do conteúdo, com scroll próprio.
-                      Expanded(
-                        child: ListView(
-                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 110),
-                          children: [
-                            _HeroTile(
-                              color: AppColors.blue,
-                              icon: Icons.favorite_outline,
-                              label: 'O nosso casamento',
-                              caption: wedding.displayNames,
-                              onTap: () => context.push('/wedding'),
-                            ),
-                            const SizedBox(height: 14),
-                            GridView.count(
-                              crossAxisCount: 2,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              mainAxisSpacing: 14,
-                              crossAxisSpacing: 14,
-                              childAspectRatio: 1.05,
-                              children: [
-                                _FeedTile(
-                                  color: AppColors.green,
-                                  icon: Icons.people_outline,
-                                  label: 'Convidados',
-                                  onTap: () => context.push('/guests'),
-                                ),
-                                _FeedTile(
-                                  color: AppColors.yellow,
-                                  icon: Icons.checklist_outlined,
-                                  label: 'Checklist',
-                                  onTap: () => context.push('/checklist'),
-                                ),
-                                const _FeedTile(color: AppColors.gray, icon: Icons.savings_outlined, label: 'Orçamento'),
-                                const _FeedTile(
-                                    color: AppColors.blue, icon: Icons.event_seat_outlined, label: 'Lugares'),
-                                _FeedTile(
-                                  color: AppColors.green,
-                                  icon: Icons.storefront_outlined,
-                                  label: 'Fornecedores',
-                                  onTap: () => context.push('/suppliers'),
-                                ),
-                              ],
-                            ),
+                    ),
+                  ),
+                ),
+                // Desvanecimento por cima da navbar — o conteúdo esbate-se
+                // em vez de ser cortado a direito ao chegar ao fundo.
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: 140,
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppTheme.background.withValues(alpha: 0),
+                            AppTheme.background,
                           ],
+                          stops: const [0.0, 0.65],
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
                 Positioned(
