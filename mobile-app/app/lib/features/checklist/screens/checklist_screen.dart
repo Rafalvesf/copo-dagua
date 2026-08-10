@@ -122,7 +122,7 @@ class _ProgressCard extends StatelessWidget {
         children: [
           Text(
             '$done de $total concluídas',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink),
+            style: AppTypography.cardTitle.copyWith(color: AppTheme.ink),
           ),
           const SizedBox(height: 12),
           ClipRRect(

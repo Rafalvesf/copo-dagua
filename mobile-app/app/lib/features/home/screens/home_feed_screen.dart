@@ -113,7 +113,7 @@ class HomeFeedScreen extends ConsumerWidget {
                             firstName.isEmpty
                                 ? 'Olá, o que precisas hoje?'
                                 : 'Olá, $firstName, o que precisas hoje?',
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 30, height: 1.15),
+                            style: Theme.of(context).textTheme.headlineMedium,
                           ),
                         ],
                       ),
@@ -186,19 +186,19 @@ class _HeroTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                  child: Icon(icon, color: AppTheme.ink, size: 20),
+                  child: Icon(icon, color: AppTheme.ink, size: AppTypography.iconSize),
                 ),
                 const Spacer(),
-                const Icon(Icons.favorite_border, color: AppTheme.ink, size: 20),
+                Icon(Icons.favorite_border, color: AppTheme.ink, size: AppTypography.iconSize),
               ],
             ),
             const SizedBox(height: 28),
             Text(
               label,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink),
+              style: AppTypography.cardTitle.copyWith(color: AppTheme.ink),
             ),
             if (caption != null)
-              Text(caption!, style: TextStyle(color: AppTheme.ink.withValues(alpha: 0.7), fontSize: 13)),
+              Text(caption!, style: AppTypography.cardSubtitle.copyWith(color: AppTheme.ink.withValues(alpha: 0.7))),
             const SizedBox(height: 14),
             ArrowCtaButton(label: 'Ver mais', expand: true, onTap: onTap),
           ],
@@ -235,13 +235,11 @@ class _FeedTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Icon(icon, color: AppTheme.ink.withValues(alpha: _enabled ? 1 : 0.5), size: 26),
+                Icon(icon, color: AppTheme.ink.withValues(alpha: _enabled ? 1 : 0.5), size: AppTypography.iconSize),
                 const SizedBox(height: 10),
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                  style: AppTypography.moduleTitle.copyWith(
                     color: AppTheme.ink.withValues(alpha: _enabled ? 1 : 0.5),
                   ),
                 ),

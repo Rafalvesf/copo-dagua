@@ -29,12 +29,12 @@ class WeddingCoverHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.55), shape: BoxShape.circle),
-            child: const Icon(Icons.favorite, color: AppTheme.ink, size: 20),
+            child: const Icon(Icons.favorite, color: AppTheme.ink, size: AppTypography.iconSize),
           ),
           const SizedBox(height: 16),
           Text(
             wedding.displayNames,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.ink),
+            style: AppTypography.cardTitle.copyWith(color: AppTheme.ink),
           ),
           if (_agesLabel != null) ...[
             const SizedBox(height: 2),

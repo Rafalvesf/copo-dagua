@@ -66,7 +66,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                   children: [
                     Text(
                       firstName.isEmpty ? 'Olá,\ncomo posso ajudar hoje?' : 'Olá, $firstName,\ncomo posso ajudar hoje?',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 30, height: 1.15),
+                      style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 28),
                     GridView.count(
@@ -219,7 +219,7 @@ class _OptionCard extends StatelessWidget {
             const Spacer(),
             Text(
               label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.ink),
+              style: AppTypography.moduleTitle.copyWith(color: AppTheme.ink),
             ),
           ],
         ),

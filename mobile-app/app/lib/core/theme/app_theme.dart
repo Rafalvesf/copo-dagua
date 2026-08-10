@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Placeholder theme — mobile-app/shared/design-system.md ainda não foi
 /// escrito a sério. Paleta extraída pelo utilizador a partir dos
 /// mockups de referência: fundo branco, superfícies pastel planas
-/// (sem gradiente), preto para texto/ícones.
+/// (sem gradiente), preto para texto/ícones. Tipografia Inter, com
+/// escala definida pelo utilizador para um ecrã de referência de 375px.
 class AppTheme {
   static const seedColor = Color(0xFF141719);
 
@@ -20,28 +22,64 @@ class AppTheme {
       brightness: Brightness.light,
     ).copyWith(surface: background);
 
-    final baseText = ThemeData.light().textTheme.apply(fontFamily: 'Aeonik');
+    final baseText = GoogleFonts.interTextTheme(ThemeData.light().textTheme);
 
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'Aeonik',
+      fontFamily: GoogleFonts.inter().fontFamily,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
       textTheme: baseText.copyWith(
-        headlineMedium: baseText.headlineMedium?.copyWith(fontWeight: FontWeight.w800, color: ink, height: 1.1),
-        headlineSmall: baseText.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: ink, height: 1.15),
-        titleLarge: baseText.titleLarge?.copyWith(fontWeight: FontWeight.w700, color: ink),
-        titleMedium: baseText.titleMedium?.copyWith(fontWeight: FontWeight.w700, color: ink),
-        bodyLarge: baseText.bodyLarge?.copyWith(color: ink),
-        bodyMedium: baseText.bodyMedium?.copyWith(color: inkMuted),
-        bodySmall: baseText.bodySmall?.copyWith(color: inkMuted),
+        // Saudação (headline)
+        headlineMedium: baseText.headlineMedium?.copyWith(
+          fontSize: 34,
+          height: 40 / 34,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+          color: ink,
+        ),
+        headlineSmall: baseText.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: ink, height: 1.15),
+        // Título do card principal
+        titleLarge: baseText.titleLarge?.copyWith(
+          fontSize: 20,
+          height: 26 / 20,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0,
+          color: ink,
+        ),
+        // Títulos dos módulos
+        titleMedium: baseText.titleMedium?.copyWith(
+          fontSize: 18,
+          height: 24 / 18,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0,
+          color: ink,
+        ),
+        bodyLarge: baseText.bodyLarge?.copyWith(letterSpacing: 0, color: ink),
+        // Subtítulo do card / descrições dos módulos
+        bodyMedium: baseText.bodyMedium?.copyWith(
+          fontSize: 14,
+          height: 20 / 14,
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0,
+          color: inkMuted,
+        ),
+        bodySmall: baseText.bodySmall?.copyWith(letterSpacing: 0, color: inkMuted),
+        // Texto do botão "Ver mais"
+        labelLarge: baseText.labelLarge?.copyWith(
+          fontSize: 16,
+          height: 24 / 16,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0,
+          color: ink,
+        ),
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: background,
         foregroundColor: ink,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: TextStyle(color: ink, fontSize: 20, fontWeight: FontWeight.w800),
+        titleTextStyle: GoogleFonts.inter(color: ink, fontSize: 20, height: 26 / 20, fontWeight: FontWeight.w600),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -58,7 +96,7 @@ class AppTheme {
           backgroundColor: ink,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          textStyle: GoogleFonts.inter(fontSize: 16, height: 24 / 16, fontWeight: FontWeight.w500),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -67,7 +105,7 @@ class AppTheme {
           foregroundColor: ink,
           side: const BorderSide(color: Color(0xFFE3E4E7)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          textStyle: GoogleFonts.inter(fontSize: 16, height: 24 / 16, fontWeight: FontWeight.w500),
         ),
       ),
       cardTheme: CardThemeData(
@@ -84,6 +122,19 @@ class AppTheme {
       ),
     );
   }
+}
+
+/// Escala tipográfica definida pelo utilizador (ecrã de referência 375px).
+/// Espelha os tokens acima como TextStyle prontos, para usar em widgets
+/// com texto sobre fundos coloridos (onde a cor tem de ser explícita e
+/// não pode vir do tema, ex: texto branco sobre um botão preto).
+class AppTypography {
+  static const cardTitle = TextStyle(fontSize: 20, height: 26 / 20, fontWeight: FontWeight.w600);
+  static const cardSubtitle = TextStyle(fontSize: 14, height: 20 / 14, fontWeight: FontWeight.w400);
+  static const buttonLabel = TextStyle(fontSize: 16, height: 24 / 16, fontWeight: FontWeight.w500);
+  static const moduleTitle = TextStyle(fontSize: 18, height: 24 / 18, fontWeight: FontWeight.w600);
+  static const moduleDescription = TextStyle(fontSize: 14, height: 20 / 14, fontWeight: FontWeight.w400);
+  static const iconSize = 24.0;
 }
 
 /// Paleta extraída dos mockups de referência — superfícies planas

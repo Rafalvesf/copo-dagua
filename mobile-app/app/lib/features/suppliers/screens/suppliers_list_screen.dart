@@ -294,11 +294,11 @@ class _SupplierCardState extends State<_SupplierCard> {
                 const SizedBox(height: 6),
                 Text(
                   supplier.name,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink),
+                  style: AppTypography.cardTitle.copyWith(color: AppTheme.ink),
                 ),
                 Text(
                   '${supplier.city} · desde €${supplier.startingPrice.toStringAsFixed(0)}',
-                  style: TextStyle(color: AppTheme.ink.withValues(alpha: 0.75), fontSize: 13),
+                  style: AppTypography.cardSubtitle.copyWith(color: AppTheme.ink.withValues(alpha: 0.75)),
                 ),
                 const SizedBox(height: 12),
                 ArrowCtaButton(label: 'Ver mais', expand: true, onTap: widget.onTap),

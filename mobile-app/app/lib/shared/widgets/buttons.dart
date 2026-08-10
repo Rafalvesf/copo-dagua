@@ -22,13 +22,10 @@ class ArrowCtaButton extends StatelessWidget {
         children: [
           if (expand)
             Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
-              ),
+              child: Text(label, style: AppTypography.buttonLabel.copyWith(color: Colors.white)),
             )
           else
-            Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+            Text(label, style: AppTypography.buttonLabel.copyWith(color: Colors.white)),
           const SizedBox(width: 14),
           Container(
             width: 36,
