@@ -20,13 +20,13 @@ class HomeFeedScreen extends ConsumerWidget {
     final profile = ref.watch(authControllerProvider).profile;
     final firstName = profile?.fullName.split(' ').first ?? '';
 
-    // Altura da faixa de desvanecimento logo abaixo do cabeçalho fixo. O
-    // conteúdo só começa a aparecer (opacidade 100%) depois desta faixa —
-    // por isso a margem do topo do conteúdo tem de ser igual ou maior,
-    // senão o topo do primeiro cartão fica "fantasma" (semi-transparente)
-    // mesmo com a lista em repouso, sem scroll nenhum.
+    // Zona escondida por baixo do cabeçalho: só começa a desvanecer para
+    // visível um pouco DEPOIS do fim do cabeçalho (topOverlap), para nunca
+    // deixar uma frincha de conteúdo a 100% opaco a espreitar na costura
+    // entre o cabeçalho e a máscara, por causa de arredondamento de pixel.
+    const topOverlap = 6.0;
     const topFadeHeight = 32.0;
-    const contentTopMargin = topFadeHeight;
+    const contentTopMargin = topOverlap + topFadeHeight;
     const bottomFadeHeight = 140.0;
 
     return Scaffold(
@@ -51,9 +51,16 @@ class HomeFeedScreen extends ConsumerWidget {
                       child: ShaderMask(
                         blendMode: BlendMode.dstIn,
                         shaderCallback: (rect) {
-                          final topStart = headerHeight / maxHeight;
+                          // O início da zona escondida fica um pouco depois
+                          // do fim do cabeçalho (não exatamente colado a
+                          // ele), para nunca deixar uma frincha de conteúdo
+                          // a 100% de opacidade a espreitar entre as duas
+                          // camadas por causa de arredondamento de pixel.
+                          final topHiddenUntil =
+                              (headerHeight + topOverlap) / maxHeight;
                           final topEnd =
-                              (headerHeight + topFadeHeight) / maxHeight;
+                              (headerHeight + topOverlap + topFadeHeight) /
+                              maxHeight;
                           final bottomStart =
                               1 - (bottomFadeHeight / maxHeight);
                           final bottomEnd =
@@ -71,7 +78,7 @@ class HomeFeedScreen extends ConsumerWidget {
                             ],
                             stops: [
                               0.0,
-                              topStart,
+                              topHiddenUntil,
                               topEnd,
                               bottomStart,
                               bottomEnd,
@@ -79,64 +86,61 @@ class HomeFeedScreen extends ConsumerWidget {
                             ],
                           ).createShader(rect);
                         },
-                        child: SafeArea(
-                          bottom: false,
-                          child: ListView(
-                            padding: EdgeInsets.fromLTRB(
-                              AppTheme.screenMargin,
-                              headerHeight + contentTopMargin,
-                              AppTheme.screenMargin,
-                              140,
-                            ),
-                            children: [
-                              _HeroTile(
-                                color: AppColors.blue,
-                                icon: Icons.favorite_outline,
-                                label: 'O nosso casamento',
-                                caption: wedding.displayNames,
-                                onTap: () => context.push('/wedding'),
-                              ),
-                              const SizedBox(height: 14),
-                              GridView.count(
-                                crossAxisCount: 2,
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                mainAxisSpacing: 14,
-                                crossAxisSpacing: 14,
-                                childAspectRatio: 1.05,
-                                children: [
-                                  _FeedTile(
-                                    color: AppColors.green,
-                                    icon: Icons.people_outline,
-                                    label: 'Convidados',
-                                    onTap: () => context.push('/guests'),
-                                  ),
-                                  _FeedTile(
-                                    color: AppColors.yellow,
-                                    icon: Icons.checklist_outlined,
-                                    label: 'Checklist',
-                                    onTap: () => context.push('/checklist'),
-                                  ),
-                                  const _FeedTile(
-                                    color: AppColors.gray,
-                                    icon: Icons.savings_outlined,
-                                    label: 'Orçamento',
-                                  ),
-                                  const _FeedTile(
-                                    color: AppColors.blue,
-                                    icon: Icons.event_seat_outlined,
-                                    label: 'Lugares',
-                                  ),
-                                  _FeedTile(
-                                    color: AppColors.green,
-                                    icon: Icons.storefront_outlined,
-                                    label: 'Fornecedores',
-                                    onTap: () => context.push('/suppliers'),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        child: ListView(
+                          padding: EdgeInsets.fromLTRB(
+                            AppTheme.screenMargin,
+                            headerHeight + contentTopMargin,
+                            AppTheme.screenMargin,
+                            140,
                           ),
+                          children: [
+                            _HeroTile(
+                              color: AppColors.blue,
+                              icon: Icons.favorite_outline,
+                              label: 'O nosso casamento',
+                              caption: wedding.displayNames,
+                              onTap: () => context.push('/wedding'),
+                            ),
+                            const SizedBox(height: 14),
+                            GridView.count(
+                              crossAxisCount: 2,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              mainAxisSpacing: 14,
+                              crossAxisSpacing: 14,
+                              childAspectRatio: 1.05,
+                              children: [
+                                _FeedTile(
+                                  color: AppColors.green,
+                                  icon: Icons.people_outline,
+                                  label: 'Convidados',
+                                  onTap: () => context.push('/guests'),
+                                ),
+                                _FeedTile(
+                                  color: AppColors.yellow,
+                                  icon: Icons.checklist_outlined,
+                                  label: 'Checklist',
+                                  onTap: () => context.push('/checklist'),
+                                ),
+                                const _FeedTile(
+                                  color: AppColors.gray,
+                                  icon: Icons.savings_outlined,
+                                  label: 'Orçamento',
+                                ),
+                                const _FeedTile(
+                                  color: AppColors.blue,
+                                  icon: Icons.event_seat_outlined,
+                                  label: 'Lugares',
+                                ),
+                                _FeedTile(
+                                  color: AppColors.green,
+                                  icon: Icons.storefront_outlined,
+                                  label: 'Fornecedores',
+                                  onTap: () => context.push('/suppliers'),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
