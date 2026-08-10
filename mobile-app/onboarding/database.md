@@ -26,7 +26,10 @@ create policy "Users manage own onboarding progress"
 create table public.weddings (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.profiles(id),
-  partner_name text,
+  partner_name_1 text not null,
+  partner_name_2 text,
+  partner_1_age integer,
+  partner_2_age integer,
   wedding_date date,
   location text,
   estimated_guests integer,
@@ -34,6 +37,8 @@ create table public.weddings (
   created_at timestamptz not null default now()
 );
 ```
+
+> **Nota de sincronização (pendente):** `partner_name_2`, `partner_1_age` e `partner_2_age` foram acrescentados depois de `database/migrations/002_onboarding.sql` já ter sido implementado e testado contra Postgres (ver `docs/architecture/TESTING_NOTES.md`). A migração real e a suite de testes de RLS ainda **não** foram atualizadas para refletir este novo shape — fazê-lo antes de assumir este schema como validado.
 
 ```sql
 -- Semente do supplier_profile, criada no passo 2 (RN04).

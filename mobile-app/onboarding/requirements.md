@@ -3,7 +3,8 @@
 ## Funcionalidades
 
 ### Onboarding — Noivos (role = couple)
-- Definir nomes dos noivos (utilizador + opcionalmente parceiro/a)
+- Passo "Sobre ti": nome (pré-preenchido a partir do registo, editável) e idade
+- Passo "Sobre o/a parceiro/a": nome e idade (ambos opcionais, nunca bloqueiam o avanço)
 - Definir data do casamento (ou "ainda não sei")
 - Definir localização aproximada do casamento
 - Estimativa inicial de número de convidados (editável depois em Guests)
@@ -36,7 +37,10 @@
 | RN06 | Data do casamento pode ficar por definir; funcionalidades dependentes (contagem decrescente, prazos) mostram estado alternativo. |
 | RN07 | Um utilizador só pode ser `owner_id` de uma wedding; pode ser colaborador de outras (fora de âmbito aqui, ver mobile-app/wedding). |
 | RN08 | NIF validado só por formato/checksum no onboarding — validação fiscal completa acontece na ligação ao Stripe Connect. |
+| RN09 | A idade de cada noivo é opcional e sem validação de intervalo no MVP — é um dado de contexto (ex: para conteúdo/ofertas relevantes por faixa etária), não um requisito de elegibilidade. |
 
 ## Risco identificado
 
 RN08 significa que podemos ter NIFs mal preenchidos até ao momento de pagamento — trade-off consciente para reduzir fricção no onboarding, resolvido mais tarde no funil quando o fornecedor já está mais investido.
+
+RN09 (idade) foi acrescentado depois da implementação inicial deste módulo, a pedido direto do utilizador durante os testes da primeira versão da app — ainda não tem uma justificação de produto formalizada além de "contexto sobre o casal". Revisitar se a idade vier a alimentar alguma funcionalidade concreta (ex: recomendações), ou remover se ficar apenas decorativa.
