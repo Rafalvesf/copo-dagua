@@ -27,28 +27,15 @@ class HomeFeedScreen extends ConsumerWidget {
               children: [
                 SafeArea(
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 110),
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 110),
                     children: [
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  firstName.isEmpty ? 'Olá! 👋' : 'Olá, $firstName 👋',
-                                  style: Theme.of(context).textTheme.headlineMedium,
-                                ),
-                                Text('O que precisas hoje?', style: Theme.of(context).textTheme.bodyLarge),
-                              ],
-                            ),
-                          ),
                           CircleIconButton(
                             icon: Icons.live_help_outlined,
                             onTap: () => openSupportScreen(context),
                           ),
-                          const SizedBox(width: 10),
+                          const Spacer(),
                           PopupMenuButton<String>(
                             icon: const GradientMark(size: 40, icon: Icons.person_outline),
                             onSelected: (value) {
@@ -60,7 +47,13 @@ class HomeFeedScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 28),
+                      Text(
+                        firstName.isEmpty ? 'Olá! 👋' : 'Olá, $firstName 👋',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 30, height: 1.15),
+                      ),
+                      Text('O que precisas hoje?', style: Theme.of(context).textTheme.bodyLarge),
+                      const SizedBox(height: 24),
                       _HeroTile(
                         gradient: AppGradients.wedding,
                         icon: Icons.favorite_outline,
