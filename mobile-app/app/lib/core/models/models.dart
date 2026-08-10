@@ -20,6 +20,18 @@ enum WeddingSide { groom, bride, both }
 
 enum CollaboratorStatus { owner, active, pending }
 
+enum SupplierCategory { catering, photography, music, decoration, venue }
+
+extension SupplierCategoryLabel on SupplierCategory {
+  String get label => switch (this) {
+        SupplierCategory.catering => 'Catering',
+        SupplierCategory.photography => 'Fotografia',
+        SupplierCategory.music => 'Música & DJ',
+        SupplierCategory.decoration => 'Decoração',
+        SupplierCategory.venue => 'Espaços',
+      };
+}
+
 class Profile {
   final String id;
   final String fullName;
@@ -199,6 +211,8 @@ class ChecklistItem {
   final String category;
   final bool done;
   final DateTime? dueDate;
+  final SupplierCategory? supplierCategory;
+  final String? selectedSupplierId;
 
   const ChecklistItem({
     required this.id,
@@ -207,6 +221,8 @@ class ChecklistItem {
     this.category = 'Geral',
     this.done = false,
     this.dueDate,
+    this.supplierCategory,
+    this.selectedSupplierId,
   });
 
   ChecklistItem copyWith({
@@ -214,6 +230,7 @@ class ChecklistItem {
     String? category,
     bool? done,
     DateTime? dueDate,
+    Object? selectedSupplierId = _unset,
   }) {
     return ChecklistItem(
       id: id,
@@ -222,6 +239,31 @@ class ChecklistItem {
       category: category ?? this.category,
       done: done ?? this.done,
       dueDate: dueDate ?? this.dueDate,
+      supplierCategory: supplierCategory,
+      selectedSupplierId:
+          identical(selectedSupplierId, _unset) ? this.selectedSupplierId : selectedSupplierId as String?,
     );
   }
+}
+
+class Supplier {
+  final String id;
+  final String name;
+  final SupplierCategory category;
+  final String city;
+  final double rating;
+  final int reviewCount;
+  final double startingPrice;
+  final String description;
+
+  const Supplier({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.city,
+    required this.rating,
+    required this.reviewCount,
+    required this.startingPrice,
+    required this.description,
+  });
 }

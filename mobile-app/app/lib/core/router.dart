@@ -13,9 +13,11 @@ import '../features/guests/screens/guest_detail_screen.dart';
 import '../features/guests/screens/guests_list_screen.dart';
 import '../features/home/screens/home_feed_screen.dart';
 import '../features/onboarding/screens/onboarding_wizard_screen.dart';
+import '../features/suppliers/screens/suppliers_list_screen.dart';
 import '../features/wedding/screens/wedding_details_screen.dart';
 import 'auth/auth_controller.dart';
 import 'models/models.dart';
+import 'suppliers/supplier_providers.dart';
 
 const _authRoutes = {'/welcome', '/role', '/register', '/login', '/forgot-password'};
 
@@ -75,6 +77,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => GuestDetailScreen(guestId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/checklist', builder: (context, state) => const ChecklistScreen()),
+      GoRoute(
+        path: '/suppliers',
+        builder: (context, state) {
+          final args = state.extra as SupplierPickerArgs?;
+          return SuppliersListScreen(category: args?.category, selectionMode: args?.selectionMode ?? false);
+        },
+      ),
     ],
   );
 });

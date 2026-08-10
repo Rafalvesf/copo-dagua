@@ -66,6 +66,16 @@ class ChecklistController extends Notifier<ChecklistState> {
     await _backend.removeChecklistItem(itemId);
     state = state.copyWith(items: state.items.where((i) => i.id != itemId).toList());
   }
+
+  Future<void> selectSupplier(String itemId, String supplierId) async {
+    final item = state.items.firstWhere((i) => i.id == itemId);
+    final updated = await _backend.updateChecklistItem(
+      item.copyWith(selectedSupplierId: supplierId, done: true),
+    );
+    state = state.copyWith(
+      items: [for (final i in state.items) if (i.id == updated.id) updated else i],
+    );
+  }
 }
 
 final checklistControllerProvider = NotifierProvider<ChecklistController, ChecklistState>(ChecklistController.new);

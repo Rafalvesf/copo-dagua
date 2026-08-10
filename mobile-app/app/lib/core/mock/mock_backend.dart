@@ -21,6 +21,7 @@ class MockBackend {
   final List<Collaborator> collaboratorsByWedding = [];
   final List<Guest> guests = [];
   final List<ChecklistItem> checklistItems = [];
+  final List<Supplier> suppliers = [];
 
   static const Duration _latency = Duration(milliseconds: 400);
 
@@ -112,6 +113,89 @@ class MockBackend {
       ),
     ]);
 
+    suppliers.addAll(const [
+      Supplier(
+        id: 'sup-photo-1',
+        name: 'Instantes Photography',
+        category: SupplierCategory.photography,
+        city: 'Lisboa',
+        rating: 4.9,
+        reviewCount: 132,
+        startingPrice: 1200,
+        description: 'Fotografia documental de casamentos, com edição incluída e entrega em 4 semanas.',
+      ),
+      Supplier(
+        id: 'sup-photo-2',
+        name: 'Luz & Sombra Studio',
+        category: SupplierCategory.photography,
+        city: 'Sintra',
+        rating: 4.7,
+        reviewCount: 84,
+        startingPrice: 950,
+        description: 'Estilo clássico e atemporal, especialistas em luz natural.',
+      ),
+      Supplier(
+        id: 'sup-catering-1',
+        name: 'Sabores & Cia',
+        category: SupplierCategory.catering,
+        city: 'Sintra',
+        rating: 4.8,
+        reviewCount: 201,
+        startingPrice: 45,
+        description: 'Catering português contemporâneo, menus personalizáveis por pessoa.',
+      ),
+      Supplier(
+        id: 'sup-catering-2',
+        name: 'Quinta do Paladar',
+        category: SupplierCategory.catering,
+        city: 'Lisboa',
+        rating: 4.6,
+        reviewCount: 97,
+        startingPrice: 38,
+        description: 'Buffet e serviço à mesa, opções vegetarianas e sem glúten incluídas.',
+      ),
+      Supplier(
+        id: 'sup-music-1',
+        name: 'DJ Nuno Beats',
+        category: SupplierCategory.music,
+        city: 'Cascais',
+        rating: 4.9,
+        reviewCount: 156,
+        startingPrice: 600,
+        description: 'DJ com mais de 10 anos de casamentos, equipamento de som e luz incluído.',
+      ),
+      Supplier(
+        id: 'sup-music-2',
+        name: 'Quarteto Harmonia',
+        category: SupplierCategory.music,
+        city: 'Lisboa',
+        rating: 4.8,
+        reviewCount: 63,
+        startingPrice: 800,
+        description: 'Quarteto de cordas para cerimónia, repertório clássico e contemporâneo.',
+      ),
+      Supplier(
+        id: 'sup-decor-1',
+        name: 'Flores & Cia',
+        category: SupplierCategory.decoration,
+        city: 'Sintra',
+        rating: 4.7,
+        reviewCount: 74,
+        startingPrice: 500,
+        description: 'Decoração floral completa — cerimónia, mesa de honra e centros de mesa.',
+      ),
+      Supplier(
+        id: 'sup-decor-2',
+        name: 'Decor Elegance',
+        category: SupplierCategory.decoration,
+        city: 'Oeiras',
+        rating: 4.5,
+        reviewCount: 41,
+        startingPrice: 650,
+        description: 'Cenografia e iluminação decorativa para cerimónia e receção.',
+      ),
+    ]);
+
     final now = DateTime.now();
     checklistItems.addAll([
       ChecklistItem(
@@ -134,6 +218,8 @@ class MockBackend {
         title: 'Escolher e contratar fotógrafo',
         category: 'Fornecedores',
         done: true,
+        supplierCategory: SupplierCategory.photography,
+        selectedSupplierId: 'sup-photo-1',
       ),
       ChecklistItem(
         id: 'cl4',
@@ -141,6 +227,7 @@ class MockBackend {
         title: 'Escolher catering e provar o menu',
         category: 'Fornecedores',
         dueDate: now.add(const Duration(days: 30)),
+        supplierCategory: SupplierCategory.catering,
       ),
       ChecklistItem(
         id: 'cl5',
@@ -148,6 +235,15 @@ class MockBackend {
         title: 'Contratar música/DJ',
         category: 'Fornecedores',
         dueDate: now.add(const Duration(days: 45)),
+        supplierCategory: SupplierCategory.music,
+      ),
+      ChecklistItem(
+        id: 'cl11',
+        weddingId: wedding.id,
+        title: 'Escolher decoração floral',
+        category: 'Fornecedores',
+        dueDate: now.add(const Duration(days: 100)),
+        supplierCategory: SupplierCategory.decoration,
       ),
       ChecklistItem(
         id: 'cl6',
@@ -351,6 +447,8 @@ class MockBackend {
       title: item.title,
       category: item.category,
       dueDate: item.dueDate,
+      supplierCategory: item.supplierCategory,
+      selectedSupplierId: item.selectedSupplierId,
     );
     checklistItems.add(withId);
     return withId;
@@ -366,6 +464,16 @@ class MockBackend {
   Future<void> removeChecklistItem(String itemId) async {
     await Future.delayed(_latency ~/ 2);
     checklistItems.removeWhere((c) => c.id == itemId);
+  }
+
+  Future<List<Supplier>> listSuppliers({SupplierCategory? category}) async {
+    await Future.delayed(_latency ~/ 2);
+    if (category == null) return List.unmodifiable(suppliers);
+    return suppliers.where((s) => s.category == category).toList();
+  }
+
+  Supplier getSupplier(String supplierId) {
+    return suppliers.firstWhere((s) => s.id == supplierId);
   }
 }
 

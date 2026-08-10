@@ -84,7 +84,12 @@ class HomeFeedScreen extends ConsumerWidget {
                           ),
                           const _FeedTile(gradient: AppGradients.budget, icon: Icons.savings_outlined, label: 'Orçamento'),
                           const _FeedTile(gradient: AppGradients.seating, icon: Icons.event_seat_outlined, label: 'Lugares'),
-                          const _FeedTile(gradient: AppGradients.suppliers, icon: Icons.storefront_outlined, label: 'Fornecedores'),
+                          _FeedTile(
+                            gradient: AppGradients.suppliers,
+                            icon: Icons.storefront_outlined,
+                            label: 'Fornecedores',
+                            onTap: () => context.push('/suppliers'),
+                          ),
                         ],
                       ),
                     ],

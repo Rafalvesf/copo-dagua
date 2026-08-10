@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/checklist/checklist_controller.dart';
+import '../../../core/mock/mock_backend.dart';
 import '../../../core/models/models.dart';
+import '../../../core/suppliers/supplier_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
@@ -45,6 +48,21 @@ class ChecklistScreen extends ConsumerWidget {
                                 item: item,
                                 onToggle: () => ref.read(checklistControllerProvider.notifier).toggleDone(item.id),
                                 onRemove: () => ref.read(checklistControllerProvider.notifier).removeItem(item.id),
+                                onPickSupplier: item.supplierCategory == null
+                                    ? null
+                                    : () async {
+                                        final supplier = await context.push<Supplier>(
+                                          '/suppliers',
+                                          extra: SupplierPickerArgs(
+                                            category: item.supplierCategory,
+                                            selectionMode: true,
+                                          ),
+                                        );
+                                        if (supplier == null) return;
+                                        ref
+                                            .read(checklistControllerProvider.notifier)
+                                            .selectSupplier(item.id, supplier.id);
+                                      },
                               ),
                           ],
                         ),
@@ -124,21 +142,42 @@ class _ChecklistTile extends StatelessWidget {
   final ChecklistItem item;
   final VoidCallback onToggle;
   final VoidCallback onRemove;
+  final VoidCallback? onPickSupplier;
 
-  const _ChecklistTile({required this.item, required this.onToggle, required this.onRemove});
+  const _ChecklistTile({
+    required this.item,
+    required this.onToggle,
+    required this.onRemove,
+    this.onPickSupplier,
+  });
 
   @override
   Widget build(BuildContext context) {
     final due = item.dueDate;
+    final selectedSupplier =
+        item.selectedSupplierId == null ? null : MockBackend.instance.getSupplier(item.selectedSupplierId!);
+
     return ListTile(
       leading: Checkbox(value: item.done, onChanged: (_) => onToggle()),
       title: Text(
         item.title,
         style: TextStyle(decoration: item.done ? TextDecoration.lineThrough : null),
       ),
-      subtitle: due == null
-          ? null
-          : Text('Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (due != null) Text('Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}'),
+          if (onPickSupplier != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: ActionChip(
+                avatar: Icon(selectedSupplier == null ? Icons.storefront_outlined : Icons.check_circle, size: 16),
+                label: Text(selectedSupplier == null ? 'Escolher fornecedor' : 'Fornecedor: ${selectedSupplier.name}'),
+                onPressed: onPickSupplier,
+              ),
+            ),
+        ],
+      ),
       trailing: IconButton(icon: const Icon(Icons.close, size: 18), onPressed: onRemove),
     );
   }
