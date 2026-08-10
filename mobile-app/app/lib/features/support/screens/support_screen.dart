@@ -18,7 +18,7 @@ class SupportScreen extends ConsumerWidget {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Row(
                 children: [
                   const CircleIconButton(icon: Icons.live_help_outlined),
@@ -33,13 +33,13 @@ class SupportScreen extends ConsumerWidget {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+                padding: const EdgeInsets.fromLTRB(24, 36, 24, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       firstName.isEmpty ? 'Olá,\ncomo posso ajudar hoje?' : 'Olá, $firstName,\ncomo posso ajudar hoje?',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 30, height: 1.15),
                     ),
                     const SizedBox(height: 28),
                     GridView.count(

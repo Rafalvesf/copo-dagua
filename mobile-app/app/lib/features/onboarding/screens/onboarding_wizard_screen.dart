@@ -93,8 +93,6 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('🎉', style: TextStyle(fontSize: 48)),
-                const SizedBox(height: 16),
                 Text('Tudo pronto, ${_ownName.text.trim().isEmpty ? profile.fullName.split(' ').first : _ownName.text.trim()}!',
                     style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 8),

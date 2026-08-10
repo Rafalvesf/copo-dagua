@@ -27,7 +27,7 @@ class HomeFeedScreen extends ConsumerWidget {
               children: [
                 SafeArea(
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 110),
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 110),
                     children: [
                       Row(
                         children: [
@@ -47,12 +47,13 @@ class HomeFeedScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 36),
                       Text(
-                        firstName.isEmpty ? 'Olá! 👋' : 'Olá, $firstName 👋',
+                        firstName.isEmpty
+                            ? 'Olá, o que precisas hoje?'
+                            : 'Olá, $firstName, o que precisas hoje?',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 30, height: 1.15),
                       ),
-                      Text('O que precisas hoje?', style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 24),
                       _HeroTile(
                         gradient: AppGradients.wedding,
