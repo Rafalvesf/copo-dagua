@@ -17,10 +17,11 @@ class AppTheme {
       brightness: Brightness.light,
     ).copyWith(surface: background);
 
-    final baseText = ThemeData.light().textTheme;
+    final baseText = ThemeData.light().textTheme.apply(fontFamily: 'Aeonik');
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Aeonik',
       colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
       textTheme: baseText.copyWith(
