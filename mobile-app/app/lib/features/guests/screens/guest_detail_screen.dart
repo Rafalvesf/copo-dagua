@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/guest_widgets.dart';
+import '../../../shared/widgets/support_chat.dart';
 
 class GuestDetailScreen extends ConsumerWidget {
   final String guestId;
@@ -26,8 +28,9 @@ class GuestDetailScreen extends ConsumerWidget {
     };
 
     return Scaffold(
-      appBar: AppBar(title: Text(guest.name)),
-      body: ListView(
+      appBar: AppBar(title: Text(guest.name), leading: const CircleBackButton()),
+      body: Stack(children: [
+        ListView(
         padding: const EdgeInsets.all(24),
         children: [
           Text(statusLabel, style: Theme.of(context).textTheme.titleMedium),
@@ -103,7 +106,9 @@ class GuestDetailScreen extends ConsumerWidget {
             ],
           ),
         ],
-      ),
+        ),
+        const Positioned.fill(child: DraggableChatBubble()),
+      ]),
     );
   }
 }

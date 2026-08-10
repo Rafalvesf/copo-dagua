@@ -6,6 +6,7 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/form_fields.dart';
+import '../../../shared/widgets/support_chat.dart';
 import '../../../shared/widgets/wedding_widgets.dart';
 
 class WeddingDetailsScreen extends ConsumerStatefulWidget {
@@ -45,7 +46,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
     final wedding = weddingState.wedding;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('O nosso casamento')),
+      appBar: AppBar(title: const Text('O nosso casamento'), leading: const CircleBackButton()),
       body: wedding == null
           ? const Center(child: CircularProgressIndicator())
           : Stack(children: [
@@ -118,6 +119,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                 bottom: 24,
                 child: Center(child: FloatingBottomNav(current: AppTab.wedding)),
               ),
+              const Positioned.fill(child: DraggableChatBubble()),
             ]),
     );
   }

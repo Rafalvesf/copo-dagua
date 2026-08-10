@@ -48,6 +48,61 @@ class ArrowCtaButton extends StatelessWidget {
   }
 }
 
+/// Botão circular translúcido — o padrão de "voltar"/"favorito" usado
+/// sobre os cartões de destaque na referência visual.
+class CircleIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+  final double size;
+  final Color background;
+  final Color foreground;
+
+  const CircleIconButton({
+    super.key,
+    required this.icon,
+    this.onTap,
+    this.size = 36,
+    this.background = Colors.white,
+    this.foreground = AppTheme.ink,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      customBorder: const CircleBorder(),
+      onTap: onTap,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(color: background, shape: BoxShape.circle),
+        child: Icon(icon, size: size * 0.5, color: foreground),
+      ),
+    );
+  }
+}
+
+/// Botão circular de voltar, para usar como `leading` de um AppBar —
+/// substitui a seta simples por omissão do Flutter.
+class CircleBackButton extends StatelessWidget {
+  final VoidCallback? onTap;
+
+  const CircleBackButton({super.key, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(left: 12),
+        child: CircleIconButton(
+          icon: Icons.arrow_back,
+          background: Colors.white,
+          onTap: onTap ?? () => Navigator.of(context).maybePop(),
+        ),
+      ),
+    );
+  }
+}
+
 class PrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;

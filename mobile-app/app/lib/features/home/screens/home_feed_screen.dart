@@ -8,6 +8,7 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_mark.dart';
+import '../../../shared/widgets/support_chat.dart';
 
 class HomeFeedScreen extends ConsumerWidget {
   const HomeFeedScreen({super.key});
@@ -43,6 +44,11 @@ class HomeFeedScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
+                          CircleIconButton(
+                            icon: Icons.live_help_outlined,
+                            onTap: () => openSupportSheet(context),
+                          ),
+                          const SizedBox(width: 10),
                           PopupMenuButton<String>(
                             icon: const GradientMark(size: 40, icon: Icons.person_outline),
                             onSelected: (value) {

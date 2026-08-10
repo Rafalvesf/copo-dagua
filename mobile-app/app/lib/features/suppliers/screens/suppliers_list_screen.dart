@@ -7,6 +7,7 @@ import '../../../core/suppliers/supplier_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/support_chat.dart';
 
 Gradient _gradientFor(SupplierCategory category) {
   switch (category) {
@@ -41,7 +42,10 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
     final suppliersAsync = ref.watch(suppliersProvider(widget.selectionMode ? widget.category : _filter));
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.selectionMode ? 'Escolher fornecedor' : 'Fornecedores')),
+      appBar: AppBar(
+        title: Text(widget.selectionMode ? 'Escolher fornecedor' : 'Fornecedores'),
+        leading: const CircleBackButton(),
+      ),
       body: Stack(
         children: [
           Column(
@@ -104,6 +108,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
               bottom: 24,
               child: Center(child: FloatingBottomNav(current: AppTab.suppliers)),
             ),
+          const Positioned.fill(child: DraggableChatBubble()),
         ],
       ),
     );
@@ -257,8 +262,9 @@ class _SupplierCardState extends State<_SupplierCard> {
           Positioned(
             top: 0,
             right: 0,
-            child: _CircleIconButton(
+            child: CircleIconButton(
               icon: _favorited ? Icons.favorite : Icons.favorite_border,
+              background: Colors.white.withValues(alpha: 0.7),
               onTap: () => setState(() => _favorited = !_favorited),
             ),
           ),
@@ -305,23 +311,3 @@ class _SupplierCardState extends State<_SupplierCard> {
   }
 }
 
-class _CircleIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _CircleIconButton({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      customBorder: const CircleBorder(),
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.7), shape: BoxShape.circle),
-        child: Icon(icon, size: 18, color: AppTheme.ink),
-      ),
-    );
-  }
-}

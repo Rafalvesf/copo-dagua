@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/guests/guest_controller.dart';
 import '../../core/models/models.dart';
+import '../../core/theme/app_theme.dart';
 import 'buttons.dart';
 import 'form_fields.dart';
 
@@ -30,6 +31,13 @@ class RsvpStatusFilterTabs extends StatelessWidget {
                   label: Text(e.value),
                   selected: selected == e.key,
                   onSelected: (_) => onChanged(e.key),
+                  selectedColor: AppTheme.ink,
+                  labelStyle: TextStyle(
+                    color: selected == e.key ? Colors.white : AppTheme.ink,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  backgroundColor: Colors.white,
+                  side: const BorderSide(color: Color(0xFFE2D9CF)),
                 ),
               ),
             )

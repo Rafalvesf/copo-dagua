@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/guest_widgets.dart';
+import '../../../shared/widgets/support_chat.dart';
 
 class GuestsListScreen extends ConsumerWidget {
   const GuestsListScreen({super.key});
@@ -16,7 +18,7 @@ class GuestsListScreen extends ConsumerWidget {
     final state = ref.watch(guestsControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Convidados')),
+      appBar: AppBar(title: const Text('Convidados'), leading: const CircleBackButton()),
       body: state.loading && state.guests.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Stack(children: [
@@ -60,6 +62,7 @@ class GuestsListScreen extends ConsumerWidget {
                 bottom: 24,
                 child: Center(child: FloatingBottomNav(current: AppTab.guests)),
               ),
+              const Positioned.fill(child: DraggableChatBubble()),
             ]),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),

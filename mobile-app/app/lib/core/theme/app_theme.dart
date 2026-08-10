@@ -74,6 +74,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: Colors.white,
+        selectedColor: ink,
         side: const BorderSide(color: Color(0xFFE2D9CF)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),

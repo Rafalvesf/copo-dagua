@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/form_fields.dart';
+import '../../../shared/widgets/support_chat.dart';
 
 class ChecklistScreen extends ConsumerWidget {
   const ChecklistScreen({super.key});
@@ -21,7 +22,7 @@ class ChecklistScreen extends ConsumerWidget {
     final categories = state.byCategory;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Checklist')),
+      appBar: AppBar(title: const Text('Checklist'), leading: const CircleBackButton()),
       body: state.loading && state.items.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -77,6 +78,7 @@ class ChecklistScreen extends ConsumerWidget {
                   bottom: 24,
                   child: Center(child: FloatingBottomNav(current: AppTab.checklist)),
                 ),
+                const Positioned.fill(child: DraggableChatBubble()),
               ],
             ),
       floatingActionButton: FloatingActionButton.extended(
