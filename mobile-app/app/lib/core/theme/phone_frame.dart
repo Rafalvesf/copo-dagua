@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
@@ -14,9 +16,12 @@ class PhoneFrame extends StatelessWidget {
   static const _phoneWidth = 412.0;
   static const _phoneHeight = 892.0;
 
+  static const _statusBarHeight = 28.0;
+
   // Simula margens de "notch"/barra de sistema para que o conteúdo dos
-  // ecrãs nunca fique colado aos cantos arredondados da moldura.
-  static const _insetTop = 18.0;
+  // ecrãs nunca fique colado aos cantos arredondados da moldura nem por
+  // baixo da barra de estado simulada.
+  static const _insetTop = _statusBarHeight + 8.0;
   static const _insetBottom = 14.0;
 
   @override
@@ -46,28 +51,95 @@ class PhoneFrame extends StatelessWidget {
                     BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 50, spreadRadius: 2),
                   ],
                 ),
-                child: MediaQuery(
-                  data: mediaQuery.copyWith(
-                    padding: EdgeInsets.only(
-                      left: mediaQuery.padding.left,
-                      right: mediaQuery.padding.right,
-                      top: mediaQuery.padding.top + _insetTop,
-                      bottom: mediaQuery.padding.bottom + _insetBottom,
+                child: Stack(
+                  children: [
+                    MediaQuery(
+                      data: mediaQuery.copyWith(
+                        padding: EdgeInsets.only(
+                          left: mediaQuery.padding.left,
+                          right: mediaQuery.padding.right,
+                          top: mediaQuery.padding.top + _insetTop,
+                          bottom: mediaQuery.padding.bottom + _insetBottom,
+                        ),
+                        viewPadding: EdgeInsets.only(
+                          left: mediaQuery.viewPadding.left,
+                          right: mediaQuery.viewPadding.right,
+                          top: mediaQuery.viewPadding.top + _insetTop,
+                          bottom: mediaQuery.viewPadding.bottom + _insetBottom,
+                        ),
+                      ),
+                      child: content,
                     ),
-                    viewPadding: EdgeInsets.only(
-                      left: mediaQuery.viewPadding.left,
-                      right: mediaQuery.viewPadding.right,
-                      top: mediaQuery.viewPadding.top + _insetTop,
-                      bottom: mediaQuery.viewPadding.bottom + _insetBottom,
+                    const Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: _statusBarHeight,
+                      child: _PhoneStatusBar(),
                     ),
-                  ),
-                  child: content,
+                  ],
                 ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+/// Barra de estado simulada (hora + sinal/wifi/bateria) — puramente
+/// decorativa, só para a moldura de desktop parecer um iPhone real.
+class _PhoneStatusBar extends StatefulWidget {
+  const _PhoneStatusBar();
+
+  @override
+  State<_PhoneStatusBar> createState() => _PhoneStatusBarState();
+}
+
+class _PhoneStatusBarState extends State<_PhoneStatusBar> {
+  late final Timer _timer;
+  DateTime _now = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) setState(() => _now = DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hour = _now.hour.toString().padLeft(2, '0');
+    final minute = _now.minute.toString().padLeft(2, '0');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 16, 0),
+      child: Row(
+        children: [
+          Text(
+            '$hour:$minute',
+            style: const TextStyle(
+              color: AppTheme.ink,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          const Icon(Icons.signal_cellular_alt, size: 15, color: AppTheme.ink),
+          const SizedBox(width: 5),
+          const Icon(Icons.wifi, size: 15, color: AppTheme.ink),
+          const SizedBox(width: 5),
+          const Icon(Icons.battery_full, size: 16, color: AppTheme.ink),
+        ],
+      ),
     );
   }
 }

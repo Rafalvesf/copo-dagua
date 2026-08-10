@@ -28,8 +28,8 @@ class HomeFeedScreen extends ConsumerWidget {
           ? const Center(child: CircularProgressIndicator())
           : LayoutBuilder(
               builder: (context, constraints) {
-                // Texto a 70% da altura do ecrã.
-                final headerHeight = constraints.maxHeight * 0.70;
+                // Texto a 30% da altura do ecrã.
+                final headerHeight = constraints.maxHeight * 0.30;
 
                 return Stack(
                   children: [
