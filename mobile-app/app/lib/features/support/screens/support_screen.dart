@@ -5,11 +5,37 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 
-class SupportScreen extends ConsumerWidget {
+class SupportScreen extends ConsumerStatefulWidget {
   const SupportScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SupportScreen> createState() => _SupportScreenState();
+}
+
+class _SupportScreenState extends ConsumerState<SupportScreen> {
+  bool _showAiCard = true;
+  bool _aiCardDismissing = false;
+  bool _searchHighlighted = false;
+
+  void _dismissAiCard() {
+    setState(() => _aiCardDismissing = true);
+    Future.delayed(const Duration(milliseconds: 220), () {
+      if (!mounted) return;
+      setState(() {
+        _showAiCard = false;
+        _searchHighlighted = true;
+      });
+    });
+  }
+
+  void _comingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Ainda sem assistente real ligado — em breve.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final profile = ref.watch(authControllerProvider).profile;
     final firstName = profile?.fullName.split(' ').first ?? '';
 
@@ -50,14 +76,35 @@ class SupportScreen extends ConsumerWidget {
                       crossAxisSpacing: 14,
                       childAspectRatio: 1.15,
                       children: [
-                        _OptionCard(
-                          color: AppColors.yellow,
-                          iconBackground: AppColors.purple,
-                          iconColor: Colors.white,
-                          icon: Icons.auto_awesome,
-                          label: 'Perguntar à IA',
-                          onTap: () => _comingSoon(context),
-                        ),
+                        if (_showAiCard)
+                          AnimatedOpacity(
+                            opacity: _aiCardDismissing ? 0 : 1,
+                            duration: const Duration(milliseconds: 200),
+                            child: AnimatedScale(
+                              scale: _aiCardDismissing ? 0.85 : 1,
+                              duration: const Duration(milliseconds: 200),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  _OptionCard(
+                                    color: AppColors.yellow,
+                                    iconBackground: AppColors.purple,
+                                    iconColor: Colors.white,
+                                    icon: Icons.auto_awesome,
+                                    label: 'Perguntar à IA',
+                                    onTap: _dismissAiCard,
+                                  ),
+                                  Positioned(
+                                    top: -14,
+                                    right: -14,
+                                    child: IgnorePointer(
+                                      child: Image.asset('assets/images/new_badge.png', width: 56),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         _OptionCard(
                           color: AppColors.green,
                           icon: Icons.support_agent,
@@ -87,17 +134,32 @@ class SupportScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      enabled: false,
-                      decoration: InputDecoration(
-                        hintText: 'Pergunta ou pesquisa qualquer coisa...',
-                        hintStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(999),
-                          borderSide: BorderSide.none,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: _searchHighlighted
+                            ? [BoxShadow(color: AppColors.purple.withValues(alpha: 0.45), blurRadius: 16, spreadRadius: 1)]
+                            : [],
+                      ),
+                      child: TextField(
+                        enabled: false,
+                        decoration: InputDecoration(
+                          hintText: _searchHighlighted ? 'Pergunta? Posso ajudar.' : 'Pergunta ou pesquisa qualquer coisa...',
+                          hintStyle: TextStyle(
+                            fontSize: 15,
+                            fontWeight: _searchHighlighted ? FontWeight.w600 : FontWeight.w400,
+                            color: _searchHighlighted ? AppTheme.ink : AppTheme.inkMuted,
+                          ),
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(999),
+                            borderSide: _searchHighlighted
+                                ? const BorderSide(color: AppColors.purple, width: 2)
+                                : BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                       ),
                     ),
                   ),
@@ -115,12 +177,6 @@ class SupportScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-
-  void _comingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Ainda sem assistente real ligado — em breve.')),
     );
   }
 }
