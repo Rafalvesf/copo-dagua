@@ -32,10 +32,7 @@ class HomeFeedScreen extends ConsumerWidget {
                         padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
                         child: Row(
                           children: [
-                            CircleIconButton(
-                              icon: Icons.live_help_outlined,
-                              onTap: () => openSupportScreen(context),
-                            ),
+                            ChatIconButton(onTap: () => openSupportScreen(context)),
                             const Spacer(),
                             PopupMenuButton<String>(
                               icon: const GradientMark(size: 40, icon: Icons.person_outline),

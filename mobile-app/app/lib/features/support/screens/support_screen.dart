@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/support_chat.dart';
 
 class SupportScreen extends ConsumerStatefulWidget {
   const SupportScreen({super.key});
@@ -47,7 +48,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Row(
                 children: [
-                  const CircleIconButton(icon: Icons.live_help_outlined),
+                  const ChatIconButton(),
                   const Spacer(),
                   CircleIconButton(
                     icon: Icons.notifications_none,
