@@ -45,11 +45,6 @@ class FloatingBottomNav extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _NavIcon(
-                  icon: Icons.people_alt_rounded,
-                  active: current == AppTab.guests,
-                  onTap: () => context.go('/guests'),
-                ),
-                _NavIcon(
                   icon: Icons.home_rounded,
                   active: current == AppTab.home,
                   onTap: () => context.go('/home'),
@@ -62,31 +57,105 @@ class FloatingBottomNav extends ConsumerWidget {
                   active: current == AppTab.suppliers,
                   onTap: () => context.go('/suppliers'),
                 ),
-                _NavIcon(
-                  icon: Icons.checklist_rounded,
-                  active: current == AppTab.checklist,
-                  onTap: () => context.go('/checklist'),
-                ),
               ],
             ),
           ),
           Positioned(
             bottom: 6,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(24),
+            child: _SquishyWeddingIcon(
+              assetPath: weddingIcon.assetPath,
+              size: _weddingIconSize,
               onTap: () => context.go('/wedding'),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.asset(
-                  weddingIcon.assetPath,
-                  width: _weddingIconSize,
-                  height: _weddingIconSize,
-                  fit: BoxFit.cover,
-                ),
-              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Boneco central da navbar: as ilustrações têm fundo escuro quadrado,
+/// que ficava visível como uma "sobra" onde o boneco sai por cima da
+/// pílula (contra o fundo claro do ecrã). Um ShaderMask radial esbate
+/// esse fundo nas bordas, deixando só o boneco visível. Ao tocar,
+/// "espreme" (squash/stretch) e volta com um pequeno ressalto elástico.
+class _SquishyWeddingIcon extends StatefulWidget {
+  final String assetPath;
+  final double size;
+  final VoidCallback onTap;
+
+  const _SquishyWeddingIcon({
+    required this.assetPath,
+    required this.size,
+    required this.onTap,
+  });
+
+  @override
+  State<_SquishyWeddingIcon> createState() => _SquishyWeddingIconState();
+}
+
+class _SquishyWeddingIconState extends State<_SquishyWeddingIcon>
+    with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(vsync: this, value: 0);
+
+  void _squish() {
+    _controller.animateTo(
+      1,
+      duration: const Duration(milliseconds: 90),
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _release() {
+    _controller.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.elasticOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _squish(),
+      onTapCancel: _release,
+      onTapUp: (_) {
+        _release();
+        widget.onTap();
+      },
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final t = _controller.value;
+          return Transform(
+            alignment: Alignment.bottomCenter,
+            transform: Matrix4.identity()
+              ..scaleByDouble(1 + t * 0.18, 1 - t * 0.22, 1, 1),
+            child: child,
+          );
+        },
+        child: ShaderMask(
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (rect) => const RadialGradient(
+            colors: [Colors.black, Colors.black, Colors.transparent],
+            stops: [0.0, 0.72, 1.0],
+          ).createShader(rect),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.asset(
+              widget.assetPath,
+              width: widget.size,
+              height: widget.size,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
       ),
     );
   }
