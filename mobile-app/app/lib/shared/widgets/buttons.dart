@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -9,29 +10,50 @@ class ArrowCtaButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool expand;
 
-  const ArrowCtaButton({super.key, required this.label, this.onTap, this.expand = false});
+  const ArrowCtaButton({
+    super.key,
+    required this.label,
+    this.onTap,
+    this.expand = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final content = Container(
       height: 46,
       padding: const EdgeInsets.only(left: 20, right: 5),
-      decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(999)),
+      decoration: BoxDecoration(
+        color: AppTheme.ink,
+        borderRadius: BorderRadius.circular(999),
+      ),
       child: Row(
         mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
         children: [
           if (expand)
             Expanded(
-              child: Text(label, style: AppTypography.buttonLabel.copyWith(color: Colors.white)),
+              child: Text(
+                label,
+                style: AppTypography.buttonLabel.copyWith(color: Colors.white),
+              ),
             )
           else
-            Text(label, style: AppTypography.buttonLabel.copyWith(color: Colors.white)),
+            Text(
+              label,
+              style: AppTypography.buttonLabel.copyWith(color: Colors.white),
+            ),
           const SizedBox(width: 14),
           Container(
             width: 36,
             height: 36,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            child: const Icon(Icons.arrow_forward, color: AppTheme.ink, size: 18),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_forward,
+              color: AppTheme.ink,
+              size: 18,
+            ),
           ),
         ],
       ),
@@ -85,6 +107,18 @@ class CircleBackButton extends StatelessWidget {
 
   const CircleBackButton({super.key, this.onTap});
 
+  // Ecrãs abertos a partir da navbar (com `context.go`) substituem a
+  // pilha em vez de a empilhar — não há nada para o `Navigator` fazer
+  // pop, e o botão de voltar ficava sem efeito nenhum. Quando não há
+  // nada para popular, volta à home em vez de ficar sem fazer nada.
+  void _handleBack(BuildContext context) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      context.go('/home');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -93,7 +127,7 @@ class CircleBackButton extends StatelessWidget {
         child: CircleIconButton(
           icon: Icons.arrow_back,
           background: Colors.white,
-          onTap: onTap ?? () => Navigator.of(context).maybePop(),
+          onTap: onTap ?? () => _handleBack(context),
         ),
       ),
     );
@@ -105,7 +139,12 @@ class PrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool loading;
 
-  const PrimaryButton({super.key, required this.label, required this.onPressed, this.loading = false});
+  const PrimaryButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.loading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +166,12 @@ class SocialLoginButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
 
-  const SocialLoginButton({super.key, required this.label, required this.icon, this.onPressed});
+  const SocialLoginButton({
+    super.key,
+    required this.label,
+    required this.icon,
+    this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
