@@ -18,11 +18,47 @@ class ChecklistScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(checklistControllerProvider);
-    final progress = state.totalCount == 0 ? 0.0 : state.doneCount / state.totalCount;
+    final progress = state.totalCount == 0
+        ? 0.0
+        : state.doneCount / state.totalCount;
     final categories = state.byCategory;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Checklist'), leading: const CircleBackButton()),
+      appBar: AppBar(
+        title: const Text('Checklist'),
+        leadingWidth: 104,
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircleBackButton(),
+            const SizedBox(width: 8),
+            CircleIconButton(
+              icon: Icons.add,
+              background: AppTheme.ink,
+              foreground: Colors.white,
+              onTap: () async {
+                final weddingId = ref
+                    .read(checklistControllerProvider.notifier)
+                    .currentWeddingId;
+                if (weddingId == null) return;
+                final result = await _showAddTaskSheet(context);
+                if (result == null) return;
+                ref
+                    .read(checklistControllerProvider.notifier)
+                    .addItem(
+                      ChecklistItem(
+                        id: '',
+                        weddingId: weddingId,
+                        title: result.title,
+                        category: result.category,
+                        dueDate: result.dueDate,
+                      ),
+                    );
+              },
+            ),
+          ],
+        ),
+      ),
       body: state.loading && state.items.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -35,7 +71,11 @@ class ChecklistScreen extends ConsumerWidget {
                     110,
                   ),
                   children: [
-                    _ProgressCard(done: state.doneCount, total: state.totalCount, progress: progress),
+                    _ProgressCard(
+                      done: state.doneCount,
+                      total: state.totalCount,
+                      progress: progress,
+                    ),
                     const SizedBox(height: 20),
                     if (categories.isEmpty)
                       const Padding(
@@ -43,7 +83,10 @@ class ChecklistScreen extends ConsumerWidget {
                         child: Center(child: Text('Sem tarefas ainda.')),
                       ),
                     for (final entry in categories.entries) ...[
-                      Text(entry.key, style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        entry.key,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 8),
                       Card(
                         margin: EdgeInsets.zero,
@@ -52,22 +95,33 @@ class ChecklistScreen extends ConsumerWidget {
                             for (final item in entry.value)
                               _ChecklistTile(
                                 item: item,
-                                onToggle: () => ref.read(checklistControllerProvider.notifier).toggleDone(item.id),
-                                onRemove: () => ref.read(checklistControllerProvider.notifier).removeItem(item.id),
+                                onToggle: () => ref
+                                    .read(checklistControllerProvider.notifier)
+                                    .toggleDone(item.id),
+                                onRemove: () => ref
+                                    .read(checklistControllerProvider.notifier)
+                                    .removeItem(item.id),
                                 onPickSupplier: item.supplierCategory == null
                                     ? null
                                     : () async {
-                                        final supplier = await context.push<Supplier>(
-                                          '/suppliers',
-                                          extra: SupplierPickerArgs(
-                                            category: item.supplierCategory,
-                                            selectionMode: true,
-                                          ),
-                                        );
+                                        final supplier = await context
+                                            .push<Supplier>(
+                                              '/suppliers',
+                                              extra: SupplierPickerArgs(
+                                                category: item.supplierCategory,
+                                                selectionMode: true,
+                                              ),
+                                            );
                                         if (supplier == null) return;
                                         ref
-                                            .read(checklistControllerProvider.notifier)
-                                            .selectSupplier(item.id, supplier.id);
+                                            .read(
+                                              checklistControllerProvider
+                                                  .notifier,
+                                            )
+                                            .selectSupplier(
+                                              item.id,
+                                              supplier.id,
+                                            );
                                       },
                               ),
                           ],
@@ -86,25 +140,6 @@ class ChecklistScreen extends ConsumerWidget {
                 const Positioned.fill(child: DraggableChatBubble()),
               ],
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.add),
-        label: const Text('Adicionar tarefa'),
-        onPressed: () async {
-          final weddingId = ref.read(checklistControllerProvider.notifier).currentWeddingId;
-          if (weddingId == null) return;
-          final result = await _showAddTaskSheet(context);
-          if (result == null) return;
-          ref.read(checklistControllerProvider.notifier).addItem(
-                ChecklistItem(
-                  id: '',
-                  weddingId: weddingId,
-                  title: result.title,
-                  category: result.category,
-                  dueDate: result.dueDate,
-                ),
-              );
-        },
-      ),
     );
   }
 }
@@ -114,14 +149,21 @@ class _ProgressCard extends StatelessWidget {
   final int total;
   final double progress;
 
-  const _ProgressCard({required this.done, required this.total, required this.progress});
+  const _ProgressCard({
+    required this.done,
+    required this.total,
+    required this.progress,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(24)),
+      decoration: BoxDecoration(
+        color: AppColors.green,
+        borderRadius: BorderRadius.circular(24),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -161,31 +203,49 @@ class _ChecklistTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final due = item.dueDate;
-    final selectedSupplier =
-        item.selectedSupplierId == null ? null : MockBackend.instance.getSupplier(item.selectedSupplierId!);
+    final selectedSupplier = item.selectedSupplierId == null
+        ? null
+        : MockBackend.instance.getSupplier(item.selectedSupplierId!);
 
     return ListTile(
       leading: Checkbox(value: item.done, onChanged: (_) => onToggle()),
       title: Text(
         item.title,
-        style: TextStyle(decoration: item.done ? TextDecoration.lineThrough : null),
+        style: TextStyle(
+          decoration: item.done ? TextDecoration.lineThrough : null,
+        ),
       ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (due != null) Text('Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}'),
+          if (due != null)
+            Text(
+              'Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}',
+            ),
           if (onPickSupplier != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: ActionChip(
-                avatar: Icon(selectedSupplier == null ? Icons.storefront_outlined : Icons.check_circle, size: 16),
-                label: Text(selectedSupplier == null ? 'Escolher fornecedor' : 'Fornecedor: ${selectedSupplier.name}'),
+                avatar: Icon(
+                  selectedSupplier == null
+                      ? Icons.storefront_outlined
+                      : Icons.check_circle,
+                  size: 16,
+                ),
+                label: Text(
+                  selectedSupplier == null
+                      ? 'Escolher fornecedor'
+                      : 'Fornecedor: ${selectedSupplier.name}',
+                ),
                 onPressed: onPickSupplier,
               ),
             ),
         ],
       ),
-      trailing: IconButton(icon: const Icon(Icons.close, size: 18), onPressed: onRemove),
+      trailing: IconButton(
+        icon: const Icon(Icons.close, size: 18),
+        onPressed: onRemove,
+      ),
     );
   }
 }
@@ -232,13 +292,24 @@ class _AddTaskSheetState extends State<_AddTaskSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Adicionar tarefa', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Adicionar tarefa',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 16),
-          AuthTextField(label: 'Tarefa', controller: _title, errorText: _titleError),
+          AuthTextField(
+            label: 'Tarefa',
+            controller: _title,
+            errorText: _titleError,
+          ),
           const SizedBox(height: 12),
           AuthTextField(label: 'Categoria', controller: _category),
           const SizedBox(height: 12),
-          DatePickerField(label: 'Prazo (opcional)', value: _dueDate, onChanged: (d) => setState(() => _dueDate = d)),
+          DatePickerField(
+            label: 'Prazo (opcional)',
+            value: _dueDate,
+            onChanged: (d) => setState(() => _dueDate = d),
+          ),
           const SizedBox(height: 16),
           PrimaryButton(
             label: 'Guardar',
@@ -250,7 +321,9 @@ class _AddTaskSheetState extends State<_AddTaskSheet> {
               Navigator.of(context).pop(
                 _AddTaskResult(
                   title: _title.text.trim(),
-                  category: _category.text.trim().isEmpty ? 'Geral' : _category.text.trim(),
+                  category: _category.text.trim().isEmpty
+                      ? 'Geral'
+                      : _category.text.trim(),
                   dueDate: _dueDate,
                 ),
               );

@@ -20,81 +20,105 @@ class GuestsListScreen extends ConsumerWidget {
     final state = ref.watch(guestsControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Convidados'), leading: const CircleBackButton()),
+      appBar: AppBar(
+        title: const Text('Convidados'),
+        leadingWidth: 104,
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircleBackButton(),
+            const SizedBox(width: 8),
+            CircleIconButton(
+              icon: Icons.add,
+              background: AppTheme.ink,
+              foreground: Colors.white,
+              onTap: () async {
+                final weddingId = ref
+                    .read(guestsControllerProvider.notifier)
+                    .currentWeddingId;
+                if (weddingId == null) return;
+                final result = await showGuestFormSheet(context);
+                if (result == null) return;
+                ref
+                    .read(guestsControllerProvider.notifier)
+                    .addGuest(
+                      Guest(
+                        id: '',
+                        weddingId: weddingId,
+                        name: result.name,
+                        email: result.email,
+                        phone: result.phone,
+                        group: result.group,
+                        side: result.side,
+                        plusOneAllowed: result.plusOneAllowed,
+                      ),
+                    );
+              },
+            ),
+          ],
+        ),
+      ),
       body: state.loading && state.guests.isEmpty
           ? const Center(child: CircularProgressIndicator())
-          : Stack(children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.screenMargin,
-                  16,
-                  AppTheme.screenMargin,
-                  24,
+          : Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.screenMargin,
+                    16,
+                    AppTheme.screenMargin,
+                    24,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      RsvpPieChart(
+                        confirmed: state.confirmedCount,
+                        pending: state.pendingCount,
+                        declined: state.declinedCount,
+                        selected: state.filter,
+                        onChanged: (f) => ref
+                            .read(guestsControllerProvider.notifier)
+                            .setFilter(f),
+                      ),
+                      const SizedBox(height: 12),
+                      RsvpStatusFilterTabs(
+                        selected: state.filter,
+                        onChanged: (f) => ref
+                            .read(guestsControllerProvider.notifier)
+                            .setFilter(f),
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: state.filtered.isEmpty
+                            ? const Center(
+                                child: Text('Sem convidados nesta categoria.'),
+                              )
+                            : ListView.builder(
+                                padding: const EdgeInsets.only(bottom: 90),
+                                itemCount: state.filtered.length,
+                                itemBuilder: (context, index) {
+                                  final guest = state.filtered[index];
+                                  return GuestListItem(
+                                    guest: guest,
+                                    onTap: () =>
+                                        context.push('/guests/${guest.id}'),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    RsvpPieChart(
-                      confirmed: state.confirmedCount,
-                      pending: state.pendingCount,
-                      declined: state.declinedCount,
-                      selected: state.filter,
-                      onChanged: (f) => ref.read(guestsControllerProvider.notifier).setFilter(f),
-                    ),
-                    const SizedBox(height: 12),
-                    RsvpStatusFilterTabs(
-                      selected: state.filter,
-                      onChanged: (f) => ref.read(guestsControllerProvider.notifier).setFilter(f),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: state.filtered.isEmpty
-                          ? const Center(child: Text('Sem convidados nesta categoria.'))
-                          : ListView.builder(
-                              padding: const EdgeInsets.only(bottom: 90),
-                              itemCount: state.filtered.length,
-                              itemBuilder: (context, index) {
-                                final guest = state.filtered[index];
-                                return GuestListItem(
-                                  guest: guest,
-                                  onTap: () => context.push('/guests/${guest.id}'),
-                                );
-                              },
-                            ),
-                    ),
-                  ],
+                const Positioned(
+                  left: AppTheme.screenMargin,
+                  right: AppTheme.screenMargin,
+                  bottom: 24,
+                  child: FloatingBottomNav(current: AppTab.guests),
                 ),
-              ),
-              const Positioned(
-                left: AppTheme.screenMargin,
-                right: AppTheme.screenMargin,
-                bottom: 24,
-                child: FloatingBottomNav(current: AppTab.guests),
-              ),
-              const Positioned.fill(child: DraggableChatBubble()),
-            ]),
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.add),
-        label: const Text('Adicionar convidado'),
-        onPressed: () async {
-          final weddingId = ref.read(guestsControllerProvider.notifier).currentWeddingId;
-          if (weddingId == null) return;
-          final result = await showGuestFormSheet(context);
-          if (result == null) return;
-          ref.read(guestsControllerProvider.notifier).addGuest(
-                Guest(
-                  id: '',
-                  weddingId: weddingId,
-                  name: result.name,
-                  email: result.email,
-                  phone: result.phone,
-                  group: result.group,
-                  side: result.side,
-                  plusOneAllowed: result.plusOneAllowed,
-                ),
-              );
-        },
-      ),
+                const Positioned.fill(child: DraggableChatBubble()),
+              ],
+            ),
     );
   }
 }
