@@ -116,12 +116,12 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                                     onTap: _dismissAiCard,
                                   ),
                                   Positioned(
-                                    top: -14,
-                                    right: -14,
+                                    top: -22,
+                                    right: -22,
                                     child: IgnorePointer(
                                       child: Image.asset(
                                         'assets/images/new_badge.png',
-                                        width: 56,
+                                        width: 84,
                                       ),
                                     ),
                                   ),
