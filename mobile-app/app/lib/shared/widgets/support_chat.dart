@@ -50,7 +50,7 @@ class _DraggableChatBubbleState extends State<DraggableChatBubble> {
   bool _dragging = false;
   bool _dismissed = false;
 
-  Offset _targetCenter(Size size) => Offset(size.width / 2, size.height * 0.3);
+  Offset _targetCenter(Size size) => Offset(size.width / 2, size.height * 0.2);
 
   @override
   Widget build(BuildContext context) {
