@@ -341,11 +341,14 @@ class _NavIconOptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
-      child: Image.asset(
-        option.assetPath,
-        width: _NavIconPickerState._maxExtent,
-        height: _NavIconPickerState._maxExtent,
-        fit: BoxFit.cover,
+      child: Transform.scale(
+        scale: option.zoom,
+        child: Image.asset(
+          option.assetPath,
+          width: _NavIconPickerState._maxExtent,
+          height: _NavIconPickerState._maxExtent,
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
