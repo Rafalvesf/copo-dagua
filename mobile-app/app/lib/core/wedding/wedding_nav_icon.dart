@@ -7,11 +7,7 @@ enum WeddingNavIcon {
   bears('Ursinhos', 'assets/images/nav_icon_bears.png', 1),
   penguins('Pinguins', 'assets/images/nav_icon_penguins.png', 1),
   frogs('Sapos', 'assets/images/nav_icon_frogs.png', 1),
-  // Ficheiro quadrado (1024x1024) em vez de retangular como os outros —
-  // com BoxFit.cover num quadro quadrado não há corte nenhum, por isso
-  // ficava visível o fundo preto quadrado do canvas original à volta do
-  // boneco. Ampliado à mão para recortar esse fundo para fora do quadro.
-  capybaras('Capivaras', 'assets/images/nav_icon_capybaras.png', 2.1);
+  capybaras('Capivaras', 'assets/images/nav_icon_capybaras.png', 1);
 
   final String label;
   final String assetPath;
