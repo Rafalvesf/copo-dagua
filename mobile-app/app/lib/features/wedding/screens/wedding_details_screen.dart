@@ -71,7 +71,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                         WeddingCoverHeader(wedding: wedding),
                         const SizedBox(height: 24),
                         Text(
-                          'Bonecos da navbar',
+                          'Nós <3',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 4),
@@ -196,56 +196,104 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
   }
 }
 
-class _NavIconPicker extends ConsumerWidget {
+/// Carrossel horizontal estilo "cover flow" (como a roda de álbuns de um
+/// iPod): a opção centrada fica maior, as vizinhas ficam mais pequenas e
+/// semi-transparentes, e o gesto de deslizar tem inércia/snap suave. Sem
+/// anéis, checkmarks ou recortes circulares — só o tamanho comunica qual
+/// está selecionada.
+class _NavIconPicker extends ConsumerStatefulWidget {
   const _NavIconPicker();
 
-  static const _tileExtent = 92.0;
+  @override
+  ConsumerState<_NavIconPicker> createState() => _NavIconPickerState();
+}
+
+class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
+  static const _maxExtent = 72.0;
+  static const _minScale = 0.6;
+
+  late final PageController _controller;
+  double _page = 0;
+
+  int get _itemCount => WeddingNavIcon.values.length + 1; // +1 = botão "+"
+  int get _moreIndex => WeddingNavIcon.values.length;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(weddingNavIconProvider);
-    final options = WeddingNavIcon.values;
+  void initState() {
+    super.initState();
+    final initialIndex = WeddingNavIcon.values.indexOf(
+      ref.read(weddingNavIconProvider),
+    );
+    _page = initialIndex.toDouble();
+    _controller =
+        PageController(viewportFraction: 0.34, initialPage: initialIndex)
+          ..addListener(() {
+            setState(() => _page = _controller.page ?? _page);
+          });
+  }
 
-    if (options.length <= 4) {
-      return Row(
-        children: [
-          for (final option in options) ...[
-            _NavIconOptionTile(
-              option: option,
-              selected: option == selected,
-              onTap: () =>
-                  ref.read(weddingNavIconProvider.notifier).select(option),
-            ),
-            if (option != options.last) const SizedBox(width: 14),
-          ],
-        ],
-      );
-    }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
-    // Mais de 4 opções: grelha de 4 colunas com scroll vertical — a 4ª
-    // posição vira um botão "+" para ganhar/receber mais bonecos, e o
-    // resto fica acessível a fazer scroll na própria grelha.
-    final tiles = <Widget>[];
-    for (var i = 0; i < options.length; i++) {
-      if (i == 3) tiles.add(const _MoreNavIconTile());
-      tiles.add(
-        _NavIconOptionTile(
-          option: options[i],
-          selected: options[i] == selected,
-          onTap: () =>
-              ref.read(weddingNavIconProvider.notifier).select(options[i]),
+  void _onSettle(int index) {
+    if (index == _moreIndex) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Em breve: ganha mais bonecos ou recebe-os como oferta.',
+          ),
         ),
       );
+      final selectedIndex = WeddingNavIcon.values.indexOf(
+        ref.read(weddingNavIconProvider),
+      );
+      _controller.animateToPage(
+        selectedIndex,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+      return;
     }
+    ref
+        .read(weddingNavIconProvider.notifier)
+        .select(WeddingNavIcon.values[index]);
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
-      height: _tileExtent * 2 + 20,
-      child: GridView.count(
-        crossAxisCount: 4,
-        mainAxisSpacing: 14,
-        crossAxisSpacing: 14,
-        childAspectRatio: 0.78,
-        children: tiles,
+      height: _maxExtent + 24,
+      child: PageView.builder(
+        controller: _controller,
+        itemCount: _itemCount,
+        onPageChanged: _onSettle,
+        itemBuilder: (context, index) {
+          final distance = (_page - index).abs().clamp(0.0, 1.0);
+          final scale = 1.0 - distance * (1 - _minScale);
+          return Center(
+            child: GestureDetector(
+              onTap: () => _controller.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              ),
+              child: Opacity(
+                opacity: 1.0 - distance * 0.55,
+                child: Transform.scale(
+                  scale: scale,
+                  child: index == _moreIndex
+                      ? const _MoreNavIconTile()
+                      : _NavIconOptionTile(
+                          option: WeddingNavIcon.values[index],
+                        ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -253,39 +301,18 @@ class _NavIconPicker extends ConsumerWidget {
 
 class _NavIconOptionTile extends StatelessWidget {
   final WeddingNavIcon option;
-  final bool selected;
-  final VoidCallback onTap;
 
-  const _NavIconOptionTile({
-    required this.option,
-    required this.selected,
-    required this.onTap,
-  });
+  const _NavIconOptionTile({required this.option});
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Image.asset(
-              option.assetPath,
-              width: _NavIconPicker._tileExtent,
-              height: _NavIconPicker._tileExtent,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Icon(
-            selected ? Icons.check_circle : Icons.circle_outlined,
-            size: 16,
-            color: selected ? AppTheme.ink : AppTheme.inkMuted,
-          ),
-        ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Image.asset(
+        option.assetPath,
+        width: _NavIconPickerState._maxExtent,
+        height: _NavIconPickerState._maxExtent,
+        fit: BoxFit.cover,
       ),
     );
   }
@@ -296,35 +323,14 @@ class _MoreNavIconTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Em breve: ganha mais bonecos ou recebe-os como oferta.',
-          ),
-        ),
+    return Container(
+      width: _NavIconPickerState._maxExtent,
+      height: _NavIconPickerState._maxExtent,
+      decoration: BoxDecoration(
+        color: AppColors.muted,
+        borderRadius: BorderRadius.circular(18),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: _NavIconPicker._tileExtent,
-            height: _NavIconPicker._tileExtent,
-            decoration: BoxDecoration(
-              color: AppColors.muted,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(Icons.add, color: AppTheme.inkMuted, size: 32),
-          ),
-          const SizedBox(height: 6),
-          const Icon(
-            Icons.circle_outlined,
-            size: 16,
-            color: Colors.transparent,
-          ),
-        ],
-      ),
+      child: const Icon(Icons.add, color: AppTheme.inkMuted, size: 28),
     );
   }
 }
