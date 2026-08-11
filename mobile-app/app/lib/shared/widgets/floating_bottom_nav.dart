@@ -85,13 +85,13 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = large ? 26.0 : 22.0;
+    final size = large ? 38.0 : 22.0;
     return InkWell(
       borderRadius: BorderRadius.circular(999),
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: EdgeInsets.all(large ? 15 : 13),
+        padding: EdgeInsets.all(large ? 11 : 13),
         decoration: BoxDecoration(
           color: active
               ? Colors.white.withValues(alpha: 0.18)
