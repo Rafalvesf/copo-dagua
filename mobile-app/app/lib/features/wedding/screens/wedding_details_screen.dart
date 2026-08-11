@@ -305,7 +305,6 @@ class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
             final realIndex = _realIndexOf(rawIndex);
             final distance = (_page - rawIndex).abs().clamp(0.0, 1.0);
             final scale = 1.0 - distance * (1 - _minScale);
-            final isCentered = distance < 0.15;
             return Center(
               child: GestureDetector(
                 onTap: () => _controller.animateToPage(
@@ -321,7 +320,6 @@ class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
                         ? const _MoreNavIconTile()
                         : _NavIconOptionTile(
                             option: WeddingNavIcon.values[realIndex],
-                            selected: isCentered,
                           ),
                   ),
                 ),
@@ -336,31 +334,20 @@ class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
 
 class _NavIconOptionTile extends StatelessWidget {
   final WeddingNavIcon option;
-  final bool selected;
 
-  const _NavIconOptionTile({required this.option, this.selected = false});
+  const _NavIconOptionTile({required this.option});
 
   @override
   Widget build(BuildContext context) {
-    // As capivaras são muito claras e confundem-se com o fundo branco —
-    // ganham uma borda quando centradas, para se distinguirem do resto.
-    final showBorder = selected && option == WeddingNavIcon.capybaras;
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        border: showBorder ? Border.all(color: AppTheme.ink, width: 2) : null,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: Transform.scale(
-          scale: option.zoom,
-          child: Image.asset(
-            option.assetPath,
-            width: _NavIconPickerState._maxExtent,
-            height: _NavIconPickerState._maxExtent,
-            fit: BoxFit.cover,
-          ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Transform.scale(
+        scale: option.zoom,
+        child: Image.asset(
+          option.assetPath,
+          width: _NavIconPickerState._maxExtent,
+          height: _NavIconPickerState._maxExtent,
+          fit: BoxFit.cover,
         ),
       ),
     );
