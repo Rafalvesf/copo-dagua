@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/wedding/wedding_nav_icon.dart';
 
 enum AppTab { home, wedding, guests, checklist, suppliers }
 
-class FloatingBottomNav extends StatelessWidget {
+class FloatingBottomNav extends ConsumerWidget {
   final AppTab current;
 
   const FloatingBottomNav({super.key, required this.current});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final weddingIcon = ref.watch(weddingNavIconProvider);
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -38,10 +42,12 @@ class FloatingBottomNav extends StatelessWidget {
             active: current == AppTab.home,
             onTap: () => context.go('/home'),
           ),
-          // Coração no centro, ligeiramente maior — casamento é a ação
-          // principal, fornecedores e início ficam logo ao lado dele.
+          // Ícone do casamento no centro, ligeiramente maior — escolhido
+          // pelo utilizador entre as opções de wedding_nav_icon.dart.
+          // Fornecedores e início ficam logo ao lado dele.
           _NavIcon(
             icon: Icons.favorite_rounded,
+            imagePath: weddingIcon.assetPath,
             active: current == AppTab.wedding,
             large: true,
             onTap: () => context.go('/wedding'),
@@ -64,12 +70,14 @@ class FloatingBottomNav extends StatelessWidget {
 
 class _NavIcon extends StatelessWidget {
   final IconData icon;
+  final String? imagePath;
   final bool active;
   final bool large;
   final VoidCallback onTap;
 
   const _NavIcon({
     required this.icon,
+    this.imagePath,
     required this.active,
     this.large = false,
     required this.onTap,
@@ -77,6 +85,7 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = large ? 26.0 : 22.0;
     return InkWell(
       borderRadius: BorderRadius.circular(999),
       onTap: onTap,
@@ -89,7 +98,16 @@ class _NavIcon extends StatelessWidget {
               : Colors.transparent,
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: Colors.white, size: large ? 26 : 22),
+        child: imagePath == null
+            ? Icon(icon, color: Colors.white, size: size)
+            : ClipOval(
+                child: Image.asset(
+                  imagePath!,
+                  width: size,
+                  height: size,
+                  fit: BoxFit.cover,
+                ),
+              ),
       ),
     );
   }
