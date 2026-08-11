@@ -66,6 +66,7 @@ class FloatingBottomNav extends ConsumerWidget {
               assetPath: weddingIcon.assetPath,
               size: _weddingIconSize,
               zoom: weddingIcon.zoom,
+              showBorder: weddingIcon == WeddingNavIcon.capybaras,
               onTap: () => context.go('/wedding'),
             ),
           ),
@@ -81,12 +82,14 @@ class _SquishyWeddingIcon extends StatefulWidget {
   final String assetPath;
   final double size;
   final double zoom;
+  final bool showBorder;
   final VoidCallback onTap;
 
   const _SquishyWeddingIcon({
     required this.assetPath,
     required this.size,
     this.zoom = 1,
+    this.showBorder = false,
     required this.onTap,
   });
 
@@ -140,15 +143,23 @@ class _SquishyWeddingIconState extends State<_SquishyWeddingIcon>
             child: child,
           );
         },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Transform.scale(
-            scale: widget.zoom,
-            child: Image.asset(
-              widget.assetPath,
-              width: widget.size,
-              height: widget.size,
-              fit: BoxFit.cover,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: widget.showBorder
+                ? Border.all(color: Colors.white, width: 2)
+                : null,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Transform.scale(
+              scale: widget.zoom,
+              child: Image.asset(
+                widget.assetPath,
+                width: widget.size,
+                height: widget.size,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         ),
