@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
-import '../../../shared/widgets/support_chat.dart';
 
 class SupportScreen extends ConsumerStatefulWidget {
   const SupportScreen({super.key});
@@ -31,7 +31,9 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
 
   void _comingSoon(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Ainda sem assistente real ligado — em breve.')),
+      const SnackBar(
+        content: Text('Ainda sem assistente real ligado — em breve.'),
+      ),
     );
   }
 
@@ -48,12 +50,20 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Row(
                 children: [
-                  const ChatIconButton(),
+                  CircleIconButton(
+                    icon: Icons.arrow_back_rounded,
+                    onTap: () => Navigator.of(context).canPop()
+                        ? Navigator.of(context).pop()
+                        : context.go('/home'),
+                  ),
                   const Spacer(),
                   CircleIconButton(
                     icon: Icons.notifications_none,
-                    onTap: () => ScaffoldMessenger.of(context)
-                        .showSnackBar(const SnackBar(content: Text('Sem notificações por agora.'))),
+                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Sem notificações por agora.'),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -65,7 +75,9 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      firstName.isEmpty ? 'Olá,\ncomo posso ajudar hoje?' : 'Olá, $firstName,\ncomo posso ajudar hoje?',
+                      firstName.isEmpty
+                          ? 'Olá,\ncomo posso ajudar hoje?'
+                          : 'Olá, $firstName,\ncomo posso ajudar hoje?',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 28),
@@ -99,7 +111,10 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                                     top: -14,
                                     right: -14,
                                     child: IgnorePointer(
-                                      child: Image.asset('assets/images/new_badge.png', width: 56),
+                                      child: Image.asset(
+                                        'assets/images/new_badge.png',
+                                        width: 56,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -140,26 +155,46 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(999),
                         boxShadow: _searchHighlighted
-                            ? [BoxShadow(color: AppColors.purple.withValues(alpha: 0.45), blurRadius: 16, spreadRadius: 1)]
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.purple.withValues(
+                                    alpha: 0.45,
+                                  ),
+                                  blurRadius: 16,
+                                  spreadRadius: 1,
+                                ),
+                              ]
                             : [],
                       ),
                       child: TextField(
                         enabled: false,
                         decoration: InputDecoration(
-                          hintText: _searchHighlighted ? 'Pergunta? Posso ajudar.' : 'Pergunta ou pesquisa qualquer coisa...',
+                          hintText: _searchHighlighted
+                              ? 'Pergunta? Posso ajudar.'
+                              : 'Pergunta ou pesquisa qualquer coisa...',
                           hintStyle: TextStyle(
                             fontSize: 15,
-                            fontWeight: _searchHighlighted ? FontWeight.w600 : FontWeight.w400,
-                            color: _searchHighlighted ? AppTheme.ink : AppTheme.inkMuted,
+                            fontWeight: _searchHighlighted
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: _searchHighlighted
+                                ? AppTheme.ink
+                                : AppTheme.inkMuted,
                           ),
                           fillColor: Colors.white,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(999),
                             borderSide: _searchHighlighted
-                                ? const BorderSide(color: AppColors.purple, width: 2)
+                                ? const BorderSide(
+                                    color: AppColors.purple,
+                                    width: 2,
+                                  )
                                 : BorderSide.none,
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
                         ),
                       ),
                     ),
@@ -206,14 +241,20 @@ class _OptionCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(24)),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(24),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 36,
               height: 36,
-              decoration: BoxDecoration(color: iconBackground ?? Colors.white, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: iconBackground ?? Colors.white,
+                shape: BoxShape.circle,
+              ),
               child: Icon(icon, size: 18, color: iconColor ?? AppTheme.ink),
             ),
             const Spacer(),
