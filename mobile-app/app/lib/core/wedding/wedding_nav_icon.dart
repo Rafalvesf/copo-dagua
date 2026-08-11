@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// casamento. Todas as opções são ilustrações personalizadas.
 enum WeddingNavIcon {
   bears('Ursinhos', 'assets/images/nav_icon_bears.png'),
-  penguins('Pinguins', 'assets/images/nav_icon_penguins.png');
+  penguins('Pinguins', 'assets/images/nav_icon_penguins.png'),
+  frogs('Sapos', 'assets/images/nav_icon_frogs.png');
 
   final String label;
   final String assetPath;
