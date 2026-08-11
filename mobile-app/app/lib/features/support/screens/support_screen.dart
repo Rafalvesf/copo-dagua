@@ -93,6 +93,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                       crossAxisCount: 2,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
+                      clipBehavior: Clip.none,
                       mainAxisSpacing: 14,
                       crossAxisSpacing: 14,
                       childAspectRatio: 1.15,
