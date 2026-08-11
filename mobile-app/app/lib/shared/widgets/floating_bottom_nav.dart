@@ -85,29 +85,42 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = large ? 38.0 : 22.0;
+    final size = large ? 62.0 : 22.0;
+    // Ícone da aba dos noivos (imagem) fica maior e sem recorte circular
+    // — destaca-se dos restantes ícones, que continuam num círculo.
+    if (imagePath != null) {
+      return InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          padding: const EdgeInsets.all(2),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(
+              imagePath!,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      );
+    }
+
     return InkWell(
       borderRadius: BorderRadius.circular(999),
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: EdgeInsets.all(large ? 11 : 13),
+        padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
           color: active
               ? Colors.white.withValues(alpha: 0.18)
               : Colors.transparent,
           shape: BoxShape.circle,
         ),
-        child: imagePath == null
-            ? Icon(icon, color: Colors.white, size: size)
-            : ClipOval(
-                child: Image.asset(
-                  imagePath!,
-                  width: size,
-                  height: size,
-                  fit: BoxFit.cover,
-                ),
-              ),
+        child: Icon(icon, color: Colors.white, size: size),
       ),
     );
   }

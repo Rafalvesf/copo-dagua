@@ -2,10 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Opções de ilustração para o ícone central (casamento) da navbar
 /// flutuante — escolhidas pelo utilizador no ecrã de detalhes do
-/// casamento. Todas as opções são ilustrações personalizadas; ainda só
-/// existe uma, as restantes chegam a seguir.
+/// casamento. Todas as opções são ilustrações personalizadas.
 enum WeddingNavIcon {
-  bears('Ursinhos', 'assets/images/nav_icon_bears.png');
+  bears('Ursinhos', 'assets/images/nav_icon_bears.png'),
+  penguins('Pinguins', 'assets/images/nav_icon_penguins.png');
 
   final String label;
   final String assetPath;

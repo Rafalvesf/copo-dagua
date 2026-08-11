@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/wedding/wedding_nav_icon.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/form_fields.dart';
@@ -14,7 +15,8 @@ class WeddingDetailsScreen extends ConsumerStatefulWidget {
   const WeddingDetailsScreen({super.key});
 
   @override
-  ConsumerState<WeddingDetailsScreen> createState() => _WeddingDetailsScreenState();
+  ConsumerState<WeddingDetailsScreen> createState() =>
+      _WeddingDetailsScreenState();
 }
 
 class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
@@ -47,81 +49,218 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
     final wedding = weddingState.wedding;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('O nosso casamento'), leading: const CircleBackButton()),
+      appBar: AppBar(
+        title: const Text('O nosso casamento'),
+        leading: const CircleBackButton(),
+      ),
       body: wedding == null
           ? const Center(child: CircularProgressIndicator())
-          : Stack(children: [
-              Builder(builder: (context) {
-                _syncControllers(wedding);
-                return ListView(
-                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 24, AppTheme.screenMargin, 110),
-                  children: [
-                  WeddingCoverHeader(wedding: wedding),
-                  const SizedBox(height: 24),
-                  Text('Editar detalhes', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 12),
-                  AuthTextField(label: 'Nome (tu)', controller: _partner1),
-                  const SizedBox(height: 12),
-                  AuthTextField(label: 'Idade (tu)', controller: _partner1Age, keyboardType: TextInputType.number),
-                  const SizedBox(height: 12),
-                  AuthTextField(label: 'Nome (parceiro/a)', controller: _partner2),
-                  const SizedBox(height: 12),
-                  AuthTextField(label: 'Idade (parceiro/a)', controller: _partner2Age, keyboardType: TextInputType.number),
-                  const SizedBox(height: 12),
-                  DatePickerField(
-                    label: 'Data',
-                    value: _date,
-                    allowUnknown: false,
-                    onChanged: (d) => setState(() => _date = d),
-                  ),
-                  const SizedBox(height: 12),
-                  AuthTextField(label: 'Localização', controller: _location),
-                  const SizedBox(height: 12),
-                  AuthTextField(label: 'Local / Venue', controller: _venue),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<CeremonyType>(
-                    initialValue: _ceremonyType,
-                    decoration: const InputDecoration(labelText: 'Tipo de cerimónia'),
-                    items: const [
-                      DropdownMenuItem(value: CeremonyType.civil, child: Text('Civil')),
-                      DropdownMenuItem(value: CeremonyType.religious, child: Text('Religiosa')),
-                      DropdownMenuItem(value: CeremonyType.both, child: Text('Ambas')),
-                    ],
-                    onChanged: (v) => setState(() => _ceremonyType = v ?? _ceremonyType),
-                  ),
-                  const SizedBox(height: 20),
-                  PrimaryButton(
-                    label: 'Guardar alterações',
-                    loading: weddingState.loading,
-                    onPressed: () {
-                      ref.read(weddingControllerProvider.notifier).update(
-                            wedding.copyWith(
-                              partnerName1: _partner1.text.trim(),
-                              partnerName2: _partner2.text.trim(),
-                              partner1Age: int.tryParse(_partner1Age.text.trim()),
-                              partner2Age: int.tryParse(_partner2Age.text.trim()),
-                              location: _location.text.trim(),
-                              venue: _venue.text.trim(),
-                              weddingDate: _date,
-                              ceremonyType: _ceremonyType,
+          : Stack(
+              children: [
+                Builder(
+                  builder: (context) {
+                    _syncControllers(wedding);
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppTheme.screenMargin,
+                        24,
+                        AppTheme.screenMargin,
+                        110,
+                      ),
+                      children: [
+                        WeddingCoverHeader(wedding: wedding),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Bonecos da navbar',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Escolhe a ilustração do ícone central da barra de navegação.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 12),
+                        const _NavIconPicker(),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Editar detalhes',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        AuthTextField(
+                          label: 'Nome (tu)',
+                          controller: _partner1,
+                        ),
+                        const SizedBox(height: 12),
+                        AuthTextField(
+                          label: 'Idade (tu)',
+                          controller: _partner1Age,
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 12),
+                        AuthTextField(
+                          label: 'Nome (parceiro/a)',
+                          controller: _partner2,
+                        ),
+                        const SizedBox(height: 12),
+                        AuthTextField(
+                          label: 'Idade (parceiro/a)',
+                          controller: _partner2Age,
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 12),
+                        DatePickerField(
+                          label: 'Data',
+                          value: _date,
+                          allowUnknown: false,
+                          onChanged: (d) => setState(() => _date = d),
+                        ),
+                        const SizedBox(height: 12),
+                        AuthTextField(
+                          label: 'Localização',
+                          controller: _location,
+                        ),
+                        const SizedBox(height: 12),
+                        AuthTextField(
+                          label: 'Local / Venue',
+                          controller: _venue,
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<CeremonyType>(
+                          initialValue: _ceremonyType,
+                          decoration: const InputDecoration(
+                            labelText: 'Tipo de cerimónia',
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: CeremonyType.civil,
+                              child: Text('Civil'),
                             ),
-                          );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Casamento atualizado.')),
-                      );
-                    },
-                  ),
-                ],
-                );
-              }),
-              const Positioned(
-                left: AppTheme.screenMargin,
-                right: AppTheme.screenMargin,
-                bottom: 24,
-                child: FloatingBottomNav(current: AppTab.wedding),
+                            DropdownMenuItem(
+                              value: CeremonyType.religious,
+                              child: Text('Religiosa'),
+                            ),
+                            DropdownMenuItem(
+                              value: CeremonyType.both,
+                              child: Text('Ambas'),
+                            ),
+                          ],
+                          onChanged: (v) => setState(
+                            () => _ceremonyType = v ?? _ceremonyType,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        PrimaryButton(
+                          label: 'Guardar alterações',
+                          loading: weddingState.loading,
+                          onPressed: () {
+                            ref
+                                .read(weddingControllerProvider.notifier)
+                                .update(
+                                  wedding.copyWith(
+                                    partnerName1: _partner1.text.trim(),
+                                    partnerName2: _partner2.text.trim(),
+                                    partner1Age: int.tryParse(
+                                      _partner1Age.text.trim(),
+                                    ),
+                                    partner2Age: int.tryParse(
+                                      _partner2Age.text.trim(),
+                                    ),
+                                    location: _location.text.trim(),
+                                    venue: _venue.text.trim(),
+                                    weddingDate: _date,
+                                    ceremonyType: _ceremonyType,
+                                  ),
+                                );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Casamento atualizado.'),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const Positioned(
+                  left: AppTheme.screenMargin,
+                  right: AppTheme.screenMargin,
+                  bottom: 24,
+                  child: FloatingBottomNav(current: AppTab.wedding),
+                ),
+                const Positioned.fill(child: DraggableChatBubble()),
+              ],
+            ),
+    );
+  }
+}
+
+class _NavIconPicker extends ConsumerWidget {
+  const _NavIconPicker();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(weddingNavIconProvider);
+
+    return Row(
+      children: [
+        for (final option in WeddingNavIcon.values) ...[
+          _NavIconOptionTile(
+            option: option,
+            selected: option == selected,
+            onTap: () =>
+                ref.read(weddingNavIconProvider.notifier).select(option),
+          ),
+          if (option != WeddingNavIcon.values.last) const SizedBox(width: 14),
+        ],
+      ],
+    );
+  }
+}
+
+class _NavIconOptionTile extends StatelessWidget {
+  final WeddingNavIcon option;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _NavIconOptionTile({
+    required this.option,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: selected ? AppTheme.ink : Colors.transparent,
+                width: 2,
               ),
-              const Positioned.fill(child: DraggableChatBubble()),
-            ]),
+            ),
+            child: ClipOval(
+              child: Image.asset(option.assetPath, fit: BoxFit.cover),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Icon(
+            selected ? Icons.check_circle : Icons.circle_outlined,
+            size: 16,
+            color: selected ? AppTheme.ink : AppTheme.inkMuted,
+          ),
+        ],
+      ),
     );
   }
 }
