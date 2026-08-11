@@ -219,18 +219,26 @@ class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
   double _page = 0;
   Timer? _wheelSnapTimer;
 
-  int get _itemCount => WeddingNavIcon.values.length + 1; // +1 = botão "+"
+  // Número real de opções (bonecos + botão "+"). O PageView usa um espaço
+  // de índices muito maior — um múltiplo grande deste valor — só para dar
+  // a sensação de loop infinito em ambas as direções: nunca se chega a
+  // uma ponta vazia, seja a arrastar seja com a roda do rato.
+  int get _realCount => WeddingNavIcon.values.length + 1; // +1 = botão "+"
   int get _moreIndex => WeddingNavIcon.values.length;
+  static const _loopSpan = 2000;
+
+  int _realIndexOf(int rawIndex) => rawIndex % _realCount;
 
   @override
   void initState() {
     super.initState();
-    final initialIndex = WeddingNavIcon.values.indexOf(
+    final initialRealIndex = WeddingNavIcon.values.indexOf(
       ref.read(weddingNavIconProvider),
     );
-    _page = initialIndex.toDouble();
+    final initialPage = (_loopSpan ~/ 2) * _realCount + initialRealIndex;
+    _page = initialPage.toDouble();
     _controller =
-        PageController(viewportFraction: 0.34, initialPage: initialIndex)
+        PageController(viewportFraction: 0.34, initialPage: initialPage)
           ..addListener(() {
             setState(() => _page = _controller.page ?? _page);
           });
@@ -266,8 +274,9 @@ class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
     });
   }
 
-  void _onSettle(int index) {
-    if (index == _moreIndex) {
+  void _onSettle(int rawIndex) {
+    final realIndex = _realIndexOf(rawIndex);
+    if (realIndex == _moreIndex) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -275,19 +284,11 @@ class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
           ),
         ),
       );
-      final selectedIndex = WeddingNavIcon.values.indexOf(
-        ref.read(weddingNavIconProvider),
-      );
-      _controller.animateToPage(
-        selectedIndex,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
       return;
     }
     ref
         .read(weddingNavIconProvider.notifier)
-        .select(WeddingNavIcon.values[index]);
+        .select(WeddingNavIcon.values[realIndex]);
   }
 
   @override
@@ -298,15 +299,16 @@ class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
         onPointerSignal: _onPointerSignal,
         child: PageView.builder(
           controller: _controller,
-          itemCount: _itemCount,
+          itemCount: _loopSpan * _realCount,
           onPageChanged: _onSettle,
-          itemBuilder: (context, index) {
-            final distance = (_page - index).abs().clamp(0.0, 1.0);
+          itemBuilder: (context, rawIndex) {
+            final realIndex = _realIndexOf(rawIndex);
+            final distance = (_page - rawIndex).abs().clamp(0.0, 1.0);
             final scale = 1.0 - distance * (1 - _minScale);
             return Center(
               child: GestureDetector(
                 onTap: () => _controller.animateToPage(
-                  index,
+                  rawIndex,
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOut,
                 ),
@@ -314,10 +316,10 @@ class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
                   opacity: 1.0 - distance * 0.55,
                   child: Transform.scale(
                     scale: scale,
-                    child: index == _moreIndex
+                    child: realIndex == _moreIndex
                         ? const _MoreNavIconTile()
                         : _NavIconOptionTile(
-                            option: WeddingNavIcon.values[index],
+                            option: WeddingNavIcon.values[realIndex],
                           ),
                   ),
                 ),
