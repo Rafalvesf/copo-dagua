@@ -89,66 +89,83 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 28),
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      clipBehavior: Clip.none,
-                      mainAxisSpacing: 14,
-                      crossAxisSpacing: 14,
-                      childAspectRatio: 1.15,
-                      children: [
-                        if (_showAiCard)
-                          AnimatedOpacity(
-                            opacity: _aiCardDismissing ? 0 : 1,
-                            duration: const Duration(milliseconds: 200),
-                            child: AnimatedScale(
-                              scale: _aiCardDismissing ? 0.85 : 1,
-                              duration: const Duration(milliseconds: 200),
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  _OptionCard(
-                                    color: AppColors.yellow,
-                                    iconBackground: Colors.transparent,
-                                    iconColor: AppColors.purple,
-                                    icon: Icons.auto_awesome,
-                                    label: 'Perguntar à IA',
-                                    onTap: _dismissAiCard,
-                                  ),
-                                  Positioned(
-                                    top: -22,
-                                    right: 40,
-                                    child: IgnorePointer(
-                                      child: Image.asset(
-                                        'assets/images/new_badge.png',
-                                        width: 84,
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final cardWidth = (constraints.maxWidth - 14) / 2;
+                        // O badge é irmão da GridView (não filho de uma
+                        // Stack por-cartão) para poder pintar por cima da
+                        // grelha inteira — incluindo o cartão vizinho onde
+                        // transborda — em vez de ficar escondido atrás
+                        // dele pela ordem normal de pintura das células.
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            GridView.count(
+                              crossAxisCount: 2,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              clipBehavior: Clip.none,
+                              mainAxisSpacing: 14,
+                              crossAxisSpacing: 14,
+                              childAspectRatio: 1.15,
+                              children: [
+                                if (_showAiCard)
+                                  AnimatedOpacity(
+                                    opacity: _aiCardDismissing ? 0 : 1,
+                                    duration: const Duration(milliseconds: 200),
+                                    child: AnimatedScale(
+                                      scale: _aiCardDismissing ? 0.85 : 1,
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
+                                      child: _OptionCard(
+                                        color: AppColors.yellow,
+                                        iconBackground: Colors.transparent,
+                                        iconColor: AppColors.purple,
+                                        icon: Icons.auto_awesome,
+                                        label: 'Perguntar à IA',
+                                        onTap: _dismissAiCard,
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
+                                _OptionCard(
+                                  color: AppColors.green,
+                                  icon: Icons.support_agent,
+                                  label: 'Falar com a equipa',
+                                  onTap: () => _comingSoon(context),
+                                ),
+                                _OptionCard(
+                                  color: AppColors.blue,
+                                  icon: Icons.storefront_outlined,
+                                  label: 'Sugestões de fornecedores',
+                                  onTap: () => _comingSoon(context),
+                                ),
+                                _OptionCard(
+                                  color: AppColors.gray,
+                                  icon: Icons.savings_outlined,
+                                  label: 'Dicas de orçamento',
+                                  onTap: () => _comingSoon(context),
+                                ),
+                              ],
                             ),
-                          ),
-                        _OptionCard(
-                          color: AppColors.green,
-                          icon: Icons.support_agent,
-                          label: 'Falar com a equipa',
-                          onTap: () => _comingSoon(context),
-                        ),
-                        _OptionCard(
-                          color: AppColors.blue,
-                          icon: Icons.storefront_outlined,
-                          label: 'Sugestões de fornecedores',
-                          onTap: () => _comingSoon(context),
-                        ),
-                        _OptionCard(
-                          color: AppColors.gray,
-                          icon: Icons.savings_outlined,
-                          label: 'Dicas de orçamento',
-                          onTap: () => _comingSoon(context),
-                        ),
-                      ],
+                            if (_showAiCard)
+                              Positioned(
+                                top: -22,
+                                left: cardWidth - 44,
+                                child: IgnorePointer(
+                                  child: AnimatedOpacity(
+                                    opacity: _aiCardDismissing ? 0 : 1,
+                                    duration: const Duration(milliseconds: 200),
+                                    child: Image.asset(
+                                      'assets/images/new_badge.png',
+                                      width: 84,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
