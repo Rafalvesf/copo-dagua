@@ -57,11 +57,19 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                         : context.go('/home'),
                   ),
                   const Spacer(),
-                  CircleIconButton(
-                    icon: Icons.notifications_none,
+                  InkWell(
+                    customBorder: const CircleBorder(),
                     onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Sem notificações por agora.'),
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/nav_icon_capybaras.png',
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),

@@ -74,11 +74,8 @@ class FloatingBottomNav extends ConsumerWidget {
   }
 }
 
-/// Boneco central da navbar: as ilustrações têm fundo escuro quadrado,
-/// que ficava visível como uma "sobra" onde o boneco sai por cima da
-/// pílula (contra o fundo claro do ecrã). Um ShaderMask radial esbate
-/// esse fundo nas bordas, deixando só o boneco visível. Ao tocar,
-/// "espreme" (squash/stretch) e volta com um pequeno ressalto elástico.
+/// Boneco central da navbar. Ao tocar, "espreme" (squash/stretch) e
+/// volta com um pequeno ressalto elástico.
 class _SquishyWeddingIcon extends StatefulWidget {
   final String assetPath;
   final double size;
@@ -140,20 +137,13 @@ class _SquishyWeddingIconState extends State<_SquishyWeddingIcon>
             child: child,
           );
         },
-        child: ShaderMask(
-          blendMode: BlendMode.dstIn,
-          shaderCallback: (rect) => const RadialGradient(
-            colors: [Colors.black, Colors.black, Colors.transparent],
-            stops: [0.0, 0.72, 1.0],
-          ).createShader(rect),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.asset(
-              widget.assetPath,
-              width: widget.size,
-              height: widget.size,
-              fit: BoxFit.cover,
-            ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.asset(
+            widget.assetPath,
+            width: widget.size,
+            height: widget.size,
+            fit: BoxFit.cover,
           ),
         ),
       ),
