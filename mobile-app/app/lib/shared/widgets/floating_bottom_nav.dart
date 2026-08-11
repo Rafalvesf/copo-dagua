@@ -12,55 +12,79 @@ class FloatingBottomNav extends ConsumerWidget {
 
   const FloatingBottomNav({super.key, required this.current});
 
+  static const _weddingIconSize = 92.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final weddingIcon = ref.watch(weddingNavIconProvider);
 
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: AppTheme.ink,
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.28),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    // Stack em vez de só a Row: o boneco do casal fica maior do que a
+    // pílula (fica de fora do fluxo normal, sem nenhum limite imposto
+    // pela navbar) e sai ligeiramente por cima dela, em vez de esticar
+    // a pílula toda para o acomodar.
+    return SizedBox(
+      height: _weddingIconSize,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
         children: [
-          _NavIcon(
-            icon: Icons.people_alt_rounded,
-            active: current == AppTab.guests,
-            onTap: () => context.go('/guests'),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppTheme.ink,
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.28),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _NavIcon(
+                  icon: Icons.people_alt_rounded,
+                  active: current == AppTab.guests,
+                  onTap: () => context.go('/guests'),
+                ),
+                _NavIcon(
+                  icon: Icons.home_rounded,
+                  active: current == AppTab.home,
+                  onTap: () => context.go('/home'),
+                ),
+                // Espaço reservado para o boneco do casal, que é
+                // desenhado por cima (fora da Row) mais abaixo.
+                const SizedBox(width: 56),
+                _NavIcon(
+                  icon: Icons.storefront_rounded,
+                  active: current == AppTab.suppliers,
+                  onTap: () => context.go('/suppliers'),
+                ),
+                _NavIcon(
+                  icon: Icons.checklist_rounded,
+                  active: current == AppTab.checklist,
+                  onTap: () => context.go('/checklist'),
+                ),
+              ],
+            ),
           ),
-          _NavIcon(
-            icon: Icons.home_rounded,
-            active: current == AppTab.home,
-            onTap: () => context.go('/home'),
-          ),
-          // Ícone do casamento no centro, ligeiramente maior — escolhido
-          // pelo utilizador entre as opções de wedding_nav_icon.dart.
-          // Fornecedores e início ficam logo ao lado dele.
-          _NavIcon(
-            icon: Icons.favorite_rounded,
-            imagePath: weddingIcon.assetPath,
-            active: current == AppTab.wedding,
-            large: true,
-            onTap: () => context.go('/wedding'),
-          ),
-          _NavIcon(
-            icon: Icons.storefront_rounded,
-            active: current == AppTab.suppliers,
-            onTap: () => context.go('/suppliers'),
-          ),
-          _NavIcon(
-            icon: Icons.checklist_rounded,
-            active: current == AppTab.checklist,
-            onTap: () => context.go('/checklist'),
+          Positioned(
+            bottom: 6,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: () => context.go('/wedding'),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  weddingIcon.assetPath,
+                  width: _weddingIconSize,
+                  height: _weddingIconSize,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -70,43 +94,18 @@ class FloatingBottomNav extends ConsumerWidget {
 
 class _NavIcon extends StatelessWidget {
   final IconData icon;
-  final String? imagePath;
   final bool active;
-  final bool large;
   final VoidCallback onTap;
 
   const _NavIcon({
     required this.icon,
-    this.imagePath,
     required this.active,
-    this.large = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final size = large ? 62.0 : 22.0;
-    // Ícone da aba dos noivos (imagem) fica maior e sem recorte circular
-    // — destaca-se dos restantes ícones, que continuam num círculo.
-    if (imagePath != null) {
-      return InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          padding: const EdgeInsets.all(2),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.asset(
-              imagePath!,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-      );
-    }
+    const size = 22.0;
 
     return InkWell(
       borderRadius: BorderRadius.circular(999),

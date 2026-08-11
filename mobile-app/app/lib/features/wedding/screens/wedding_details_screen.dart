@@ -199,22 +199,54 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
 class _NavIconPicker extends ConsumerWidget {
   const _NavIconPicker();
 
+  static const _tileExtent = 92.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(weddingNavIconProvider);
+    final options = WeddingNavIcon.values;
 
-    return Row(
-      children: [
-        for (final option in WeddingNavIcon.values) ...[
-          _NavIconOptionTile(
-            option: option,
-            selected: option == selected,
-            onTap: () =>
-                ref.read(weddingNavIconProvider.notifier).select(option),
-          ),
-          if (option != WeddingNavIcon.values.last) const SizedBox(width: 14),
+    if (options.length <= 4) {
+      return Row(
+        children: [
+          for (final option in options) ...[
+            _NavIconOptionTile(
+              option: option,
+              selected: option == selected,
+              onTap: () =>
+                  ref.read(weddingNavIconProvider.notifier).select(option),
+            ),
+            if (option != options.last) const SizedBox(width: 14),
+          ],
         ],
-      ],
+      );
+    }
+
+    // Mais de 4 opções: grelha de 4 colunas com scroll vertical — a 4ª
+    // posição vira um botão "+" para ganhar/receber mais bonecos, e o
+    // resto fica acessível a fazer scroll na própria grelha.
+    final tiles = <Widget>[];
+    for (var i = 0; i < options.length; i++) {
+      if (i == 3) tiles.add(const _MoreNavIconTile());
+      tiles.add(
+        _NavIconOptionTile(
+          option: options[i],
+          selected: options[i] == selected,
+          onTap: () =>
+              ref.read(weddingNavIconProvider.notifier).select(options[i]),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: _tileExtent * 2 + 20,
+      child: GridView.count(
+        crossAxisCount: 4,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 14,
+        childAspectRatio: 0.78,
+        children: tiles,
+      ),
     );
   }
 }
@@ -233,24 +265,18 @@ class _NavIconOptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(20),
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: selected ? AppTheme.ink : Colors.transparent,
-                width: 2,
-              ),
-            ),
-            child: ClipOval(
-              child: Image.asset(option.assetPath, fit: BoxFit.cover),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Image.asset(
+              option.assetPath,
+              width: _NavIconPicker._tileExtent,
+              height: _NavIconPicker._tileExtent,
+              fit: BoxFit.cover,
             ),
           ),
           const SizedBox(height: 6),
@@ -258,6 +284,44 @@ class _NavIconOptionTile extends StatelessWidget {
             selected ? Icons.check_circle : Icons.circle_outlined,
             size: 16,
             color: selected ? AppTheme.ink : AppTheme.inkMuted,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MoreNavIconTile extends StatelessWidget {
+  const _MoreNavIconTile();
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Em breve: ganha mais bonecos ou recebe-os como oferta.',
+          ),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: _NavIconPicker._tileExtent,
+            height: _NavIconPicker._tileExtent,
+            decoration: BoxDecoration(
+              color: AppColors.muted,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(Icons.add, color: AppTheme.inkMuted, size: 32),
+          ),
+          const SizedBox(height: 6),
+          const Icon(
+            Icons.circle_outlined,
+            size: 16,
+            color: Colors.transparent,
           ),
         ],
       ),
