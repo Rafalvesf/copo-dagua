@@ -118,7 +118,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                                   ),
                                   Positioned(
                                     top: -22,
-                                    right: -22,
+                                    right: 40,
                                     child: IgnorePointer(
                                       child: Image.asset(
                                         'assets/images/new_badge.png',
