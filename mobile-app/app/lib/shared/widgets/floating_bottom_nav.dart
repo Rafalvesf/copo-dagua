@@ -12,7 +12,7 @@ class FloatingBottomNav extends ConsumerWidget {
 
   const FloatingBottomNav({super.key, required this.current});
 
-  static const _weddingIconSize = 92.0;
+  static const _weddingIconSize = 72.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

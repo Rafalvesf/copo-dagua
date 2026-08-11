@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -209,11 +212,12 @@ class _NavIconPicker extends ConsumerStatefulWidget {
 }
 
 class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
-  static const _maxExtent = 72.0;
+  static const _maxExtent = 92.0;
   static const _minScale = 0.6;
 
   late final PageController _controller;
   double _page = 0;
+  Timer? _wheelSnapTimer;
 
   int get _itemCount => WeddingNavIcon.values.length + 1; // +1 = botão "+"
   int get _moreIndex => WeddingNavIcon.values.length;
@@ -234,8 +238,32 @@ class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
 
   @override
   void dispose() {
+    _wheelSnapTimer?.cancel();
     _controller.dispose();
     super.dispose();
+  }
+
+  // A roda do rato num browser desktop só emite delta vertical — sem
+  // isto o carrossel horizontal não reage a scroll nenhum, só a
+  // arrastar. Depois de uma pausa no scroll, ajusta suavemente para a
+  // opção mais próxima, como o "click" da roda de um iPod.
+  void _onPointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || !_controller.hasClients) return;
+    final target = (_controller.offset + event.scrollDelta.dy).clamp(
+      0.0,
+      _controller.position.maxScrollExtent,
+    );
+    _controller.jumpTo(target);
+
+    _wheelSnapTimer?.cancel();
+    _wheelSnapTimer = Timer(const Duration(milliseconds: 160), () {
+      if (!_controller.hasClients) return;
+      _controller.animateToPage(
+        _page.round(),
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   void _onSettle(int index) {
@@ -266,34 +294,37 @@ class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
   Widget build(BuildContext context) {
     return SizedBox(
       height: _maxExtent + 24,
-      child: PageView.builder(
-        controller: _controller,
-        itemCount: _itemCount,
-        onPageChanged: _onSettle,
-        itemBuilder: (context, index) {
-          final distance = (_page - index).abs().clamp(0.0, 1.0);
-          final scale = 1.0 - distance * (1 - _minScale);
-          return Center(
-            child: GestureDetector(
-              onTap: () => _controller.animateToPage(
-                index,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              ),
-              child: Opacity(
-                opacity: 1.0 - distance * 0.55,
-                child: Transform.scale(
-                  scale: scale,
-                  child: index == _moreIndex
-                      ? const _MoreNavIconTile()
-                      : _NavIconOptionTile(
-                          option: WeddingNavIcon.values[index],
-                        ),
+      child: Listener(
+        onPointerSignal: _onPointerSignal,
+        child: PageView.builder(
+          controller: _controller,
+          itemCount: _itemCount,
+          onPageChanged: _onSettle,
+          itemBuilder: (context, index) {
+            final distance = (_page - index).abs().clamp(0.0, 1.0);
+            final scale = 1.0 - distance * (1 - _minScale);
+            return Center(
+              child: GestureDetector(
+                onTap: () => _controller.animateToPage(
+                  index,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                ),
+                child: Opacity(
+                  opacity: 1.0 - distance * 0.55,
+                  child: Transform.scale(
+                    scale: scale,
+                    child: index == _moreIndex
+                        ? const _MoreNavIconTile()
+                        : _NavIconOptionTile(
+                            option: WeddingNavIcon.values[index],
+                          ),
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
