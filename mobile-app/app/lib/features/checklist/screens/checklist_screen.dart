@@ -415,7 +415,7 @@ class _OverallProgressCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.greenDark,
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -426,7 +426,11 @@ class _OverallProgressCard extends StatelessWidget {
             children: [
               const Text(
                 'Progresso geral',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
               ),
               const Spacer(),
               Text(
@@ -434,7 +438,7 @@ class _OverallProgressCard extends StatelessWidget {
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 14,
-                  color: AppTheme.ink,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -445,14 +449,14 @@ class _OverallProgressCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: AppColors.muted,
-              valueColor: const AlwaysStoppedAnimation(AppColors.greenDark),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              valueColor: const AlwaysStoppedAnimation(AppColors.green),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             '$done de $total tarefas concluídas',
-            style: TextStyle(fontSize: 12, color: AppTheme.inkMuted),
+            style: const TextStyle(fontSize: 12, color: Colors.white70),
           ),
         ],
       ),
