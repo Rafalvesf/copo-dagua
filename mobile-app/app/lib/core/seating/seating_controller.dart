@@ -81,9 +81,14 @@ class SeatingController extends Notifier<SeatingState> {
     );
   }
 
+  // Matriz fixa em 3 colunas × 4 linhas (12 mesas) — o grid da UI está
+  // fixo em 3 colunas, por isso a capacidade também fica limitada aqui
+  // para nunca sobrar uma linha incompleta.
+  static const maxTables = 12;
+
   int _capacityFor(Wedding wedding) {
-    final guests = wedding.estimatedGuests ?? seatsPerTable * 12;
-    return (guests / seatsPerTable).ceil().clamp(1, 999);
+    final guests = wedding.estimatedGuests ?? seatsPerTable * maxTables;
+    return (guests / seatsPerTable).ceil().clamp(1, maxTables);
   }
 
   /// Guarda a mesa "próxima" (`state.nextIndex`) com os convidados
