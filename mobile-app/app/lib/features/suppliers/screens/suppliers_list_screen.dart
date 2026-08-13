@@ -165,6 +165,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                       0,
                     ),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: _CategoryNavBar(
