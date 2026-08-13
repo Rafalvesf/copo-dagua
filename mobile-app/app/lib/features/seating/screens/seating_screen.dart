@@ -286,26 +286,48 @@ class _TableCell extends StatelessWidget {
 
     final image = Image.asset(_seatingTableAsset, fit: BoxFit.contain);
 
-    final card = Container(
-      padding: const EdgeInsets.fromLTRB(6, 10, 6, 6),
-      decoration: BoxDecoration(
-        color: isLocked ? Colors.white : AppColors.green,
-        borderRadius: BorderRadius.circular(18),
-        border: isNext
-            ? Border.all(color: AppStatusColors.confirmed, width: 2)
-            : null,
-        boxShadow: isLocked ? null : AppTheme.cardShadow,
-      ),
+    // Sem cartão nem cor de fundo à volta — só a ilustração a "flutuar"
+    // com uma sombra elíptica desfocada por baixo, como se cada mesa
+    // fosse uma ilha, em vez de um retângulo preso à grelha.
+    final island = Opacity(
+      opacity: isLocked ? 0.55 : 1,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(
-            child: isLocked
-                ? ColorFiltered(
-                    colorFilter: const ColorFilter.matrix(_grayscaleMatrix),
-                    child: image,
-                  )
-                : image,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  bottom: 2,
+                  child: Container(
+                    width: 34,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 9,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: isLocked
+                      ? ColorFiltered(
+                          colorFilter: const ColorFilter.matrix(
+                            _grayscaleMatrix,
+                          ),
+                          child: image,
+                        )
+                      : image,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 2),
           Text(
@@ -325,8 +347,8 @@ class _TableCell extends StatelessWidget {
     final content = Stack(
       clipBehavior: Clip.none,
       children: [
-        Opacity(opacity: isLocked ? 0.55 : 1, child: card),
-        Positioned(top: -6, right: -6, child: _StatusBadge(state: state)),
+        island,
+        Positioned(top: -4, right: -2, child: _StatusBadge(state: state)),
       ],
     );
 
