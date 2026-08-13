@@ -220,6 +220,13 @@ class AppColors {
   static const purple = Color(0xFFB589DF);
 
   static const muted = Color(0xFFEDEDED);
+
+  /// Verde escuro de destaque forte — usar com moderação (cards de
+  /// destaque, progresso importante, estados ativos que precisam de
+  /// mais peso), nunca como cor de base. Hierarquia: [green] (normal) →
+  /// [AppStatusColors.confirmed] (ativo/confirmado) → [greenDark]
+  /// (destaque forte).
+  static const greenDark = Color(0xFF174D3B);
 }
 
 /// Cores semânticas de estado (ex: RSVP) — usadas em vez de emojis para

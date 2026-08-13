@@ -234,7 +234,7 @@ class _SeatingProgressCard extends StatelessWidget {
               value: progress,
               minHeight: 8,
               backgroundColor: AppColors.muted,
-              valueColor: const AlwaysStoppedAnimation(AppColors.green),
+              valueColor: const AlwaysStoppedAnimation(AppColors.greenDark),
             ),
           ),
         ],

@@ -16,11 +16,14 @@ Minimalista, elegante, clean, moderno e amigável — estética de app de casame
 | `AppTheme.inkMuted` | `#6E7378` | Texto secundário |
 | `AppTheme.background` | `#FFFFFF` | Fundo predominante |
 | `AppColors.green` | `#E2F7DE` | Verde suave — destaque/seleção (chips, pills, tile "Todos") |
-| `AppStatusColors.confirmed` | `#2EAD65` | Confirmado |
+| `AppStatusColors.confirmed` | `#2EAD65` | Confirmado / ativo |
+| `AppColors.greenDark` | `#174D3B` | Destaque forte — com moderação (cards de destaque, progresso importante, ícones/números que precisam de mais peso). Nunca como cor de base. |
 | `AppStatusColors.pending` | `#F2A01B` | Pendente (fundo creme suave = a própria cor a 15% alpha) |
 | `AppStatusColors.declined` | `#EF5350` | Recusado (fundo vermelho muito claro = a própria cor a 15% alpha) |
 
 As cores de estado nunca aparecem em bloco sólido sobre fundo — os badges (`RsvpStatusBadge`) usam a cor a `alpha: 0.15` como fundo e a cor cheia no texto/ícone, gerando o tom pastel suave a partir de uma única fonte de verdade.
+
+Hierarquia dos três verdes: `AppColors.green` (normal) → `AppStatusColors.confirmed` (ativo/confirmado) → `AppColors.greenDark` (destaque forte, usado com moderação, nunca em todo o lado).
 
 ## Layout
 
