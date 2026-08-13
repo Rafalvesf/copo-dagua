@@ -284,51 +284,21 @@ class _TableCell extends StatelessWidget {
     final isLocked = state == _CellState.locked;
     final isNext = state == _CellState.next;
 
-    final image = Image.asset(_seatingTableAsset, fit: BoxFit.contain);
+    // A ilustração já vem com a base/ilha e sombra embutidas — sem
+    // cartão nem sombra artificial à volta, só a imagem tal como está.
+    final image = isLocked
+        ? ColorFiltered(
+            colorFilter: const ColorFilter.matrix(_grayscaleMatrix),
+            child: Image.asset(_seatingTableAsset, fit: BoxFit.contain),
+          )
+        : Image.asset(_seatingTableAsset, fit: BoxFit.contain);
 
-    // Sem cartão nem cor de fundo à volta — só a ilustração a "flutuar"
-    // com uma sombra elíptica desfocada por baixo, como se cada mesa
-    // fosse uma ilha, em vez de um retângulo preso à grelha.
     final island = Opacity(
       opacity: isLocked ? 0.55 : 1,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned(
-                  bottom: 2,
-                  child: Container(
-                    width: 34,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 9,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(2),
-                  child: isLocked
-                      ? ColorFiltered(
-                          colorFilter: const ColorFilter.matrix(
-                            _grayscaleMatrix,
-                          ),
-                          child: image,
-                        )
-                      : image,
-                ),
-              ],
-            ),
-          ),
+          Expanded(child: Padding(padding: const EdgeInsets.all(2), child: image)),
           const SizedBox(height: 2),
           Text(
             isNext && draftCount != null
