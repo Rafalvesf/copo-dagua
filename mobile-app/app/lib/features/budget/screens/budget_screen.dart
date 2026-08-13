@@ -185,21 +185,25 @@ class _TotalsCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.greenDark,
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Orçamento total',
-            style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+            style: TextStyle(color: Colors.white70, fontSize: 12.5),
           ),
           const SizedBox(height: 4),
           Text(
             '€${budget.total.toStringAsFixed(0)}',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 24),
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 24,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 16),
           Row(
@@ -208,15 +212,16 @@ class _TotalsCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Gasto',
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                     Text(
                       '€${budget.spent.toStringAsFixed(0)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -226,15 +231,16 @@ class _TotalsCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Restante',
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                     Text(
                       '€${budget.remaining.toStringAsFixed(0)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -248,14 +254,14 @@ class _TotalsCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: budget.progress,
               minHeight: 8,
-              backgroundColor: AppColors.purple.withValues(alpha: 0.15),
-              valueColor: const AlwaysStoppedAnimation(AppTheme.ink),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              valueColor: const AlwaysStoppedAnimation(AppColors.green),
             ),
           ),
           const SizedBox(height: 6),
           Text(
             '$pct% do orçamento usado',
-            style: TextStyle(color: AppTheme.inkMuted, fontSize: 11.5),
+            style: const TextStyle(color: Colors.white70, fontSize: 11.5),
           ),
         ],
       ),
