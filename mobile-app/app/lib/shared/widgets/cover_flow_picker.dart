@@ -171,7 +171,7 @@ class CategoryPillLabel extends StatelessWidget {
       duration: const Duration(milliseconds: 180),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: selected ? AppColors.green : Colors.transparent,
+        color: selected ? AppColors.greenDark : Colors.transparent,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
@@ -179,7 +179,7 @@ class CategoryPillLabel extends StatelessWidget {
         style: TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: big ? 15 : 13,
-          color: AppTheme.ink,
+          color: selected ? Colors.white : AppTheme.ink,
         ),
       ),
     );

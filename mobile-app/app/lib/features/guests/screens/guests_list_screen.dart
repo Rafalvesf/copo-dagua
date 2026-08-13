@@ -211,11 +211,11 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                               flex: 21,
                               child: _StatTile(
                                 icon: Icons.groups_outlined,
-                                iconColor: AppTheme.ink,
+                                iconColor: Colors.white,
                                 value: '$total',
                                 label: 'Todos',
                                 big: true,
-                                background: AppColors.green,
+                                background: AppColors.greenDark,
                                 onTap: () => ref
                                     .read(guestsControllerProvider.notifier)
                                     .setFilter(GuestFilter.all),
@@ -308,6 +308,9 @@ class _StatTile extends StatelessWidget {
     final pct = total == null || total == 0
         ? null
         : ((int.parse(value) / total) * 100).round();
+    // Fundo de destaque forte (verde escuro) pede texto branco para
+    // continuar legível — os restantes tiles mantêm o texto normal.
+    final isDark = background == AppColors.greenDark;
     return SnappyTap(
       onTap: onTap,
       child: Container(
@@ -329,6 +332,7 @@ class _StatTile extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: big ? 21 : 17,
+                color: isDark ? Colors.white : null,
               ),
             ),
             Text(
@@ -336,7 +340,7 @@ class _StatTile extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: big ? 10 : 9.5,
-                color: AppTheme.inkMuted,
+                color: isDark ? Colors.white70 : AppTheme.inkMuted,
                 fontWeight: FontWeight.w600,
               ),
               maxLines: 1,
