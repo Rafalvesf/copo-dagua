@@ -124,7 +124,7 @@ class SeatingScreen extends ConsumerWidget {
                                 itemCount: total,
                                 gridDelegate:
                                     const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 4,
+                                      crossAxisCount: 3,
                                       mainAxisSpacing: 12,
                                       crossAxisSpacing: 12,
                                       childAspectRatio: 1,
