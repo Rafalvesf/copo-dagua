@@ -1,18 +1,35 @@
-import 'dart:async';
-
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/budget/budget_controller.dart';
+import '../../../core/budget/effective_budget.dart';
+import '../../../core/checklist/checklist_controller.dart';
+import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../core/suppliers/supplier_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/wedding_nav_icon.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/cover_flow_picker.dart';
+import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/form_fields.dart';
+import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 import '../../../shared/widgets/wedding_widgets.dart';
+
+IconData _iconForTask(ChecklistItem item) {
+  return switch (item.supplierCategory) {
+    SupplierCategory.photography => Icons.camera_alt_outlined,
+    SupplierCategory.catering => Icons.restaurant_outlined,
+    SupplierCategory.music => Icons.music_note_outlined,
+    SupplierCategory.decoration => Icons.local_florist_outlined,
+    SupplierCategory.venue => Icons.villa_outlined,
+    null => Icons.task_alt_outlined,
+  };
+}
 
 class WeddingDetailsScreen extends ConsumerStatefulWidget {
   const WeddingDetailsScreen({super.key});
@@ -50,6 +67,12 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
   Widget build(BuildContext context) {
     final weddingState = ref.watch(weddingControllerProvider);
     final wedding = weddingState.wedding;
+    final checklistState = ref.watch(checklistControllerProvider);
+    final guestsState = ref.watch(guestsControllerProvider);
+    final budgetState = ref.watch(budgetControllerProvider);
+    final budget = budgetState.budget == null
+        ? null
+        : computeEffectiveBudget(budgetState.budget!, checklistState.items);
 
     return Scaffold(
       appBar: AppBar(
@@ -63,126 +86,173 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                 Builder(
                   builder: (context) {
                     _syncControllers(wedding);
-                    return ListView(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppTheme.screenMargin,
-                        24,
-                        AppTheme.screenMargin,
-                        110,
-                      ),
-                      children: [
-                        WeddingCoverHeader(wedding: wedding),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Nós <3',
-                          style: Theme.of(context).textTheme.titleMedium,
+                    return EdgeFade(
+                      topFadeHeight: 32,
+                      bottomFadeHeight: 140,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppTheme.screenMargin,
+                          32,
+                          AppTheme.screenMargin,
+                          140,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Escolhe a ilustração do ícone central da barra de navegação.',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 12),
-                        const _NavIconPicker(),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Editar detalhes',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 12),
-                        AuthTextField(
-                          label: 'Nome (tu)',
-                          controller: _partner1,
-                        ),
-                        const SizedBox(height: 12),
-                        AuthTextField(
-                          label: 'Idade (tu)',
-                          controller: _partner1Age,
-                          keyboardType: TextInputType.number,
-                        ),
-                        const SizedBox(height: 12),
-                        AuthTextField(
-                          label: 'Nome (parceiro/a)',
-                          controller: _partner2,
-                        ),
-                        const SizedBox(height: 12),
-                        AuthTextField(
-                          label: 'Idade (parceiro/a)',
-                          controller: _partner2Age,
-                          keyboardType: TextInputType.number,
-                        ),
-                        const SizedBox(height: 12),
-                        DatePickerField(
-                          label: 'Data',
-                          value: _date,
-                          allowUnknown: false,
-                          onChanged: (d) => setState(() => _date = d),
-                        ),
-                        const SizedBox(height: 12),
-                        AuthTextField(
-                          label: 'Localização',
-                          controller: _location,
-                        ),
-                        const SizedBox(height: 12),
-                        AuthTextField(
-                          label: 'Local / Venue',
-                          controller: _venue,
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<CeremonyType>(
-                          initialValue: _ceremonyType,
-                          decoration: const InputDecoration(
-                            labelText: 'Tipo de cerimónia',
+                        children: [
+                          WeddingCoverHeader(wedding: wedding),
+                          const SizedBox(height: 22),
+                          _UrgentTasksSection(
+                            items: checklistState.items,
+                            onOpenChecklist: () => context.push('/checklist'),
                           ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: CeremonyType.civil,
-                              child: Text('Civil'),
-                            ),
-                            DropdownMenuItem(
-                              value: CeremonyType.religious,
-                              child: Text('Religiosa'),
-                            ),
-                            DropdownMenuItem(
-                              value: CeremonyType.both,
-                              child: Text('Ambas'),
-                            ),
-                          ],
-                          onChanged: (v) => setState(
-                            () => _ceremonyType = v ?? _ceremonyType,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        PrimaryButton(
-                          label: 'Guardar alterações',
-                          loading: weddingState.loading,
-                          onPressed: () {
-                            ref
-                                .read(weddingControllerProvider.notifier)
-                                .update(
-                                  wedding.copyWith(
-                                    partnerName1: _partner1.text.trim(),
-                                    partnerName2: _partner2.text.trim(),
-                                    partner1Age: int.tryParse(
-                                      _partner1Age.text.trim(),
-                                    ),
-                                    partner2Age: int.tryParse(
-                                      _partner2Age.text.trim(),
-                                    ),
-                                    location: _location.text.trim(),
-                                    venue: _venue.text.trim(),
-                                    weddingDate: _date,
-                                    ceremonyType: _ceremonyType,
-                                  ),
-                                );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Casamento atualizado.'),
+                          const SizedBox(height: 22),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _BudgetStatCard(
+                                  budget: budget,
+                                  onTap: () => context.push('/budget'),
+                                ),
                               ),
-                            );
-                          },
-                        ),
-                      ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _GuestsStatCard(
+                                  confirmed: guestsState.confirmedCount,
+                                  total: guestsState.guests.length,
+                                  onTap: () => context.push('/guests'),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          _WeddingCopilotCard(
+                            onTap: () => context.push(
+                              '/suppliers',
+                              extra: const SupplierPickerArgs(
+                                category: SupplierCategory.music,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Nós <3',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Escolhe a ilustração do ícone central da barra de navegação.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 12),
+                          const _NavIconPicker(),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.person_outline,
+                                size: 18,
+                                color: AppTheme.ink,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Editar detalhes',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          AuthTextField(
+                            label: 'Nome (tu)',
+                            controller: _partner1,
+                          ),
+                          const SizedBox(height: 12),
+                          AuthTextField(
+                            label: 'Idade (tu)',
+                            controller: _partner1Age,
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 12),
+                          AuthTextField(
+                            label: 'Nome (parceiro/a)',
+                            controller: _partner2,
+                          ),
+                          const SizedBox(height: 12),
+                          AuthTextField(
+                            label: 'Idade (parceiro/a)',
+                            controller: _partner2Age,
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 12),
+                          DatePickerField(
+                            label: 'Data',
+                            value: _date,
+                            allowUnknown: false,
+                            onChanged: (d) => setState(() => _date = d),
+                          ),
+                          const SizedBox(height: 12),
+                          AuthTextField(
+                            label: 'Localização',
+                            controller: _location,
+                          ),
+                          const SizedBox(height: 12),
+                          AuthTextField(
+                            label: 'Local / Venue',
+                            controller: _venue,
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<CeremonyType>(
+                            initialValue: _ceremonyType,
+                            decoration: const InputDecoration(
+                              labelText: 'Tipo de cerimónia',
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: CeremonyType.civil,
+                                child: Text('Civil'),
+                              ),
+                              DropdownMenuItem(
+                                value: CeremonyType.religious,
+                                child: Text('Religiosa'),
+                              ),
+                              DropdownMenuItem(
+                                value: CeremonyType.both,
+                                child: Text('Ambas'),
+                              ),
+                            ],
+                            onChanged: (v) => setState(
+                              () => _ceremonyType = v ?? _ceremonyType,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          PrimaryButton(
+                            label: 'Guardar alterações',
+                            loading: weddingState.loading,
+                            onPressed: () {
+                              ref
+                                  .read(weddingControllerProvider.notifier)
+                                  .update(
+                                    wedding.copyWith(
+                                      partnerName1: _partner1.text.trim(),
+                                      partnerName2: _partner2.text.trim(),
+                                      partner1Age: int.tryParse(
+                                        _partner1Age.text.trim(),
+                                      ),
+                                      partner2Age: int.tryParse(
+                                        _partner2Age.text.trim(),
+                                      ),
+                                      location: _location.text.trim(),
+                                      venue: _venue.text.trim(),
+                                      weddingDate: _date,
+                                      ceremonyType: _ceremonyType,
+                                    ),
+                                  );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Casamento atualizado.'),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -199,135 +269,366 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
   }
 }
 
-/// Carrossel horizontal estilo "cover flow" (como a roda de álbuns de um
-/// iPod): a opção centrada fica maior, as vizinhas ficam mais pequenas e
-/// semi-transparentes, e o gesto de deslizar tem inércia/snap suave. Sem
-/// anéis, checkmarks ou recortes circulares — só o tamanho comunica qual
-/// está selecionada.
-class _NavIconPicker extends ConsumerStatefulWidget {
-  const _NavIconPicker();
+class _UrgentTasksSection extends StatelessWidget {
+  final List<ChecklistItem> items;
+  final VoidCallback onOpenChecklist;
 
-  @override
-  ConsumerState<_NavIconPicker> createState() => _NavIconPickerState();
-}
+  const _UrgentTasksSection({
+    required this.items,
+    required this.onOpenChecklist,
+  });
 
-class _NavIconPickerState extends ConsumerState<_NavIconPicker> {
-  static const _maxExtent = 92.0;
-  static const _minScale = 0.6;
-
-  late final PageController _controller;
-  double _page = 0;
-  Timer? _wheelSnapTimer;
-
-  // Número real de opções (bonecos + botão "+"). O PageView usa um espaço
-  // de índices muito maior — um múltiplo grande deste valor — só para dar
-  // a sensação de loop infinito em ambas as direções: nunca se chega a
-  // uma ponta vazia, seja a arrastar seja com a roda do rato.
-  int get _realCount => WeddingNavIcon.values.length + 1; // +1 = botão "+"
-  int get _moreIndex => WeddingNavIcon.values.length;
-  static const _loopSpan = 2000;
-
-  int _realIndexOf(int rawIndex) => rawIndex % _realCount;
-
-  @override
-  void initState() {
-    super.initState();
-    final initialRealIndex = WeddingNavIcon.values.indexOf(
-      ref.read(weddingNavIconProvider),
-    );
-    final initialPage = (_loopSpan ~/ 2) * _realCount + initialRealIndex;
-    _page = initialPage.toDouble();
-    _controller =
-        PageController(viewportFraction: 0.34, initialPage: initialPage)
-          ..addListener(() {
-            setState(() => _page = _controller.page ?? _page);
-          });
-  }
-
-  @override
-  void dispose() {
-    _wheelSnapTimer?.cancel();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  // A roda do rato num browser desktop só emite delta vertical — sem
-  // isto o carrossel horizontal não reage a scroll nenhum, só a
-  // arrastar. Depois de uma pausa no scroll, ajusta suavemente para a
-  // opção mais próxima, como o "click" da roda de um iPod.
-  void _onPointerSignal(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent || !_controller.hasClients) return;
-    final target = (_controller.offset + event.scrollDelta.dy).clamp(
-      0.0,
-      _controller.position.maxScrollExtent,
-    );
-    _controller.jumpTo(target);
-
-    _wheelSnapTimer?.cancel();
-    _wheelSnapTimer = Timer(const Duration(milliseconds: 160), () {
-      if (!_controller.hasClients) return;
-      _controller.animateToPage(
-        _page.round(),
-        duration: const Duration(milliseconds: 260),
-        curve: Curves.easeOut,
-      );
-    });
-  }
-
-  void _onSettle(int rawIndex) {
-    final realIndex = _realIndexOf(rawIndex);
-    if (realIndex == _moreIndex) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Em breve: ganha mais bonecos ou recebe-os como oferta.',
-          ),
-        ),
-      );
-      return;
-    }
-    ref
-        .read(weddingNavIconProvider.notifier)
-        .select(WeddingNavIcon.values[realIndex]);
-  }
+  static const _labels = ['O que tens de fazer hoje', 'Amanhã', 'Esta semana'];
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: _maxExtent + 24,
-      child: Listener(
-        onPointerSignal: _onPointerSignal,
-        child: PageView.builder(
-          controller: _controller,
-          itemCount: _loopSpan * _realCount,
-          onPageChanged: _onSettle,
-          itemBuilder: (context, rawIndex) {
-            final realIndex = _realIndexOf(rawIndex);
-            final distance = (_page - rawIndex).abs().clamp(0.0, 1.0);
-            final scale = 1.0 - distance * (1 - _minScale);
-            return Center(
-              child: GestureDetector(
-                onTap: () => _controller.animateToPage(
-                  rawIndex,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                ),
-                child: Opacity(
-                  opacity: 1.0 - distance * 0.55,
-                  child: Transform.scale(
-                    scale: scale,
-                    child: realIndex == _moreIndex
-                        ? const _MoreNavIconTile()
-                        : _NavIconOptionTile(
-                            option: WeddingNavIcon.values[realIndex],
-                          ),
-                  ),
-                ),
+    final urgent = items.where((i) => !i.done && i.dueDate != null).toList()
+      ..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
+    final top = urgent.take(3).toList();
+
+    if (top.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: AppTheme.cardShadow,
+        ),
+        child: const Text('Sem tarefas pendentes — bom trabalho! 🎉'),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (index, item) in top.indexed) ...[
+          Text(_labels[index], style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          _TaskRow(
+            item: item,
+            highPriority: index == 0,
+            onTap: onOpenChecklist,
+          ),
+          if (index != top.length - 1) const SizedBox(height: 16),
+        ],
+      ],
+    );
+  }
+}
+
+class _TaskRow extends StatelessWidget {
+  final ChecklistItem item;
+  final bool highPriority;
+  final VoidCallback onTap;
+
+  const _TaskRow({
+    required this.item,
+    required this.highPriority,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final due = item.dueDate!;
+    return SnappyTap.builder(
+      onTap: onTap,
+      builder: (context, hovered) => Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.green,
+                borderRadius: BorderRadius.circular(12),
               ),
-            );
-          },
+              child: Icon(_iconForTask(item), size: 18, color: AppTheme.ink),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  if (highPriority)
+                    const Text(
+                      'Alta prioridade',
+                      style: TextStyle(
+                        color: AppStatusColors.declined,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )
+                  else
+                    Text(
+                      'Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}',
+                      style: TextStyle(
+                        color: AppTheme.inkMuted,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: AppTheme.inkMuted, size: 20),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _BudgetStatCard extends StatelessWidget {
+  final EffectiveBudget? budget;
+  final VoidCallback onTap;
+
+  const _BudgetStatCard({required this.budget, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final b = budget;
+    final pct = b == null ? 0 : (b.progress * 100).round();
+    return SnappyTap.builder(
+      onTap: onTap,
+      builder: (context, hovered) => Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.savings_outlined,
+                  size: 16,
+                  color: AppColors.purple,
+                ),
+                const SizedBox(width: 6),
+                const Text(
+                  'Orçamento',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.ink,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              b == null ? '—' : '€${b.spent.toStringAsFixed(0)}',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+            ),
+            Text(
+              b == null ? '' : 'de €${b.total.toStringAsFixed(0)} · $pct%',
+              style: TextStyle(color: AppTheme.inkMuted, fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GuestsStatCard extends StatelessWidget {
+  final int confirmed;
+  final int total;
+  final VoidCallback onTap;
+
+  const _GuestsStatCard({
+    required this.confirmed,
+    required this.total,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = total == 0 ? 0 : ((confirmed / total) * 100).round();
+    return SnappyTap.builder(
+      onTap: onTap,
+      builder: (context, hovered) => Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(
+                  Icons.groups_outlined,
+                  size: 16,
+                  color: AppStatusColors.confirmed,
+                ),
+                SizedBox(width: 6),
+                Text(
+                  'Convidados',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.ink,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '$confirmed/$total',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+            ),
+            Text(
+              'confirmados · $pct%',
+              style: TextStyle(color: AppTheme.inkMuted, fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WeddingCopilotCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _WeddingCopilotCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.purple.withValues(alpha: 0.7), AppColors.purple],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.auto_awesome,
+              size: 18,
+              color: AppColors.purple,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Wedding Copilot',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Ainda não tens música reservada. Os DJs mais populares ficam completos 9 meses antes.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SnappyTap.builder(
+                  onTap: onTap,
+                  builder: (context, hovered) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(999),
+                      boxShadow: hovered
+                          ? AppTheme.cardShadowStrong
+                          : AppTheme.cardShadow,
+                    ),
+                    child: const Text(
+                      'Ver sugestões',
+                      style: TextStyle(
+                        color: AppColors.purple,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Seleção do ícone da navbar através do carrossel "cover flow"
+/// partilhado ([CoverFlowPicker]) — `null` representa o botão "+" de
+/// desbloquear mais bonecos.
+class _NavIconPicker extends ConsumerWidget {
+  const _NavIconPicker();
+
+  static const _maxExtent = 92.0;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(weddingNavIconProvider);
+    return CoverFlowPicker<WeddingNavIcon?>(
+      options: [...WeddingNavIcon.values, null],
+      selected: selected,
+      itemExtent: _maxExtent,
+      itemBuilder: (context, option, isSelected) => option == null
+          ? const _MoreNavIconTile()
+          : _NavIconOptionTile(option: option),
+      onChanged: (option) {
+        if (option == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Em breve: ganha mais bonecos ou recebe-os como oferta.',
+              ),
+            ),
+          );
+          return;
+        }
+        ref.read(weddingNavIconProvider.notifier).select(option);
+      },
     );
   }
 }
@@ -345,8 +646,8 @@ class _NavIconOptionTile extends StatelessWidget {
         scale: option.zoom,
         child: Image.asset(
           option.assetPath,
-          width: _NavIconPickerState._maxExtent,
-          height: _NavIconPickerState._maxExtent,
+          width: _NavIconPicker._maxExtent,
+          height: _NavIconPicker._maxExtent,
           fit: BoxFit.cover,
         ),
       ),
@@ -360,8 +661,8 @@ class _MoreNavIconTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: _NavIconPickerState._maxExtent,
-      height: _NavIconPickerState._maxExtent,
+      width: _NavIconPicker._maxExtent,
+      height: _NavIconPicker._maxExtent,
       decoration: BoxDecoration(
         color: AppColors.muted,
         borderRadius: BorderRadius.circular(18),

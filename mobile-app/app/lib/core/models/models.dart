@@ -24,12 +24,12 @@ enum SupplierCategory { catering, photography, music, decoration, venue }
 
 extension SupplierCategoryLabel on SupplierCategory {
   String get label => switch (this) {
-        SupplierCategory.catering => 'Catering',
-        SupplierCategory.photography => 'Fotografia',
-        SupplierCategory.music => 'Música & DJ',
-        SupplierCategory.decoration => 'Decoração',
-        SupplierCategory.venue => 'Espaços',
-      };
+    SupplierCategory.catering => 'Catering',
+    SupplierCategory.photography => 'Fotografia',
+    SupplierCategory.music => 'Música & DJ',
+    SupplierCategory.decoration => 'Decoração',
+    SupplierCategory.venue => 'Espaços',
+  };
 }
 
 class Profile {
@@ -51,10 +51,7 @@ class Profile {
     this.onboardingComplete = false,
   });
 
-  Profile copyWith({
-    bool? emailVerified,
-    bool? onboardingComplete,
-  }) {
+  Profile copyWith({bool? emailVerified, bool? onboardingComplete}) {
     return Profile(
       id: id,
       fullName: fullName,
@@ -98,8 +95,22 @@ class Wedding {
     this.status = WeddingStatus.planning,
   });
 
-  String get displayNames =>
-      partnerName2 == null || partnerName2!.isEmpty ? partnerName1 : '$partnerName1 & $partnerName2';
+  String get displayNames => partnerName2 == null || partnerName2!.isEmpty
+      ? partnerName1
+      : '$partnerName1 & $partnerName2';
+
+  /// Slug usado no link público de convite (ex: "ana-e-miguel").
+  String get inviteSlug {
+    final base = partnerName2 == null || partnerName2!.isEmpty
+        ? partnerName1
+        : '$partnerName1-e-$partnerName2';
+    return base
+        .toLowerCase()
+        .replaceAll(RegExp('[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
+  }
+
+  String get inviteUrl => 'www.copodeagua.pt/invite/$inviteSlug';
 
   Wedding copyWith({
     String? partnerName1,
@@ -119,8 +130,12 @@ class Wedding {
       ownerId: ownerId,
       partnerName1: partnerName1 ?? this.partnerName1,
       partnerName2: partnerName2 ?? this.partnerName2,
-      partner1Age: identical(partner1Age, _unset) ? this.partner1Age : partner1Age as int?,
-      partner2Age: identical(partner2Age, _unset) ? this.partner2Age : partner2Age as int?,
+      partner1Age: identical(partner1Age, _unset)
+          ? this.partner1Age
+          : partner1Age as int?,
+      partner2Age: identical(partner2Age, _unset)
+          ? this.partner2Age
+          : partner2Age as int?,
       weddingDate: weddingDate ?? this.weddingDate,
       location: location ?? this.location,
       venue: venue ?? this.venue,
@@ -240,8 +255,9 @@ class ChecklistItem {
       done: done ?? this.done,
       dueDate: dueDate ?? this.dueDate,
       supplierCategory: supplierCategory,
-      selectedSupplierId:
-          identical(selectedSupplierId, _unset) ? this.selectedSupplierId : selectedSupplierId as String?,
+      selectedSupplierId: identical(selectedSupplierId, _unset)
+          ? this.selectedSupplierId
+          : selectedSupplierId as String?,
     );
   }
 }
@@ -255,6 +271,7 @@ class Supplier {
   final int reviewCount;
   final double startingPrice;
   final String description;
+  final String imageUrl;
 
   const Supplier({
     required this.id,
@@ -265,5 +282,66 @@ class Supplier {
     required this.reviewCount,
     required this.startingPrice,
     required this.description,
+    required this.imageUrl,
   });
+}
+
+/// Mesa da disposição de lugares. A posição da mesa na sequência não é
+/// guardada explicitamente — é o índice desta mesa na lista ordenada de
+/// mesas de um casamento (ver [MockBackend.listSeatingTables]), o que
+/// garante que nunca há mesas preenchidas depois de uma mesa vazia:
+/// remover uma mesa do meio reajusta automaticamente a sequência.
+class SeatingTable {
+  final String id;
+  final String weddingId;
+  final List<String> guestIds;
+
+  const SeatingTable({
+    required this.id,
+    required this.weddingId,
+    this.guestIds = const [],
+  });
+
+  SeatingTable copyWith({List<String>? guestIds}) {
+    return SeatingTable(
+      id: id,
+      weddingId: weddingId,
+      guestIds: guestIds ?? this.guestIds,
+    );
+  }
+}
+
+class BudgetCategory {
+  final String name;
+  final double amount;
+
+  /// Categoria de fornecedor correspondente — permite somar o preço de
+  /// fornecedores escolhidos na checklist a esta categoria de
+  /// orçamento. `null` para categorias sem fornecedor associado (ex:
+  /// "Outros").
+  final SupplierCategory? supplierCategory;
+
+  const BudgetCategory({
+    required this.name,
+    required this.amount,
+    this.supplierCategory,
+  });
+}
+
+class Budget {
+  final String weddingId;
+  final double total;
+  final List<BudgetCategory> categories;
+
+  const Budget({
+    required this.weddingId,
+    required this.total,
+    required this.categories,
+  });
+
+  double get spent => categories.fold(0, (sum, c) => sum + c.amount);
+
+  double get remaining => total - spent;
+
+  double get progress => total == 0 ? 0 : (spent / total).clamp(0, 1);
 }

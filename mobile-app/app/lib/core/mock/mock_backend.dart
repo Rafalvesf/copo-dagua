@@ -22,6 +22,8 @@ class MockBackend {
   final List<Guest> guests = [];
   final List<ChecklistItem> checklistItems = [];
   final List<Supplier> suppliers = [];
+  final List<Budget> budgets = [];
+  final List<SeatingTable> seatingTables = [];
 
   static const Duration _latency = Duration(milliseconds: 400);
 
@@ -55,9 +57,24 @@ class MockBackend {
     weddings.add(wedding);
 
     collaboratorsByWedding.addAll([
-      Collaborator(id: 'c1', name: 'Ana Silva', email: demo.email, status: CollaboratorStatus.owner),
-      const Collaborator(id: 'c2', name: 'Miguel Costa', email: 'miguel@exemplo.com', status: CollaboratorStatus.active),
-      const Collaborator(id: 'c3', name: 'Pedro Alves', email: 'pedro@exemplo.com', status: CollaboratorStatus.pending),
+      Collaborator(
+        id: 'c1',
+        name: 'Ana Silva',
+        email: demo.email,
+        status: CollaboratorStatus.owner,
+      ),
+      const Collaborator(
+        id: 'c2',
+        name: 'Miguel Costa',
+        email: 'miguel@exemplo.com',
+        status: CollaboratorStatus.active,
+      ),
+      const Collaborator(
+        id: 'c3',
+        name: 'Pedro Alves',
+        email: 'pedro@exemplo.com',
+        status: CollaboratorStatus.pending,
+      ),
     ]);
 
     guests.addAll([
@@ -111,6 +128,68 @@ class MockBackend {
         side: WeddingSide.bride,
         rsvpStatus: RsvpStatus.pending,
       ),
+      const Guest(
+        id: 'g6',
+        weddingId: 'demo-wedding',
+        name: 'Miguel Sousa',
+        email: 'miguel.sousa@exemplo.com',
+        group: 'Família noivo',
+        side: WeddingSide.groom,
+        rsvpStatus: RsvpStatus.confirmed,
+      ),
+      const Guest(
+        id: 'g7',
+        weddingId: 'demo-wedding',
+        name: 'Inês Pereira',
+        email: 'ines@exemplo.com',
+        group: 'Amigos',
+        side: WeddingSide.bride,
+        rsvpStatus: RsvpStatus.confirmed,
+      ),
+      const Guest(
+        id: 'g8',
+        weddingId: 'demo-wedding',
+        name: 'Duarte Costa',
+        email: 'duarte@exemplo.com',
+        group: 'Trabalho',
+        side: WeddingSide.groom,
+        rsvpStatus: RsvpStatus.confirmed,
+      ),
+      const Guest(
+        id: 'g9',
+        weddingId: 'demo-wedding',
+        name: 'Marta Lopes',
+        email: 'marta@exemplo.com',
+        group: 'Família noiva',
+        side: WeddingSide.bride,
+        rsvpStatus: RsvpStatus.confirmed,
+      ),
+      const Guest(
+        id: 'g10',
+        weddingId: 'demo-wedding',
+        name: 'André Ramos',
+        email: 'andre@exemplo.com',
+        group: 'Amigos',
+        side: WeddingSide.groom,
+        rsvpStatus: RsvpStatus.pending,
+      ),
+    ]);
+
+    // Mesa 1 completa (8/8, aparece com ✓); mesa 2 é a "próxima", já
+    // com um rascunho de 2 convidados guardado (mostra "2/8") — dá para
+    // ver os três estados da matriz (✓, próxima em progresso, bloqueada)
+    // já ao abrir o ecrã.
+    seatingTables.addAll(const [
+      SeatingTable(
+        id: 'table-1',
+        weddingId: 'demo-wedding',
+        guestIds: ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8'],
+      ),
+      SeatingTable(
+        id: 'table-2',
+        weddingId: 'demo-wedding',
+        guestIds: ['g9', 'g10'],
+      ),
     ]);
 
     suppliers.addAll(const [
@@ -122,7 +201,9 @@ class MockBackend {
         rating: 4.9,
         reviewCount: 132,
         startingPrice: 1200,
-        description: 'Fotografia documental de casamentos, com edição incluída e entrega em 4 semanas.',
+        description:
+            'Fotografia documental de casamentos, com edição incluída e entrega em 4 semanas.',
+        imageUrl: 'https://picsum.photos/seed/sup-photo-1/900/700',
       ),
       Supplier(
         id: 'sup-photo-2',
@@ -132,7 +213,9 @@ class MockBackend {
         rating: 4.7,
         reviewCount: 84,
         startingPrice: 950,
-        description: 'Estilo clássico e atemporal, especialistas em luz natural.',
+        description:
+            'Estilo clássico e atemporal, especialistas em luz natural.',
+        imageUrl: 'https://picsum.photos/seed/sup-photo-2/900/700',
       ),
       Supplier(
         id: 'sup-catering-1',
@@ -142,7 +225,9 @@ class MockBackend {
         rating: 4.8,
         reviewCount: 201,
         startingPrice: 45,
-        description: 'Catering português contemporâneo, menus personalizáveis por pessoa.',
+        description:
+            'Catering português contemporâneo, menus personalizáveis por pessoa.',
+        imageUrl: 'https://picsum.photos/seed/sup-catering-1/900/700',
       ),
       Supplier(
         id: 'sup-catering-2',
@@ -152,7 +237,9 @@ class MockBackend {
         rating: 4.6,
         reviewCount: 97,
         startingPrice: 38,
-        description: 'Buffet e serviço à mesa, opções vegetarianas e sem glúten incluídas.',
+        description:
+            'Buffet e serviço à mesa, opções vegetarianas e sem glúten incluídas.',
+        imageUrl: 'https://picsum.photos/seed/sup-catering-2/900/700',
       ),
       Supplier(
         id: 'sup-music-1',
@@ -162,7 +249,9 @@ class MockBackend {
         rating: 4.9,
         reviewCount: 156,
         startingPrice: 600,
-        description: 'DJ com mais de 10 anos de casamentos, equipamento de som e luz incluído.',
+        description:
+            'DJ com mais de 10 anos de casamentos, equipamento de som e luz incluído.',
+        imageUrl: 'https://picsum.photos/seed/sup-music-1/900/700',
       ),
       Supplier(
         id: 'sup-music-2',
@@ -172,7 +261,9 @@ class MockBackend {
         rating: 4.8,
         reviewCount: 63,
         startingPrice: 800,
-        description: 'Quarteto de cordas para cerimónia, repertório clássico e contemporâneo.',
+        description:
+            'Quarteto de cordas para cerimónia, repertório clássico e contemporâneo.',
+        imageUrl: 'https://picsum.photos/seed/sup-music-2/900/700',
       ),
       Supplier(
         id: 'sup-decor-1',
@@ -182,7 +273,9 @@ class MockBackend {
         rating: 4.7,
         reviewCount: 74,
         startingPrice: 500,
-        description: 'Decoração floral completa — cerimónia, mesa de honra e centros de mesa.',
+        description:
+            'Decoração floral completa — cerimónia, mesa de honra e centros de mesa.',
+        imageUrl: 'https://picsum.photos/seed/sup-decor-1/900/700',
       ),
       Supplier(
         id: 'sup-decor-2',
@@ -192,9 +285,47 @@ class MockBackend {
         rating: 4.5,
         reviewCount: 41,
         startingPrice: 650,
-        description: 'Cenografia e iluminação decorativa para cerimónia e receção.',
+        description:
+            'Cenografia e iluminação decorativa para cerimónia e receção.',
+        imageUrl: 'https://picsum.photos/seed/sup-decor-2/900/700',
       ),
     ]);
+
+    budgets.add(
+      Budget(
+        weddingId: wedding.id,
+        total: wedding.estimatedBudget ?? 25000,
+        categories: const [
+          BudgetCategory(
+            name: 'Quinta',
+            amount: 6000,
+            supplierCategory: SupplierCategory.venue,
+          ),
+          BudgetCategory(
+            name: 'Fotografia',
+            amount: 1000,
+            supplierCategory: SupplierCategory.photography,
+          ),
+          BudgetCategory(
+            name: 'Catering',
+            amount: 2800,
+            supplierCategory: SupplierCategory.catering,
+          ),
+          BudgetCategory(
+            name: 'Decoração',
+            amount: 1500,
+            supplierCategory: SupplierCategory.decoration,
+          ),
+          BudgetCategory(
+            name: 'Música',
+            amount: 1000,
+            supplierCategory: SupplierCategory.music,
+          ),
+          BudgetCategory(name: 'Vestido e fato', amount: 800),
+          BudgetCategory(name: 'Outros', amount: 1200),
+        ],
+      ),
+    );
 
     final now = DateTime.now();
     checklistItems.addAll([
@@ -293,7 +424,9 @@ class MockBackend {
     required UserRole role,
   }) async {
     await Future.delayed(_latency);
-    final exists = profiles.any((p) => p.email.toLowerCase() == email.toLowerCase());
+    final exists = profiles.any(
+      (p) => p.email.toLowerCase() == email.toLowerCase(),
+    );
     if (exists) throw EmailAlreadyRegisteredException();
     final profile = Profile(
       id: _nextId('user'),
@@ -306,10 +439,17 @@ class MockBackend {
     return profile;
   }
 
-  Future<Profile> signIn({required String email, required String password}) async {
+  Future<Profile> signIn({
+    required String email,
+    required String password,
+  }) async {
     await Future.delayed(_latency);
     final profile = profiles
-        .where((p) => p.email.toLowerCase() == email.toLowerCase() && p.password == password)
+        .where(
+          (p) =>
+              p.email.toLowerCase() == email.toLowerCase() &&
+              p.password == password,
+        )
         .firstOrNull;
     if (profile == null) throw InvalidCredentialsException();
     return profile;
@@ -358,12 +498,19 @@ class MockBackend {
     );
     weddings.add(wedding);
     collaboratorsByWedding.add(
-      Collaborator(id: _nextId('collab'), name: partnerName1, email: '', status: CollaboratorStatus.owner),
+      Collaborator(
+        id: _nextId('collab'),
+        name: partnerName1,
+        email: '',
+        status: CollaboratorStatus.owner,
+      ),
     );
 
     final profileIndex = profiles.indexWhere((p) => p.id == ownerId);
     if (profileIndex != -1) {
-      profiles[profileIndex] = profiles[profileIndex].copyWith(onboardingComplete: true);
+      profiles[profileIndex] = profiles[profileIndex].copyWith(
+        onboardingComplete: true,
+      );
     }
     return wedding;
   }
@@ -371,6 +518,11 @@ class MockBackend {
   Future<Wedding?> getWeddingForOwner(String ownerId) async {
     await Future.delayed(_latency ~/ 2);
     return weddings.where((w) => w.ownerId == ownerId).firstOrNull;
+  }
+
+  Future<Wedding?> getWeddingBySlug(String slug) async {
+    await Future.delayed(_latency ~/ 2);
+    return weddings.where((w) => w.inviteSlug == slug).firstOrNull;
   }
 
   Future<Wedding> updateWedding(Wedding wedding) async {
@@ -385,7 +537,10 @@ class MockBackend {
     return List.unmodifiable(collaboratorsByWedding);
   }
 
-  Future<Collaborator> inviteCollaborator({required String weddingId, required String email}) async {
+  Future<Collaborator> inviteCollaborator({
+    required String weddingId,
+    required String email,
+  }) async {
     await Future.delayed(_latency);
     final invite = Collaborator(
       id: _nextId('collab'),
@@ -474,6 +629,54 @@ class MockBackend {
 
   Supplier getSupplier(String supplierId) {
     return suppliers.firstWhere((s) => s.id == supplierId);
+  }
+
+  Future<Budget> getBudget(String weddingId) async {
+    await Future.delayed(_latency ~/ 2);
+    return budgets.firstWhere((b) => b.weddingId == weddingId);
+  }
+
+  Future<Budget> updateBudgetTotal(String weddingId, double total) async {
+    await Future.delayed(_latency);
+    final index = budgets.indexWhere((b) => b.weddingId == weddingId);
+    final updated = Budget(
+      weddingId: weddingId,
+      total: total,
+      categories: budgets[index].categories,
+    );
+    budgets[index] = updated;
+    return updated;
+  }
+
+  Future<List<SeatingTable>> listSeatingTables(String weddingId) async {
+    await Future.delayed(_latency ~/ 2);
+    return seatingTables.where((t) => t.weddingId == weddingId).toList();
+  }
+
+  Future<SeatingTable> addSeatingTable({
+    required String weddingId,
+    required List<String> guestIds,
+  }) async {
+    await Future.delayed(_latency);
+    final table = SeatingTable(
+      id: _nextId('table'),
+      weddingId: weddingId,
+      guestIds: guestIds,
+    );
+    seatingTables.add(table);
+    return table;
+  }
+
+  Future<SeatingTable> updateSeatingTable(SeatingTable table) async {
+    await Future.delayed(_latency);
+    final index = seatingTables.indexWhere((t) => t.id == table.id);
+    if (index != -1) seatingTables[index] = table;
+    return table;
+  }
+
+  Future<void> removeSeatingTable(String tableId) async {
+    await Future.delayed(_latency ~/ 2);
+    seatingTables.removeWhere((t) => t.id == tableId);
   }
 }
 

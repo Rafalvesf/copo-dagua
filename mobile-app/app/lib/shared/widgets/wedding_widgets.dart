@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
+import 'cards.dart';
 import 'progress.dart';
 
 class WeddingCoverHeader extends StatelessWidget {
@@ -19,40 +20,52 @@ class WeddingCoverHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(color: AppColors.blue, borderRadius: BorderRadius.circular(28)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: Stack(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.55), shape: BoxShape.circle),
-            child: const Icon(Icons.favorite, color: AppTheme.ink, size: AppTypography.iconSize),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            wedding.displayNames,
-            style: AppTypography.cardTitle.copyWith(color: AppTheme.ink),
-          ),
-          if (_agesLabel != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              _agesLabel!,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.ink.withValues(alpha: 0.7)),
+          Positioned.fill(
+            child: PhotoCardBackground(
+              imageUrl: 'https://picsum.photos/seed/${wedding.id}-venue/900/700',
+              fallbackColor: AppColors.blue,
             ),
-          ],
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 10,
-            runSpacing: 8,
-            children: [
-              if (wedding.location != null) _InfoChip(icon: Icons.place_outlined, label: wedding.location!),
-              if (wedding.venue != null && wedding.venue!.isNotEmpty)
-                _InfoChip(icon: Icons.villa_outlined, label: wedding.venue!),
-              CountdownBadge(weddingDate: wedding.weddingDate, light: true),
-            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.85), shape: BoxShape.circle),
+                  child: const Icon(Icons.favorite, color: AppTheme.ink, size: AppTypography.iconSize),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  wedding.displayNames,
+                  style: AppTypography.cardTitle.copyWith(color: Colors.white),
+                ),
+                if (_agesLabel != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    _agesLabel!,
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white.withValues(alpha: 0.85)),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 8,
+                  children: [
+                    if (wedding.location != null) _InfoChip(icon: Icons.place_outlined, label: wedding.location!),
+                    if (wedding.venue != null && wedding.venue!.isNotEmpty)
+                      _InfoChip(icon: Icons.villa_outlined, label: wedding.venue!),
+                    CountdownBadge(weddingDate: wedding.weddingDate, light: true),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

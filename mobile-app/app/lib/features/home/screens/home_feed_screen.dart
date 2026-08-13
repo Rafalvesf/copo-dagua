@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_mark.dart';
+import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 
 class HomeFeedScreen extends ConsumerWidget {
@@ -94,14 +94,6 @@ class HomeFeedScreen extends ConsumerWidget {
                             140,
                           ),
                           children: [
-                            _HeroTile(
-                              color: AppColors.blue,
-                              icon: Icons.favorite_outline,
-                              label: 'O nosso casamento',
-                              caption: wedding.displayNames,
-                              onTap: () => context.push('/wedding'),
-                            ),
-                            const SizedBox(height: 14),
                             GridView.count(
                               crossAxisCount: 2,
                               shrinkWrap: true,
@@ -122,18 +114,20 @@ class HomeFeedScreen extends ConsumerWidget {
                                   label: 'Checklist',
                                   onTap: () => context.push('/checklist'),
                                 ),
-                                const _FeedTile(
+                                _FeedTile(
                                   color: AppColors.gray,
                                   icon: Icons.savings_outlined,
                                   label: 'Orçamento',
+                                  onTap: () => context.push('/budget'),
                                 ),
-                                const _FeedTile(
+                                _FeedTile(
                                   color: AppColors.blue,
                                   icon: Icons.event_seat_outlined,
                                   label: 'Lugares',
+                                  onTap: () => context.push('/seating'),
                                 ),
                                 _FeedTile(
-                                  color: AppColors.green,
+                                  color: AppColors.pink,
                                   icon: Icons.storefront_outlined,
                                   label: 'Fornecedores',
                                   onTap: () => context.push('/suppliers'),
@@ -228,78 +222,6 @@ class HomeFeedScreen extends ConsumerWidget {
   }
 }
 
-class _HeroTile extends StatelessWidget {
-  final Color color;
-  final IconData icon;
-  final String label;
-  final String? caption;
-  final VoidCallback? onTap;
-
-  const _HeroTile({
-    required this.color,
-    required this.icon,
-    required this.label,
-    this.caption,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(28),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    icon,
-                    color: AppTheme.ink,
-                    size: AppTypography.iconSize,
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.favorite_border,
-                  color: AppTheme.ink,
-                  size: AppTypography.iconSize,
-                ),
-              ],
-            ),
-            const SizedBox(height: 28),
-            Text(
-              label,
-              style: AppTypography.cardTitle.copyWith(color: AppTheme.ink),
-            ),
-            if (caption != null)
-              Text(
-                caption!,
-                style: AppTypography.cardSubtitle.copyWith(
-                  color: AppTheme.ink.withValues(alpha: 0.7),
-                ),
-              ),
-            const SizedBox(height: 14),
-            ArrowCtaButton(label: 'Ver mais', expand: true, onTap: onTap),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _FeedTile extends StatelessWidget {
   final Color color;
   final IconData icon;
@@ -317,14 +239,18 @@ class _FeedTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
+    return SnappyTap.builder(
       onTap: onTap,
-      child: Container(
+      builder: (context, hovered) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: _enabled ? color : AppColors.muted,
           borderRadius: BorderRadius.circular(24),
+          boxShadow: !_enabled
+              ? null
+              : hovered
+              ? AppTheme.cardShadowStrong
+              : AppTheme.cardShadow,
         ),
         child: Stack(
           children: [

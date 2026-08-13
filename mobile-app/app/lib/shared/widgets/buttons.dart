@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'snappy_tap.dart';
 
 /// Pílula escura com um botão circular branco de seta encaixado no
 /// canto direito — o padrão de CTA usado nos cartões de destaque.
@@ -19,50 +20,50 @@ class ArrowCtaButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Container(
-      height: 46,
-      padding: const EdgeInsets.only(left: 20, right: 5),
-      decoration: BoxDecoration(
-        color: AppTheme.ink,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
-        children: [
-          if (expand)
-            Expanded(
-              child: Text(
+    return SnappyTap.builder(
+      onTap: onTap,
+      builder: (context, hovered) => Container(
+        height: 46,
+        padding: const EdgeInsets.only(left: 20, right: 5),
+        decoration: BoxDecoration(
+          color: AppTheme.ink,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
+        ),
+        child: Row(
+          mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
+          children: [
+            if (expand)
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTypography.buttonLabel.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              )
+            else
+              Text(
                 label,
                 style: AppTypography.buttonLabel.copyWith(color: Colors.white),
               ),
-            )
-          else
-            Text(
-              label,
-              style: AppTypography.buttonLabel.copyWith(color: Colors.white),
+            const SizedBox(width: 14),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_forward,
+                color: AppTheme.ink,
+                size: 18,
+              ),
             ),
-          const SizedBox(width: 14),
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.arrow_forward,
-              color: AppTheme.ink,
-              size: 18,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(999),
-      onTap: onTap,
-      child: content,
     );
   }
 }
@@ -75,6 +76,7 @@ class CircleIconButton extends StatelessWidget {
   final double size;
   final Color background;
   final Color foreground;
+  final bool shadow;
 
   const CircleIconButton({
     super.key,
@@ -83,17 +85,25 @@ class CircleIconButton extends StatelessWidget {
     this.size = 36,
     this.background = Colors.white,
     this.foreground = AppTheme.ink,
+    this.shadow = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      customBorder: const CircleBorder(),
+    return SnappyTap.builder(
       onTap: onTap,
-      child: Container(
+      builder: (context, hovered) => Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(color: background, shape: BoxShape.circle),
+        decoration: BoxDecoration(
+          color: background,
+          shape: BoxShape.circle,
+          boxShadow: !shadow
+              ? null
+              : hovered
+              ? AppTheme.cardShadowStrong
+              : AppTheme.cardShadow,
+        ),
         child: Icon(icon, size: size * 0.5, color: foreground),
       ),
     );
@@ -127,6 +137,7 @@ class CircleBackButton extends StatelessWidget {
         child: CircleIconButton(
           icon: Icons.arrow_back,
           background: Colors.white,
+          shadow: false,
           onTap: onTap ?? () => _handleBack(context),
         ),
       ),

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Placeholder theme — mobile-app/shared/design-system.md ainda não foi
-/// escrito a sério. Paleta extraída pelo utilizador a partir dos
-/// mockups de referência: fundo branco, superfícies pastel planas
-/// (sem gradiente), preto para texto/ícones. Tipografia Inter, com
-/// escala definida pelo utilizador para um ecrã de referência de 375px.
+/// Implementação executável do design system documentado em
+/// mobile-app/shared/design-system.md — fundo branco, superfícies
+/// pastel planas (sem gradiente), preto quase absoluto para
+/// texto/ícones. Tipografia Inter, com escala definida para um ecrã de
+/// referência de 375px.
 class AppTheme {
   static const seedColor = Color(0xFF141719);
 
@@ -19,6 +19,27 @@ class AppTheme {
   /// Margem lateral partilhada por todos os ecrãs principais — o
   /// conteúdo e a navbar flutuante alinham-se a esta mesma largura.
   static const screenMargin = 28.0;
+
+  /// Sombra partilhada por todos os cards — projetada para baixo, sem
+  /// distorção, sem blur (aresta nítida e visível, em vez de um halo
+  /// difuso).
+  static const cardShadow = [
+    BoxShadow(color: Color(0x1A000000), blurRadius: 0, offset: Offset(0, 3)),
+  ];
+
+  /// Variante mais carregada de [cardShadow], para elementos que devem
+  /// ganhar destaque/dominância sobre os cards normais (ex: tiles de
+  /// estatística selecionáveis, estado de hover) — mesma aresta nítida,
+  /// mais opacidade e um pouco mais de alcance.
+  static const cardShadowStrong = [
+    BoxShadow(color: Color(0x33000000), blurRadius: 0, offset: Offset(0, 5)),
+  ];
+
+  /// Escurece uma cor de superfície ~10% para o estado pressionado —
+  /// mesma cor base, sem introduzir tons novos, sem alterar tamanho,
+  /// posição ou border-radius.
+  static Color pressedOverlay(Color base) =>
+      Color.alphaBlend(Colors.black.withValues(alpha: 0.1), base);
 
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(
@@ -42,11 +63,15 @@ class AppTheme {
           letterSpacing: -0.5,
           color: ink,
         ),
-        headlineSmall: baseText.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: ink, height: 1.15),
+        headlineSmall: baseText.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: ink,
+          height: 1.15,
+        ),
         // Título do card principal
         titleLarge: baseText.titleLarge?.copyWith(
-          fontSize: 20,
-          height: 26 / 20,
+          fontSize: 22,
+          height: 28 / 22,
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
           color: ink,
@@ -68,7 +93,10 @@ class AppTheme {
           letterSpacing: 0,
           color: inkMuted,
         ),
-        bodySmall: baseText.bodySmall?.copyWith(letterSpacing: 0, color: inkMuted),
+        bodySmall: baseText.bodySmall?.copyWith(
+          letterSpacing: 0,
+          color: inkMuted,
+        ),
         // Texto do botão "Ver mais"
         labelLarge: baseText.labelLarge?.copyWith(
           fontSize: 16,
@@ -83,7 +111,12 @@ class AppTheme {
         foregroundColor: ink,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.inter(color: ink, fontSize: 20, height: 26 / 20, fontWeight: FontWeight.w600),
+        titleTextStyle: GoogleFonts.inter(
+          color: ink,
+          fontSize: 22,
+          height: 28 / 22,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -92,15 +125,24 @@ class AppTheme {
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 16,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size.fromHeight(54),
           backgroundColor: ink,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          textStyle: GoogleFonts.inter(fontSize: 16, height: 24 / 16, fontWeight: FontWeight.w500),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          textStyle: GoogleFonts.inter(
+            fontSize: 16,
+            height: 24 / 16,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -108,8 +150,14 @@ class AppTheme {
           minimumSize: const Size.fromHeight(54),
           foregroundColor: ink,
           side: const BorderSide(color: Color(0xFFE3E4E7)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          textStyle: GoogleFonts.inter(fontSize: 16, height: 24 / 16, fontWeight: FontWeight.w500),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          textStyle: GoogleFonts.inter(
+            fontSize: 16,
+            height: 24 / 16,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
       cardTheme: CardThemeData(
@@ -120,7 +168,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: Colors.white,
-        selectedColor: ink,
+        selectedColor: AppColors.green,
         side: const BorderSide(color: Color(0xFFE3E4E7)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
@@ -133,11 +181,31 @@ class AppTheme {
 /// com texto sobre fundos coloridos (onde a cor tem de ser explícita e
 /// não pode vir do tema, ex: texto branco sobre um botão preto).
 class AppTypography {
-  static const cardTitle = TextStyle(fontSize: 20, height: 26 / 20, fontWeight: FontWeight.w600);
-  static const cardSubtitle = TextStyle(fontSize: 14, height: 20 / 14, fontWeight: FontWeight.w400);
-  static const buttonLabel = TextStyle(fontSize: 16, height: 24 / 16, fontWeight: FontWeight.w500);
-  static const moduleTitle = TextStyle(fontSize: 18, height: 24 / 18, fontWeight: FontWeight.w600);
-  static const moduleDescription = TextStyle(fontSize: 14, height: 20 / 14, fontWeight: FontWeight.w400);
+  static const cardTitle = TextStyle(
+    fontSize: 22,
+    height: 28 / 22,
+    fontWeight: FontWeight.w600,
+  );
+  static const cardSubtitle = TextStyle(
+    fontSize: 14,
+    height: 20 / 14,
+    fontWeight: FontWeight.w400,
+  );
+  static const buttonLabel = TextStyle(
+    fontSize: 16,
+    height: 24 / 16,
+    fontWeight: FontWeight.w500,
+  );
+  static const moduleTitle = TextStyle(
+    fontSize: 18,
+    height: 24 / 18,
+    fontWeight: FontWeight.w600,
+  );
+  static const moduleDescription = TextStyle(
+    fontSize: 14,
+    height: 20 / 14,
+    fontWeight: FontWeight.w400,
+  );
   static const iconSize = 24.0;
 }
 
@@ -145,8 +213,9 @@ class AppTypography {
 /// (sem gradiente) para os cartões de destaque.
 class AppColors {
   static const blue = Color(0xFFDEF3FA);
-  static const green = Color(0xFFE1F7DD);
+  static const green = Color(0xFFE2F7DE);
   static const yellow = Color(0xFFFFF5C0);
+  static const pink = Color(0xFFFCE1EC);
   static const gray = Color(0xFFF2F2F2);
   static const purple = Color(0xFFB589DF);
 
@@ -156,7 +225,7 @@ class AppColors {
 /// Cores semânticas de estado (ex: RSVP) — usadas em vez de emojis para
 /// comunicar estado, mantendo a app livre de emojis decorativos.
 class AppStatusColors {
-  static const confirmed = Color(0xFF3FA463);
-  static const pending = Color(0xFFDB9A34);
-  static const declined = Color(0xFFD5615A);
+  static const confirmed = Color(0xFF2EAD65);
+  static const pending = Color(0xFFF2A01B);
+  static const declined = Color(0xFFEF5350);
 }

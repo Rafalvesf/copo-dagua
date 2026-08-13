@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'snappy_tap.dart';
+
 void openSupportScreen(BuildContext context) {
   context.push('/support');
 }
@@ -15,8 +17,7 @@ class ChatIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      customBorder: const CircleBorder(),
+    return SnappyTap(
       onTap: onTap,
       child: ClipOval(
         child: Image.asset(
