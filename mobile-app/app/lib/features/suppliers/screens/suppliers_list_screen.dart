@@ -235,7 +235,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                         child: ListView(
                           padding: const EdgeInsets.fromLTRB(0, 32, 0, 140),
                           children: [
-                            if (!widget.selectionMode)
+                            if (!widget.selectionMode && _filter == null)
                               trendingAsync.maybeWhen(
                                 data: (allTrending) {
                                   if (allTrending.isEmpty) {
@@ -287,7 +287,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                                   12,
                                 ),
                                 child: Text(
-                                  'Mais Dos Melhores',
+                                  _filter?.label ?? 'Mais Dos Melhores',
                                   style: Theme.of(
                                     context,
                                   ).textTheme.titleMedium,
@@ -525,25 +525,35 @@ class _CategoryIconTile extends StatelessWidget {
       children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          width: selected ? 52 : 40,
-          height: selected ? 52 : 40,
+          width: selected ? 64 : 40,
+          height: selected ? 64 : 40,
           decoration: BoxDecoration(
-            color: selected ? AppColors.green : Colors.white,
+            color: selected ? AppColors.greenDark : Colors.white,
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, size: selected ? 22 : 18, color: AppTheme.ink),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          style: TextStyle(
-            fontSize: selected ? 11.5 : 10.5,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-            color: AppTheme.ink,
+          child: Icon(
+            icon,
+            size: selected ? 26 : 18,
+            color: selected ? Colors.white : AppTheme.ink,
           ),
         ),
+        // A opção selecionada só mostra a bola maior — o nome da
+        // categoria passa a aparecer no título da lista logo abaixo
+        // ("Mais Dos Melhores" é substituído pelo nome), por isso não
+        // precisa de se repetir aqui.
+        if (!selected) ...[
+          const SizedBox(height: 6),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            style: const TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.ink,
+            ),
+          ),
+        ],
       ],
     );
   }
