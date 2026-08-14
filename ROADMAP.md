@@ -11,6 +11,15 @@ Desenvolvemos **um módulo de cada vez**, nunca em paralelo, seguindo sempre a m
 - ⏳ Por iniciar
 - 🧊 Fora do MVP (futuro)
 
+## Nota de terminologia
+
+"Parceiro" é usado no produto com **dois significados distintos**, uma decisão consciente tomada a 2026-08-14 ao renomear "Fornecedor" para "Parceiro":
+
+1. **Parceiro = a pessoa com quem o utilizador casa** (`Wedding.partnerName1`/`partnerName2`, passo de onboarding "Sobre o/a parceiro/a"). Este uso já existia antes e está documentado e testado em `mobile-app/onboarding/` e `mobile-app/wedding/`.
+2. **Parceiro = prestador de serviços no marketplace** (`UserRole.partner`, `partner-app/`, `partner_profiles`). Este é o novo uso, que substituiu "Fornecedor".
+
+A ambiguidade foi assumida deliberadamente (ver conversa de 2026-08-14) em vez de reverter ou escolher outro termo. Ao escrever UI copy ou documentação nova, desambiguar pelo contexto imediato ("o teu parceiro/a" vs. "parceiros no Marketplace") e evitar frases onde os dois sentidos possam colidir na mesma frase.
+
 ## Ordem de dependências (visão de arquiteto)
 
 ```
@@ -21,7 +30,7 @@ Authentication ✅
         ├── Checklist
         ├── Budget
         └── Marketplace
-              ├── Supplier Profile
+              ├── Partner Profile
               ├── Quotations
               ├── Bookings
               ├── Contracts
@@ -56,7 +65,7 @@ Authentication ✅
 | Módulo | Estado | Localização |
 |---|---|---|
 | Marketplace | ⏳ | `mobile-app/marketplace/` |
-| Supplier Profile | ⏳ | `mobile-app/supplier-profile/` |
+| Partner Profile | ⏳ | `mobile-app/partner-profile/` |
 | Quotations | ⏳ | `mobile-app/quotations/` |
 | Bookings | ⏳ | `mobile-app/bookings/` |
 | Contracts | ⏳ | `mobile-app/contracts/` |
@@ -74,18 +83,18 @@ Authentication ✅
 | Profile | ⏳ | `mobile-app/profile/` |
 | Settings | ⏳ | `mobile-app/settings/` |
 
-### Supplier App
+### Partner App
 | Módulo | Estado | Localização |
 |---|---|---|
-| Dashboard (fornecedor) | ⏳ | `supplier-app/dashboard/` |
-| Calendar | ⏳ | `supplier-app/calendar/` |
-| Bookings | ⏳ | `supplier-app/bookings/` |
-| Quotations | ⏳ | `supplier-app/quotations/` |
-| Chat | ⏳ | `supplier-app/chat/` |
-| Contracts | ⏳ | `supplier-app/contracts/` |
-| Payouts | ⏳ | `supplier-app/payouts/` |
-| Analytics | ⏳ | `supplier-app/analytics/` |
-| Profile | ⏳ | `supplier-app/profile/` |
+| Dashboard (parceiro) | ⏳ | `partner-app/dashboard/` |
+| Calendar | ⏳ | `partner-app/calendar/` |
+| Bookings | ⏳ | `partner-app/bookings/` |
+| Quotations | ⏳ | `partner-app/quotations/` |
+| Chat | ⏳ | `partner-app/chat/` |
+| Contracts | ⏳ | `partner-app/contracts/` |
+| Payouts | ⏳ | `partner-app/payouts/` |
+| Analytics | ⏳ | `partner-app/analytics/` |
+| Profile | ✅ | `partner-app/profile/` |
 
 ### Admin Web
 | Módulo | Estado | Localização |
@@ -93,7 +102,7 @@ Authentication ✅
 | Dashboard | ⏳ | `admin-web/dashboard/` |
 | Users | ⏳ | `admin-web/users/` |
 | Weddings | ⏳ | `admin-web/weddings/` |
-| Suppliers | ⏳ | `admin-web/suppliers/` |
+| Partners | ⏳ | `admin-web/partners/` |
 | Categories | ⏳ | `admin-web/categories/` |
 | Payments | ⏳ | `admin-web/payments/` |
 | Commissions | ⏳ | `admin-web/commissions/` |
@@ -112,6 +121,7 @@ Authentication ✅
 | `mobile-app/shared/design-system.md` | ⏳ | Bloqueia velocidade dos módulos seguintes — recomenda-se priorizar cedo |
 | `database/erd.md` | ⏳ | Deve começar a ganhar forma a partir do módulo Wedding |
 | `mobile-app/payments/stripe-connect.md` | ⏳ | Decisão de arquitetura crítica (Standard vs Express, escrow vs destination charge) |
+| `database/tests/rls_test_suite.sql` (T12–T21, Profile) | ⏳ | Testes escritos, ainda não corridos contra Postgres real — sem `psql`/Docker disponíveis na sessão em que foram escritos. Ver `database/README.md`. |
 
 ## Marco: implementação e testes da fundação
 
@@ -122,4 +132,9 @@ Depois de documentar Authentication, Onboarding, Wedding e Guests, o schema SQL 
 Com Authentication, Onboarding, Wedding e Guests concluídos, sugestões por ordem de dependência natural:
 - **Seating Plan** — depende diretamente de Guests (usa a lista de confirmados) e fecha o ciclo de "organização social" do casamento.
 - **Budget** — já pode começar a refletir dados de Guests (nº de confirmados) para estimativas de custo por convidado.
-- **Marketplace** — se preferires validar primeiro o lado da receita (fornecedores), já que é o motor do modelo de negócio.
+- **Marketplace** — se preferires validar primeiro o lado da receita (parceiros), já que é o motor do modelo de negócio.
+
+`partner-app/profile/` foi documentado (2026-08-14) como primeiro módulo do lado do parceiro — é a base de dados que o Marketplace, `mobile-app/partner-profile/` e o resto da partner-app vão consumir. Bloqueio identificado para produção: `admin-web/partners/` ainda não existe, e sem essa vista nenhum perfil sai de `pending_review` (ver `partner-app/profile/tasks.md`). Sugestões por ordem de dependência natural a partir daqui:
+- **`admin-web/partners/`** (mínimo viável: listar + aprovar/rejeitar) — desbloqueia testar o ciclo de vida completo do Profile ponta a ponta.
+- **`partner-app/quotations/`** — primeiro módulo de valor real para o parceiro (receber pedidos), já pode ser desenhado assumindo um `partner_profiles.status = published`.
+- Correr `database/tests/rls_test_suite.sql` (T12–T21) contra Postgres real assim que houver `psql`/Docker disponível, para fechar a verificação de Profile ao mesmo nível dos módulos anteriores.

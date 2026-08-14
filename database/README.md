@@ -11,6 +11,7 @@ Este diretório contém o **schema SQL real** dos módulos já implementados, ex
 | Onboarding | `002_onboarding.sql` | ✅ |
 | Wedding | `003_wedding.sql` | ✅ (incluindo correção de policy de INSERT em falta) |
 | Guests | `004_guests.sql` | ✅ |
+| Profile (partner-app) | `005_partner_profile.sql` | ⏳ — escrita e com testes adicionados a `rls_test_suite.sql` (T12–T21), mas **não executada** contra um Postgres real neste ambiente de trabalho (sem `psql`/Docker disponíveis aqui). Ver nota abaixo. |
 
 Ver `docs/architecture/TESTING_NOTES.md` para o relatório completo de testes, incluindo os bugs reais encontrados e corrigidos.
 
@@ -25,12 +26,13 @@ psql -d copodagua_test -f migrations/001_authentication.sql
 psql -d copodagua_test -f migrations/002_onboarding.sql
 psql -d copodagua_test -f migrations/003_wedding.sql
 psql -d copodagua_test -f migrations/004_guests.sql
+psql -d copodagua_test -f migrations/005_partner_profile.sql
 
 # correr os testes de RLS
 psql -d copodagua_test -f tests/rls_test_suite.sql
 ```
 
-Devem passar **11 de 11 testes** (procurar por `PASS`/`FAIL` no output).
+Deviam passar **21 de 21 testes** (procurar por `PASS`/`FAIL` no output) — os 11 originais (Authentication/Wedding/Guests) mais os 10 novos de Profile (T12–T21). **Nota:** os testes T12–T21 ainda não foram corridos contra um Postgres real (ver tabela acima); a próxima sessão com acesso a `psql` ou Docker deve validar isto antes de considerar o módulo `partner-app/profile/` verificado ao mesmo nível dos restantes.
 
 ## Nota importante
 

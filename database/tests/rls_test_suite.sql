@@ -192,4 +192,180 @@ begin;
   );
 commit;
 
+-- ============================================================
+-- Setup adicional: Profile (partner-app)
+-- ============================================================
+insert into auth.users (id, email) values
+  ('55555555-5555-5555-5555-555555555555', 'parceiro.a@example.com'),
+  ('66666666-6666-6666-6666-666666666666', 'parceiro.b@example.com');
+
+insert into public.profiles (id, role, full_name) values
+  ('55555555-5555-5555-5555-555555555555', 'partner', 'Estúdio Luz & Sombra'),
+  ('66666666-6666-6666-6666-666666666666', 'partner', 'Quinta das Rosas');
+
+-- Parceiro A: perfil publicado e visível
+insert into public.partner_profiles (id, business_name, description, status, is_paused) values
+  ('55555555-5555-5555-5555-555555555555', 'Estúdio Luz & Sombra', 'Fotografia de casamento com mais de 10 anos de experiência.', 'published', false);
+
+-- Parceiro B: perfil ainda em draft, não deve ser visível publicamente
+insert into public.partner_profiles (id, business_name, description, status, is_paused) values
+  ('66666666-6666-6666-6666-666666666666', 'Quinta das Rosas', 'Espaço para casamentos ao ar livre.', 'draft', false);
+
+insert into public.partner_verification (partner_id, tax_id, billing_address) values
+  ('55555555-5555-5555-5555-555555555555', '123456789', 'Rua das Flores, 10, Lisboa'),
+  ('66666666-6666-6666-6666-666666666666', '987654321', 'Estrada Nacional 1, Sintra');
+
+insert into public.partner_profile_categories (partner_id, category_id, starting_price)
+  select '55555555-5555-5555-5555-555555555555', id, 800.00
+  from public.partner_categories where slug = 'photography';
+
+-- ============================================================
+-- TESTE 12 e 13: Parceiro A vê e atualiza o próprio perfil
+-- ============================================================
+begin;
+  set local role app_authenticated;
+  set local app.current_user_id = '55555555-5555-5555-5555-555555555555';
+
+  select pg_temp.check(
+    'T12 - Parceiro A ve o proprio perfil (mesmo antes de published, sempre pode)',
+    (select count(*) from public.partner_profiles where id = '55555555-5555-5555-5555-555555555555') = 1
+  );
+
+  update public.partner_profiles set description = 'Descrição atualizada.'
+  where id = '55555555-5555-5555-5555-555555555555';
+
+  select pg_temp.check(
+    'T13 - Parceiro A consegue atualizar o proprio perfil',
+    (select description from public.partner_profiles where id = '55555555-5555-5555-5555-555555555555') = 'Descrição atualizada.'
+  );
+commit;
+
+-- ============================================================
+-- TESTE 14: Parceiro B NÃO consegue atualizar o perfil do Parceiro A
+-- ============================================================
+begin;
+  set local role app_authenticated;
+  set local app.current_user_id = '66666666-6666-6666-6666-666666666666';
+
+  do $$
+  declare affected int;
+  begin
+    update public.partner_profiles set business_name = 'Hackeado'
+    where id = '55555555-5555-5555-5555-555555555555';
+    get diagnostics affected = row_count;
+    if affected = 0 then
+      raise notice 'PASS - T14 - Parceiro B tentou editar perfil de A, 0 linhas afetadas (RLS bloqueou)';
+    else
+      raise warning 'FAIL - T14 - Parceiro B conseguiu editar % linha(s) do perfil de A!', affected;
+    end if;
+  end $$;
+rollback;
+
+-- ============================================================
+-- TESTE 15 e 16: Noivo vê perfil published, não vê perfil draft
+-- ============================================================
+begin;
+  set local role app_authenticated;
+  set local app.current_user_id = '11111111-1111-1111-1111-111111111111';
+
+  select pg_temp.check(
+    'T15 - Noivo ve perfil PUBLISHED do Parceiro A',
+    (select count(*) from public.partner_profiles where id = '55555555-5555-5555-5555-555555555555') = 1
+  );
+
+  select pg_temp.check(
+    'T16 - Noivo NAO ve perfil DRAFT do Parceiro B',
+    (select count(*) from public.partner_profiles where id = '66666666-6666-6666-6666-666666666666') = 0
+  );
+commit;
+
+-- ============================================================
+-- TESTE 17: Noivo NUNCA consegue ler partner_verification, nem de perfil publicado
+-- ============================================================
+begin;
+  set local role app_authenticated;
+  set local app.current_user_id = '11111111-1111-1111-1111-111111111111';
+
+  select pg_temp.check(
+    'T17 - Noivo nao le partner_verification de nenhum parceiro (RN11)',
+    (select count(*) from public.partner_verification) = 0
+  );
+commit;
+
+-- ============================================================
+-- TESTE 18: Parceiro A vê os próprios dados de verificação; não os de B
+-- ============================================================
+begin;
+  set local role app_authenticated;
+  set local app.current_user_id = '55555555-5555-5555-5555-555555555555';
+
+  select pg_temp.check(
+    'T18a - Parceiro A ve os proprios dados fiscais',
+    (select count(*) from public.partner_verification where partner_id = '55555555-5555-5555-5555-555555555555') = 1
+  );
+
+  select pg_temp.check(
+    'T18b - Parceiro A NAO ve dados fiscais do Parceiro B',
+    (select count(*) from public.partner_verification where partner_id = '66666666-6666-6666-6666-666666666666') = 0
+  );
+commit;
+
+-- ============================================================
+-- TESTE 19: Parceiro B NÃO consegue inserir categoria no perfil do Parceiro A
+-- ============================================================
+begin;
+  set local role app_authenticated;
+  set local app.current_user_id = '66666666-6666-6666-6666-666666666666';
+
+  do $$
+  begin
+    insert into public.partner_profile_categories (partner_id, category_id)
+    select '55555555-5555-5555-5555-555555555555', id from public.partner_categories where slug = 'venue';
+    raise warning 'FAIL - T19 - Parceiro B conseguiu inserir categoria no perfil de A (RLS nao bloqueou)';
+  exception when insufficient_privilege or others then
+    raise notice 'PASS - T19 - Insercao indevida bloqueada (%)', sqlstate;
+  end $$;
+rollback;
+
+-- ============================================================
+-- TESTE 20: Limite de 5 categorias (RN03) é aplicado pelo trigger
+-- ============================================================
+begin;
+  set local role app_authenticated;
+  set local app.current_user_id = '55555555-5555-5555-5555-555555555555';
+
+  do $$
+  begin
+    insert into public.partner_profile_categories (partner_id, category_id)
+    select '55555555-5555-5555-5555-555555555555', id from public.partner_categories
+    where slug in ('videography', 'venue', 'catering', 'music_dj');
+
+    -- 5 categorias já inseridas (photography + as 4 acima) — a 6ª deve falhar
+    insert into public.partner_profile_categories (partner_id, category_id)
+    select '55555555-5555-5555-5555-555555555555', id from public.partner_categories where slug = 'flowers_decor';
+
+    raise warning 'FAIL - T20 - 6a categoria foi aceite (trigger nao bloqueou, RN03)';
+  exception when others then
+    raise notice 'PASS - T20 - 6a categoria bloqueada pelo trigger (%)', sqlstate;
+  end $$;
+rollback;
+
+-- ============================================================
+-- TESTE 21: is_partner_profile_visible() reflete o status correto
+-- ============================================================
+begin;
+  set local role app_authenticated;
+  set local app.current_user_id = '11111111-1111-1111-1111-111111111111';
+
+  select pg_temp.check(
+    'T21a - is_partner_profile_visible() true para perfil published',
+    public.is_partner_profile_visible('55555555-5555-5555-5555-555555555555') is true
+  );
+
+  select pg_temp.check(
+    'T21b - is_partner_profile_visible() false para perfil draft',
+    public.is_partner_profile_visible('66666666-6666-6666-6666-666666666666') is not true
+  );
+commit;
+
 \echo '=== FIM DOS TESTES ==='
