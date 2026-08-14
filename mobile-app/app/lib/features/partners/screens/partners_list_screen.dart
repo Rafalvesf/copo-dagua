@@ -545,14 +545,17 @@ class _CategoryIconTile extends StatelessWidget {
         // ("Mais Dos Melhores" é substituído pelo nome), por isso não
         // precisa de se repetir aqui.
         //
-        // Altura do rótulo fixada (em vez de deixar o texto crescer
-        // livremente até 2 linhas) para o tile nunca ultrapassar os 74px
-        // disponíveis no _CategoryNavBar, mesmo com rótulos mais longos
-        // ("Música & DJ") que quebram em 2 linhas.
+        // Flexible (não SizedBox de altura fixa) porque, numa Column,
+        // filhos não-flex recebem altura MÁXIMA ilimitada durante o
+        // layout — um SizedBox com altura fixa ainda assim contava para
+        // o overflow do RenderFlex sempre que o texto de 2 linhas
+        // precisava de mais espaço do que sobrava nos 74px do tile.
+        // Flexible obriga o texto a caber no espaço que sobra depois do
+        // ícone, cortando com reticências se for preciso, sem nunca
+        // ultrapassar os 74px.
         if (!selected) ...[
           const SizedBox(height: 6),
-          SizedBox(
-            height: 24,
+          Flexible(
             child: Text(
               label,
               textAlign: TextAlign.center,
