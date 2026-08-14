@@ -1,4 +1,4 @@
-# Modulo: calendar (supplier-app)
+# Modulo: calendar (partner-app)
 
 Estado: por iniciar.
 

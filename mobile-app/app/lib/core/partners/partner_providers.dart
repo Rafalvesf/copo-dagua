@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../mock/mock_backend.dart';
 import '../models/models.dart';
 
-final suppliersProvider = FutureProvider.family<List<Supplier>, SupplierCategory?>((ref, category) {
-  return MockBackend.instance.listSuppliers(category: category);
+final partnersProvider = FutureProvider.family<List<Partner>, PartnerCategory?>((ref, category) {
+  return MockBackend.instance.listPartners(category: category);
 });
 
-class SupplierPickerArgs {
-  final SupplierCategory? category;
+class PartnerPickerArgs {
+  final PartnerCategory? category;
   final bool selectionMode;
 
-  const SupplierPickerArgs({this.category, this.selectionMode = false});
+  const PartnerPickerArgs({this.category, this.selectionMode = false});
 }

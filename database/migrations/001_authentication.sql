@@ -4,7 +4,7 @@
 
 create extension if not exists pgcrypto;
 
-create type user_role as enum ('couple', 'supplier', 'admin');
+create type user_role as enum ('couple', 'partner', 'admin');
 
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,

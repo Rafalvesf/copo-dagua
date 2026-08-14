@@ -1,4 +1,4 @@
-# Modulo: dashboard (supplier-app)
+# Modulo: dashboard (partner-app)
 
 Estado: por iniciar.
 

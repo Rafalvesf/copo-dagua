@@ -1,4 +1,4 @@
-# Modulo: suppliers (backend)
+# Modulo: partners (backend)
 
 Estado: por iniciar.
 

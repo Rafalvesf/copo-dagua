@@ -1,12 +1,12 @@
 # Authentication — Fluxo do Utilizador
 
-## Registo (Noivo ou Fornecedor)
+## Registo (Noivo ou Parceiro)
 
 ```
 Abrir app
   → Ecrã "Bem-vindo" (Entrar / Criar conta)
     → Criar conta
-      → Escolher papel: "Vou casar-me" ou "Sou fornecedor"
+      → Escolher papel: "Vou casar-me" ou "Sou parceiro"
         → Formulário: Nome, Email, Password
           → (opcional) Continuar com Google / Apple
         → Aceitar Termos e Política de Privacidade (checkbox obrigatório)

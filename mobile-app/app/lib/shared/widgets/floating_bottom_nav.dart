@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/wedding/wedding_nav_icon.dart';
 
-enum AppTab { home, wedding, guests, checklist, suppliers, budget, seating }
+enum AppTab { home, wedding, guests, checklist, partners, budget, seating }
 
 class FloatingBottomNav extends ConsumerWidget {
   final AppTab current;
@@ -54,8 +54,8 @@ class FloatingBottomNav extends ConsumerWidget {
                 const SizedBox(width: 56),
                 _NavIcon(
                   icon: Icons.storefront_rounded,
-                  active: current == AppTab.suppliers,
-                  onTap: () => context.go('/suppliers'),
+                  active: current == AppTab.partners,
+                  onTap: () => context.go('/partners'),
                 ),
               ],
             ),

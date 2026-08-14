@@ -19,7 +19,7 @@
 |---|---|
 | RN01 | Só o `owner_id` pode eliminar o casamento ou transferir a propriedade. Colaboradores podem editar todos os outros dados. |
 | RN02 | Um utilizador só pode ser `owner_id` de **um** casamento ativo de cada vez (herdado do Onboarding RN07). Pode ser colaborador em múltiplos. |
-| RN03 | Convite de colaborador é feito por email. Se o email já tiver conta noutro `role` (ex: fornecedor), o convite falha com mensagem clara — mesma lógica já aplicada no convite do Onboarding. |
+| RN03 | Convite de colaborador é feito por email. Se o email já tiver conta noutro `role` (ex: parceiro), o convite falha com mensagem clara — mesma lógica já aplicada no convite do Onboarding. |
 | RN04 | Não existem permissões granulares por colaborador no MVP — um colaborador aceite tem acesso de edição total aos dados do casamento (guests, budget, checklist, etc.), exceto eliminar/transferir propriedade (RN01). Papéis diferenciados (ex: "só visualização" para um wedding planner) ficam para depois do MVP. |
 | RN05 | `wedding_date` pode ser alterada livremente enquanto o casamento estiver em estado `planning`. Uma vez em `completed`, a data fica bloqueada para edição (preserva integridade do histórico e de contratos/pagamentos já associados). |
 | RN06 | Transição automática de `planning` para `completed` acontece 1 dia depois de `wedding_date`, via job agendado — mas pode também ser feita manualmente antes disso pelo owner. |

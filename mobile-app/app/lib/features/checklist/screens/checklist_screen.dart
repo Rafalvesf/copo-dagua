@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/checklist/checklist_controller.dart';
 import '../../../core/mock/mock_backend.dart';
 import '../../../core/models/models.dart';
-import '../../../core/suppliers/supplier_providers.dart';
+import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cover_flow_picker.dart';
@@ -270,8 +270,8 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                                                 .notifier,
                                           )
                                           .removeItem(item.id),
-                                      onPickSupplier: (item) =>
-                                          _pickSupplier(item),
+                                      onPickPartner: (item) =>
+                                          _pickPartner(item),
                                     ),
                                   )
                               else if (visibleFlatItems.isEmpty)
@@ -308,10 +308,10 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                                                     .notifier,
                                               )
                                               .removeItem(item.id),
-                                          onPickSupplier:
-                                              item.supplierCategory == null
+                                          onPickPartner:
+                                              item.partnerCategory == null
                                               ? null
-                                              : () => _pickSupplier(item),
+                                              : () => _pickPartner(item),
                                         ),
                                     ],
                                   ),
@@ -335,18 +335,18 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
     );
   }
 
-  Future<void> _pickSupplier(ChecklistItem item) async {
-    final supplier = await context.push<Supplier>(
-      '/suppliers',
-      extra: SupplierPickerArgs(
-        category: item.supplierCategory,
+  Future<void> _pickPartner(ChecklistItem item) async {
+    final partner = await context.push<Partner>(
+      '/partners',
+      extra: PartnerPickerArgs(
+        category: item.partnerCategory,
         selectionMode: true,
       ),
     );
-    if (supplier == null) return;
+    if (partner == null) return;
     ref
         .read(checklistControllerProvider.notifier)
-        .selectSupplier(item.id, supplier.id);
+        .selectPartner(item.id, partner.id);
   }
 }
 
@@ -472,7 +472,7 @@ class _PhaseGroup extends StatelessWidget {
   final VoidCallback onToggle;
   final ValueChanged<ChecklistItem> onToggleDone;
   final ValueChanged<ChecklistItem> onRemove;
-  final ValueChanged<ChecklistItem> onPickSupplier;
+  final ValueChanged<ChecklistItem> onPickPartner;
 
   const _PhaseGroup({
     required this.title,
@@ -482,7 +482,7 @@ class _PhaseGroup extends StatelessWidget {
     required this.onToggle,
     required this.onToggleDone,
     required this.onRemove,
-    required this.onPickSupplier,
+    required this.onPickPartner,
   });
 
   @override
@@ -547,9 +547,9 @@ class _PhaseGroup extends StatelessWidget {
                         item: item,
                         onToggle: () => onToggleDone(item),
                         onRemove: () => onRemove(item),
-                        onPickSupplier: item.supplierCategory == null
+                        onPickPartner: item.partnerCategory == null
                             ? null
-                            : () => onPickSupplier(item),
+                            : () => onPickPartner(item),
                       ),
                   ],
                 ),
@@ -564,21 +564,21 @@ class _ChecklistTile extends StatelessWidget {
   final ChecklistItem item;
   final VoidCallback onToggle;
   final VoidCallback onRemove;
-  final VoidCallback? onPickSupplier;
+  final VoidCallback? onPickPartner;
 
   const _ChecklistTile({
     required this.item,
     required this.onToggle,
     required this.onRemove,
-    this.onPickSupplier,
+    this.onPickPartner,
   });
 
   @override
   Widget build(BuildContext context) {
     final due = item.dueDate;
-    final selectedSupplier = item.selectedSupplierId == null
+    final selectedPartner = item.selectedPartnerId == null
         ? null
-        : MockBackend.instance.getSupplier(item.selectedSupplierId!);
+        : MockBackend.instance.getPartner(item.selectedPartnerId!);
 
     return ListTile(
       leading: SnappyTap(
@@ -626,22 +626,22 @@ class _ChecklistTile extends StatelessWidget {
               'Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}',
               style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
             ),
-          if (onPickSupplier != null)
+          if (onPickPartner != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: ActionChip(
                 avatar: Icon(
-                  selectedSupplier == null
+                  selectedPartner == null
                       ? Icons.storefront_outlined
                       : Icons.check_circle,
                   size: 16,
                 ),
                 label: Text(
-                  selectedSupplier == null
-                      ? 'Escolher fornecedor'
-                      : 'Fornecedor: ${selectedSupplier.name}',
+                  selectedPartner == null
+                      ? 'Escolher parceiro'
+                      : 'Parceiro: ${selectedPartner.name}',
                 ),
-                onPressed: onPickSupplier,
+                onPressed: onPickPartner,
               ),
             ),
         ],

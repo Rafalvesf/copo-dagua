@@ -4,7 +4,7 @@ Supabase gere a tabela `auth.users` automaticamente (email, password hash, provi
 
 ```sql
 -- Enum de papéis
-create type user_role as enum ('couple', 'supplier', 'admin');
+create type user_role as enum ('couple', 'partner', 'admin');
 
 -- Tabela de perfis (estende auth.users)
 create table public.profiles (

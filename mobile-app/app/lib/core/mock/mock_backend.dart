@@ -21,7 +21,7 @@ class MockBackend {
   final List<Collaborator> collaboratorsByWedding = [];
   final List<Guest> guests = [];
   final List<ChecklistItem> checklistItems = [];
-  final List<Supplier> suppliers = [];
+  final List<Partner> partners = [];
   final List<Budget> budgets = [];
   final List<SeatingTable> seatingTables = [];
 
@@ -192,11 +192,11 @@ class MockBackend {
       ),
     ]);
 
-    suppliers.addAll(const [
-      Supplier(
+    partners.addAll(const [
+      Partner(
         id: 'sup-photo-1',
         name: 'Instantes Photography',
-        category: SupplierCategory.photography,
+        category: PartnerCategory.photography,
         city: 'Lisboa',
         rating: 4.9,
         reviewCount: 132,
@@ -205,10 +205,10 @@ class MockBackend {
             'Fotografia documental de casamentos, com edição incluída e entrega em 4 semanas.',
         imageUrl: 'https://picsum.photos/seed/sup-photo-1/900/700',
       ),
-      Supplier(
+      Partner(
         id: 'sup-photo-2',
         name: 'Luz & Sombra Studio',
-        category: SupplierCategory.photography,
+        category: PartnerCategory.photography,
         city: 'Sintra',
         rating: 4.7,
         reviewCount: 84,
@@ -217,10 +217,10 @@ class MockBackend {
             'Estilo clássico e atemporal, especialistas em luz natural.',
         imageUrl: 'https://picsum.photos/seed/sup-photo-2/900/700',
       ),
-      Supplier(
+      Partner(
         id: 'sup-catering-1',
         name: 'Sabores & Cia',
-        category: SupplierCategory.catering,
+        category: PartnerCategory.catering,
         city: 'Sintra',
         rating: 4.8,
         reviewCount: 201,
@@ -229,10 +229,10 @@ class MockBackend {
             'Catering português contemporâneo, menus personalizáveis por pessoa.',
         imageUrl: 'https://picsum.photos/seed/sup-catering-1/900/700',
       ),
-      Supplier(
+      Partner(
         id: 'sup-catering-2',
         name: 'Quinta do Paladar',
-        category: SupplierCategory.catering,
+        category: PartnerCategory.catering,
         city: 'Lisboa',
         rating: 4.6,
         reviewCount: 97,
@@ -241,10 +241,10 @@ class MockBackend {
             'Buffet e serviço à mesa, opções vegetarianas e sem glúten incluídas.',
         imageUrl: 'https://picsum.photos/seed/sup-catering-2/900/700',
       ),
-      Supplier(
+      Partner(
         id: 'sup-music-1',
         name: 'DJ Nuno Beats',
-        category: SupplierCategory.music,
+        category: PartnerCategory.music,
         city: 'Cascais',
         rating: 4.9,
         reviewCount: 156,
@@ -253,10 +253,10 @@ class MockBackend {
             'DJ com mais de 10 anos de casamentos, equipamento de som e luz incluído.',
         imageUrl: 'https://picsum.photos/seed/sup-music-1/900/700',
       ),
-      Supplier(
+      Partner(
         id: 'sup-music-2',
         name: 'Quarteto Harmonia',
-        category: SupplierCategory.music,
+        category: PartnerCategory.music,
         city: 'Lisboa',
         rating: 4.8,
         reviewCount: 63,
@@ -265,10 +265,10 @@ class MockBackend {
             'Quarteto de cordas para cerimónia, repertório clássico e contemporâneo.',
         imageUrl: 'https://picsum.photos/seed/sup-music-2/900/700',
       ),
-      Supplier(
+      Partner(
         id: 'sup-decor-1',
         name: 'Flores & Cia',
-        category: SupplierCategory.decoration,
+        category: PartnerCategory.decoration,
         city: 'Sintra',
         rating: 4.7,
         reviewCount: 74,
@@ -277,10 +277,10 @@ class MockBackend {
             'Decoração floral completa — cerimónia, mesa de honra e centros de mesa.',
         imageUrl: 'https://picsum.photos/seed/sup-decor-1/900/700',
       ),
-      Supplier(
+      Partner(
         id: 'sup-decor-2',
         name: 'Decor Elegance',
-        category: SupplierCategory.decoration,
+        category: PartnerCategory.decoration,
         city: 'Oeiras',
         rating: 4.5,
         reviewCount: 41,
@@ -299,27 +299,27 @@ class MockBackend {
           BudgetCategory(
             name: 'Quinta',
             amount: 6000,
-            supplierCategory: SupplierCategory.venue,
+            partnerCategory: PartnerCategory.venue,
           ),
           BudgetCategory(
             name: 'Fotografia',
             amount: 1000,
-            supplierCategory: SupplierCategory.photography,
+            partnerCategory: PartnerCategory.photography,
           ),
           BudgetCategory(
             name: 'Catering',
             amount: 2800,
-            supplierCategory: SupplierCategory.catering,
+            partnerCategory: PartnerCategory.catering,
           ),
           BudgetCategory(
             name: 'Decoração',
             amount: 1500,
-            supplierCategory: SupplierCategory.decoration,
+            partnerCategory: PartnerCategory.decoration,
           ),
           BudgetCategory(
             name: 'Música',
             amount: 1000,
-            supplierCategory: SupplierCategory.music,
+            partnerCategory: PartnerCategory.music,
           ),
           BudgetCategory(name: 'Vestido e fato', amount: 800),
           BudgetCategory(name: 'Outros', amount: 1200),
@@ -347,34 +347,34 @@ class MockBackend {
         id: 'cl3',
         weddingId: wedding.id,
         title: 'Escolher e contratar fotógrafo',
-        category: 'Fornecedores',
+        category: 'Parceiros',
         done: true,
-        supplierCategory: SupplierCategory.photography,
-        selectedSupplierId: 'sup-photo-1',
+        partnerCategory: PartnerCategory.photography,
+        selectedPartnerId: 'sup-photo-1',
       ),
       ChecklistItem(
         id: 'cl4',
         weddingId: wedding.id,
         title: 'Escolher catering e provar o menu',
-        category: 'Fornecedores',
+        category: 'Parceiros',
         dueDate: now.add(const Duration(days: 30)),
-        supplierCategory: SupplierCategory.catering,
+        partnerCategory: PartnerCategory.catering,
       ),
       ChecklistItem(
         id: 'cl5',
         weddingId: wedding.id,
         title: 'Contratar música/DJ',
-        category: 'Fornecedores',
+        category: 'Parceiros',
         dueDate: now.add(const Duration(days: 45)),
-        supplierCategory: SupplierCategory.music,
+        partnerCategory: PartnerCategory.music,
       ),
       ChecklistItem(
         id: 'cl11',
         weddingId: wedding.id,
         title: 'Escolher decoração floral',
-        category: 'Fornecedores',
+        category: 'Parceiros',
         dueDate: now.add(const Duration(days: 100)),
-        supplierCategory: SupplierCategory.decoration,
+        partnerCategory: PartnerCategory.decoration,
       ),
       ChecklistItem(
         id: 'cl6',
@@ -407,7 +407,7 @@ class MockBackend {
       ChecklistItem(
         id: 'cl10',
         weddingId: wedding.id,
-        title: 'Confirmar cronograma do dia com todos os fornecedores',
+        title: 'Confirmar cronograma do dia com todos os parceiros',
         category: 'No dia',
         dueDate: now.add(const Duration(days: 210)),
       ),
@@ -602,8 +602,8 @@ class MockBackend {
       title: item.title,
       category: item.category,
       dueDate: item.dueDate,
-      supplierCategory: item.supplierCategory,
-      selectedSupplierId: item.selectedSupplierId,
+      partnerCategory: item.partnerCategory,
+      selectedPartnerId: item.selectedPartnerId,
     );
     checklistItems.add(withId);
     return withId;
@@ -621,14 +621,14 @@ class MockBackend {
     checklistItems.removeWhere((c) => c.id == itemId);
   }
 
-  Future<List<Supplier>> listSuppliers({SupplierCategory? category}) async {
+  Future<List<Partner>> listPartners({PartnerCategory? category}) async {
     await Future.delayed(_latency ~/ 2);
-    if (category == null) return List.unmodifiable(suppliers);
-    return suppliers.where((s) => s.category == category).toList();
+    if (category == null) return List.unmodifiable(partners);
+    return partners.where((s) => s.category == category).toList();
   }
 
-  Supplier getSupplier(String supplierId) {
-    return suppliers.firstWhere((s) => s.id == supplierId);
+  Partner getPartner(String partnerId) {
+    return partners.firstWhere((s) => s.id == partnerId);
   }
 
   Future<Budget> getBudget(String weddingId) async {

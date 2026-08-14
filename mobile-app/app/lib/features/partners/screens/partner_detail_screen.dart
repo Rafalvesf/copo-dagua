@@ -3,25 +3,25 @@ import 'package:flutter/material.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
-import '../supplier_style.dart';
+import '../partner_style.dart';
 
 enum _DetailTab { about, packages, gallery, reviews }
 
-class SupplierDetailScreen extends StatefulWidget {
-  final Supplier supplier;
+class PartnerDetailScreen extends StatefulWidget {
+  final Partner partner;
   final bool selectionMode;
 
-  const SupplierDetailScreen({
+  const PartnerDetailScreen({
     super.key,
-    required this.supplier,
+    required this.partner,
     this.selectionMode = false,
   });
 
   @override
-  State<SupplierDetailScreen> createState() => _SupplierDetailScreenState();
+  State<PartnerDetailScreen> createState() => _PartnerDetailScreenState();
 }
 
-class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
+class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
   _DetailTab _tab = _DetailTab.packages;
   bool _favorited = false;
 
@@ -33,11 +33,11 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final supplier = widget.supplier;
-    final packages = packagesFor(supplier);
+    final partner = widget.partner;
+    final packages = packagesFor(partner);
     final galleryUrls = List.generate(
       4,
-      (i) => 'https://picsum.photos/seed/${supplier.id}-g$i/600/600',
+      (i) => 'https://picsum.photos/seed/${partner.id}-g$i/600/600',
     );
 
     return Scaffold(
@@ -57,10 +57,10 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                         fit: StackFit.expand,
                         children: [
                           Container(
-                            color: colorForSupplierCategory(supplier.category),
+                            color: colorForPartnerCategory(partner.category),
                           ),
                           Image.network(
-                            supplier.imageUrl,
+                            partner.imageUrl,
                             fit: BoxFit.cover,
                             loadingBuilder: (context, child, progress) =>
                                 progress == null
@@ -133,7 +133,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        supplier.name,
+                        partner.name,
                         style: const TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 20,
@@ -149,7 +149,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                           ),
                           const SizedBox(width: 3),
                           Text(
-                            '${supplier.rating}',
+                            '${partner.rating}',
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 13.5,
@@ -157,7 +157,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '(${supplier.reviewCount} avaliações)',
+                            '(${partner.reviewCount} avaliações)',
                             style: TextStyle(
                               color: AppTheme.inkMuted,
                               fontSize: 12.5,
@@ -171,7 +171,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                           ),
                           const SizedBox(width: 2),
                           Text(
-                            supplier.city,
+                            partner.city,
                             style: TextStyle(
                               color: AppTheme.inkMuted,
                               fontSize: 12.5,
@@ -181,7 +181,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Resposta média: ${responseMinutesFor(supplier)} min',
+                        'Resposta média: ${responseMinutesFor(partner)} min',
                         style: TextStyle(
                           color: AppTheme.inkMuted,
                           fontSize: 12.5,
@@ -194,7 +194,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                       ),
                       const SizedBox(height: 18),
                       switch (_tab) {
-                        _DetailTab.about => _AboutSection(supplier: supplier),
+                        _DetailTab.about => _AboutSection(partner: partner),
                         _DetailTab.packages => _PackagesSection(
                           packages: packages,
                         ),
@@ -253,7 +253,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                       child: ElevatedButton.icon(
                         onPressed: () {
                           if (widget.selectionMode) {
-                            Navigator.of(context).pop(supplier);
+                            Navigator.of(context).pop(partner);
                           } else {
                             _comingSoon('Reservas em breve.');
                           }
@@ -264,7 +264,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                         ),
                         label: Text(
                           widget.selectionMode
-                              ? 'Escolher fornecedor'
+                              ? 'Escolher parceiro'
                               : 'Reservar',
                         ),
                       ),
@@ -336,9 +336,9 @@ class _DetailTabs extends StatelessWidget {
 }
 
 class _AboutSection extends StatelessWidget {
-  final Supplier supplier;
+  final Partner partner;
 
-  const _AboutSection({required this.supplier});
+  const _AboutSection({required this.partner});
 
   @override
   Widget build(BuildContext context) {
@@ -354,12 +354,12 @@ class _AboutSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${supplier.category.label} · ${supplier.city}',
+            '${partner.category.label} · ${partner.city}',
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
           ),
           const SizedBox(height: 10),
           Text(
-            supplier.description,
+            partner.description,
             style: const TextStyle(fontSize: 13.5, height: 1.5),
           ),
         ],
@@ -369,7 +369,7 @@ class _AboutSection extends StatelessWidget {
 }
 
 class _PackagesSection extends StatelessWidget {
-  final List<SupplierPackage> packages;
+  final List<PartnerPackage> packages;
 
   const _PackagesSection({required this.packages});
 
@@ -390,7 +390,7 @@ class _PackagesSection extends StatelessWidget {
 }
 
 class _PackageCard extends StatelessWidget {
-  final SupplierPackage package;
+  final PartnerPackage package;
 
   const _PackageCard({required this.package});
 

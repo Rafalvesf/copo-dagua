@@ -2,34 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
-import '../../../core/suppliers/supplier_providers.dart';
+import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
-import '../supplier_style.dart';
-import 'supplier_detail_screen.dart';
+import '../partner_style.dart';
+import 'partner_detail_screen.dart';
 
-class SuppliersListScreen extends ConsumerStatefulWidget {
-  final SupplierCategory? category;
+class PartnersListScreen extends ConsumerStatefulWidget {
+  final PartnerCategory? category;
   final bool selectionMode;
 
-  const SuppliersListScreen({
+  const PartnersListScreen({
     super.key,
     this.category,
     this.selectionMode = false,
   });
 
   @override
-  ConsumerState<SuppliersListScreen> createState() =>
-      _SuppliersListScreenState();
+  ConsumerState<PartnersListScreen> createState() =>
+      _PartnersListScreenState();
 }
 
-class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
-  late SupplierCategory? _filter =
-      widget.category ?? SupplierCategory.values.first;
+class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
+  late PartnerCategory? _filter =
+      widget.category ?? PartnerCategory.values.first;
   final _search = TextEditingController();
 
   @override
@@ -58,10 +58,10 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final suppliersAsync = ref.watch(
-      suppliersProvider(widget.selectionMode ? widget.category : _filter),
+    final partnersAsync = ref.watch(
+      partnersProvider(widget.selectionMode ? widget.category : _filter),
     );
-    final trendingAsync = ref.watch(suppliersProvider(null));
+    final trendingAsync = ref.watch(partnersProvider(null));
 
     return Scaffold(
       body: Stack(
@@ -125,7 +125,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                     child: TextField(
                       controller: _search,
                       decoration: InputDecoration(
-                        hintText: 'Pesquisar fornecedores...',
+                        hintText: 'Pesquisar parceiros...',
                         prefixIcon: const Icon(Icons.search, size: 20),
                         filled: true,
                         fillColor: Colors.white,
@@ -151,7 +151,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Escolhe um fornecedor de ${widget.category?.label.toLowerCase()} para esta tarefa.',
+                        'Escolhe um parceiro de ${widget.category?.label.toLowerCase()} para esta tarefa.',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
@@ -200,33 +200,33 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                     ),
                   ),
                 Expanded(
-                  child: suppliersAsync.when(
+                  child: partnersAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
                     error: (err, st) => const Center(
-                      child: Text('Não foi possível carregar fornecedores.'),
+                      child: Text('Não foi possível carregar parceiros.'),
                     ),
-                    data: (allSuppliers) {
+                    data: (allPartners) {
                       final query = _search.text.trim().toLowerCase();
-                      final suppliers = query.isEmpty
-                          ? allSuppliers
-                          : allSuppliers
+                      final partners = query.isEmpty
+                          ? allPartners
+                          : allPartners
                                 .where(
                                   (s) =>
                                       s.name.toLowerCase().contains(query),
                                 )
                                 .toList();
-                      if (suppliers.isEmpty) {
+                      if (partners.isEmpty) {
                         return Center(
                           child: Text(
                             query.isEmpty
-                                ? 'Sem fornecedores nesta categoria.'
-                                : 'Sem fornecedores para "${_search.text.trim()}".',
+                                ? 'Sem parceiros nesta categoria.'
+                                : 'Sem parceiros para "${_search.text.trim()}".',
                           ),
                         );
                       }
-                      final grouped = <SupplierCategory, List<Supplier>>{};
-                      for (final s in suppliers) {
+                      final grouped = <PartnerCategory, List<Partner>>{};
+                      for (final s in partners) {
                         grouped.putIfAbsent(s.category, () => []).add(s);
                       }
                       return EdgeFade(
@@ -266,10 +266,10 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                                         ),
                                         const SizedBox(height: 10),
                                         _TrendingWheel(
-                                          suppliers: trending.take(8).toList(),
-                                          onTap: (supplier) => _openDetails(
+                                          partners: trending.take(8).toList(),
+                                          onTap: (partner) => _openDetails(
                                             context,
-                                            supplier,
+                                            partner,
                                           ),
                                         ),
                                       ],
@@ -290,7 +290,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                                   _filter?.label ?? 'Mais Dos Melhores',
                                   style: Theme.of(
                                     context,
-                                  ).textTheme.titleMedium,
+                                  ).textTheme.titleLarge,
                                 ),
                               ),
                             for (final entry in grouped.entries) ...[
@@ -303,23 +303,23 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                                     entry.key.label,
                                     style: Theme.of(
                                       context,
-                                    ).textTheme.titleMedium,
+                                    ).textTheme.titleLarge,
                                   ),
                                 ),
                                 const SizedBox(height: 12),
                               ],
-                              for (final (index, supplier)
+                              for (final (index, partner)
                                   in entry.value.indexed) ...[
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: AppTheme.screenMargin,
                                   ),
-                                  child: _SupplierCard(
-                                    supplier: supplier,
+                                  child: _PartnerCard(
+                                    partner: partner,
                                     mostPopular:
                                         index == 0 && entry.value.length > 1,
                                     onTap: () =>
-                                        _openDetails(context, supplier),
+                                        _openDetails(context, partner),
                                   ),
                                 ),
                                 const SizedBox(height: 16),
@@ -339,7 +339,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
               left: AppTheme.screenMargin,
               right: AppTheme.screenMargin,
               bottom: 24,
-              child: FloatingBottomNav(current: AppTab.suppliers),
+              child: FloatingBottomNav(current: AppTab.partners),
             ),
           const Positioned.fill(child: DraggableChatBubble()),
         ],
@@ -347,9 +347,9 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
     );
   }
 
-  Future<void> _openDetails(BuildContext context, Supplier supplier) async {
-    final chosen = await Navigator.of(context).push<Supplier>(
-      PageRouteBuilder<Supplier>(
+  Future<void> _openDetails(BuildContext context, Partner partner) async {
+    final chosen = await Navigator.of(context).push<Partner>(
+      PageRouteBuilder<Partner>(
         opaque: false,
         barrierColor: Colors.black45,
         transitionDuration: const Duration(milliseconds: 280),
@@ -359,8 +359,8 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(24),
             ),
-            child: SupplierDetailScreen(
-              supplier: supplier,
+            child: PartnerDetailScreen(
+              partner: partner,
               selectionMode: widget.selectionMode,
             ),
           ),
@@ -388,8 +388,8 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
 /// selecionada fica maior e encostada à esquerda — mostra sempre 3 a 4
 /// categorias de cada vez, com espaço visível entre elas.
 class _CategoryNavBar extends StatefulWidget {
-  final SupplierCategory? selected;
-  final ValueChanged<SupplierCategory?> onChanged;
+  final PartnerCategory? selected;
+  final ValueChanged<PartnerCategory?> onChanged;
 
   const _CategoryNavBar({required this.selected, required this.onChanged});
 
@@ -404,7 +404,7 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
   static const _tileWidthSelected = 78.0;
   static const _spacing = 6.0;
 
-  List<SupplierCategory?> get _options => [null, ...SupplierCategory.values];
+  List<PartnerCategory?> get _options => [null, ...PartnerCategory.values];
 
   @override
   void didUpdateWidget(covariant _CategoryNavBar oldWidget) {
@@ -424,9 +424,12 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
     if (index < 0) return;
     // Fica uma casa para a direita do início — a opção anterior nunca
     // desaparece por completo, para se conseguir sempre voltar a
-    // percorrer as restantes categorias.
-    final offset = (index - 1) * (_tileWidth + _spacing);
-    _animateTo(offset);
+    // percorrer as restantes categorias. Usa _cumulativeOffset (não uma
+    // largura fixa) porque o tile selecionado é mais largo que os
+    // outros — uma aproximação por largura constante desalinha o scroll
+    // depois de algumas seleções seguidas.
+    final anchor = (index - 1).clamp(0, _options.length - 1);
+    _animateTo(_cumulativeOffset(anchor));
   }
 
   double _widthOf(int index) =>
@@ -493,7 +496,7 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
                   child: _CategoryIconTile(
                     icon: category == null
                         ? Icons.apps_rounded
-                        : iconForSupplierCategory(category),
+                        : iconForPartnerCategory(category),
                     label: category?.label ?? 'Todos',
                     selected: isSelected,
                   ),
@@ -541,16 +544,26 @@ class _CategoryIconTile extends StatelessWidget {
         // categoria passa a aparecer no título da lista logo abaixo
         // ("Mais Dos Melhores" é substituído pelo nome), por isso não
         // precisa de se repetir aqui.
+        //
+        // Altura do rótulo fixada (em vez de deixar o texto crescer
+        // livremente até 2 linhas) para o tile nunca ultrapassar os 74px
+        // disponíveis no _CategoryNavBar, mesmo com rótulos mais longos
+        // ("Música & DJ") que quebram em 2 linhas.
         if (!selected) ...[
           const SizedBox(height: 6),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            style: const TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.ink,
+          SizedBox(
+            height: 24,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                height: 1.1,
+                color: AppTheme.ink,
+              ),
             ),
           ),
         ],
@@ -560,18 +573,18 @@ class _CategoryIconTile extends StatelessWidget {
 }
 
 /// Cartão compacto para o carrossel horizontal "Trending" — versão
-/// reduzida do [_SupplierCard], só com o essencial para caber numa
+/// reduzida do [_PartnerCard], só com o essencial para caber numa
 /// fila que desliza da esquerda para a direita.
 /// Roda estilo "cover flow" para o carrossel "Trending" — a opção
 /// centrada fica maior e opaca, as vizinhas ficam mais pequenas e
 /// semi-transparentes. Ao contrário do [CoverFlowPicker] partilhado
 /// (pensado para escolher uma opção), aqui qualquer toque abre logo o
-/// perfil do fornecedor, mesmo que ainda não esteja centrado.
+/// perfil do parceiro, mesmo que ainda não esteja centrado.
 class _TrendingWheel extends StatefulWidget {
-  final List<Supplier> suppliers;
-  final ValueChanged<Supplier> onTap;
+  final List<Partner> partners;
+  final ValueChanged<Partner> onTap;
 
-  const _TrendingWheel({required this.suppliers, required this.onTap});
+  const _TrendingWheel({required this.partners, required this.onTap});
 
   @override
   State<_TrendingWheel> createState() => _TrendingWheelState();
@@ -603,9 +616,9 @@ class _TrendingWheelState extends State<_TrendingWheel> {
       height: 240,
       child: PageView.builder(
         controller: _controller,
-        itemCount: widget.suppliers.length,
+        itemCount: widget.partners.length,
         itemBuilder: (context, index) {
-          final supplier = widget.suppliers[index];
+          final partner = widget.partners[index];
           final distance = (_page - index).abs().clamp(0.0, 1.0);
           final scale = 1.0 - distance * 0.06;
           return Padding(
@@ -617,8 +630,8 @@ class _TrendingWheelState extends State<_TrendingWheel> {
               child: Transform.scale(
                 scale: scale,
                 child: _TrendingCard(
-                  supplier: supplier,
-                  onTap: () => widget.onTap(supplier),
+                  partner: partner,
+                  onTap: () => widget.onTap(partner),
                 ),
               ),
             ),
@@ -630,10 +643,10 @@ class _TrendingWheelState extends State<_TrendingWheel> {
 }
 
 class _TrendingCard extends StatelessWidget {
-  final Supplier supplier;
+  final Partner partner;
   final VoidCallback onTap;
 
-  const _TrendingCard({required this.supplier, required this.onTap});
+  const _TrendingCard({required this.partner, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -660,10 +673,10 @@ class _TrendingCard extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     Container(
-                      color: colorForSupplierCategory(supplier.category),
+                      color: colorForPartnerCategory(partner.category),
                     ),
                     Image.network(
-                      supplier.imageUrl,
+                      partner.imageUrl,
                       fit: BoxFit.cover,
                       loadingBuilder: (context, child, progress) =>
                           progress == null ? child : const SizedBox.shrink(),
@@ -680,7 +693,7 @@ class _TrendingCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    supplier.name,
+                    partner.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -698,7 +711,7 @@ class _TrendingCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 2),
                       Text(
-                        '${supplier.rating}',
+                        '${partner.rating}',
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -707,7 +720,7 @@ class _TrendingCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          supplier.category.label,
+                          partner.category.label,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -728,29 +741,29 @@ class _TrendingCard extends StatelessWidget {
   }
 }
 
-class _SupplierCard extends StatefulWidget {
-  final Supplier supplier;
+class _PartnerCard extends StatefulWidget {
+  final Partner partner;
   final bool mostPopular;
   final VoidCallback onTap;
 
-  const _SupplierCard({
-    required this.supplier,
+  const _PartnerCard({
+    required this.partner,
     required this.onTap,
     this.mostPopular = false,
   });
 
   @override
-  State<_SupplierCard> createState() => _SupplierCardState();
+  State<_PartnerCard> createState() => _PartnerCardState();
 }
 
-class _SupplierCardState extends State<_SupplierCard> {
+class _PartnerCardState extends State<_PartnerCard> {
   bool _favorited = false;
 
   @override
   Widget build(BuildContext context) {
-    final supplier = widget.supplier;
-    final features = featureTagsFor(supplier.category);
-    final responseMinutes = responseMinutesFor(supplier);
+    final partner = widget.partner;
+    final features = featureTagsFor(partner.category);
+    final responseMinutes = responseMinutesFor(partner);
 
     return SnappyTap.builder(
       onTap: widget.onTap,
@@ -770,9 +783,9 @@ class _SupplierCardState extends State<_SupplierCard> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Container(color: colorForSupplierCategory(supplier.category)),
+                  Container(color: colorForPartnerCategory(partner.category)),
                   Image.network(
-                    supplier.imageUrl,
+                    partner.imageUrl,
                     fit: BoxFit.cover,
                     loadingBuilder: (context, child, progress) =>
                         progress == null ? child : const SizedBox.shrink(),
@@ -829,7 +842,7 @@ class _SupplierCardState extends State<_SupplierCard> {
                     ),
                     const SizedBox(width: 2),
                     Text(
-                      '${supplier.rating}',
+                      '${partner.rating}',
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -837,7 +850,7 @@ class _SupplierCardState extends State<_SupplierCard> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '(${supplier.reviewCount} avaliações)',
+                      '(${partner.reviewCount} avaliações)',
                       style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
                     ),
                     const Spacer(),
@@ -852,7 +865,7 @@ class _SupplierCardState extends State<_SupplierCard> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  supplier.name,
+                  partner.name,
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 16,
@@ -860,12 +873,12 @@ class _SupplierCardState extends State<_SupplierCard> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${supplier.category.label} · ${supplier.city}',
+                  '${partner.category.label} · ${partner.city}',
                   style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Desde €${supplier.startingPrice.toStringAsFixed(0)}',
+                  'Desde €${partner.startingPrice.toStringAsFixed(0)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13.5,

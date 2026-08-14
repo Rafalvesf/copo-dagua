@@ -7,7 +7,7 @@ import '../../../core/budget/effective_budget.dart';
 import '../../../core/checklist/checklist_controller.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
-import '../../../core/suppliers/supplier_providers.dart';
+import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/wedding_nav_icon.dart';
@@ -21,12 +21,12 @@ import '../../../shared/widgets/support_chat.dart';
 import '../../../shared/widgets/wedding_widgets.dart';
 
 IconData _iconForTask(ChecklistItem item) {
-  return switch (item.supplierCategory) {
-    SupplierCategory.photography => Icons.camera_alt_outlined,
-    SupplierCategory.catering => Icons.restaurant_outlined,
-    SupplierCategory.music => Icons.music_note_outlined,
-    SupplierCategory.decoration => Icons.local_florist_outlined,
-    SupplierCategory.venue => Icons.villa_outlined,
+  return switch (item.partnerCategory) {
+    PartnerCategory.photography => Icons.camera_alt_outlined,
+    PartnerCategory.catering => Icons.restaurant_outlined,
+    PartnerCategory.music => Icons.music_note_outlined,
+    PartnerCategory.decoration => Icons.local_florist_outlined,
+    PartnerCategory.venue => Icons.villa_outlined,
     null => Icons.task_alt_outlined,
   };
 }
@@ -125,9 +125,9 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                           const SizedBox(height: 16),
                           _WeddingCopilotCard(
                             onTap: () => context.push(
-                              '/suppliers',
-                              extra: const SupplierPickerArgs(
-                                category: SupplierCategory.music,
+                              '/partners',
+                              extra: const PartnerPickerArgs(
+                                category: PartnerCategory.music,
                               ),
                             ),
                           ),

@@ -51,7 +51,7 @@ Inter (via `google_fonts`), escala definida para ecrã de referência 375px:
 | Papel | Tamanho | Peso |
 |---|---|---|
 | Títulos (`textTheme.titleLarge`) | 22px | w600 |
-| Nomes (convidado, fornecedor) | ~16px | w600–w700 |
+| Nomes (convidado, parceiro) | ~16px | w600–w700 |
 | Texto secundário/subtítulos | ~13px | w400–w600 |
 | Labels / status (badges) | 13–14px | w600 |
 | Números de destaque (stat tiles) | 17–18px | w800 |

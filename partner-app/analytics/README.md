@@ -1,4 +1,4 @@
-# Modulo: analytics (supplier-app)
+# Modulo: analytics (partner-app)
 
 Estado: por iniciar.
 

@@ -1,4 +1,4 @@
-# Modulo: payouts (supplier-app)
+# Modulo: payouts (partner-app)
 
 Estado: por iniciar.
 

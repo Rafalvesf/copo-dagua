@@ -8,7 +8,11 @@ class _Unset {
 
 const _unset = _Unset();
 
-enum UserRole { couple, supplier }
+// `UserRole.partner` é o papel de negócio (prestador de serviços no
+// marketplace) — não confundir com `Wedding.partnerName1`/`partnerName2`
+// abaixo, que são os nomes do casal. O termo "parceiro" é usado nos dois
+// sentidos no produto; ver nota de terminologia em `ROADMAP.md`.
+enum UserRole { couple, partner }
 
 enum CeremonyType { civil, religious, both }
 
@@ -20,15 +24,15 @@ enum WeddingSide { groom, bride, both }
 
 enum CollaboratorStatus { owner, active, pending }
 
-enum SupplierCategory { catering, photography, music, decoration, venue }
+enum PartnerCategory { catering, photography, music, decoration, venue }
 
-extension SupplierCategoryLabel on SupplierCategory {
+extension PartnerCategoryLabel on PartnerCategory {
   String get label => switch (this) {
-    SupplierCategory.catering => 'Catering',
-    SupplierCategory.photography => 'Fotografia',
-    SupplierCategory.music => 'Música & DJ',
-    SupplierCategory.decoration => 'Decoração',
-    SupplierCategory.venue => 'Espaços',
+    PartnerCategory.catering => 'Catering',
+    PartnerCategory.photography => 'Fotografia',
+    PartnerCategory.music => 'Música & DJ',
+    PartnerCategory.decoration => 'Decoração',
+    PartnerCategory.venue => 'Espaços',
   };
 }
 
@@ -226,8 +230,8 @@ class ChecklistItem {
   final String category;
   final bool done;
   final DateTime? dueDate;
-  final SupplierCategory? supplierCategory;
-  final String? selectedSupplierId;
+  final PartnerCategory? partnerCategory;
+  final String? selectedPartnerId;
 
   const ChecklistItem({
     required this.id,
@@ -236,8 +240,8 @@ class ChecklistItem {
     this.category = 'Geral',
     this.done = false,
     this.dueDate,
-    this.supplierCategory,
-    this.selectedSupplierId,
+    this.partnerCategory,
+    this.selectedPartnerId,
   });
 
   ChecklistItem copyWith({
@@ -245,7 +249,7 @@ class ChecklistItem {
     String? category,
     bool? done,
     DateTime? dueDate,
-    Object? selectedSupplierId = _unset,
+    Object? selectedPartnerId = _unset,
   }) {
     return ChecklistItem(
       id: id,
@@ -254,18 +258,18 @@ class ChecklistItem {
       category: category ?? this.category,
       done: done ?? this.done,
       dueDate: dueDate ?? this.dueDate,
-      supplierCategory: supplierCategory,
-      selectedSupplierId: identical(selectedSupplierId, _unset)
-          ? this.selectedSupplierId
-          : selectedSupplierId as String?,
+      partnerCategory: partnerCategory,
+      selectedPartnerId: identical(selectedPartnerId, _unset)
+          ? this.selectedPartnerId
+          : selectedPartnerId as String?,
     );
   }
 }
 
-class Supplier {
+class Partner {
   final String id;
   final String name;
-  final SupplierCategory category;
+  final PartnerCategory category;
   final String city;
   final double rating;
   final int reviewCount;
@@ -273,7 +277,7 @@ class Supplier {
   final String description;
   final String imageUrl;
 
-  const Supplier({
+  const Partner({
     required this.id,
     required this.name,
     required this.category,
@@ -315,16 +319,16 @@ class BudgetCategory {
   final String name;
   final double amount;
 
-  /// Categoria de fornecedor correspondente — permite somar o preço de
-  /// fornecedores escolhidos na checklist a esta categoria de
-  /// orçamento. `null` para categorias sem fornecedor associado (ex:
+  /// Categoria de parceiro correspondente — permite somar o preço de
+  /// parceiros escolhidos na checklist a esta categoria de
+  /// orçamento. `null` para categorias sem parceiro associado (ex:
   /// "Outros").
-  final SupplierCategory? supplierCategory;
+  final PartnerCategory? partnerCategory;
 
   const BudgetCategory({
     required this.name,
     required this.amount,
-    this.supplierCategory,
+    this.partnerCategory,
   });
 }
 

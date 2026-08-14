@@ -12,7 +12,7 @@ Praticamente todos. Em particular:
 |---|---|
 | `mobile-app/onboarding/` | Só arranca depois de conta criada e email verificado |
 | `mobile-app/wedding/` | `wedding.owner_id` referencia `profiles.id` |
-| `backend/suppliers/` | Perfil de fornecedor liga-se a `profiles.id` com `role = supplier` |
+| `backend/partners/` | Perfil de parceiro liga-se a `profiles.id` com `role = partner` |
 | `mobile-app/payments/`, `mobile-app/contracts/`, `mobile-app/bookings/` | Bloqueados por RN04 (email verificado) |
 | `admin-web/*` | Todo o painel de administração exige `role = admin`, validado via `is_admin()` |
 | Todos os módulos com RLS | Dependem do padrão `auth.uid()` estabelecido aqui |

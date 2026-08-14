@@ -41,9 +41,9 @@ create table public.weddings (
 > **Nota de sincronização:** `partner_name_2`, `partner_1_age` e `partner_2_age` foram acrescentados depois de `database/migrations/002_onboarding.sql` já ter sido implementado e testado uma primeira vez contra Postgres. A migração real e a suite de testes de RLS foram atualizadas e **re-validadas contra Postgres 16** com este novo shape — 11 de 11 testes continuam a passar. Ver `docs/architecture/TESTING_NOTES.md`.
 
 ```sql
--- Semente do supplier_profile, criada no passo 2 (RN04).
--- Modelo completo pertence a backend/suppliers/database.md
-create table public.supplier_profiles (
+-- Semente do partner_profile, criada no passo 2 (RN04).
+-- Modelo completo pertence a backend/partners/database.md
+create table public.partner_profiles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id),
   business_name text not null,
@@ -55,4 +55,4 @@ create table public.supplier_profiles (
 );
 ```
 
-**Nota para os módulos Wedding e Suppliers:** este schema é a "semente" mínima — esses módulos vão estender estas tabelas (colaboradores, portefólio completo, RSVP settings, etc.), não recriá-las. Evita duas fontes de verdade para a mesma entidade.
+**Nota para os módulos Wedding e Partners:** este schema é a "semente" mínima — esses módulos vão estender estas tabelas (colaboradores, portefólio completo, RSVP settings, etc.), não recriá-las. Evita duas fontes de verdade para a mesma entidade.

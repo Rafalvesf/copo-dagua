@@ -17,7 +17,7 @@ Detalhes do casamento → "Colaboradores"
   → [ + Convidar colaborador ]
       → Inserir email
       → Convite enviado (email com deep link)
-        → Se o email já existe como Fornecedor → erro imediato (RN03)
+        → Se o email já existe como Parceiro → erro imediato (RN03)
         → Se o email não existe → convite fica "pendente" na lista
 
   Do lado de quem recebe o convite:

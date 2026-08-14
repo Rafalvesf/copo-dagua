@@ -28,7 +28,7 @@
 │  │ 💍 Vou casar-me       │ │
 │  └──────────────────────┘ │
 │  ┌──────────────────────┐ │
-│  │ 🧑‍💼 Sou fornecedor    │ │
+│  │ 🧑‍💼 Sou parceiro    │ │
 │  └──────────────────────┘ │
 │                            │
 └───────────────────────────┘
@@ -83,7 +83,7 @@
 |---|---|---|
 | `AuthTextField` | Input com label flutuante, validação inline, estado de erro | Todos os formulários da app |
 | `PasswordField` | Variante de `AuthTextField` com toggle mostrar/ocultar | Registo, Login, Reset |
-| `RoleSelectorCard` | Cartão selecionável grande (papel: Noivo/Fornecedor) | Registo, futuramente em multi-perfil |
+| `RoleSelectorCard` | Cartão selecionável grande (papel: Noivo/Parceiro) | Registo, futuramente em multi-perfil |
 | `PrimaryButton` | Botão principal, estado loading incluído | Toda a app |
 | `SocialLoginButton` | Botão OAuth com ícone da provider | Login, Registo |
 | `ErrorBanner` | Faixa de erro inline (não bloqueia layout) | Toda a app |

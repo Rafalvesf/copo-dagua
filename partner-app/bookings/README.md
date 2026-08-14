@@ -1,4 +1,4 @@
-# Modulo: bookings (supplier-app)
+# Modulo: bookings (partner-app)
 
 Estado: por iniciar.
 

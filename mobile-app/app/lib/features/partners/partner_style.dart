@@ -3,61 +3,61 @@ import 'package:flutter/material.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 
-/// Apresentação partilhada entre a lista e o detalhe de fornecedores —
+/// Apresentação partilhada entre a lista e o detalhe de parceiros —
 /// dados ilustrativos (features, tempo de resposta) que não fazem parte
-/// do modelo `Supplier`, derivados de forma determinística para variar
-/// por fornecedor sem precisar de um campo novo no backend mock.
-Color colorForSupplierCategory(SupplierCategory category) {
+/// do modelo `Partner`, derivados de forma determinística para variar
+/// por parceiro sem precisar de um campo novo no backend mock.
+Color colorForPartnerCategory(PartnerCategory category) {
   switch (category) {
-    case SupplierCategory.photography:
+    case PartnerCategory.photography:
       return AppColors.blue;
-    case SupplierCategory.catering:
+    case PartnerCategory.catering:
       return AppColors.yellow;
-    case SupplierCategory.music:
+    case PartnerCategory.music:
       return AppColors.green;
-    case SupplierCategory.decoration:
+    case PartnerCategory.decoration:
       return AppColors.gray;
-    case SupplierCategory.venue:
+    case PartnerCategory.venue:
       return AppColors.purple;
   }
 }
 
-IconData iconForSupplierCategory(SupplierCategory category) {
+IconData iconForPartnerCategory(PartnerCategory category) {
   switch (category) {
-    case SupplierCategory.photography:
+    case PartnerCategory.photography:
       return Icons.camera_alt_outlined;
-    case SupplierCategory.catering:
+    case PartnerCategory.catering:
       return Icons.restaurant_outlined;
-    case SupplierCategory.music:
+    case PartnerCategory.music:
       return Icons.music_note_outlined;
-    case SupplierCategory.decoration:
+    case PartnerCategory.decoration:
       return Icons.local_florist_outlined;
-    case SupplierCategory.venue:
+    case PartnerCategory.venue:
       return Icons.villa_outlined;
   }
 }
 
 const _featureTagsByCategory = {
-  SupplierCategory.photography: ['Drone', 'Álbum', 'Pré-wedding'],
-  SupplierCategory.catering: ['Prova de menu', 'Vegetariano', 'Bar incluído'],
-  SupplierCategory.music: ['Som incluído', 'Luzes', 'Repertório'],
-  SupplierCategory.decoration: ['Instalação', 'Flores frescas', 'Iluminação'],
-  SupplierCategory.venue: ['Estacionamento', 'Catering próprio', 'Alojamento'],
+  PartnerCategory.photography: ['Drone', 'Álbum', 'Pré-wedding'],
+  PartnerCategory.catering: ['Prova de menu', 'Vegetariano', 'Bar incluído'],
+  PartnerCategory.music: ['Som incluído', 'Luzes', 'Repertório'],
+  PartnerCategory.decoration: ['Instalação', 'Flores frescas', 'Iluminação'],
+  PartnerCategory.venue: ['Estacionamento', 'Catering próprio', 'Alojamento'],
 };
 
-List<String> featureTagsFor(SupplierCategory category) =>
+List<String> featureTagsFor(PartnerCategory category) =>
     _featureTagsByCategory[category] ?? const [];
 
-int responseMinutesFor(Supplier supplier) =>
-    8 + (supplier.id.hashCode.abs() % 45);
+int responseMinutesFor(Partner partner) =>
+    8 + (partner.id.hashCode.abs() % 45);
 
-class SupplierPackage {
+class PartnerPackage {
   final String name;
   final double price;
   final List<String> features;
   final bool highlighted;
 
-  const SupplierPackage({
+  const PartnerPackage({
     required this.name,
     required this.price,
     required this.features,
@@ -65,11 +65,11 @@ class SupplierPackage {
   });
 }
 
-List<SupplierPackage> packagesFor(Supplier supplier) {
-  final base = supplier.startingPrice;
-  final extra = featureTagsFor(supplier.category);
+List<PartnerPackage> packagesFor(Partner partner) {
+  final base = partner.startingPrice;
+  final extra = featureTagsFor(partner.category);
   return [
-    SupplierPackage(
+    PartnerPackage(
       name: 'Essencial',
       price: base,
       features: [
@@ -79,13 +79,13 @@ List<SupplierPackage> packagesFor(Supplier supplier) {
         if (extra.isNotEmpty) extra.first,
       ],
     ),
-    SupplierPackage(
+    PartnerPackage(
       name: 'Premium',
       price: (base * 1.4).roundToDouble(),
       features: ['Cobertura de 10h', ...extra, 'Edição profissional'],
       highlighted: true,
     ),
-    SupplierPackage(
+    PartnerPackage(
       name: 'Luxury',
       price: (base * 2).roundToDouble(),
       features: ['Cobertura completa do dia', ...extra, 'Equipa dedicada'],

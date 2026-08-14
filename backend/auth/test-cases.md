@@ -2,7 +2,7 @@
 
 ## Critérios de aceitação
 
-- [ ] Um utilizador consegue criar conta como Noivo ou Fornecedor com email/password.
+- [ ] Um utilizador consegue criar conta como Noivo ou Parceiro com email/password.
 - [ ] Um utilizador consegue criar conta via Google e via Apple.
 - [ ] Um email de verificação é enviado e o deep link funciona corretamente em iOS e Android.
 - [ ] Um utilizador não verificado consegue navegar mas não consegue aceder a Payments/Contracts.
@@ -29,7 +29,7 @@
 ## Testes E2E (mobile)
 
 - Fluxo completo de registo até ao Dashboard (Noivo)
-- Fluxo completo de registo até ao Dashboard (Fornecedor)
+- Fluxo completo de registo até ao Dashboard (Parceiro)
 - Fluxo de "esqueci-me da password" com deep link real
 - Eliminação de conta com e sem contratos ativos
 

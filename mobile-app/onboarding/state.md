@@ -6,12 +6,12 @@ OnboardingState
 ├── inProgress
 │   ├── step: <nome do passo atual>
 │   └── draftData: {...}
-├── submitting                (a criar wedding/supplier_profile)
+├── submitting                (a criar wedding/partner_profile)
 ├── completed
 └── error
     ├── validationError
     ├── networkError
-    └── uploadError            (falha no upload de fotos — fluxo Fornecedor)
+    └── uploadError            (falha no upload de fotos — fluxo Parceiro)
 ```
 
 Ao entrar no módulo, primeiro passo: verificar `onboarding_progress`. Se existir registo incompleto, retomar em `current_step`; caso contrário, iniciar do passo 1.

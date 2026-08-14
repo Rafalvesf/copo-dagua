@@ -5,7 +5,7 @@ import '../../core/theme/app_theme.dart';
 import 'rsvp_status_badge.dart';
 import 'snappy_tap.dart';
 
-/// Fundo fotográfico para cartões de destaque (hero, fornecedores): a
+/// Fundo fotográfico para cartões de destaque (hero, parceiros): a
 /// foto preenche o cartão todo e um gradiente escuro no fundo garante
 /// legibilidade ao texto branco sobreposto, mesmo com fotos muito
 /// claras. `fallbackColor` cobre o tempo de carregamento e falhas de

@@ -7,6 +7,6 @@
 | Localização | Resultado válido do autocomplete | "Seleciona uma localização da lista" |
 | Local / Venue | Texto livre, opcional, máx. 100 caracteres | — |
 | Tipo de cerimónia | Um de: civil, religiosa, ambas | "Seleciona um tipo de cerimónia válido" |
-| Email de convite a colaborador | Formato válido; não pode ser o próprio utilizador; não pode já ser Fornecedor (RN03) | "Introduz um email válido" / "Não podes convidar-te a ti próprio/a" / "Este email já está registado como fornecedor" |
+| Email de convite a colaborador | Formato válido; não pode ser o próprio utilizador; não pode já ser Parceiro (RN03) | "Introduz um email válido" / "Não podes convidar-te a ti próprio/a" / "Este email já está registado como parceiro" |
 | Foto de capa | JPG/PNG, ≤ 10MB | "A imagem tem de ser JPG ou PNG até 10MB" |
 | Transferência de propriedade | Novo owner tem de ser colaborador `active` | "Só podes transferir a propriedade para um colaborador ativo" |

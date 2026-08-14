@@ -437,17 +437,17 @@ class _CategoryRow extends StatelessWidget {
               ),
             ],
           ),
-          if (category.chosenSuppliers.isNotEmpty)
+          if (category.chosenPartners.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(left: 20, top: 6),
               child: Row(
                 children: [
-                  for (final supplier in category.chosenSuppliers)
+                  for (final partner in category.chosenPartners)
                     Padding(
                       padding: const EdgeInsets.only(right: 6),
                       child: ClipOval(
                         child: Image.network(
-                          supplier.imageUrl,
+                          partner.imageUrl,
                           width: 20,
                           height: 20,
                           fit: BoxFit.cover,
@@ -462,7 +462,7 @@ class _CategoryRow extends StatelessWidget {
                     ),
                   Expanded(
                     child: Text(
-                      category.chosenSuppliers.map((s) => s.name).join(', '),
+                      category.chosenPartners.map((s) => s.name).join(', '),
                       style: TextStyle(color: AppTheme.inkMuted, fontSize: 11),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

@@ -22,7 +22,7 @@ Este projeto desenvolve **um módulo de cada vez**, nunca em paralelo.
 
 ## Padrão de ficheiros por módulo
 
-Cada módulo funcional (em `mobile-app/`, `supplier-app/`, `admin-web/` ou `backend/`) deve conter, no mínimo:
+Cada módulo funcional (em `mobile-app/`, `partner-app/`, `admin-web/` ou `backend/`) deve conter, no mínimo:
 
 - `README.md` — resumo executivo e índice
 - `requirements.md` — funcionalidades e regras de negócio

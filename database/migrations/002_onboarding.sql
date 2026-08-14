@@ -34,8 +34,8 @@ create table public.weddings (
   created_at timestamptz not null default now()
 );
 
--- Semente do supplier_profile (RN04 do Onboarding) — estendida em backend/suppliers.
-create table public.supplier_profiles (
+-- Semente do partner_profile (RN04 do Onboarding) — estendida em backend/partners.
+create table public.partner_profiles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id),
   business_name text not null,
@@ -47,4 +47,4 @@ create table public.supplier_profiles (
 );
 
 grant select, insert, update on public.weddings to app_authenticated;
-grant select, insert, update on public.supplier_profiles to app_authenticated;
+grant select, insert, update on public.partner_profiles to app_authenticated;

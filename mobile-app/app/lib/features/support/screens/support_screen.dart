@@ -163,7 +163,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                                     _OptionCard(
                                       color: AppColors.blue,
                                       icon: Icons.storefront_outlined,
-                                      label: 'Sugestões de fornecedores',
+                                      label: 'Sugestões de parceiros',
                                       onTap: () => _comingSoon(context),
                                     ),
                                     _OptionCard(
@@ -351,7 +351,7 @@ class _ExplanationBubble extends StatelessWidget {
         children: [
           Text(
             'Escreve aqui a tua pergunta — sobre convidados, orçamento, '
-            'fornecedores ou o que precisares.',
+            'parceiros ou o que precisares.',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: AppTheme.ink),

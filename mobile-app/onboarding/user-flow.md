@@ -21,7 +21,7 @@ Email verificado → entra no Onboarding
       → redireciona para Dashboard
 ```
 
-## Onboarding — Fornecedores
+## Onboarding — Parceiros
 
 ```
 Email verificado → entra no Onboarding
@@ -29,7 +29,7 @@ Email verificado → entra no Onboarding
       [Input texto]
   → Passo 2: "Que serviços ofereces?"
       [Multi-seleção de categorias]
-      → cria supplier_profile em draft
+      → cria partner_profile em draft
   → Passo 3: "Onde atuas?"
       [Multi-seleção de distritos/concelhos]
   → Passo 4: "Dados fiscais"
@@ -37,6 +37,6 @@ Email verificado → entra no Onboarding
   → Passo 5: "Mostra o teu trabalho"
       [Upload de 1-3 fotos] (mínimo 1 obrigatório)
   → Ecrã final: "O teu perfil está quase pronto!"
-      → supplier_profile passa a status = pending_review
-      → redireciona para Dashboard (supplier-app)
+      → partner_profile passa a status = pending_review
+      → redireciona para Dashboard (partner-app)
 ```

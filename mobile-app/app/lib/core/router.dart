@@ -16,12 +16,12 @@ import '../features/home/screens/home_feed_screen.dart';
 import '../features/invite/screens/invite_page_screen.dart';
 import '../features/onboarding/screens/onboarding_wizard_screen.dart';
 import '../features/seating/screens/seating_screen.dart';
-import '../features/suppliers/screens/suppliers_list_screen.dart';
+import '../features/partners/screens/partners_list_screen.dart';
 import '../features/support/screens/support_screen.dart';
 import '../features/wedding/screens/wedding_details_screen.dart';
 import 'auth/auth_controller.dart';
 import 'models/models.dart';
-import 'suppliers/supplier_providers.dart';
+import 'partners/partner_providers.dart';
 
 const _authRoutes = {
   '/welcome',
@@ -133,10 +133,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SeatingScreen(),
       ),
       GoRoute(
-        path: '/suppliers',
+        path: '/partners',
         builder: (context, state) {
-          final args = state.extra as SupplierPickerArgs?;
-          return SuppliersListScreen(
+          final args = state.extra as PartnerPickerArgs?;
+          return PartnersListScreen(
             category: args?.category,
             selectionMode: args?.selectionMode ?? false,
           );

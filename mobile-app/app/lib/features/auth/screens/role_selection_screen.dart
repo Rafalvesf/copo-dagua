@@ -34,9 +34,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             const SizedBox(height: 12),
             RoleSelectorCard(
               icon: Icons.storefront_outlined,
-              label: 'Sou fornecedor',
-              selected: _selected == UserRole.supplier,
-              onTap: () => setState(() => _selected = UserRole.supplier),
+              label: 'Sou parceiro',
+              selected: _selected == UserRole.partner,
+              onTap: () => setState(() => _selected = UserRole.partner),
             ),
             const Spacer(),
             FilledButton(

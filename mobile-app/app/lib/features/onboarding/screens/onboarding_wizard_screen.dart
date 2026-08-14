@@ -62,7 +62,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
       _ownNamePrefilled = true;
     }
 
-    if (profile.role == UserRole.supplier) {
+    if (profile.role == UserRole.partner) {
       return Scaffold(
         appBar: AppBar(
           actions: [
@@ -76,7 +76,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           padding: EdgeInsets.all(24),
           child: Center(
             child: Text(
-              'O onboarding de fornecedores ainda não está implementado nesta versão de teste. '
+              'O onboarding de parceiros ainda não está implementado nesta versão de teste. '
               'Esta primeira app cobre apenas o fluxo de Noivos.',
               textAlign: TextAlign.center,
             ),

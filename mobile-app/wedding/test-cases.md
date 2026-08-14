@@ -5,7 +5,7 @@
 - [ ] O owner consegue editar todos os campos do casamento e as alterações persistem.
 - [ ] Um colaborador consegue editar dados do casamento mas não consegue eliminar nem transferir propriedade (bloqueado por RLS, não só por UI).
 - [ ] Convite a colaborador por email funciona ponta a ponta, incluindo deep link de aceitação.
-- [ ] Convite a um email já registado como Fornecedor falha com mensagem clara.
+- [ ] Convite a um email já registado como Parceiro falha com mensagem clara.
 - [ ] `is_wedding_member()` bloqueia corretamente o acesso de um utilizador que não é owner nem colaborador ativo (testado via chamada direta à API).
 - [ ] Transição para `completed` bloqueia edição posterior de `wedding_date`.
 - [ ] Eliminação do casamento é bloqueada quando existem contratos/pagamentos ativos.

@@ -14,9 +14,9 @@
 
 ## Melhorias futuras
 
-- **Login sem password (magic link)** — reduz fricção, especialmente para fornecedores menos técnicos.
-- **Contas multi-role** — resolver a limitação da RN01 (pessoa que é noiva e fornecedora).
-- **SSO empresarial** para fornecedores grandes (ex: cadeias de hotéis que gerem múltiplos casamentos) — relevante só se o produto evoluir para B2B2C.
+- **Login sem password (magic link)** — reduz fricção, especialmente para parceiros menos técnicos.
+- **Contas multi-role** — resolver a limitação da RN01 (pessoa que é noiva e parceiroa).
+- **SSO empresarial** para parceiros grandes (ex: cadeias de hotéis que gerem múltiplos casamentos) — relevante só se o produto evoluir para B2B2C.
 - **Deteção de dispositivos suspeitos** (impossible travel, novo dispositivo) com notificação de segurança por email.
 - **Internacionalização do fluxo de auth** — o `locale` já está no modelo de dados (`profiles.locale`) precisamente para preparar isto desde o início, mesmo que o MVP seja só PT.
 

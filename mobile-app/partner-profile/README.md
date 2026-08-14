@@ -1,4 +1,4 @@
-# Modulo: supplier-profile (mobile-app)
+# Modulo: partner-profile (mobile-app)
 
 Estado: por iniciar.
 

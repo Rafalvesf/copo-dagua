@@ -14,7 +14,7 @@
 | `mobile-app/seating/` | A organização de mesas usa a lista de convidados confirmados (`rsvp_status = confirmed`) como base |
 | `mobile-app/budget/` | O nº de convidados confirmados (com acompanhantes) influencia estimativas de custo por convidado (catering, por exemplo) |
 | `mobile-app/dashboard/` | Mostra o resumo agregado de RSVP (`RsvpSummaryBar`) |
-| `mobile-app/chat/` (indireto, futuro) | Restrições alimentares agregadas podem ser partilhadas com fornecedores de catering — ver melhorias futuras |
+| `mobile-app/chat/` (indireto, futuro) | Restrições alimentares agregadas podem ser partilhadas com parceiros de catering — ver melhorias futuras |
 
 ## Serviços externos
 

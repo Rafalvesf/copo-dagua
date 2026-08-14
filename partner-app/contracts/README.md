@@ -1,4 +1,4 @@
-# Modulo: contracts (supplier-app)
+# Modulo: contracts (partner-app)
 
 Estado: por iniciar.
 

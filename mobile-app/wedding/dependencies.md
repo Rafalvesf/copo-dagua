@@ -15,7 +15,7 @@ Praticamente todos os módulos de organização do casamento e de transação. E
 |---|---|
 | `mobile-app/guests/`, `mobile-app/seating/`, `mobile-app/checklist/`, `mobile-app/budget/` | Todas as tabelas destes módulos terão `wedding_id` e usarão `is_wedding_member()` nas suas policies de RLS |
 | `mobile-app/marketplace/`, `mobile-app/quotations/`, `mobile-app/bookings/`, `mobile-app/contracts/`, `mobile-app/payments/` | Pedidos, propostas, contratos e pagamentos ficam sempre associados a um `wedding_id` |
-| `mobile-app/chat/` | Conversas com fornecedores ficam associadas ao `wedding_id` do casal |
+| `mobile-app/chat/` | Conversas com parceiros ficam associadas ao `wedding_id` do casal |
 | `mobile-app/dashboard/` | Lê `ActiveWeddingContext` (ver `state.md`) para mostrar o resumo do casamento ativo |
 | `admin-web/weddings/` | Painel de administração para gestão/consulta de casamentos, incluindo resolução de disputas de propriedade |
 

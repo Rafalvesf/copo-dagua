@@ -1,4 +1,4 @@
-# Modulo: quotations (supplier-app)
+# Modulo: quotations (partner-app)
 
 Estado: por iniciar.
 

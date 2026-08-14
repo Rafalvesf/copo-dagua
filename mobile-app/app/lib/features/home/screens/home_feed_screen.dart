@@ -129,8 +129,8 @@ class HomeFeedScreen extends ConsumerWidget {
                                 _FeedTile(
                                   color: AppColors.pink,
                                   icon: Icons.storefront_outlined,
-                                  label: 'Fornecedores',
-                                  onTap: () => context.push('/suppliers'),
+                                  label: 'Parceiros',
+                                  onTap: () => context.push('/partners'),
                                 ),
                               ],
                             ),

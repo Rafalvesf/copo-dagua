@@ -4,7 +4,7 @@
 
 ## O que existe hoje
 
-- Lista de tarefas de planeamento do casamento, agrupadas por categoria (Local & Data, Fornecedores, Convidados, Vestuário, Legal, No dia — categorias livres, definidas pelo casal ao criar a tarefa).
+- Lista de tarefas de planeamento do casamento, agrupadas por categoria (Local & Data, Parceiros, Convidados, Vestuário, Legal, No dia — categorias livres, definidas pelo casal ao criar a tarefa).
 - Cada tarefa: título, categoria, concluída/pendente, prazo opcional.
 - Cartão de progresso no topo (`X de Y concluídas`, barra de progresso).
 - Adicionar tarefa (bottom sheet), marcar concluída, remover.

@@ -1,4 +1,4 @@
-# Modulo: chat (supplier-app)
+# Modulo: chat (partner-app)
 
 Estado: por iniciar.
 

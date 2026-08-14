@@ -1,4 +1,4 @@
-# Modulo: suppliers (admin-web)
+# Modulo: partners (admin-web)
 
 Estado: por iniciar.
 
