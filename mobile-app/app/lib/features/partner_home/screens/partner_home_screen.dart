@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
@@ -77,23 +78,23 @@ class PartnerHomeScreen extends ConsumerWidget {
                   mainAxisSpacing: 14,
                   crossAxisSpacing: 14,
                   childAspectRatio: 1.05,
-                  children: const [
-                    _PartnerTile(
+                  children: [
+                    const _PartnerTile(
                       color: AppColors.blue,
                       icon: Icons.request_quote_outlined,
                       label: 'Pedidos de orçamento',
                     ),
-                    _PartnerTile(
+                    const _PartnerTile(
                       color: AppColors.green,
                       icon: Icons.event_available_outlined,
                       label: 'Reservas',
                     ),
-                    _PartnerTile(
+                    const _PartnerTile(
                       color: AppColors.yellow,
                       icon: Icons.calendar_month_outlined,
                       label: 'Calendário',
                     ),
-                    _PartnerTile(
+                    const _PartnerTile(
                       color: AppColors.pink,
                       icon: Icons.storefront_outlined,
                       label: 'Perfil de negócio',
@@ -102,8 +103,10 @@ class PartnerHomeScreen extends ConsumerWidget {
                       color: AppColors.gray,
                       icon: Icons.description_outlined,
                       label: 'Contratos',
+                      badge: 'Chat',
+                      onTap: () => context.push('/partner-chat'),
                     ),
-                    _PartnerTile(
+                    const _PartnerTile(
                       color: AppColors.purple,
                       icon: Icons.payments_outlined,
                       label: 'Pagamentos',
@@ -123,19 +126,25 @@ class _PartnerTile extends StatelessWidget {
   final Color color;
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
+  final String badge;
 
   const _PartnerTile({
     required this.color,
     required this.icon,
     required this.label,
+    this.onTap,
+    this.badge = 'Em breve',
   });
 
   @override
   Widget build(BuildContext context) {
     return SnappyTap.builder(
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Em breve.')),
-      ),
+      onTap:
+          onTap ??
+          () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Em breve.')),
+          ),
       builder: (context, hovered) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -166,9 +175,9 @@ class _PartnerTile extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: const Text(
-                  'Em breve',
-                  style: TextStyle(fontSize: 10, color: AppTheme.inkMuted),
+                child: Text(
+                  badge,
+                  style: const TextStyle(fontSize: 10, color: AppTheme.inkMuted),
                 ),
               ),
             ),

@@ -15,6 +15,7 @@ import '../features/guests/screens/guests_list_screen.dart';
 import '../features/home/screens/home_feed_screen.dart';
 import '../features/invite/screens/invite_page_screen.dart';
 import '../features/onboarding/screens/onboarding_wizard_screen.dart';
+import '../features/partner_home/screens/partner_chat_screen.dart';
 import '../features/partner_home/screens/partner_home_screen.dart';
 import '../features/seating/screens/seating_screen.dart';
 import '../features/partners/screens/partners_list_screen.dart';
@@ -122,6 +123,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/partner-home',
         builder: (context, state) => const PartnerHomeScreen(),
+      ),
+      GoRoute(
+        path: '/partner-chat',
+        builder: (context, state) => const PartnerChatScreen(),
       ),
       GoRoute(
         path: '/wedding',

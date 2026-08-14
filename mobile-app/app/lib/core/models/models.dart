@@ -290,6 +290,31 @@ class Partner {
   });
 }
 
+/// Mensagem trocada entre um parceiro e o casal cliente. `contractTitle`
+/// não-nulo marca a mensagem como um "cartão de contrato" em vez de texto
+/// livre — é assim que um contrato é "enviado no chat" (ver `tasks.md`
+/// de `partner-app/contracts/` para o modelo completo, ainda por
+/// implementar; isto é a versão mínima só de envio/receção no chat).
+class ChatMessage {
+  final String id;
+  final String partnerId;
+  final bool fromPartner;
+  final String? text;
+  final String? contractTitle;
+  final DateTime sentAt;
+
+  const ChatMessage({
+    required this.id,
+    required this.partnerId,
+    required this.fromPartner,
+    this.text,
+    this.contractTitle,
+    required this.sentAt,
+  });
+
+  bool get isContract => contractTitle != null;
+}
+
 /// Mesa da disposição de lugares. A posição da mesa na sequência não é
 /// guardada explicitamente — é o índice desta mesa na lista ordenada de
 /// mesas de um casamento (ver [MockBackend.listSeatingTables]), o que

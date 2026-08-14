@@ -31,6 +31,7 @@ class MockBackend {
   final List<Partner> partners = [];
   final List<Budget> budgets = [];
   final List<SeatingTable> seatingTables = [];
+  final List<ChatMessage> chatMessages = [];
 
   static const Duration _latency = Duration(milliseconds: 400);
 
@@ -430,6 +431,23 @@ class MockBackend {
         dueDate: now.add(const Duration(days: 210)),
       ),
     ]);
+
+    chatMessages.addAll([
+      ChatMessage(
+        id: 'msg1',
+        partnerId: demoPartner.id,
+        fromPartner: false,
+        text: 'Olá! Vimos o vosso portefólio e adorámos, queríamos avançar.',
+        sentAt: now.subtract(const Duration(days: 2, hours: 3)),
+      ),
+      ChatMessage(
+        id: 'msg2',
+        partnerId: demoPartner.id,
+        fromPartner: true,
+        text: 'Que bom, Ana! Fico já a preparar o contrato para vos enviar aqui.',
+        sentAt: now.subtract(const Duration(days: 2, hours: 2)),
+      ),
+    ]);
   }
 
   int _idCounter = 100;
@@ -707,6 +725,32 @@ class MockBackend {
   Future<void> removeSeatingTable(String tableId) async {
     await Future.delayed(_latency ~/ 2);
     seatingTables.removeWhere((t) => t.id == tableId);
+  }
+
+  Future<List<ChatMessage>> listMessages(String partnerId) async {
+    await Future.delayed(_latency ~/ 2);
+    final messages = chatMessages.where((m) => m.partnerId == partnerId).toList()
+      ..sort((a, b) => a.sentAt.compareTo(b.sentAt));
+    return messages;
+  }
+
+  Future<ChatMessage> sendMessage({
+    required String partnerId,
+    required bool fromPartner,
+    String? text,
+    String? contractTitle,
+  }) async {
+    await Future.delayed(_latency);
+    final message = ChatMessage(
+      id: _nextId('msg'),
+      partnerId: partnerId,
+      fromPartner: fromPartner,
+      text: text,
+      contractTitle: contractTitle,
+      sentAt: DateTime.now(),
+    );
+    chatMessages.add(message);
+    return message;
   }
 }
 
