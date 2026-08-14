@@ -72,14 +72,38 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             ),
           ],
         ),
-        body: const Padding(
-          padding: EdgeInsets.all(24),
-          child: Center(
-            child: Text(
-              'O onboarding de parceiros ainda não está implementado nesta versão de teste. '
-              'Esta primeira app cobre apenas o fluxo de Noivos.',
-              textAlign: TextAlign.center,
-            ),
+        body: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Bem-vindo(a), ${profile.fullName.split(' ').first}!',
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'O wizard completo de perfil de parceiro (categorias, portefólio, '
+                'dados fiscais) ainda está em desenvolvimento. Por agora, entra '
+                'para veres a área do parceiro.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              PrimaryButton(
+                label: 'Entrar',
+                loading: _saving,
+                onPressed: _saving
+                    ? null
+                    : () async {
+                        setState(() => _saving = true);
+                        await ref
+                            .read(authControllerProvider.notifier)
+                            .completePartnerOnboarding();
+                      },
+              ),
+            ],
           ),
         ),
       );

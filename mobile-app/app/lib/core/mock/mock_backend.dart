@@ -16,6 +16,13 @@ class MockBackend {
 
   static final MockBackend instance = MockBackend._internal();
 
+  // Credenciais de demonstração — usadas tanto para semear as duas contas
+  // seed abaixo como pelo botão "Trocar de conta" (ver auth_controller.dart),
+  // que troca entre elas sem pedir password de novo.
+  static const demoCoupleEmail = 'ana@exemplo.com';
+  static const demoPartnerEmail = 'parceiro@exemplo.com';
+  static const demoPassword = 'teste1234';
+
   final List<Profile> profiles = [];
   final List<Wedding> weddings = [];
   final List<Collaborator> collaboratorsByWedding = [];
@@ -31,13 +38,24 @@ class MockBackend {
     final demo = const Profile(
       id: 'demo-user',
       fullName: 'Ana Silva',
-      email: 'ana@exemplo.com',
-      password: 'teste1234',
+      email: demoCoupleEmail,
+      password: demoPassword,
       role: UserRole.couple,
       emailVerified: true,
       onboardingComplete: true,
     );
     profiles.add(demo);
+
+    final demoPartner = const Profile(
+      id: 'demo-partner',
+      fullName: 'Miguel Fotografia',
+      email: demoPartnerEmail,
+      password: demoPassword,
+      role: UserRole.partner,
+      emailVerified: true,
+      onboardingComplete: true,
+    );
+    profiles.add(demoPartner);
 
     final wedding = Wedding(
       id: 'demo-wedding',
@@ -468,6 +486,18 @@ class MockBackend {
     final index = profiles.indexWhere((p) => p.id == profileId);
     if (index == -1) throw ProfileNotFoundException();
     final updated = profiles[index].copyWith(emailVerified: true);
+    profiles[index] = updated;
+    return updated;
+  }
+
+  // O wizard completo de perfil de parceiro (categorias, portefólio, dados
+  // fiscais — ver partner-app/profile/) ainda não está implementado nesta
+  // app; isto so desbloqueia a conta para entrar na área do parceiro.
+  Future<Profile> completePartnerOnboarding(String profileId) async {
+    await Future.delayed(_latency ~/ 2);
+    final index = profiles.indexWhere((p) => p.id == profileId);
+    if (index == -1) throw ProfileNotFoundException();
+    final updated = profiles[index].copyWith(onboardingComplete: true);
     profiles[index] = updated;
     return updated;
   }

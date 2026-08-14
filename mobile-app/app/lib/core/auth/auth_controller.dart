@@ -101,6 +101,26 @@ class AuthController extends Notifier<AuthState> {
     state = AuthState(status: AuthState.statusFor(updatedProfile), profile: updatedProfile);
   }
 
+  Future<void> completePartnerOnboarding() async {
+    final profile = state.profile;
+    if (profile == null) return;
+    state = state.copyWith(status: AuthStatus.authenticating);
+    final updated = await _backend.completePartnerOnboarding(profile.id);
+    state = AuthState(status: AuthState.statusFor(updated), profile: updated);
+  }
+
+  /// Troca entre as duas contas de demonstração (Noivo/a ↔ Parceiro) sem
+  /// pedir password de novo — não existe ainda um conceito real de conta
+  /// multi-role (ver RN01 em backend/auth/requirements.md), isto é só um
+  /// atalho de teste para navegar entre as duas experiências.
+  Future<void> switchDemoAccount() async {
+    final isPartner = state.profile?.role == UserRole.partner;
+    await login(
+      email: isPartner ? MockBackend.demoCoupleEmail : MockBackend.demoPartnerEmail,
+      password: MockBackend.demoPassword,
+    );
+  }
+
   void logout() {
     state = const AuthState.unauthenticated();
   }

@@ -179,9 +179,19 @@ class HomeFeedScreen extends ConsumerWidget {
                                               authControllerProvider.notifier,
                                             )
                                             .logout();
+                                      } else if (value == 'switch') {
+                                        ref
+                                            .read(
+                                              authControllerProvider.notifier,
+                                            )
+                                            .switchDemoAccount();
                                       }
                                     },
                                     itemBuilder: (context) => const [
+                                      PopupMenuItem(
+                                        value: 'switch',
+                                        child: Text('Ver como Parceiro'),
+                                      ),
                                       PopupMenuItem(
                                         value: 'logout',
                                         child: Text('Sair'),

@@ -15,6 +15,7 @@ import '../features/guests/screens/guests_list_screen.dart';
 import '../features/home/screens/home_feed_screen.dart';
 import '../features/invite/screens/invite_page_screen.dart';
 import '../features/onboarding/screens/onboarding_wizard_screen.dart';
+import '../features/partner_home/screens/partner_home_screen.dart';
 import '../features/seating/screens/seating_screen.dart';
 import '../features/partners/screens/partners_list_screen.dart';
 import '../features/support/screens/support_screen.dart';
@@ -68,10 +69,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (location == '/onboarding') return null;
           return '/onboarding';
         case AuthStatus.active:
+          final homeForRole = auth.profile?.role == UserRole.partner
+              ? '/partner-home'
+              : '/home';
           if (_authRoutes.contains(location) ||
               location == '/verify-email' ||
               location == '/onboarding') {
-            return '/home';
+            return homeForRole;
+          }
+          // Mantém o utilizador na área certa mesmo que a role mude a
+          // meio da sessão (troca rápida de conta de demonstração).
+          if (location == '/home' && homeForRole != '/home') {
+            return homeForRole;
+          }
+          if (location == '/partner-home' && homeForRole != '/partner-home') {
+            return homeForRole;
           }
           return null;
       }
@@ -106,6 +118,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home',
         builder: (context, state) => const HomeFeedScreen(),
+      ),
+      GoRoute(
+        path: '/partner-home',
+        builder: (context, state) => const PartnerHomeScreen(),
       ),
       GoRoute(
         path: '/wedding',
