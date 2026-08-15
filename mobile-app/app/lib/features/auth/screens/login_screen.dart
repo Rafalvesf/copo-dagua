@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/mock/mock_backend.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/form_fields.dart';
@@ -15,8 +16,15 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _email = TextEditingController(text: 'ana@exemplo.com');
-  final _password = TextEditingController(text: 'teste1234');
+  final _email = TextEditingController(text: MockBackend.demoCoupleEmail);
+  final _password = TextEditingController(text: MockBackend.demoPassword);
+
+  void _fillDemo(String email) {
+    setState(() {
+      _email.text = email;
+      _password.text = MockBackend.demoPassword;
+    });
+  }
 
   @override
   void dispose() {
@@ -40,8 +48,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             Text('Entrar', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
             Text(
-              'Conta de demonstração já preenchida: ana@exemplo.com / teste1234',
+              'Contas de demonstração — password igual para as duas: ${MockBackend.demoPassword}',
               style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  label: const Text('Noivo/a (ana@exemplo.com)'),
+                  selected: _email.text == MockBackend.demoCoupleEmail,
+                  onSelected: (_) => _fillDemo(MockBackend.demoCoupleEmail),
+                ),
+                ChoiceChip(
+                  label: const Text('Parceiro (parceiro@exemplo.com)'),
+                  selected: _email.text == MockBackend.demoPartnerEmail,
+                  onSelected: (_) => _fillDemo(MockBackend.demoPartnerEmail),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             if (auth.status == AuthStatus.error && auth.errorMessage != null)
