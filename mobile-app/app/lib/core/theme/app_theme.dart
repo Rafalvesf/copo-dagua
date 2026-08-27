@@ -26,7 +26,7 @@ class AppTheme {
   static const borderMuted = Color(0xFFE6DFD6);
 
   /// Fundo geral atrás da moldura de telemóvel, em janelas largas.
-  static const outerBackdrop = Color(0xFFD9D2E6);
+  static const outerBackdrop = Color(0xFFC7C7CC);
 
   /// Margem lateral partilhada por todos os ecrãs principais — o
   /// conteúdo e a navbar flutuante alinham-se a esta mesma largura.
