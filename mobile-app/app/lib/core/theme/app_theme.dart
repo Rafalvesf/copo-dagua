@@ -9,7 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   static const seedColor = accentLavender;
 
-  static const background = Color(0xFFFBF6F0);
+  static const background = Color(0xFFF4F4F5);
   static const ink = Color(0xFF1E1A22);
   static const inkMuted = Color(0xFF7A7480);
 
@@ -259,37 +259,14 @@ class AppColors {
   static const greenDark = Color(0xFF174D3B);
 }
 
-/// Gradientes de fundo — a linguagem visual principal do redesign.
-/// Aplicados através de GradientScaffold, nunca diretamente num
-/// Scaffold (que só aceita uma Color sólida).
+/// Fundos planos usados através de GradientScaffold — substituíram os
+/// gradientes pastel do redesign anterior por um cinzento uniforme,
+/// bem claro, em todos os ecrãs.
 class AppGradients {
-  /// Lavanda → creme, diagonal. Ecrãs de primeira impressão / emoção
-  /// (boas-vindas, onboarding).
-  static const hero = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFFDCD3F0), Color(0xFFFBF6F0)],
-  );
-
-  /// Creme → rosa, vertical. Ecrãs de lista/dashboard.
-  static const feed = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Color(0xFFFBF6F0), Color(0xFFF9E6E9)],
-  );
-
-  /// Creme → branco, vertical, quase impercetível. Ecrãs de
-  /// formulário/detalhe, onde um gradiente forte prejudicaria a
-  /// legibilidade.
-  static const subtle = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Color(0xFFFBF6F0), Color(0xFFFFFFFF)],
-  );
-
-  /// Lavanda sólido — momento único e celebratório (ex: fim do
-  /// onboarding).
-  static const moodSolid = Color(0xFFD9CEF0);
+  static const hero = Color(0xFFF4F4F5);
+  static const feed = Color(0xFFF4F4F5);
+  static const subtle = Color(0xFFF4F4F5);
+  static const moodSolid = Color(0xFFF4F4F5);
 }
 
 /// Cores semânticas de estado (ex: RSVP) — usadas em vez de emojis para

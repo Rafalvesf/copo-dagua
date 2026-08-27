@@ -137,7 +137,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                   bottom: false,
                   child: Container(
                     width: double.infinity,
-                    color: const Color(0xFFFBF6F0), // topo de AppGradients.feed
+                    color: AppGradients.feed,
                     padding: const EdgeInsets.fromLTRB(
                       AppTheme.screenMargin,
                       20,

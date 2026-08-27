@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_nav_icon.dart';
+import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -39,11 +40,16 @@ class MascotHubScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(
                 AppTheme.screenMargin,
-                28,
+                20,
                 AppTheme.screenMargin,
                 140,
               ),
               children: [
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: CircleBackButton(),
+                ),
+                const SizedBox(height: 20),
                 AspectRatio(
                   aspectRatio: 1.4,
                   child: ClipRRect(
@@ -92,7 +98,7 @@ class MascotHubScreen extends ConsumerWidget {
                     ),
                     _ActionTile(
                       color: AppColors.gray,
-                      icon: Icons.groups_outlined,
+                      icon: Icons.forum_outlined,
                       title: 'Conversar',
                       subtitle: 'Falar connosco é sempre fácil.',
                       onTap: () => context.go('/chat'),
@@ -103,6 +109,20 @@ class MascotHubScreen extends ConsumerWidget {
                       title: 'Surpresas',
                       subtitle: 'Pequenos mimos para vocês.',
                       onTap: () => _comingSoon(context),
+                    ),
+                    _ActionTile(
+                      color: AppColors.green,
+                      icon: Icons.savings_outlined,
+                      title: 'Orçamento',
+                      subtitle: 'Quanto já gastaram e quanto falta.',
+                      onTap: () => context.push('/budget'),
+                    ),
+                    _ActionTile(
+                      color: AppColors.pink,
+                      icon: Icons.groups_outlined,
+                      title: 'Convidados',
+                      subtitle: 'Lista, RSVPs e confirmações.',
+                      onTap: () => context.push('/guests'),
                     ),
                   ],
                 ),

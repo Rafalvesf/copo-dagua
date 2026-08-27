@@ -67,7 +67,6 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
     return GradientScaffold(
       background: AppBackground.subtle,
       appBar: AppBar(
-        title: const Text('O nosso casamento'),
         leading: const CircleBackButton(),
       ),
       body: wedding == null

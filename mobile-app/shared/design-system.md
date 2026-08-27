@@ -6,7 +6,7 @@ Os tokens abaixo estão implementados em `mobile-app/app/lib/core/theme/app_them
 
 ## DNA visual
 
-Wellness/journaling — quente, suave, acolhedor, ainda assim elegante e moderno. Fundos em gradiente pastel suave (lavanda → creme, creme → rosa), cards brancos que "flutuam" com sombra difusa e tingida (nunca cinzenta/dura), formas em pílula/circulares, títulos serifados misturados com corpo de texto sans-serif limpo.
+Limpo e neutro — fundo cinzento bem claro e uniforme em todos os ecrãs, cards brancos que "flutuam" com sombra difusa e tingida (nunca cinzenta/dura), formas em pílula/circulares, títulos serifados misturados com corpo de texto sans-serif limpo.
 
 ## Cor
 
@@ -14,7 +14,7 @@ Wellness/journaling — quente, suave, acolhedor, ainda assim elegante e moderno
 |---|---|---|
 | `AppTheme.ink` | `#1E1A22` | Texto principal, ícones, botão primário (pílula escura) |
 | `AppTheme.inkMuted` | `#7A7480` | Texto secundário |
-| `AppTheme.background` | `#FBF6F0` | Fundo plano de reserva (quando um ecrã não usa `GradientScaffold`) |
+| `AppTheme.background` | `#F4F4F5` | Fundo plano de todos os ecrãs (cinzento bem claro, via `GradientScaffold`) |
 | `AppTheme.accentLavender` | `#9C8FD9` | Acento de marca — estados selecionados/ativos, `GradientMark` |
 | `AppTheme.accentDeep` | `#6C56B3` | Variante mais escura do acento — tinge as sombras dos cards |
 | `AppTheme.borderMuted` | `#E6DFD6` | Contorno neutro e quente (chips, botões outline, separadores) |
@@ -28,16 +28,9 @@ As cores de estado nunca aparecem em bloco sólido sobre fundo — os badges (`R
 
 Hierarquia dos três verdes: `AppColors.green` (normal) → `AppStatusColors.confirmed` (ativo/confirmado) → `AppColors.greenDark` (destaque forte, usado com moderação, nunca em todo o lado).
 
-## Gradientes (`AppGradients`)
+## Fundo (`AppGradients`)
 
-Fundo em gradiente é a principal assinatura visual do redesign. Aplica-se sempre através de `GradientScaffold` (`mobile-app/app/lib/shared/widgets/gradient_scaffold.dart`) — nunca diretamente num `Scaffold`, que só aceita uma `Color` sólida.
-
-| Gradiente | Composição | Quando usar |
-|---|---|---|
-| `AppGradients.hero` | lavanda `#DCD3F0` → creme `#FBF6F0`, diagonal | Primeira impressão / emoção — boas-vindas, onboarding, seleção de papel |
-| `AppGradients.feed` | creme `#FBF6F0` → rosa `#F9E6E9`, vertical | Ecrãs de lista/dashboard (feed, convidados, checklist, orçamento, lugares, parceiros) |
-| `AppGradients.subtle` | creme `#FBF6F0` → branco, vertical | Ecrãs de formulário/detalhe, onde um gradiente forte prejudicaria a legibilidade |
-| `AppGradients.moodSolid` | lavanda sólido `#D9CEF0` | Momento único e celebratório (ex: fim do onboarding) — usar com moderação |
+Apesar do nome (herdado do redesign anterior, em gradiente), `AppGradients` guarda hoje 4 cores planas — todas o mesmo cinzento bem claro (`#F4F4F5`). Aplica-se sempre através de `GradientScaffold` (`mobile-app/app/lib/shared/widgets/gradient_scaffold.dart`) — nunca diretamente num `Scaffold`. Os 4 valores (`hero`, `feed`, `subtle`, `moodSolid`) existem só para não obrigar a tocar em todos os ecrãs se um dia se quiser voltar a diferenciar o fundo por tipo de ecrã — hoje são idênticos.
 
 `GradientScaffold(background: AppBackground.hero|feed|subtle|mood, ...)` substitui `Scaffold(...)` sem alterar mais nada no ecrã — só o fundo muda.
 
@@ -55,7 +48,7 @@ A app tem 4 separadores de topo, sempre acessíveis através do `FloatingBottomN
 
 ## Componentes
 
-- **Cards**: fundo branco (contraste sobre o gradiente/fundo creme), `border-radius` 18–24px, sombra sempre a mesma dupla: `AppTheme.cardShadow` (normal) / `AppTheme.cardShadowStrong` (hover/destaque) — difusa, tingida com `AppTheme.accentDeep` a baixa opacidade, nunca cinzenta/dura.
+- **Cards**: fundo branco (contraste sobre o fundo cinzento claro), `border-radius` 18–24px, sombra sempre a mesma dupla: `AppTheme.cardShadow` (normal) / `AppTheme.cardShadowStrong` (hover/destaque) — difusa, tingida com `AppTheme.accentDeep` a baixa opacidade, nunca cinzenta/dura.
 - **Botões/filtros**: formato pill (`border-radius: 999`). Seleção usa `AppColors.green` como fundo — nunca preto (isso é reservado ao CTA primário).
 - **Seletor de opções** (categorias, filtros, ícone da navbar): `CoverFlowPicker` — carrossel horizontal em loop infinito, a opção centrada fica maior/opaca, snap suave ao largar. Rótulos de texto usam `CategoryPillLabel` (fundo verde + sombra só quando selecionado).
 - **Campo de pesquisa**: grande, `AppColors.gray`, pill.
