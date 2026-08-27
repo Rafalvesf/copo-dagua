@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_mark.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 
@@ -31,7 +32,8 @@ class PartnerHomeScreen extends ConsumerWidget {
     const contentTopMargin = topOverlap + topFadeHeight;
     const bottomFadeHeight = 140.0;
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.feed,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final headerHeight = constraints.maxHeight * 0.40;
@@ -135,7 +137,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                   bottom: false,
                   child: Container(
                     width: double.infinity,
-                    color: AppTheme.background,
+                    color: const Color(0xFFFBF6F0), // topo de AppGradients.feed
                     padding: const EdgeInsets.fromLTRB(
                       AppTheme.screenMargin,
                       20,

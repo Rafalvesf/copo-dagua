@@ -3,13 +3,15 @@ import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_mark.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.hero,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),

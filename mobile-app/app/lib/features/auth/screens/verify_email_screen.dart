@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 
 class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({super.key});
@@ -41,7 +42,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     final email = auth.profile?.email ?? '';
     final loading = auth.status == AuthStatus.authenticating;
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.hero,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),

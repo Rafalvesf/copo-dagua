@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_mark.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 
@@ -29,7 +30,8 @@ class HomeFeedScreen extends ConsumerWidget {
     const contentTopMargin = topOverlap + topFadeHeight;
     const bottomFadeHeight = 140.0;
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.feed,
       body: wedding == null
           ? const Center(child: CircularProgressIndicator())
           : LayoutBuilder(
@@ -151,7 +153,7 @@ class HomeFeedScreen extends ConsumerWidget {
                         bottom: false,
                         child: Container(
                           width: double.infinity,
-                          color: AppTheme.background,
+                          color: const Color(0xFFFBF6F0), // topo de AppGradients.feed
                           padding: const EdgeInsets.fromLTRB(
                             AppTheme.screenMargin,
                             20,
@@ -218,11 +220,11 @@ class HomeFeedScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    Positioned(
-                      left: AppTheme.screenMargin,
-                      right: AppTheme.screenMargin,
-                      bottom: 24,
-                      child: const FloatingBottomNav(current: AppTab.home),
+                    const Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: FloatingBottomNav(current: AppTab.home),
                     ),
                   ],
                 );

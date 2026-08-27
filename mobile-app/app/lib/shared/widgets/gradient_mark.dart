@@ -14,7 +14,11 @@ class GradientMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: const BoxDecoration(
-        color: AppTheme.ink,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppTheme.accentLavender, AppTheme.accentDeep],
+        ),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, size: size * 0.5, color: Colors.white),

@@ -12,6 +12,7 @@ import '../../../shared/widgets/cover_flow_picker.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/form_fields.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 
@@ -113,7 +114,8 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
       });
     final visibleFlatItems = flatItems.where(_matchesFilter).toList();
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.feed,
       body: state.loading && state.items.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -324,9 +326,9 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                   ),
                 ),
                 const Positioned(
-                  left: AppTheme.screenMargin,
-                  right: AppTheme.screenMargin,
-                  bottom: 24,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   child: FloatingBottomNav(current: AppTab.checklist),
                 ),
                 const Positioned.fill(child: DraggableChatBubble()),
@@ -592,7 +594,7 @@ class _ChecklistTile extends StatelessWidget {
             border: Border.all(
               color: item.done
                   ? AppStatusColors.confirmed
-                  : const Color(0xFFE2D9CF),
+                  : AppTheme.borderMuted,
               width: 2,
             ),
           ),

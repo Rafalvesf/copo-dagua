@@ -5,6 +5,7 @@ import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_widgets.dart';
 import '../../../shared/widgets/rsvp_status_badge.dart';
 import '../../../shared/widgets/support_chat.dart';
@@ -20,12 +21,14 @@ class GuestDetailScreen extends ConsumerWidget {
     final guest = state.guests.where((g) => g.id == guestId).firstOrNull;
 
     if (guest == null) {
-      return const Scaffold(
-        body: Center(child: Text('Convidado não encontrado.')),
+      return GradientScaffold(
+        background: AppBackground.subtle,
+        body: const Center(child: Text('Convidado não encontrado.')),
       );
     }
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.subtle,
       appBar: AppBar(
         title: Text(guest.name),
         leading: const CircleBackButton(),

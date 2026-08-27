@@ -11,6 +11,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/support_chat.dart';
 
 const _categoryColors = [
@@ -87,7 +88,8 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
         ? null
         : computeEffectiveBudget(state.budget!, checklistItems);
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.feed,
       body: budget == null
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -161,9 +163,9 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                   ),
                 ),
                 const Positioned(
-                  left: AppTheme.screenMargin,
-                  right: AppTheme.screenMargin,
-                  bottom: 24,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   child: FloatingBottomNav(current: AppTab.budget),
                 ),
                 const Positioned.fill(child: DraggableChatBubble()),

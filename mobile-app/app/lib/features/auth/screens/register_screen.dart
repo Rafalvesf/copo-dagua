@@ -7,6 +7,7 @@ import '../../../core/models/models.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/form_fields.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 
 final _nameRegex = RegExp(r'^[a-zA-ZÀ-ÿ]+(\s[a-zA-ZÀ-ÿ]+)+$');
 final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -63,7 +64,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
     });
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.subtle,
       appBar: AppBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

@@ -12,6 +12,7 @@ import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/cover_flow_picker.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_widgets.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
@@ -92,7 +93,8 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
       return matchesGroup && matchesQuery;
     }).toList();
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.feed,
       body: state.loading && state.guests.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -269,9 +271,9 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                   ),
                 ),
                 const Positioned(
-                  left: AppTheme.screenMargin,
-                  right: AppTheme.screenMargin,
-                  bottom: 24,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   child: FloatingBottomNav(current: AppTab.guests),
                 ),
                 const Positioned.fill(child: DraggableChatBubble()),

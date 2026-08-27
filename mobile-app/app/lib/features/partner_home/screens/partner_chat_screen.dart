@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/chat/chat_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 
 /// Chat mínimo entre o parceiro e o casal cliente, com a possibilidade
 /// de "enviar contrato" como um cartão na própria conversa — o pedido
@@ -86,7 +87,8 @@ class _PartnerChatScreenState extends ConsumerState<PartnerChatScreen> {
       }
     });
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.subtle,
       appBar: AppBar(
         title: const Text('Ana & Miguel'),
       ),

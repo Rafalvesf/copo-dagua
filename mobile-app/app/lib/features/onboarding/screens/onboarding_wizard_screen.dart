@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/mock/mock_backend.dart';
 import '../../../core/models/models.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/progress.dart';
 
 const _totalSteps = 7;
@@ -54,7 +56,10 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     final profile = auth.profile;
 
     if (profile == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const GradientScaffold(
+        background: AppBackground.hero,
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (!_ownNamePrefilled) {
@@ -63,7 +68,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     }
 
     if (profile.role == UserRole.partner) {
-      return Scaffold(
+      return GradientScaffold(
+        background: AppBackground.hero,
         appBar: AppBar(
           actions: [
             TextButton(
@@ -110,7 +116,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     }
 
     if (_done) {
-      return Scaffold(
+      return GradientScaffold(
+        background: AppBackground.mood,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -166,11 +173,12 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
       );
     }
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.hero,
       appBar: AppBar(
         leading: _step == 0
             ? null
-            : IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => setState(() => _step--)),
+            : CircleBackButton(onTap: () => setState(() => _step--)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -261,6 +269,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
       child: Row(
         children: [
           TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted),
             onPressed: () {
               if (isLast) {
                 setState(() => _done = true);
@@ -271,15 +280,15 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             child: const Text('Saltar'),
           ),
           const Spacer(),
-          FilledButton(
-            onPressed: () {
+          ArrowCtaButton(
+            label: isLast ? 'Concluir' : 'Continuar',
+            onTap: () {
               if (isLast) {
                 setState(() => _done = true);
               } else {
                 setState(() => _step++);
               }
             },
-            child: Text(isLast ? 'Concluir' : 'Continuar'),
           ),
         ],
       ),

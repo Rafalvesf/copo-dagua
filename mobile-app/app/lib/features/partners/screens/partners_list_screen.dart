@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 import '../partner_style.dart';
@@ -63,7 +64,8 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
     );
     final trendingAsync = ref.watch(partnersProvider(null));
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.feed,
       body: Stack(
         children: [
           SafeArea(
@@ -336,9 +338,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
           ),
           if (!widget.selectionMode)
             const Positioned(
-              left: AppTheme.screenMargin,
-              right: AppTheme.screenMargin,
-              bottom: 24,
+              left: 0,
+              right: 0,
+              bottom: 0,
               child: FloatingBottomNav(current: AppTab.partners),
             ),
           const Positioned.fill(child: DraggableChatBubble()),
@@ -901,7 +903,7 @@ class _PartnerCardState extends State<_PartnerCard> {
                           ),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: const Color(0xFFE2D9CF)),
+                            border: Border.all(color: AppTheme.borderMuted),
                           ),
                           child: Text(
                             feature,

@@ -7,6 +7,7 @@ import '../../../core/mock/mock_backend.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/form_fields.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -38,7 +39,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final auth = ref.watch(authControllerProvider);
     final loading = auth.status == AuthStatus.authenticating;
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.subtle,
       appBar: AppBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

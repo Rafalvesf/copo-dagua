@@ -16,6 +16,7 @@ import '../../../shared/widgets/cover_flow_picker.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/form_fields.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 import '../../../shared/widgets/wedding_widgets.dart';
@@ -74,7 +75,8 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
         ? null
         : computeEffectiveBudget(budgetState.budget!, checklistState.items);
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.subtle,
       appBar: AppBar(
         title: const Text('O nosso casamento'),
         leading: const CircleBackButton(),
@@ -257,9 +259,9 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                   },
                 ),
                 const Positioned(
-                  left: AppTheme.screenMargin,
-                  right: AppTheme.screenMargin,
-                  bottom: 24,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   child: FloatingBottomNav(current: AppTab.wedding),
                 ),
                 const Positioned.fill(child: DraggableChatBubble()),

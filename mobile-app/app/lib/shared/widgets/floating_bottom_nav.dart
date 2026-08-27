@@ -7,76 +7,77 @@ import '../../core/wedding/wedding_nav_icon.dart';
 
 enum AppTab { home, wedding, guests, checklist, partners, budget, seating }
 
+/// Doca branca encostada ao fundo do ecrã (cantos arredondados só em
+/// cima, sem margem lateral nem espaço por baixo) — o boneco do casal
+/// é um botão circular que sai ligeiramente por cima do canto direito
+/// da doca, como destaque.
 class FloatingBottomNav extends ConsumerWidget {
   final AppTab current;
 
   const FloatingBottomNav({super.key, required this.current});
 
-  static const _weddingIconSize = 72.0;
+  static const _accentSize = 60.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final weddingIcon = ref.watch(weddingNavIconProvider);
 
-    // Stack em vez de só a Row: o boneco do casal fica maior do que a
-    // pílula (fica de fora do fluxo normal, sem nenhum limite imposto
-    // pela navbar) e sai ligeiramente por cima dela, em vez de esticar
-    // a pílula toda para o acomodar.
-    return SizedBox(
-      height: _weddingIconSize,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.bottomCenter,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppTheme.ink,
-              borderRadius: BorderRadius.circular(999),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.28),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
-                ),
-              ],
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _NavIcon(
-                  icon: Icons.home_rounded,
-                  active: current == AppTab.home,
-                  onTap: () => context.go('/home'),
-                ),
-                // Espaço reservado para o boneco do casal, que é
-                // desenhado por cima (fora da Row) mais abaixo.
-                const SizedBox(width: 56),
-                _NavIcon(
-                  icon: Icons.storefront_rounded,
-                  active: current == AppTab.partners,
-                  onTap: () => context.go('/partners'),
-                ),
-              ],
+            boxShadow: AppTheme.cardShadow,
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                14,
+                20 + _accentSize + 8,
+                14,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _NavIcon(
+                    icon: Icons.home_rounded,
+                    active: current == AppTab.home,
+                    onTap: () => context.go('/home'),
+                  ),
+                  _NavIcon(
+                    icon: Icons.storefront_rounded,
+                    active: current == AppTab.partners,
+                    onTap: () => context.go('/partners'),
+                  ),
+                ],
+              ),
             ),
           ),
-          Positioned(
-            bottom: 6,
-            child: _SquishyWeddingIcon(
-              assetPath: weddingIcon.assetPath,
-              size: _weddingIconSize,
-              zoom: weddingIcon.zoom,
-              onTap: () => context.go('/wedding'),
-            ),
+        ),
+        Positioned(
+          top: -_accentSize * 0.3,
+          right: 16,
+          child: _SquishyWeddingIcon(
+            assetPath: weddingIcon.assetPath,
+            size: _accentSize,
+            zoom: weddingIcon.zoom,
+            onTap: () => context.go('/wedding'),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-/// Boneco central da navbar. Ao tocar, "espreme" (squash/stretch) e
-/// volta com um pequeno ressalto elástico.
+/// Botão circular de destaque com o boneco do casal. Ao tocar, "espreme"
+/// (squash/stretch) e volta com um pequeno ressalto elástico.
 class _SquishyWeddingIcon extends StatefulWidget {
   final String assetPath;
   final double size;
@@ -134,21 +135,28 @@ class _SquishyWeddingIconState extends State<_SquishyWeddingIcon>
         builder: (context, child) {
           final t = _controller.value;
           return Transform(
-            alignment: Alignment.bottomCenter,
+            alignment: Alignment.center,
             transform: Matrix4.identity()
               ..scaleByDouble(1 + t * 0.18, 1 - t * 0.22, 1, 1),
             child: child,
           );
         },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Transform.scale(
-            scale: widget.zoom,
-            child: Image.asset(
-              widget.assetPath,
-              width: widget.size,
-              height: widget.size,
-              fit: BoxFit.cover,
+        child: Container(
+          width: widget.size,
+          height: widget.size,
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            boxShadow: AppTheme.cardShadowStrong,
+          ),
+          child: ClipOval(
+            child: Transform.scale(
+              scale: widget.zoom,
+              child: Image.asset(
+                widget.assetPath,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         ),
@@ -179,12 +187,14 @@ class _NavIcon extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 2),
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: active
-              ? Colors.white.withValues(alpha: 0.18)
-              : Colors.transparent,
+          color: active ? AppTheme.accentLavender : Colors.transparent,
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: Colors.white, size: size),
+        child: Icon(
+          icon,
+          color: active ? Colors.white : AppTheme.ink,
+          size: size,
+        ),
       ),
     );
   }

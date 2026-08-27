@@ -2,37 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Implementação executável do design system documentado em
-/// mobile-app/shared/design-system.md — fundo branco, superfícies
-/// pastel planas (sem gradiente), preto quase absoluto para
-/// texto/ícones. Tipografia Inter, com escala definida para um ecrã de
-/// referência de 375px.
+/// mobile-app/shared/design-system.md — fundo creme/lavanda com
+/// gradientes suaves, cards brancos com sombra difusa, tipografia
+/// serifada (Fraunces) para títulos e Inter para o resto. Escala
+/// definida para um ecrã de referência de 375px.
 class AppTheme {
-  static const seedColor = Color(0xFF141719);
+  static const seedColor = accentLavender;
 
-  static const background = Color(0xFFFFFFFF);
-  static const ink = Color(0xFF141719);
-  static const inkMuted = Color(0xFF6E7378);
+  static const background = Color(0xFFFBF6F0);
+  static const ink = Color(0xFF1E1A22);
+  static const inkMuted = Color(0xFF7A7480);
+
+  /// Acento principal da marca — lavanda suave. Usado em estados
+  /// selecionados/ativos e para semear o ColorScheme.
+  static const accentLavender = Color(0xFF9C8FD9);
+
+  /// Variante mais escura do acento — usada para tingir sombras e dar
+  /// mais contraste onde o lavanda pastel não chega.
+  static const accentDeep = Color(0xFF6C56B3);
+
+  /// Cor de contorno neutra e quente, partilhada por bordas subtis
+  /// (chips, botões outline, separadores).
+  static const borderMuted = Color(0xFFE6DFD6);
 
   /// Fundo geral atrás da moldura de telemóvel, em janelas largas.
-  static const outerBackdrop = Color(0xFFD1D4DA);
+  static const outerBackdrop = Color(0xFFD9D2E6);
 
   /// Margem lateral partilhada por todos os ecrãs principais — o
   /// conteúdo e a navbar flutuante alinham-se a esta mesma largura.
   static const screenMargin = 28.0;
 
-  /// Sombra partilhada por todos os cards — projetada para baixo, sem
-  /// distorção, sem blur (aresta nítida e visível, em vez de um halo
-  /// difuso).
+  /// Sombra partilhada por todos os cards — difusa e tingida com
+  /// [accentDeep] a baixa opacidade, para um halo suave em vez de uma
+  /// sombra cinzenta dura.
   static const cardShadow = [
-    BoxShadow(color: Color(0x1A000000), blurRadius: 0, offset: Offset(0, 3)),
+    BoxShadow(color: Color(0x1F6C56B3), blurRadius: 24, offset: Offset(0, 10)),
   ];
 
   /// Variante mais carregada de [cardShadow], para elementos que devem
   /// ganhar destaque/dominância sobre os cards normais (ex: tiles de
-  /// estatística selecionáveis, estado de hover) — mesma aresta nítida,
-  /// mais opacidade e um pouco mais de alcance.
+  /// estatística selecionáveis, estado de hover) — mesmo halo, mais
+  /// opacidade e alcance.
   static const cardShadowStrong = [
-    BoxShadow(color: Color(0x33000000), blurRadius: 0, offset: Offset(0, 5)),
+    BoxShadow(color: Color(0x2E6C56B3), blurRadius: 32, offset: Offset(0, 14)),
   ];
 
   /// Escurece uma cor de superfície ~10% para o estado pressionado —
@@ -55,18 +67,22 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
       textTheme: baseText.copyWith(
-        // Saudação (headline)
-        headlineMedium: baseText.headlineMedium?.copyWith(
-          fontSize: 50,
-          height: 40 / 34,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.5,
-          color: ink,
+        // Saudação (headline) — serifado, editorial mas amigável.
+        headlineMedium: GoogleFonts.fraunces(
+          textStyle: baseText.headlineMedium?.copyWith(
+            fontSize: 50,
+            height: 40 / 34,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.5,
+            color: ink,
+          ),
         ),
-        headlineSmall: baseText.headlineSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: ink,
-          height: 1.15,
+        headlineSmall: GoogleFonts.fraunces(
+          textStyle: baseText.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: ink,
+            height: 1.15,
+          ),
         ),
         // Título do card principal
         titleLarge: baseText.titleLarge?.copyWith(
@@ -107,7 +123,7 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: background,
+        backgroundColor: Colors.transparent,
         foregroundColor: ink,
         elevation: 0,
         centerTitle: false,
@@ -149,7 +165,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(54),
           foregroundColor: ink,
-          side: const BorderSide(color: Color(0xFFE3E4E7)),
+          side: const BorderSide(color: borderMuted),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(28),
           ),
@@ -169,7 +185,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: Colors.white,
         selectedColor: AppColors.green,
-        side: const BorderSide(color: Color(0xFFE3E4E7)),
+        side: const BorderSide(color: borderMuted),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
     );
@@ -207,19 +223,33 @@ class AppTypography {
     fontWeight: FontWeight.w400,
   );
   static const iconSize = 24.0;
+
+  /// Título serifado (Fraunces) para usar fora do textTheme, onde a cor
+  /// tem de ser explícita (ex: texto sobre um gradiente).
+  static TextStyle displaySerif({
+    double fontSize = 28,
+    FontWeight fontWeight = FontWeight.w600,
+    Color? color,
+  }) => GoogleFonts.fraunces(
+    fontSize: fontSize,
+    height: 1.2,
+    fontWeight: fontWeight,
+    color: color,
+  );
 }
 
-/// Paleta extraída dos mockups de referência — superfícies planas
-/// (sem gradiente) para os cartões de destaque.
+/// Paleta extraída dos mockups de referência — superfícies pastel
+/// quentes para os cartões de destaque, pensadas para funcionar sobre
+/// os novos fundos em gradiente.
 class AppColors {
-  static const blue = Color(0xFFDEF3FA);
-  static const green = Color(0xFFE2F7DE);
-  static const yellow = Color(0xFFFFF5C0);
-  static const pink = Color(0xFFFCE1EC);
-  static const gray = Color(0xFFF2F2F2);
-  static const purple = Color(0xFFB589DF);
+  static const blue = Color(0xFFE4E1F7);
+  static const green = Color(0xFFE7F0DE);
+  static const yellow = Color(0xFFFBEFC9);
+  static const pink = Color(0xFFF8DCE4);
+  static const gray = Color(0xFFF3EEE7);
+  static const purple = Color(0xFFA78BD1);
 
-  static const muted = Color(0xFFEDEDED);
+  static const muted = Color(0xFFEFE9E2);
 
   /// Verde escuro de destaque forte — usar com moderação (cards de
   /// destaque, progresso importante, estados ativos que precisam de
@@ -227,6 +257,39 @@ class AppColors {
   /// [AppStatusColors.confirmed] (ativo/confirmado) → [greenDark]
   /// (destaque forte).
   static const greenDark = Color(0xFF174D3B);
+}
+
+/// Gradientes de fundo — a linguagem visual principal do redesign.
+/// Aplicados através de GradientScaffold, nunca diretamente num
+/// Scaffold (que só aceita uma Color sólida).
+class AppGradients {
+  /// Lavanda → creme, diagonal. Ecrãs de primeira impressão / emoção
+  /// (boas-vindas, onboarding).
+  static const hero = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFDCD3F0), Color(0xFFFBF6F0)],
+  );
+
+  /// Creme → rosa, vertical. Ecrãs de lista/dashboard.
+  static const feed = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFFFBF6F0), Color(0xFFF9E6E9)],
+  );
+
+  /// Creme → branco, vertical, quase impercetível. Ecrãs de
+  /// formulário/detalhe, onde um gradiente forte prejudicaria a
+  /// legibilidade.
+  static const subtle = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFFFBF6F0), Color(0xFFFFFFFF)],
+  );
+
+  /// Lavanda sólido — momento único e celebratório (ex: fim do
+  /// onboarding).
+  static const moodSolid = Color(0xFFD9CEF0);
 }
 
 /// Cores semânticas de estado (ex: RSVP) — usadas em vez de emojis para

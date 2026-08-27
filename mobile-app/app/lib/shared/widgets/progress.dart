@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_theme.dart';
+
 class StepProgressBar extends StatelessWidget {
   final int totalSteps;
   final int currentStep;
@@ -54,7 +56,7 @@ class CountdownBadge extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          color: light ? const Color(0xFF241F1C) : colorScheme.onSecondaryContainer,
+          color: light ? AppTheme.ink : colorScheme.onSecondaryContainer,
           fontWeight: FontWeight.w700,
         ),
       ),

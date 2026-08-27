@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../partner_style.dart';
 
 enum _DetailTab { about, packages, gallery, reviews }
@@ -40,7 +41,8 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
       (i) => 'https://picsum.photos/seed/${partner.id}-g$i/600/600',
     );
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.subtle,
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -228,9 +230,9 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 12,
-                      offset: const Offset(0, -4),
+                      color: AppTheme.accentDeep.withValues(alpha: 0.12),
+                      blurRadius: 24,
+                      offset: const Offset(0, -6),
                     ),
                   ],
                 ),
@@ -243,7 +245,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
                         label: const Text('Chat'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppTheme.ink,
-                          side: const BorderSide(color: Color(0xFFE2D9CF)),
+                          side: const BorderSide(color: AppTheme.borderMuted),
                         ),
                       ),
                     ),
@@ -411,15 +413,7 @@ class _PackageCard extends StatelessWidget {
             border: highlighted
                 ? Border.all(color: AppTheme.ink, width: 1.5)
                 : null,
-            boxShadow: highlighted
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
+            boxShadow: highlighted ? AppTheme.cardShadow : null,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

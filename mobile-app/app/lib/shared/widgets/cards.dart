@@ -142,12 +142,13 @@ class GuestListItem extends StatelessWidget {
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
+                      color: AppTheme.ink,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${guest.group.isEmpty ? 'Sem grupo' : guest.group} · $_adultsLabel',
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+                    style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
                   ),
                 ],
               ),

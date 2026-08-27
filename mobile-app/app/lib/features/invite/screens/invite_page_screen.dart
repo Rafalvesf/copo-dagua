@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/form_fields.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 
 /// Página pública de convite — acessível sem sessão iniciada, para os
 /// convidados abrirem a partir do link partilhado pelos noivos
@@ -38,7 +39,8 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.subtle,
       body: SafeArea(
         child: FutureBuilder<Wedding?>(
           future: _weddingFuture,

@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 
@@ -75,7 +76,8 @@ class SeatingScreen extends ConsumerWidget {
         ? 0.0
         : (filled / total).clamp(0.0, 1.0).toDouble();
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.feed,
       body: total == 0
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -174,9 +176,9 @@ class SeatingScreen extends ConsumerWidget {
                   ),
                 ),
                 const Positioned(
-                  left: AppTheme.screenMargin,
-                  right: AppTheme.screenMargin,
-                  bottom: 24,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   child: FloatingBottomNav(current: AppTab.seating),
                 ),
                 const Positioned.fill(child: DraggableChatBubble()),
@@ -525,7 +527,7 @@ class _GuestPickRow extends StatelessWidget {
         border: Border.all(
           color: selected
               ? AppStatusColors.confirmed
-              : const Color(0xFFE3E4E7),
+              : AppTheme.borderMuted,
         ),
       ),
       child: Row(

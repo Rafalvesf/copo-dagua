@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
 class SupportScreen extends ConsumerStatefulWidget {
@@ -60,7 +61,8 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
     final profile = ref.watch(authControllerProvider).profile;
     final firstName = profile?.fullName.split(' ').first ?? '';
 
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.subtle,
       body: Stack(
         children: [
           SafeArea(

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/models/models.dart';
 import '../../../shared/widgets/cards.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
@@ -16,7 +17,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GradientScaffold(
+      background: AppBackground.hero,
       appBar: AppBar(),
       body: Padding(
         padding: const EdgeInsets.all(24),
