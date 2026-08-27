@@ -5,73 +5,74 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/wedding/wedding_nav_icon.dart';
 
-enum AppTab { home, wedding, guests, checklist, partners, budget, seating }
+enum AppTab {
+  home,
+  wedding,
+  guests,
+  checklist,
+  partners,
+  budget,
+  seating,
+  chat,
+  mascot,
+}
 
-/// Doca branca encostada ao fundo do ecrã (cantos arredondados só em
-/// cima, sem margem lateral nem espaço por baixo) — o boneco do casal
-/// é um botão circular que sai ligeiramente por cima do canto direito
-/// da doca, como destaque.
+/// Pílula branca flutuante, destacada do fundo por todos os lados —
+/// 4 separadores (Home, Parceiros, Chat, boneco do casal), o ativo
+/// ganha um círculo preenchido a `AppTheme.ink`. O boneco do casal é
+/// sempre uma foto/ilustração circular (nunca um ícone Material), com
+/// um anel lavanda que engrossa quando este é o separador ativo.
 class FloatingBottomNav extends ConsumerWidget {
   final AppTab current;
 
   const FloatingBottomNav({super.key, required this.current});
 
-  static const _accentSize = 60.0;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final weddingIcon = ref.watch(weddingNavIconProvider);
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        DecoratedBox(
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+        child: DecoratedBox(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(32),
-              topRight: Radius.circular(32),
-            ),
-            boxShadow: AppTheme.cardShadow,
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: AppTheme.cardShadowStrong,
           ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                20,
-                14,
-                20 + _accentSize + 8,
-                14,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _NavIcon(
-                    icon: Icons.home_rounded,
-                    active: current == AppTab.home,
-                    onTap: () => context.go('/home'),
-                  ),
-                  _NavIcon(
-                    icon: Icons.storefront_rounded,
-                    active: current == AppTab.partners,
-                    onTap: () => context.go('/partners'),
-                  ),
-                ],
-              ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _NavIcon(
+                  icon: Icons.home_rounded,
+                  active: current == AppTab.home,
+                  onTap: () => context.go('/home'),
+                ),
+                _NavIcon(
+                  icon: Icons.storefront_rounded,
+                  active: current == AppTab.partners,
+                  onTap: () => context.go('/partners'),
+                ),
+                _NavIcon(
+                  icon: Icons.forum_rounded,
+                  active: current == AppTab.chat,
+                  onTap: () => context.go('/chat'),
+                ),
+                _SquishyWeddingIcon(
+                  assetPath: weddingIcon.assetPath,
+                  zoom: weddingIcon.zoom,
+                  active: current == AppTab.mascot,
+                  onTap: () => context.go('/mascot'),
+                ),
+              ],
             ),
           ),
         ),
-        Positioned(
-          top: -_accentSize * 0.3,
-          right: 16,
-          child: _SquishyWeddingIcon(
-            assetPath: weddingIcon.assetPath,
-            size: _accentSize,
-            zoom: weddingIcon.zoom,
-            onTap: () => context.go('/wedding'),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -80,14 +81,14 @@ class FloatingBottomNav extends ConsumerWidget {
 /// (squash/stretch) e volta com um pequeno ressalto elástico.
 class _SquishyWeddingIcon extends StatefulWidget {
   final String assetPath;
-  final double size;
   final double zoom;
+  final bool active;
   final VoidCallback onTap;
 
   const _SquishyWeddingIcon({
     required this.assetPath,
-    required this.size,
     this.zoom = 1,
+    required this.active,
     required this.onTap,
   });
 
@@ -97,6 +98,8 @@ class _SquishyWeddingIcon extends StatefulWidget {
 
 class _SquishyWeddingIconState extends State<_SquishyWeddingIcon>
     with SingleTickerProviderStateMixin {
+  static const _size = 44.0;
+
   late final _controller = AnimationController(vsync: this, value: 0);
 
   void _squish() {
@@ -141,22 +144,19 @@ class _SquishyWeddingIconState extends State<_SquishyWeddingIcon>
             child: child,
           );
         },
-        child: Container(
-          width: widget.size,
-          height: widget.size,
-          padding: const EdgeInsets.all(3),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: _size,
+          height: _size,
+          padding: EdgeInsets.all(widget.active ? 1.5 : 2.5),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white,
-            boxShadow: AppTheme.cardShadowStrong,
+            color: widget.active ? AppTheme.ink : AppTheme.accentLavender,
           ),
           child: ClipOval(
             child: Transform.scale(
               scale: widget.zoom,
-              child: Image.asset(
-                widget.assetPath,
-                fit: BoxFit.cover,
-              ),
+              child: Image.asset(widget.assetPath, fit: BoxFit.cover),
             ),
           ),
         ),
@@ -183,16 +183,16 @@ class _NavIcon extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(999),
       onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.all(13),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
-          color: active ? AppTheme.accentLavender : Colors.transparent,
+          color: active ? AppTheme.ink : Colors.transparent,
           shape: BoxShape.circle,
         ),
         child: Icon(
           icon,
-          color: active ? Colors.white : AppTheme.ink,
+          color: active ? Colors.white : AppTheme.inkMuted,
           size: size,
         ),
       ),

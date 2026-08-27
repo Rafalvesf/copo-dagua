@@ -49,6 +49,10 @@ Fundo em gradiente é a principal assinatura visual do redesign. Aplica-se sempr
 - Elementos organizados verticalmente, alinhados à mesma margem.
 - `AppBarTheme` é transparente por omissão — deixa o gradiente do `GradientScaffold` mostrar-se através de qualquer `AppBar` sem precisar de configuração por ecrã.
 
+### Separadores principais
+
+A app tem 4 separadores de topo, sempre acessíveis através do `FloatingBottomNav`: **Home** (`/home`), **Parceiros** (`/partners`), **Chat** (`/chat`) e o boneco/mascote (`/mascot`, ecrã `MascotHubScreen`). O ecrã `/wedding` (`WeddingDetailsScreen`, com o formulário de edição e o seletor de boneco) deixou de estar diretamente na navbar — é alcançado a partir do ícone de editar na capa do Home ou do atalho "Ver agenda do casamento" no hub do boneco.
+
 ## Componentes
 
 - **Cards**: fundo branco (contraste sobre o gradiente/fundo creme), `border-radius` 18–24px, sombra sempre a mesma dupla: `AppTheme.cardShadow` (normal) / `AppTheme.cardShadowStrong` (hover/destaque) — difusa, tingida com `AppTheme.accentDeep` a baixa opacidade, nunca cinzenta/dura.
@@ -58,7 +62,7 @@ Fundo em gradiente é a principal assinatura visual do redesign. Aplica-se sempr
 - **Avatares**: circulares.
 - **Botão primário**: pílula escura (`AppTheme.ink`) — `PrimaryButton` para ações simples, `ArrowCtaButton` quando o padrão pede a seta circular branca embutida no canto.
 - **Marca/logo** (`GradientMark`): círculo com gradiente lavanda (`accentLavender` → `accentDeep`), nunca preenchimento sólido.
-- **Bottom nav** (`FloatingBottomNav`): pílula branca flutuante com sombra suave, ícones em `AppTheme.ink`; o item ativo ganha um círculo preenchido a `accentLavender` com ícone branco. O "boneco" do casal fica encostado ao lado direito da pílula, ligeiramente sobreposto por cima dela.
+- **Bottom nav** (`FloatingBottomNav`): pílula branca flutuante, destacada do fundo em todos os lados (margem `AppTheme.screenMargin`), com 4 separadores lado a lado — Home, Parceiros, Chat e o boneco do casal. O separador ativo ganha um círculo preenchido a `AppTheme.ink` com ícone branco (não `accentLavender` — reservado ao anel do boneco). O boneco do casal é sempre uma foto/ilustração circular (nunca um ícone Material) com um anel `accentLavender`; o anel passa a `AppTheme.ink` quando este é o separador ativo.
 - **Botões circulares de ícone** (`CircleIconButton`): fundo branco, sombra igual à dos cards, feedback de toque via `SnappyTap` (encolhe ligeiramente e volta com leve ressalto).
 - **Ícones**: `Icons` do Material, sempre em variante `_outlined` quando disponível — finos, nunca preenchidos a não ser para indicar estado ativo.
 

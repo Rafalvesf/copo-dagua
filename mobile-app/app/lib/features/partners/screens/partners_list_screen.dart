@@ -119,6 +119,25 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                     AppTheme.screenMargin,
                     0,
                   ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Parceiros', style: Theme.of(context).textTheme.headlineSmall),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Pessoas especiais que tornam tudo isto possível.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.screenMargin,
+                    16,
+                    AppTheme.screenMargin,
+                    0,
+                  ),
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(999),
@@ -533,7 +552,7 @@ class _CategoryIconTile extends StatelessWidget {
           width: selected ? 64 : 40,
           height: selected ? 64 : 40,
           decoration: BoxDecoration(
-            color: selected ? AppColors.greenDark : Colors.white,
+            color: selected ? AppTheme.accentLavender : Colors.white,
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -767,8 +786,6 @@ class _PartnerCardState extends State<_PartnerCard> {
   @override
   Widget build(BuildContext context) {
     final partner = widget.partner;
-    final features = featureTagsFor(partner.category);
-    final responseMinutes = responseMinutesFor(partner);
 
     return SnappyTap.builder(
       onTap: widget.onTap,
@@ -797,9 +814,31 @@ class _PartnerCardState extends State<_PartnerCard> {
                     errorBuilder: (context, error, stackTrace) =>
                         const SizedBox.shrink(),
                   ),
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.92),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        partner.category.label,
+                        style: const TextStyle(
+                          color: AppTheme.ink,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
                   if (widget.mostPopular)
                     Positioned(
-                      top: 12,
+                      top: 46,
                       left: 12,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -838,6 +877,21 @@ class _PartnerCardState extends State<_PartnerCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  partner.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  partner.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5, height: 1.4),
+                ),
+                const SizedBox(height: 10),
                 Row(
                   children: [
                     const Icon(
@@ -859,136 +913,26 @@ class _PartnerCardState extends State<_PartnerCard> {
                       style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
                     ),
                     const Spacer(),
-                    Text(
-                      'Resposta em $responseMinutes min',
-                      style: TextStyle(
-                        color: AppTheme.inkMuted,
-                        fontSize: 11.5,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  partner.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${partner.category.label} · ${partner.city}',
-                  style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Desde €${partner.startingPrice.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
-                  ),
-                ),
-                if (features.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      for (final feature in features)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: AppTheme.borderMuted),
-                          ),
-                          child: Text(
-                            feature,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppStatusColors.confirmed.withValues(
-                            alpha: 0.12,
-                          ),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.check_circle,
-                              size: 14,
-                              color: AppStatusColors.confirmed,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                'Disponível na tua data',
-                                style: const TextStyle(
-                                  color: AppStatusColors.confirmed,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    SnappyTap.builder(
+                    SnappyTap(
                       onTap: widget.onTap,
-                      builder: (context, hovered) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.ink,
-                          borderRadius: BorderRadius.circular(999),
-                          boxShadow: hovered
-                              ? AppTheme.cardShadowStrong
-                              : AppTheme.cardShadow,
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Ver perfil',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12.5,
-                              ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Ver detalhes',
+                            style: TextStyle(
+                              color: AppTheme.accentDeep,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12.5,
                             ),
-                            SizedBox(width: 4),
-                            Icon(
-                              Icons.arrow_forward,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 3),
+                          const Icon(
+                            Icons.arrow_forward,
+                            size: 14,
+                            color: AppTheme.accentDeep,
+                          ),
+                        ],
                       ),
                     ),
                   ],

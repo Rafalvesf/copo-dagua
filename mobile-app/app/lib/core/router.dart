@@ -9,11 +9,13 @@ import '../features/auth/screens/role_selection_screen.dart';
 import '../features/auth/screens/verify_email_screen.dart';
 import '../features/auth/screens/welcome_screen.dart';
 import '../features/budget/screens/budget_screen.dart';
+import '../features/chat/screens/chat_list_screen.dart';
 import '../features/checklist/screens/checklist_screen.dart';
 import '../features/guests/screens/guest_detail_screen.dart';
 import '../features/guests/screens/guests_list_screen.dart';
 import '../features/home/screens/home_feed_screen.dart';
 import '../features/invite/screens/invite_page_screen.dart';
+import '../features/mascot/screens/mascot_hub_screen.dart';
 import '../features/onboarding/screens/onboarding_wizard_screen.dart';
 import '../features/partner_home/screens/partner_chat_screen.dart';
 import '../features/partner_home/screens/partner_home_screen.dart';
@@ -166,6 +168,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/support',
         builder: (context, state) => const SupportScreen(),
+      ),
+      GoRoute(
+        path: '/chat',
+        builder: (context, state) => const ChatListScreen(),
+      ),
+      GoRoute(
+        path: '/mascot',
+        builder: (context, state) => const MascotHubScreen(),
       ),
       GoRoute(
         path: '/invite/:slug',
