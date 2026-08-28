@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 enum WeddingNavIcon {
   bears('Ursinhos', 'assets/images/nav_icon_bears.png', 1),
   penguins('Pinguins', 'assets/images/nav_icon_penguins.png', 1),
-  frogs('Sapos', 'assets/images/nav_icon_frogs.png', 1),
+  koalas('Coalas', 'assets/images/nav_icon_koalas.png', 1),
   capybaras('Capivaras', 'assets/images/nav_icon_capybaras.png', 1);
 
   final String label;
