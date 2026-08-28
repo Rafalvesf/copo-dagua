@@ -29,6 +29,7 @@ class GuestDetailScreen extends ConsumerWidget {
 
     return GradientScaffold(
       background: AppBackground.subtle,
+      extendBodyBehindAppBar: false,
       appBar: AppBar(
         title: Text(guest.name),
         leading: const CircleBackButton(),

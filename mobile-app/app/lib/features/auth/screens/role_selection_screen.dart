@@ -19,6 +19,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   Widget build(BuildContext context) {
     return GradientScaffold(
       background: AppBackground.hero,
+      extendBodyBehindAppBar: false,
       appBar: AppBar(),
       body: Padding(
         padding: const EdgeInsets.all(24),

@@ -70,6 +70,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     if (profile.role == UserRole.partner) {
       return GradientScaffold(
         background: AppBackground.hero,
+        extendBodyBehindAppBar: false,
         appBar: AppBar(
           actions: [
             TextButton(
@@ -175,6 +176,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
 
     return GradientScaffold(
       background: AppBackground.hero,
+      extendBodyBehindAppBar: false,
       appBar: AppBar(
         leading: _step == 0
             ? null

@@ -89,6 +89,7 @@ class _PartnerChatScreenState extends ConsumerState<PartnerChatScreen> {
 
     return GradientScaffold(
       background: AppBackground.subtle,
+      extendBodyBehindAppBar: false,
       appBar: AppBar(
         title: const Text('Ana & Miguel'),
       ),

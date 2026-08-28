@@ -41,6 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return GradientScaffold(
       background: AppBackground.subtle,
+      extendBodyBehindAppBar: false,
       appBar: AppBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

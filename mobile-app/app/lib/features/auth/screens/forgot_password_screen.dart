@@ -28,6 +28,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return GradientScaffold(
       background: AppBackground.subtle,
+      extendBodyBehindAppBar: false,
       appBar: AppBar(),
       body: Padding(
         padding: const EdgeInsets.all(24),
