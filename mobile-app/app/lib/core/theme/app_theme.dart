@@ -10,7 +10,7 @@ class AppTheme {
   static const seedColor = accentOliveDark;
 
   static const background = Color(0xFFF8F3EA);
-  static const ink = Color(0xFF241F16);
+  static const ink = Color(0xFF000000);
   static const inkMuted = Color(0xFF8A8175);
 
   /// Acento principal da marca — verde-oliva médio. Usado em estados
