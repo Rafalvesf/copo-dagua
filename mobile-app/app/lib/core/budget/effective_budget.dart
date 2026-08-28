@@ -19,6 +19,8 @@ class EffectiveBudgetCategory {
       chosenPartners.fold(0, (sum, s) => sum + s.startingPrice);
 
   double get amount => base.amount + chosenTotal;
+
+  double get allocated => base.allocated;
 }
 
 class EffectiveBudget {

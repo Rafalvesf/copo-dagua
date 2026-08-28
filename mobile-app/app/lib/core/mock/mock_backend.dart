@@ -32,6 +32,8 @@ class MockBackend {
   final List<Budget> budgets = [];
   final List<SeatingTable> seatingTables = [];
   final List<ChatMessage> chatMessages = [];
+  final List<Expense> expenses = [];
+  final List<ChatConversation> chatConversations = [];
 
   static const Duration _latency = Duration(milliseconds: 400);
 
@@ -208,6 +210,7 @@ class MockBackend {
         id: 'table-2',
         weddingId: 'demo-wedding',
         guestIds: ['g9', 'g10'],
+        rectangular: true,
       ),
     ]);
 
@@ -318,30 +321,35 @@ class MockBackend {
           BudgetCategory(
             name: 'Quinta',
             amount: 6000,
+            allocated: 8500,
             partnerCategory: PartnerCategory.venue,
           ),
           BudgetCategory(
             name: 'Fotografia',
             amount: 1000,
+            allocated: 1250,
             partnerCategory: PartnerCategory.photography,
           ),
           BudgetCategory(
             name: 'Catering',
             amount: 2800,
+            allocated: 4500,
             partnerCategory: PartnerCategory.catering,
           ),
           BudgetCategory(
             name: 'Decoração',
             amount: 1500,
+            allocated: 2730,
             partnerCategory: PartnerCategory.decoration,
           ),
           BudgetCategory(
             name: 'Música',
             amount: 1000,
+            allocated: 1000,
             partnerCategory: PartnerCategory.music,
           ),
-          BudgetCategory(name: 'Vestido e fato', amount: 800),
-          BudgetCategory(name: 'Outros', amount: 1200),
+          BudgetCategory(name: 'Vestido e fato', amount: 800, allocated: 1100),
+          BudgetCategory(name: 'Outros', amount: 1200, allocated: 1500),
         ],
       ),
     );
@@ -378,6 +386,8 @@ class MockBackend {
         category: 'Parceiros',
         dueDate: now.add(const Duration(days: 30)),
         partnerCategory: PartnerCategory.catering,
+        progressPercent: 50,
+        assigneeSeeds: const ['ana', 'miguel'],
       ),
       ChecklistItem(
         id: 'cl5',
@@ -386,6 +396,7 @@ class MockBackend {
         category: 'Parceiros',
         dueDate: now.add(const Duration(days: 45)),
         partnerCategory: PartnerCategory.music,
+        assigneeSeeds: const ['ana'],
       ),
       ChecklistItem(
         id: 'cl11',
@@ -394,6 +405,8 @@ class MockBackend {
         category: 'Parceiros',
         dueDate: now.add(const Duration(days: 100)),
         partnerCategory: PartnerCategory.decoration,
+        progressPercent: 30,
+        assigneeSeeds: const ['ana', 'miguel'],
       ),
       ChecklistItem(
         id: 'cl6',
@@ -401,6 +414,7 @@ class MockBackend {
         title: 'Enviar convites digitais',
         category: 'Convidados',
         dueDate: now.add(const Duration(days: 60)),
+        assigneeSeeds: const ['ana', 'miguel'],
       ),
       ChecklistItem(
         id: 'cl7',
@@ -415,6 +429,7 @@ class MockBackend {
         title: 'Comprar o vestido/fato',
         category: 'Vestuário',
         dueDate: now.add(const Duration(days: 120)),
+        assigneeSeeds: const ['ana'],
       ),
       ChecklistItem(
         id: 'cl9',
@@ -432,6 +447,108 @@ class MockBackend {
       ),
     ]);
 
+    expenses.addAll([
+      Expense(
+        id: 'exp1',
+        weddingId: wedding.id,
+        title: 'Sinal da quinta',
+        category: PartnerCategory.venue,
+        amount: 2000,
+        dueDate: now.add(const Duration(days: 16)),
+      ),
+      Expense(
+        id: 'exp2',
+        weddingId: wedding.id,
+        title: 'Última prestação fotografia',
+        category: PartnerCategory.photography,
+        amount: 800,
+        dueDate: now.add(const Duration(days: 42)),
+      ),
+      Expense(
+        id: 'exp3',
+        weddingId: wedding.id,
+        title: 'DJ / Banda',
+        category: PartnerCategory.music,
+        amount: 1000,
+        dueDate: now.add(const Duration(days: 67)),
+      ),
+      Expense(
+        id: 'exp4',
+        weddingId: wedding.id,
+        title: 'Reserva da quinta',
+        category: PartnerCategory.venue,
+        amount: 4200,
+        dueDate: now.subtract(const Duration(days: 30)),
+        paid: true,
+      ),
+      Expense(
+        id: 'exp5',
+        weddingId: wedding.id,
+        title: 'Sinal fotografia',
+        category: PartnerCategory.photography,
+        amount: 400,
+        dueDate: now.subtract(const Duration(days: 45)),
+        paid: true,
+      ),
+      Expense(
+        id: 'exp6',
+        weddingId: wedding.id,
+        title: 'Prova de menu',
+        category: PartnerCategory.catering,
+        amount: 180,
+        dueDate: now.subtract(const Duration(days: 12)),
+        paid: true,
+      ),
+      Expense(
+        id: 'exp7',
+        weddingId: wedding.id,
+        title: 'Sinal catering',
+        category: PartnerCategory.catering,
+        amount: 1400,
+        dueDate: now.add(const Duration(days: 20)),
+      ),
+      Expense(
+        id: 'exp8',
+        weddingId: wedding.id,
+        title: 'Flores da cerimónia',
+        category: PartnerCategory.decoration,
+        amount: 500,
+        dueDate: now.subtract(const Duration(days: 5)),
+        paid: true,
+      ),
+      Expense(
+        id: 'exp9',
+        weddingId: wedding.id,
+        title: 'Centros de mesa',
+        category: PartnerCategory.decoration,
+        amount: 300,
+        dueDate: now.subtract(const Duration(days: 3)),
+        paid: true,
+      ),
+      Expense(
+        id: 'exp10',
+        weddingId: wedding.id,
+        title: 'Vestido de noiva',
+        amount: 800,
+        dueDate: now.subtract(const Duration(days: 60)),
+        paid: true,
+      ),
+      Expense(
+        id: 'exp11',
+        weddingId: wedding.id,
+        title: 'Convites impressos',
+        amount: 220,
+        dueDate: now.add(const Duration(days: 8)),
+      ),
+      Expense(
+        id: 'exp12',
+        weddingId: wedding.id,
+        title: 'Alianças',
+        amount: 980,
+        dueDate: now.add(const Duration(days: 90)),
+      ),
+    ]);
+
     chatMessages.addAll([
       ChatMessage(
         id: 'msg1',
@@ -446,6 +563,97 @@ class MockBackend {
         fromPartner: true,
         text: 'Que bom, Ana! Fico já a preparar o contrato para vos enviar aqui.',
         sentAt: now.subtract(const Duration(days: 2, hours: 2)),
+      ),
+      // Conversas com o cortejo (madrinha/padrinho) — não têm parceiro no
+      // backend mock, por isso reutilizam o mesmo `chatMessages`/`partnerId`
+      // como chave arbitrária da conversa (ver `listMessages`).
+      ChatMessage(
+        id: 'msg-party1',
+        partnerId: 'party-marta',
+        fromPartner: true,
+        text: 'Já comprei o vestido! 💚',
+        sentAt: now.subtract(const Duration(days: 1, hours: 5)),
+      ),
+      ChatMessage(
+        id: 'msg-party2',
+        partnerId: 'party-tiago',
+        fromPartner: true,
+        text: 'Entendido. Até já',
+        sentAt: now.subtract(const Duration(days: 1, hours: 2)),
+      ),
+      // Conversas com parceiros já contratados/contactados fora do fio
+      // único do `demoPartner` — seed mínimo para as threads do Chat
+      // não abrirem vazias.
+      ChatMessage(
+        id: 'msg-photo1',
+        partnerId: 'sup-photo-1',
+        fromPartner: false,
+        text: 'Olá! Vimos o vosso portefólio e adorámos, queríamos avançar.',
+        sentAt: now.subtract(const Duration(hours: 5)),
+      ),
+      ChatMessage(
+        id: 'msg-photo2',
+        partnerId: 'sup-photo-1',
+        fromPartner: true,
+        text: 'Perfeito! Obrigado 🙏',
+        sentAt: now.subtract(const Duration(hours: 3)),
+      ),
+      ChatMessage(
+        id: 'msg-decor1',
+        partnerId: 'sup-decor-1',
+        fromPartner: true,
+        text: 'Enviei algumas ideias de decoração ✨',
+        sentAt: now.subtract(const Duration(days: 1)),
+      ),
+      ChatMessage(
+        id: 'msg-music1',
+        partnerId: 'sup-music-1',
+        fromPartner: true,
+        text: 'Vamos confirmar a lista de músicas!',
+        sentAt: now.subtract(const Duration(days: 3)),
+      ),
+    ]);
+
+    chatConversations.addAll([
+      ChatConversation(
+        id: 'sup-photo-1',
+        name: 'Instantes Photography',
+        avatarSeed: 'sup-photo-1',
+        partnerId: 'sup-photo-1',
+        lastMessage: 'Perfeito! Obrigado 🙏',
+        lastMessageAt: now.subtract(const Duration(hours: 3)),
+        unreadCount: 1,
+      ),
+      ChatConversation(
+        id: 'sup-decor-1',
+        name: 'Flores & Cia',
+        avatarSeed: 'sup-decor-1',
+        partnerId: 'sup-decor-1',
+        lastMessage: 'Enviei algumas ideias de decoração ✨',
+        lastMessageAt: now.subtract(const Duration(days: 1)),
+      ),
+      ChatConversation(
+        id: 'party-marta',
+        name: 'Marta (Madrinha)',
+        avatarSeed: 'marta-madrinha',
+        lastMessage: 'Já comprei o vestido! 💚',
+        lastMessageAt: now.subtract(const Duration(days: 1, hours: 5)),
+        unreadCount: 2,
+      ),
+      ChatConversation(
+        id: 'party-tiago',
+        name: 'Tiago (Padrinho)',
+        avatarSeed: 'tiago-padrinho',
+        lastMessage: 'Entendido. Até já',
+        lastMessageAt: now.subtract(const Duration(days: 1, hours: 2)),
+      ),
+      ChatConversation(
+        id: 'sup-music-1',
+        name: 'DJ Nuno Beats',
+        avatarSeed: 'sup-music-1',
+        partnerId: 'sup-music-1',
+        lastMessage: 'Vamos confirmar a lista de músicas!',
+        lastMessageAt: now.subtract(const Duration(days: 3)),
       ),
     ]);
   }
@@ -652,6 +860,8 @@ class MockBackend {
       dueDate: item.dueDate,
       partnerCategory: item.partnerCategory,
       selectedPartnerId: item.selectedPartnerId,
+      progressPercent: item.progressPercent,
+      assigneeSeeds: item.assigneeSeeds,
     );
     checklistItems.add(withId);
     return withId;
@@ -751,6 +961,40 @@ class MockBackend {
     );
     chatMessages.add(message);
     return message;
+  }
+
+  Future<List<Expense>> listExpenses(String weddingId) async {
+    await Future.delayed(_latency ~/ 2);
+    return expenses.where((e) => e.weddingId == weddingId).toList();
+  }
+
+  Future<Expense> addExpense(Expense expense) async {
+    await Future.delayed(_latency);
+    final withId = Expense(
+      id: _nextId('expense'),
+      weddingId: expense.weddingId,
+      title: expense.title,
+      category: expense.category,
+      amount: expense.amount,
+      dueDate: expense.dueDate,
+      paid: expense.paid,
+    );
+    expenses.add(withId);
+    return withId;
+  }
+
+  Future<Expense> updateExpense(Expense expense) async {
+    await Future.delayed(_latency ~/ 2);
+    final index = expenses.indexWhere((e) => e.id == expense.id);
+    if (index != -1) expenses[index] = expense;
+    return expense;
+  }
+
+  Future<List<ChatConversation>> listChatConversations() async {
+    await Future.delayed(_latency ~/ 2);
+    final list = List<ChatConversation>.from(chatConversations)
+      ..sort((a, b) => b.lastMessageAt.compareTo(a.lastMessageAt));
+    return list;
   }
 }
 

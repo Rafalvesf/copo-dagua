@@ -83,6 +83,11 @@ class Wedding {
   final double? estimatedBudget;
   final WeddingStatus status;
 
+  /// Frase de destaque mostrada no ecrã "Os noivos" — editável nas
+  /// Definições, com um valor de exemplo por defeito quando ainda não
+  /// foi personalizada.
+  final String? quote;
+
   const Wedding({
     required this.id,
     required this.ownerId,
@@ -97,7 +102,18 @@ class Wedding {
     this.estimatedGuests,
     this.estimatedBudget,
     this.status = WeddingStatus.planning,
+    this.quote,
   });
+
+  String get displayQuote =>
+      (quote == null || quote!.isEmpty)
+      ? 'O amor não se vê com os olhos, mas com a alma.'
+      : quote!;
+
+  /// Domínio fictício do site do casamento, derivado do slug já
+  /// existente (sem traços) — não precisa de campo próprio.
+  String get websiteDomain =>
+      '${inviteSlug.replaceAll('-', '')}.casamento.pt';
 
   String get displayNames => partnerName2 == null || partnerName2!.isEmpty
       ? partnerName1
@@ -128,6 +144,7 @@ class Wedding {
     int? estimatedGuests,
     double? estimatedBudget,
     WeddingStatus? status,
+    String? quote,
   }) {
     return Wedding(
       id: id,
@@ -147,6 +164,7 @@ class Wedding {
       estimatedGuests: estimatedGuests ?? this.estimatedGuests,
       estimatedBudget: estimatedBudget ?? this.estimatedBudget,
       status: status ?? this.status,
+      quote: quote ?? this.quote,
     );
   }
 }
@@ -223,6 +241,8 @@ class Guest {
   }
 }
 
+enum ChecklistStatus { todo, inProgress, done }
+
 class ChecklistItem {
   final String id;
   final String weddingId;
@@ -233,6 +253,16 @@ class ChecklistItem {
   final PartnerCategory? partnerCategory;
   final String? selectedPartnerId;
 
+  /// Progresso (1-99) de uma tarefa "em curso" — só tem efeito quando
+  /// [done] é false; ver [status]. `null`/0 e não concluída conta como
+  /// "por fazer".
+  final int? progressPercent;
+
+  /// Seeds para os avatares (`https://i.pravatar.cc/150?u=<seed>`) dos
+  /// responsáveis pela tarefa, mostrados em "Próximas tarefas" e em
+  /// Tarefas — dados ilustrativos, sem modelo de colaborador próprio.
+  final List<String> assigneeSeeds;
+
   const ChecklistItem({
     required this.id,
     required this.weddingId,
@@ -242,7 +272,16 @@ class ChecklistItem {
     this.dueDate,
     this.partnerCategory,
     this.selectedPartnerId,
+    this.progressPercent,
+    this.assigneeSeeds = const [],
   });
+
+  ChecklistStatus get status {
+    if (done) return ChecklistStatus.done;
+    final p = progressPercent;
+    if (p != null && p > 0 && p < 100) return ChecklistStatus.inProgress;
+    return ChecklistStatus.todo;
+  }
 
   ChecklistItem copyWith({
     String? title,
@@ -250,6 +289,8 @@ class ChecklistItem {
     bool? done,
     DateTime? dueDate,
     Object? selectedPartnerId = _unset,
+    Object? progressPercent = _unset,
+    List<String>? assigneeSeeds,
   }) {
     return ChecklistItem(
       id: id,
@@ -262,6 +303,10 @@ class ChecklistItem {
       selectedPartnerId: identical(selectedPartnerId, _unset)
           ? this.selectedPartnerId
           : selectedPartnerId as String?,
+      progressPercent: identical(progressPercent, _unset)
+          ? this.progressPercent
+          : progressPercent as int?,
+      assigneeSeeds: assigneeSeeds ?? this.assigneeSeeds,
     );
   }
 }
@@ -315,6 +360,32 @@ class ChatMessage {
   bool get isContract => contractTitle != null;
 }
 
+/// Linha do separador Chat — uma conversa com um parceiro contratado
+/// ou com alguém do cortejo (madrinha/padrinho). Quando [partnerId] não
+/// é nulo, a conversa reaproveita o [ChatMessage]/`chatControllerProvider`
+/// já existente para o chat com parceiros; quando é nulo, é uma
+/// conversa com o cortejo, sem contraparte no backend mock — a thread
+/// usa uma lista de mensagens local, gerada em [MockBackend].
+class ChatConversation {
+  final String id;
+  final String name;
+  final String avatarSeed;
+  final String? partnerId;
+  final String lastMessage;
+  final DateTime lastMessageAt;
+  final int unreadCount;
+
+  const ChatConversation({
+    required this.id,
+    required this.name,
+    required this.avatarSeed,
+    this.partnerId,
+    required this.lastMessage,
+    required this.lastMessageAt,
+    this.unreadCount = 0,
+  });
+}
+
 /// Mesa da disposição de lugares. A posição da mesa na sequência não é
 /// guardada explicitamente — é o índice desta mesa na lista ordenada de
 /// mesas de um casamento (ver [MockBackend.listSeatingTables]), o que
@@ -325,10 +396,15 @@ class SeatingTable {
   final String weddingId;
   final List<String> guestIds;
 
+  /// Forma da mesa na planta (Lugares) — retangular ou redonda
+  /// (default). Só visual, não afeta a lógica de preenchimento.
+  final bool rectangular;
+
   const SeatingTable({
     required this.id,
     required this.weddingId,
     this.guestIds = const [],
+    this.rectangular = false,
   });
 
   SeatingTable copyWith({List<String>? guestIds}) {
@@ -336,6 +412,7 @@ class SeatingTable {
       id: id,
       weddingId: weddingId,
       guestIds: guestIds ?? this.guestIds,
+      rectangular: rectangular,
     );
   }
 }
@@ -350,11 +427,53 @@ class BudgetCategory {
   /// "Outros").
   final PartnerCategory? partnerCategory;
 
+  /// Verba atribuída a esta categoria — distinto de [amount] (o já
+  /// gasto). Usado para a barra de progresso e o selo "Dentro do
+  /// orçamento" / "Atenção" em Orçamento.
+  final double allocated;
+
   const BudgetCategory({
     required this.name,
     required this.amount,
     this.partnerCategory,
+    this.allocated = 0,
   });
+}
+
+/// Estado de pagamento de uma despesa individual — distinto do
+/// agregado por categoria em [BudgetCategory], que só guarda o total já
+/// gasto. Alimenta os separadores Todas/Pagas/Pendentes e a secção
+/// "Pagamentos próximos" em Orçamento.
+class Expense {
+  final String id;
+  final String weddingId;
+  final String title;
+  final PartnerCategory? category;
+  final double amount;
+  final DateTime? dueDate;
+  final bool paid;
+
+  const Expense({
+    required this.id,
+    required this.weddingId,
+    required this.title,
+    this.category,
+    required this.amount,
+    this.dueDate,
+    this.paid = false,
+  });
+
+  Expense copyWith({bool? paid}) {
+    return Expense(
+      id: id,
+      weddingId: weddingId,
+      title: title,
+      category: category,
+      amount: amount,
+      dueDate: dueDate,
+      paid: paid ?? this.paid,
+    );
+  }
 }
 
 class Budget {

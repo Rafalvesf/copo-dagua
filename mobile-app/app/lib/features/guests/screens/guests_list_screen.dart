@@ -106,14 +106,28 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(
                           AppTheme.screenMargin,
-                          20,
+                          40,
                           AppTheme.screenMargin,
                           0,
                         ),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const CircleBackButton(),
-                            const Spacer(),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Convidados',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: false,
+                                style: AppTypography.displaySerif(
+                                  fontSize: 34,
+                                  color: AppTheme.ink,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
                             if (wedding != null) ...[
                               CircleIconButton(
                                 icon: Icons.ios_share,
@@ -274,7 +288,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.guests),
+                  child: FloatingBottomNav(current: AppTab.wedding),
                 ),
                 const Positioned.fill(child: DraggableChatBubble()),
               ],
@@ -316,10 +330,7 @@ class _StatTile extends StatelessWidget {
     return SnappyTap(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(
-          vertical: big ? 13 : 12,
-          horizontal: 8,
-        ),
+        padding: EdgeInsets.symmetric(vertical: big ? 13 : 12, horizontal: 8),
         decoration: BoxDecoration(
           color: background ?? Colors.white,
           borderRadius: BorderRadius.circular(18),

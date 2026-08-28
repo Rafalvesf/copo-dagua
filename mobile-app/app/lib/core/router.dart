@@ -9,6 +9,8 @@ import '../features/auth/screens/role_selection_screen.dart';
 import '../features/auth/screens/verify_email_screen.dart';
 import '../features/auth/screens/welcome_screen.dart';
 import '../features/budget/screens/budget_screen.dart';
+import '../features/chat/screens/chat_list_screen.dart';
+import '../features/chat/screens/chat_thread_screen.dart';
 import '../features/checklist/screens/checklist_screen.dart';
 import '../features/guests/screens/guest_detail_screen.dart';
 import '../features/guests/screens/guests_list_screen.dart';
@@ -19,6 +21,7 @@ import '../features/partner_home/screens/partner_chat_screen.dart';
 import '../features/partner_home/screens/partner_home_screen.dart';
 import '../features/seating/screens/seating_screen.dart';
 import '../features/partners/screens/partners_list_screen.dart';
+import '../features/settings/screens/settings_screen.dart';
 import '../features/support/screens/support_screen.dart';
 import '../features/wedding/screens/wedding_details_screen.dart';
 import 'auth/auth_controller.dart';
@@ -162,6 +165,19 @@ final routerProvider = Provider<GoRouter>((ref) {
             selectionMode: args?.selectionMode ?? false,
           );
         },
+      ),
+      GoRoute(
+        path: '/chat',
+        builder: (context, state) => const ChatListScreen(),
+      ),
+      GoRoute(
+        path: '/chat/:conversationId',
+        builder: (context, state) =>
+            ChatThreadScreen(conversation: state.extra as ChatConversation),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/support',

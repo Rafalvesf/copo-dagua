@@ -17,7 +17,7 @@ class GradientMark extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppTheme.accentLavender, AppTheme.accentDeep],
+          colors: [AppTheme.accentOlive, AppTheme.accentOliveDark],
         ),
         shape: BoxShape.circle,
       ),

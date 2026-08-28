@@ -230,7 +230,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.accentDeep.withValues(alpha: 0.12),
+                      color: AppTheme.accentOliveDark.withValues(alpha: 0.12),
                       blurRadius: 24,
                       offset: const Offset(0, -6),
                     ),

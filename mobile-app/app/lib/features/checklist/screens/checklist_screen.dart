@@ -3,22 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/checklist/checklist_controller.dart';
-import '../../../core/mock/mock_backend.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/category_tag_color.dart';
+import '../../../shared/widgets/assignee_cluster.dart';
 import '../../../shared/widgets/buttons.dart';
-import '../../../shared/widgets/cover_flow_picker.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 
-enum _ChecklistTab { phases, myPlan }
+enum _StatusFilter { all, todo, inProgress, done }
 
-enum _StatusFilter { all, late, thisWeek, done }
+const _groupTitles = {
+  ChecklistStatus.todo: 'Por fazer',
+  ChecklistStatus.inProgress: 'Em curso',
+  ChecklistStatus.done: 'Concluídas',
+};
+
+const _collapsedLimit = 5;
 
 class ChecklistScreen extends ConsumerStatefulWidget {
   const ChecklistScreen({super.key});
@@ -28,46 +35,8 @@ class ChecklistScreen extends ConsumerStatefulWidget {
 }
 
 class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
-  _ChecklistTab _tab = _ChecklistTab.phases;
-  _StatusFilter _statusFilter = _StatusFilter.all;
-  final _expanded = <String>{};
-  bool _expandedSeeded = false;
-  final _search = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _search.addListener(() => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
-
-  bool _matchesFilter(ChecklistItem item) {
-    final query = _search.text.trim().toLowerCase();
-    if (query.isNotEmpty && !item.title.toLowerCase().contains(query)) {
-      return false;
-    }
-    final due = item.dueDate;
-    final now = DateTime.now();
-    switch (_statusFilter) {
-      case _StatusFilter.all:
-        return true;
-      case _StatusFilter.done:
-        return item.done;
-      case _StatusFilter.late:
-        return !item.done &&
-            due != null &&
-            due.isBefore(DateTime(now.year, now.month, now.day));
-      case _StatusFilter.thisWeek:
-        if (item.done || due == null) return false;
-        final diff = due.difference(now).inDays;
-        return diff >= 0 && diff <= 7;
-    }
-  }
+  _StatusFilter _filter = _StatusFilter.all;
+  final _expandedGroups = <ChecklistStatus>{};
 
   Future<void> _addTask() async {
     final weddingId = ref
@@ -89,254 +58,6 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
         );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final state = ref.watch(checklistControllerProvider);
-    final progress = state.totalCount == 0
-        ? 0.0
-        : state.doneCount / state.totalCount;
-    final categories = state.byCategory;
-
-    if (!_expandedSeeded && categories.isNotEmpty) {
-      _expandedSeeded = true;
-      _expanded.add(categories.keys.first);
-    }
-
-    final flatItems = [...state.items]
-      ..sort((a, b) {
-        if (a.done != b.done) return a.done ? 1 : -1;
-        final ad = a.dueDate;
-        final bd = b.dueDate;
-        if (ad == null && bd == null) return 0;
-        if (ad == null) return 1;
-        if (bd == null) return -1;
-        return ad.compareTo(bd);
-      });
-    final visibleFlatItems = flatItems.where(_matchesFilter).toList();
-
-    return GradientScaffold(
-      background: AppBackground.feed,
-      body: state.loading && state.items.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
-              children: [
-                SafeArea(
-                  bottom: false,
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppTheme.screenMargin,
-                          20,
-                          AppTheme.screenMargin,
-                          0,
-                        ),
-                        child: Row(
-                          children: [
-                            const CircleBackButton(),
-                            const Spacer(),
-                            CircleIconButton(
-                              icon: Icons.add,
-                              background: AppTheme.ink,
-                              foreground: Colors.white,
-                              onTap: _addTask,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppTheme.screenMargin,
-                          16,
-                          AppTheme.screenMargin,
-                          0,
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(999),
-                            boxShadow: AppTheme.cardShadow,
-                          ),
-                          child: TextField(
-                            controller: _search,
-                            decoration: InputDecoration(
-                              hintText: 'Pesquisar tarefas...',
-                              prefixIcon: const Icon(Icons.search, size: 20),
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(999),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppTheme.screenMargin,
-                          18,
-                          AppTheme.screenMargin,
-                          0,
-                        ),
-                        child: CoverFlowPicker<_StatusFilter>(
-                          options: _StatusFilter.values,
-                          selected: _statusFilter,
-                          itemExtent: 20,
-                          itemBuilder: (context, filter, isSelected) =>
-                              CategoryPillLabel(
-                                label: switch (filter) {
-                                  _StatusFilter.all => 'Tudo',
-                                  _StatusFilter.late => 'Em atraso',
-                                  _StatusFilter.thisWeek => 'Esta semana',
-                                  _StatusFilter.done => 'Concluídas',
-                                },
-                                big: filter == _StatusFilter.all,
-                                selected: isSelected,
-                              ),
-                          onChanged: (filter) =>
-                              setState(() => _statusFilter = filter),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppTheme.screenMargin,
-                          12,
-                          AppTheme.screenMargin,
-                          0,
-                        ),
-                        child: _ChecklistTabBar(
-                          selected: _tab,
-                          onChanged: (t) => setState(() => _tab = t),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppTheme.screenMargin,
-                          14,
-                          AppTheme.screenMargin,
-                          0,
-                        ),
-                        child: _OverallProgressCard(
-                          done: state.doneCount,
-                          total: state.totalCount,
-                          progress: progress,
-                        ),
-                      ),
-                      Expanded(
-                        child: EdgeFade(
-                          topFadeHeight: 32,
-                          bottomFadeHeight: 140,
-                          child: ListView(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppTheme.screenMargin,
-                              20,
-                              AppTheme.screenMargin,
-                              140,
-                            ),
-                            children: [
-                              if (categories.isEmpty)
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 40),
-                                  child: Center(
-                                    child: Text('Sem tarefas ainda.'),
-                                  ),
-                                )
-                              else if (_tab == _ChecklistTab.phases)
-                                for (final entry in categories.entries)
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 10),
-                                    child: _PhaseGroup(
-                                      title: entry.key,
-                                      items: entry.value,
-                                      visibleItems: entry.value
-                                          .where(_matchesFilter)
-                                          .toList(),
-                                      expanded: _expanded.contains(entry.key),
-                                      onToggle: () => setState(() {
-                                        if (!_expanded.remove(entry.key)) {
-                                          _expanded.add(entry.key);
-                                        }
-                                      }),
-                                      onToggleDone: (item) => ref
-                                          .read(
-                                            checklistControllerProvider
-                                                .notifier,
-                                          )
-                                          .toggleDone(item.id),
-                                      onRemove: (item) => ref
-                                          .read(
-                                            checklistControllerProvider
-                                                .notifier,
-                                          )
-                                          .removeItem(item.id),
-                                      onPickPartner: (item) =>
-                                          _pickPartner(item),
-                                    ),
-                                  )
-                              else if (visibleFlatItems.isEmpty)
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 40),
-                                  child: Center(
-                                    child: Text('Sem tarefas nesta vista.'),
-                                  ),
-                                )
-                              else
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: AppTheme.cardShadow,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 4,
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      for (final item in visibleFlatItems)
-                                        _ChecklistTile(
-                                          item: item,
-                                          onToggle: () => ref
-                                              .read(
-                                                checklistControllerProvider
-                                                    .notifier,
-                                              )
-                                              .toggleDone(item.id),
-                                          onRemove: () => ref
-                                              .read(
-                                                checklistControllerProvider
-                                                    .notifier,
-                                              )
-                                              .removeItem(item.id),
-                                          onPickPartner:
-                                              item.partnerCategory == null
-                                              ? null
-                                              : () => _pickPartner(item),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.checklist),
-                ),
-                const Positioned.fill(child: DraggableChatBubble()),
-              ],
-            ),
-    );
-  }
-
   Future<void> _pickPartner(ChecklistItem item) async {
     final partner = await context.push<Partner>(
       '/partners',
@@ -350,51 +71,123 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
         .read(checklistControllerProvider.notifier)
         .selectPartner(item.id, partner.id);
   }
-}
 
-class _ChecklistTabBar extends StatelessWidget {
-  final _ChecklistTab selected;
-  final ValueChanged<_ChecklistTab> onChanged;
-
-  const _ChecklistTabBar({required this.selected, required this.onChanged});
+  List<ChecklistStatus> get _visibleStatuses => switch (_filter) {
+    _StatusFilter.all => const [
+      ChecklistStatus.todo,
+      ChecklistStatus.inProgress,
+      ChecklistStatus.done,
+    ],
+    _StatusFilter.todo => const [ChecklistStatus.todo],
+    _StatusFilter.inProgress => const [ChecklistStatus.inProgress],
+    _StatusFilter.done => const [ChecklistStatus.done],
+  };
 
   @override
   Widget build(BuildContext context) {
-    Widget tab(_ChecklistTab value, String label) {
-      final isSelected = selected == value;
-      return Expanded(
-        child: GestureDetector(
-          onTap: () => onChanged(value),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                  color: isSelected ? AppTheme.ink : AppTheme.inkMuted,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                height: 3,
-                decoration: BoxDecoration(
-                  color: isSelected ? AppTheme.ink : Colors.transparent,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+    final state = ref.watch(checklistControllerProvider);
+    final byStatus = <ChecklistStatus, List<ChecklistItem>>{
+      for (final s in ChecklistStatus.values)
+        s: state.items.where((i) => i.status == s).toList(),
+    };
 
-    return Row(
-      children: [
-        tab(_ChecklistTab.phases, 'Por fases'),
-        tab(_ChecklistTab.myPlan, 'Meu plano'),
-      ],
+    return GradientScaffold(
+      background: AppBackground.feed,
+      body: state.loading && state.items.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
+              children: [
+                SafeArea(
+                  bottom: false,
+                  child: EdgeFade(
+                    topFadeHeight: 8,
+                    bottomFadeHeight: 140,
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: [
+                        const SizedBox(height: 40),
+                        PageHeader(
+                          title: 'Tarefas',
+                          subtitle: 'Organizem tudo e nunca percam nada',
+                          trailing: AddActionButton(onTap: _addTask),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppTheme.screenMargin,
+                            20,
+                            AppTheme.screenMargin,
+                            140,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _OverallProgressCard(
+                                done: state.doneCount,
+                                total: state.totalCount,
+                                progress: state.totalCount == 0
+                                    ? 0
+                                    : state.doneCount / state.totalCount,
+                              ),
+                              const SizedBox(height: 18),
+                              _FilterChipsRow(
+                                selected: _filter,
+                                total: state.items.length,
+                                todo: byStatus[ChecklistStatus.todo]!.length,
+                                inProgress:
+                                    byStatus[ChecklistStatus.inProgress]!
+                                        .length,
+                                done: byStatus[ChecklistStatus.done]!.length,
+                                onChanged: (f) => setState(() => _filter = f),
+                              ),
+                              const SizedBox(height: 24),
+                              if (state.items.isEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 40),
+                                  child: Center(
+                                    child: Text('Sem tarefas ainda.'),
+                                  ),
+                                )
+                              else
+                                for (final status in _visibleStatuses) ...[
+                                  _StatusGroup(
+                                    title: _groupTitles[status]!,
+                                    items: byStatus[status]!,
+                                    expanded: _expandedGroups.contains(status),
+                                    onToggleExpand: () => setState(() {
+                                      if (!_expandedGroups.remove(status)) {
+                                        _expandedGroups.add(status);
+                                      }
+                                    }),
+                                    onToggleDone: (item) => ref
+                                        .read(
+                                          checklistControllerProvider.notifier,
+                                        )
+                                        .toggleDone(item.id),
+                                    onRemove: (item) => ref
+                                        .read(
+                                          checklistControllerProvider.notifier,
+                                        )
+                                        .removeItem(item.id),
+                                    onPickPartner: _pickPartner,
+                                  ),
+                                  const SizedBox(height: 22),
+                                ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: FloatingBottomNav(current: AppTab.wedding),
+                ),
+                const Positioned.fill(child: DraggableChatBubble()),
+              ],
+            ),
     );
   }
 }
@@ -417,48 +210,61 @@ class _OverallProgressCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.greenDark,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.cardShadow,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              const Text(
-                'Progresso geral',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                  color: Colors.white,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Progresso geral',
+                  style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                '$pct%',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                  color: Colors.white,
+                const SizedBox(height: 4),
+                Text(
+                  '$pct%',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 26,
+                    color: AppTheme.accentOliveDark,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              valueColor: const AlwaysStoppedAnimation(AppColors.green),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 7,
+                    backgroundColor: AppColors.muted,
+                    valueColor: const AlwaysStoppedAnimation(
+                      AppTheme.accentOliveDark,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$done de $total tarefas concluídas',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.inkMuted,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            '$done de $total tarefas concluídas',
-            style: const TextStyle(fontSize: 12, color: Colors.white70),
+          const SizedBox(width: 12),
+          const Opacity(
+            opacity: 0.3,
+            child: Icon(
+              Icons.eco_outlined,
+              size: 46,
+              color: AppTheme.accentOliveDark,
+            ),
           ),
         ],
       ),
@@ -466,22 +272,124 @@ class _OverallProgressCard extends StatelessWidget {
   }
 }
 
-class _PhaseGroup extends StatelessWidget {
+class _FilterChipsRow extends StatelessWidget {
+  final _StatusFilter selected;
+  final int total;
+  final int todo;
+  final int inProgress;
+  final int done;
+  final ValueChanged<_StatusFilter> onChanged;
+
+  const _FilterChipsRow({
+    required this.selected,
+    required this.total,
+    required this.todo,
+    required this.inProgress,
+    required this.done,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = [
+      (_StatusFilter.all, 'Todas', total),
+      (_StatusFilter.todo, 'Por fazer', todo),
+      (_StatusFilter.inProgress, 'Em curso', inProgress),
+      (_StatusFilter.done, 'Concluídas', done),
+    ];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final (index, entry) in entries.indexed) ...[
+            _FilterChip(
+              label: entry.$2,
+              count: entry.$3,
+              selected: selected == entry.$1,
+              onTap: () => onChanged(entry.$1),
+            ),
+            if (index != entries.length - 1) const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SnappyTap(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppTheme.accentOliveDark : Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: AppTheme.cardShadow,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? Colors.white : AppTheme.ink,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                color: selected
+                    ? Colors.white.withValues(alpha: 0.25)
+                    : AppColors.muted,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  color: selected ? Colors.white : AppTheme.inkMuted,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusGroup extends StatelessWidget {
   final String title;
   final List<ChecklistItem> items;
-  final List<ChecklistItem> visibleItems;
   final bool expanded;
-  final VoidCallback onToggle;
+  final VoidCallback onToggleExpand;
   final ValueChanged<ChecklistItem> onToggleDone;
   final ValueChanged<ChecklistItem> onRemove;
   final ValueChanged<ChecklistItem> onPickPartner;
 
-  const _PhaseGroup({
+  const _StatusGroup({
     required this.title,
     required this.items,
-    required this.visibleItems,
     required this.expanded,
-    required this.onToggle,
+    required this.onToggleExpand,
     required this.onToggleDone,
     required this.onRemove,
     required this.onPickPartner,
@@ -489,86 +397,88 @@ class _PhaseGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final done = items.where((i) => i.done).length;
-    final total = items.length;
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        children: [
-          SnappyTap(
-            onTap: onToggle,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.5,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '$done/$total',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                      color: done == total
-                          ? AppStatusColors.confirmed
-                          : AppTheme.inkMuted,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    expanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppTheme.inkMuted,
-                  ),
-                ],
+    if (items.isEmpty) return const SizedBox.shrink();
+    final sorted = [...items]
+      ..sort((a, b) {
+        final ad = a.dueDate;
+        final bd = b.dueDate;
+        if (ad == null && bd == null) return 0;
+        if (ad == null) return 1;
+        if (bd == null) return -1;
+        return ad.compareTo(bd);
+      });
+    final showAll = expanded || sorted.length <= _collapsedLimit;
+    final visible = showAll ? sorted : sorted.take(_collapsedLimit).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.muted,
+                borderRadius: BorderRadius.circular(999),
               ),
-            ),
-          ),
-          if (expanded)
-            if (visibleItems.isEmpty)
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 14),
-                child: Text('Sem tarefas nesta vista.'),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Column(
-                  children: [
-                    for (final item in visibleItems)
-                      _ChecklistTile(
-                        item: item,
-                        onToggle: () => onToggleDone(item),
-                        onRemove: () => onRemove(item),
-                        onPickPartner: item.partnerCategory == null
-                            ? null
-                            : () => onPickPartner(item),
-                      ),
-                  ],
+              child: Text(
+                '${sorted.length}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11.5,
+                  color: AppTheme.inkMuted,
                 ),
               ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        for (final item in visible) ...[
+          _TaskTile(
+            item: item,
+            onToggle: () => onToggleDone(item),
+            onRemove: () => onRemove(item),
+            onPickPartner: item.partnerCategory == null
+                ? null
+                : () => onPickPartner(item),
+          ),
+          const SizedBox(height: 10),
         ],
-      ),
+        if (sorted.length > _collapsedLimit)
+          SnappyTap(
+            onTap: onToggleExpand,
+            child: Row(
+              children: [
+                Text(
+                  expanded ? 'Ver menos' : 'Ver todas (${sorted.length})',
+                  style: const TextStyle(
+                    color: AppTheme.accentOliveDark,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+                Icon(
+                  expanded ? Icons.expand_less : Icons.expand_more,
+                  size: 18,
+                  color: AppTheme.accentOliveDark,
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
 
-class _ChecklistTile extends StatelessWidget {
+class _TaskTile extends StatelessWidget {
   final ChecklistItem item;
   final VoidCallback onToggle;
   final VoidCallback onRemove;
   final VoidCallback? onPickPartner;
 
-  const _ChecklistTile({
+  const _TaskTile({
     required this.item,
     required this.onToggle,
     required this.onRemove,
@@ -578,79 +488,129 @@ class _ChecklistTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final due = item.dueDate;
-    final selectedPartner = item.selectedPartnerId == null
-        ? null
-        : MockBackend.instance.getPartner(item.selectedPartnerId!);
-
-    return ListTile(
-      leading: SnappyTap(
-        onTap: onToggle,
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: item.done ? AppStatusColors.confirmed : Colors.white,
-            border: Border.all(
-              color: item.done
-                  ? AppStatusColors.confirmed
-                  : AppTheme.borderMuted,
-              width: 2,
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Row(
+        children: [
+          SnappyTap(
+            onTap: onToggle,
+            child: _StatusIndicator(item: item),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13.5,
+                    decoration: item.done ? TextDecoration.lineThrough : null,
+                    color: item.done ? AppTheme.inkMuted : AppTheme.ink,
+                  ),
+                ),
+                if (due != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    item.done
+                        ? 'Concluída a ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}'
+                        : 'Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}',
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 11.5),
+                  ),
+                ],
+              ],
             ),
           ),
-          child: item.done
-              ? const Icon(Icons.check, size: 16, color: Colors.white)
-              : null,
-        ),
-      ),
-      title: Text(
-        item.title,
-        style: TextStyle(
-          decoration: item.done ? TextDecoration.lineThrough : null,
-          color: item.done ? AppTheme.inkMuted : AppTheme.ink,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (item.done)
-            const Text(
-              'Concluída',
-              style: TextStyle(
-                color: AppStatusColors.confirmed,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            )
-          else if (due != null)
-            Text(
-              'Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}',
-              style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+          if (item.assigneeSeeds.isNotEmpty) ...[
+            AssigneeCluster(seeds: item.assigneeSeeds),
+            const SizedBox(width: 8),
+          ],
+          StatusPill(
+            label: item.category,
+            color: colorForTagLabel(item.category),
+          ),
+          PopupMenuButton<String>(
+            padding: EdgeInsets.zero,
+            icon: const Icon(
+              Icons.more_horiz,
+              size: 18,
+              color: AppTheme.inkMuted,
             ),
-          if (onPickPartner != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: ActionChip(
-                avatar: Icon(
-                  selectedPartner == null
-                      ? Icons.storefront_outlined
-                      : Icons.check_circle,
-                  size: 16,
+            onSelected: (value) {
+              if (value == 'remove') onRemove();
+              if (value == 'partner') onPickPartner?.call();
+            },
+            itemBuilder: (context) => [
+              if (onPickPartner != null)
+                const PopupMenuItem(
+                  value: 'partner',
+                  child: Text('Escolher parceiro'),
                 ),
-                label: Text(
-                  selectedPartner == null
-                      ? 'Escolher parceiro'
-                      : 'Parceiro: ${selectedPartner.name}',
-                ),
-                onPressed: onPickPartner,
-              ),
-            ),
+              const PopupMenuItem(value: 'remove', child: Text('Remover')),
+            ],
+          ),
         ],
       ),
-      trailing: IconButton(
-        icon: const Icon(Icons.close, size: 18),
-        onPressed: onRemove,
+    );
+  }
+}
+
+class _StatusIndicator extends StatelessWidget {
+  final ChecklistItem item;
+
+  const _StatusIndicator({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    if (item.done) {
+      return const CircleAvatar(
+        radius: 12,
+        backgroundColor: AppStatusColors.confirmed,
+        child: Icon(Icons.check, size: 14, color: Colors.white),
+      );
+    }
+    final progress = item.progressPercent;
+    if (progress != null && progress > 0) {
+      return SizedBox(
+        width: 24,
+        height: 24,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            CircularProgressIndicator(
+              value: progress / 100,
+              strokeWidth: 3,
+              backgroundColor: AppColors.muted,
+              valueColor: const AlwaysStoppedAnimation(
+                AppTheme.accentOliveDark,
+              ),
+            ),
+            Text(
+              '$progress',
+              style: const TextStyle(
+                fontSize: 7.5,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.accentOliveDark,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: AppTheme.borderMuted, width: 2),
       ),
     );
   }

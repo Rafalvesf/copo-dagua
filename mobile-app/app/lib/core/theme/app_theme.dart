@@ -2,41 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Implementação executável do design system documentado em
-/// mobile-app/shared/design-system.md — fundo creme/lavanda com
-/// gradientes suaves, cards brancos com sombra difusa, tipografia
+/// mobile-app/shared/design-system.md — fundo creme quente com
+/// acentos verde-oliva, cards brancos com sombra difusa, tipografia
 /// serifada (Fraunces) para títulos e Inter para o resto. Escala
 /// definida para um ecrã de referência de 375px.
 class AppTheme {
-  static const seedColor = accentLavender;
+  static const seedColor = accentOliveDark;
 
-  static const background = Color(0xFFFBF6F0);
-  static const ink = Color(0xFF1E1A22);
-  static const inkMuted = Color(0xFF7A7480);
+  static const background = Color(0xFFF8F3EA);
+  static const ink = Color(0xFF241F16);
+  static const inkMuted = Color(0xFF8A8175);
 
-  /// Acento principal da marca — lavanda suave. Usado em estados
+  /// Acento principal da marca — verde-oliva médio. Usado em estados
   /// selecionados/ativos e para semear o ColorScheme.
-  static const accentLavender = Color(0xFF9C8FD9);
+  static const accentOlive = Color(0xFF6E7C55);
 
-  /// Variante mais escura do acento — usada para tingir sombras e dar
-  /// mais contraste onde o lavanda pastel não chega.
-  static const accentDeep = Color(0xFF6C56B3);
+  /// Variante mais escura do acento — cards de destaque (hero do
+  /// Home), botões primários, barras de progresso, estado ativo da
+  /// navbar — e para tingir sombras onde o verde pastel não chega.
+  static const accentOliveDark = Color(0xFF3F4A30);
 
   /// Cor de contorno neutra e quente, partilhada por bordas subtis
   /// (chips, botões outline, separadores).
-  static const borderMuted = Color(0xFFE6DFD6);
+  static const borderMuted = Color(0xFFE6E0D2);
 
   /// Fundo geral atrás da moldura de telemóvel, em janelas largas.
-  static const outerBackdrop = Color(0xFFD9D2E6);
+  static const outerBackdrop = Color(0xFFEAE3D1);
 
   /// Margem lateral partilhada por todos os ecrãs principais — o
   /// conteúdo e a navbar flutuante alinham-se a esta mesma largura.
   static const screenMargin = 28.0;
 
   /// Sombra partilhada por todos os cards — difusa e tingida com
-  /// [accentDeep] a baixa opacidade, para um halo suave em vez de uma
-  /// sombra cinzenta dura.
+  /// [accentOliveDark] a baixa opacidade, para um halo suave em vez de
+  /// uma sombra cinzenta dura.
   static const cardShadow = [
-    BoxShadow(color: Color(0x1F6C56B3), blurRadius: 24, offset: Offset(0, 10)),
+    BoxShadow(color: Color(0x1F3F4A30), blurRadius: 24, offset: Offset(0, 10)),
   ];
 
   /// Variante mais carregada de [cardShadow], para elementos que devem
@@ -44,7 +45,7 @@ class AppTheme {
   /// estatística selecionáveis, estado de hover) — mesmo halo, mais
   /// opacidade e alcance.
   static const cardShadowStrong = [
-    BoxShadow(color: Color(0x2E6C56B3), blurRadius: 32, offset: Offset(0, 14)),
+    BoxShadow(color: Color(0x2E3F4A30), blurRadius: 32, offset: Offset(0, 14)),
   ];
 
   /// Escurece uma cor de superfície ~10% para o estado pressionado —
@@ -242,40 +243,40 @@ class AppTypography {
 /// quentes para os cartões de destaque, pensadas para funcionar sobre
 /// os novos fundos em gradiente.
 class AppColors {
-  static const blue = Color(0xFFE4E1F7);
-  static const green = Color(0xFFE7F0DE);
-  static const yellow = Color(0xFFFBEFC9);
-  static const pink = Color(0xFFF8DCE4);
-  static const gray = Color(0xFFF3EEE7);
-  static const purple = Color(0xFFA78BD1);
+  static const blue = Color(0xFFDCE3EF);
+  static const green = Color(0xFFE4EADC);
+  static const yellow = Color(0xFFF7EACA);
+  static const pink = Color(0xFFF3DEE0);
+  static const gray = Color(0xFFF1ECE1);
+  static const purple = Color(0xFFDCD9EA);
 
-  static const muted = Color(0xFFEFE9E2);
+  static const muted = Color(0xFFEEE8DA);
 
-  /// Verde escuro de destaque forte — usar com moderação (cards de
-  /// destaque, progresso importante, estados ativos que precisam de
-  /// mais peso), nunca como cor de base. Hierarquia: [green] (normal) →
+  /// Verde-oliva escuro de destaque forte — usar com moderação (cards
+  /// de destaque, progresso importante, botões primários, estado ativo
+  /// da navbar), nunca como cor de base. Hierarquia: [green] (normal) →
   /// [AppStatusColors.confirmed] (ativo/confirmado) → [greenDark]
-  /// (destaque forte).
-  static const greenDark = Color(0xFF174D3B);
+  /// (destaque forte). Alias de [AppTheme.accentOliveDark].
+  static const greenDark = AppTheme.accentOliveDark;
 }
 
 /// Gradientes de fundo — a linguagem visual principal do redesign.
 /// Aplicados através de GradientScaffold, nunca diretamente num
 /// Scaffold (que só aceita uma Color sólida).
 class AppGradients {
-  /// Lavanda → creme, diagonal. Ecrãs de primeira impressão / emoção
-  /// (boas-vindas, onboarding).
+  /// Verde-sálvia → creme, diagonal. Ecrãs de primeira impressão /
+  /// emoção (boas-vindas, onboarding).
   static const hero = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFDCD3F0), Color(0xFFFBF6F0)],
+    colors: [Color(0xFFE6E7D5), Color(0xFFF8F3EA)],
   );
 
-  /// Creme → rosa, vertical. Ecrãs de lista/dashboard.
+  /// Creme, quase sólido, vertical. Ecrãs de lista/dashboard.
   static const feed = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFFBF6F0), Color(0xFFF9E6E9)],
+    colors: [Color(0xFFF8F3EA), Color(0xFFF3EEE0)],
   );
 
   /// Creme → branco, vertical, quase impercetível. Ecrãs de
@@ -284,12 +285,12 @@ class AppGradients {
   static const subtle = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFFBF6F0), Color(0xFFFFFFFF)],
+    colors: [Color(0xFFF8F3EA), Color(0xFFFFFFFF)],
   );
 
-  /// Lavanda sólido — momento único e celebratório (ex: fim do
+  /// Sálvia sólido — momento único e celebratório (ex: fim do
   /// onboarding).
-  static const moodSolid = Color(0xFFD9CEF0);
+  static const moodSolid = Color(0xFFDCE3C8);
 }
 
 /// Cores semânticas de estado (ex: RSVP) — usadas em vez de emojis para

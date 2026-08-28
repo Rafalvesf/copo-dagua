@@ -24,8 +24,7 @@ class PartnersListScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<PartnersListScreen> createState() =>
-      _PartnersListScreenState();
+  ConsumerState<PartnersListScreen> createState() => _PartnersListScreenState();
 }
 
 class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
@@ -45,15 +44,15 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
     super.dispose();
   }
 
+  void _showFavoritesComingSoon() {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Favoritos em breve.')));
+  }
+
   void _showFiltersComingSoon() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Filtros avançados em breve.')),
-    );
-  }
-
-  void _showLocationComingSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Escolha de localização em breve.')),
     );
   }
 
@@ -75,40 +74,43 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppTheme.screenMargin,
-                    20,
+                    40,
                     AppTheme.screenMargin,
                     0,
                   ),
                   child: Row(
                     children: [
-                      const CircleBackButton(),
-                      const Spacer(),
-                      SnappyTap(
-                        onTap: _showLocationComingSoon,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.place_outlined,
-                              size: 16,
-                              color: AppTheme.inkMuted,
-                            ),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'Lisboa · 50 km',
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const Icon(
-                              Icons.expand_more,
-                              size: 18,
-                              color: AppTheme.inkMuted,
-                            ),
-                          ],
+                      if (widget.selectionMode) ...[
+                        const CircleBackButton(),
+                        const SizedBox(width: 12),
+                      ],
+                      Text(
+                        'Parceiros',
+                        style: AppTypography.displaySerif(
+                          fontSize: 30,
+                          color: AppTheme.ink,
                         ),
                       ),
+                      const Spacer(),
+                      if (!widget.selectionMode)
+                        SnappyTap.builder(
+                          onTap: _showFavoritesComingSoon,
+                          builder: (context, hovered) => Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: hovered
+                                  ? AppTheme.cardShadowStrong
+                                  : AppTheme.cardShadow,
+                            ),
+                            child: const Icon(
+                              Icons.favorite_border,
+                              color: AppTheme.ink,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -119,27 +121,54 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                     AppTheme.screenMargin,
                     0,
                   ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
-                      boxShadow: AppTheme.cardShadow,
-                    ),
-                    child: TextField(
-                      controller: _search,
-                      decoration: InputDecoration(
-                        hintText: 'Pesquisar parceiros...',
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(999),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: AppTheme.cardShadow,
+                          ),
+                          child: TextField(
+                            controller: _search,
+                            decoration: InputDecoration(
+                              hintText: 'Pesquisar parceiros...',
+                              prefixIcon: const Icon(Icons.search, size: 20),
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(999),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 10),
+                      SnappyTap.builder(
+                        onTap: _showFiltersComingSoon,
+                        builder: (context, hovered) => Container(
+                          width: 46,
+                          height: 46,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: hovered
+                                ? AppTheme.cardShadowStrong
+                                : AppTheme.cardShadow,
+                          ),
+                          child: const Icon(
+                            Icons.tune,
+                            size: 18,
+                            color: AppTheme.ink,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 if (widget.selectionMode)
@@ -166,39 +195,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       AppTheme.screenMargin,
                       0,
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: _CategoryNavBar(
-                            selected: _filter,
-                            onChanged: (c) => setState(() => _filter = c),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        SnappyTap.builder(
-                          onTap: _showFiltersComingSoon,
-                          builder: (context, hovered) => Container(
-                            padding: const EdgeInsets.all(11),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(999),
-                              boxShadow: hovered
-                                  ? AppTheme.cardShadowStrong
-                                  : AppTheme.cardShadow,
-                              border: Border.all(
-                                color: AppColors.green,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.tune,
-                              size: 16,
-                              color: AppTheme.ink,
-                            ),
-                          ),
-                        ),
-                      ],
+                    child: _CategoryNavBar(
+                      selected: _filter,
+                      onChanged: (c) => setState(() => _filter = c),
                     ),
                   ),
                 Expanded(
@@ -214,8 +213,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                           ? allPartners
                           : allPartners
                                 .where(
-                                  (s) =>
-                                      s.name.toLowerCase().contains(query),
+                                  (s) => s.name.toLowerCase().contains(query),
                                 )
                                 .toList();
                       if (partners.isEmpty) {
@@ -248,9 +246,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                       (a, b) => b.rating.compareTo(a.rating),
                                     );
                                   return Padding(
-                                    padding: const EdgeInsets.only(
-                                      bottom: 36,
-                                    ),
+                                    padding: const EdgeInsets.only(bottom: 36),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -269,10 +265,8 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                         const SizedBox(height: 10),
                                         _TrendingWheel(
                                           partners: trending.take(8).toList(),
-                                          onTap: (partner) => _openDetails(
-                                            context,
-                                            partner,
-                                          ),
+                                          onTap: (partner) =>
+                                              _openDetails(context, partner),
                                         ),
                                       ],
                                     ),
@@ -290,9 +284,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 ),
                                 child: Text(
                                   _filter?.label ?? 'Mais Dos Melhores',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleLarge,
+                                  style: Theme.of(context).textTheme.titleLarge,
                                 ),
                               ),
                             for (final entry in grouped.entries) ...[
@@ -320,8 +312,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                     partner: partner,
                                     mostPopular:
                                         index == 0 && entry.value.length > 1,
-                                    onTap: () =>
-                                        _openDetails(context, partner),
+                                    onTap: () => _openDetails(context, partner),
                                   ),
                                 ),
                                 const SizedBox(height: 16),
@@ -358,9 +349,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
         pageBuilder: (context, animation, secondaryAnimation) => Padding(
           padding: const EdgeInsets.only(top: 40),
           child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(24),
-            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             child: PartnerDetailScreen(
               partner: partner,
               selectionMode: widget.selectionMode,
@@ -369,10 +358,13 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 1),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
             child: child,
           );
         },
@@ -402,8 +394,8 @@ class _CategoryNavBar extends StatefulWidget {
 class _CategoryNavBarState extends State<_CategoryNavBar> {
   final _controller = ScrollController();
 
-  static const _tileWidth = 68.0;
-  static const _tileWidthSelected = 78.0;
+  static const _tileWidth = 64.0;
+  static const _tileWidthSelected = 84.0;
   static const _spacing = 6.0;
 
   List<PartnerCategory?> get _options => [null, ...PartnerCategory.values];
@@ -477,7 +469,7 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 74,
+      height: 82,
       child: NotificationListener<ScrollEndNotification>(
         onNotification: _onScrollEnd,
         child: ListView.builder(
@@ -512,6 +504,9 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
   }
 }
 
+/// Bolha circular com ícone — a opção selecionada fica maior e
+/// preenchida a verde-oliva escuro, sem rótulo por baixo; as restantes
+/// ficam mais pequenas, brancas, com o nome da categoria por baixo.
 class _CategoryIconTile extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -530,31 +525,19 @@ class _CategoryIconTile extends StatelessWidget {
       children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          width: selected ? 64 : 40,
-          height: selected ? 64 : 40,
+          width: selected ? 72 : 44,
+          height: selected ? 72 : 44,
           decoration: BoxDecoration(
-            color: selected ? AppColors.greenDark : Colors.white,
+            color: selected ? AppTheme.accentOliveDark : Colors.white,
             shape: BoxShape.circle,
+            boxShadow: AppTheme.cardShadow,
           ),
           child: Icon(
             icon,
-            size: selected ? 26 : 18,
+            size: selected ? 32 : 22,
             color: selected ? Colors.white : AppTheme.ink,
           ),
         ),
-        // A opção selecionada só mostra a bola maior — o nome da
-        // categoria passa a aparecer no título da lista logo abaixo
-        // ("Mais Dos Melhores" é substituído pelo nome), por isso não
-        // precisa de se repetir aqui.
-        //
-        // Flexible (não SizedBox de altura fixa) porque, numa Column,
-        // filhos não-flex recebem altura MÁXIMA ilimitada durante o
-        // layout — um SizedBox com altura fixa ainda assim contava para
-        // o overflow do RenderFlex sempre que o texto de 2 linhas
-        // precisava de mais espaço do que sobrava nos 74px do tile.
-        // Flexible obriga o texto a caber no espaço que sobra depois do
-        // ícone, cortando com reticências se for preciso, sem nunca
-        // ultrapassar os 74px.
         if (!selected) ...[
           const SizedBox(height: 6),
           Flexible(
@@ -677,9 +660,7 @@ class _TrendingCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Container(
-                      color: colorForPartnerCategory(partner.category),
-                    ),
+                    Container(color: colorForPartnerCategory(partner.category)),
                     Image.network(
                       partner.imageUrl,
                       fit: BoxFit.cover,
@@ -782,222 +763,229 @@ class _PartnerCardState extends State<_PartnerCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            child: SizedBox(
-              height: 170,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Container(color: colorForPartnerCategory(partner.category)),
-                  Image.network(
-                    partner.imageUrl,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, progress) =>
-                        progress == null ? child : const SizedBox.shrink(),
-                    errorBuilder: (context, error, stackTrace) =>
-                        const SizedBox.shrink(),
-                  ),
-                  if (widget.mostPopular)
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.ink,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: const Text(
-                          'Mais popular',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+              child: SizedBox(
+                height: 170,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(color: colorForPartnerCategory(partner.category)),
+                    Image.network(
+                      partner.imageUrl,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, progress) =>
+                          progress == null ? child : const SizedBox.shrink(),
+                      errorBuilder: (context, error, stackTrace) =>
+                          const SizedBox.shrink(),
+                    ),
+                    if (widget.mostPopular)
+                      Positioned(
+                        top: 12,
+                        left: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.ink,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Text(
+                            'Mais popular',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: CircleIconButton(
+                        icon: _favorited
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        background: Colors.white.withValues(alpha: 0.9),
+                        onTap: () => setState(() => _favorited = !_favorited),
+                      ),
                     ),
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: CircleIconButton(
-                      icon: _favorited ? Icons.favorite : Icons.favorite_border,
-                      background: Colors.white.withValues(alpha: 0.9),
-                      onTap: () => setState(() => _favorited = !_favorited),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 16,
+                        color: Colors.amber,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        '${partner.rating}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '(${partner.reviewCount} avaliações)',
+                        style: TextStyle(
+                          color: AppTheme.inkMuted,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Resposta em $responseMinutes min',
+                        style: TextStyle(
+                          color: AppTheme.inkMuted,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    partner.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
                     ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${partner.category.label} · ${partner.city}',
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Desde €${partner.startingPrice.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                  if (features.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final feature in features)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: AppTheme.borderMuted),
+                            ),
+                            child: Text(
+                              feature,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppStatusColors.confirmed.withValues(
+                              alpha: 0.12,
+                            ),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.check_circle,
+                                size: 14,
+                                color: AppStatusColors.confirmed,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  'Disponível na tua data',
+                                  style: const TextStyle(
+                                    color: AppStatusColors.confirmed,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      SnappyTap.builder(
+                        onTap: widget.onTap,
+                        builder: (context, hovered) => Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.ink,
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: hovered
+                                ? AppTheme.cardShadowStrong
+                                : AppTheme.cardShadow,
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Ver perfil',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_forward,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.star_rounded,
-                      size: 16,
-                      color: Colors.amber,
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      '${partner.rating}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '(${partner.reviewCount} avaliações)',
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
-                    ),
-                    const Spacer(),
-                    Text(
-                      'Resposta em $responseMinutes min',
-                      style: TextStyle(
-                        color: AppTheme.inkMuted,
-                        fontSize: 11.5,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  partner.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${partner.category.label} · ${partner.city}',
-                  style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Desde €${partner.startingPrice.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
-                  ),
-                ),
-                if (features.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      for (final feature in features)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: AppTheme.borderMuted),
-                          ),
-                          child: Text(
-                            feature,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppStatusColors.confirmed.withValues(
-                            alpha: 0.12,
-                          ),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.check_circle,
-                              size: 14,
-                              color: AppStatusColors.confirmed,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                'Disponível na tua data',
-                                style: const TextStyle(
-                                  color: AppStatusColors.confirmed,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    SnappyTap.builder(
-                      onTap: widget.onTap,
-                      builder: (context, hovered) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.ink,
-                          borderRadius: BorderRadius.circular(999),
-                          boxShadow: hovered
-                              ? AppTheme.cardShadowStrong
-                              : AppTheme.cardShadow,
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Ver perfil',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12.5,
-                              ),
-                            ),
-                            SizedBox(width: 4),
-                            Icon(
-                              Icons.arrow_forward,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
