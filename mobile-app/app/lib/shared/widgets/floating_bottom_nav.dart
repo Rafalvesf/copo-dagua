@@ -148,8 +148,8 @@ class _WeddingNavTab extends StatelessWidget {
               opacity: active ? 1 : 0.55,
               child: ClipOval(
                 child: SizedBox(
-                  width: 23,
-                  height: 23,
+                  width: 34,
+                  height: 34,
                   child: Transform.scale(
                     scale: zoom,
                     child: Image.asset(assetPath, fit: BoxFit.cover),
