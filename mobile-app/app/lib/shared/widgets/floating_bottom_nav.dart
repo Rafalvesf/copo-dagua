@@ -17,11 +17,13 @@ enum AppTab {
   mascot,
 }
 
-/// Pílula branca flutuante, destacada do fundo por todos os lados —
-/// 4 separadores (Home, Parceiros, Chat, boneco do casal), o ativo
-/// ganha um círculo preenchido a `AppTheme.ink`. O boneco do casal é
-/// sempre uma foto/ilustração circular (nunca um ícone Material), com
-/// um anel lavanda que engrossa quando este é o separador ativo.
+/// Doca flutuante em dois grupos separados — a pílula branca com os 3
+/// separadores de ícone (Home, Parceiros, Chat) e, à parte, o boneco
+/// do casal como botão circular independente. O ativo (entre os 3
+/// ícones) ganha um círculo preenchido a `AppTheme.ink`. O boneco do
+/// casal é sempre uma foto/ilustração circular (nunca um ícone
+/// Material), com um anel lavanda que passa a `AppTheme.ink` quando
+/// este é o separador ativo.
 class FloatingBottomNav extends ConsumerWidget {
   final AppTab current;
 
@@ -36,41 +38,49 @@ class FloatingBottomNav extends ConsumerWidget {
       minimum: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(999),
-            boxShadow: AppTheme.cardShadowStrong,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _NavIcon(
-                  icon: Icons.home_rounded,
-                  active: current == AppTab.home,
-                  onTap: () => context.go('/home'),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: AppTheme.cardShadowStrong,
                 ),
-                _NavIcon(
-                  icon: Icons.storefront_rounded,
-                  active: current == AppTab.partners,
-                  onTap: () => context.go('/partners'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _NavIcon(
+                        icon: Icons.home_rounded,
+                        active: current == AppTab.home,
+                        onTap: () => context.go('/home'),
+                      ),
+                      _NavIcon(
+                        icon: Icons.storefront_rounded,
+                        active: current == AppTab.partners,
+                        onTap: () => context.go('/partners'),
+                      ),
+                      _NavIcon(
+                        icon: Icons.forum_rounded,
+                        active: current == AppTab.chat,
+                        onTap: () => context.go('/chat'),
+                      ),
+                    ],
+                  ),
                 ),
-                _NavIcon(
-                  icon: Icons.forum_rounded,
-                  active: current == AppTab.chat,
-                  onTap: () => context.go('/chat'),
-                ),
-                _SquishyWeddingIcon(
-                  assetPath: weddingIcon.assetPath,
-                  zoom: weddingIcon.zoom,
-                  active: current == AppTab.mascot,
-                  onTap: () => context.go('/mascot'),
-                ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(width: 14),
+            _SquishyWeddingIcon(
+              assetPath: weddingIcon.assetPath,
+              zoom: weddingIcon.zoom,
+              active: current == AppTab.mascot,
+              onTap: () => context.go('/mascot'),
+            ),
+          ],
         ),
       ),
     );
@@ -98,7 +108,7 @@ class _SquishyWeddingIcon extends StatefulWidget {
 
 class _SquishyWeddingIconState extends State<_SquishyWeddingIcon>
     with SingleTickerProviderStateMixin {
-  static const _size = 44.0;
+  static const _size = 48.0;
 
   late final _controller = AnimationController(vsync: this, value: 0);
 
@@ -185,7 +195,7 @@ class _NavIcon extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(11),
+        padding: const EdgeInsets.all(9),
         decoration: BoxDecoration(
           color: active ? AppTheme.ink : Colors.transparent,
           shape: BoxShape.circle,
