@@ -50858,7 +50858,7 @@ r.push(B.c4)
 r.push(A.U("A p\xe1gina p\xfablica de RSVP fica fora desta primeira vers\xe3o \u2014 aqui simulamos a resposta dentro da app.",p,p,p,p,A.L(a).ok.Q,p,p,p))
 r.push(B.a_)
 r.push(A.JC(A.b([A.aQC(B.a5l,new A.agm(b,n),p),new A.Ex(B.a8l,new A.agn(b,n),p,p,p,p,B.k,p,!1,p,!0,p,B.a58,p),A.Uf(B.a52,new A.ago(b,n),p)],s),0,8))
-return A.dT(o,B.c5,A.cq(B.ac,A.b([A.na(r,B.LS,p,!1),B.dg],s),B.r,B.ad,p),!0)}}
+return A.dT(o,B.c5,A.cq(B.ac,A.b([A.na(r,B.LS,p,!1),B.dg],s),B.r,B.ad,p),!1)}}
 A.agi.prototype={
 $1(a){return a.a===this.a.e},
 $S:29}
@@ -51264,10 +51264,10 @@ o.z=!0}if(m.e===B.fI){s=t.p
 r=A.oA(A.b([A.kK(B.Ew,n,n,new A.aF3(o),n,n)],s),n,n)
 q=A.U("Bem-vindo(a), "+B.b.ga2(m.b.split(" "))+"!",n,n,n,n,A.L(a).ok.f,B.aI,n,n)
 p=o.y
-return A.dT(r,B.eM,new A.ak(B.cp,A.aE(A.b([q,B.a_,B.a5j,B.cW,new A.fX("Entrar",p?n:new A.aF4(o),p,n)],s),B.aC,B.c0,B.m),n),!0)}if(o.x){s=B.c.bs(o.Q.a.a)
+return A.dT(r,B.eM,new A.ak(B.cp,A.aE(A.b([q,B.a_,B.a5j,B.cW,new A.fX("Entrar",p?n:new A.aF4(o),p,n)],s),B.aC,B.c0,B.m),n),!1)}if(o.x){s=B.c.bs(o.Q.a.a)
 if(s.length===0)s=B.b.ga2(m.b.split(" "))
 return A.dT(n,B.pk,A.dG(!0,new A.ak(B.cp,A.aE(A.b([A.U("Tudo pronto, "+s+"!",n,n,n,n,A.L(a).ok.f,n,n,n),B.cb,B.a5v,B.cW,new A.fX("Ver o meu casamento",new A.aF5(o,m,a),o.y,n)],t.p),B.n,B.c0,B.m),n),B.L,!0),!0)}s=o.w
-return A.dT(A.oA(n,s===0?n:new A.Dc(new A.aF6(o),n),n),B.eM,new A.ak(B.cp,A.aE(A.b([new A.WX(7,s,n),B.cW,A.be(o.afc(a),1),o.af_()],t.p),B.aC,B.h,B.m),n),!0)},
+return A.dT(A.oA(n,s===0?n:new A.Dc(new A.aF6(o),n),n),B.eM,new A.ak(B.cp,A.aE(A.b([new A.WX(7,s,n),B.cW,A.be(o.afc(a),1),o.af_()],t.p),B.aC,B.h,B.m),n),!1)},
 afc(a){var s,r=this,q=null
 switch(r.w){case 0:return new A.mm("Fala-nos sobre ti","O teu nome e idade.",A.aE(A.b([A.dy(r.Q,q,q,"O teu nome"),B.a_,A.dy(r.as,q,B.ez,"A tua idade")],t.p),B.aC,B.h,B.m),q)
 case 1:return new A.mm("E sobre o/a teu/a parceiro/a?","Podes deixar em branco por agora.",A.aE(A.b([A.dy(r.at,q,q,"Nome do/a parceiro/a"),B.a_,A.dy(r.ax,q,B.ez,"Idade do/a parceiro/a")],t.p),B.aC,B.h,B.m),q)
@@ -51424,7 +51424,7 @@ o=A.be(l.a&&J.fI(l.b)?B.c_:A.FG(q.x,new A.aFB(l),J.cc(l.b),B.rc,B.a8,!1),1)
 n=A.pe(p,p,p,B.Od,p,p,q.gasV(),p,p,p,"Enviar contrato")
 s=A.aD(999)
 r=t.p
-return A.dT(m,B.c5,A.aE(A.b([o,A.dG(!0,new A.ak(B.re,A.aQ(A.b([n,A.be(A.ar(p,A.nU(p,B.aP,!1,p,!0,B.r,p,A.rb(),q.w,p,p,p,p,p,2,A.lz(p,new A.f9(4,A.aD(999),B.v),p,B.ra,p,p,p,p,!0,p,p,p,p,p,p,B.e,!0,p,p,p,p,p,p,p,p,p,p,p,p,p,p,"Escreve uma mensagem...",p,p,p,p,p,p,p,p,p,!0,!0,!1,p,p,p,p,p,p,p,p,p,p,p,p,p,p),B.Z,!0,p,!0,p,!1,p,B.bI,p,p,p,p,p,p,p,p,1,p,p,!1,"\u2022",p,p,p,new A.aFC(q),p,!1,p,p,!1,p,!0,p,B.co,p,p,p,p,p,p,p,p,p,p,p,p,!0,B.az,p,B.cB,p,p,p,p),B.k,p,p,new A.al(p,p,p,s,B.M,p,B.t),p,p,p,p,p,p,p),1),B.bs,A.mD(B.T,B.e,B.t9,q.gaqw(),!0,36)],r),B.n,B.h,B.m,0),p),B.L,!1)],r),B.n,B.h,B.m),!0)}}
+return A.dT(m,B.c5,A.aE(A.b([o,A.dG(!0,new A.ak(B.re,A.aQ(A.b([n,A.be(A.ar(p,A.nU(p,B.aP,!1,p,!0,B.r,p,A.rb(),q.w,p,p,p,p,p,2,A.lz(p,new A.f9(4,A.aD(999),B.v),p,B.ra,p,p,p,p,!0,p,p,p,p,p,p,B.e,!0,p,p,p,p,p,p,p,p,p,p,p,p,p,p,"Escreve uma mensagem...",p,p,p,p,p,p,p,p,p,!0,!0,!1,p,p,p,p,p,p,p,p,p,p,p,p,p,p),B.Z,!0,p,!0,p,!1,p,B.bI,p,p,p,p,p,p,p,p,1,p,p,!1,"\u2022",p,p,p,new A.aFC(q),p,!1,p,p,!1,p,!0,p,B.co,p,p,p,p,p,p,p,p,p,p,p,p,!0,B.az,p,B.cB,p,p,p,p),B.k,p,p,new A.al(p,p,p,s,B.M,p,B.t),p,p,p,p,p,p,p),1),B.bs,A.mD(B.T,B.e,B.t9,q.gaqw(),!0,36)],r),B.n,B.h,B.m,0),p),B.L,!1)],r),B.n,B.h,B.m),!1)}}
 A.aFw.prototype={
 $1(a){var s=this.a.x,r=s.f
 if(r.length===0)return
