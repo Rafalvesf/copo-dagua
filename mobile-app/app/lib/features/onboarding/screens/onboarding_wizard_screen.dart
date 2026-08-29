@@ -10,6 +10,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/progress.dart';
+import '../../partner_onboarding/screens/partner_welcome_screen.dart';
 
 const _totalSteps = 7;
 
@@ -68,52 +69,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     }
 
     if (profile.role == UserRole.partner) {
-      return GradientScaffold(
-        background: AppBackground.hero,
-        extendBodyBehindAppBar: false,
-        appBar: AppBar(
-          actions: [
-            TextButton(
-              onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-              child: const Text('Sair'),
-            ),
-          ],
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Bem-vindo(a), ${profile.fullName.split(' ').first}!',
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'O wizard completo de perfil de parceiro (categorias, portefólio, '
-                'dados fiscais) ainda está em desenvolvimento. Por agora, entra '
-                'para veres a área do parceiro.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              PrimaryButton(
-                label: 'Entrar',
-                loading: _saving,
-                onPressed: _saving
-                    ? null
-                    : () async {
-                        setState(() => _saving = true);
-                        await ref
-                            .read(authControllerProvider.notifier)
-                            .completePartnerOnboarding();
-                      },
-              ),
-            ],
-          ),
-        ),
-      );
+      return const PartnerWelcomeScreen();
     }
 
     if (_done) {

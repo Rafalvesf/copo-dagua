@@ -16,9 +16,22 @@ import '../features/guests/screens/guest_detail_screen.dart';
 import '../features/guests/screens/guests_list_screen.dart';
 import '../features/home/screens/home_feed_screen.dart';
 import '../features/invite/screens/invite_page_screen.dart';
+import '../features/calendar/screens/calendar_screen.dart';
 import '../features/onboarding/screens/onboarding_wizard_screen.dart';
+import '../features/partner_bookings/screens/booking_detail_screen.dart';
+import '../features/partner_bookings/screens/partner_bookings_screen.dart';
+import '../features/partner_calendar/screens/partner_calendar_screen.dart';
 import '../features/partner_home/screens/partner_chat_screen.dart';
 import '../features/partner_home/screens/partner_home_screen.dart';
+import '../features/partner_messages/screens/partner_chat_thread_screen.dart';
+import '../features/partner_messages/screens/partner_messages_screen.dart';
+import '../features/partner_onboarding/screens/partner_welcome_screen.dart';
+import '../features/partner_profile/screens/business_info_screen.dart';
+import '../features/partner_profile/screens/partner_pricing_screen.dart';
+import '../features/partner_profile/screens/partner_portfolio_screen.dart';
+import '../features/partner_profile/screens/partner_profile_screen.dart';
+import '../features/partner_reviews/screens/partner_reviews_screen.dart';
+import '../features/partner_stats/screens/partner_stats_screen.dart';
 import '../features/seating/screens/seating_screen.dart';
 import '../features/partners/screens/partners_list_screen.dart';
 import '../features/settings/screens/settings_screen.dart';
@@ -130,6 +143,61 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/partner-chat',
         builder: (context, state) => const PartnerChatScreen(),
+      ),
+      GoRoute(
+        path: '/partner-welcome',
+        builder: (context, state) => const PartnerWelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/partner-profile',
+        builder: (context, state) => const PartnerProfileScreen(),
+      ),
+      GoRoute(
+        path: '/partner-business-info',
+        builder: (context, state) => const BusinessInfoScreen(),
+      ),
+      GoRoute(
+        path: '/partner-portfolio',
+        builder: (context, state) => const PartnerPortfolioScreen(),
+      ),
+      GoRoute(
+        path: '/partner-pricing',
+        builder: (context, state) => const PartnerPricingScreen(),
+      ),
+      GoRoute(
+        path: '/partner-requests',
+        builder: (context, state) => const PartnerBookingsScreen(),
+      ),
+      GoRoute(
+        path: '/partner-requests/:id',
+        builder: (context, state) =>
+            BookingDetailScreen(booking: state.extra as Booking),
+      ),
+      GoRoute(
+        path: '/partner-messages',
+        builder: (context, state) => const PartnerMessagesScreen(),
+      ),
+      GoRoute(
+        path: '/partner-messages/:id',
+        builder: (context, state) => PartnerChatThreadScreen(
+          conversation: state.extra as ChatConversation,
+        ),
+      ),
+      GoRoute(
+        path: '/partner-reviews',
+        builder: (context, state) => const PartnerReviewsScreen(),
+      ),
+      GoRoute(
+        path: '/partner-stats',
+        builder: (context, state) => const PartnerStatsScreen(),
+      ),
+      GoRoute(
+        path: '/partner-calendar',
+        builder: (context, state) => const PartnerCalendarScreen(),
+      ),
+      GoRoute(
+        path: '/calendar',
+        builder: (context, state) => const CalendarScreen(),
       ),
       GoRoute(
         path: '/wedding',

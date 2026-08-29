@@ -91,7 +91,7 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppTheme.accentOliveDark : AppTheme.inkMuted;
+    final color = active ? AppTheme.accentOliveDark : AppTheme.navIconMuted;
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
@@ -100,7 +100,7 @@ class _NavIcon extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(active ? activeIcon : icon, color: color, size: 23),
+            Icon(active ? activeIcon : icon, color: color, size: 28),
             const SizedBox(height: 4),
             Text(
               label,
@@ -135,7 +135,7 @@ class _WeddingNavTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppTheme.accentOliveDark : AppTheme.inkMuted;
+    final color = active ? AppTheme.accentOliveDark : AppTheme.navIconMuted;
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
@@ -148,8 +148,8 @@ class _WeddingNavTab extends StatelessWidget {
               opacity: active ? 1 : 0.55,
               child: ClipOval(
                 child: SizedBox(
-                  width: 34,
-                  height: 34,
+                  width: 40,
+                  height: 40,
                   child: Transform.scale(
                     scale: zoom,
                     child: Image.asset(assetPath, fit: BoxFit.cover),

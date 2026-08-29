@@ -6,6 +6,7 @@ import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/page_header.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
 /// e contactos do cortejo partilham este mesmo ecrã (ver
@@ -75,39 +76,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         children: [
           SafeArea(
             bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.screenMargin,
-                40,
-                AppTheme.screenMargin,
-                12,
-              ),
-              child: Row(
-                children: [
-                  const CircleBackButton(),
-                  const SizedBox(width: 12),
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: AppColors.gray,
-                    backgroundImage: NetworkImage(
-                      'https://i.pravatar.cc/150?u=${widget.conversation.avatarSeed}',
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      widget.conversation.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            child: PageHeader(title: widget.conversation.name, titleFontSize: 26),
           ),
           Expanded(
             child: chat.loading && chat.messages.isEmpty

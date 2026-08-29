@@ -79,6 +79,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                     children: [
                       CircleIconButton(
                         icon: Icons.arrow_back_rounded,
+                        size: 46,
                         onTap: () => Navigator.of(context).canPop()
                             ? Navigator.of(context).pop()
                             : context.go('/home'),

@@ -299,7 +299,6 @@ class _HeroCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: AppTypography.displaySerif(
                   fontSize: 26,
-                  fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),

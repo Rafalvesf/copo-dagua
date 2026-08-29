@@ -45,6 +45,23 @@ class Profile {
   final bool emailVerified;
   final bool onboardingComplete;
 
+  /// Categoria de negócio — só usada quando [role] é [UserRole.partner].
+  final PartnerCategory? category;
+
+  // Campos de "Informações do negócio" — todos só usados quando [role]
+  // é [UserRole.partner]; ver `partner_profile/screens/business_info_screen.dart`.
+  final String? businessDescription;
+  final String? location;
+  final List<String> serviceAreas;
+  final int? yearsExperience;
+  final String? website;
+  final String? instagram;
+  final String? phone;
+  final String? contactEmail;
+  final bool acceptingRequests;
+  final bool travelsForEvents;
+  final int? maxTravelDistanceKm;
+
   const Profile({
     required this.id,
     required this.fullName,
@@ -53,17 +70,52 @@ class Profile {
     required this.role,
     this.emailVerified = false,
     this.onboardingComplete = false,
+    this.category,
+    this.businessDescription,
+    this.location,
+    this.serviceAreas = const [],
+    this.yearsExperience,
+    this.website,
+    this.instagram,
+    this.phone,
+    this.contactEmail,
+    this.acceptingRequests = true,
+    this.travelsForEvents = true,
+    this.maxTravelDistanceKm,
   });
 
-  Profile copyWith({bool? emailVerified, bool? onboardingComplete}) {
+  Profile copyWith({
+    bool? emailVerified,
+    bool? onboardingComplete,
+    String? fullName,
+    String? businessDescription,
+    String? website,
+    String? instagram,
+    String? phone,
+    String? contactEmail,
+    bool? acceptingRequests,
+    bool? travelsForEvents,
+  }) {
     return Profile(
       id: id,
-      fullName: fullName,
+      fullName: fullName ?? this.fullName,
       email: email,
       password: password,
       role: role,
       emailVerified: emailVerified ?? this.emailVerified,
       onboardingComplete: onboardingComplete ?? this.onboardingComplete,
+      category: category,
+      businessDescription: businessDescription ?? this.businessDescription,
+      location: location,
+      serviceAreas: serviceAreas,
+      yearsExperience: yearsExperience,
+      website: website ?? this.website,
+      instagram: instagram ?? this.instagram,
+      phone: phone ?? this.phone,
+      contactEmail: contactEmail ?? this.contactEmail,
+      acceptingRequests: acceptingRequests ?? this.acceptingRequests,
+      travelsForEvents: travelsForEvents ?? this.travelsForEvents,
+      maxTravelDistanceKm: maxTravelDistanceKm,
     );
   }
 }
@@ -332,6 +384,218 @@ class Partner {
     required this.startingPrice,
     required this.description,
     required this.imageUrl,
+  });
+}
+
+enum BookingStatus { novo, emAnalise, confirmado, concluido, recusado }
+
+extension BookingStatusLabel on BookingStatus {
+  String get label => switch (this) {
+    BookingStatus.novo => 'Novo',
+    BookingStatus.emAnalise => 'Em análise',
+    BookingStatus.confirmado => 'Confirmado',
+    BookingStatus.concluido => 'Concluído',
+    BookingStatus.recusado => 'Recusado',
+  };
+}
+
+/// Pedido de orçamento/reserva recebido por um parceiro — do lado do
+/// parceiro, não confundir com [ChecklistItem] (do lado do casal).
+class Booking {
+  final String id;
+  final String partnerId;
+  final String clientName;
+  final String avatarSeed;
+  final DateTime eventDate;
+  final String city;
+  final PartnerCategory category;
+  final String packageLabel;
+  final BookingStatus status;
+  final String? messageFromCouple;
+
+  const Booking({
+    required this.id,
+    required this.partnerId,
+    required this.clientName,
+    required this.avatarSeed,
+    required this.eventDate,
+    required this.city,
+    required this.category,
+    required this.packageLabel,
+    this.status = BookingStatus.novo,
+    this.messageFromCouple,
+  });
+
+  Booking copyWith({BookingStatus? status}) => Booking(
+    id: id,
+    partnerId: partnerId,
+    clientName: clientName,
+    avatarSeed: avatarSeed,
+    eventDate: eventDate,
+    city: city,
+    category: category,
+    packageLabel: packageLabel,
+    status: status ?? this.status,
+    messageFromCouple: messageFromCouple,
+  );
+}
+
+enum PortfolioCategory { casamentos, sessoes, detalhes }
+
+extension PortfolioCategoryLabel on PortfolioCategory {
+  String get label => switch (this) {
+    PortfolioCategory.casamentos => 'Casamentos',
+    PortfolioCategory.sessoes => 'Sessões',
+    PortfolioCategory.detalhes => 'Detalhes',
+  };
+}
+
+class PortfolioItem {
+  final String id;
+  final String partnerId;
+  final String imageUrl;
+  final PortfolioCategory category;
+
+  const PortfolioItem({
+    required this.id,
+    required this.partnerId,
+    required this.imageUrl,
+    required this.category,
+  });
+}
+
+/// Pacote de serviços do parceiro — editável (ver [active], ligado a um
+/// `Switch` no ecrã de Serviços e preços), por isso distinto do
+/// `PartnerPackage` só de leitura em `partner_style.dart` (lado do
+/// casal, derivado de `Partner.startingPrice`).
+class ServicePackage {
+  final String id;
+  final String partnerId;
+  final String name;
+  final double price;
+  final List<String> features;
+  final bool active;
+
+  const ServicePackage({
+    required this.id,
+    required this.partnerId,
+    required this.name,
+    required this.price,
+    required this.features,
+    this.active = true,
+  });
+
+  ServicePackage copyWith({
+    String? name,
+    double? price,
+    List<String>? features,
+    bool? active,
+  }) => ServicePackage(
+    id: id,
+    partnerId: partnerId,
+    name: name ?? this.name,
+    price: price ?? this.price,
+    features: features ?? this.features,
+    active: active ?? this.active,
+  );
+}
+
+class ServiceExtra {
+  final String id;
+  final String partnerId;
+  final String name;
+  final double price;
+  final bool active;
+
+  const ServiceExtra({
+    required this.id,
+    required this.partnerId,
+    required this.name,
+    required this.price,
+    this.active = true,
+  });
+
+  ServiceExtra copyWith({String? name, double? price, bool? active}) =>
+      ServiceExtra(
+        id: id,
+        partnerId: partnerId,
+        name: name ?? this.name,
+        price: price ?? this.price,
+        active: active ?? this.active,
+      );
+}
+
+class Review {
+  final String id;
+  final String partnerId;
+  final String authorName;
+  final String avatarSeed;
+  final int rating;
+  final String comment;
+  final DateTime date;
+
+  /// Resposta do parceiro a esta avaliação — `null` enquanto ainda não
+  /// respondeu.
+  final String? response;
+
+  const Review({
+    required this.id,
+    required this.partnerId,
+    required this.authorName,
+    required this.avatarSeed,
+    required this.rating,
+    required this.comment,
+    required this.date,
+    this.response,
+  });
+
+  Review copyWith({String? response}) => Review(
+    id: id,
+    partnerId: partnerId,
+    authorName: authorName,
+    avatarSeed: avatarSeed,
+    rating: rating,
+    comment: comment,
+    date: date,
+    response: response ?? this.response,
+  );
+}
+
+/// Resumo agregado de avaliações — valor fixo de referência (não
+/// derivado da lista de [Review] seed, que só tem exemplos parciais).
+class PartnerReviewSummary {
+  final double average;
+  final int count;
+
+  const PartnerReviewSummary({required this.average, required this.count});
+}
+
+/// Estatísticas agregadas do parceiro para um período — objeto de
+/// valor simples, não persistido, devolvido diretamente por
+/// `MockBackend.getPartnerStats`.
+class PartnerStats {
+  final int views;
+  final double viewsDeltaPct;
+  final int requestCount;
+  final double requestDeltaPct;
+  final double conversionPct;
+  final double conversionDeltaPct;
+  final double avgRating;
+  final double avgRatingDelta;
+
+  /// Pontos do gráfico de tendência (sparkline) de visualizações.
+  final List<double> viewsTrend;
+
+  const PartnerStats({
+    required this.views,
+    required this.viewsDeltaPct,
+    required this.requestCount,
+    required this.requestDeltaPct,
+    required this.conversionPct,
+    required this.conversionDeltaPct,
+    required this.avgRating,
+    required this.avgRatingDelta,
+    required this.viewsTrend,
   });
 }
 

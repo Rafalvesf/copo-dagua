@@ -82,6 +82,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
                         child: CircleIconButton(
                           icon: Icons.arrow_back_rounded,
                           background: Colors.white.withValues(alpha: 0.9),
+                          size: 46,
                           onTap: () => Navigator.of(context).pop(),
                         ),
                       ),
@@ -96,6 +97,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
                               ? Icons.favorite
                               : Icons.favorite_border,
                           background: Colors.white.withValues(alpha: 0.9),
+                          size: 46,
                           onTap: () => setState(() => _favorited = !_favorited),
                         ),
                       ),

@@ -6,6 +6,7 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 
@@ -15,10 +16,9 @@ import '../../../shared/widgets/support_chat.dart';
 /// este ecrã só desbloqueia a conta para deixar de cair num beco sem
 /// saída depois do registo.
 ///
-/// Estrutura deliberadamente igual ao HomeFeedScreen (cabeçalho fixo com
-/// saudação + desvanecimento do conteúdo por baixo, grelha de módulos a
-/// 2 colunas) — pedido explícito de coerência entre a área do Noivo/a e
-/// a área do Parceiro, em vez de um layout próprio diferente.
+/// Cabeçalho com rótulo pequeno + saudação serifada e grelha de módulos
+/// em "bento boxes" a 3 colunas (ícone num círculo pastel + rótulo),
+/// seguindo o estilo de referência partilhado para o ecrã de Parceiros.
 class PartnerHomeScreen extends ConsumerWidget {
   const PartnerHomeScreen({super.key});
 
@@ -83,38 +83,40 @@ class PartnerHomeScreen extends ConsumerWidget {
                     ),
                     children: [
                       GridView.count(
-                        crossAxisCount: 2,
+                        crossAxisCount: 3,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 14,
-                        crossAxisSpacing: 14,
-                        childAspectRatio: 1.05,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 0.92,
                         children: [
-                          const _PartnerTile(
+                          _PartnerTile(
                             color: AppColors.blue,
                             icon: Icons.request_quote_outlined,
                             label: 'Pedidos de orçamento',
+                            onTap: () => context.push('/partner-requests'),
                           ),
                           const _PartnerTile(
                             color: AppColors.green,
                             icon: Icons.event_available_outlined,
                             label: 'Reservas',
                           ),
-                          const _PartnerTile(
+                          _PartnerTile(
                             color: AppColors.yellow,
                             icon: Icons.calendar_month_outlined,
                             label: 'Calendário',
+                            onTap: () => context.push('/partner-calendar'),
                           ),
-                          const _PartnerTile(
+                          _PartnerTile(
                             color: AppColors.pink,
                             icon: Icons.storefront_outlined,
                             label: 'Perfil de negócio',
+                            onTap: () => context.push('/partner-profile'),
                           ),
                           _PartnerTile(
                             color: AppColors.gray,
                             icon: Icons.description_outlined,
                             label: 'Contratos',
-                            badge: 'Chat',
                             onTap: () => context.push('/partner-chat'),
                           ),
                           const _PartnerTile(
@@ -137,7 +139,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                   bottom: false,
                   child: Container(
                     width: double.infinity,
-                    color: const Color(0xFFFBF6F0), // topo de AppGradients.feed
+                    color: const Color(0xFFFAF7F0), // topo de AppGradients.feed
                     padding: const EdgeInsets.fromLTRB(
                       AppTheme.screenMargin,
                       20,
@@ -149,8 +151,14 @@ class PartnerHomeScreen extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            ChatIconButton(
-                              onTap: () => openSupportScreen(context),
+                            Text(
+                              'PAINEL',
+                              style: TextStyle(
+                                color: AppTheme.inkMuted,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.2,
+                              ),
                             ),
                             const Spacer(),
                             PopupMenuButton<String>(
@@ -191,7 +199,10 @@ class PartnerHomeScreen extends ConsumerWidget {
                                   : 'Olá, $firstName, o que precisas hoje?',
                               style: Theme.of(
                                 context,
-                              ).textTheme.headlineMedium,
+                              ).textTheme.headlineMedium?.copyWith(
+                                fontSize: 42,
+                                height: 1.15,
+                              ),
                             ),
                           ),
                         ),
@@ -199,6 +210,12 @@ class PartnerHomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+              ),
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: PartnerBottomNav(current: PartnerTab.home),
               ),
               const Positioned.fill(child: DraggableChatBubble()),
             ],
@@ -214,14 +231,12 @@ class _PartnerTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
-  final String badge;
 
   const _PartnerTile({
     required this.color,
     required this.icon,
     required this.label,
     this.onTap,
-    this.badge = 'Em breve',
   });
 
   @override
@@ -233,39 +248,35 @@ class _PartnerTile extends StatelessWidget {
             const SnackBar(content: Text('Em breve.')),
           ),
       builder: (context, hovered) => Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(22),
           boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
         ),
-        child: Stack(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Icon(icon, color: AppTheme.ink, size: AppTypography.iconSize),
-                const SizedBox(height: 10),
-                Text(label, style: AppTypography.moduleTitle),
-              ],
+            Container(
+              width: 38,
+              height: 38,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.6),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: AppTheme.ink, size: 19),
             ),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  badge,
-                  style: const TextStyle(fontSize: 10, color: AppTheme.inkMuted),
-                ),
+            const Spacer(),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.ink,
+                height: 1.2,
               ),
             ),
           ],

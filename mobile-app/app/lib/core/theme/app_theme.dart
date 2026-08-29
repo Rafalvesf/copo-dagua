@@ -4,23 +4,28 @@ import 'package:google_fonts/google_fonts.dart';
 /// Implementação executável do design system documentado em
 /// mobile-app/shared/design-system.md — fundo creme quente com
 /// acentos verde-oliva, cards brancos com sombra difusa, tipografia
-/// serifada (Fraunces) para títulos e Inter para o resto. Escala
+/// Roboto Black para títulos e Roboto Regular para o resto. Escala
 /// definida para um ecrã de referência de 375px.
 class AppTheme {
   static const seedColor = accentOliveDark;
 
-  static const background = Color(0xFFF8F3EA);
-  static const ink = Color(0xFF000000);
-  static const inkMuted = Color(0xFF8A8175);
+  static const background = Color(0xFFFAF7F0);
+  static const ink = Color(0xFF171713);
 
-  /// Acento principal da marca — verde-oliva médio. Usado em estados
-  /// selecionados/ativos e para semear o ColorScheme.
-  static const accentOlive = Color(0xFF6E7C55);
+  /// Alias de [ink] — texto "secundário"/"muted" deixou de ter um tom
+  /// mais claro próprio; usa-se preto sólido em todo o lado.
+  static const inkMuted = ink;
 
-  /// Variante mais escura do acento — cards de destaque (hero do
-  /// Home), botões primários, barras de progresso, estado ativo da
-  /// navbar — e para tingir sombras onde o verde pastel não chega.
-  static const accentOliveDark = Color(0xFF3F4A30);
+  /// Cinza escuro neutro — só para o estado inativo dos ícones da
+  /// navbar (Home/FloatingBottomNav/PartnerBottomNav), distinto do
+  /// preto sólido usado no resto do texto.
+  static const navIconMuted = Color(0xFF57534E);
+
+  /// Verde principal da marca — cor única de acento (botões primários,
+  /// estados ativos, barras de progresso). [accentOlive] e
+  /// [accentOliveDark] eram dois tons; unificados num só verde.
+  static const accentOlive = Color(0xFF5F7545);
+  static const accentOliveDark = Color(0xFF5F7545);
 
   /// Cor de contorno neutra e quente, partilhada por bordas subtis
   /// (chips, botões outline, separadores).
@@ -60,27 +65,27 @@ class AppTheme {
       brightness: Brightness.light,
     ).copyWith(surface: background);
 
-    final baseText = GoogleFonts.interTextTheme(ThemeData.light().textTheme);
+    final baseText = GoogleFonts.robotoTextTheme(ThemeData.light().textTheme);
 
     return ThemeData(
       useMaterial3: true,
-      fontFamily: GoogleFonts.inter().fontFamily,
+      fontFamily: GoogleFonts.roboto().fontFamily,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
       textTheme: baseText.copyWith(
-        // Saudação (headline) — serifado, editorial mas amigável.
-        headlineMedium: GoogleFonts.fraunces(
+        // Saudação (headline) — Roboto Black, forte e direta.
+        headlineMedium: GoogleFonts.roboto(
           textStyle: baseText.headlineMedium?.copyWith(
             fontSize: 50,
             height: 40 / 34,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w900,
             letterSpacing: -0.5,
             color: ink,
           ),
         ),
-        headlineSmall: GoogleFonts.fraunces(
+        headlineSmall: GoogleFonts.roboto(
           textStyle: baseText.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w900,
             color: ink,
             height: 1.15,
           ),
@@ -128,7 +133,7 @@ class AppTheme {
         foregroundColor: ink,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: GoogleFonts.roboto(
           color: ink,
           fontSize: 22,
           height: 28 / 22,
@@ -150,10 +155,25 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size.fromHeight(54),
-          backgroundColor: ink,
+          backgroundColor: accentOliveDark,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: GoogleFonts.inter(
+            fontSize: 16,
+            height: 24 / 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(54),
+          backgroundColor: accentOliveDark,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
           ),
           textStyle: GoogleFonts.inter(
             fontSize: 16,
@@ -165,10 +185,10 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(54),
-          foregroundColor: ink,
-          side: const BorderSide(color: borderMuted),
+          foregroundColor: accentOliveDark,
+          side: const BorderSide(color: accentOliveDark),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(14),
           ),
           textStyle: GoogleFonts.inter(
             fontSize: 16,
@@ -225,13 +245,15 @@ class AppTypography {
   );
   static const iconSize = 24.0;
 
-  /// Título serifado (Fraunces) para usar fora do textTheme, onde a cor
-  /// tem de ser explícita (ex: texto sobre um gradiente).
+  /// Título em Roboto Black para usar fora do textTheme, onde a cor tem
+  /// de ser explícita (ex: texto sobre um gradiente). Mantém o nome
+  /// histórico `displaySerif` (já usado em dezenas de ecrãs) mesmo não
+  /// sendo serifado — só a família/peso mudaram.
   static TextStyle displaySerif({
     double fontSize = 28,
-    FontWeight fontWeight = FontWeight.w600,
+    FontWeight fontWeight = FontWeight.w900,
     Color? color,
-  }) => GoogleFonts.fraunces(
+  }) => GoogleFonts.roboto(
     fontSize: fontSize,
     height: 1.2,
     fontWeight: fontWeight,
@@ -244,13 +266,13 @@ class AppTypography {
 /// os novos fundos em gradiente.
 class AppColors {
   static const blue = Color(0xFFDCE3EF);
-  static const green = Color(0xFFE4EADC);
+  static const green = Color(0xFFDDE5D3);
   static const yellow = Color(0xFFF7EACA);
   static const pink = Color(0xFFF3DEE0);
-  static const gray = Color(0xFFF1ECE1);
+  static const gray = Color(0xFFEEF2E9);
   static const purple = Color(0xFFDCD9EA);
 
-  static const muted = Color(0xFFEEE8DA);
+  static const muted = Color(0xFFEEF2E9);
 
   /// Verde-oliva escuro de destaque forte — usar com moderação (cards
   /// de destaque, progresso importante, botões primários, estado ativo
@@ -269,14 +291,14 @@ class AppGradients {
   static const hero = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFE6E7D5), Color(0xFFF8F3EA)],
+    colors: [Color(0xFFE6E7D5), Color(0xFFFAF7F0)],
   );
 
   /// Creme, quase sólido, vertical. Ecrãs de lista/dashboard.
   static const feed = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFF8F3EA), Color(0xFFF3EEE0)],
+    colors: [Color(0xFFFAF7F0), Color(0xFFF3EEE0)],
   );
 
   /// Creme → branco, vertical, quase impercetível. Ecrãs de
@@ -285,7 +307,7 @@ class AppGradients {
   static const subtle = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFF8F3EA), Color(0xFFFFFFFF)],
+    colors: [Color(0xFFFAF7F0), Color(0xFFFFFFFF)],
   );
 
   /// Sálvia sólido — momento único e celebratório (ex: fim do

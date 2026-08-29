@@ -160,3 +160,121 @@ class GuestListItem extends StatelessWidget {
     );
   }
 }
+
+/// Linha de conversa — avatar, nome + hora, prévia da última mensagem
+/// e selo de não-lidas. Usada pelo Chat do lado do Noivo/a e pelas
+/// Mensagens do lado do Parceiro (mesma forma, contrapartes diferentes).
+class ConversationListItem extends StatelessWidget {
+  final ChatConversation conversation;
+  final VoidCallback onTap;
+
+  const ConversationListItem({
+    super.key,
+    required this.conversation,
+    required this.onTap,
+  });
+
+  String get _timeLabel {
+    final now = DateTime.now();
+    final at = conversation.lastMessageAt;
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(at.year, at.month, at.day);
+    if (day == today) {
+      return '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';
+    }
+    if (today.difference(day).inDays == 1) return 'Ontem';
+    return '${at.day.toString().padLeft(2, '0')}/${at.month.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SnappyTap.builder(
+      onTap: onTap,
+      builder: (context, hovered) => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 26,
+              backgroundColor: AppColors.gray,
+              backgroundImage: NetworkImage(
+                'https://i.pravatar.cc/150?u=${conversation.avatarSeed}',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          conversation.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.5,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        _timeLabel,
+                        style: const TextStyle(
+                          color: AppTheme.inkMuted,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          conversation.lastMessage,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppTheme.inkMuted,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      if (conversation.unreadCount > 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 20,
+                          height: 20,
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.accentOliveDark,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${conversation.unreadCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -34,13 +34,18 @@ class MockBackend {
   final List<ChatMessage> chatMessages = [];
   final List<Expense> expenses = [];
   final List<ChatConversation> chatConversations = [];
+  final List<Booking> bookings = [];
+  final List<PortfolioItem> portfolioItems = [];
+  final List<ServicePackage> servicePackages = [];
+  final List<ServiceExtra> serviceExtras = [];
+  final List<Review> reviews = [];
 
   static const Duration _latency = Duration(milliseconds: 400);
 
   void _seed() {
     final demo = const Profile(
       id: 'demo-user',
-      fullName: 'Ana Silva',
+      fullName: 'Sofia Silva',
       email: demoCoupleEmail,
       password: demoPassword,
       role: UserRole.couple,
@@ -51,20 +56,32 @@ class MockBackend {
 
     final demoPartner = const Profile(
       id: 'demo-partner',
-      fullName: 'Miguel Fotografia',
+      fullName: 'Miguel Fotografias',
       email: demoPartnerEmail,
       password: demoPassword,
       role: UserRole.partner,
       emailVerified: true,
       onboardingComplete: true,
+      category: PartnerCategory.photography,
+      businessDescription:
+          'Conta aos casais um pouco sobre o teu negócio e o teu estilo.',
+      location: 'Lisboa, Portugal',
+      serviceAreas: ['Lisboa', 'Sintra', 'Cascais'],
+      yearsExperience: 6,
+      instagram: '@miguel.fotografias',
+      phone: '+351 912 345 678',
+      contactEmail: 'ola@miguel.fotografias.pt',
+      acceptingRequests: true,
+      travelsForEvents: true,
+      maxTravelDistanceKm: 100,
     );
     profiles.add(demoPartner);
 
     final wedding = Wedding(
       id: 'demo-wedding',
       ownerId: demo.id,
-      partnerName1: 'Ana',
-      partnerName2: 'Miguel',
+      partnerName1: 'Sofia',
+      partnerName2: 'André',
       partner1Age: 29,
       partner2Age: 31,
       weddingDate: DateTime.now().add(const Duration(days: 214)),
@@ -80,7 +97,7 @@ class MockBackend {
     collaboratorsByWedding.addAll([
       Collaborator(
         id: 'c1',
-        name: 'Ana Silva',
+        name: 'Sofia Silva',
         email: demo.email,
         status: CollaboratorStatus.owner,
       ),
@@ -384,7 +401,7 @@ class MockBackend {
         weddingId: wedding.id,
         title: 'Escolher catering e provar o menu',
         category: 'Parceiros',
-        dueDate: now.add(const Duration(days: 30)),
+        dueDate: DateTime(now.year, now.month, now.day + 30, 15, 0),
         partnerCategory: PartnerCategory.catering,
         progressPercent: 50,
         assigneeSeeds: const ['ana', 'miguel'],
@@ -394,7 +411,7 @@ class MockBackend {
         weddingId: wedding.id,
         title: 'Contratar música/DJ',
         category: 'Parceiros',
-        dueDate: now.add(const Duration(days: 45)),
+        dueDate: DateTime(now.year, now.month, now.day + 45, 11, 30),
         partnerCategory: PartnerCategory.music,
         assigneeSeeds: const ['ana'],
       ),
@@ -403,7 +420,7 @@ class MockBackend {
         weddingId: wedding.id,
         title: 'Escolher decoração floral',
         category: 'Parceiros',
-        dueDate: now.add(const Duration(days: 100)),
+        dueDate: DateTime(now.year, now.month, now.day + 100, 17, 0),
         partnerCategory: PartnerCategory.decoration,
         progressPercent: 30,
         assigneeSeeds: const ['ana', 'miguel'],
@@ -413,7 +430,7 @@ class MockBackend {
         weddingId: wedding.id,
         title: 'Enviar convites digitais',
         category: 'Convidados',
-        dueDate: now.add(const Duration(days: 60)),
+        dueDate: DateTime(now.year, now.month, now.day + 60, 19, 0),
         assigneeSeeds: const ['ana', 'miguel'],
       ),
       ChecklistItem(
@@ -561,7 +578,7 @@ class MockBackend {
         id: 'msg2',
         partnerId: demoPartner.id,
         fromPartner: true,
-        text: 'Que bom, Ana! Fico já a preparar o contrato para vos enviar aqui.',
+        text: 'Que bom, Sofia! Fico já a preparar o contrato para vos enviar aqui.',
         sentAt: now.subtract(const Duration(days: 2, hours: 2)),
       ),
       // Conversas com o cortejo (madrinha/padrinho) — não têm parceiro no
@@ -655,6 +672,253 @@ class MockBackend {
         lastMessage: 'Vamos confirmar a lista de músicas!',
         lastMessageAt: now.subtract(const Duration(days: 3)),
       ),
+      // Conversas dos clientes do `demoPartner` — reutilizam o `id` como
+      // chave arbitrária de thread em `chatMessages` (mesmo padrão do
+      // cortejo acima), já que o parceiro fala com vários casais e não
+      // só com o `demoPartner.id` (que é a sua própria conta).
+      ChatConversation(
+        id: 'client-mariana-pedro',
+        name: 'Mariana & Pedro',
+        avatarSeed: 'client-mariana-pedro',
+        lastMessage: 'Olá! Podemos agendar uma reunião?',
+        lastMessageAt: now.subtract(const Duration(hours: 14)),
+        unreadCount: 2,
+      ),
+      ChatConversation(
+        id: 'client-ines-joao',
+        name: 'Inês & João',
+        avatarSeed: 'client-ines-joao',
+        lastMessage: 'Obrigada! Ficamos aguardar.',
+        lastMessageAt: now.subtract(const Duration(days: 1)),
+      ),
+      ChatConversation(
+        id: 'client-beatriz-marco',
+        name: 'Beatriz & Marco',
+        avatarSeed: 'client-beatriz-marco',
+        lastMessage: 'Perfeito, muito obrigado!',
+        lastMessageAt: now.subtract(const Duration(days: 2)),
+      ),
+      ChatConversation(
+        id: 'client-catarina-luis',
+        name: 'Catarina & Luís',
+        avatarSeed: 'client-catarina-luis',
+        lastMessage: 'Enviar-te-ei o contrato.',
+        lastMessageAt: now.subtract(const Duration(days: 3)),
+      ),
+    ]);
+
+    chatMessages.addAll([
+      ChatMessage(
+        id: 'msg-cli-mp1',
+        partnerId: 'client-mariana-pedro',
+        fromPartner: false,
+        text: 'Olá! Podemos agendar uma reunião?',
+        sentAt: now.subtract(const Duration(hours: 14)),
+      ),
+      ChatMessage(
+        id: 'msg-cli-ij1',
+        partnerId: 'client-ines-joao',
+        fromPartner: false,
+        text: 'Obrigada! Ficamos aguardar.',
+        sentAt: now.subtract(const Duration(days: 1)),
+      ),
+      ChatMessage(
+        id: 'msg-cli-bm1',
+        partnerId: 'client-beatriz-marco',
+        fromPartner: false,
+        text: 'Perfeito, muito obrigado!',
+        sentAt: now.subtract(const Duration(days: 2)),
+      ),
+      ChatMessage(
+        id: 'msg-cli-cl1',
+        partnerId: 'client-catarina-luis',
+        fromPartner: false,
+        text: 'Enviar-te-ei o contrato.',
+        sentAt: now.subtract(const Duration(days: 3)),
+      ),
+    ]);
+
+    bookings.addAll([
+      Booking(
+        id: 'bk1',
+        partnerId: demoPartner.id,
+        clientName: 'Mariana & Pedro',
+        avatarSeed: 'client-mariana-pedro',
+        eventDate: DateTime(2025, 6, 22, 14, 30),
+        city: 'Lisboa',
+        category: PartnerCategory.photography,
+        packageLabel: 'Pacote Completo',
+        status: BookingStatus.novo,
+        messageFromCouple:
+            'Olá! Vimos o vosso portefólio e adorámos, queríamos avançar. '
+            'Têm disponibilidade para 22 de junho?',
+      ),
+      Booking(
+        id: 'bk2',
+        partnerId: demoPartner.id,
+        clientName: 'Inês & João',
+        avatarSeed: 'client-ines-joao',
+        eventDate: DateTime(2025, 8, 15, 10, 0),
+        city: 'Sintra',
+        category: PartnerCategory.photography,
+        packageLabel: 'Pacote Essencial',
+        status: BookingStatus.emAnalise,
+        messageFromCouple:
+            'Adorámos o trabalho! Podem enviar mais informações sobre o '
+            'pacote Essencial?',
+      ),
+      Booking(
+        id: 'bk3',
+        partnerId: demoPartner.id,
+        clientName: 'Beatriz & Marco',
+        avatarSeed: 'client-beatriz-marco',
+        eventDate: DateTime(2025, 10, 10, 16, 0),
+        city: 'Lisboa',
+        category: PartnerCategory.photography,
+        packageLabel: 'Pacote Premium',
+        status: BookingStatus.confirmado,
+        messageFromCouple: 'Confirmado! Mal podemos esperar.',
+      ),
+      Booking(
+        id: 'bk4',
+        partnerId: demoPartner.id,
+        clientName: 'Catarina & Luís',
+        avatarSeed: 'client-catarina-luis',
+        eventDate: DateTime(2024, 5, 18, 11, 30),
+        city: 'Cascais',
+        category: PartnerCategory.photography,
+        packageLabel: 'Pacote Completo',
+        status: BookingStatus.concluido,
+        messageFromCouple: 'Foi tudo perfeito, obrigado pelo excelente trabalho!',
+      ),
+    ]);
+
+    portfolioItems.addAll([
+      PortfolioItem(
+        id: 'pf1',
+        partnerId: demoPartner.id,
+        imageUrl: 'https://picsum.photos/seed/portfolio-1/900/700',
+        category: PortfolioCategory.casamentos,
+      ),
+      PortfolioItem(
+        id: 'pf2',
+        partnerId: demoPartner.id,
+        imageUrl: 'https://picsum.photos/seed/portfolio-2/900/700',
+        category: PortfolioCategory.casamentos,
+      ),
+      PortfolioItem(
+        id: 'pf3',
+        partnerId: demoPartner.id,
+        imageUrl: 'https://picsum.photos/seed/portfolio-3/900/700',
+        category: PortfolioCategory.sessoes,
+      ),
+      PortfolioItem(
+        id: 'pf4',
+        partnerId: demoPartner.id,
+        imageUrl: 'https://picsum.photos/seed/portfolio-4/900/700',
+        category: PortfolioCategory.sessoes,
+      ),
+      PortfolioItem(
+        id: 'pf5',
+        partnerId: demoPartner.id,
+        imageUrl: 'https://picsum.photos/seed/portfolio-5/900/700',
+        category: PortfolioCategory.detalhes,
+      ),
+      PortfolioItem(
+        id: 'pf6',
+        partnerId: demoPartner.id,
+        imageUrl: 'https://picsum.photos/seed/portfolio-6/900/700',
+        category: PortfolioCategory.detalhes,
+      ),
+    ]);
+
+    servicePackages.addAll([
+      ServicePackage(
+        id: 'pkg1',
+        partnerId: demoPartner.id,
+        name: 'Essencial',
+        price: 900,
+        features: const [
+          'Cobertura até 6h',
+          '300+ fotos editadas',
+          'Galeria online',
+        ],
+      ),
+      ServicePackage(
+        id: 'pkg2',
+        partnerId: demoPartner.id,
+        name: 'Completo',
+        price: 1290,
+        features: const [
+          'Cobertura até 10h',
+          '600+ fotos editadas',
+          'Pré-wedding incluído',
+          'Galeria online',
+        ],
+      ),
+      ServicePackage(
+        id: 'pkg3',
+        partnerId: demoPartner.id,
+        name: 'Premium',
+        price: 1790,
+        features: const [
+          'Cobertura completa',
+          '800+ fotos editadas',
+          'Álbum de luxo',
+          'Pré-wedding incluído',
+        ],
+      ),
+    ]);
+
+    serviceExtras.addAll([
+      ServiceExtra(
+        id: 'ext1',
+        partnerId: demoPartner.id,
+        name: 'Hora extra de cobertura',
+        price: 150,
+      ),
+      ServiceExtra(
+        id: 'ext2',
+        partnerId: demoPartner.id,
+        name: 'Segundo fotógrafo',
+        price: 300,
+      ),
+      ServiceExtra(
+        id: 'ext3',
+        partnerId: demoPartner.id,
+        name: 'Vídeo do dia',
+        price: 400,
+      ),
+    ]);
+
+    reviews.addAll([
+      Review(
+        id: 'rev1',
+        partnerId: demoPartner.id,
+        authorName: 'Mariana & Pedro',
+        avatarSeed: 'client-mariana-pedro',
+        rating: 5,
+        comment: 'Excelente profissional! As fotos ficaram incríveis.',
+        date: DateTime(2025, 6, 22),
+      ),
+      Review(
+        id: 'rev2',
+        partnerId: demoPartner.id,
+        authorName: 'Inês & João',
+        avatarSeed: 'client-ines-joao',
+        rating: 5,
+        comment: 'Super atencioso e muito talentoso. Recomendamos.',
+        date: DateTime(2025, 5, 15),
+      ),
+      Review(
+        id: 'rev3',
+        partnerId: demoPartner.id,
+        authorName: 'Beatriz & Marco',
+        avatarSeed: 'client-beatriz-marco',
+        rating: 5,
+        comment: 'Trabalho impecável do início ao fim.',
+        date: DateTime(2025, 4, 10),
+      ),
     ]);
   }
 
@@ -705,6 +969,33 @@ class MockBackend {
 
   Profile getProfile(String profileId) {
     return profiles.firstWhere((p) => p.id == profileId);
+  }
+
+  Future<Profile> updateBusinessInfo(
+    String profileId, {
+    String? fullName,
+    String? businessDescription,
+    String? website,
+    String? instagram,
+    String? phone,
+    String? contactEmail,
+    bool? acceptingRequests,
+    bool? travelsForEvents,
+  }) async {
+    await Future.delayed(_latency);
+    final index = profiles.indexWhere((p) => p.id == profileId);
+    final updated = profiles[index].copyWith(
+      fullName: fullName,
+      businessDescription: businessDescription,
+      website: website,
+      instagram: instagram,
+      phone: phone,
+      contactEmail: contactEmail,
+      acceptingRequests: acceptingRequests,
+      travelsForEvents: travelsForEvents,
+    );
+    profiles[index] = updated;
+    return updated;
   }
 
   Future<Profile> markEmailVerified(String profileId) async {
@@ -995,6 +1286,160 @@ class MockBackend {
     final list = List<ChatConversation>.from(chatConversations)
       ..sort((a, b) => b.lastMessageAt.compareTo(a.lastMessageAt));
     return list;
+  }
+
+  Future<List<Booking>> listBookingsForPartner(
+    String partnerId, {
+    BookingStatus? status,
+  }) async {
+    await Future.delayed(_latency ~/ 2);
+    final list = bookings.where((b) => b.partnerId == partnerId).toList()
+      ..sort((a, b) => b.eventDate.compareTo(a.eventDate));
+    if (status == null) return list;
+    return list.where((b) => b.status == status).toList();
+  }
+
+  Booking getBooking(String id) {
+    return bookings.firstWhere((b) => b.id == id);
+  }
+
+  Future<Booking> updateBookingStatus(String id, BookingStatus status) async {
+    await Future.delayed(_latency);
+    final index = bookings.indexWhere((b) => b.id == id);
+    final updated = bookings[index].copyWith(status: status);
+    bookings[index] = updated;
+    return updated;
+  }
+
+  Future<List<PortfolioItem>> listPortfolioItems(
+    String partnerId, {
+    PortfolioCategory? category,
+  }) async {
+    await Future.delayed(_latency ~/ 2);
+    final list = portfolioItems.where((p) => p.partnerId == partnerId);
+    if (category == null) return list.toList();
+    return list.where((p) => p.category == category).toList();
+  }
+
+  Future<PortfolioItem> addPortfolioItem(
+    String partnerId,
+    PortfolioCategory category,
+  ) async {
+    await Future.delayed(_latency);
+    final item = PortfolioItem(
+      id: _nextId('pf'),
+      partnerId: partnerId,
+      imageUrl: 'https://picsum.photos/seed/${_nextId('portfolio')}/900/700',
+      category: category,
+    );
+    portfolioItems.add(item);
+    return item;
+  }
+
+  Future<List<ServicePackage>> listServicePackages(String partnerId) async {
+    await Future.delayed(_latency ~/ 2);
+    return servicePackages.where((p) => p.partnerId == partnerId).toList();
+  }
+
+  Future<ServicePackage> togglePackageActive(String id, bool active) async {
+    await Future.delayed(_latency ~/ 2);
+    final index = servicePackages.indexWhere((p) => p.id == id);
+    final updated = servicePackages[index].copyWith(active: active);
+    servicePackages[index] = updated;
+    return updated;
+  }
+
+  Future<ServicePackage> updateServicePackage(
+    String id, {
+    required String name,
+    required double price,
+    required List<String> features,
+  }) async {
+    await Future.delayed(_latency);
+    final index = servicePackages.indexWhere((p) => p.id == id);
+    final updated = servicePackages[index].copyWith(
+      name: name,
+      price: price,
+      features: features,
+    );
+    servicePackages[index] = updated;
+    return updated;
+  }
+
+  Future<List<ServiceExtra>> listServiceExtras(String partnerId) async {
+    await Future.delayed(_latency ~/ 2);
+    return serviceExtras.where((e) => e.partnerId == partnerId).toList();
+  }
+
+  Future<ServiceExtra> toggleExtraActive(String id, bool active) async {
+    await Future.delayed(_latency ~/ 2);
+    final index = serviceExtras.indexWhere((e) => e.id == id);
+    final updated = serviceExtras[index].copyWith(active: active);
+    serviceExtras[index] = updated;
+    return updated;
+  }
+
+  Future<ServiceExtra> updateServiceExtra(
+    String id, {
+    required String name,
+    required double price,
+  }) async {
+    await Future.delayed(_latency);
+    final index = serviceExtras.indexWhere((e) => e.id == id);
+    final updated = serviceExtras[index].copyWith(name: name, price: price);
+    serviceExtras[index] = updated;
+    return updated;
+  }
+
+  Future<List<Review>> listReviewsForPartner(String partnerId) async {
+    await Future.delayed(_latency ~/ 2);
+    final list = reviews.where((r) => r.partnerId == partnerId).toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+    return list;
+  }
+
+  Future<Review> respondToReview(String id, String response) async {
+    await Future.delayed(_latency);
+    final index = reviews.indexWhere((r) => r.id == id);
+    final updated = reviews[index].copyWith(response: response);
+    reviews[index] = updated;
+    return updated;
+  }
+
+  /// Valor de referência fixo — não derivado da lista (parcial) de
+  /// [reviews] semeada, ver doc de [PartnerReviewSummary].
+  PartnerReviewSummary getReviewSummary(String partnerId) {
+    return const PartnerReviewSummary(average: 4.8, count: 32);
+  }
+
+  /// Conversas com os clientes do parceiro — filtra pelo prefixo
+  /// `client-` usado ao semear estas conversas (mesma convenção de
+  /// chave arbitrária do cortejo, ver `_seed`), já que [ChatConversation]
+  /// não guarda o id do parceiro do lado de quem a possui.
+  Future<List<ChatConversation>> listConversationsForPartner(
+    String partnerId,
+  ) async {
+    await Future.delayed(_latency ~/ 2);
+    final list =
+        chatConversations.where((c) => c.id.startsWith('client-')).toList()
+          ..sort((a, b) => b.lastMessageAt.compareTo(a.lastMessageAt));
+    return list;
+  }
+
+  /// Números agregados fixos de referência para o período — mock só
+  /// visual, não derivado de outros dados semeados.
+  PartnerStats getPartnerStats(String partnerId, {String period = 'Este mês'}) {
+    return const PartnerStats(
+      views: 152,
+      viewsDeltaPct: 24,
+      requestCount: 38,
+      requestDeltaPct: 18,
+      conversionPct: 25,
+      conversionDeltaPct: 6,
+      avgRating: 4.8,
+      avgRatingDelta: 0.2,
+      viewsTrend: [40, 55, 48, 70, 65, 90, 85, 110, 100, 130, 120, 152],
+    );
   }
 }
 

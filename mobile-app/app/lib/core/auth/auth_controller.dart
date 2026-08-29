@@ -121,6 +121,13 @@ class AuthController extends Notifier<AuthState> {
     );
   }
 
+  /// Aplica um [Profile] já atualizado no backend (ex: depois de gravar
+  /// Informações do negócio) ao estado local — sem repetir o pedido de
+  /// login, ao contrário de [login]/[completeOnboarding].
+  void refreshProfile(Profile updated) {
+    state = state.copyWith(profile: updated);
+  }
+
   void logout() {
     state = const AuthState.unauthenticated();
   }

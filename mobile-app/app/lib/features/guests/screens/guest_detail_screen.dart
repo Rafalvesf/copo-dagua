@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_widgets.dart';
+import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/rsvp_status_badge.dart';
 import '../../../shared/widgets/support_chat.dart';
 
@@ -29,14 +29,32 @@ class GuestDetailScreen extends ConsumerWidget {
 
     return GradientScaffold(
       background: AppBackground.subtle,
-      extendBodyBehindAppBar: false,
-      appBar: AppBar(
-        title: Text(guest.name),
-        leading: const CircleBackButton(),
-      ),
       body: Stack(
         children: [
-          ListView(
+          SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                PageHeader(title: guest.name, titleFontSize: 26),
+                Expanded(child: _GuestDetailBody(guest: guest)),
+              ],
+            ),
+          ),
+          const Positioned.fill(child: DraggableChatBubble()),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuestDetailBody extends ConsumerWidget {
+  final Guest guest;
+
+  const _GuestDetailBody({required this.guest});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListView(
             padding: const EdgeInsets.all(AppTheme.screenMargin),
             children: [
               RsvpStatusBadge(status: guest.rsvpStatus),
@@ -152,11 +170,7 @@ class GuestDetailScreen extends ConsumerWidget {
                 ],
               ),
             ],
-          ),
-          const Positioned.fill(child: DraggableChatBubble()),
-        ],
-      ),
-    );
+          );
   }
 }
 

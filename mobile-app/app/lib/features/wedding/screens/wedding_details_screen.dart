@@ -6,7 +6,6 @@ import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -61,14 +60,14 @@ class WeddingDetailsScreen extends ConsumerWidget {
                       ),
                       children: [
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            const CircleBackButton(),
-                            const Spacer(),
                             SnappyTap.builder(
                               onTap: () => context.push('/settings'),
                               builder: (context, hovered) => Container(
-                                width: 40,
-                                height: 40,
+                                width: 46,
+                                height: 46,
+                                alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   shape: BoxShape.circle,

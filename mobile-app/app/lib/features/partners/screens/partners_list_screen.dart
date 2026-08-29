@@ -8,6 +8,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 import '../partner_style.dart';
@@ -71,33 +72,18 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
             bottom: false,
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppTheme.screenMargin,
-                    40,
-                    AppTheme.screenMargin,
-                    0,
-                  ),
-                  child: Row(
-                    children: [
-                      if (widget.selectionMode) ...[
-                        const CircleBackButton(),
-                        const SizedBox(width: 12),
-                      ],
-                      Text(
-                        'Parceiros',
-                        style: AppTypography.displaySerif(
-                          fontSize: 30,
-                          color: AppTheme.ink,
-                        ),
-                      ),
-                      const Spacer(),
-                      if (!widget.selectionMode)
-                        SnappyTap.builder(
+                PageHeader(
+                  title: 'Parceiros',
+                  titleFontSize: 30,
+                  showBack: widget.selectionMode,
+                  trailing: widget.selectionMode
+                      ? null
+                      : SnappyTap.builder(
                           onTap: _showFavoritesComingSoon,
                           builder: (context, hovered) => Container(
-                            width: 40,
-                            height: 40,
+                            width: 46,
+                            height: 46,
+                            alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.circle,
@@ -107,12 +93,11 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             ),
                             child: const Icon(
                               Icons.favorite_border,
+                              size: 18,
                               color: AppTheme.ink,
                             ),
                           ),
                         ),
-                    ],
-                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -189,12 +174,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                   )
                 else
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      14,
-                      AppTheme.screenMargin,
-                      0,
-                    ),
+                    padding: const EdgeInsets.fromLTRB(0, 14, 0, 0),
                     child: _CategoryNavBar(
                       selected: _filter,
                       onChanged: (c) => setState(() => _filter = c),
@@ -256,7 +236,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                             horizontal: AppTheme.screenMargin,
                                           ),
                                           child: Text(
-                                            'Trending',
+                                            'Destaques',
                                             style: Theme.of(
                                               context,
                                             ).textTheme.titleMedium,
@@ -475,6 +455,9 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
         child: ListView.builder(
           controller: _controller,
           scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.screenMargin,
+          ),
           itemCount: _options.length,
           itemBuilder: (context, index) {
             final category = _options[index];

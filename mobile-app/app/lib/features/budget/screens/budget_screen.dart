@@ -83,9 +83,9 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                     child: ListView(
                       padding: EdgeInsets.zero,
                       children: [
-                        const SizedBox(height: 40),
                         PageHeader(
                           title: 'Orçamento',
+                          titleFontSize: 26,
                           trailing: AddActionButton(onTap: _addExpense),
                         ),
                         Padding(

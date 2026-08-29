@@ -14,6 +14,7 @@ import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_widgets.dart';
+import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/support_chat.dart';
 
@@ -103,35 +104,17 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                   bottom: false,
                   child: Column(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppTheme.screenMargin,
-                          40,
-                          AppTheme.screenMargin,
-                          0,
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                      PageHeader(
+                        title: 'Convidados',
+                        titleFontSize: 26,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            const CircleBackButton(),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'Convidados',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                softWrap: false,
-                                style: AppTypography.displaySerif(
-                                  fontSize: 34,
-                                  color: AppTheme.ink,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
                             if (wedding != null) ...[
                               CircleIconButton(
                                 icon: Icons.ios_share,
                                 background: Colors.white,
+                                size: 46,
                                 onTap: () => _shareInvite(wedding),
                               ),
                               const SizedBox(width: 8),
@@ -140,6 +123,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                               icon: Icons.add,
                               background: AppTheme.ink,
                               foreground: Colors.white,
+                              size: 46,
                               onTap: _addGuest,
                             ),
                           ],

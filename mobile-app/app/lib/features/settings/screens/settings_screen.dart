@@ -12,6 +12,7 @@ import '../../../shared/widgets/cover_flow_picker.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
 /// Ecrã de catch-all para tudo o que os mockups do redesign não
@@ -83,24 +84,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     topFadeHeight: 24,
                     bottomFadeHeight: 40,
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppTheme.screenMargin,
-                        40,
-                        AppTheme.screenMargin,
-                        60,
-                      ),
+                      padding: EdgeInsets.zero,
                       children: [
-                        Row(
-                          children: [
-                            const CircleBackButton(),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Definições',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
+                        const PageHeader(title: 'Definições', titleFontSize: 26),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppTheme.screenMargin,
+                            24,
+                            AppTheme.screenMargin,
+                            60,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                         Text(
                           'Atalhos',
                           style: Theme.of(context).textTheme.titleMedium,
@@ -269,6 +265,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           onTap: () => ref
                               .read(authControllerProvider.notifier)
                               .logout(),
+                        ),
+                            ],
+                          ),
                         ),
                       ],
                     ),

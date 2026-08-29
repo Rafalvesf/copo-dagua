@@ -1,34 +1,58 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/chat/chat_controller.dart';
+import '../../../core/mock/mock_backend.dart';
+import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 
-/// Chat mínimo entre o parceiro e o casal cliente, com a possibilidade
-/// de "enviar contrato" como um cartão na própria conversa — o pedido
-/// concreto era "adiciona chat ao botão Contratos, para os contratos
-/// poderem ser enviados no chat com os clientes". Módulo completo
-/// (múltiplos clientes, PDF real, assinatura) fica para
-/// `partner-app/chat/` e `partner-app/contracts/`.
-class PartnerChatScreen extends ConsumerStatefulWidget {
-  const PartnerChatScreen({super.key});
+/// Fio de conversa com um cliente específico das Mensagens — versão
+/// parametrizada de `PartnerChatScreen` (que fica hardcoded a uma única
+/// conversa, ligada ao botão Contratos do dashboard). Usa
+/// `MockBackend.listMessages`/`sendMessage` diretamente com
+/// `conversation.id` como chave da thread, em vez do
+/// `chatControllerProvider` global (que assume uma só conversa por
+/// utilizador autenticado).
+class PartnerChatThreadScreen extends StatefulWidget {
+  final ChatConversation conversation;
+
+  const PartnerChatThreadScreen({super.key, required this.conversation});
 
   @override
-  ConsumerState<PartnerChatScreen> createState() => _PartnerChatScreenState();
+  State<PartnerChatThreadScreen> createState() =>
+      _PartnerChatThreadScreenState();
 }
 
-class _PartnerChatScreenState extends ConsumerState<PartnerChatScreen> {
+class _PartnerChatThreadScreenState extends State<PartnerChatThreadScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+  final _backend = MockBackend.instance;
+
+  bool _loading = true;
+  List<ChatMessage> _messages = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
 
   @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _load() async {
+    final messages = await _backend.listMessages(widget.conversation.id);
+    if (!mounted) return;
+    setState(() {
+      _messages = messages;
+      _loading = false;
+    });
+    _scrollToBottom();
   }
 
   void _scrollToBottom() {
@@ -46,58 +70,30 @@ class _PartnerChatScreenState extends ConsumerState<PartnerChatScreen> {
     final text = _messageController.text;
     if (text.trim().isEmpty) return;
     _messageController.clear();
-    await ref.read(chatControllerProvider.notifier).sendText(text);
-    _scrollToBottom();
-  }
-
-  Future<void> _sendContract() async {
-    final controller = TextEditingController(text: 'Contrato de prestação de serviços');
-    final title = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Enviar contrato'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: 'Nome do contrato'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('Enviar'),
-          ),
-        ],
-      ),
+    final message = await _backend.sendMessage(
+      partnerId: widget.conversation.id,
+      fromPartner: true,
+      text: text.trim(),
     );
-    if (title == null || title.trim().isEmpty) return;
-    await ref.read(chatControllerProvider.notifier).sendContract(title);
+    setState(() => _messages = [..._messages, message]);
     _scrollToBottom();
   }
 
   @override
   Widget build(BuildContext context) {
-    final chat = ref.watch(chatControllerProvider);
-
-    ref.listen(chatControllerProvider, (previous, next) {
-      if ((previous?.messages.length ?? 0) != next.messages.length) {
-        _scrollToBottom();
-      }
-    });
-
     return GradientScaffold(
       background: AppBackground.subtle,
       body: Column(
         children: [
           SafeArea(
             bottom: false,
-            child: PageHeader(title: 'Sofia & André', titleFontSize: 26),
+            child: PageHeader(
+              title: widget.conversation.name,
+              titleFontSize: 26,
+            ),
           ),
           Expanded(
-            child: chat.loading && chat.messages.isEmpty
+            child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     controller: _scrollController,
@@ -107,24 +103,19 @@ class _PartnerChatScreenState extends ConsumerState<PartnerChatScreen> {
                       AppTheme.screenMargin,
                       16,
                     ),
-                    itemCount: chat.messages.length,
+                    itemCount: _messages.length,
                     itemBuilder: (context, index) {
-                      final message = chat.messages[index];
+                      final message = _messages[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: Align(
                           alignment: message.fromPartner
                               ? Alignment.centerRight
                               : Alignment.centerLeft,
-                          child: message.isContract
-                              ? _ContractBubble(
-                                  title: message.contractTitle!,
-                                  fromPartner: message.fromPartner,
-                                )
-                              : _TextBubble(
-                                  text: message.text ?? '',
-                                  fromPartner: message.fromPartner,
-                                ),
+                          child: _TextBubble(
+                            text: message.text ?? '',
+                            fromPartner: message.fromPartner,
+                          ),
                         ),
                       );
                     },
@@ -141,11 +132,6 @@ class _PartnerChatScreenState extends ConsumerState<PartnerChatScreen> {
               ),
               child: Row(
                 children: [
-                  IconButton(
-                    tooltip: 'Enviar contrato',
-                    onPressed: _sendContract,
-                    icon: const Icon(Icons.description_outlined),
-                  ),
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
@@ -209,61 +195,7 @@ class _TextBubble extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: TextStyle(
-            color: fromPartner ? Colors.white : AppTheme.ink,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ContractBubble extends StatelessWidget {
-  final String title;
-  final bool fromPartner;
-
-  const _ContractBubble({required this.title, required this.fromPartner});
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.72,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.greenDark, width: 1.5),
-          boxShadow: AppTheme.cardShadow,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.description_outlined,
-              color: AppColors.greenDark,
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Contrato',
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          style: TextStyle(color: fromPartner ? Colors.white : AppTheme.ink),
         ),
       ),
     );

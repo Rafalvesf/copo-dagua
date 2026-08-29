@@ -105,9 +105,9 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                     child: ListView(
                       padding: EdgeInsets.zero,
                       children: [
-                        const SizedBox(height: 40),
                         PageHeader(
                           title: 'Lugares',
+                          titleFontSize: 26,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -119,8 +119,9 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                       ),
                                     ),
                                 builder: (context, hovered) => Container(
-                                  width: 40,
-                                  height: 40,
+                                  width: 46,
+                                  height: 46,
+                                  alignment: Alignment.center,
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     shape: BoxShape.circle,

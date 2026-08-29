@@ -110,8 +110,8 @@ class CircleIconButton extends StatelessWidget {
   }
 }
 
-/// Botão circular de voltar, para usar como `leading` de um AppBar —
-/// substitui a seta simples por omissão do Flutter.
+/// Botão de voltar — só a seta, sem fundo/sombra, para usar como
+/// `leading` de um AppBar ou no topo de um [PageHeader].
 class CircleBackButton extends StatelessWidget {
   final VoidCallback? onTap;
 
@@ -131,16 +131,17 @@ class CircleBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.only(left: 12),
-        child: CircleIconButton(
-          icon: Icons.arrow_back,
-          background: Colors.white,
-          shadow: false,
-          onTap: onTap ?? () => _handleBack(context),
-        ),
-      ),
+    // Alinhamento à esquerda (em vez do centro por omissão) para o
+    // glifo da seta ficar rente à margem do ecrã, tal como o resto do
+    // conteúdo — a caixa de toque continua 46px, só cresce para a
+    // direita, sem empurrar o desenho da seta para dentro.
+    return IconButton(
+      onPressed: onTap ?? () => _handleBack(context),
+      icon: const Icon(Icons.arrow_back, color: AppTheme.ink),
+      iconSize: 24,
+      padding: EdgeInsets.zero,
+      alignment: Alignment.centerLeft,
+      constraints: const BoxConstraints(minWidth: 46, minHeight: 46),
     );
   }
 }

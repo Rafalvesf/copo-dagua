@@ -6,6 +6,7 @@ import '../../../core/checklist/checklist_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/wedding/date_format_pt.dart';
 import '../../../shared/category_tag_color.dart';
 import '../../../shared/widgets/assignee_cluster.dart';
 import '../../../shared/widgets/buttons.dart';
@@ -105,11 +106,19 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                     child: ListView(
                       padding: EdgeInsets.zero,
                       children: [
-                        const SizedBox(height: 40),
                         PageHeader(
                           title: 'Tarefas',
                           subtitle: 'Organizem tudo e nunca percam nada',
-                          trailing: AddActionButton(onTap: _addTask),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _DateShortcut(
+                                onTap: () => context.push('/calendar'),
+                              ),
+                              const SizedBox(width: 8),
+                              AddActionButton(onTap: _addTask),
+                            ],
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(
@@ -188,6 +197,50 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                 const Positioned.fill(child: DraggableChatBubble()),
               ],
             ),
+    );
+  }
+}
+
+/// Atalho para o Calendário — mostra a data de hoje, ao lado do botão
+/// "+ Nova tarefa" no cabeçalho de Tarefas.
+class _DateShortcut extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _DateShortcut({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SnappyTap(
+      onTap: onTap,
+      child: Container(
+        height: 46,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: AppTheme.cardShadow,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.calendar_today_outlined,
+              size: 15,
+              color: AppTheme.accentOliveDark,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              formatShortDatePt(DateTime.now()),
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.ink,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
