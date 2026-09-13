@@ -11,6 +11,7 @@ Color bookingStatusColor(BookingStatus status) {
     case BookingStatus.novo:
     case BookingStatus.emAnalise:
       return AppStatusColors.pending;
+    case BookingStatus.aceite:
     case BookingStatus.confirmado:
       return AppStatusColors.confirmed;
     case BookingStatus.concluido:

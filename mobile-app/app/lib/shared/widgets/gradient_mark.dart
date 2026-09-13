@@ -28,12 +28,16 @@ class GradientMark extends StatelessWidget {
   }
 }
 
-/// Emblema circular de troca de conta — usado no canto superior direito
-/// dos ecrãs do parceiro (ver `page_header.dart`'s `PageHeader.trailing`).
-/// Reaproveita [GradientMark] como gatilho de um menu com "Ver como
-/// Noivo/a" / "Sair", o mesmo par de ações já usado inline em
-/// `partner_home_screen.dart` — aqui só para os ecrãs novos, o dashboard
-/// mantém a sua cópia própria.
+/// Emblema circular de conta — usado no canto superior direito dos ecrãs
+/// do parceiro (ver `page_header.dart`'s `PageHeader.trailing`).
+/// Reaproveita [GradientMark] como gatilho de um menu com "Sair".
+///
+/// Até 2026-08-30 também tinha "Ver como Noivo/a" (`switchDemoAccount()`),
+/// um atalho que trocava entre as duas contas de demonstração fixas sem
+/// pedir password — removido ao ligar a autenticação real
+/// (`core/auth/auth_controller.dart`): não há equivalente com contas
+/// reais, cada uma com a sua própria password. Ver
+/// `mobile-app/dashboard/tasks.md` para a nota sobre este atalho de teste.
 class AccountSwitcherBadge extends ConsumerWidget {
   const AccountSwitcherBadge({super.key});
 
@@ -44,12 +48,9 @@ class AccountSwitcherBadge extends ConsumerWidget {
       onSelected: (value) {
         if (value == 'logout') {
           ref.read(authControllerProvider.notifier).logout();
-        } else if (value == 'switch') {
-          ref.read(authControllerProvider.notifier).switchDemoAccount();
         }
       },
       itemBuilder: (context) => const [
-        PopupMenuItem(value: 'switch', child: Text('Ver como Noivo/a')),
         PopupMenuItem(value: 'logout', child: Text('Sair')),
       ],
     );

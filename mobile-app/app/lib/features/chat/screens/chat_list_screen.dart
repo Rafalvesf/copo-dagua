@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/chat/chat_helpers.dart';
 import '../../../core/chat/chat_list_controller.dart';
+import '../../../core/models/models.dart';
+import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
@@ -20,6 +24,7 @@ class ChatListScreen extends ConsumerStatefulWidget {
 
 class _ChatListScreenState extends ConsumerState<ChatListScreen> {
   final _search = TextEditingController();
+  bool _startingConversation = false;
 
   @override
   void initState() {
@@ -31,6 +36,47 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
   void dispose() {
     _search.dispose();
     super.dispose();
+  }
+
+  Future<void> _startNewConversation() async {
+    if (_startingConversation) return;
+    final wedding = ref.read(weddingControllerProvider).wedding;
+    if (wedding == null) return;
+    setState(() => _startingConversation = true);
+    try {
+      final partner = await context.push<Partner>(
+        '/partners',
+        extra: const PartnerPickerArgs(selectionMode: true),
+      );
+      if (partner == null || !mounted) return;
+      final conversationId = await getOrCreateConversation(
+        weddingId: wedding.id,
+        partnerId: partner.id,
+      );
+      if (!mounted) return;
+      await context.push(
+        '/chat/$conversationId',
+        extra: ChatConversation(
+          id: conversationId,
+          weddingId: wedding.id,
+          partnerId: partner.id,
+          name: partner.name,
+          avatarSeed: partner.id,
+          avatarUrl: partner.imageUrl,
+        ),
+      );
+      if (mounted) {
+        ref.read(chatListControllerProvider.notifier).load(wedding.id);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível iniciar a conversa.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _startingConversation = false);
+    }
   }
 
   @override
@@ -53,31 +99,17 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               children: [
                 PageHeader(
                   title: 'Chat',
-                  titleFontSize: 32,
+                  titleFontSize: 30,
                   showBack: false,
-                  trailing: SnappyTap.builder(
-                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Nova conversa em breve.'),
-                      ),
-                    ),
-                    builder: (context, hovered) => Container(
-                      width: 46,
-                      height: 46,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: hovered
-                            ? AppTheme.cardShadowStrong
-                            : AppTheme.cardShadow,
-                      ),
-                      child: const Icon(
-                        Icons.add_rounded,
-                        color: AppTheme.ink,
-                      ),
-                    ),
-                  ),
+                  // Mesma arquitetura/layout do cabeçalho de
+                  // "Parceiros" (`partners_list_screen.dart`): cabeçalho
+                  // só com o título, e o ícone de ação (lá é o coração,
+                  // aqui é o "+" de nova conversa) ao lado da barra de
+                  // pesquisa, na linha por baixo. `trailing` aqui é só
+                  // um espaçador invisível — mantém a altura do
+                  // cabeçalho (ver o mesmo comentário em
+                  // `partners_list_screen.dart`).
+                  trailing: const SizedBox(width: 46, height: 46),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -86,27 +118,52 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                     AppTheme.screenMargin,
                     0,
                   ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
-                      boxShadow: AppTheme.cardShadow,
-                    ),
-                    child: TextField(
-                      controller: _search,
-                      decoration: InputDecoration(
-                        hintText: 'Pesquisar conversas...',
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(999),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: AppTheme.searchBarShadow,
+                          ),
+                          child: TextField(
+                            controller: _search,
+                            decoration: InputDecoration(
+                              hintText: 'Pesquisar conversas...',
+                              prefixIcon: const Icon(Icons.search, size: 20),
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(999),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.accentOliveDark,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 10),
+                      SnappyTap(
+                        onTap: _startingConversation ? null : _startNewConversation,
+                        child: Container(
+                          width: 46,
+                          height: 46,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.add_rounded,
+                            color: AppTheme.ink,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(

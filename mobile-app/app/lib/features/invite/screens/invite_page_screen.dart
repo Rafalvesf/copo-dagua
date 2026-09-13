@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/mock/mock_backend.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
-import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 
 /// Página pública de convite — acessível sem sessão iniciada, para os
@@ -27,14 +26,6 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
   void initState() {
     super.initState();
     _weddingFuture = MockBackend.instance.getWeddingBySlug(widget.slug);
-  }
-
-  Future<void> _openRsvpSheet(Wedding wedding) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => _RsvpSheet(wedding: wedding),
-    );
   }
 
   @override
@@ -125,9 +116,8 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppTheme.surface,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: AppTheme.cardShadow,
                     ),
                     child: Column(
                       children: [
@@ -153,8 +143,18 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: () => _openRsvpSheet(wedding),
-                    child: const Text('Confirmar presença'),
+                    onPressed: () => context.push(
+                      '/register?role=guest'
+                      '${wedding.guestCode != null ? '&code=${wedding.guestCode}' : ''}',
+                    ),
+                    child: const Text('Criar conta e confirmar presença'),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'É preciso criar conta para confirmar presença e '
+                    'acompanhar o casamento.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
                   ),
                 ],
               ),
@@ -191,114 +191,6 @@ class _InfoLine extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _RsvpSheet extends StatefulWidget {
-  final Wedding wedding;
-
-  const _RsvpSheet({required this.wedding});
-
-  @override
-  State<_RsvpSheet> createState() => _RsvpSheetState();
-}
-
-class _RsvpSheetState extends State<_RsvpSheet> {
-  final _name = TextEditingController();
-  RsvpStatus _status = RsvpStatus.confirmed;
-  bool _submitted = false;
-  bool _submitting = false;
-  String? _nameError;
-
-  Future<void> _submit() async {
-    if (_name.text.trim().isEmpty) {
-      setState(() => _nameError = 'Indica o teu nome');
-      return;
-    }
-    setState(() => _submitting = true);
-    await MockBackend.instance.addGuest(
-      Guest(
-        id: '',
-        weddingId: widget.wedding.id,
-        name: _name.text.trim(),
-        rsvpStatus: _status,
-      ),
-    );
-    if (!mounted) return;
-    setState(() {
-      _submitting = false;
-      _submitted = true;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: _submitted
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.check_circle,
-                  color: AppStatusColors.confirmed,
-                  size: 40,
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Resposta enviada! Obrigado.',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 16),
-                PrimaryButton(
-                  label: 'Fechar',
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            )
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Confirmar presença',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                AuthTextField(
-                  label: 'O teu nome',
-                  controller: _name,
-                  errorText: _nameError,
-                ),
-                const SizedBox(height: 16),
-                SegmentedButton<RsvpStatus>(
-                  segments: const [
-                    ButtonSegment(
-                      value: RsvpStatus.confirmed,
-                      label: Text('Vou'),
-                    ),
-                    ButtonSegment(
-                      value: RsvpStatus.declined,
-                      label: Text('Não vou'),
-                    ),
-                  ],
-                  selected: {_status},
-                  onSelectionChanged: (s) => setState(() => _status = s.first),
-                ),
-                const SizedBox(height: 20),
-                PrimaryButton(
-                  label: 'Enviar',
-                  onPressed: _submit,
-                  loading: _submitting,
-                ),
-              ],
-            ),
     );
   }
 }

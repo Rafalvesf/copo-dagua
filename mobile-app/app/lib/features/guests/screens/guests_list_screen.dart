@@ -16,7 +16,6 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_widgets.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/support_chat.dart';
 
 class GuestsListScreen extends ConsumerStatefulWidget {
   const GuestsListScreen({super.key});
@@ -68,7 +67,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => _InviteShareSheet(wedding: wedding),
+      builder: (context) => InviteShareSheet(wedding: wedding),
     );
   }
 
@@ -107,27 +106,6 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                       PageHeader(
                         title: 'Convidados',
                         titleFontSize: 26,
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (wedding != null) ...[
-                              CircleIconButton(
-                                icon: Icons.ios_share,
-                                background: Colors.white,
-                                size: 46,
-                                onTap: () => _shareInvite(wedding),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            CircleIconButton(
-                              icon: Icons.add,
-                              background: AppTheme.ink,
-                              foreground: Colors.white,
-                              size: 46,
-                              onTap: _addGuest,
-                            ),
-                          ],
-                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(
@@ -136,27 +114,52 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                           AppTheme.screenMargin,
                           0,
                         ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(999),
-                            boxShadow: AppTheme.cardShadow,
-                          ),
-                          child: TextField(
-                            controller: _search,
-                            decoration: InputDecoration(
-                              hintText: 'Pesquisar convidados...',
-                              prefixIcon: const Icon(Icons.search, size: 20),
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(999),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 12,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(999),
+                                  boxShadow: AppTheme.searchBarShadow,
+                                ),
+                                child: TextField(
+                                  controller: _search,
+                                  decoration: InputDecoration(
+                                    hintText: 'Pesquisar convidados...',
+                                    prefixIcon: const Icon(Icons.search, size: 20),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(999),
+                                      borderSide: const BorderSide(
+                                        color: AppTheme.accentOliveDark,
+                                      ),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            if (wedding != null) ...[
+                              const SizedBox(width: 10),
+                              CircleIconButton(
+                                icon: Icons.ios_share,
+                                background: Colors.white,
+                                size: 46,
+                                onTap: () => _shareInvite(wedding),
+                              ),
+                            ],
+                            const SizedBox(width: 10),
+                            CircleIconButton(
+                              icon: Icons.add,
+                              background: AppTheme.ink,
+                              foreground: Colors.white,
+                              size: 46,
+                              onTap: _addGuest,
+                            ),
+                          ],
                         ),
                       ),
                       if (groups.isNotEmpty)
@@ -274,7 +277,6 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                   bottom: 0,
                   child: FloatingBottomNav(current: AppTab.wedding),
                 ),
-                const Positioned.fill(child: DraggableChatBubble()),
               ],
             ),
     );
@@ -316,9 +318,8 @@ class _StatTile extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(vertical: big ? 13 : 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: background ?? Colors.white,
+          color: background ?? AppTheme.surface,
           borderRadius: BorderRadius.circular(18),
-          boxShadow: AppTheme.cardShadowStrong,
         ),
         child: Column(
           children: [
@@ -359,28 +360,36 @@ class _StatTile extends StatelessWidget {
   }
 }
 
-class _InviteShareSheet extends StatefulWidget {
+class InviteShareSheet extends StatefulWidget {
   final Wedding wedding;
 
-  const _InviteShareSheet({required this.wedding});
+  const InviteShareSheet({super.key, required this.wedding});
 
   @override
-  State<_InviteShareSheet> createState() => _InviteShareSheetState();
+  State<InviteShareSheet> createState() => InviteShareSheetState();
 }
 
-class _InviteShareSheetState extends State<_InviteShareSheet> {
-  bool _copied = false;
+class InviteShareSheetState extends State<InviteShareSheet> {
+  bool _linkCopied = false;
+  bool _codeCopied = false;
 
   Future<void> _copyLink() async {
     await Clipboard.setData(
       ClipboardData(text: 'https://${widget.wedding.inviteUrl}'),
     );
     if (!mounted) return;
-    setState(() => _copied = true);
+    setState(() => _linkCopied = true);
+  }
+
+  Future<void> _copyCode(String code) async {
+    await Clipboard.setData(ClipboardData(text: code));
+    if (!mounted) return;
+    setState(() => _codeCopied = true);
   }
 
   @override
   Widget build(BuildContext context) {
+    final guestCode = widget.wedding.guestCode;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
       child: Column(
@@ -393,7 +402,8 @@ class _InviteShareSheetState extends State<_InviteShareSheet> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Envia este link aos teus convidados para veres quem confirma.',
+            'Envia este link aos teus convidados — vão precisar de criar '
+            'conta para confirmar presença.',
             style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
           ),
           const SizedBox(height: 16),
@@ -417,12 +427,53 @@ class _InviteShareSheetState extends State<_InviteShareSheet> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: _copyLink,
-            icon: Icon(_copied ? Icons.check : Icons.copy, size: 18),
-            label: Text(_copied ? 'Copiado!' : 'Copiar link'),
+            icon: Icon(_linkCopied ? Icons.check : Icons.copy, size: 18),
+            label: Text(_linkCopied ? 'Copiado!' : 'Copiar link'),
           ),
+          if (guestCode != null) ...[
+            const SizedBox(height: 24),
+            Text(
+              'Código do casal',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Se já têm a app instalada, os convidados usam este código '
+              'ao criar conta para ficar ligados ao vosso casamento.',
+              style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.green,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      guestCode,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () => _copyCode(guestCode),
+              icon: Icon(_codeCopied ? Icons.check : Icons.copy, size: 18),
+              label: Text(_codeCopied ? 'Copiado!' : 'Copiar código'),
+            ),
+          ],
         ],
       ),
     );

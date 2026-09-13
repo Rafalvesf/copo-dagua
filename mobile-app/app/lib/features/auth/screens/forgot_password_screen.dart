@@ -10,7 +10,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -28,43 +29,65 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return GradientScaffold(
       background: AppBackground.subtle,
-      extendBodyBehindAppBar: false,
-      appBar: AppBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: _sent
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.mark_email_read_outlined, size: 56, color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Se esse email existir na nossa plataforma, vais receber um link para repor a password.',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('Esqueci-me da password', style: Theme.of(context).textTheme.headlineSmall),
-                  const SizedBox(height: 16),
-                  AuthTextField(label: 'Email', controller: _email, keyboardType: TextInputType.emailAddress),
-                  const SizedBox(height: 20),
-                  PrimaryButton(
-                    label: 'Enviar link',
-                    loading: _loading,
-                    onPressed: () async {
-                      setState(() => _loading = true);
-                      await ref.read(authControllerProvider.notifier).requestPasswordReset(_email.text.trim());
-                      setState(() {
-                        _loading = false;
-                        _sent = true;
-                      });
-                    },
-                  ),
-                ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const CircleBackButton(),
+              const SizedBox(height: 8),
+              Expanded(
+                child: _sent
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.mark_email_read_outlined,
+                            size: 56,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Se esse email existir na nossa plataforma, vais receber um link para repor a password.',
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Esqueci-me da password',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 16),
+                          AuthTextField(
+                            label: 'Email',
+                            controller: _email,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 20),
+                          PrimaryButton(
+                            label: 'Enviar link',
+                            loading: _loading,
+                            onPressed: () async {
+                              setState(() => _loading = true);
+                              await ref
+                                  .read(authControllerProvider.notifier)
+                                  .requestPasswordReset(_email.text.trim());
+                              setState(() {
+                                _loading = false;
+                                _sent = true;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
               ),
+            ],
+          ),
+        ),
       ),
     );
   }

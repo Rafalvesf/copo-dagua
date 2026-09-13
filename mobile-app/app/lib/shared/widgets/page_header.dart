@@ -111,7 +111,6 @@ class AddActionButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppTheme.accentOliveDark,
             shape: BoxShape.circle,
-            boxShadow: AppTheme.cardShadow,
           ),
           child: const Icon(Icons.add_rounded, size: 24, color: Colors.white),
         ),

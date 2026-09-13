@@ -24,7 +24,6 @@ create table public.profiles (
 );
 
 -- Índices
-create unique index profiles_role_idx on public.profiles (role);
 create index profiles_status_idx on public.profiles (status);
 
 -- Log de tentativas de login falhadas (anti brute-force)

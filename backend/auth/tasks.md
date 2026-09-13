@@ -4,6 +4,8 @@
 
 | Item | Prioridade | Nota |
 |---|---|---|
+| **Voltar a ligar "Confirm email"** (Supabase Dashboard → Authentication → Sign In/Providers → Email) e configurar SMTP próprio | **Alta — bloqueia produção** | Desligado a 2026-08-30 como conveniência de teste (ver `ROADMAP.md`), depois de o serviço de email por omissão do Supabase esgotar o rate limit durante os testes de signup real. Enquanto estiver desligado, qualquer signup real fica sem verificação de email nenhuma — inaceitável para utilizadores reais. |
+| Ativar "Leaked Password Protection" (Supabase Dashboard → Authentication → Policies) | Média | Sinalizado pelo security advisor (`auth_leaked_password_protection`) a 2026-08-30, durante a Fase 2 de `ROADMAP.md` — não é causado por nenhuma alteração desta sessão, só a primeira vez que o advisor foi corrido depois de existir password real em uso. Verifica passwords novas contra o HaveIBeenPwned; sem custo de implementação do nosso lado, só o toggle. |
 | Decidir mecanismo de rate limiting (Edge Function custom vs nativo Supabase) | Alta | Bloqueia RN07 |
 | Implementar `is_admin()` como função `security definer` reutilizável | Alta | Base para RLS de todos os módulos seguintes |
 | Criar `mobile-app/shared/design-system.md` e pacote Flutter interno com os componentes de `ui.md` | Alta | Bloqueia velocidade de desenvolvimento dos módulos seguintes |

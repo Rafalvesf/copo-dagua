@@ -49,6 +49,7 @@ create table public.partner_profile_categories (
 create or replace function public.enforce_partner_category_limit()
 returns trigger
 language plpgsql
+set search_path = public, pg_temp
 as $$
 begin
   if (select count(*) from public.partner_profile_categories where partner_id = new.partner_id) >= 5 then
@@ -112,6 +113,7 @@ returns boolean
 language sql
 security definer
 stable
+set search_path = public, pg_temp
 as $$
   select exists (
     select 1 from public.partner_profiles sp
@@ -122,6 +124,9 @@ as $$
       and p.status = 'active'
   );
 $$;
+
+revoke execute on function public.is_partner_profile_visible(uuid) from public, anon;
+grant execute on function public.is_partner_profile_visible(uuid) to authenticated;
 
 create policy "Owner can view own profile"
   on public.partner_profiles for select
@@ -186,8 +191,8 @@ create policy "Owner can manage own verification data"
   using (partner_id = auth.uid())
   with check (partner_id = auth.uid());
 
-grant select, update on public.partner_profiles to app_authenticated;
-grant select on public.partner_categories to app_authenticated;
-grant select, insert, update, delete on public.partner_profile_categories to app_authenticated;
-grant select, insert, update, delete on public.partner_portfolio_items to app_authenticated;
-grant select, insert, update on public.partner_verification to app_authenticated;
+grant select, update on public.partner_profiles to authenticated;
+grant select on public.partner_categories to authenticated;
+grant select, insert, update, delete on public.partner_profile_categories to authenticated;
+grant select, insert, update, delete on public.partner_portfolio_items to authenticated;
+grant select, insert, update on public.partner_verification to authenticated;

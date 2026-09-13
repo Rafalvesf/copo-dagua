@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/auth_controller.dart';
-import '../../../core/mock/mock_backend.dart';
-import '../../../core/models/models.dart';
+import '../../../core/partner_profile/partner_profile_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_mark.dart';
@@ -49,6 +48,55 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
     setState(() => onSaved(result.trim()));
   }
 
+  Future<void> _editMultilineField({
+    required String label,
+    required String value,
+    required ValueChanged<String> onSaved,
+  }) async {
+    final controller = TextEditingController(text: value);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(label),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLines: 5,
+          minLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(controller.text),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (result == null) return;
+    setState(() => onSaved(result.trim()));
+  }
+
+  Future<void> _editCategories() async {
+    final options = await ref.read(partnerProfileControllerProvider.notifier).loadCategoryOptions();
+    final selectedIds = await ref
+        .read(partnerProfileControllerProvider.notifier)
+        .loadSelectedCategoryIds(_profile.id);
+    if (!mounted) return;
+    final result = await showDialog<Set<String>>(
+      context: context,
+      builder: (context) => CategoryPickerDialog(options: options, initialSelectedIds: selectedIds),
+    );
+    if (result == null) return;
+    final selected = options.where((o) => result.contains(o.id)).toList();
+    await ref.read(partnerProfileControllerProvider.notifier).saveCategories(selected);
+    if (!mounted) return;
+    setState(() => _profile = ref.read(authControllerProvider).profile!);
+  }
+
   void _comingSoon() {
     ScaffoldMessenger.of(
       context,
@@ -57,18 +105,18 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    final updated = await MockBackend.instance.updateBusinessInfo(
-      _profile.id,
-      fullName: _profile.fullName,
-      businessDescription: _profile.businessDescription,
-      website: _profile.website,
-      instagram: _profile.instagram,
-      phone: _profile.phone,
-      contactEmail: _profile.contactEmail,
-      acceptingRequests: _profile.acceptingRequests,
-      travelsForEvents: _profile.travelsForEvents,
-    );
-    ref.read(authControllerProvider.notifier).refreshProfile(updated);
+    await ref.read(partnerProfileControllerProvider.notifier).updateBusinessInfo(
+          businessName: _profile.businessName,
+          businessDescription: _profile.businessDescription,
+          serviceAreas: _profile.serviceAreas,
+          yearsExperience: _profile.yearsExperience,
+          website: _profile.website,
+          instagram: _profile.instagram,
+          phone: _profile.phone,
+          contactEmail: _profile.contactEmail,
+          acceptingRequests: _profile.acceptingRequests,
+          travelsForEvents: _profile.travelsForEvents,
+        );
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(
@@ -169,39 +217,57 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                       _InfoRow(
                         icon: Icons.sell_outlined,
                         label: 'Nome do negócio',
-                        value: _profile.fullName,
+                        value: _profile.businessName?.isEmpty ?? true
+                            ? '—'
+                            : _profile.businessName!,
                         editable: true,
                         onTap: () => _editField(
                           label: 'Nome do negócio',
-                          value: _profile.fullName,
+                          value: _profile.businessName ?? '',
                           onSaved: (v) => _profile = _profile.copyWith(
-                            fullName: v.isEmpty ? _profile.fullName : v,
+                            businessName: v.isEmpty ? _profile.businessName : v,
                           ),
                         ),
                       ),
                       _InfoRow(
                         icon: Icons.camera_alt_outlined,
-                        label: 'Categoria',
-                        value: _profile.category?.label ?? '—',
-                        onTap: _comingSoon,
+                        label: 'Categoria (até 5)',
+                        value: _profile.categoryLabels.isEmpty
+                            ? '—'
+                            : _profile.categoryLabels.join(' · '),
+                        editable: true,
+                        onTap: _editCategories,
                       ),
                       _InfoRow(
                         icon: Icons.description_outlined,
                         label: 'Descrição',
-                        value: _profile.businessDescription ?? '—',
-                        onTap: _comingSoon,
-                      ),
-                      _InfoRow(
-                        icon: Icons.place_outlined,
-                        label: 'Localização',
-                        value: _profile.location ?? '—',
-                        onTap: _comingSoon,
+                        value: _profile.businessDescription?.isEmpty ?? true
+                            ? '—'
+                            : _profile.businessDescription!,
+                        editable: true,
+                        onTap: () => _editMultilineField(
+                          label: 'Descrição',
+                          value: _profile.businessDescription ?? '',
+                          onSaved: (v) =>
+                              _profile = _profile.copyWith(businessDescription: v),
+                        ),
                       ),
                       _InfoRow(
                         icon: Icons.radar_outlined,
                         label: 'Área de serviço',
                         value: serviceAreas.isEmpty ? '—' : serviceAreas,
-                        onTap: _comingSoon,
+                        editable: true,
+                        onTap: () => _editField(
+                          label: 'Área de serviço (separadas por vírgula)',
+                          value: _profile.serviceAreas.join(', '),
+                          onSaved: (v) => _profile = _profile.copyWith(
+                            serviceAreas: v
+                                .split(',')
+                                .map((s) => s.trim())
+                                .where((s) => s.isNotEmpty)
+                                .toList(),
+                          ),
+                        ),
                       ),
                       _InfoRow(
                         icon: Icons.star_border_rounded,
@@ -209,7 +275,14 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                         value: _profile.yearsExperience == null
                             ? '—'
                             : '${_profile.yearsExperience} anos',
-                        onTap: _comingSoon,
+                        editable: true,
+                        onTap: () => _editField(
+                          label: 'Anos de experiência',
+                          value: _profile.yearsExperience?.toString() ?? '',
+                          onSaved: (v) => _profile = _profile.copyWith(
+                            yearsExperience: int.tryParse(v) ?? _profile.yearsExperience,
+                          ),
+                        ),
                       ),
                       _InfoRow(
                         icon: Icons.language,
@@ -320,6 +393,67 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class CategoryPickerDialog extends StatefulWidget {
+  final List<PartnerCategoryOption> options;
+  final Set<String> initialSelectedIds;
+
+  const CategoryPickerDialog({super.key, required this.options, required this.initialSelectedIds});
+
+  @override
+  State<CategoryPickerDialog> createState() => CategoryPickerDialogState();
+}
+
+class CategoryPickerDialogState extends State<CategoryPickerDialog> {
+  static const _maxCategories = 5;
+  final Set<String> _selected = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _selected.addAll(widget.initialSelectedIds);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Categorias'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: widget.options.map((option) {
+            final selected = _selected.contains(option.id);
+            return FilterChip(
+              label: Text(option.label),
+              selected: selected,
+              onSelected: (value) {
+                setState(() {
+                  if (value) {
+                    if (_selected.length < _maxCategories) _selected.add(option.id);
+                  } else {
+                    _selected.remove(option.id);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_selected),
+          child: const Text('Guardar'),
+        ),
+      ],
     );
   }
 }

@@ -13,6 +13,13 @@ alter table public.weddings
   add column pending_deletion_at timestamptz,
   add column completed_at timestamptz,
   add column updated_at timestamptz not null default now();
+
+-- Frase de destaque do casal, editável em Definições e mostrada no ecrã
+-- "Os noivos" (`Wedding.quote` no modelo Flutter). Adicionada em
+-- `012_wedding_quote.sql` (2026-08-30) — existia na UI e no modelo desde
+-- antes, mas nunca tinha sido documentada nem persistida.
+alter table public.weddings
+  add column quote text;
 ```
 
 ## Colaboradores

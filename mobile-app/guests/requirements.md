@@ -14,20 +14,21 @@
 - Ver detalhe da resposta de um convidado (confirmação, acompanhante, restrições alimentares, notas)
 - Adicionar convidados manualmente sem contacto (para convites em papel, sem RSVP digital)
 
-### Lado do convidado (público, sem conta)
-- Abrir link único de RSVP (sem login)
-- Confirmar ou recusar presença
+### Lado do convidado (conta obrigatória)
+- Abrir link único de convite → redireciona sempre para a criação de conta (`register_screen.dart`, `?role=guest&code=...`), nunca para um formulário de RSVP anónimo
+- Criar conta com o `guest_code` do casal (`050_wedding_guest_code.sql`) pré-preenchido a partir do link, ou introduzido manualmente
+- Confirmar ou recusar presença, já autenticado
 - Se aplicável, indicar nome do acompanhante
 - Indicar restrições alimentares/alergias
 - Deixar uma mensagem opcional para os noivos
-- Alterar a resposta depois de submetida, enquanto o link permanecer válido
+- Alterar a resposta depois de submetida
 
 ## Regras de negócio
 
 | # | Regra |
 |---|---|
 | RN01 | Todo o convidado pertence a exatamente um `wedding_id`. Gestão restrita a owner e colaboradores ativos (via `is_wedding_member()`, herdado do módulo Wedding). |
-| RN02 | O acesso do convidado ao RSVP é feito por **token único, imprevisível, sem autenticação** — nunca por email/password. O convidado nunca cria conta na plataforma. |
+| RN02 | **Revista (2026-09-06):** criar conta é obrigatório para o convidado — deixou de existir RSVP anónimo por token. O convidado entra pelo `guest_code` do casal (`050_wedding_guest_code.sql`), validado por `lookup_wedding_by_guest_code()` antes do signup e associado por `join_wedding_by_code()` depois. O link de convite (`invite_page_screen.dart`) continua a existir mas agora só encaminha para `/register?role=guest&code=...` com o código pré-preenchido, em vez de abrir um formulário de RSVP sem conta. |
 | RN03 | Um convidado só pode indicar acompanhante se `plus_one_allowed = true` nesse registo, definido previamente pelo casal. |
 | RN04 | O convite de RSVP digital só pode ser enviado se o convidado tiver email ou telefone preenchido. Convidados sem contacto ficam marcados como "convite em papel" e o casal atualiza o estado manualmente. |
 | RN05 | O convidado pode alterar a resposta quantas vezes quiser enquanto o token for válido — não há "resposta final" bloqueada, porque planos mudam (ex: alguém que tinha recusado e afinal pode ir). |
@@ -37,4 +38,4 @@
 
 ## Risco identificado
 
-RN02/RN05 (token sem expiração e sem "resposta final") favorecem simplicidade e correção de respostas ao longo do tempo, mas criam uma superfície de acesso público que precisa de proteção cuidadosa contra brute-force de tokens (ver `edge-cases.md` e `tasks.md` — rate limiting na Edge Function pública, à semelhança do que já fizemos para login em Authentication).
+RN05 (sem "resposta final" bloqueada) favorece correção de respostas ao longo do tempo. Com RN02 revista, a superfície pública deixou de ser um token de RSVP e passou a ser `lookup_wedding_by_guest_code()` (só devolve nomes do casal, chamada antes de existir conta) — continua a precisar de proteção contra brute-force do `guest_code` (ver `edge-cases.md` e `tasks.md` — rate limiting na função pública, à semelhança do que já fizemos para login em Authentication).

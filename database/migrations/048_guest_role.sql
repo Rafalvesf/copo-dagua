@@ -1,0 +1,26 @@
+-- ============================================================
+-- Authentication — terceiro role público (backend/auth/requirements.md
+-- RN01, mobile-app/app/lib/features/auth/screens/role_selection_screen.dart
+-- "Sou convidado")
+-- ============================================================
+--
+-- Pedido explícito do utilizador (2026-09-04): a opção de criar conta
+-- tem de aparecer no próprio ecrã de registo, não só numa página pública
+-- de convite. `role_selection_screen.dart` ganhou uma terceira opção
+-- ("Sou convidado") que passa `role=guest` para o registo normal
+-- (`RegisterScreen`/`AuthController.register`) — já genérico o
+-- suficiente para qualquer `UserRole`, só faltava o backend aceitar o
+-- valor.
+--
+-- Distinto de propósito do RSVP por token de `mobile-app/guests/`
+-- (RN02 em requirements.md: "o convidado nunca cria conta na
+-- plataforma", continua válido) — este é um role de conta genérico,
+-- sem `wedding_id` nenhum associado no momento do registo. `profiles`
+-- já aceita a linha sem alterações (`onboarding_completed` fica sempre
+-- `false`, ignorado para este role em `AuthController.statusFor`) e
+-- `handle_new_user()` (011_auth_provisioning.sql) só tem lógica extra
+-- para `role = 'partner'`, por isso não precisa de alterações.
+--
+-- `ALTER TYPE ... ADD VALUE` não pode correr na mesma transação que use
+-- o valor novo, mas sozinho numa migração é seguro (Postgres 12+).
+alter type public.user_role add value 'guest';

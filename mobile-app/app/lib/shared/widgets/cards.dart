@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
+import 'initials_avatar.dart';
 import 'rsvp_status_badge.dart';
 import 'snappy_tap.dart';
 
@@ -111,17 +112,14 @@ class GuestListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SnappyTap.builder(
+    return SnappyTap(
       onTap: onTap,
-      builder: (context, hovered) => Container(
+      child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: hovered
-              ? AppTheme.cardShadowStrong
-              : AppTheme.cardShadow,
         ),
         child: Row(
           children: [
@@ -174,9 +172,10 @@ class ConversationListItem extends StatelessWidget {
     required this.onTap,
   });
 
-  String get _timeLabel {
-    final now = DateTime.now();
+  String? get _timeLabel {
     final at = conversation.lastMessageAt;
+    if (at == null) return null;
+    final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final day = DateTime(at.year, at.month, at.day);
     if (day == today) {
@@ -188,24 +187,24 @@ class ConversationListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SnappyTap.builder(
+    final avatarUrl = conversation.avatarUrl;
+    return SnappyTap(
       onTap: onTap,
-      builder: (context, hovered) => Container(
+      child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 26,
-              backgroundColor: AppColors.gray,
-              backgroundImage: NetworkImage(
-                'https://i.pravatar.cc/150?u=${conversation.avatarSeed}',
-              ),
-            ),
+            avatarUrl == null
+                ? InitialsAvatar(name: conversation.name, radius: 26)
+                : CircleAvatar(
+                    radius: 26,
+                    backgroundColor: AppColors.gray,
+                    backgroundImage: NetworkImage(avatarUrl),
+                  ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -224,13 +223,14 @@ class ConversationListItem extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Text(
-                        _timeLabel,
-                        style: const TextStyle(
-                          color: AppTheme.inkMuted,
-                          fontSize: 11.5,
+                      if (_timeLabel != null)
+                        Text(
+                          _timeLabel!,
+                          style: const TextStyle(
+                            color: AppTheme.inkMuted,
+                            fontSize: 11.5,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 3),
@@ -238,7 +238,7 @@ class ConversationListItem extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          conversation.lastMessage,
+                          conversation.lastMessage ?? 'Sem mensagens ainda.',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(

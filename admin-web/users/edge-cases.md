@@ -1,0 +1,5 @@
+# Users (admin-web) — Casos Limite
+
+- Admin tenta suspender a própria conta (ex: abre `/users/:id` da sua própria conta por engano) → botão Suspender nem aparece (a UI compara `id` da linha com a sessão atual); mesmo que contornado via chamada direta, `suspend_user_account` bloqueia com `invalid_state` (RN03).
+- Conta `role = 'partner'` é suspensa enquanto o `partner_profile` associado está `published` → o perfil desaparece do Marketplace imediatamente via `is_partner_profile_visible()` (que já verifica `profiles.status = 'active'`), sem que `partner_profiles.status` mude — ver RN02. O admin que revê `admin-web/partners/:id` desse parceiro continua a ver `status = published`, o que é surpreendente à primeira vista; documentar isto visivelmente na UI (ex: banner "Conta suspensa" no ecrã de detalhe do parceiro quando `profiles.status != active`).
+- Dois admins suspendem/reativam a mesma conta quase em simultâneo → o segundo recebe `invalid_state`, mesmo tratamento que `admin-web/partners/edge-cases.md`.

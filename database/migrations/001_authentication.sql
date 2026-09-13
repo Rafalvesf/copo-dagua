@@ -50,6 +50,7 @@ returns boolean
 language sql
 security definer
 stable
+set search_path = public, pg_temp
 as $$
   select exists (
     select 1 from public.profiles p
@@ -57,9 +58,34 @@ as $$
   );
 $$;
 
+revoke execute on function public.is_admin() from public, anon;
+grant execute on function public.is_admin() to authenticated;
+
 create policy "Admins can view all profiles"
   on public.profiles for select
   using (public.is_admin());
 
-grant select, insert, update on public.profiles to app_authenticated;
-grant select, insert on public.login_attempts to app_authenticated;
+-- login_attempts guarda emails + IPs de TODAS as tentativas de login,
+-- falhadas ou não — nunca deve ter grants de cliente. A escrita acontece
+-- na Edge Function `check-login-rate-limit` (backend/auth/api.md), que
+-- corre com service_role e por isso ignora RLS/GRANT por completo; nenhum
+-- role de cliente precisa de acesso direto a esta tabela.
+-- Bug real encontrado 2026-08-30 (lint do Supabase, "RLS Disabled in
+-- Public"): esta tabela nunca teve `enable row level security`, e tinha
+-- `grant select, insert ... to authenticated` — qualquer utilizador
+-- autenticado conseguia ler o histórico de login de todos os outros.
+alter table public.login_attempts enable row level security;
+
+create policy "Admins can view login attempts"
+  on public.login_attempts for select
+  using (public.is_admin());
+
+-- Sem isto, a policy acima nunca é sequer avaliada: GRANT de tabela é
+-- verificado por Postgres antes de RLS, por isso um admin (is_admin() =
+-- true) continuava a não conseguir ler `login_attempts` através do
+-- cliente Supabase, apesar da policy estar correta. Seguro porque a
+-- policy continua a restringir a leitura só a admins — qualquer outro
+-- utilizador autenticado obtém sempre 0 linhas.
+grant select on public.login_attempts to authenticated;
+
+grant select, insert, update on public.profiles to authenticated;

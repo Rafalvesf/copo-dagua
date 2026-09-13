@@ -8,30 +8,45 @@ import '../features/auth/screens/register_screen.dart';
 import '../features/auth/screens/role_selection_screen.dart';
 import '../features/auth/screens/verify_email_screen.dart';
 import '../features/auth/screens/welcome_screen.dart';
+import '../features/bookings/screens/couple_booking_detail_screen.dart';
+import '../features/bookings/screens/couple_bookings_screen.dart';
 import '../features/budget/screens/budget_screen.dart';
 import '../features/chat/screens/chat_list_screen.dart';
 import '../features/chat/screens/chat_thread_screen.dart';
 import '../features/checklist/screens/checklist_screen.dart';
+import '../features/tasks/screens/service_preferences_screen.dart';
+import '../features/tasks/screens/tasks_screen.dart';
+import '../features/guest_home/screens/guest_gallery_screen.dart';
+import '../features/guest_home/screens/guest_gifts_screen.dart';
+import '../features/guest_home/screens/guest_home_screen.dart';
+import '../features/guest_home/screens/guest_profile_screen.dart';
+import '../features/guest_home/screens/guest_wedding_details_screen.dart';
+import '../features/gallery/screens/gallery_screen.dart';
 import '../features/guests/screens/guest_detail_screen.dart';
 import '../features/guests/screens/guests_list_screen.dart';
 import '../features/home/screens/home_feed_screen.dart';
 import '../features/invite/screens/invite_page_screen.dart';
+import '../features/invite/screens/rsvp_page_screen.dart';
 import '../features/calendar/screens/calendar_screen.dart';
+import '../features/maintenance/screens/maintenance_screen.dart';
 import '../features/onboarding/screens/onboarding_wizard_screen.dart';
 import '../features/partner_bookings/screens/booking_detail_screen.dart';
 import '../features/partner_bookings/screens/partner_bookings_screen.dart';
+import '../features/partner_bookings/screens/send_proposal_screen.dart';
 import '../features/partner_calendar/screens/partner_calendar_screen.dart';
 import '../features/partner_home/screens/partner_chat_screen.dart';
 import '../features/partner_home/screens/partner_home_screen.dart';
 import '../features/partner_messages/screens/partner_chat_thread_screen.dart';
 import '../features/partner_messages/screens/partner_messages_screen.dart';
 import '../features/partner_onboarding/screens/partner_welcome_screen.dart';
+import '../features/partner_payments/screens/partner_payments_screen.dart';
 import '../features/partner_profile/screens/business_info_screen.dart';
 import '../features/partner_profile/screens/partner_pricing_screen.dart';
 import '../features/partner_profile/screens/partner_portfolio_screen.dart';
 import '../features/partner_profile/screens/partner_profile_screen.dart';
 import '../features/partner_reviews/screens/partner_reviews_screen.dart';
 import '../features/partner_stats/screens/partner_stats_screen.dart';
+import '../features/partner_venue_tables/screens/partner_venue_tables_screen.dart';
 import '../features/seating/screens/seating_screen.dart';
 import '../features/partners/screens/partners_list_screen.dart';
 import '../features/settings/screens/settings_screen.dart';
@@ -40,6 +55,7 @@ import '../features/wedding/screens/wedding_details_screen.dart';
 import 'auth/auth_controller.dart';
 import 'models/models.dart';
 import 'partners/partner_providers.dart';
+import 'platform/maintenance_controller.dart';
 
 const _authRoutes = {
   '/welcome',
@@ -52,6 +68,7 @@ const _authRoutes = {
 class RouterRefreshNotifier extends ChangeNotifier {
   RouterRefreshNotifier(Ref ref) {
     ref.listen(authControllerProvider, (previous, next) => notifyListeners());
+    ref.listen(maintenanceControllerProvider, (previous, next) => notifyListeners());
   }
 }
 
@@ -68,6 +85,39 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Página pública de convite — acessível sem sessão, para
       // convidados que abrem o link partilhado.
       if (location.startsWith('/invite/')) return null;
+
+      // Página pública de RSVP por token (`get-rsvp-by-token`/
+      // `submit-rsvp`) — mesmo raciocínio de `/invite/`, mas com um
+      // convidado real e específico (`guests.rsvp_token`), não a
+      // criação de conta genérica de `/invite/`.
+      if (location.startsWith('/rsvp/')) return null;
+
+      // `/register` sem uma role válida na URL (ver role_selection_screen.dart
+      // e a nota na rota `/register` abaixo) volta sempre a `/role` em vez
+      // de deixar o registo continuar com uma role adivinhada.
+      if (location == '/register') {
+        final role = state.uri.queryParameters['role'];
+        if (role != 'couple' && role != 'partner' && role != 'guest') return '/role';
+      }
+
+      // Modo de manutenção (`admin-web/components/MaintenanceSwitch.tsx`)
+      // — só faz sentido uma vez a role conhecida (perfil já carregado);
+      // um visitante ainda não autenticado continua a ver o login
+      // normalmente. Pedido explícito do utilizador: interruptores
+      // independentes por lado, "ambos" é só ligar os dois. Convidado não
+      // tem interruptor próprio (`MaintenanceState` só tem `couple`/
+      // `partner`) e nunca é bloqueado por manutenção de outro lado.
+      final role = auth.profile?.role;
+      if (role != null && role != UserRole.guest) {
+        final maintenance = ref.read(maintenanceControllerProvider);
+        final blocked = role == UserRole.couple ? maintenance.couple : maintenance.partner;
+        if (blocked && location != '/maintenance') return '/maintenance';
+        if (!blocked && location == '/maintenance') {
+          return auth.status == AuthStatus.active
+              ? (role == UserRole.partner ? '/partner-home' : '/home')
+              : '/welcome';
+        }
+      }
 
       switch (auth.status) {
         case AuthStatus.unauthenticated:
@@ -86,9 +136,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (location == '/onboarding') return null;
           return '/onboarding';
         case AuthStatus.active:
-          final homeForRole = auth.profile?.role == UserRole.partner
-              ? '/partner-home'
-              : '/home';
+          final homeForRole = switch (auth.profile?.role) {
+            UserRole.partner => '/partner-home',
+            UserRole.guest => '/guest-home',
+            _ => '/home',
+          };
           if (_authRoutes.contains(location) ||
               location == '/verify-email' ||
               location == '/onboarding') {
@@ -96,11 +148,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           }
           // Mantém o utilizador na área certa mesmo que a role mude a
           // meio da sessão (troca rápida de conta de demonstração).
-          if (location == '/home' && homeForRole != '/home') {
-            return homeForRole;
-          }
-          if (location == '/partner-home' && homeForRole != '/partner-home') {
-            return homeForRole;
+          for (final home in const ['/home', '/partner-home', '/guest-home']) {
+            if (location == home && homeForRole != home) return homeForRole;
           }
           return null;
       }
@@ -116,8 +165,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/register',
-        builder: (context, state) =>
-            RegisterScreen(role: state.extra as UserRole? ?? UserRole.couple),
+        builder: (context, state) {
+          // Lê a role da própria query string (`?role=couple|partner`, ver
+          // role_selection_screen.dart) em vez de `extra` — `extra` do
+          // go_router não sobrevive de forma fiável no Flutter Web (só
+          // existe em memória, não faz parte do URL), o que fazia o registo
+          // cair sempre em `UserRole.couple` independentemente do que fosse
+          // escolhido em `/role`. `redirect` (acima) já garante que só se
+          // chega aqui com 'couple' ou 'partner' na URL.
+          return RegisterScreen(
+            role: UserRole.values.byName(state.uri.queryParameters['role']!),
+            initialWeddingCode: state.uri.queryParameters['code'],
+          );
+        },
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
@@ -133,12 +193,64 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const OnboardingWizardScreen(),
       ),
       GoRoute(
+        path: '/maintenance',
+        builder: (context, state) => const MaintenanceScreen(),
+      ),
+      GoRoute(
         path: '/home',
         builder: (context, state) => const HomeFeedScreen(),
       ),
       GoRoute(
         path: '/partner-home',
         builder: (context, state) => const PartnerHomeScreen(),
+      ),
+      GoRoute(
+        path: '/guest-home',
+        builder: (context, state) => const GuestHomeScreen(),
+      ),
+      GoRoute(
+        // Variante com `weddingId` explícito — usada só por uma conta
+        // de casal em "Modo convidado" (`guest_mode_screen.dart`),
+        // nunca por uma conta 100% convidado. Caminho distinto de
+        // `/guest-home` de propósito: o `redirect` acima devolve
+        // sempre uma conta de casal a `/home` ao ver `location ==
+        // '/guest-home'` exatamente — este caminho nunca é esse texto
+        // exato, por isso não é apanhado por essa guarda.
+        path: '/guest-home/:weddingId',
+        builder: (context, state) =>
+            GuestHomeScreen(weddingId: state.pathParameters['weddingId']),
+      ),
+      GoRoute(
+        path: '/guest-wedding-details',
+        builder: (context, state) =>
+            GuestWeddingDetailsScreen(wedding: state.extra as GuestWedding),
+      ),
+      GoRoute(
+        path: '/guest-gifts',
+        builder: (context, state) => const GuestGiftsScreen(),
+      ),
+      GoRoute(
+        path: '/guest-gifts/:weddingId',
+        builder: (context, state) =>
+            GuestGiftsScreen(weddingId: state.pathParameters['weddingId']),
+      ),
+      GoRoute(
+        path: '/guest-profile',
+        builder: (context, state) => const GuestProfileScreen(),
+      ),
+      GoRoute(
+        path: '/guest-profile/:weddingId',
+        builder: (context, state) =>
+            GuestProfileScreen(weddingId: state.pathParameters['weddingId']),
+      ),
+      GoRoute(
+        path: '/guest-gallery',
+        builder: (context, state) => const GuestGalleryScreen(),
+      ),
+      GoRoute(
+        path: '/guest-gallery/:weddingId',
+        builder: (context, state) =>
+            GuestGalleryScreen(weddingId: state.pathParameters['weddingId']),
       ),
       GoRoute(
         path: '/partner-chat',
@@ -166,12 +278,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/partner-requests',
-        builder: (context, state) => const PartnerBookingsScreen(),
+        builder: (context, state) => PartnerBookingsScreen(
+          initialSegment: state.uri.queryParameters['segment'],
+        ),
       ),
       GoRoute(
         path: '/partner-requests/:id',
         builder: (context, state) =>
             BookingDetailScreen(booking: state.extra as Booking),
+      ),
+      GoRoute(
+        path: '/partner-requests/:id/proposal',
+        builder: (context, state) =>
+            SendProposalScreen(booking: state.extra as Booking),
       ),
       GoRoute(
         path: '/partner-messages',
@@ -182,6 +301,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => PartnerChatThreadScreen(
           conversation: state.extra as ChatConversation,
         ),
+      ),
+      GoRoute(
+        path: '/partner-payments',
+        builder: (context, state) => const PartnerPaymentsScreen(),
+      ),
+      GoRoute(
+        path: '/partner-venue-tables',
+        builder: (context, state) => const PartnerVenueTablesScreen(),
       ),
       GoRoute(
         path: '/partner-reviews',
@@ -204,6 +331,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const WeddingDetailsScreen(),
       ),
       GoRoute(
+        path: '/gallery',
+        builder: (context, state) =>
+            GalleryScreen(weddingId: state.extra as String?),
+      ),
+      GoRoute(
         path: '/guests',
         builder: (context, state) => const GuestsListScreen(),
       ),
@@ -217,6 +349,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ChecklistScreen(),
       ),
       GoRoute(
+        path: '/tasks',
+        builder: (context, state) => const TasksScreen(),
+      ),
+      GoRoute(
+        path: '/service-preferences',
+        builder: (context, state) => const ServicePreferencesScreen(),
+      ),
+      GoRoute(
         path: '/budget',
         builder: (context, state) => const BudgetScreen(),
       ),
@@ -225,11 +365,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SeatingScreen(),
       ),
       GoRoute(
+        path: '/bookings',
+        builder: (context, state) => const CoupleBookingsScreen(),
+      ),
+      GoRoute(
+        path: '/bookings/detail',
+        builder: (context, state) => CoupleBookingDetailScreen(
+          booking: state.extra as CoupleBooking,
+        ),
+      ),
+      GoRoute(
         path: '/partners',
         builder: (context, state) {
           final args = state.extra as PartnerPickerArgs?;
           return PartnersListScreen(
-            category: args?.category,
+            categorySlug: args?.categorySlug,
             selectionMode: args?.selectionMode ?? false,
           );
         },
@@ -255,6 +405,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/invite/:slug',
         builder: (context, state) =>
             InvitePageScreen(slug: state.pathParameters['slug']!),
+      ),
+      GoRoute(
+        path: '/rsvp/:token',
+        builder: (context, state) =>
+            RsvpPageScreen(token: state.pathParameters['token']!),
       ),
     ],
   );

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
+import '../../../core/partner_profile/partner_profile_controller.dart';
+import '../../../core/partners/favorite_partners_controller.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
@@ -10,17 +12,16 @@ import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/support_chat.dart';
 import '../partner_style.dart';
 import 'partner_detail_screen.dart';
 
 class PartnersListScreen extends ConsumerStatefulWidget {
-  final PartnerCategory? category;
+  final String? categorySlug;
   final bool selectionMode;
 
   const PartnersListScreen({
     super.key,
-    this.category,
+    this.categorySlug,
     this.selectionMode = false,
   });
 
@@ -29,8 +30,7 @@ class PartnersListScreen extends ConsumerStatefulWidget {
 }
 
 class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
-  late PartnerCategory? _filter =
-      widget.category ?? PartnerCategory.values.first;
+  late String? _filter = widget.categorySlug;
   final _search = TextEditingController();
 
   @override
@@ -45,10 +45,13 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
     super.dispose();
   }
 
-  void _showFavoritesComingSoon() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Favoritos em breve.')));
+  void _showFavoritesSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const _FavoritesSheet(),
+    );
   }
 
   void _showFiltersComingSoon() {
@@ -59,10 +62,14 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final categoryOptionsAsync = ref.watch(partnerCategoryOptionsProvider);
     final partnersAsync = ref.watch(
-      partnersProvider(widget.selectionMode ? widget.category : _filter),
+      partnersProvider(widget.selectionMode ? widget.categorySlug : _filter),
     );
-    final trendingAsync = ref.watch(partnersProvider(null));
+    final selectedLabel = categoryOptionsAsync.maybeWhen(
+      data: (options) => options.where((o) => o.slug == _filter).firstOrNull?.label,
+      orElse: () => null,
+    );
 
     return GradientScaffold(
       background: AppBackground.feed,
@@ -76,28 +83,13 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                   title: 'Parceiros',
                   titleFontSize: 30,
                   showBack: widget.selectionMode,
-                  trailing: widget.selectionMode
-                      ? null
-                      : SnappyTap.builder(
-                          onTap: _showFavoritesComingSoon,
-                          builder: (context, hovered) => Container(
-                            width: 46,
-                            height: 46,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: hovered
-                                  ? AppTheme.cardShadowStrong
-                                  : AppTheme.cardShadow,
-                            ),
-                            child: const Icon(
-                              Icons.favorite_border,
-                              size: 18,
-                              color: AppTheme.ink,
-                            ),
-                          ),
-                        ),
+                  // Mantém a altura do cabeçalho igual à de antes de o
+                  // coração ter saído daqui para junto da barra de
+                  // pesquisa — sem isto, `hasIconRow` no PageHeader fica
+                  // `false` (nem back button nem trailing) e o título
+                  // sobe, perdendo o alinhamento vertical com o resto
+                  // da app.
+                  trailing: widget.selectionMode ? null : const SizedBox(width: 46, height: 46),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -112,7 +104,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(999),
-                            boxShadow: AppTheme.cardShadow,
+                            boxShadow: AppTheme.searchBarShadow,
                           ),
                           child: TextField(
                             controller: _search,
@@ -123,7 +115,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(999),
-                                borderSide: BorderSide.none,
+                                borderSide: const BorderSide(
+                                  color: AppTheme.accentOliveDark,
+                                ),
                               ),
                               contentPadding: const EdgeInsets.symmetric(
                                 vertical: 12,
@@ -132,19 +126,36 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                           ),
                         ),
                       ),
+                      if (!widget.selectionMode) ...[
+                        const SizedBox(width: 10),
+                        SnappyTap(
+                          onTap: _showFavoritesSheet,
+                          child: Container(
+                            width: 46,
+                            height: 46,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AppTheme.surface,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.favorite_border,
+                              size: 18,
+                              color: AppTheme.ink,
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(width: 10),
-                      SnappyTap.builder(
+                      SnappyTap(
                         onTap: _showFiltersComingSoon,
-                        builder: (context, hovered) => Container(
+                        child: Container(
                           width: 46,
                           height: 46,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppTheme.surface,
                             shape: BoxShape.circle,
-                            boxShadow: hovered
-                                ? AppTheme.cardShadowStrong
-                                : AppTheme.cardShadow,
                           ),
                           child: const Icon(
                             Icons.tune,
@@ -167,17 +178,38 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Escolhe um parceiro de ${widget.category?.label.toLowerCase()} para esta tarefa.',
+                        selectedLabel == null
+                            ? 'Escolhe um parceiro para esta tarefa.'
+                            : 'Escolhe um parceiro de ${selectedLabel.toLowerCase()} para esta tarefa.',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
                   )
                 else
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 14, 0, 0),
-                    child: _CategoryNavBar(
-                      selected: _filter,
-                      onChanged: (c) => setState(() => _filter = c),
+                  categoryOptionsAsync.when(
+                    loading: () => const SizedBox(height: 82),
+                    error: (err, st) => const SizedBox.shrink(),
+                    data: (options) => Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 14, 0, 0),
+                          child: _CategoryNavBar(
+                            options: options,
+                            selected: _filter,
+                            onChanged: (c) => setState(() => _filter = c),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.screenMargin,
+                          ),
+                          child: Divider(
+                            color: AppTheme.borderMuted,
+                            height: 1,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 Expanded(
@@ -205,9 +237,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                           ),
                         );
                       }
-                      final grouped = <PartnerCategory, List<Partner>>{};
+                      final grouped = <String, List<Partner>>{};
                       for (final s in partners) {
-                        grouped.putIfAbsent(s.category, () => []).add(s);
+                        grouped.putIfAbsent(s.primaryCategoryLabel, () => []).add(s);
                       }
                       return EdgeFade(
                         topFadeHeight: 32,
@@ -215,45 +247,6 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         child: ListView(
                           padding: const EdgeInsets.fromLTRB(0, 32, 0, 140),
                           children: [
-                            if (!widget.selectionMode && _filter == null)
-                              trendingAsync.maybeWhen(
-                                data: (allTrending) {
-                                  if (allTrending.isEmpty) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  final trending = [...allTrending]
-                                    ..sort(
-                                      (a, b) => b.rating.compareTo(a.rating),
-                                    );
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 36),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: AppTheme.screenMargin,
-                                          ),
-                                          child: Text(
-                                            'Destaques',
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.titleMedium,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        _TrendingWheel(
-                                          partners: trending.take(8).toList(),
-                                          onTap: (partner) =>
-                                              _openDetails(context, partner),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                                orElse: () => const SizedBox.shrink(),
-                              ),
                             if (!widget.selectionMode)
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(
@@ -263,7 +256,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                   12,
                                 ),
                                 child: Text(
-                                  _filter?.label ?? 'Mais Dos Melhores',
+                                  selectedLabel ?? 'Todos os parceiros',
                                   style: Theme.of(context).textTheme.titleLarge,
                                 ),
                               ),
@@ -274,7 +267,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                     horizontal: AppTheme.screenMargin,
                                   ),
                                   child: Text(
-                                    entry.key.label,
+                                    entry.key,
                                     style: Theme.of(
                                       context,
                                     ).textTheme.titleLarge,
@@ -314,7 +307,6 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
               bottom: 0,
               child: FloatingBottomNav(current: AppTab.partners),
             ),
-          const Positioned.fill(child: DraggableChatBubble()),
         ],
       ),
     );
@@ -356,16 +348,21 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   }
 }
 
+extension _FirstOrNull<T> on Iterable<T> {
+  T? get firstOrNull => isEmpty ? null : first;
+}
+
 /// Carrossel de categorias estilo "escolhas populares" (ícone numa
 /// bolha + rótulo por baixo, como em apps de entregas). Ao contrário do
 /// [CoverFlowPicker] partilhado (que centra a opção), aqui a opção
 /// selecionada fica maior e encostada à esquerda — mostra sempre 3 a 4
 /// categorias de cada vez, com espaço visível entre elas.
 class _CategoryNavBar extends StatefulWidget {
-  final PartnerCategory? selected;
-  final ValueChanged<PartnerCategory?> onChanged;
+  final List<PartnerCategoryOption> options;
+  final String? selected;
+  final ValueChanged<String?> onChanged;
 
-  const _CategoryNavBar({required this.selected, required this.onChanged});
+  const _CategoryNavBar({required this.options, required this.selected, required this.onChanged});
 
   @override
   State<_CategoryNavBar> createState() => _CategoryNavBarState();
@@ -378,7 +375,7 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
   static const _tileWidthSelected = 84.0;
   static const _spacing = 6.0;
 
-  List<PartnerCategory?> get _options => [null, ...PartnerCategory.values];
+  List<PartnerCategoryOption?> get _options => [null, ...widget.options];
 
   @override
   void didUpdateWidget(covariant _CategoryNavBar oldWidget) {
@@ -394,7 +391,7 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
 
   void _scrollToSelected() {
     if (!_controller.hasClients) return;
-    final index = _options.indexOf(widget.selected);
+    final index = _options.indexWhere((o) => o?.slug == widget.selected);
     if (index < 0) return;
     // Fica uma casa para a direita do início — a opção anterior nunca
     // desaparece por completo, para se conseguir sempre voltar a
@@ -407,7 +404,7 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
   }
 
   double _widthOf(int index) =>
-      _options[index] == widget.selected ? _tileWidthSelected : _tileWidth;
+      _options[index]?.slug == widget.selected ? _tileWidthSelected : _tileWidth;
 
   double _cumulativeOffset(int index) {
     var offset = 0.0;
@@ -460,21 +457,21 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
           ),
           itemCount: _options.length,
           itemBuilder: (context, index) {
-            final category = _options[index];
-            final isSelected = category == widget.selected;
+            final option = _options[index];
+            final isSelected = option?.slug == widget.selected;
             return Padding(
               padding: EdgeInsets.only(
                 right: index == _options.length - 1 ? 0 : _spacing,
               ),
               child: SnappyTap(
-                onTap: () => widget.onChanged(category),
+                onTap: () => widget.onChanged(option?.slug),
                 child: SizedBox(
                   width: isSelected ? _tileWidthSelected : _tileWidth,
                   child: _CategoryIconTile(
-                    icon: category == null
+                    icon: option == null
                         ? Icons.apps_rounded
-                        : iconForPartnerCategory(category),
-                    label: category?.label ?? 'Todos',
+                        : iconForCategorySlug(option.slug),
+                    label: option?.label ?? 'Todos',
                     selected: isSelected,
                   ),
                 ),
@@ -489,7 +486,7 @@ class _CategoryNavBarState extends State<_CategoryNavBar> {
 
 /// Bolha circular com ícone — a opção selecionada fica maior e
 /// preenchida a verde-oliva escuro, sem rótulo por baixo; as restantes
-/// ficam mais pequenas, brancas, com o nome da categoria por baixo.
+/// ficam mais pequenas, com o nome da categoria por baixo.
 class _CategoryIconTile extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -511,9 +508,8 @@ class _CategoryIconTile extends StatelessWidget {
           width: selected ? 72 : 44,
           height: selected ? 72 : 44,
           decoration: BoxDecoration(
-            color: selected ? AppTheme.accentOliveDark : Colors.white,
+            color: selected ? AppTheme.accentOliveDark : Colors.transparent,
             shape: BoxShape.circle,
-            boxShadow: AppTheme.cardShadow,
           ),
           child: Icon(
             icon,
@@ -543,174 +539,7 @@ class _CategoryIconTile extends StatelessWidget {
   }
 }
 
-/// Cartão compacto para o carrossel horizontal "Trending" — versão
-/// reduzida do [_PartnerCard], só com o essencial para caber numa
-/// fila que desliza da esquerda para a direita.
-/// Roda estilo "cover flow" para o carrossel "Trending" — a opção
-/// centrada fica maior e opaca, as vizinhas ficam mais pequenas e
-/// semi-transparentes. Ao contrário do [CoverFlowPicker] partilhado
-/// (pensado para escolher uma opção), aqui qualquer toque abre logo o
-/// perfil do parceiro, mesmo que ainda não esteja centrado.
-class _TrendingWheel extends StatefulWidget {
-  final List<Partner> partners;
-  final ValueChanged<Partner> onTap;
-
-  const _TrendingWheel({required this.partners, required this.onTap});
-
-  @override
-  State<_TrendingWheel> createState() => _TrendingWheelState();
-}
-
-class _TrendingWheelState extends State<_TrendingWheel> {
-  // Largura de página total (1.0) — cada cartão fica com a mesma
-  // largura dos cartões da lista principal, logo abaixo.
-  final PageController _controller = PageController();
-  double _page = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller.addListener(() {
-      setState(() => _page = _controller.page ?? _page);
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 240,
-      child: PageView.builder(
-        controller: _controller,
-        itemCount: widget.partners.length,
-        itemBuilder: (context, index) {
-          final partner = widget.partners[index];
-          final distance = (_page - index).abs().clamp(0.0, 1.0);
-          final scale = 1.0 - distance * 0.06;
-          return Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.screenMargin,
-            ),
-            child: Opacity(
-              opacity: 1.0 - distance * 0.4,
-              child: Transform.scale(
-                scale: scale,
-                child: _TrendingCard(
-                  partner: partner,
-                  onTap: () => widget.onTap(partner),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _TrendingCard extends StatelessWidget {
-  final Partner partner;
-  final VoidCallback onTap;
-
-  const _TrendingCard({required this.partner, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: AppTheme.cardShadow,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(18),
-              ),
-              child: SizedBox(
-                height: 145,
-                width: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Container(color: colorForPartnerCategory(partner.category)),
-                    Image.network(
-                      partner.imageUrl,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, progress) =>
-                          progress == null ? child : const SizedBox.shrink(),
-                      errorBuilder: (context, error, stackTrace) =>
-                          const SizedBox.shrink(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    partner.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.star_rounded,
-                        size: 13,
-                        color: Colors.amber,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '${partner.rating}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          partner.category.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: AppTheme.inkMuted,
-                            fontSize: 10.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PartnerCard extends StatefulWidget {
+class _PartnerCard extends ConsumerStatefulWidget {
   final Partner partner;
   final bool mostPopular;
   final VoidCallback onTap;
@@ -722,254 +551,261 @@ class _PartnerCard extends StatefulWidget {
   });
 
   @override
-  State<_PartnerCard> createState() => _PartnerCardState();
+  ConsumerState<_PartnerCard> createState() => _PartnerCardState();
 }
 
-class _PartnerCardState extends State<_PartnerCard> {
-  bool _favorited = false;
-
+class _PartnerCardState extends ConsumerState<_PartnerCard> {
   @override
   Widget build(BuildContext context) {
     final partner = widget.partner;
-    final features = featureTagsFor(partner.category);
-    final responseMinutes = responseMinutesFor(partner);
+    final favorited = ref.watch(
+      favoritePartnersControllerProvider.select((s) => s.partnerIds.contains(partner.id)),
+    );
 
-    return SnappyTap.builder(
+    return SnappyTap(
       onTap: widget.onTap,
-      builder: (context, hovered) => Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
-              child: SizedBox(
-                height: 170,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Container(color: colorForPartnerCategory(partner.category)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: SizedBox(
+              height: 150,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(color: colorForCategorySlug(partner.primaryCategorySlug)),
+                  if (partner.imageUrl != null)
                     Image.network(
-                      partner.imageUrl,
+                      partner.imageUrl!,
                       fit: BoxFit.cover,
                       loadingBuilder: (context, child, progress) =>
                           progress == null ? child : const SizedBox.shrink(),
                       errorBuilder: (context, error, stackTrace) =>
                           const SizedBox.shrink(),
                     ),
-                    if (widget.mostPopular)
-                      Positioned(
-                        top: 12,
-                        left: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.ink,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: const Text(
-                            'Mais popular',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                            ),
+                  if (widget.mostPopular)
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.ink,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: const Text(
+                          'Mais popular',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: CircleIconButton(
-                        icon: _favorited
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        background: Colors.white.withValues(alpha: 0.9),
-                        onTap: () => setState(() => _favorited = !_favorited),
+                    ),
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: CircleIconButton(
+                      icon: favorited ? Icons.favorite : Icons.favorite_border,
+                      background: Colors.white.withValues(alpha: 0.9),
+                      onTap: () => ref
+                          .read(favoritePartnersControllerProvider.notifier)
+                          .toggle(partner.id),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      partner.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${partner.primaryCategoryLabel} · ${partner.location}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppTheme.ink,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12.5,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+              const SizedBox(width: 10),
+              SnappyTap(
+                onTap: widget.onTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.star_rounded,
-                        size: 16,
-                        color: Colors.amber,
-                      ),
-                      const SizedBox(width: 2),
                       Text(
-                        '${partner.rating}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '(${partner.reviewCount} avaliações)',
+                        'Ver perfil',
                         style: TextStyle(
-                          color: AppTheme.inkMuted,
+                          color: AppTheme.ink,
+                          fontWeight: FontWeight.w700,
                           fontSize: 12,
                         ),
                       ),
-                      const Spacer(),
-                      Text(
-                        'Resposta em $responseMinutes min',
-                        style: TextStyle(
-                          color: AppTheme.inkMuted,
-                          fontSize: 11.5,
-                        ),
+                      SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 13,
+                        color: AppTheme.ink,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    partner.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${partner.category.label} · ${partner.city}',
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Desde €${partner.startingPrice.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13.5,
-                    ),
-                  ),
-                  if (features.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        for (final feature in features)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: AppTheme.borderMuted),
-                            ),
-                            child: Text(
-                              feature,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppStatusColors.confirmed.withValues(
-                              alpha: 0.12,
-                            ),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.check_circle,
-                                size: 14,
-                                color: AppStatusColors.confirmed,
-                              ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  'Disponível na tua data',
-                                  style: const TextStyle(
-                                    color: AppStatusColors.confirmed,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      SnappyTap.builder(
-                        onTap: widget.onTap,
-                        builder: (context, hovered) => Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.ink,
-                            borderRadius: BorderRadius.circular(999),
-                            boxShadow: hovered
-                                ? AppTheme.cardShadowStrong
-                                : AppTheme.cardShadow,
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Ver perfil',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12.5,
-                                ),
-                              ),
-                              SizedBox(width: 4),
-                              Icon(
-                                Icons.arrow_forward,
-                                size: 14,
-                                color: Colors.white,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
+    );
+  }
+}
+
+/// Sheet de favoritos — pedido explícito do utilizador: "mesmo estilo
+/// de janela que a página de notificações" (`_NotificationsSheet` em
+/// `home_feed_screen.dart`). Mesma arquitetura: `DraggableScrollableSheet`
+/// branco com cantos arredondados a subir do fundo, sobre `favorite_partners`
+/// real (não uma lista inventada).
+class _FavoritesSheet extends ConsumerWidget {
+  const _FavoritesSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final favoriteIds = ref.watch(favoritePartnersControllerProvider.select((s) => s.partnerIds));
+    final partnersAsync = ref.watch(partnersProvider(null));
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.4,
+      maxChildSize: 0.92,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.borderMuted,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Row(
+                    children: [
+                      Text('Favoritos', style: Theme.of(context).textTheme.titleLarge),
+                      const Spacer(),
+                      Icon(Icons.favorite, size: 18, color: AppTheme.accentOliveDark),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Expanded(
+                  child: partnersAsync.when(
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (err, st) => const Center(
+                      child: Text('Não foi possível carregar os favoritos.'),
+                    ),
+                    data: (allPartners) {
+                      final favorites = allPartners.where((p) => favoriteIds.contains(p.id)).toList();
+                      if (favorites.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(
+                              'Ainda não guardaste nenhum favorito — toca no coração de um parceiro para o guardares aqui.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: AppTheme.inkMuted),
+                            ),
+                          ),
+                        );
+                      }
+                      return ListView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        children: [
+                          for (final partner in favorites) ...[
+                            _PartnerCard(
+                              partner: partner,
+                              onTap: () async {
+                                await Navigator.of(context).push(
+                                  PageRouteBuilder(
+                                    opaque: false,
+                                    barrierColor: Colors.black45,
+                                    transitionDuration: const Duration(milliseconds: 280),
+                                    pageBuilder: (context, animation, secondaryAnimation) => Padding(
+                                      padding: const EdgeInsets.only(top: 40),
+                                      child: ClipRRect(
+                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                                        child: PartnerDetailScreen(partner: partner),
+                                      ),
+                                    ),
+                                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                      return SlideTransition(
+                                        position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                                            .animate(
+                                              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+                                            ),
+                                        child: child,
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

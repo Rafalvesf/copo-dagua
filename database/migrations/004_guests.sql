@@ -37,4 +37,4 @@ create policy "Members manage guests"
   using (public.is_wedding_member(wedding_id))
   with check (public.is_wedding_member(wedding_id));
 
-grant select, insert, update, delete on public.guests to app_authenticated;
+grant select, insert, update, delete on public.guests to authenticated;

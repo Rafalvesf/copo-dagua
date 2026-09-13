@@ -15,7 +15,6 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/support_chat.dart';
 
 enum _BudgetFilter { all, paid, pending, categories }
 
@@ -91,7 +90,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(
                             AppTheme.screenMargin,
-                            20,
+                            16,
                             AppTheme.screenMargin,
                             140,
                           ),
@@ -107,7 +106,9 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                                 pending: pending.length,
                                 onChanged: (f) => setState(() => _filter = f),
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 14),
+                              Divider(color: AppTheme.borderMuted, height: 1),
+                              const SizedBox(height: 18),
                               if (_filter == _BudgetFilter.paid)
                                 _ExpenseList(expenses: paid)
                               else if (_filter == _BudgetFilter.pending)
@@ -152,7 +153,6 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                   bottom: 0,
                   child: FloatingBottomNav(current: AppTab.wedding),
                 ),
-                const Positioned.fill(child: DraggableChatBubble()),
               ],
             ),
     );
@@ -173,9 +173,8 @@ class _SummaryCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,7 +213,7 @@ class _SummaryCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: budget.progress,
               minHeight: 7,
-              backgroundColor: AppColors.muted,
+              backgroundColor: Colors.white,
               valueColor: const AlwaysStoppedAnimation(
                 AppTheme.accentOliveDark,
               ),
@@ -329,9 +328,8 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : Colors.white,
+          color: selected ? AppTheme.accentOliveDark : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
-          boxShadow: AppTheme.cardShadow,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -403,9 +401,8 @@ class _CategoriesSection extends StatelessWidget {
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.surface,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: AppTheme.cardShadow,
           ),
           child: Column(
             children: [
@@ -513,7 +510,7 @@ class _CategoryRow extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: ratio > 1 ? 1 : ratio.toDouble(),
                       minHeight: 5,
-                      backgroundColor: AppColors.muted,
+                      backgroundColor: Colors.white,
                       valueColor: AlwaysStoppedAnimation(
                         overBudget
                             ? AppStatusColors.pending
@@ -622,9 +619,8 @@ class _ExpenseRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: AppTheme.cardShadow,
         ),
         child: Row(
           children: [

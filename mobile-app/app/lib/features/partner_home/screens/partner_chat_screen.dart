@@ -150,7 +150,6 @@ class _PartnerChatScreenState extends ConsumerState<PartnerChatScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(999),
-                        boxShadow: AppTheme.cardShadow,
                       ),
                       child: TextField(
                         controller: _messageController,
@@ -203,9 +202,8 @@ class _TextBubble extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: fromPartner ? AppColors.greenDark : Colors.white,
+          color: fromPartner ? AppColors.greenDark : AppTheme.surface,
           borderRadius: BorderRadius.circular(18),
-          boxShadow: AppTheme.cardShadow,
         ),
         child: Text(
           text,
@@ -233,10 +231,9 @@ class _ContractBubble extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppColors.greenDark, width: 1.5),
-          boxShadow: AppTheme.cardShadow,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

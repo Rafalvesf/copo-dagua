@@ -9,6 +9,7 @@
 | Integração de envio de WhatsApp (Business API ou equivalente) | Média | Canal de convite preferido em Portugal, mais do que email para muitos casais |
 | Integração de envio de SMS | Baixa | Canal de fallback, menos prioritário que WhatsApp |
 | Exportação da lista de convidados (CSV/PDF) | Média | Útil para partilhar com parceiros (ex: catering) — mas cuidado com GDPR, ver melhorias futuras |
+| Desenhar a home do `guest` account (2026-09-04) | Alta | `backend/auth/requirements.md` RN01b e `role_selection_screen.dart` ("Sou convidado") já criam a conta genérica, com placeholder mínimo em `features/guest_home/screens/guest_home_screen.dart`. Falta desenhar a superfície real: juntar-se a um casamento (por slug/token?), ver histórico de RSVPs dados, etc. Seguir a sequência de trabalho do `ROADMAP.md` antes de implementar. |
 
 ## Melhorias futuras
 

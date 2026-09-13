@@ -14,6 +14,7 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 
 /// Ecrã de catch-all para tudo o que os mockups do redesign não
 /// mostram diretamente — o formulário de edição do casamento, o
@@ -118,6 +119,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           icon: Icons.event_seat_outlined,
                           label: 'Lugares',
                           onTap: () => context.push('/seating'),
+                        ),
+                        const SizedBox(height: 10),
+                        _ShortcutRow(
+                          icon: Icons.checklist_rtl_outlined,
+                          label: 'Serviços já tratados',
+                          onTap: () => context.push('/service-preferences'),
                         ),
                         const SizedBox(height: 28),
                         Text(
@@ -252,11 +259,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         const SizedBox(height: 12),
                         _ShortcutRow(
-                          icon: Icons.swap_horiz,
-                          label: 'Ver como Parceiro',
-                          onTap: () => ref
-                              .read(authControllerProvider.notifier)
-                              .switchDemoAccount(),
+                          icon: Icons.swap_horizontal_circle_outlined,
+                          label: 'Ver como convidado',
+                          onTap: () => showGuestModeSheet(context),
                         ),
                         const SizedBox(height: 10),
                         _ShortcutRow(
@@ -292,14 +297,13 @@ class _ShortcutRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SnappyTap.builder(
+    return SnappyTap(
       onTap: onTap,
-      builder: (context, hovered) => Container(
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
         ),
         child: Row(
           children: [

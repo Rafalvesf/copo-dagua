@@ -35,6 +35,7 @@ returns boolean
 language sql
 security definer
 stable
+set search_path = public, pg_temp
 as $$
   select exists (
     select 1 from public.weddings w
@@ -47,6 +48,9 @@ as $$
       and wc.status = 'active'
   );
 $$;
+
+revoke execute on function public.is_wedding_member(uuid) from public, anon;
+grant execute on function public.is_wedding_member(uuid) to authenticated;
 
 alter table public.weddings enable row level security;
 alter table public.wedding_collaborators enable row level security;
@@ -81,5 +85,5 @@ create policy "Only owner manages collaborators"
     )
   );
 
-grant select, insert, update, delete on public.wedding_collaborators to app_authenticated;
-grant delete on public.weddings to app_authenticated;
+grant select, insert, update, delete on public.wedding_collaborators to authenticated;
+grant delete on public.weddings to authenticated;

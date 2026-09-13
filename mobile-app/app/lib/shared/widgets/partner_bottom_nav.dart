@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/partner_app/partner_app_providers.dart';
 import '../../core/theme/app_theme.dart';
 
 enum PartnerTab { home, requests, chat, profile }
@@ -10,13 +12,16 @@ enum PartnerTab { home, requests, chat, profile }
 /// ativo a verde-oliva), mas com destinos próprios: Home / Parceiros
 /// (pedidos recebidos) / Chat (mensagens) / Os nossos (perfil de
 /// negócio do parceiro).
-class PartnerBottomNav extends StatelessWidget {
+class PartnerBottomNav extends ConsumerWidget {
   final PartnerTab current;
 
   const PartnerBottomNav({super.key, required this.current});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unreadCount = ref
+        .watch(partnerUnreadMessagesCountProvider)
+        .maybeWhen(data: (count) => count, orElse: () => 0);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -24,7 +29,7 @@ class PartnerBottomNav extends StatelessWidget {
           topLeft: Radius.circular(28),
           topRight: Radius.circular(28),
         ),
-        boxShadow: AppTheme.cardShadow,
+        boxShadow: AppTheme.navBarShadow,
       ),
       child: SafeArea(
         top: false,
@@ -52,6 +57,7 @@ class PartnerBottomNav extends StatelessWidget {
                 activeIcon: Icons.chat_bubble_rounded,
                 label: 'Chat',
                 active: current == PartnerTab.chat,
+                badgeCount: unreadCount,
                 onTap: () => context.go('/partner-messages'),
               ),
               _NavIcon(
@@ -75,6 +81,7 @@ class _NavIcon extends StatelessWidget {
   final String label;
   final bool active;
   final VoidCallback onTap;
+  final int badgeCount;
 
   const _NavIcon({
     required this.icon,
@@ -82,6 +89,7 @@ class _NavIcon extends StatelessWidget {
     required this.label,
     required this.active,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   @override
@@ -95,7 +103,28 @@ class _NavIcon extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(active ? activeIcon : icon, color: color, size: 28),
+            SizedBox(
+              width: 28,
+              height: 28,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Center(
+                    child: Icon(
+                      active ? activeIcon : icon,
+                      color: color,
+                      size: 28,
+                    ),
+                  ),
+                  if (badgeCount > 0)
+                    Positioned(
+                      top: -4,
+                      right: -6,
+                      child: _UnreadBadge(count: badgeCount),
+                    ),
+                ],
+              ),
+            ),
             const SizedBox(height: 4),
             Text(
               label,
@@ -106,6 +135,39 @@ class _NavIcon extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Mesmo selo de `floating_bottom_nav.dart` (verde-oliva da marca,
+/// `99+` acima do limite) — duplicado em vez de partilhado porque os
+/// dois `_NavIcon` já eram classes privadas por ficheiro antes desta
+/// alteração.
+class _UnreadBadge extends StatelessWidget {
+  final int count;
+
+  const _UnreadBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppTheme.accentOliveDark,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 1.5),
+      ),
+      child: Text(
+        count > 99 ? '99+' : '$count',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          height: 1,
         ),
       ),
     );

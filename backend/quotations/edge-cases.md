@@ -1,0 +1,6 @@
+# Quotations — Casos Limite
+
+- Casal pede orçamento sem `event_date` (ainda por decidir) → permitido, RN01 só se aplica quando a data é conhecida; o parceiro propõe sem essa informação, a data acaba definida quando o `booking` é criado (herdada do `wedding.wedding_date` se a proposta não tiver uma própria — ver `backend/bookings/edge-cases.md`).
+- Parceiro tenta enviar proposta depois do perfil ser suspenso (`admin-web/partners/`) a meio da conversa → `send_proposal()` não verifica `is_partner_profile_visible()` (só `request_quote()` verifica, no momento do pedido) — **gap consciente**: um parceiro suspenso a meio de uma negociação em curso ainda consegue responder a pedidos já recebidos. Aceitável no MVP (a suspensão trata de visibilidade no Marketplace, não de conversas já iniciadas); revisitar se abuso real for reportado.
+- Dois pedidos de orçamento diferentes do mesmo casal ao mesmo parceiro para o mesmo casamento → permitido, sem constraint de unicidade — pode ser legítimo (pedir de novo depois de recusar a primeira proposta).
+- `accept_proposal()` chamado duas vezes seguidas (duplo tap) → a segunda falha com `invalid_state` (`status <> 'sent'`), não cria um segundo `booking`.

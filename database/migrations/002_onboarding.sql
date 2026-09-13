@@ -17,7 +17,7 @@ create policy "Users manage own onboarding progress"
   on public.onboarding_progress for all
   using (auth.uid() = user_id);
 
-grant select, insert, update, delete on public.onboarding_progress to app_authenticated;
+grant select, insert, update, delete on public.onboarding_progress to authenticated;
 
 -- Semente da wedding (RN03 do Onboarding) — estendida no módulo Wedding.
 create table public.weddings (
@@ -34,17 +34,16 @@ create table public.weddings (
   created_at timestamptz not null default now()
 );
 
--- Semente do partner_profile (RN04 do Onboarding) — estendida em backend/partners.
-create table public.partner_profiles (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id),
-  business_name text not null,
-  categories text[] not null default '{}',
-  service_areas text[] default '{}',
-  tax_id text,
-  status text not null default 'draft',
-  created_at timestamptz not null default now()
-);
+-- NOTA (bug real encontrado 2026-08-30, primeira vez que 002+005 foram
+-- aplicadas juntas a um Postgres real): esta migração continha uma segunda
+-- "semente", `partner_profiles`, pensada para ser estendida por
+-- `backend/partners/` (nunca escrito). Em vez disso, `partner-app/profile/`
+-- assumiu o módulo e definiu `partner_profiles` do zero em
+-- database/migrations/005_partner_profile.sql, com um desenho de PK
+-- incompatível (id = FK 1:1 para profiles, não um id próprio + user_id
+-- separado) — as duas migrações não podiam coexistir. 005 é a versão
+-- correta: totalmente documentada com RLS, API e usada em todo
+-- partner-app/profile/ e admin-web/partners/. A semente foi removida daqui;
+-- ver mobile-app/onboarding/database.md.
 
-grant select, insert, update on public.weddings to app_authenticated;
-grant select, insert, update on public.partner_profiles to app_authenticated;
+grant select, insert, update on public.weddings to authenticated;

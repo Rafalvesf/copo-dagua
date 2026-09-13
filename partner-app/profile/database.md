@@ -14,6 +14,8 @@ create table public.partner_categories (
   is_active boolean not null default true
 );
 
+create type partner_pricing_mode as enum ('packages', 'quote_only');
+
 create table public.partner_profiles (
   id uuid primary key references public.profiles(id) on delete cascade,
   business_name text not null default '',
@@ -27,8 +29,10 @@ create table public.partner_profiles (
   website_url text,
   instagram_url text,
   facebook_url text,
-  cover_photo_url text,
+  contact_email text, -- email público de contacto do negócio, distinto do email de login (auth.users.email); ver 013_partner_contact_email.sql
+  cover_photo_url text, -- também usado como logótipo obrigatório de onboarding, ver Profile.logoUrl (mobile-app)
   status partner_profile_status not null default 'draft',
+  pricing_mode partner_pricing_mode not null default 'quote_only', -- RN: parceiro escolhe UM dos dois modos, nunca os dois — ver partner_service_packages abaixo
   is_paused boolean not null default false,
   rejection_reason text,
   submitted_at timestamptz,
@@ -75,6 +79,37 @@ create table public.partner_portfolio_items (
 );
 create index partner_portfolio_items_partner_idx on public.partner_portfolio_items (partner_id, position);
 
+-- Pacotes de serviço reais (RN: até 3 por parceiro, só usados quando
+-- pricing_mode = 'packages'). Ver database/migrations/028_partner_service_packages.sql.
+create table public.partner_service_packages (
+  id uuid primary key default gen_random_uuid(),
+  partner_id uuid not null references public.partner_profiles(id) on delete cascade,
+  name text not null,
+  description text not null default '',
+  price numeric(10,2) not null,
+  is_starting_price boolean not null default false, -- true = "A partir de X€", preço não fechado
+  position integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index partner_service_packages_partner_idx on public.partner_service_packages (partner_id, position);
+
+create or replace function public.enforce_partner_package_limit()
+returns trigger
+language plpgsql
+as $$
+begin
+  if (select count(*) from public.partner_service_packages where partner_id = new.partner_id) >= 3 then
+    raise exception 'Um parceiro pode ter no máximo 3 pacotes de serviço';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger partner_package_limit_check
+  before insert on public.partner_service_packages
+  for each row execute function public.enforce_partner_package_limit();
+
 -- RN11: dados fiscais/verificação isolados numa tabela própria, nunca lida pelo Marketplace
 create table public.partner_verification (
   partner_id uuid primary key references public.partner_profiles(id) on delete cascade,
@@ -84,7 +119,15 @@ create table public.partner_verification (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create unique index partner_verification_tax_id_idx on public.partner_verification (tax_id);
+-- Parcial (não simples): exclui o placeholder '' que on-partner-created
+-- insere para todo parceiro novo até preencher o NIF real — um índice
+-- único simples só deixaria UM parceiro em toda a plataforma ficar por
+-- preencher de cada vez. Corrigido em 014_partner_verification_tax_id_partial_unique.sql
+-- (2026-08-30) depois de um segundo signup de parceiro real falhar com
+-- "duplicate key value" antes de chegar a qualquer ecrã da app.
+create unique index partner_verification_tax_id_idx
+  on public.partner_verification (tax_id)
+  where tax_id <> '';
 ```
 
 ## Row Level Security (RLS) — crítico
@@ -94,6 +137,7 @@ alter table public.partner_profiles enable row level security;
 alter table public.partner_categories enable row level security;
 alter table public.partner_profile_categories enable row level security;
 alter table public.partner_portfolio_items enable row level security;
+alter table public.partner_service_packages enable row level security;
 alter table public.partner_verification enable row level security;
 
 -- Helper de visibilidade pública — implementa RN01 num único ponto,
@@ -164,6 +208,19 @@ create policy "Owner manages own portfolio"
   using (partner_id = auth.uid())
   with check (partner_id = auth.uid());
 
+create policy "Visible when parent profile visible"
+  on public.partner_service_packages for select
+  using (
+    partner_id = auth.uid()
+    or public.is_partner_profile_visible(partner_id)
+    or public.is_admin()
+  );
+
+create policy "Owner manages own packages"
+  on public.partner_service_packages for all
+  using (partner_id = auth.uid())
+  with check (partner_id = auth.uid());
+
 -- partner_verification nunca tem policy de leitura pública — só owner e admin.
 create policy "Owner can view own verification data"
   on public.partner_verification for select
@@ -178,14 +235,15 @@ create policy "Owner can manage own verification data"
   using (partner_id = auth.uid())
   with check (partner_id = auth.uid());
 
-grant select, update on public.partner_profiles to app_authenticated;
-grant select on public.partner_categories to app_authenticated;
-grant select, insert, update, delete on public.partner_profile_categories to app_authenticated;
-grant select, insert, update, delete on public.partner_portfolio_items to app_authenticated;
-grant select, insert, update on public.partner_verification to app_authenticated;
+grant select, update on public.partner_profiles to authenticated;
+grant select on public.partner_categories to authenticated;
+grant select, insert, update, delete on public.partner_profile_categories to authenticated;
+grant select, insert, update, delete on public.partner_portfolio_items to authenticated;
+grant select, insert, update, delete on public.partner_service_packages to authenticated;
+grant select, insert, update on public.partner_verification to authenticated;
 ```
 
-Nota: `partner_profiles` não tem policy de `insert` para `app_authenticated` — a linha nasce via trigger `on-partner-created` (security definer, ver `api.md`) no momento do signup, não por escrita direta do cliente. Isto evita que um utilizador crie múltiplos `partner_profiles` para si próprio ou perfis "órfãos" sem conta associada.
+Nota: `partner_profiles` não tem policy de `insert` para `authenticated` — a linha nasce via trigger `on-partner-created` (security definer, ver `api.md`) no momento do signup, não por escrita direta do cliente. Isto evita que um utilizador crie múltiplos `partner_profiles` para si próprio ou perfis "órfãos" sem conta associada.
 
 ## Decisões de arquitetura
 

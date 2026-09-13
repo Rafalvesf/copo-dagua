@@ -7,25 +7,34 @@ import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/support_chat.dart';
 import '../booking_style.dart';
 
 enum _BookingSegment { recebidos, confirmados, concluidos }
 
 class PartnerBookingsScreen extends ConsumerStatefulWidget {
-  const PartnerBookingsScreen({super.key});
+  /// Separador inicial — 'confirmados' quando aberto a partir do tile
+  /// "Reservas" em `partner_home_screen.dart` (distinto de "Pedidos de
+  /// orçamento", que abre em "Recebidos"). `null`/qualquer outro valor
+  /// cai no default.
+  final String? initialSegment;
+
+  const PartnerBookingsScreen({super.key, this.initialSegment});
 
   @override
   ConsumerState<PartnerBookingsScreen> createState() =>
       _PartnerBookingsScreenState();
 }
 
-class _PartnerBookingsScreenState
-    extends ConsumerState<PartnerBookingsScreen> {
-  _BookingSegment _segment = _BookingSegment.recebidos;
+class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
+  late _BookingSegment _segment = switch (widget.initialSegment) {
+    'confirmados' => _BookingSegment.confirmados,
+    'concluidos' => _BookingSegment.concluidos,
+    _ => _BookingSegment.recebidos,
+  };
 
   bool _matches(Booking booking) {
     switch (_segment) {
@@ -33,7 +42,8 @@ class _PartnerBookingsScreenState
         return booking.status == BookingStatus.novo ||
             booking.status == BookingStatus.emAnalise;
       case _BookingSegment.confirmados:
-        return booking.status == BookingStatus.confirmado;
+        return booking.status == BookingStatus.aceite ||
+            booking.status == BookingStatus.confirmado;
       case _BookingSegment.concluidos:
         return booking.status == BookingStatus.concluido;
     }
@@ -62,31 +72,35 @@ class _PartnerBookingsScreenState
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.screenMargin,
                   ),
-                  child: Row(
-                    children: [
-                      _SegmentButton(
-                        label: 'Recebidos',
-                        selected: _segment == _BookingSegment.recebidos,
-                        onTap: () =>
-                            setState(() => _segment = _BookingSegment.recebidos),
-                      ),
-                      const SizedBox(width: 8),
-                      _SegmentButton(
-                        label: 'Confirmados',
-                        selected: _segment == _BookingSegment.confirmados,
-                        onTap: () => setState(
-                          () => _segment = _BookingSegment.confirmados,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _SegmentButton(
+                          label: 'Recebidos',
+                          selected: _segment == _BookingSegment.recebidos,
+                          onTap: () => setState(
+                            () => _segment = _BookingSegment.recebidos,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      _SegmentButton(
-                        label: 'Concluídos',
-                        selected: _segment == _BookingSegment.concluidos,
-                        onTap: () => setState(
-                          () => _segment = _BookingSegment.concluidos,
+                        const SizedBox(width: 8),
+                        _SegmentButton(
+                          label: 'Confirmados',
+                          selected: _segment == _BookingSegment.confirmados,
+                          onTap: () => setState(
+                            () => _segment = _BookingSegment.confirmados,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        _SegmentButton(
+                          label: 'Concluídos',
+                          selected: _segment == _BookingSegment.concluidos,
+                          onTap: () => setState(
+                            () => _segment = _BookingSegment.concluidos,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -134,7 +148,6 @@ class _PartnerBookingsScreenState
             bottom: 0,
             child: PartnerBottomNav(current: PartnerTab.requests),
           ),
-          const Positioned.fill(child: DraggableChatBubble()),
         ],
       ),
     );
@@ -159,9 +172,8 @@ class _SegmentButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : Colors.white,
+          color: selected ? AppTheme.accentOliveDark : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
-          boxShadow: AppTheme.cardShadow,
         ),
         child: Text(
           label,
@@ -188,24 +200,17 @@ class _BookingRow extends StatelessWidget {
     final dateLabel =
         '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
-    return SnappyTap.builder(
+    return SnappyTap(
       onTap: onTap,
-      builder: (context, hovered) => Container(
+      child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: AppColors.green,
-              backgroundImage: NetworkImage(
-                'https://i.pravatar.cc/150?u=${booking.avatarSeed}',
-              ),
-            ),
+            InitialsAvatar(name: booking.clientName, radius: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -221,7 +226,7 @@ class _BookingRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '$dateLabel · ${booking.category.label}',
+                    '$dateLabel · ${booking.category ?? 'Serviço'}',
                     style: const TextStyle(
                       color: AppTheme.inkMuted,
                       fontSize: 12.5,

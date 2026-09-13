@@ -31,3 +31,5 @@ Este módulo tem uma particularidade importante face a todos os anteriores: **um
 ## Decisão de arquitetura mais relevante
 
 O RSVP público não pode depender de `is_wedding_member()` nem de `auth.uid()`, porque o convidado não está autenticado. A solução adotada é um **token único e imprevisível por convidado**, validado por uma Edge Function com privilégios de serviço (`service_role`), nunca por RLS direta do cliente. A página de RSVP em si deve ser servida como web pública leve (fora do binário da app mobile), para não exigir instalação da app a quem só quer confirmar presença. Ver `database.md` e `tasks.md`.
+
+**Não confundir com o `UserRole.guest` genérico** (2026-09-04, `backend/auth/requirements.md` RN01b) — uma conta opcional, criada a partir do ecrã de registo normal ("Sou convidado"), sem `wedding_id` associado. Serve para o convidado voltar a aceder à plataforma mais tarde; RN02 acima continua a valer para o RSVP em si, que nunca exige esta ou nenhuma outra conta. Ver `tasks.md` para o que falta desenhar.

@@ -15,7 +15,7 @@ published ──(editar campo crítico: nome/NIF/categorias)──▶ pending_re
 published ──(admin: suspend)──▶ suspended
 published ──(is_paused = true, não muda status)──▶ published (pausado)
 
-suspended ──(admin: reativar, fora de âmbito deste módulo — ver admin-web/partners/)──▶ published
+suspended ──(restore-partner-profile)──▶ published
 ```
 
 `is_paused` é ortogonal ao `status` — só tem efeito quando `status = published` (ver RN10). Não existe transição de volta de `suspended` iniciada pelo próprio parceiro.

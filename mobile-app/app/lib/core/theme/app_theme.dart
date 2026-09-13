@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Implementação executável do design system documentado em
-/// mobile-app/shared/design-system.md — fundo creme quente com
-/// acentos verde-oliva, cards brancos com sombra difusa, tipografia
-/// Roboto Black para títulos e Roboto Regular para o resto. Escala
-/// definida para um ecrã de referência de 375px.
+/// mobile-app/shared/design-system.md — fundo branco (creme quente
+/// antes, pedido explícito do utilizador 2026-08-31: "make the bg
+/// white on all pages instead of that cream") com acentos
+/// verde-oliva, cards brancos com sombra difusa, tipografia Roboto
+/// Black para títulos e Roboto Regular para o resto. Escala definida
+/// para um ecrã de referência de 375px.
 class AppTheme {
   static const seedColor = accentOliveDark;
 
-  static const background = Color(0xFFFAF7F0);
+  static const background = Colors.white;
   static const ink = Color(0xFF171713);
 
   /// Alias de [ink] — texto "secundário"/"muted" deixou de ter um tom
@@ -38,19 +40,40 @@ class AppTheme {
   /// conteúdo e a navbar flutuante alinham-se a esta mesma largura.
   static const screenMargin = 28.0;
 
-  /// Sombra partilhada por todos os cards — difusa e tingida com
-  /// [accentOliveDark] a baixa opacidade, para um halo suave em vez de
-  /// uma sombra cinzenta dura.
-  static const cardShadow = [
+  /// Pedido explícito do utilizador 2026-08-31: "remove shadows from
+  /// boxes" — cards deixaram de ter sombra própria; a separação do
+  /// fundo branco vem agora da cor [surface] (cinzento claro), não de
+  /// um halo. Mantidas como listas vazias (em vez de remover o campo)
+  /// para não obrigar a tocar nos ~30 ficheiros que já referenciam
+  /// [cardShadow]/[cardShadowStrong] no seu `boxShadow:`.
+  static const cardShadow = <BoxShadow>[];
+
+  static const cardShadowStrong = <BoxShadow>[];
+
+  /// Superfície cinzenta clara para cards/caixas — pedido explícito do
+  /// utilizador 2026-08-31: "if the boxes are white turn them
+  /// greyish" (depois de remover a sombra dos cards, um card branco
+  /// sobre o novo fundo branco liso ficava sem nenhum contraste).
+  static const surface = Color(0xFFF0F0F0);
+
+  /// Sombra exclusiva das barras de pesquisa — pedido explícito do
+  /// utilizador 2026-08-31: "only leave the shadow on the
+  /// searchbar(s)" (depois de [cardShadow]/[cardShadowStrong] ficarem
+  /// vazias para todas as outras caixas). Mesmos valores que
+  /// [cardShadow] tinha antes de ser esvaziada.
+  static const searchBarShadow = [
     BoxShadow(color: Color(0x1F3F4A30), blurRadius: 24, offset: Offset(0, 10)),
   ];
 
-  /// Variante mais carregada de [cardShadow], para elementos que devem
-  /// ganhar destaque/dominância sobre os cards normais (ex: tiles de
-  /// estatística selecionáveis, estado de hover) — mesmo halo, mais
-  /// opacidade e alcance.
-  static const cardShadowStrong = [
-    BoxShadow(color: Color(0x2E3F4A30), blurRadius: 32, offset: Offset(0, 14)),
+  /// Sombra virada para cima — para elementos ancorados ao fundo do
+  /// ecrã (FloatingBottomNav/PartnerBottomNav). [cardShadow] projeta
+  /// para baixo (offset Y positivo), o que não dá nenhum contraste
+  /// visível numa doca já encostada à borda inferior — a sombra ficava
+  /// fora do ecrã. Pedido explícito do utilizador: "add a shadow to
+  /// the navbar to add contrast" (depois de o fundo ter passado a
+  /// branco liso, a doca branca deixou de se destacar sem isto).
+  static const navBarShadow = [
+    BoxShadow(color: Color(0x293F4A30), blurRadius: 20, offset: Offset(0, -6)),
   ];
 
   /// Escurece uma cor de superfície ~10% para o estado pressionado —
@@ -199,12 +222,12 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: Colors.white,
+        color: surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: surface,
         selectedColor: AppColors.green,
         side: const BorderSide(color: borderMuted),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
@@ -286,28 +309,27 @@ class AppColors {
 /// Aplicados através de GradientScaffold, nunca diretamente num
 /// Scaffold (que só aceita uma Color sólida).
 class AppGradients {
-  /// Verde-sálvia → creme, diagonal. Ecrãs de primeira impressão /
-  /// emoção (boas-vindas, onboarding).
+  /// Verde-sálvia → branco, diagonal (creme antes, ver nota em
+  /// [AppTheme]). Ecrãs de primeira impressão / emoção (boas-vindas,
+  /// onboarding).
   static const hero = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFE6E7D5), Color(0xFFFAF7F0)],
+    colors: [Color(0xFFE6E7D5), Colors.white],
   );
 
-  /// Creme, quase sólido, vertical. Ecrãs de lista/dashboard.
+  /// Branco sólido. Ecrãs de lista/dashboard.
   static const feed = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFFAF7F0), Color(0xFFF3EEE0)],
+    colors: [Colors.white, Colors.white],
   );
 
-  /// Creme → branco, vertical, quase impercetível. Ecrãs de
-  /// formulário/detalhe, onde um gradiente forte prejudicaria a
-  /// legibilidade.
+  /// Branco sólido. Ecrãs de formulário/detalhe.
   static const subtle = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFFAF7F0), Color(0xFFFFFFFF)],
+    colors: [Colors.white, Colors.white],
   );
 
   /// Sálvia sólido — momento único e celebratório (ex: fim do

@@ -1,0 +1,1552 @@
+
+> app@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.187:3000
+- Environments: .env.local
+✓ Ready in 5.5s
+⚠ Warning: Next.js ignored package-lock.json in C:\Users\alves\OneDrive\Ambiente de Trabalho\New_stuff because it is outside the current Git repository (C:\Users\alves\OneDrive\Ambiente de Trabalho\New_stuff\copo-dagua\copo-dagua).
+ To use this directory, set `turbopack.root` in your Next.js config.
+
+✓ Running next.config.ts took 369ms
+
+ GET / 200 in 3.2s (next.js: 294ms, proxy.ts: 1436ms, application-code: 1438ms)
+ GET / 200 in 831ms (next.js: 11ms, proxy.ts: 121ms, application-code: 699ms)
+ GET / 200 in 1028ms (next.js: 10ms, proxy.ts: 285ms, application-code: 733ms)
+ GET / 200 in 824ms (next.js: 6ms, proxy.ts: 103ms, application-code: 716ms)
+ GET / 200 in 794ms (next.js: 8ms, proxy.ts: 92ms, application-code: 694ms)
+ GET /login 200 in 1026ms (next.js: 938ms, proxy.ts: 7ms, application-code: 80ms)
+ GET / 200 in 880ms (next.js: 8ms, proxy.ts: 140ms, application-code: 732ms)
+ GET / 200 in 943ms (next.js: 9ms, proxy.ts: 112ms, application-code: 822ms)
+[browser] Error restoring session i: Failed to connect to MetaMask
+    at Object.connect (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/inpage.js:7:84292) (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/inpage.js:4:10741)
+[browser] Error restoring session i: Failed to connect to MetaMask
+    at Object.connect (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/inpage.js:7:84292) (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/inpage.js:17:4697)
+[browser] ⨯ unhandledRejection: i: Failed to connect to MetaMask
+    at Object.connect (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/inpage.js:7:84292)
+[browser] ⨯ unhandledRejection: i: Failed to connect to MetaMask
+    at Object.connect (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/inpage.js:7:84292)
+ GET / 200 in 1646ms (next.js: 35ms, proxy.ts: 354ms, application-code: 1257ms)
+ GET / 200 in 1187ms (next.js: 9ms, proxy.ts: 157ms, application-code: 1022ms)
+ GET / 200 in 920ms (next.js: 12ms, proxy.ts: 132ms, application-code: 776ms)
+ GET / 200 in 825ms (next.js: 12ms, proxy.ts: 152ms, application-code: 661ms)
+ GET / 200 in 703ms (next.js: 6ms, proxy.ts: 134ms, application-code: 563ms)
+ GET / 200 in 719ms (next.js: 6ms, proxy.ts: 128ms, application-code: 586ms)
+ GET / 200 in 656ms (next.js: 6ms, proxy.ts: 158ms, application-code: 492ms)
+ GET / 200 in 685ms (next.js: 7ms, proxy.ts: 120ms, application-code: 558ms)
+ GET / 200 in 677ms (next.js: 6ms, proxy.ts: 102ms, application-code: 569ms)
+ GET / 200 in 827ms (next.js: 8ms, proxy.ts: 162ms, application-code: 658ms)
+ GET /users 200 in 484ms (next.js: 65ms, proxy.ts: 120ms, application-code: 300ms)
+ GET /users 200 in 360ms (next.js: 7ms, proxy.ts: 70ms, application-code: 282ms)
+ GET /users 200 in 400ms (next.js: 8ms, proxy.ts: 73ms, application-code: 320ms)
+ GET / 200 in 888ms (next.js: 7ms, proxy.ts: 67ms, application-code: 814ms)
+ GET /users 200 in 425ms (next.js: 8ms, proxy.ts: 114ms, application-code: 303ms)
+ GET /weddings 200 in 421ms (next.js: 58ms, proxy.ts: 61ms, application-code: 301ms)
+ GET /partners 200 in 412ms (next.js: 54ms, proxy.ts: 76ms, application-code: 282ms)
+ GET /partners?status=changes_required 200 in 351ms (next.js: 8ms, proxy.ts: 68ms, application-code: 276ms)
+ GET /partners?status=published 200 in 345ms (next.js: 7ms, proxy.ts: 69ms, application-code: 269ms)
+ GET /partners?status=rejected 200 in 344ms (next.js: 8ms, proxy.ts: 71ms, application-code: 265ms)
+ GET /partners?status=suspended 200 in 353ms (next.js: 8ms, proxy.ts: 70ms, application-code: 276ms)
+ GET /bookings 200 in 387ms (next.js: 57ms, proxy.ts: 72ms, application-code: 258ms)
+ GET /payments 200 in 1160ms (next.js: 579ms, proxy.ts: 125ms, application-code: 456ms)
+ GET /bookings 200 in 983ms (next.js: 82ms, proxy.ts: 510ms, application-code: 391ms)
+ GET /bookings?status=confirmed 200 in 337ms (next.js: 10ms, proxy.ts: 66ms, application-code: 260ms)
+ GET /bookings?status=awaiting_deposit 200 in 360ms (next.js: 12ms, proxy.ts: 97ms, application-code: 252ms)
+ GET /bookings?status=all 200 in 347ms (next.js: 8ms, proxy.ts: 85ms, application-code: 253ms)
+ GET /bookings?status=all 200 in 454ms (next.js: 8ms, proxy.ts: 72ms, application-code: 374ms)
+ GET /bookings?status=all 200 in 508ms (next.js: 8ms, proxy.ts: 149ms, application-code: 352ms)
+ GET /bookings?status=awaiting_deposit 200 in 393ms (next.js: 9ms, proxy.ts: 126ms, application-code: 257ms)
+ GET /bookings?status=all 200 in 387ms (next.js: 9ms, proxy.ts: 68ms, application-code: 310ms)
+ GET /partners 200 in 360ms (next.js: 13ms, proxy.ts: 68ms, application-code: 278ms)
+ GET /bookings 200 in 343ms (next.js: 13ms, proxy.ts: 73ms, application-code: 257ms)
+ GET /bookings?status=awaiting_deposit 200 in 409ms (next.js: 10ms, proxy.ts: 108ms, application-code: 291ms)
+ GET /bookings?status=all 200 in 480ms (next.js: 9ms, proxy.ts: 150ms, application-code: 321ms)
+ GET /bookings?status=awaiting_deposit 200 in 355ms (next.js: 7ms, proxy.ts: 69ms, application-code: 279ms)
+ GET /bookings?status=confirmed 200 in 338ms (next.js: 9ms, proxy.ts: 72ms, application-code: 256ms)
+ GET /bookings?status=completed 200 in 331ms (next.js: 8ms, proxy.ts: 71ms, application-code: 252ms)
+ GET /bookings?status=expired 200 in 358ms (next.js: 8ms, proxy.ts: 104ms, application-code: 246ms)
+ GET /bookings?status=awaiting_deposit 200 in 331ms (next.js: 10ms, proxy.ts: 69ms, application-code: 252ms)
+ GET /partners 200 in 334ms (next.js: 11ms, proxy.ts: 72ms, application-code: 251ms)
+ GET /partners?status=changes_required 200 in 338ms (next.js: 8ms, proxy.ts: 69ms, application-code: 261ms)
+ GET /partners?status=published 200 in 341ms (next.js: 7ms, proxy.ts: 72ms, application-code: 261ms)
+ GET /weddings 200 in 399ms (next.js: 15ms, proxy.ts: 67ms, application-code: 317ms)
+ GET /payments 200 in 515ms (next.js: 20ms, proxy.ts: 71ms, application-code: 424ms)
+ GET /bookings 200 in 322ms (next.js: 7ms, proxy.ts: 66ms, application-code: 249ms)
+ GET /weddings 200 in 745ms (next.js: 14ms, proxy.ts: 284ms, application-code: 447ms)
+ GET /users 200 in 501ms (next.js: 21ms, proxy.ts: 71ms, application-code: 410ms)
+ GET /users/925c390b-c96b-41c9-81fe-eef7524c9c71 200 in 6.6s (next.js: 6.1s, proxy.ts: 112ms, application-code: 411ms)
+ GET /users 200 in 449ms (next.js: 34ms, proxy.ts: 108ms, application-code: 307ms)
+ GET /users/925c390b-c96b-41c9-81fe-eef7524c9c71 200 in 359ms (next.js: 34ms, proxy.ts: 67ms, application-code: 257ms)
+ GET /users 200 in 335ms (next.js: 7ms, proxy.ts: 66ms, application-code: 263ms)
+ GET /users/12fa3170-661b-4559-a1ad-fd46a10001d7 200 in 428ms (next.js: 18ms, proxy.ts: 66ms, application-code: 343ms)
+ GET /users 200 in 337ms (next.js: 8ms, proxy.ts: 69ms, application-code: 260ms)
+ GET /users/925c390b-c96b-41c9-81fe-eef7524c9c71 200 in 349ms (next.js: 18ms, proxy.ts: 72ms, application-code: 259ms)
+ GET /users 200 in 669ms (next.js: 8ms, proxy.ts: 270ms, application-code: 391ms)
+ GET /users 200 in 1290ms (next.js: 34ms, proxy.ts: 490ms, application-code: 766ms)
+ GET /bookings 200 in 485ms (next.js: 32ms, proxy.ts: 134ms, application-code: 320ms)
+ GET / 200 in 1663ms (next.js: 132ms, proxy.ts: 338ms, application-code: 1193ms)
+ GET /support 200 in 685ms (next.js: 244ms, proxy.ts: 142ms, application-code: 298ms)
+ GET /support?status=open 200 in 340ms (next.js: 9ms, proxy.ts: 67ms, application-code: 264ms)
+ GET /support?status=resolved 200 in 349ms (next.js: 11ms, proxy.ts: 65ms, application-code: 273ms)
+ GET /support?status=pending 200 in 334ms (next.js: 8ms, proxy.ts: 66ms, application-code: 259ms)
+ GET /support?status=all 200 in 494ms (next.js: 11ms, proxy.ts: 66ms, application-code: 417ms)
+ GET / 200 in 5.0s (next.js: 234ms, proxy.ts: 1995ms, application-code: 2.7s)
+ GET /analytics 200 in 1835ms (next.js: 905ms, proxy.ts: 168ms, application-code: 761ms)
+ GET /bookings 200 in 592ms (next.js: 28ms, proxy.ts: 140ms, application-code: 424ms)
+○ Compiling /bookings/[id] ...
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+○ Compiling /_error ...
+ GET /bookings?status=confirmed 200 in 646ms (next.js: 99ms, proxy.ts: 171ms, application-code: 377ms)
+ GET /bookings?status=awaiting_deposit 200 in 681ms (next.js: 25ms, proxy.ts: 163ms, application-code: 493ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 9.0s (proxy.ts: 76ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 308ms (proxy.ts: 126ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 382ms (proxy.ts: 305ms)
+ GET /bookings?status=all 200 in 1823ms (next.js: 806ms, proxy.ts: 97ms, application-code: 920ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 501ms (proxy.ts: 378ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 807ms (proxy.ts: 453ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 402ms (proxy.ts: 203ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings?status=all 200 in 965ms (next.js: 93ms, proxy.ts: 220ms, application-code: 652ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 625ms (proxy.ts: 245ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 489ms (proxy.ts: 220ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 746ms (proxy.ts: 258ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 589ms (proxy.ts: 284ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 900ms (proxy.ts: 286ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 737ms (proxy.ts: 338ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 1154ms (proxy.ts: 342ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 947ms (proxy.ts: 444ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 1431ms (proxy.ts: 444ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 1313ms (proxy.ts: 613ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 1814ms (proxy.ts: 614ms)
+ GET /payments 200 in 2.6s (next.js: 314ms, proxy.ts: 471ms, application-code: 1848ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 1207ms (proxy.ts: 582ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 1951ms (proxy.ts: 582ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 1432ms (proxy.ts: 693ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 2.0s (proxy.ts: 693ms)
+ GET /bookings 200 in 3.2s (next.js: 288ms, proxy.ts: 801ms, application-code: 2.1s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 1464ms (proxy.ts: 716ms)
+(node:44184) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 unpipe listeners added to [Socket]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:44184) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Socket]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(node:44184) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 close listeners added to [Socket]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(node:44184) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 finish listeners added to [Socket]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(node:44184) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 unpipe listeners added to [Socket]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(node:44184) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Socket]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(node:44184) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 close listeners added to [Socket]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(node:44184) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 finish listeners added to [Socket]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 2.1s (proxy.ts: 722ms)
+ GET /bookings 200 in 3.0s (next.js: 389ms, proxy.ts: 706ms, application-code: 1947ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 1666ms (proxy.ts: 675ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.0s (proxy.ts: 677ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 33.9s (proxy.ts: 2.0s)
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.2s (proxy.ts: 1556ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.2s (proxy.ts: 1557ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 37.2s (proxy.ts: 2.0s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.2s (proxy.ts: 1557ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.2s (proxy.ts: 1563ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 2.5s (proxy.ts: 1128ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 5.6s (proxy.ts: 3.5s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.0s (proxy.ts: 738ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.2s (proxy.ts: 1125ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.2s (proxy.ts: 1125ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.2s (proxy.ts: 1130ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 403ms (proxy.ts: 391ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 79ms (proxy.ts: 67ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 1876ms (proxy.ts: 67ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 1748ms (proxy.ts: 77ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 2.8s (proxy.ts: 1153ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.7s (proxy.ts: 1155ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 2.0s (proxy.ts: 892ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.4s (proxy.ts: 796ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.2s (proxy.ts: 1313ms)
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.1s (proxy.ts: 1178ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 4.3s (proxy.ts: 1314ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 2.9s (proxy.ts: 1426ms)
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 5.6s (proxy.ts: 1979ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 4.0s (proxy.ts: 2.2s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.2s (proxy.ts: 1344ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 4.8s (proxy.ts: 1528ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.7s (proxy.ts: 2.0s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 4.1s (proxy.ts: 1688ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 5.5s (proxy.ts: 1690ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 5.9s (proxy.ts: 3.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.4s (proxy.ts: 3.7s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 3.9s (proxy.ts: 1723ms)
+✓ Finished filesystem cache database compaction in 82s
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 6.0s (proxy.ts: 1579ms)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 4.3s (proxy.ts: 1782ms)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 5.8s (proxy.ts: 3.2s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.0s (proxy.ts: 2.3s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 5.7s (proxy.ts: 3.0s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.9s (proxy.ts: 3.1s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 6.9s (proxy.ts: 4.2s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.5s (proxy.ts: 3.0s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 6.4s (proxy.ts: 3.4s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.8s (proxy.ts: 2.3s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 5.3s (proxy.ts: 2.3s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.6s (proxy.ts: 3.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 10.3s (proxy.ts: 4.3s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.1s (proxy.ts: 3.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 9.2s (proxy.ts: 3.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.5s (proxy.ts: 4.5s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 9.5s (proxy.ts: 3.9s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 5.2s (proxy.ts: 2.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.3s (proxy.ts: 3.8s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 9.9s (proxy.ts: 3.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.6s (proxy.ts: 4.0s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 10.6s (proxy.ts: 4.0s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 8.1s (proxy.ts: 4.5s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 10.9s (proxy.ts: 4.5s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.9s (proxy.ts: 4.2s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 10.9s (proxy.ts: 4.2s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 8.8s (proxy.ts: 4.8s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 11.9s (proxy.ts: 4.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 9.7s (proxy.ts: 4.6s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.8s (proxy.ts: 4.6s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 8.4s (proxy.ts: 4.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 11.3s (proxy.ts: 4.9s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 8.6s (proxy.ts: 4.6s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 11.2s (proxy.ts: 4.6s)
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+ GET /bookings?status=completed 200 in 14.5s (next.js: 2.3s, proxy.ts: 2.7s, application-code: 9.5s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.6s (proxy.ts: 3.3s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 9.9s (proxy.ts: 3.3s)
+ GET /bookings?status=all 200 in 15.5s (next.js: 2.2s, proxy.ts: 3.1s, application-code: 10.1s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 9.4s (proxy.ts: 5.4s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 12.4s (proxy.ts: 5.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 9.5s (proxy.ts: 5.2s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 12.8s (proxy.ts: 5.2s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 10.1s (proxy.ts: 5.6s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.8s (proxy.ts: 5.6s)
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 11.2s (proxy.ts: 6.0s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 15.5s (proxy.ts: 6.0s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.2s (proxy.ts: 7.4s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.7s (proxy.ts: 7.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 21.3s (proxy.ts: 10.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 27.8s (proxy.ts: 10.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 20.2s (proxy.ts: 9.0s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 20.2s (proxy.ts: 9.0s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 20.2s (proxy.ts: 9.0s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 20.2s (proxy.ts: 9.0s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 19.0s (proxy.ts: 8.7s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.2s (proxy.ts: 5.0s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.9s (proxy.ts: 7.8s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 18.8s (proxy.ts: 7.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 18.8s (proxy.ts: 7.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 18.8s (proxy.ts: 7.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.5s (proxy.ts: 7.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 11.4s (proxy.ts: 4.9s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.2s (proxy.ts: 7.3s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.2s (proxy.ts: 7.3s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.2s (proxy.ts: 7.3s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 18.3s (proxy.ts: 7.3s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 15.0s (proxy.ts: 8.6s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 14.6s (proxy.ts: 7.7s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 11.4s (proxy.ts: 5.6s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.9s (proxy.ts: 7.6s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.5s (proxy.ts: 7.7s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.3s (proxy.ts: 7.4s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 10.6s (proxy.ts: 4.9s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.6s (proxy.ts: 7.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 12.7s (proxy.ts: 6.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.5s (proxy.ts: 6.9s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 9.0s (proxy.ts: 5.4s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 11.8s (proxy.ts: 5.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 7.8s (proxy.ts: 4.3s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 10.3s (proxy.ts: 4.3s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 8.0s (proxy.ts: 4.5s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 11.1s (proxy.ts: 4.5s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 8.4s (proxy.ts: 4.8s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 11.3s (proxy.ts: 4.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 10.5s (proxy.ts: 4.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 15.2s (proxy.ts: 4.9s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 12.4s (proxy.ts: 6.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 16.8s (proxy.ts: 6.9s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 12.0s (proxy.ts: 6.6s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 18.1s (proxy.ts: 6.6s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.9s (proxy.ts: 9.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 24.0s (proxy.ts: 9.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 24.7s (proxy.ts: 9.7s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 24.7s (proxy.ts: 9.7s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 24.7s (proxy.ts: 9.7s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 24.7s (proxy.ts: 9.7s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 24.7s (proxy.ts: 9.7s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 21.9s (proxy.ts: 6.6s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 19.6s (proxy.ts: 10.8s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 26.6s (proxy.ts: 10.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 26.6s (proxy.ts: 10.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 26.6s (proxy.ts: 10.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.7s (proxy.ts: 10.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.7s (proxy.ts: 10.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.4s (proxy.ts: 10.2s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.5s (proxy.ts: 6.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.5s (proxy.ts: 6.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.5s (proxy.ts: 6.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 11.9s (proxy.ts: 5.3s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 20.6s (proxy.ts: 8.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 12.2s (proxy.ts: 5.4s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 15.7s (proxy.ts: 6.1s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 15.7s (proxy.ts: 6.2s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 16.5s (proxy.ts: 5.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 15.0s (proxy.ts: 5.5s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 22.8s (proxy.ts: 9.5s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 29.8s (proxy.ts: 8.8s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 29.3s (proxy.ts: 13.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 30.4s (proxy.ts: 13.4s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 40s (proxy.ts: 13.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 40s (proxy.ts: 13.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 40s (proxy.ts: 13.4s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 37.1s (proxy.ts: 17.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 20.4s (proxy.ts: 11.6s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 13.3s (proxy.ts: 5.6s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 21.7s (proxy.ts: 8.5s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 18.0s (proxy.ts: 9.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 18.0s (proxy.ts: 9.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 20.1s (proxy.ts: 11.6s)
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 20.1s (proxy.ts: 10.5s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 27.5s (proxy.ts: 11.6s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 27.8s (proxy.ts: 10.5s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 16.6s (proxy.ts: 7.6s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 28.9s (proxy.ts: 11.6s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 24.4s (proxy.ts: 7.7s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 27.0s (proxy.ts: 11.5s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 27.0s (proxy.ts: 11.5s)
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 23.3s (proxy.ts: 12.4s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 29.2s (proxy.ts: 12.4s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 26.0s (proxy.ts: 8.3s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 20.4s (proxy.ts: 11.1s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 20.2s (proxy.ts: 10.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 21.6s (proxy.ts: 7.0s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 18.4s (proxy.ts: 10.1s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 15.2s (proxy.ts: 7.1s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 23.4s (proxy.ts: 7.1s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 20.2s (proxy.ts: 11.0s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 23.1s (proxy.ts: 11.8s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 21.6s (proxy.ts: 10.2s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 12.2s (proxy.ts: 6.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 17.0s (proxy.ts: 6.9s)
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 15.4s (proxy.ts: 4.5s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 307 in 34.7s (proxy.ts: 13.0s)
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+[browser] Failed to fetch RSC payload for http://localhost:3000/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5. Falling back to browser navigation. TypeError: Failed to fetch
+[browser] Failed to fetch RSC payload for http://localhost:3000/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5. Falling back to browser navigation. TypeError: Failed to fetch
+[browser] Failed to fetch RSC payload for http://localhost:3000/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5. Falling back to browser navigation. TypeError: Failed to fetch
+[browser] Failed to fetch RSC payload for http://localhost:3000/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5. Falling back to browser navigation. TypeError: Failed to fetch
+[browser] Failed to fetch RSC payload for http://localhost:3000/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5. Falling back to browser navigation. TypeError: Failed to fetch
+[browser] Failed to fetch RSC payload for http://localhost:3000/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5. Falling back to browser navigation. TypeError: Failed to fetch
+[browser] Failed to fetch RSC payload for http://localhost:3000/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5. Falling back to browser navigation. TypeError: Failed to fetch
+[browser] Failed to fetch RSC payload for http://localhost:3000/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5. Falling back to browser navigation. TypeError: Failed to fetch
+[browser] Failed to fetch RSC payload for http://localhost:3000/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5. Falling back to browser navigation. TypeError: Failed to fetch
+[browser] Failed to fetch RSC payload for http://localhost:3000/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5. Falling back to browser navigation. TypeError: Failed to fetch
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+ GET /bookings?status=all 200 in 28.9s (next.js: 2.9s, proxy.ts: 9.1s, application-code: 16.9s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5'
+}
+ GET /bookings/bbbf9e52-680b-47ea-b52c-a2739b5894f5 500 in 21.7s (next.js: 10.9s, proxy.ts: 8.4s, application-code: 2.4s)
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+[browser] Uncaught Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+ GET / 200 in 32.4s (next.js: 2.6s, proxy.ts: 6.4s, application-code: 23.4s)
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException: Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+⨯ uncaughtException:  Error: write EPIPE
+    at ignore-listed frames {
+  errno: -4047,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+ GET /bookings 200 in 37.1s (next.js: 2.9s, proxy.ts: 9.1s, application-code: 25.1s)
+⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+    at ignore-listed frames {
+  type: 'WorkerError',
+  page: '/bookings/1df10a25-9f92-4443-8ad0-ec0fa03db4f2'
+}
+ GET /bookings/1df10a25-9f92-4443-8ad0-ec0fa03db4f2 307 in 21.3s (proxy.ts: 9.0s)

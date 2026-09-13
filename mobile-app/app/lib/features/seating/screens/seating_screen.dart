@@ -12,7 +12,6 @@ import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/support_chat.dart';
 
 enum _PlanView { plan, list }
 
@@ -72,6 +71,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
     final notifier = ref.read(seatingControllerProvider.notifier);
     if (result.remove) {
       if (existing != null) await notifier.removeTable(existing.id);
+      if (!mounted) return;
       setState(() => _selectedIndex = null);
     } else if (isNextCell) {
       await notifier.saveNextTable(result.guestIds);
@@ -90,10 +90,12 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
 
     final filled = state.nextIndex;
     final total = state.totalTables;
+    final loading = state.loading || wedding == null;
+    final noTables = !loading && total == 0;
 
     return GradientScaffold(
       background: AppBackground.feed,
-      body: total == 0 || wedding == null
+      body: loading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
@@ -108,58 +110,31 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                         PageHeader(
                           title: 'Lugares',
                           titleFontSize: 26,
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SnappyTap.builder(
-                                onTap: () =>
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Mais opções em breve.'),
+                          trailing: AddActionButton(
+                            onTap: state.isFull
+                                ? () => ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        !state.hasVenue
+                                            ? 'Escolhe primeiro o local do casamento.'
+                                            : total == 0
+                                            ? 'O local ainda não configurou mesas disponíveis.'
+                                            : 'Já criaste o número máximo de mesas.',
                                       ),
                                     ),
-                                builder: (context, hovered) => Container(
-                                  width: 46,
-                                  height: 46,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: hovered
-                                        ? AppTheme.cardShadowStrong
-                                        : AppTheme.cardShadow,
+                                  )
+                                : () => _openTable(
+                                    ref,
+                                    index: filled,
+                                    isNextCell: true,
+                                    existing: state.nextTable,
                                   ),
-                                  child: const Icon(
-                                    Icons.more_horiz,
-                                    color: AppTheme.ink,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              AddActionButton(
-                                onTap: state.isFull
-                                    ? () => ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Já criaste o número máximo de mesas.',
-                                              ),
-                                            ),
-                                          )
-                                    : () => _openTable(
-                                        ref,
-                                        index: filled,
-                                        isNextCell: true,
-                                        existing: state.nextTable,
-                                      ),
-                              ),
-                            ],
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(
                             AppTheme.screenMargin,
-                            20,
+                            16,
                             AppTheme.screenMargin,
                             140,
                           ),
@@ -170,48 +145,81 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                 totalGuests: guestsState.guests.length,
                                 estimatedGuests: wedding.estimatedGuests,
                                 totalTables: total,
+                                hasVenue: state.hasVenue,
                                 tables: state.tables,
                               ),
                               const SizedBox(height: 20),
-                              _ViewToggle(
-                                selected: _view,
-                                onChanged: (v) => setState(() => _view = v),
-                              ),
-                              const SizedBox(height: 18),
-                              if (_view == _PlanView.plan)
-                                _PlanGrid(
-                                  state: state,
-                                  selectedIndex: _selectedIndex,
-                                  onSelect: _select,
-                                )
-                              else
-                                _TableListView(
-                                  state: state,
-                                  selectedIndex: _selectedIndex,
-                                  onSelect: _select,
+                              if (noTables)
+                                _NoTablesCard(hasVenue: state.hasVenue)
+                              else ...[
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _ViewToggle(
+                                        selected: _view,
+                                        onChanged: (v) => setState(() => _view = v),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    SnappyTap(
+                                      onTap: () =>
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Mais opções em breve.'),
+                                            ),
+                                          ),
+                                      child: Container(
+                                        width: 46,
+                                        height: 46,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.surface,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.more_horiz,
+                                          color: AppTheme.ink,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              const SizedBox(height: 18),
-                              const _Legend(),
-                              if (_selectedIndex != null) ...[
-                                const SizedBox(height: 22),
-                                _SelectedTableCard(
-                                  index: _selectedIndex!,
-                                  state: state,
-                                  guests: guestsState.guests,
-                                  onEdit: () {
-                                    final index = _selectedIndex!;
-                                    final isNext = index == state.nextIndex;
-                                    final existing = index < state.tables.length
-                                        ? state.tables[index]
-                                        : null;
-                                    _openTable(
-                                      ref,
-                                      index: index,
-                                      isNextCell: isNext,
-                                      existing: existing,
-                                    );
-                                  },
-                                ),
+                                const SizedBox(height: 18),
+                                if (_view == _PlanView.plan)
+                                  _PlanGrid(
+                                    state: state,
+                                    selectedIndex: _selectedIndex,
+                                    onSelect: _select,
+                                  )
+                                else
+                                  _TableListView(
+                                    state: state,
+                                    selectedIndex: _selectedIndex,
+                                    onSelect: _select,
+                                  ),
+                                const SizedBox(height: 18),
+                                const _Legend(),
+                                if (_selectedIndex != null) ...[
+                                  const SizedBox(height: 22),
+                                  _SelectedTableCard(
+                                    index: _selectedIndex!,
+                                    state: state,
+                                    guests: guestsState.guests,
+                                    onEdit: () {
+                                      final index = _selectedIndex!;
+                                      final isNext = index == state.nextIndex;
+                                      final existing = index < state.tables.length
+                                          ? state.tables[index]
+                                          : null;
+                                      _openTable(
+                                        ref,
+                                        index: index,
+                                        isNextCell: isNext,
+                                        existing: existing,
+                                      );
+                                    },
+                                  ),
+                                ],
                               ],
                             ],
                           ),
@@ -226,7 +234,6 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                   bottom: 0,
                   child: FloatingBottomNav(current: AppTab.wedding),
                 ),
-                const Positioned.fill(child: DraggableChatBubble()),
               ],
             ),
     );
@@ -237,12 +244,14 @@ class _StatsRow extends StatelessWidget {
   final int totalGuests;
   final int? estimatedGuests;
   final int totalTables;
+  final bool hasVenue;
   final List<SeatingTable> tables;
 
   const _StatsRow({
     required this.totalGuests,
     required this.estimatedGuests,
     required this.totalTables,
+    required this.hasVenue,
     required this.tables,
   });
 
@@ -273,8 +282,13 @@ class _StatsRow extends StatelessWidget {
         _StatCard(
           icon: Icons.event_seat_outlined,
           label: 'Mesas',
-          value: '$totalTables',
-          caption: '$roundCount redondas · $rectCount retangulares',
+          // Só mostra um número real depois de haver local reservado —
+          // pedido explícito do utilizador, nunca voltar a estimar a
+          // partir do número de convidados. Ver [SeatingState.hasVenue].
+          value: hasVenue ? '$totalTables' : '-',
+          caption: !hasVenue
+              ? 'Escolhe o local do casamento'
+              : '$roundCount redondas · $rectCount retangulares',
         ),
         _StatCard(
           icon: Icons.check_circle_outline,
@@ -289,6 +303,57 @@ class _StatsRow extends StatelessWidget {
           caption: '${availablePct.toStringAsFixed(1)}%',
         ),
       ],
+    );
+  }
+}
+
+/// Mostrado em vez da planta/lista quando ainda não há nenhuma mesa real
+/// disponível — ou porque o casal ainda não reservou o local
+/// ([SeatingState.hasVenue] `false`), ou porque o reservou mas esse
+/// local ainda não configurou nenhum tipo de mesa (`hasVenue` `true`,
+/// [SeatingState.totalTables] em 0).
+class _NoTablesCard extends StatelessWidget {
+  final bool hasVenue;
+
+  const _NoTablesCard({required this.hasVenue});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.event_seat_outlined,
+            size: 32,
+            color: AppTheme.inkMuted,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            hasVenue
+                ? 'O local que reservaste ainda não configurou as mesas disponíveis.'
+                : 'Ainda não reservaste o local do casamento.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14.5,
+              color: AppTheme.ink,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            hasVenue
+                ? 'Fala com o parceiro ou volta mais tarde — assim que ele indicar as mesas, aparecem aqui.'
+                : 'Assim que reservares um espaço, o número real de mesas aparece aqui e podes começar a organizar os lugares.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -311,9 +376,8 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,9 +430,8 @@ class _ViewToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Row(
         children: [
@@ -460,9 +523,8 @@ class _PlanGrid extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -603,12 +665,11 @@ class _TableListRow extends StatelessWidget {
     final content = Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: selected
             ? Border.all(color: AppTheme.accentOliveDark, width: 1.5)
             : null,
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Row(
         children: [
@@ -746,19 +807,16 @@ class _SelectedTableCard extends StatelessWidget {
                 ],
               ),
             ),
-            SnappyTap.builder(
+            SnappyTap(
               onTap: onEdit,
-              builder: (context, hovered) => Container(
+              child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(999),
-                  boxShadow: hovered
-                      ? AppTheme.cardShadowStrong
-                      : AppTheme.cardShadow,
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -784,9 +842,8 @@ class _SelectedTableCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: AppTheme.cardShadow,
             ),
             child: const Text('Ainda sem convidados nesta mesa.'),
           )
@@ -818,9 +875,8 @@ class _SeatedGuestTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Row(
         children: [
@@ -1006,7 +1062,6 @@ class _StatusBadge extends StatelessWidget {
         color: background,
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 2),
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Icon(icon, size: 13, color: Colors.white),
     );

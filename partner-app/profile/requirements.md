@@ -45,6 +45,7 @@ Sem um perfil completo e aprovado, um parceiro tem conta autenticada (`backend/a
 | RN09 | Um administrador pode suspender um perfil já publicado (`published` → `suspended`) por incumprimento de políticas; o parceiro é notificado (ver `mobile-app/notifications/`, ainda ⏳) e o perfil desaparece do Marketplace imediatamente, mesmo sem passar por `is_paused`. |
 | RN10 | Pausar o perfil (`is_paused = true`) é uma ação do próprio parceiro, reversível a qualquer momento, e não afeta o `status` de aprovação — um parceiro `published` que pausa continua `published`, só deixa de ser pesquisável (RN01). |
 | RN11 | Dados fiscais (NIF, morada de faturação) e documentos de verificação nunca são expostos publicamente — vivem numa tabela separada (`partner_verification`) com RLS restrita ao próprio parceiro e a administradores. Ver `database.md` para a justificação arquitetural. |
+| RN12 | Um administrador pode restaurar um perfil suspenso (`suspended` → `published`) sem nova revisão de completude — a suspensão é uma decisão administrativa reversível, não uma rejeição do conteúdo do perfil. `rejection_reason` (se existir de uma rejeição anterior) não é reaproveitado nem exibido para uma suspensão/restauro — são fluxos distintos com o seu próprio motivo (ver `admin-web/partners/requirements.md`). |
 
 ## Risco identificado
 

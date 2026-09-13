@@ -10,7 +10,6 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/support_chat.dart';
 
 class PartnerMessagesScreen extends ConsumerWidget {
   const PartnerMessagesScreen({super.key});
@@ -68,21 +67,18 @@ class PartnerMessagesScreen extends ConsumerWidget {
                     AppTheme.screenMargin,
                     110,
                   ),
-                  child: SnappyTap.builder(
+                  child: SnappyTap(
                     onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Já estás a ver todas as conversas.'),
                       ),
                     ),
-                    builder: (context, hovered) => Container(
+                    child: Container(
                       height: 52,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: AppTheme.accentOliveDark,
                         borderRadius: BorderRadius.circular(999),
-                        boxShadow: hovered
-                            ? AppTheme.cardShadowStrong
-                            : AppTheme.cardShadow,
                       ),
                       child: const Text(
                         'Ver todas as conversas',
@@ -104,7 +100,6 @@ class PartnerMessagesScreen extends ConsumerWidget {
             bottom: 0,
             child: PartnerBottomNav(current: PartnerTab.chat),
           ),
-          const Positioned.fill(child: DraggableChatBubble()),
         ],
       ),
     );

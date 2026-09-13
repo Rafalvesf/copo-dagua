@@ -164,7 +164,7 @@ class _BookingAgendaCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    '${booking.category.label} · ${booking.packageLabel}',
+                    '${booking.category ?? 'Serviço'} · ${booking.packageLabel}',
                     style: const TextStyle(
                       color: AppTheme.inkMuted,
                       fontSize: 12.5,

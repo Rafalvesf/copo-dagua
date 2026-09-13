@@ -16,7 +16,7 @@
 - Autenticação multifator (MFA) — opcional no MVP, obrigatório para Administradores
 
 ### Específicas
-- **Seleção de papel (role)** no registo: Noivo(a) ou Parceiro. Administradores não se registam publicamente — são criados manualmente via painel interno (`admin-web/users/`).
+- **Seleção de papel (role)** no registo: Noivo(a), Parceiro ou Convidado. Administradores não se registam publicamente — são criados manualmente via painel interno (`admin-web/users/`).
 - **Deep linking** para verificação de email e reset de password (abrir diretamente na app mobile).
 - **Biometria local** (Face ID / Touch ID) para reautenticação rápida em sessões já iniciadas — não substitui o login inicial, é uma camada de conveniência sobre uma sessão já válida.
 
@@ -24,7 +24,8 @@
 
 | # | Regra |
 |---|---|
-| RN01 | Um utilizador tem exatamente um `role` principal: `couple`, `partner` ou `admin`. Não existem contas híbridas no MVP (uma pessoa que é noiva e também parceiroa precisa de duas contas com emails diferentes). |
+| RN01 | Um utilizador tem exatamente um `role` principal: `couple`, `partner`, `guest` ou `admin`. Não existem contas híbridas no MVP (uma pessoa que é noiva e também parceira precisa de duas contas com emails diferentes). |
+| RN01b | `guest` é uma conta genérica, sem `wedding_id` associado no momento do registo — não confundir com o RSVP por token de `mobile-app/guests/` (RN02 desse módulo: confirmar presença nunca exige conta). Serve para o convidado poder voltar a aceder à plataforma; a superfície real que vê depois de entrar (juntar-se a um casamento, ver o histórico de RSVPs) ainda não está desenhada — ver `mobile-app/guests/tasks.md`. |
 | RN02 | O email tem de ser único em toda a plataforma, independentemente do role. |
 | RN03 | A password mínima é 8 caracteres, com pelo menos 1 letra e 1 número. Sem imposição de símbolos especiais (reduz fricção, alinhado com guidelines NIST modernas). |
 | RN04 | O acesso a funcionalidades que envolvem dinheiro (Payments, Contracts, Bookings) exige email verificado. Sem verificação, o utilizador pode navegar e explorar, mas não pode transacionar. |

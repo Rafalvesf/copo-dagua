@@ -22,12 +22,19 @@ as $$
   select nullif(current_setting('app.current_user_id', true), '')::uuid;
 $$;
 
--- Role usado para simular o cliente autenticado (equivalente ao
--- role "authenticated" do Supabase, que é quem sofre RLS).
+-- Role usado para simular o cliente autenticado. Tem de se chamar
+-- literalmente "authenticated" (não "app_authenticated" ou outro nome) —
+-- é o nome exato do role nativo do Supabase para quem sofre RLS, e as
+-- migrações 001+ fazem GRANT a esse nome assumindo que funcionam sem
+-- alteração tanto aqui (Postgres local) como num projeto Supabase real.
+-- (Bug real encontrado 2026-08-30: a primeira vez que estas migrações
+-- foram aplicadas a um Supabase real, os GRANTs falharam porque este
+-- stub tinha criado "app_authenticated" em vez de "authenticated" — ver
+-- database/README.md.)
 do $$
 begin
-  if not exists (select 1 from pg_roles where rolname = 'app_authenticated') then
-    create role app_authenticated nologin;
+  if not exists (select 1 from pg_roles where rolname = 'authenticated') then
+    create role authenticated nologin;
   end if;
 end $$;
-grant usage on schema auth, public to app_authenticated;
+grant usage on schema auth, public to authenticated;

@@ -1,6 +1,6 @@
 # Módulo: checklist (mobile-app)
 
-**Estado:** 🔄 Em progresso — implementado diretamente em código (`mobile-app/app/lib/features/checklist/`) com backend mock, a pedido direto do utilizador durante os testes da primeira versão da app. Documentação formal completa (Regras de negócio, Fluxo, Casos limite, Critérios de aceitação, Testes) segundo a metodologia de `docs/product/README.md` ainda **não foi escrita** — este ficheiro descreve o que existe hoje, não substitui esse processo.
+**Estado:** 🔄 Em progresso — implementado diretamente em código (`mobile-app/app/lib/features/checklist/`), ligado a dados reais (`checklist_items`, `database/migrations/031_checklist.sql`) em 2026-08-31 a pedido direto do utilizador ("switch them to real live data"). Documentação formal completa (Regras de negócio, Fluxo, Casos limite, Critérios de aceitação, Testes) segundo a metodologia de `docs/product/README.md` ainda **não foi escrita** — este ficheiro descreve o que existe hoje, não substitui esse processo.
 
 ## O que existe hoje
 
@@ -13,8 +13,9 @@
 ## Por documentar
 
 - Regras de negócio (ex: existem tarefas pré-semeadas por omissão para todos os casamentos? Podem ser editadas/removidas as sugeridas pela plataforma?).
-- Modelo de dados definitivo e RLS (`checklist_items`, ligado a `wedding_id` via `is_wedding_member()` — mesmo padrão dos módulos anteriores).
 - Edge cases (ex: prazo no passado, tarefa duplicada, categoria vazia).
 - Testes e critérios de aceitação.
+- `assignee_seeds` (avatares de responsáveis por tarefa) não tem modelo real ainda — a versão real simplesmente não mostra avatares, em vez de continuar a inventá-los via pravatar.cc.
+- `selected_partner_id` sem FK a `partner_profiles` de propósito — a navegação de parceiros do lado do casal ainda é mock, ver `mobile-app/marketplace/`.
 
 Ver estado geral em `ROADMAP.md` na raiz do projeto.

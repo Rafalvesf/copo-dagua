@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/mock/mock_backend.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+
+/// "Há quanto tempo tem conta" — só a antiguidade, nunca a data exata
+/// (evita ler como um dado pessoal/sensível). Pedido explícito do
+/// utilizador.
+String _accountAge(DateTime createdAt) {
+  final days = DateTime.now().difference(createdAt).inDays;
+  if (days < 30) return 'conta há ${days < 1 ? 1 : days} dias';
+  if (days < 365) return 'conta há ${(days / 30).floor()} meses';
+  final years = (days / 365).floor();
+  return 'conta há $years ${years == 1 ? 'ano' : 'anos'}';
+}
 
 class PartnerReviewsScreen extends ConsumerWidget {
   const PartnerReviewsScreen({super.key});
@@ -46,17 +57,16 @@ class PartnerReviewsScreen extends ConsumerWidget {
       ),
     );
     if (text == null || text.trim().isEmpty) return;
-    await MockBackend.instance.respondToReview(review.id, text.trim());
-    ref.invalidate(partnerReviewsProvider);
+    await respondToReview(ref, review.id, text.trim());
   }
 
-  Future<void> _report(BuildContext context, Review review) async {
+  Future<void> _report(BuildContext context, WidgetRef ref, Review review) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Denunciar avaliação'),
-        content: Text(
-          'Denunciar a avaliação de ${review.authorName} para revisão da equipa Copo d\'Água?',
+        content: const Text(
+          'Denunciar esta avaliação para revisão da equipa Copo d\'Água? Deixa de aparecer no teu perfil público até a equipa decidir.',
         ),
         actions: [
           TextButton(
@@ -70,7 +80,9 @@ class PartnerReviewsScreen extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed != true || !context.mounted) return;
+    if (confirmed != true) return;
+    await flagReview(ref, review.id);
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Avaliação denunciada para revisão.')),
     );
@@ -125,23 +137,34 @@ class PartnerReviewsScreen extends ConsumerWidget {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, st) =>
                     const Center(child: Text('Não foi possível carregar.')),
-                data: (reviews) => ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppTheme.screenMargin,
-                    0,
-                    AppTheme.screenMargin,
-                    16,
-                  ),
-                  itemCount: reviews.length,
-                  itemBuilder: (context, index) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _ReviewCard(
-                      review: reviews[index],
-                      onRespond: () => _respond(context, ref, reviews[index]),
-                      onReport: () => _report(context, reviews[index]),
-                    ),
-                  ),
-                ),
+                data: (reviews) => reviews.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(
+                            'Ainda não têm avaliações — aparecem aqui assim que um casal avaliar uma reserva concluída.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: AppTheme.inkMuted),
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppTheme.screenMargin,
+                          0,
+                          AppTheme.screenMargin,
+                          16,
+                        ),
+                        itemCount: reviews.length,
+                        itemBuilder: (context, index) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _ReviewCard(
+                            review: reviews[index],
+                            onRespond: () => _respond(context, ref, reviews[index]),
+                            onReport: () => _report(context, ref, reviews[index]),
+                          ),
+                        ),
+                      ),
               ),
             ),
             Padding(
@@ -151,21 +174,18 @@ class PartnerReviewsScreen extends ConsumerWidget {
                 AppTheme.screenMargin,
                 16,
               ),
-              child: SnappyTap.builder(
+              child: SnappyTap(
                 onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Já estás a ver todas as avaliações.'),
                   ),
                 ),
-                builder: (context, hovered) => Container(
+                child: Container(
                   height: 52,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: AppTheme.accentOliveDark,
                     borderRadius: BorderRadius.circular(999),
-                    boxShadow: hovered
-                        ? AppTheme.cardShadowStrong
-                        : AppTheme.cardShadow,
                   ),
                   child: const Text(
                     'Ver todas as avaliações',
@@ -201,9 +221,8 @@ class _ReviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,13 +230,13 @@ class _ReviewCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: AppColors.green,
-                backgroundImage: NetworkImage(
-                  'https://i.pravatar.cc/150?u=${review.avatarSeed}',
-                ),
-              ),
+              review.coupleAvatarUrl == null
+                  ? InitialsAvatar(name: review.coupleDisplayName, radius: 20)
+                  : CircleAvatar(
+                      radius: 20,
+                      backgroundColor: AppColors.gray,
+                      backgroundImage: NetworkImage(review.coupleAvatarUrl!),
+                    ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -227,15 +246,17 @@ class _ReviewCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            review.authorName,
+                            review.coupleDisplayName,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
-                              fontSize: 14,
+                              fontSize: 13.5,
+                              color: AppTheme.ink,
                             ),
                           ),
                         ),
                         Text(
-                          '${review.date.day.toString().padLeft(2, '0')}/${review.date.month.toString().padLeft(2, '0')}/${review.date.year}',
+                          '${review.createdAt.day.toString().padLeft(2, '0')}/${review.createdAt.month.toString().padLeft(2, '0')}/${review.createdAt.year}',
                           style: const TextStyle(
                             color: AppTheme.inkMuted,
                             fontSize: 11.5,
@@ -243,17 +264,62 @@ class _ReviewCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    _StarRow(rating: review.rating, size: 14),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 2),
+                    // Só factos já públicos no perfil do casal, nunca
+                    // orçamento/contactos — pedido explícito do
+                    // utilizador: "informações... interessantes mas
+                    // não secretas ou pessoais".
                     Text(
-                      review.comment,
-                      style: const TextStyle(
-                        color: AppTheme.inkMuted,
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
+                      [
+                        _accountAge(review.accountCreatedAt),
+                        if (review.weddingDate != null)
+                          'casamento em ${review.weddingDate!.day.toString().padLeft(2, '0')}/${review.weddingDate!.month.toString().padLeft(2, '0')}/${review.weddingDate!.year}',
+                        if (review.location != null && review.location!.isNotEmpty)
+                          review.location!,
+                        if (review.estimatedGuests != null)
+                          '~${review.estimatedGuests} convidados',
+                      ].join(' · '),
+                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 11),
                     ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _StarRow(rating: review.rating, size: 14),
+                        if (review.status != 'published') ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: review.status == 'flagged'
+                                  ? AppStatusColors.declined.withValues(alpha: 0.15)
+                                  : AppTheme.borderMuted,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              review.status == 'flagged' ? 'Denunciada' : 'Removida',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: review.status == 'flagged'
+                                    ? AppStatusColors.declined
+                                    : AppTheme.inkMuted,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (review.comment != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        review.comment!,
+                        style: const TextStyle(
+                          color: AppTheme.inkMuted,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
+import '../../../core/partner_profile/partner_profile_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_mark.dart';
@@ -10,6 +11,14 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
+const _maxPackages = 3;
+
+/// Serviços e preços real — liga-se a `partner_profiles.pricing_mode` +
+/// `partner_service_packages` (`database/migrations/028_partner_service_packages.sql`).
+/// Um parceiro escolhe UM dos dois modos (pedido explícito do
+/// utilizador: "up to 3 options or por orcamento only. partner can
+/// choose"), nunca os dois: até 3 pacotes fixos, ou só orçamento à
+/// medida sem nenhum pacote.
 class PartnerPricingScreen extends ConsumerStatefulWidget {
   const PartnerPricingScreen({super.key});
 
@@ -19,45 +28,64 @@ class PartnerPricingScreen extends ConsumerStatefulWidget {
 }
 
 class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
-  bool _showPackages = true;
+  bool _busy = false;
+
+  Future<void> _withBusy(Future<void> Function() action) async {
+    setState(() => _busy = true);
+    try {
+      await action();
+      ref.invalidate(partnerPricingProvider);
+      await ref.read(partnerProfileControllerProvider.notifier).refreshReviewStatus();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível guardar. Tenta novamente.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _setMode(String mode) => _withBusy(() => setPartnerPricingMode(mode));
+
+  Future<void> _saveAveragePrice(double? price) => _withBusy(() => setAverageQuotePrice(price));
+
+  Future<void> _addPackage(int currentCount) async {
+    final result = await showEditPackageSheet(context);
+    if (result == null) return;
+    await _withBusy(() => addServicePackage(
+          name: result.name,
+          description: result.description,
+          price: result.price,
+          isStartingPrice: result.isStartingPrice,
+          position: currentCount,
+        ));
+  }
 
   Future<void> _editPackage(ServicePackage pkg) async {
-    final result = await _showEditServiceSheet(
+    final result = await showEditPackageSheet(
       context,
       name: pkg.name,
+      description: pkg.description,
       price: pkg.price,
-      features: pkg.features,
-      hasFeatures: true,
+      isStartingPrice: pkg.isStartingPrice,
     );
     if (result == null) return;
-    await ref
-        .read(partnerPricingControllerProvider.notifier)
-        .editPackage(
+    await _withBusy(() => editServicePackage(
           pkg.id,
           name: result.name,
+          description: result.description,
           price: result.price,
-          features: result.features,
-        );
+          isStartingPrice: result.isStartingPrice,
+        ));
   }
 
-  Future<void> _editExtra(ServiceExtra extra) async {
-    final result = await _showEditServiceSheet(
-      context,
-      name: extra.name,
-      price: extra.price,
-      features: const [],
-      hasFeatures: false,
-    );
-    if (result == null) return;
-    await ref
-        .read(partnerPricingControllerProvider.notifier)
-        .editExtra(extra.id, name: result.name, price: result.price);
-  }
+  Future<void> _removePackage(ServicePackage pkg) => _withBusy(() => removeServicePackage(pkg.id));
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(partnerPricingControllerProvider);
-    final controller = ref.read(partnerPricingControllerProvider.notifier);
+    final pricingAsync = ref.watch(partnerPricingProvider);
 
     return GradientScaffold(
       background: AppBackground.feed,
@@ -67,73 +95,104 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
           children: [
             PageHeader(
               title: 'Serviços e preços',
-              subtitle: 'Gerir os teus pacotes e preços.',
+              subtitle: 'Escolhe como os casais veem os teus preços.',
               trailing: const AccountSwitcherBadge(),
             ),
             const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.screenMargin,
-              ),
-              child: Row(
-                children: [
-                  _SegmentButton(
-                    label: 'Pacotes',
-                    selected: _showPackages,
-                    onTap: () => setState(() => _showPackages = true),
-                  ),
-                  const SizedBox(width: 8),
-                  _SegmentButton(
-                    label: 'Extras',
-                    selected: !_showPackages,
-                    onTap: () => setState(() => _showPackages = false),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
             Expanded(
-              child: state.loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppTheme.screenMargin,
-                        0,
-                        AppTheme.screenMargin,
-                        24,
-                      ),
-                      children: _showPackages
-                          ? [
-                              for (final pkg in state.packages)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 14),
-                                  child: _PricingTierCard(
-                                    name: pkg.name,
-                                    price: pkg.price,
-                                    features: pkg.features,
-                                    active: pkg.active,
-                                    onChanged: (v) =>
-                                        controller.togglePackage(pkg.id, v),
-                                    onEdit: () => _editPackage(pkg),
-                                  ),
-                                ),
-                            ]
-                          : [
-                              for (final extra in state.extras)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 14),
-                                  child: _PricingTierCard(
-                                    name: extra.name,
-                                    price: extra.price,
-                                    features: const [],
-                                    active: extra.active,
-                                    onChanged: (v) =>
-                                        controller.toggleExtra(extra.id, v),
-                                    onEdit: () => _editExtra(extra),
-                                  ),
-                                ),
-                            ],
+              child: pricingAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, st) =>
+                    const Center(child: Text('Não foi possível carregar.')),
+                data: (pricing) {
+                  final packages = pricing.packages;
+                  final isPackages = pricing.pricingMode == 'packages';
+                  return ListView(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.screenMargin,
+                      0,
+                      AppTheme.screenMargin,
+                      24,
                     ),
+                    children: [
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _SegmentButton(
+                              label: 'Pacotes',
+                              selected: isPackages,
+                              onTap: _busy ? null : () => _setMode('packages'),
+                            ),
+                            const SizedBox(width: 8),
+                            _SegmentButton(
+                              label: 'Só orçamento',
+                              selected: !isPackages,
+                              onTap: _busy ? null : () => _setMode('quote_only'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      if (!isPackages)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Os casais vão pedir-te um orçamento à medida — sem pacotes fixos com preço.',
+                                style: TextStyle(color: AppTheme.inkMuted, fontSize: 13.5, height: 1.4),
+                              ),
+                              const SizedBox(height: 16),
+                              _AverageQuoteField(
+                                initialValue: pricing.averageQuotePrice,
+                                busy: _busy,
+                                onSave: _saveAveragePrice,
+                              ),
+                            ],
+                          ),
+                        )
+                      else ...[
+                        for (final pkg in packages)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: _PackageCard(
+                              pkg: pkg,
+                              onEdit: _busy ? null : () => _editPackage(pkg),
+                              onDelete: _busy ? null : () => _removePackage(pkg),
+                            ),
+                          ),
+                        if (packages.length < _maxPackages)
+                          SnappyTap(
+                            onTap: _busy ? () {} : () => _addPackage(packages.length),
+                            child: Container(
+                              height: 52,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: AppTheme.surface,
+                                border: Border.all(color: AppTheme.accentOliveDark),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: const Text(
+                                '+ Adicionar pacote',
+                                style: TextStyle(
+                                  color: AppTheme.accentOliveDark,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ],
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -145,7 +204,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
 class _SegmentButton extends StatelessWidget {
   final String label;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _SegmentButton({
     required this.label,
@@ -156,13 +215,12 @@ class _SegmentButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SnappyTap(
-      onTap: onTap,
+      onTap: onTap ?? () {},
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : Colors.white,
+          color: selected ? AppTheme.accentOliveDark : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
-          boxShadow: AppTheme.cardShadow,
         ),
         child: Text(
           label,
@@ -177,31 +235,83 @@ class _SegmentButton extends StatelessWidget {
   }
 }
 
-class _PricingTierCard extends StatelessWidget {
-  final String name;
-  final double price;
-  final List<String> features;
-  final bool active;
-  final ValueChanged<bool> onChanged;
-  final VoidCallback onEdit;
+/// Valor médio dos orçamentos que o parceiro costuma fazer — pedido
+/// explícito do utilizador (2026-09-04): "os parceiros quando colocam a
+/// opção orçamento devem colocar um valor médio... para o casal ter uma
+/// ideia de quanto lhes pode ficar este parceiro". Mostrado ao casal em
+/// `partner_detail_screen.dart` quando não há pacotes fixos. Guarda em
+/// `partner_profiles.average_quote_price`
+/// (`database/migrations/049_partner_average_quote_price.sql`).
+class _AverageQuoteField extends StatefulWidget {
+  final double? initialValue;
+  final bool busy;
+  final ValueChanged<double?> onSave;
 
-  const _PricingTierCard({
-    required this.name,
-    required this.price,
-    required this.features,
-    required this.active,
-    required this.onChanged,
-    required this.onEdit,
+  const _AverageQuoteField({
+    required this.initialValue,
+    required this.busy,
+    required this.onSave,
   });
 
   @override
+  State<_AverageQuoteField> createState() => _AverageQuoteFieldState();
+}
+
+class _AverageQuoteFieldState extends State<_AverageQuoteField> {
+  late final _price = TextEditingController(
+    text: widget.initialValue == null ? '' : widget.initialValue!.toStringAsFixed(0),
+  );
+
+  @override
+  void dispose() {
+    _price.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _price,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(labelText: 'Valor médio dos orçamentos (€)'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: FilledButton(
+            onPressed: widget.busy
+                ? null
+                : () => widget.onSave(
+                      double.tryParse(_price.text.trim().replaceAll(',', '.')),
+                    ),
+            child: const Text('Guardar'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PackageCard extends StatelessWidget {
+  final ServicePackage pkg;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+
+  const _PackageCard({required this.pkg, required this.onEdit, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    final priceLabel = '${pkg.isStartingPrice ? "A partir de " : ""}€${pkg.price.toStringAsFixed(0)}';
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,7 +320,7 @@ class _PricingTierCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '$name  €${price.toStringAsFixed(0)}',
+                  '${pkg.name}  $priceLabel',
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 16,
@@ -219,47 +329,28 @@ class _PricingTierCard extends StatelessWidget {
                 ),
               ),
               SnappyTap(
-                onTap: onEdit,
+                onTap: onEdit ?? () {},
                 child: const Padding(
                   padding: EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.edit_outlined,
-                    size: 18,
-                    color: AppTheme.inkMuted,
-                  ),
+                  child: Icon(Icons.edit_outlined, size: 18, color: AppTheme.inkMuted),
                 ),
               ),
               const SizedBox(width: 4),
-              Switch(
-                value: active,
-                activeThumbColor: AppTheme.accentOliveDark,
-                onChanged: onChanged,
+              SnappyTap(
+                onTap: onDelete ?? () {},
+                child: const Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(Icons.delete_outline, size: 18, color: AppTheme.inkMuted),
+                ),
               ),
             ],
           ),
-          if (features.isNotEmpty) ...[
+          if (pkg.description.isNotEmpty) ...[
             const SizedBox(height: 8),
-            for (final feature in features)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.check,
-                      size: 16,
-                      color: AppTheme.accentOliveDark,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      feature,
-                      style: const TextStyle(
-                        color: AppTheme.inkMuted,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            Text(
+              pkg.description,
+              style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+            ),
           ],
         ],
       ),
@@ -267,84 +358,82 @@ class _PricingTierCard extends StatelessWidget {
   }
 }
 
-class _EditServiceResult {
+class EditPackageResult {
   final String name;
+  final String description;
   final double price;
-  final List<String> features;
+  final bool isStartingPrice;
 
-  const _EditServiceResult({
+  const EditPackageResult({
     required this.name,
+    required this.description,
     required this.price,
-    required this.features,
+    required this.isStartingPrice,
   });
 }
 
-Future<_EditServiceResult?> _showEditServiceSheet(
+Future<EditPackageResult?> showEditPackageSheet(
   BuildContext context, {
-  required String name,
-  required double price,
-  required List<String> features,
-  required bool hasFeatures,
+  String name = '',
+  String description = '',
+  double price = 0,
+  bool isStartingPrice = false,
 }) {
-  return showModalBottomSheet<_EditServiceResult>(
+  return showModalBottomSheet<EditPackageResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => _EditServiceSheet(
+    builder: (context) => _EditPackageSheet(
       name: name,
+      description: description,
       price: price,
-      features: features,
-      hasFeatures: hasFeatures,
+      isStartingPrice: isStartingPrice,
     ),
   );
 }
 
-class _EditServiceSheet extends StatefulWidget {
+class _EditPackageSheet extends StatefulWidget {
   final String name;
+  final String description;
   final double price;
-  final List<String> features;
-  final bool hasFeatures;
+  final bool isStartingPrice;
 
-  const _EditServiceSheet({
+  const _EditPackageSheet({
     required this.name,
+    required this.description,
     required this.price,
-    required this.features,
-    required this.hasFeatures,
+    required this.isStartingPrice,
   });
 
   @override
-  State<_EditServiceSheet> createState() => _EditServiceSheetState();
+  State<_EditPackageSheet> createState() => _EditPackageSheetState();
 }
 
-class _EditServiceSheetState extends State<_EditServiceSheet> {
+class _EditPackageSheetState extends State<_EditPackageSheet> {
   late final _name = TextEditingController(text: widget.name);
+  late final _description = TextEditingController(text: widget.description);
   late final _price = TextEditingController(
-    text: widget.price.toStringAsFixed(0),
+    text: widget.price == 0 ? '' : widget.price.toStringAsFixed(0),
   );
-  late final List<TextEditingController> _features = [
-    for (final f in widget.features) TextEditingController(text: f),
-  ];
+  late bool _isStartingPrice = widget.isStartingPrice;
 
   @override
   void dispose() {
     _name.dispose();
+    _description.dispose();
     _price.dispose();
-    for (final c in _features) {
-      c.dispose();
-    }
     super.dispose();
   }
 
   void _save() {
-    final price = double.tryParse(_price.text.trim()) ?? widget.price;
+    if (_name.text.trim().isEmpty) return;
+    final price = double.tryParse(_price.text.trim()) ?? 0;
     Navigator.of(context).pop(
-      _EditServiceResult(
-        name: _name.text.trim().isEmpty ? widget.name : _name.text.trim(),
+      EditPackageResult(
+        name: _name.text.trim(),
+        description: _description.text.trim(),
         price: price,
-        features: [
-          for (final c in _features)
-            if (c.text.trim().isNotEmpty) c.text.trim(),
-        ],
+        isStartingPrice: _isStartingPrice,
       ),
     );
   }
@@ -352,9 +441,7 @@ class _EditServiceSheetState extends State<_EditServiceSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         decoration: const BoxDecoration(
@@ -365,10 +452,7 @@ class _EditServiceSheetState extends State<_EditServiceSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Editar serviço',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-            ),
+            const Text('Pacote', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
             const SizedBox(height: 16),
             TextField(
               controller: _name,
@@ -376,51 +460,25 @@ class _EditServiceSheetState extends State<_EditServiceSheet> {
             ),
             const SizedBox(height: 12),
             TextField(
+              controller: _description,
+              maxLines: 3,
+              minLines: 2,
+              decoration: const InputDecoration(labelText: 'Descrição'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
               controller: _price,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Preço (€)',
-              ),
+              decoration: const InputDecoration(labelText: 'Preço (€)'),
             ),
-            if (widget.hasFeatures) ...[
-              const SizedBox(height: 16),
-              const Text(
-                'Inclui',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.inkMuted,
-                  fontSize: 12.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              for (final controller in _features)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: controller,
-                          decoration: const InputDecoration(isDense: true),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () =>
-                            setState(() => _features.remove(controller)),
-                        icon: const Icon(Icons.close, size: 18),
-                      ),
-                    ],
-                  ),
-                ),
-              TextButton.icon(
-                onPressed: () =>
-                    setState(() => _features.add(TextEditingController())),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Adicionar item'),
-              ),
-              const SizedBox(height: 8),
-            ] else
-              const SizedBox(height: 16),
+            CheckboxListTile(
+              value: _isStartingPrice,
+              onChanged: (v) => setState(() => _isStartingPrice = v ?? false),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Mostrar como "A partir de"', style: TextStyle(fontSize: 13.5)),
+            ),
+            const SizedBox(height: 8),
             PrimaryButton(label: 'Guardar', onPressed: _save),
           ],
         ),

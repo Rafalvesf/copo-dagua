@@ -4,24 +4,58 @@ import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 
 /// Apresentação partilhada entre a lista e o detalhe de parceiros —
-/// dados ilustrativos (features, tempo de resposta) que não fazem parte
-/// do modelo `Partner`, derivados de forma determinística para variar
-/// por parceiro sem precisar de um campo novo no backend mock.
-Color colorForPartnerCategory(PartnerCategory category) {
-  switch (category) {
-    case PartnerCategory.photography:
-      return AppColors.blue;
-    case PartnerCategory.catering:
-      return AppColors.yellow;
-    case PartnerCategory.music:
-      return AppColors.green;
-    case PartnerCategory.decoration:
-      return AppColors.gray;
-    case PartnerCategory.venue:
-      return AppColors.purple;
-  }
-}
+/// por `slug` real (`partner_categories`, 14 valores), não pelo antigo
+/// enum de 5 [PartnerCategory] (esse mantém-se só para
+/// Checklist/Orçamento, ver [slugForPartnerCategory] abaixo). `'other'`
+/// e qualquer slug desconhecido caem no valor por omissão no fim de
+/// cada switch.
+Color colorForCategorySlug(String slug) => switch (slug) {
+  'photography' => AppColors.blue,
+  'videography' => AppColors.blue,
+  'catering' => AppColors.yellow,
+  'cake' => AppColors.yellow,
+  'music_dj' => AppColors.green,
+  'flowers_decor' => AppColors.gray,
+  'venue' => AppColors.purple,
+  'rentals' => AppColors.purple,
+  _ => AppColors.gray,
+};
 
+IconData iconForCategorySlug(String slug) => switch (slug) {
+  'photography' => Icons.camera_alt_outlined,
+  'videography' => Icons.videocam_outlined,
+  'catering' => Icons.restaurant_outlined,
+  'cake' => Icons.cake_outlined,
+  'music_dj' => Icons.music_note_outlined,
+  'flowers_decor' => Icons.local_florist_outlined,
+  'venue' => Icons.villa_outlined,
+  'beauty' => Icons.face_retouching_natural_outlined,
+  'officiant' => Icons.record_voice_over_outlined,
+  'invitations' => Icons.mail_outline,
+  'rentals' => Icons.chair_outlined,
+  'transport' => Icons.directions_car_outlined,
+  'wedding_planner' => Icons.event_note_outlined,
+  _ => Icons.storefront_outlined,
+};
+
+/// Ponte para o antigo enum de 5 categorias, ainda usado por
+/// Checklist/Orçamento (`checklist_items.partner_category`,
+/// `budget_categories.partner_category`) — nunca migrados para a
+/// taxonomia real nesta ronda. Usado só para pré-filtrar o Marketplace
+/// quando a Checklist pede "escolher fotógrafo" — as 5 categorias
+/// antigas têm sempre um slug real equivalente.
+String slugForPartnerCategory(PartnerCategory category) => switch (category) {
+  PartnerCategory.photography => 'photography',
+  PartnerCategory.catering => 'catering',
+  PartnerCategory.music => 'music_dj',
+  PartnerCategory.decoration => 'flowers_decor',
+  PartnerCategory.venue => 'venue',
+};
+
+/// Ícone por categoria do antigo enum de 5 — só para
+/// `budget_categories.partner_category`/`_CategoryRow`
+/// (`budget_screen.dart`), que ainda usa [PartnerCategory], não a
+/// taxonomia real. Ver [iconForCategorySlug] para o Marketplace.
 IconData iconForPartnerCategory(PartnerCategory category) {
   switch (category) {
     case PartnerCategory.photography:
@@ -35,60 +69,4 @@ IconData iconForPartnerCategory(PartnerCategory category) {
     case PartnerCategory.venue:
       return Icons.villa_outlined;
   }
-}
-
-const _featureTagsByCategory = {
-  PartnerCategory.photography: ['Drone', 'Álbum', 'Pré-wedding'],
-  PartnerCategory.catering: ['Prova de menu', 'Vegetariano', 'Bar incluído'],
-  PartnerCategory.music: ['Som incluído', 'Luzes', 'Repertório'],
-  PartnerCategory.decoration: ['Instalação', 'Flores frescas', 'Iluminação'],
-  PartnerCategory.venue: ['Estacionamento', 'Catering próprio', 'Alojamento'],
-};
-
-List<String> featureTagsFor(PartnerCategory category) =>
-    _featureTagsByCategory[category] ?? const [];
-
-int responseMinutesFor(Partner partner) =>
-    8 + (partner.id.hashCode.abs() % 45);
-
-class PartnerPackage {
-  final String name;
-  final double price;
-  final List<String> features;
-  final bool highlighted;
-
-  const PartnerPackage({
-    required this.name,
-    required this.price,
-    required this.features,
-    this.highlighted = false,
-  });
-}
-
-List<PartnerPackage> packagesFor(Partner partner) {
-  final base = partner.startingPrice;
-  final extra = featureTagsFor(partner.category);
-  return [
-    PartnerPackage(
-      name: 'Essencial',
-      price: base,
-      features: [
-        'Cobertura de 6h',
-        'Edição profissional',
-        'Galeria online',
-        if (extra.isNotEmpty) extra.first,
-      ],
-    ),
-    PartnerPackage(
-      name: 'Premium',
-      price: (base * 1.4).roundToDouble(),
-      features: ['Cobertura de 10h', ...extra, 'Edição profissional'],
-      highlighted: true,
-    ),
-    PartnerPackage(
-      name: 'Luxury',
-      price: (base * 2).roundToDouble(),
-      features: ['Cobertura completa do dia', ...extra, 'Equipa dedicada'],
-    ),
-  ];
 }

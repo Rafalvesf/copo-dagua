@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/models/models.dart';
+import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/support_chat.dart';
 
 /// Área do parceiro (fornecedor) — versão mínima. Os módulos reais
 /// (Quotations, Bookings, Calendar, Profile, Contracts, Payouts) estão
@@ -82,6 +83,8 @@ class PartnerHomeScreen extends ConsumerWidget {
                       140,
                     ),
                     children: [
+                      const _PartnerDashboardSummary(),
+                      const SizedBox(height: 22),
                       GridView.count(
                         crossAxisCount: 3,
                         shrinkWrap: true,
@@ -96,10 +99,12 @@ class PartnerHomeScreen extends ConsumerWidget {
                             label: 'Pedidos de orçamento',
                             onTap: () => context.push('/partner-requests'),
                           ),
-                          const _PartnerTile(
+                          _PartnerTile(
                             color: AppColors.green,
                             icon: Icons.event_available_outlined,
                             label: 'Reservas',
+                            onTap: () => context
+                                .push('/partner-requests?segment=confirmados'),
                           ),
                           _PartnerTile(
                             color: AppColors.yellow,
@@ -139,7 +144,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                   bottom: false,
                   child: Container(
                     width: double.infinity,
-                    color: const Color(0xFFFAF7F0), // topo de AppGradients.feed
+                    color: Colors.white, // topo de AppGradients.feed
                     padding: const EdgeInsets.fromLTRB(
                       AppTheme.screenMargin,
                       20,
@@ -171,17 +176,9 @@ class PartnerHomeScreen extends ConsumerWidget {
                                   ref
                                       .read(authControllerProvider.notifier)
                                       .logout();
-                                } else if (value == 'switch') {
-                                  ref
-                                      .read(authControllerProvider.notifier)
-                                      .switchDemoAccount();
                                 }
                               },
                               itemBuilder: (context) => const [
-                                PopupMenuItem(
-                                  value: 'switch',
-                                  child: Text('Ver como Noivo/a'),
-                                ),
                                 PopupMenuItem(
                                   value: 'logout',
                                   child: Text('Sair'),
@@ -217,10 +214,207 @@ class PartnerHomeScreen extends ConsumerWidget {
                 bottom: 0,
                 child: PartnerBottomNav(current: PartnerTab.home),
               ),
-              const Positioned.fill(child: DraggableChatBubble()),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Resumo de painel — reservas, vendas, assuntos urgentes e suporte.
+/// Dados mock (`core/mock/mock_backend.dart`), mesmo padrão de
+/// `partner_stats_screen.dart`; ver `partner-app/dashboard/README.md`
+/// para a nota sobre isto ainda não estar ligado a um backend real.
+class _PartnerDashboardSummary extends ConsumerWidget {
+  const _PartnerDashboardSummary();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bookingsAsync = ref.watch(partnerBookingsProvider(null));
+    final statsAsync = ref.watch(partnerStatsProvider('Este mês'));
+    final ticketsAsync = ref.watch(partnerSupportTicketsProvider);
+
+    final pendingBookings = bookingsAsync.maybeWhen(
+      data: (list) => list
+          .where(
+            (b) =>
+                b.status == BookingStatus.novo ||
+                b.status == BookingStatus.emAnalise,
+          )
+          .toList(),
+      orElse: () => const <Booking>[],
+    );
+    final needingResponse = bookingsAsync.maybeWhen(
+      data: (list) =>
+          list.where((b) => b.status == BookingStatus.novo).toList(),
+      orElse: () => const <Booking>[],
+    );
+    final openTickets = ticketsAsync.maybeWhen(
+      data: (list) => list
+          .where((t) => t.status != SupportTicketStatus.resolved)
+          .toList(),
+      orElse: () => const <SupportTicket>[],
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _MetricCard(
+                label: 'Reservas pendentes',
+                value: '${pendingBookings.length}',
+                color: AppColors.blue,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _MetricCard(
+                label: 'Vendas este mês',
+                value: statsAsync.maybeWhen(
+                  data: (s) => '${s.revenue.toStringAsFixed(0)} €',
+                  orElse: () => '—',
+                ),
+                color: AppColors.green,
+              ),
+            ),
+          ],
+        ),
+        if (needingResponse.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          _UrgentMattersCard(bookings: needingResponse),
+        ],
+        const SizedBox(height: 14),
+        _SupportSummaryCard(openCount: openTickets.length),
+      ],
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _MetricCard({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 22,
+              color: AppTheme.ink,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Pedidos ainda sem qualquer resposta do parceiro — o "urgente"
+/// aqui é sempre acionável por quem vê o ecrã, ao contrário de um
+/// aviso genérico ("tens X reservas"), mesmo raciocínio do bloco
+/// "Assuntos urgentes" em `admin-web/dashboard/requirements.md`.
+class _UrgentMattersCard extends StatelessWidget {
+  final List<Booking> bookings;
+
+  const _UrgentMattersCard({required this.bookings});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppStatusColors.declined.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Assuntos urgentes (${bookings.length})',
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              color: AppTheme.ink,
+            ),
+          ),
+          const SizedBox(height: 8),
+          for (final booking in bookings.take(3))
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                '${booking.clientName} — sem resposta ainda',
+                style: const TextStyle(fontSize: 12.5, color: AppTheme.ink),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SupportSummaryCard extends StatelessWidget {
+  final int openCount;
+
+  const _SupportSummaryCard({required this.openCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.support_agent_outlined,
+            size: 20,
+            color: AppTheme.inkMuted,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              openCount == 0
+                  ? 'Sem pedidos de suporte em aberto'
+                  : '$openCount pedido${openCount == 1 ? '' : 's'} de suporte em aberto',
+              style: const TextStyle(fontSize: 12.5, color: AppTheme.ink),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -241,18 +435,17 @@ class _PartnerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SnappyTap.builder(
+    return SnappyTap(
       onTap:
           onTap ??
           () => ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Em breve.')),
           ),
-      builder: (context, hovered) => Container(
+      child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(22),
-          boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

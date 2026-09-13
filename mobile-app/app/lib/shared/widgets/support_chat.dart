@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/app_theme.dart';
 import 'snappy_tap.dart';
 
 void openSupportScreen(BuildContext context) {
@@ -135,10 +134,7 @@ class _DraggableChatBubbleState extends State<DraggableChatBubble> {
                 child: Container(
                   width: _bubbleSize,
                   height: _bubbleSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: AppTheme.cardShadowStrong,
-                  ),
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
                   child: ClipOval(
                     child: Image.asset(
                       'assets/images/chat_icon.png',

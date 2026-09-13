@@ -2,18 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/chat/chat_list_controller.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/wedding/wedding_nav_icon.dart';
 
-enum AppTab { home, partners, chat, wedding }
+enum AppTab { home, partners, chat, wedding, gallery }
 
-/// Doca branca encostada ao fundo do ecrã — 4 separadores iguais (Home
-/// / Parceiros / Chat / Os noivos), cada um com ícone + rótulo. O
-/// separador ativo fica a verde-oliva; o ícone de "Os noivos" usa a
-/// ilustração escolhida pelo utilizador em [weddingNavIconProvider]
-/// (carrossel movido para o ecrã de Definições) em vez de um ícone
-/// Material fixo — por defeito os ursinhos, que já correspondem ao
-/// glifo do mockup.
+/// Ilha flutuante com margem de todos os lados (pedido explícito do
+/// utilizador: "a navbar deve ser uma ilha em vez de se estender até à
+/// base do ecrã") — 5 separadores (Galeria / Parceiros / Os noivos /
+/// Chat / Perfil), "Os noivos" ao centro (pedido explícito: "coloca o
+/// botão os noivos ao centrado na navbar"), Galeria à esquerda (pedido
+/// explícito: "adiciona na navbar, no lado esquerdo, um botão de
+/// galeria"). O separador ativo fica a verde-oliva; o ícone de "Os
+/// noivos" usa a ilustração escolhida pelo utilizador em
+/// [weddingNavIconProvider] (carrossel movido para o ecrã de
+/// Definições) em vez de um ícone Material fixo — por defeito os
+/// ursinhos, que já correspondem ao glifo do mockup.
 class FloatingBottomNav extends ConsumerWidget {
   final AppTab current;
 
@@ -22,49 +27,88 @@ class FloatingBottomNav extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final weddingIcon = ref.watch(weddingNavIconProvider);
+    final unreadCount = ref
+        .watch(unreadMessagesCountProvider)
+        .maybeWhen(data: (count) => count, orElse: () => 0);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(28),
+    return SafeArea(
+      top: false,
+      // `minimum` garante a margem da ilha mesmo em ambientes sem
+      // inset de safe-area real (ex: preview web) — soma-se ao inset
+      // real do dispositivo quando existe (ex: home indicator do iOS).
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: AppTheme.navBarShadow,
         ),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: SafeArea(
-        top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            // Cada separador ocupa uma fatia igual da largura (em vez
+            // de `spaceEvenly`, que distribuía o espaço entre as
+            // larguras intrínsecas de cada rótulo — "Parceiros" e
+            // "Perfil" têm textos de comprimentos diferentes, o que
+            // deixava os ícones com margens desiguais e "Os noivos"
+            // fora do centro visual). Pedido explícito do utilizador:
+            // "centra o icon os noivos e coloca as margens iguais em
+            // todos os icons".
             children: [
-              _NavIcon(
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home_rounded,
-                label: 'Home',
-                active: current == AppTab.home,
-                onTap: () => context.go('/home'),
+              Expanded(
+                child: Center(
+                  child: _NavIcon(
+                    icon: Icons.photo_library_outlined,
+                    activeIcon: Icons.photo_library_rounded,
+                    label: 'Galeria',
+                    active: current == AppTab.gallery,
+                    onTap: () => context.go('/gallery'),
+                  ),
+                ),
               ),
-              _NavIcon(
-                icon: Icons.spa_outlined,
-                activeIcon: Icons.spa_rounded,
-                label: 'Parceiros',
-                active: current == AppTab.partners,
-                onTap: () => context.go('/partners'),
+              Expanded(
+                child: Center(
+                  child: _NavIcon(
+                    icon: Icons.spa_outlined,
+                    activeIcon: Icons.spa_rounded,
+                    label: 'Parceiros',
+                    active: current == AppTab.partners,
+                    onTap: () => context.go('/partners'),
+                  ),
+                ),
               ),
-              _NavIcon(
-                icon: Icons.chat_bubble_outline_rounded,
-                activeIcon: Icons.chat_bubble_rounded,
-                label: 'Chat',
-                active: current == AppTab.chat,
-                onTap: () => context.go('/chat'),
+              Expanded(
+                child: Center(
+                  child: _WeddingNavTab(
+                    assetPath: weddingIcon.assetPath,
+                    zoom: weddingIcon.zoom,
+                    active: current == AppTab.wedding,
+                    onTap: () => context.go('/wedding'),
+                  ),
+                ),
               ),
-              _WeddingNavTab(
-                assetPath: weddingIcon.assetPath,
-                zoom: weddingIcon.zoom,
-                active: current == AppTab.wedding,
-                onTap: () => context.go('/wedding'),
+              Expanded(
+                child: Center(
+                  child: _NavIcon(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    activeIcon: Icons.chat_bubble_rounded,
+                    label: 'Chat',
+                    active: current == AppTab.chat,
+                    badgeCount: unreadCount,
+                    onTap: () => context.go('/chat'),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: _NavIcon(
+                    icon: Icons.person_outline_rounded,
+                    activeIcon: Icons.person_rounded,
+                    label: 'Perfil',
+                    active: current == AppTab.home,
+                    onTap: () => context.go('/home'),
+                  ),
+                ),
               ),
             ],
           ),
@@ -81,12 +125,18 @@ class _NavIcon extends StatelessWidget {
   final bool active;
   final VoidCallback onTap;
 
+  /// Selo de não lidas (`unreadMessagesCountProvider`) — só usado pelo
+  /// separador "Chat" hoje, mas genérico caso outro separador precise
+  /// no futuro. `0`/negativo não mostra nada.
+  final int badgeCount;
+
   const _NavIcon({
     required this.icon,
     required this.activeIcon,
     required this.label,
     required this.active,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   @override
@@ -96,12 +146,37 @@ class _NavIcon extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(active ? activeIcon : icon, color: color, size: 28),
-            const SizedBox(height: 4),
+            // Altura fixa (32) igual ao avatar de [_WeddingNavTab] —
+            // sem isto o rótulo deste separador ficava mais alto do
+            // que o de "Os noivos" (ícone Material vs avatar),
+            // desalinhando o texto entre os separadores. Pedido
+            // explícito do utilizador: navbar mais fina.
+            SizedBox(
+              height: 36,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Center(
+                    child: Icon(
+                      active ? activeIcon : icon,
+                      color: color,
+                      size: 28,
+                    ),
+                  ),
+                  if (badgeCount > 0)
+                    Positioned(
+                      top: 0,
+                      right: 2,
+                      child: _UnreadBadge(count: badgeCount),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
@@ -111,6 +186,39 @@ class _NavIcon extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Selo de contagem — mesma cor/estilo já usado em `cards.dart` para o
+/// mesmo `unreadCount` na lista de conversas (verde-oliva da marca),
+/// só mais pequeno para caber sobre o ícone da navbar. `99+` em vez de
+/// deixar o número crescer sem limite.
+class _UnreadBadge extends StatelessWidget {
+  final int count;
+
+  const _UnreadBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppTheme.accentOliveDark,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 1.5),
+      ),
+      child: Text(
+        count > 99 ? '99+' : '$count',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          height: 1,
         ),
       ),
     );
@@ -140,7 +248,7 @@ class _WeddingNavTab extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -148,8 +256,8 @@ class _WeddingNavTab extends StatelessWidget {
               opacity: active ? 1 : 0.55,
               child: ClipOval(
                 child: SizedBox(
-                  width: 40,
-                  height: 40,
+                  width: 36,
+                  height: 36,
                   child: Transform.scale(
                     scale: zoom,
                     child: Image.asset(assetPath, fit: BoxFit.cover),
@@ -157,7 +265,7 @@ class _WeddingNavTab extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               'Os noivos',
               style: TextStyle(

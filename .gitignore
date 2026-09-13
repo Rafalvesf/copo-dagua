@@ -7,3 +7,6 @@ desktop.ini
 .vscode/
 .idea/
 *.swp
+
+# Supabase CLI local cache (project ref, pooler URL, tool versions)
+supabase/.temp/

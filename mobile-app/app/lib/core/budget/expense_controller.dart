@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../mock/mock_backend.dart';
 import '../models/models.dart';
+import '../supabase/supabase_config.dart';
 import '../wedding/wedding_controller.dart';
 
 class ExpenseState {
@@ -21,11 +21,22 @@ class ExpenseState {
   }
 }
 
-/// Despesas individuais do orçamento — Todas/Pagas/Pendentes e
-/// "Pagamentos próximos" em Orçamento. Segue o mesmo padrão de
-/// `ChecklistController` (`core/checklist/checklist_controller.dart`).
+Expense _expenseFromRow(Map<String, dynamic> row) => Expense(
+  id: row['id'] as String,
+  weddingId: row['wedding_id'] as String,
+  title: row['title'] as String,
+  category: (row['category'] as String?) == null
+      ? null
+      : PartnerCategory.values.byName(row['category'] as String),
+  amount: (row['amount'] as num).toDouble(),
+  dueDate: row['due_date'] == null ? null : DateTime.parse(row['due_date'] as String),
+  paid: row['paid'] as bool? ?? false,
+);
+
+/// Liga-se à tabela `expenses` real (`database/migrations/033_budget.sql`)
+/// — substitui `MockBackend.listExpenses/addExpense/updateExpense`.
+/// Mesmo padrão de `ChecklistController`.
 class ExpenseController extends Notifier<ExpenseState> {
-  final _backend = MockBackend.instance;
   String? currentWeddingId;
 
   @override
@@ -42,20 +53,41 @@ class ExpenseController extends Notifier<ExpenseState> {
 
   Future<void> load(String weddingId) async {
     state = state.copyWith(loading: true);
-    final items = await _backend.listExpenses(weddingId);
-    state = ExpenseState(loading: false, expenses: items);
+    final rows = await supabase
+        .from('expenses')
+        .select()
+        .eq('wedding_id', weddingId)
+        .order('created_at', ascending: true);
+    state = ExpenseState(loading: false, expenses: rows.map(_expenseFromRow).toList());
   }
 
   Future<void> addExpense(Expense expense) async {
-    final added = await _backend.addExpense(expense);
-    state = state.copyWith(expenses: [...state.expenses, added]);
+    final row = await supabase
+        .from('expenses')
+        .insert({
+          'wedding_id': expense.weddingId,
+          'title': expense.title,
+          'category': expense.category?.name,
+          'amount': expense.amount,
+          'due_date': expense.dueDate?.toIso8601String().split('T').first,
+        })
+        .select()
+        .single();
+    state = state.copyWith(expenses: [...state.expenses, _expenseFromRow(row)]);
   }
 
   Future<void> togglePaid(String expenseId) async {
     final expense = state.expenses.firstWhere((e) => e.id == expenseId);
-    final updated = await _backend.updateExpense(
-      expense.copyWith(paid: !expense.paid),
-    );
+    final row = await supabase
+        .from('expenses')
+        .update({
+          'paid': !expense.paid,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', expenseId)
+        .select()
+        .single();
+    final updated = _expenseFromRow(row);
     state = state.copyWith(
       expenses: [
         for (final e in state.expenses) if (e.id == updated.id) updated else e,

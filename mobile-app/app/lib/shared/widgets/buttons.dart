@@ -20,15 +20,14 @@ class ArrowCtaButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SnappyTap.builder(
+    return SnappyTap(
       onTap: onTap,
-      builder: (context, hovered) => Container(
+      child: Container(
         height: 46,
         padding: const EdgeInsets.only(left: 20, right: 5),
         decoration: BoxDecoration(
           color: AppTheme.ink,
           borderRadius: BorderRadius.circular(999),
-          boxShadow: hovered ? AppTheme.cardShadowStrong : AppTheme.cardShadow,
         ),
         child: Row(
           mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
@@ -90,20 +89,12 @@ class CircleIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SnappyTap.builder(
+    return SnappyTap(
       onTap: onTap,
-      builder: (context, hovered) => Container(
+      child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          color: background,
-          shape: BoxShape.circle,
-          boxShadow: !shadow
-              ? null
-              : hovered
-              ? AppTheme.cardShadowStrong
-              : AppTheme.cardShadow,
-        ),
+        decoration: BoxDecoration(color: background, shape: BoxShape.circle),
         child: Icon(icon, size: size * 0.5, color: foreground),
       ),
     );
@@ -142,6 +133,12 @@ class CircleBackButton extends StatelessWidget {
       padding: EdgeInsets.zero,
       alignment: Alignment.centerLeft,
       constraints: const BoxConstraints(minWidth: 46, minHeight: 46),
+      // Pedido explícito do utilizador (2026-09-04): sem o círculo de
+      // hover/splash por omissão do Material — só a seta.
+      style: IconButton.styleFrom(
+        overlayColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+      ),
     );
   }
 }
@@ -169,6 +166,64 @@ class PrimaryButton extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2.5),
             )
           : Text(label),
+    );
+  }
+}
+
+/// Rodapé partilhado dos assistentes por passos (casal —
+/// `onboarding_wizard_screen.dart` — e parceiro —
+/// `partner_welcome_screen.dart`) — pedido explícito do utilizador:
+/// "change the back button to a button next to the continuar button",
+/// mais "rule 1: same locations same layout and architecture" — os
+/// dois assistentes usavam o mesmo padrão (voltar na `AppBar`, sozinho),
+/// por isso o novo padrão (voltar junto ao botão de continuar) vive
+/// aqui, num único sítio, para não voltarem a divergir um do outro.
+class WizardFooter extends StatelessWidget {
+  /// null = primeiro passo do assistente, sem nada para onde voltar —
+  /// esconde o botão de voltar em vez de o desativar.
+  final VoidCallback? onBack;
+
+  /// null = este assistente não tem "Saltar" (ex: parceiro, onde quase
+  /// tudo é obrigatório).
+  final VoidCallback? onSkip;
+
+  /// Botão de continuar/concluir — cada assistente mantém o seu próprio
+  /// (`PrimaryButton` no parceiro, `ArrowCtaButton` no casal), só a
+  /// disposição à volta dele é partilhada.
+  final Widget continueButton;
+
+  const WizardFooter({
+    super.key,
+    this.onBack,
+    this.onSkip,
+    required this.continueButton,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        children: [
+          // O Spacer só existe para empurrar o grupo Voltar+Continuar
+          // para a direita quando há Saltar à esquerda — sem Saltar
+          // (parceiro), entraria em conflito com um `continueButton`
+          // [Expanded] a disputar o mesmo espaço livre.
+          if (onSkip != null) ...[
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted),
+              onPressed: onSkip,
+              child: const Text('Saltar'),
+            ),
+            const Spacer(),
+          ],
+          if (onBack != null) ...[
+            CircleBackButton(onTap: onBack),
+            const SizedBox(width: 12),
+          ],
+          continueButton,
+        ],
+      ),
     );
   }
 }

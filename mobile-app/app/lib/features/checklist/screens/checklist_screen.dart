@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../shared/category_tag_color.dart';
 import '../../../shared/widgets/assignee_cluster.dart';
+import '../../partners/partner_style.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
@@ -16,7 +17,6 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/support_chat.dart';
 
 enum _StatusFilter { all, todo, inProgress, done }
 
@@ -63,7 +63,9 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
     final partner = await context.push<Partner>(
       '/partners',
       extra: PartnerPickerArgs(
-        category: item.partnerCategory,
+        categorySlug: item.partnerCategory == null
+            ? null
+            : slugForPartnerCategory(item.partnerCategory!),
         selectionMode: true,
       ),
     );
@@ -148,7 +150,9 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                                 done: byStatus[ChecklistStatus.done]!.length,
                                 onChanged: (f) => setState(() => _filter = f),
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 14),
+                              Divider(color: AppTheme.borderMuted, height: 1),
+                              const SizedBox(height: 18),
                               if (state.items.isEmpty)
                                 const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 40),
@@ -194,7 +198,6 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                   bottom: 0,
                   child: FloatingBottomNav(current: AppTab.wedding),
                 ),
-                const Positioned.fill(child: DraggableChatBubble()),
               ],
             ),
     );
@@ -217,9 +220,8 @@ class _DateShortcut extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(999),
-          boxShadow: AppTheme.cardShadow,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -263,9 +265,8 @@ class _OverallProgressCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -293,7 +294,7 @@ class _OverallProgressCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 7,
-                    backgroundColor: AppColors.muted,
+                    backgroundColor: Colors.white,
                     valueColor: const AlwaysStoppedAnimation(
                       AppTheme.accentOliveDark,
                     ),
@@ -389,9 +390,8 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : Colors.white,
+          color: selected ? AppTheme.accentOliveDark : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
-          boxShadow: AppTheme.cardShadow,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -544,9 +544,8 @@ class _TaskTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Row(
         children: [
@@ -641,7 +640,7 @@ class _StatusIndicator extends StatelessWidget {
             CircularProgressIndicator(
               value: progress / 100,
               strokeWidth: 3,
-              backgroundColor: AppColors.muted,
+              backgroundColor: Colors.white,
               valueColor: const AlwaysStoppedAnimation(
                 AppTheme.accentOliveDark,
               ),
