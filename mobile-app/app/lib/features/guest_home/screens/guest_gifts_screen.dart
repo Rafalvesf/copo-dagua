@@ -34,7 +34,7 @@ class GuestGiftsScreen extends StatelessWidget {
             bottom: false,
             child: Column(
               children: [
-                const PageHeader(title: 'Presentes', showBack: false),
+                const PageHeader(title: 'Presentes', titleFontSize: 30, showBack: false, trailing: SizedBox(width: 46, height: 46)),
                 const SizedBox(height: 16),
                 Expanded(
                   child: ListView(

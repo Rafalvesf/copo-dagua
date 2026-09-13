@@ -70,6 +70,7 @@ class GalleryScreen extends ConsumerWidget {
                   // `weddingId` explícito) — mesma convenção de todos
                   // os outros ecrãs raiz da app.
                   showBack: !(showNav || showGuestNav),
+                  trailing: (showNav || showGuestNav) ? const SizedBox(width: 46, height: 46) : null,
                 ),
                 const SizedBox(height: 16),
                 Expanded(

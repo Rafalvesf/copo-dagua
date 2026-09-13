@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
@@ -9,6 +10,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/snappy_tap.dart';
 import 'guest_table_screen.dart';
 
 /// "O meu perfil" — pedido explícito do utilizador (mockup de
@@ -30,6 +32,7 @@ class GuestProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(authControllerProvider).profile;
     final weddingsAsync = ref.watch(guestWeddingsProvider);
+    final isCouple = profile?.role == UserRole.couple;
 
     return GradientScaffold(
       background: AppBackground.subtle,
@@ -42,8 +45,24 @@ class GuestProfileScreen extends ConsumerWidget {
                 // Ecrã raiz da navbar (Perfil) — sem seta de voltar,
                 // mesma convenção de todos os outros separadores raiz
                 // da app (Chat, Tarefas, Pedidos, "O meu perfil" do
-                // parceiro, Mensagens, Galeria).
-                const PageHeader(title: 'O meu perfil', showBack: false),
+                // parceiro, Mensagens, Galeria). `trailing` com a roda
+                // de definições mantém a linha de ícones (senão o
+                // título subia, tal como em `gallery_screen.dart`).
+                PageHeader(
+                  title: 'O meu perfil',
+                  titleFontSize: 30,
+                  showBack: false,
+                  trailing: SnappyTap(
+                    onTap: () => _openSettings(context, ref, isCouple),
+                    child: Container(
+                      width: 46,
+                      height: 46,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(color: AppTheme.surface, shape: BoxShape.circle),
+                      child: const Icon(Icons.settings_outlined, color: AppTheme.ink),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Expanded(
                   child: weddingsAsync.when(
@@ -73,6 +92,39 @@ class GuestProfileScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Uma conta de casal a acompanhar outro casamento em "Modo convidado"
+/// tem o seu próprio casamento em `weddingControllerProvider`, por isso
+/// `/settings` (`settings_screen.dart`) funciona normalmente — mostra
+/// as definições do casamento REAL do casal, não do casamento que estão
+/// a visitar como convidados, o que é o comportamento certo. Uma conta
+/// 100% convidada não tem casamento próprio (`SettingsScreen` fica
+/// perpetuamente a carregar à espera de `weddingControllerProvider`),
+/// por isso mostra uma folha mínima com só "Sair" em vez de abrir esse
+/// ecrã, que nunca foi desenhado para este caso.
+void _openSettings(BuildContext context, WidgetRef ref, bool isCouple) {
+  if (isCouple) {
+    context.push('/settings');
+    return;
+  }
+  showModalBottomSheet(
+    context: context,
+    builder: (context) => SafeArea(
+      child: Wrap(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Sair'),
+            onTap: () {
+              Navigator.of(context).pop();
+              ref.read(authControllerProvider.notifier).logout();
+            },
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _GuestProfileBody extends ConsumerWidget {

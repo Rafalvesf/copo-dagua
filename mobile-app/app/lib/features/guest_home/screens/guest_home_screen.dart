@@ -126,6 +126,12 @@ class _GuestHomeBody extends StatelessWidget {
         120,
       ),
       children: [
+        // Espaçador invisível equivalente à linha de ícones + gap do
+        // PageHeader (46 + 18 = 64) — este título fica centrado (pedido
+        // explícito), mas sem isto arrancava a 20px do topo em vez de
+        // 84px como Galeria/Presentes/Perfil, ficando visivelmente mais
+        // alto que o resto da navbar de convidado.
+        const SizedBox(height: 64),
         Text(
           'O nosso casamento',
           textAlign: TextAlign.center,
