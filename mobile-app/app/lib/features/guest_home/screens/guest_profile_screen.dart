@@ -43,7 +43,7 @@ class GuestProfileScreen extends ConsumerWidget {
                 // mesma convenção de todos os outros separadores raiz
                 // da app (Chat, Tarefas, Pedidos, "O meu perfil" do
                 // parceiro, Mensagens, Galeria).
-                const PageHeader(title: 'O meu perfil'),
+                const PageHeader(title: 'O meu perfil', showBack: false),
                 const SizedBox(height: 16),
                 Expanded(
                   child: weddingsAsync.when(

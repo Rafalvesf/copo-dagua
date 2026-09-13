@@ -118,7 +118,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
             bottom: false,
             child: Column(
               children: [
-                const PageHeader(title: 'Galeria', showBack: false),
+                const PageHeader(title: 'Galeria', showBack: false, titleFontSize: 30),
                 const SizedBox(height: 16),
                 Expanded(
                   child: photosAsync.when(

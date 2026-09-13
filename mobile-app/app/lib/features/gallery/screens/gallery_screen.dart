@@ -64,6 +64,7 @@ class GalleryScreen extends ConsumerWidget {
               children: [
                 PageHeader(
                   title: 'Galeria',
+                  titleFontSize: 30,
                   // Sem seta de voltar sempre que há navbar (casal ou
                   // convidado, incluindo "Modo convidado" com
                   // `weddingId` explícito) — mesma convenção de todos
