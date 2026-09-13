@@ -38,25 +38,50 @@
 │  [_______________________]│
 │  Lado: ( ) Noivo ( ) Noiva │
 │        ( ) Ambos            │
-│  ☐ Pode trazer acompanhante│
+│  Relação: [Família ▾]      │
+│  Acompanhantes permitidos  │
+│  [ - ]   1   [ + ]         │
 │                            │
 │  [   Guardar   ]           │
 └───────────────────────────┘
 ```
 
-### Página pública de RSVP (web, sem app)
+### Wizard de RSVP (convidado, dentro da app — 1º acesso)
+
 ```
-┌───────────────────────────┐
-│                            │
-│   💍 Ana & Miguel          │
-│   12 de Setembro, 2026     │
-│                            │
-│   "Vais celebrar connosco?"│
-│                            │
-│   [   Vou!   ]              │
-│   [ Não vou poder ir ]     │
-│                            │
-└───────────────────────────┘
+┌───────────────────────────┐        ┌───────────────────────────┐
+│   Inês & Miguel vão casar 💍│        │  Vamos sentir a tua       │
+│   Vais estar connosco      │        │  falta 🤍                 │
+│   neste dia?               │        │  Obrigado por nos dizeres.│
+│                            │        │  Continuas a fazer parte  │
+│  [ ✓ Sim, vou ]            │  ───▶  │  deste momento.           │
+│  [ ✕ Não vou poder ir ]    │  "Não" │                            │
+│                            │        │  [ Entrar no casamento → ]│
+└───────────────────────────┘        └───────────────────────────┘
+        │ "Sim"
+        ▼
+┌───────────────────────────┐   ┌───────────────────────────┐   ┌───────────────────────────┐
+│  Quem vem contigo?         │   │  De que lado vens?         │   │  Como nos conhecemos?      │
+│                            │   │                            │   │                            │
+│  [ Vou sozinho ]           │──▶│  [ 👰 Noiva ]              │──▶│  [Família][Amigos][Trabalho]│
+│  [+ Adicionar acompanhante]│   │  [ 🤵 Noivo ]              │   │  [Faculdade][Outro]        │
+│    Nome do acompanhante    │   │  [ 💍 Ambos ]              │   │                            │
+│  [+ Adicionar outro]       │   │  (pré-preenchido pelo casal)│  │  (pré-preenchido pelo casal)│
+└───────────────────────────┘   └───────────────────────────┘   └───────────────────────────┘
+                                                                          │
+                                                                          ▼
+┌───────────────────────────┐   ┌───────────────────────────┐
+│  🍽️ João Silva              │   │  Está tudo pronto! 🎉       │
+│  [Carne][Peixe][Vegetariano]│   │                            │
+│  [Outro]                   │   │  Presença: ✓ Confirmada    │
+│  Alergias/intolerâncias?   │──▶│  Convidados: João, Maria   │
+│  [ Não tenho ]              │   │  Relação: Família · Noiva  │
+│  [+ Adicionar]              │   │  Ementa: João — Carne       │
+│  (repete para cada          │   │          Maria — Vegetariano│
+│   acompanhante)             │   │                            │
+└───────────────────────────┘   │  [ Confirmar informações ] │
+                                 │  [ Entrar no casamento → ] │
+                                 └───────────────────────────┘
 ```
 
 ### Detalhe de resposta (casal)
@@ -66,12 +91,39 @@
 │                            │
 │  Rita Almeida        ✅    │
 │  Confirmou presença         │
-│  + Acompanhante: João       │
-│  🥗 Vegetariana              │
+│  Família · Noiva            │
+│                            │
+│  Rita — Vegetariana         │
+│  + João (acompanhante)      │
+│    Carne · Sem intolerâncias│
+│                            │
 │  💬 "Mal posso esperar!"    │
 │                            │
-│  [ Reenviar convite ]       │
 │  [ Editar ]  [ Remover ]    │
+└───────────────────────────┘
+```
+
+### "O meu perfil" (convidado, depois do wizard)
+```
+┌───────────────────────────┐
+│  O meu perfil               │
+│                            │
+│  Presença: ✓ Confirmada    │
+│  [ Alterar RSVP ]          │
+│                            │
+│  Acompanhantes  [ Editar ] │
+│  Menu           [ Editar ] │
+│  Alergias       [ Editar ] │
+│  A tua mesa      Mesa 5    │
+│                            │
+│  Histórico                 │
+│  ✓ Presença confirmada     │
+│  + Maria adicionada         │
+│  🍽️ Menu Carne selecionado  │
+│  ⚠️ Intolerância à lactose  │
+│     adicionada para Maria   │
+│  🎁 Presente enviado        │
+│  📷 4 fotografias adicionadas│
 └───────────────────────────┘
 ```
 
@@ -81,11 +133,14 @@
 |---|---|---|
 | `GuestListItem` | Linha de convidado com badge de estado RSVP | Lista de convidados |
 | `RsvpStatusFilterTabs` | Tabs de filtro (Todos/Confirmados/Pendentes/Recusados) | Guests, futuramente Seating |
-| `GuestFormSheet` | Formulário de adicionar/editar convidado | Guests |
+| `GuestFormSheet` | Formulário de adicionar/editar convidado (com lado, relação e nº de acompanhantes) | Guests |
 | `RsvpSummaryBar` | Barra com contagem agregada (✅/⏳/❌) | Guests, Dashboard |
-| `PublicRsvpCard` | Cartão da página pública de RSVP (fora do design system mobile, mas com a mesma identidade visual) | Página pública de RSVP |
-| `SendInviteChannelPicker` | Seletor de canal de envio (Email/WhatsApp/SMS) | Guests |
+| `RsvpGateStep` | Ecrã "Vais estar connosco?" (Sim/Não), primeiro do wizard | Wizard de RSVP |
+| `CompanionListEditor` | Adicionar/remover acompanhantes, respeitando `companions_limit` | Wizard de RSVP, Perfil |
+| `PerPersonMenuStep` | Um ecrã de menu + alergias por pessoa (convidado ou acompanhante) | Wizard de RSVP, Perfil |
+| `RsvpSummaryCard` | Resumo final antes de confirmar (presença, convidados, relação, ementa) | Wizard de RSVP |
+| `GuestActivityTimeline` | Lista de eventos (`guest_rsvp_events`) no Perfil do convidado | Perfil do convidado |
 
-Reutilizados de módulos anteriores: `PrimaryButton`, `AuthTextField`, `LoadingOverlay` (Authentication).
+Reutilizados de módulos anteriores: `PrimaryButton`, `AuthTextField`, `LoadingOverlay` (Authentication), `StepProgressBar`, `WizardFooter` (Onboarding).
 
-**Nota de arquiteto:** `PublicRsvpCard` não pode depender do `mobile-app/shared/design-system.md` compilado dentro do binário Flutter mobile — precisa de uma versão web-friendly (ver `tasks.md`).
+**Nota de arquiteto:** o wizard vive dentro do binário Flutter mobile (o convidado já está autenticado quando o vê) — ao contrário da versão anterior desta spec, não precisa de nenhuma superfície web separada. `InvitePageScreen` continua a ser a única peça pública (pré-login), e só encaminha para o registo.

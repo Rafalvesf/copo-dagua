@@ -1,10 +1,11 @@
 # Guests — Casos Limite
 
-- Convidado tenta usar um link de RSVP depois de o casal ter regenerado o token (`regenerate-rsvp-token`) → mostrar mensagem clara ("Este link já não é válido, contacta os noivos") em vez de erro técnico.
-- Convidado marcado como "pode trazer acompanhante" recusa presença → o formulário deve esconder os campos de acompanhante nesse caso, mas manter a flag `plus_one_allowed` intacta caso ele mude de resposta depois.
-- Casal remove um convidado que já respondeu ao RSVP → hard delete acontece sem aviso especial (RN06), mas a UI deve confirmar explicitamente antes de remover ("Este convidado já respondeu. Queres mesmo remover?").
+- Convidado entra pela primeira vez mas não há correspondência automática de email (`linked_profile_id` continua `null` depois de `join_wedding_by_code()`) → o wizard de RSVP não pode arrancar (não sabe a que linha de `guests` associar as respostas); mostrar um estado vazio a pedir para confirmar o email com o casal, mesmo raciocínio já usado em `GuestProfileScreen`.
+- Casal reduz `companions_limit` depois de o convidado já ter adicionado acompanhantes acima do novo limite → os acompanhantes já guardados não são removidos automaticamente; só fica bloqueado adicionar mais no wizard/Perfil até o número voltar a ficar dentro do limite.
+- Convidado responde "Não vou" depois de já ter preenchido acompanhantes/menu/alergias numa resposta anterior → esses dados **não são apagados** (RN11); se voltar a confirmar, reaparecem tal como estavam.
+- Convidado com `companions_limit = 0` tenta adicionar acompanhante → opção "+ Adicionar acompanhante" nem aparece no wizard, evitando o erro em vez de o mostrar depois de o convidado tentar.
+- Casal remove um convidado que já respondeu ao RSVP → hard delete acontece sem aviso especial (RN06), mas a UI deve confirmar explicitamente antes de remover ("Este convidado já respondeu. Queres mesmo remover?"), incluindo os acompanhantes associados (`on delete cascade` em `guest_companions`).
 - Dois convidados com o mesmo nome mas pessoas diferentes → sem deduplicação automática; o casal é responsável por distinguir (ex: "Maria Silva (tia)" vs "Maria Silva (colega)").
-- Convidado responde ao RSVP através do link múltiplas vezes em curto espaço de tempo (ex: muda de ideias 3x seguidas) → permitido (RN05), mas a função `submit-rsvp` deve ter rate limiting suave (ex: máx. 10 submissões/hora por token) para prevenir abuso automatizado.
-- Convite enviado por WhatsApp mas o número está incorreto → sem forma de a plataforma detetar isto automaticamente no MVP; o casal só percebe pela ausência de resposta e pode reenviar por outro canal.
-- Casamento muda de data depois de convites já enviados → o texto da página pública de RSVP deve refletir sempre a data atual de `weddings.wedding_date`, não uma cópia estática guardada no momento do envio.
+- Casamento muda de data depois de o convidado já ter respondido → não invalida a resposta; o convidado só é avisado através dos ecrãs normais de "O Casamento" (data atual de `weddings.wedding_date`), sem reabrir o wizard automaticamente.
 - Colaborador remove um convidado enquanto o owner está a editá-lo em simultâneo → last-write-wins, mesma limitação aceite no módulo Wedding.
+- Conta de casal entra em "Modo convidado" noutro casamento (`showGuestModeSheet`, `guest_mode_screen.dart`) e responde ao wizard desse casamento → tratado exatamente como qualquer outra conta convidada; `wedding_guest_members` já é many-to-many de propósito para isto.

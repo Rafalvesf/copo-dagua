@@ -2,30 +2,32 @@
 
 ## Critérios de aceitação
 
-- [ ] O casal consegue adicionar, editar e remover convidados.
+- [ ] O casal consegue adicionar, editar e remover convidados, incluindo lado, relação e nº de acompanhantes permitidos.
 - [ ] O casal consegue filtrar a lista por estado de RSVP.
-- [ ] O envio de convite de RSVP gera um link funcional e atualiza o estado do convidado para "Convite enviado".
-- [ ] Um convidado consegue abrir o link de RSVP sem qualquer login e submeter a resposta.
-- [ ] Um convidado consegue alterar a resposta depois de já ter respondido, usando o mesmo link.
-- [ ] O campo de acompanhante só aparece se `plus_one_allowed = true`.
-- [ ] Um token inválido ou regenerado mostra mensagem de erro clara, não uma página em branco ou erro técnico.
-- [ ] RLS impede que um utilizador autenticado (mas sem ser membro do casamento) leia a lista de convidados de outro casamento.
-- [ ] As funções públicas (`get-rsvp-by-token`, `submit-rsvp`) nunca expõem dados de convidados que não correspondam ao token fornecido.
+- [ ] Um convidado que cria conta com o `guest_code` correto fica automaticamente associado ao casamento (`wedding_guest_members`) e, quando o email coincide, à sua linha em `guests` (`linked_profile_id`).
+- [ ] Na primeira entrada com a linha ligada, o wizard de RSVP arranca automaticamente e não volta a arrancar sozinho depois de `rsvp_wizard_completed_at` ficar preenchido.
+- [ ] Responder "Não vou" no wizard não impede o acesso a "O Casamento", "Presentes", "Galeria" e "Perfil".
+- [ ] Responder "Sim, vou" não deixa adicionar mais acompanhantes do que `companions_limit`.
+- [ ] Cada pessoa (convidado principal e cada acompanhante) tem o seu próprio menu e alergias, visíveis separadamente no ecrã de confirmação e no detalhe do casal.
+- [ ] Mudar de "Confirmado" para "Recusado" e depois outra vez para "Confirmado" reaproveita os acompanhantes/menu/alergias anteriores, sem os pedir de novo.
+- [ ] RLS impede que um utilizador autenticado (mas sem ser membro do casamento, nem o próprio convidado) leia a lista de convidados de outro casamento.
+- [ ] RLS impede que um convidado leia ou escreva acompanhantes (`guest_companions`) de outro convidado que não seja o seu.
 
 ## Testes unitários
 - Validação de email/telefone
 - Lógica de resumo agregado (contagem de confirmados/pendentes/recusados/lugares totais)
+- Limite de acompanhantes: adicionar acima de `companions_limit` é rejeitado antes de chamar a API
 
 ## Testes de integração
-- `send-rsvp-invite` gera token válido e atualiza estado corretamente
-- `get-rsvp-by-token` com token inexistente devolve erro controlado, não expõe detalhes internos
-- `submit-rsvp` com token válido atualiza o registo correto e nenhum outro
-- RLS: utilizador não-membro do casamento não consegue ler/escrever `guests` via chamada direta à API
+- `join_wedding_by_code` associa `wedding_guest_members` e liga `linked_profile_id` quando o email coincide; não liga nada quando não coincide
+- `submit_own_rsvp` com `p_status = 'declined'` preserva `guest_companions` já existentes (RN11)
+- `submit_own_rsvp` com mais acompanhantes do que `companions_limit` é rejeitado pela função
+- RLS: utilizador não-membro do casamento e sem `linked_profile_id` correspondente não consegue ler/escrever `guests` nem `guest_companions` via chamada direta à API
 
 ## Testes E2E
-- Fluxo completo: casal adiciona convidado → envia convite → convidado (sem app) responde → casal vê a resposta atualizada
-- Fluxo completo: convidado responde "não vou" e depois muda para "vou", com acompanhante
+- Fluxo completo: casal adiciona convidado com `companions_limit = 2` → convidado cria conta → wizard corre → adiciona 1 acompanhante → escolhe menu/alergias para os dois → confirma → casal vê a resposta atualizada com os dois menus
+- Fluxo completo: convidado responde "não vou" → entra na app → mais tarde reabre "Alterar RSVP" → muda para "sim" com os mesmos acompanhantes de antes
 
 ## Testes de segurança
-- Tentativa de enumerar tokens válidos por força bruta → deve ser mitigada por rate limiting
-- Tentativa de aceder a `get-rsvp-by-token` com token de outro convidado → deve devolver apenas os dados desse convidado, nunca de outros
+- Tentativa de um convidado chamar `submit_own_rsvp` para uma linha de `guests` que não é a sua (via `linked_profile_id` de outra conta) → deve falhar, nunca escrever no registo errado
+- Tentativa de ler `guest_companions` de outro convidado do mesmo casamento → só o casal (via `is_wedding_member`) ou o próprio convidado (via `linked_profile_id`) podem
