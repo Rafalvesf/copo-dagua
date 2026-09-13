@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/supabase/supabase_config.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/form_fields.dart';
@@ -43,21 +46,71 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _termsError;
   String? _weddingCodeError;
 
+  // Pré-visualização em tempo real do casamento encontrado pelo
+  // código, enquanto o convidado ainda está a preencher o resto do
+  // formulário — antes disto, o único feedback sobre o código
+  // acontecia em `_submit()`, no fim, sem mostrar a quem se estava a
+  // juntar. Puramente aditivo: `_submit()` continua a validar o
+  // código de novo no fim, exatamente como antes.
+  Timer? _codeDebounce;
+  bool _verifyingCode = false;
+  String? _foundWeddingNames;
+
   @override
   void initState() {
     super.initState();
     if (widget.initialWeddingCode != null) {
       _weddingCode.text = widget.initialWeddingCode!;
+      _onWeddingCodeChanged(widget.initialWeddingCode!);
     }
   }
 
   @override
   void dispose() {
+    _codeDebounce?.cancel();
     _name.dispose();
     _email.dispose();
     _password.dispose();
     _weddingCode.dispose();
     super.dispose();
+  }
+
+  void _onWeddingCodeChanged(String value) {
+    _codeDebounce?.cancel();
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      setState(() => _foundWeddingNames = null);
+      return;
+    }
+    _codeDebounce = Timer(const Duration(milliseconds: 500), () => _lookupWeddingCode(trimmed));
+  }
+
+  /// Só uma pré-visualização best-effort — nunca bloqueia nem substitui
+  /// a validação real feita em `_submit()` antes do signUp.
+  Future<void> _lookupWeddingCode(String code) async {
+    setState(() => _verifyingCode = true);
+    try {
+      final rows = await supabase.rpc(
+        'lookup_wedding_by_guest_code',
+        params: {'p_code': code},
+      ) as List;
+      if (!mounted) return;
+      if (rows.isEmpty) {
+        setState(() => _foundWeddingNames = null);
+      } else {
+        final row = rows.first as Map<String, dynamic>;
+        final name1 = row['partner_name_1'] as String?;
+        final name2 = row['partner_name_2'] as String?;
+        setState(() {
+          _foundWeddingNames = (name2 != null && name2.isNotEmpty) ? '$name1 & $name2' : (name1 ?? '');
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _foundWeddingNames = null);
+    } finally {
+      if (mounted) setState(() => _verifyingCode = false);
+    }
   }
 
   bool _validate() {
@@ -168,7 +221,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   label: 'Código do casal',
                   controller: _weddingCode,
                   errorText: _weddingCodeError,
+                  onChanged: _onWeddingCodeChanged,
                 ),
+                if (_verifyingCode)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 6),
+                    child: Text(
+                      'A verificar código...',
+                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+                    ),
+                  )
+                else if (_foundWeddingNames != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      '✓ Vais juntar-te ao casamento de $_foundWeddingNames',
+                      style: const TextStyle(
+                        color: AppStatusColors.confirmed,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 12),
               ],
               AuthTextField(
