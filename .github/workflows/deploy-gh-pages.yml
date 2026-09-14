@@ -1,0 +1,53 @@
+name: Deploy Flutter web to gh-pages
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'mobile-app/app/**'
+      - '.github/workflows/deploy-gh-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-gh-pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile-app/app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        run: flutter build web --release --base-href /copo-dagua/
+
+      - name: Prepare GitHub Pages fallback
+        run: cp build/web/index.html build/web/404.html
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: mobile-app/app/build/web
+          force_orphan: false
+          enable_jekyll: false
