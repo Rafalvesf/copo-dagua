@@ -10,28 +10,30 @@ import 'buttons.dart';
 /// o ritmo vertical da referência partilhada (ícones colados ao topo,
 /// título logo a seguir, por baixo).
 class PageHeader extends StatelessWidget {
-  final String title;
+  final String? title;
   final String? subtitle;
   final bool showBack;
   final Widget? trailing;
   final double titleFontSize;
+  final double topPadding;
 
   const PageHeader({
     super.key,
-    required this.title,
+    this.title,
     this.subtitle,
     this.showBack = true,
     this.trailing,
     this.titleFontSize = 34,
+    this.topPadding = 20,
   });
 
   @override
   Widget build(BuildContext context) {
     final hasIconRow = showBack || trailing != null;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppTheme.screenMargin,
-        20,
+        topPadding,
         AppTheme.screenMargin,
         0,
       ),
@@ -48,39 +50,41 @@ class PageHeader extends StatelessWidget {
             ),
             const SizedBox(height: 18),
           ],
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.displaySerif(
-              fontSize: titleFontSize,
-              color: AppTheme.ink,
+          if (title != null) ...[
+            Text(
+              title!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.displaySerif(
+                fontSize: titleFontSize,
+                color: AppTheme.ink,
+              ),
             ),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    subtitle!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppTheme.inkMuted,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.bold,
+            if (subtitle != null) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppTheme.inkMuted,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 6),
-                const Icon(
-                  Icons.favorite,
-                  size: 15,
-                  color: AppTheme.accentOliveDark,
-                ),
-              ],
-            ),
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.favorite,
+                    size: 15,
+                    color: AppTheme.accentOliveDark,
+                  ),
+                ],
+              ),
+            ],
           ],
         ],
       ),

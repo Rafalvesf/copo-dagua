@@ -19,7 +19,9 @@ import '../features/tasks/screens/tasks_screen.dart';
 import '../features/guest_home/screens/guest_gallery_screen.dart';
 import '../features/guest_home/screens/guest_gifts_screen.dart';
 import '../features/guest_home/screens/guest_home_screen.dart';
+import '../features/guest_home/screens/guest_onboarding_wizard_screen.dart';
 import '../features/guest_home/screens/guest_profile_screen.dart';
+import '../features/guest_home/screens/invite_token_screen.dart';
 import '../features/guest_home/screens/guest_wedding_details_screen.dart';
 import '../features/gallery/screens/gallery_screen.dart';
 import '../features/guests/screens/guest_detail_screen.dart';
@@ -91,6 +93,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       // convidado real e específico (`guests.rsvp_token`), não a
       // criação de conta genérica de `/invite/`.
       if (location.startsWith('/rsvp/')) return null;
+
+      // Link de convite individual (`invite_token_screen.dart`) — também
+      // público: decide por si próprio se mostra "Iniciar sessão/Criar
+      // conta" (sem sessão) ou já tenta associar o token (com sessão).
+      if (location.startsWith('/i/')) return null;
 
       // `/register` sem uma role válida na URL (ver role_selection_screen.dart
       // e a nota na rota `/register` abaixo) volta sempre a `/role` em vez
@@ -219,6 +226,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/guest-home/:weddingId',
         builder: (context, state) =>
             GuestHomeScreen(weddingId: state.pathParameters['weddingId']),
+      ),
+      GoRoute(
+        path: '/i/:token',
+        builder: (context, state) => InviteTokenScreen(token: state.pathParameters['token']!),
+      ),
+      GoRoute(
+        // Wizard "Vais ao casamento?" — pedido explícito do utilizador
+        // (071/073), mostrado uma única vez por `GuestHomeScreen`
+        // quando `guest.onboardingCompletedAt == null`.
+        path: '/guest-onboarding/:weddingId',
+        builder: (context, state) => GuestOnboardingWizardScreen(
+          weddingId: state.pathParameters['weddingId']!,
+          guest: state.extra as Guest,
+        ),
       ),
       GoRoute(
         path: '/guest-wedding-details',
@@ -395,7 +416,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
+        builder: (context, state) => SettingsScreen(fromGuestMode: state.extra == true),
       ),
       GoRoute(
         path: '/support',

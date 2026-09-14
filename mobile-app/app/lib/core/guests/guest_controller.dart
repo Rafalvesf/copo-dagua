@@ -99,6 +99,10 @@ Guest guestFromRow(Map<String, dynamic> row) => Guest(
       ? null
       : DateTime.parse(row['rsvp_responded_at'] as String),
   rsvpToken: row['rsvp_token'] as String?,
+  menuSelection: row['menu_selection'] as String?,
+  onboardingCompletedAt: row['onboarding_completed_at'] == null
+      ? null
+      : DateTime.parse(row['onboarding_completed_at'] as String),
 );
 
 /// Liga-se à tabela `guests` real (`database/migrations/004_guests.sql`)

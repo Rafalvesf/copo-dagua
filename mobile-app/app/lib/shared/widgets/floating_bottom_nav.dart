@@ -44,7 +44,7 @@ class FloatingBottomNav extends ConsumerWidget {
           boxShadow: AppTheme.navBarShadow,
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
             // Cada separador ocupa uma fatia igual da largura (em vez
             // de `spaceEvenly`, que distribuía o espaço entre as
@@ -60,7 +60,6 @@ class FloatingBottomNav extends ConsumerWidget {
                   child: _NavIcon(
                     icon: Icons.photo_library_outlined,
                     activeIcon: Icons.photo_library_rounded,
-                    label: 'Galeria',
                     active: current == AppTab.gallery,
                     onTap: () => context.go('/gallery'),
                   ),
@@ -71,7 +70,6 @@ class FloatingBottomNav extends ConsumerWidget {
                   child: _NavIcon(
                     icon: Icons.spa_outlined,
                     activeIcon: Icons.spa_rounded,
-                    label: 'Parceiros',
                     active: current == AppTab.partners,
                     onTap: () => context.go('/partners'),
                   ),
@@ -92,7 +90,6 @@ class FloatingBottomNav extends ConsumerWidget {
                   child: _NavIcon(
                     icon: Icons.chat_bubble_outline_rounded,
                     activeIcon: Icons.chat_bubble_rounded,
-                    label: 'Chat',
                     active: current == AppTab.chat,
                     badgeCount: unreadCount,
                     onTap: () => context.go('/chat'),
@@ -104,7 +101,6 @@ class FloatingBottomNav extends ConsumerWidget {
                   child: _NavIcon(
                     icon: Icons.person_outline_rounded,
                     activeIcon: Icons.person_rounded,
-                    label: 'Perfil',
                     active: current == AppTab.home,
                     onTap: () => context.go('/home'),
                   ),
@@ -121,7 +117,6 @@ class FloatingBottomNav extends ConsumerWidget {
 class _NavIcon extends StatelessWidget {
   final IconData icon;
   final IconData activeIcon;
-  final String label;
   final bool active;
   final VoidCallback onTap;
 
@@ -133,7 +128,6 @@ class _NavIcon extends StatelessWidget {
   const _NavIcon({
     required this.icon,
     required this.activeIcon,
-    required this.label,
     required this.active,
     required this.onTap,
     this.badgeCount = 0,
@@ -146,17 +140,16 @@ class _NavIcon extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Altura fixa (32) igual ao avatar de [_WeddingNavTab] —
-            // sem isto o rótulo deste separador ficava mais alto do
-            // que o de "Os noivos" (ícone Material vs avatar),
-            // desalinhando o texto entre os separadores. Pedido
-            // explícito do utilizador: navbar mais fina.
+            // Altura fixa igual ao avatar de [_WeddingNavTab] — sem
+            // isto o rótulo deste separador ficava mais alto do que o
+            // de "Os noivos" (ícone Material vs avatar), desalinhando
+            // o texto entre os separadores.
             SizedBox(
-              height: 36,
+              height: 42,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -164,7 +157,7 @@ class _NavIcon extends StatelessWidget {
                     child: Icon(
                       active ? activeIcon : icon,
                       color: color,
-                      size: 28,
+                      size: 32,
                     ),
                   ),
                   if (badgeCount > 0)
@@ -174,15 +167,6 @@ class _NavIcon extends StatelessWidget {
                       child: _UnreadBadge(count: badgeCount),
                     ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ],
@@ -243,38 +227,23 @@ class _WeddingNavTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppTheme.accentOliveDark : AppTheme.navIconMuted;
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Opacity(
-              opacity: active ? 1 : 0.55,
-              child: ClipOval(
-                child: SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Transform.scale(
-                    scale: zoom,
-                    child: Image.asset(assetPath, fit: BoxFit.cover),
-                  ),
-                ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Opacity(
+          opacity: active ? 1 : 0.55,
+          child: ClipOval(
+            child: SizedBox(
+              width: 42,
+              height: 42,
+              child: Transform.scale(
+                scale: zoom,
+                child: Image.asset(assetPath, fit: BoxFit.cover),
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              'Os noivos',
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

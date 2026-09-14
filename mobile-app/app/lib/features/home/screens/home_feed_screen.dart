@@ -562,8 +562,8 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
                     Text('Notificações', style: Theme.of(context).textTheme.titleLarge),
                     const Spacer(),
                     SnappyTap(
-                      onTap: () => context.push('/settings'),
-                      child: const Icon(Icons.settings_outlined, color: AppTheme.ink),
+                      onTap: () => ref.read(taskEngineControllerProvider.notifier).markAllNotificationsRead(),
+                      child: const Icon(Icons.done_all, color: AppTheme.ink),
                     ),
                   ],
                 ),

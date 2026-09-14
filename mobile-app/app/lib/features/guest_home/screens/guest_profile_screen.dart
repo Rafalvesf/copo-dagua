@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import 'guest_mode_screen.dart' show showGuestModeSheet;
 import 'guest_table_screen.dart';
 
 /// "O meu perfil" — pedido explícito do utilizador (mockup de
@@ -49,8 +53,8 @@ class GuestProfileScreen extends ConsumerWidget {
                 // de definições mantém a linha de ícones (senão o
                 // título subia, tal como em `gallery_screen.dart`).
                 PageHeader(
-                  title: 'O meu perfil',
                   titleFontSize: 30,
+                  topPadding: 8,
                   showBack: false,
                   trailing: SnappyTap(
                     onTap: () => _openSettings(context, ref, isCouple),
@@ -105,7 +109,7 @@ class GuestProfileScreen extends ConsumerWidget {
 /// ecrã, que nunca foi desenhado para este caso.
 void _openSettings(BuildContext context, WidgetRef ref, bool isCouple) {
   if (isCouple) {
-    context.push('/settings');
+    context.push('/settings', extra: true);
     return;
   }
   showModalBottomSheet(
@@ -125,6 +129,67 @@ void _openSettings(BuildContext context, WidgetRef ref, bool isCouple) {
       ),
     ),
   );
+}
+
+/// Substitui a antiga snackbar "Foto de perfil em breve." — mesma
+/// coluna partilhada por toda a app (`profiles.avatar_url`), por isso
+/// um único caminho de upload aqui já "sincroniza" tudo o resto que a
+/// lê (incluindo uma conta de casal a ver a mesma foto).
+Future<void> _pickAndUploadAvatar(BuildContext context, WidgetRef ref) async {
+  final file = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+  if (file == null) return;
+  try {
+    await ref.read(authControllerProvider.notifier).uploadAvatarPhoto(file);
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível enviar a foto. Tenta novamente.')),
+      );
+    }
+  }
+}
+
+/// "Abrir link de convite" no estado vazio — aceita tanto um link
+/// completo (`.../i/{token}`) como só o token, e liga a conta a essa
+/// linha específica de `guests` via `joinWeddingByInviteToken()`
+/// (`071_guest_join_mode_and_invite_token.sql`), sem nunca criar uma
+/// linha nova (um token só existe para uma que o casal já criou).
+Future<void> _openInviteLinkDialog(BuildContext context, WidgetRef ref) async {
+  final controller = TextEditingController();
+  final input = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Link de convite'),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: const InputDecoration(hintText: 'Cola aqui o link ou código do convite'),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+          child: const Text('Associar'),
+        ),
+      ],
+    ),
+  );
+  if (input == null || input.isEmpty) return;
+
+  final token = input.contains('/') ? input.split('/').last : input;
+  try {
+    final result = await joinWeddingByInviteToken(token);
+    ref.invalidate(guestWeddingsProvider);
+    ref.invalidate(myGuestRowProvider(result.weddingId));
+  } catch (e) {
+    if (!context.mounted) return;
+    final message = e is PostgrestException && e.code == 'P0002'
+        ? 'Link inválido — confirma com os noivos.'
+        : e is PostgrestException && e.code == 'P0007'
+        ? 'Este convite já está associado a outra conta.'
+        : 'Não foi possível associar o convite. Tenta novamente.';
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
 }
 
 class _GuestProfileBody extends ConsumerWidget {
@@ -176,7 +241,9 @@ class _GuestProfileBody extends ConsumerWidget {
             Center(
               child: Stack(
                 children: [
-                  InitialsAvatar(name: profile.fullName, radius: 44, background: AppTheme.surface),
+                  profile.avatarUrl == null
+                      ? InitialsAvatar(name: profile.fullName, radius: 44, background: AppTheme.surface)
+                      : CircleAvatar(radius: 44, backgroundImage: NetworkImage(profile.avatarUrl!)),
                   Positioned(
                     right: 0,
                     bottom: 0,
@@ -188,9 +255,7 @@ class _GuestProfileBody extends ConsumerWidget {
                         shape: const CircleBorder(),
                         child: InkWell(
                           customBorder: const CircleBorder(),
-                          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Foto de perfil em breve.')),
-                          ),
+                          onTap: () => _pickAndUploadAvatar(context, ref),
                           child: const Icon(Icons.edit, size: 13, color: Colors.white),
                         ),
                       ),
@@ -217,9 +282,32 @@ class _GuestProfileBody extends ConsumerWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(18)),
-                child: const Text(
-                  'Ainda não encontrámos a tua entrada na lista de convidados. Fala com os noivos para confirmarem o teu email.',
-                  style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Ainda não encontrámos a tua entrada na lista de convidados.',
+                      style: TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w700, fontSize: 14),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Se recebeste um link ou código deste casamento, usa-o para associares a tua conta.',
+                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                    ),
+                    const SizedBox(height: 16),
+                    PrimaryButton(
+                      label: 'Introduzir código do casamento',
+                      onPressed: () => showGuestModeSheet(context),
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () => _openInviteLinkDialog(context, ref),
+                      child: const Text(
+                        'Abrir link de convite',
+                        style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
                 ),
               )
             else ...[

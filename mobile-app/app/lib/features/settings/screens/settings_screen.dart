@@ -23,7 +23,15 @@ import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet
 /// pelo menu do Home. Acedido pela engrenagem no Home e pelo "..." em
 /// "Os noivos".
 class SettingsScreen extends ConsumerStatefulWidget {
-  const SettingsScreen({super.key});
+  /// Presente quando aberto a partir do perfil de "Modo convidado"
+  /// (conta de casal a acompanhar outro casamento, ver
+  /// `guest_profile_screen.dart`) — nesse caso o atalho que normalmente
+  /// entra em modo convidado passa a voltar ao modo casamento (o
+  /// próprio casal já está dentro de modo convidado, então "ver como
+  /// convidado" deixa de fazer sentido ali).
+  final bool fromGuestMode;
+
+  const SettingsScreen({super.key, this.fromGuestMode = false});
 
   @override
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
@@ -98,35 +106,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                        Text(
-                          'Atalhos',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 12),
-                        _ShortcutRow(
-                          icon: Icons.savings_outlined,
-                          label: 'Orçamento',
-                          onTap: () => context.push('/budget'),
-                        ),
-                        const SizedBox(height: 10),
-                        _ShortcutRow(
-                          icon: Icons.people_outline,
-                          label: 'Convidados',
-                          onTap: () => context.push('/guests'),
-                        ),
-                        const SizedBox(height: 10),
-                        _ShortcutRow(
-                          icon: Icons.event_seat_outlined,
-                          label: 'Lugares',
-                          onTap: () => context.push('/seating'),
-                        ),
-                        const SizedBox(height: 10),
-                        _ShortcutRow(
-                          icon: Icons.checklist_rtl_outlined,
-                          label: 'Serviços já tratados',
-                          onTap: () => context.push('/service-preferences'),
-                        ),
-                        const SizedBox(height: 28),
                         Text(
                           'Nós <3',
                           style: Theme.of(context).textTheme.titleMedium,
@@ -260,8 +239,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         const SizedBox(height: 12),
                         _ShortcutRow(
                           icon: Icons.swap_horizontal_circle_outlined,
-                          label: 'Ver como convidado',
-                          onTap: () => showGuestModeSheet(context),
+                          label: widget.fromGuestMode ? 'Ver em modo casamento' : 'Ver como convidado',
+                          onTap: widget.fromGuestMode
+                              ? () => context.go('/home')
+                              : () => showGuestModeSheet(context),
                         ),
                         const SizedBox(height: 10),
                         _ShortcutRow(

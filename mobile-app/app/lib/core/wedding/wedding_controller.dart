@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
@@ -114,11 +116,21 @@ class WeddingController extends Notifier<WeddingState> {
   /// `PartnerProfileController.uploadLogo` (ficheiro único por
   /// casamento, `upsert: true`, caminho `{wedding_id}/banner.{ext}`).
   Future<void> uploadBanner(XFile file) async {
+    final bytes = await file.readAsBytes();
+    final ext = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'jpg';
+    await uploadBannerBytes(bytes, ext: ext);
+  }
+
+  /// Mesma lógica de [uploadBanner], mas a partir de bytes já em
+  /// memória — usado depois de `showPhotoAdjustScreen()`
+  /// (`photo_adjust_screen.dart`), que devolve a foto já reenquadrada
+  /// pelo casal como PNG, não o ficheiro original escolhido. Pedido
+  /// explícito do utilizador: "faz com que eu consiga ajustar a
+  /// fotografia do casal".
+  Future<void> uploadBannerBytes(Uint8List bytes, {String ext = 'png'}) async {
     final wedding = state.wedding;
     if (wedding == null) return;
     state = state.copyWith(loading: true);
-    final bytes = await file.readAsBytes();
-    final ext = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'jpg';
     final path = '${wedding.id}/banner.$ext';
 
     await supabase.storage.from('wedding-banners').uploadBinary(

@@ -17,6 +17,7 @@ import '../../guests/screens/guests_list_screen.dart' show InviteShareSheet;
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/photo_adjust_screen.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
@@ -56,16 +57,12 @@ class WeddingDetailsScreen extends ConsumerWidget {
                       children: [
                         _HeroCard(wedding: wedding),
                         const SizedBox(height: 22),
-                        const _FinancialSummaryRow(),
-                        const SizedBox(height: 16),
-                        _ShareWeddingButton(wedding: wedding),
-                        const SizedBox(height: 16),
                         const _QuickLinksRow(),
                         const SizedBox(height: 22),
-                        const _UpcomingPaymentsCard(),
-                        const SizedBox(height: 14),
                         const _BookingsSection(),
-                        const SizedBox(height: 26),
+                        const SizedBox(height: 14),
+                        const _UpcomingPaymentsCard(),
+                        const SizedBox(height: 22),
                         Row(
                           children: [
                             Text(
@@ -88,6 +85,10 @@ class WeddingDetailsScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 12),
                         const _UpcomingTasksSection(),
+                        const SizedBox(height: 26),
+                        const _FinancialSummaryRow(),
+                        const SizedBox(height: 22),
+                        _ShareWeddingButton(wedding: wedding),
                       ],
                     ),
                   ),
@@ -133,9 +134,13 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
     final picker = ImagePicker();
     final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (file == null || !mounted) return;
+    final rawBytes = await file.readAsBytes();
+    if (!mounted) return;
+    final adjusted = await showPhotoAdjustScreen(context, imageBytes: rawBytes);
+    if (adjusted == null || !mounted) return;
     setState(() => _uploading = true);
     try {
-      await ref.read(weddingControllerProvider.notifier).uploadBanner(file);
+      await ref.read(weddingControllerProvider.notifier).uploadBannerBytes(adjusted);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -468,40 +473,58 @@ class _CountdownBox extends StatelessWidget {
 }
 
 /// Atalhos diretos para os módulos que deixaram de ter tile próprio no
-/// grid antigo — Orçamento, Convidados e Lugares continuam a precisar
-/// de um ponto de entrada visível, além de Definições.
+/// grid antigo — Orçamento, Convidados, Lugares e Serviços já tratados
+/// (movido de Definições, 2026-09-14) continuam a precisar de um ponto
+/// de entrada visível, além de Definições.
 class _QuickLinksRow extends StatelessWidget {
   const _QuickLinksRow();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _QuickLinkTile(
-            icon: Icons.savings_outlined,
-            label: 'Orçamento',
-            color: AppColors.purple,
-            onTap: () => context.push('/budget'),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickLinkTile(
+                icon: Icons.savings_outlined,
+                label: 'Orçamento',
+                color: AppColors.purple,
+                onTap: () => context.push('/budget'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _QuickLinkTile(
+                icon: Icons.people_outline,
+                label: 'Convidados',
+                color: AppColors.green,
+                onTap: () => context.push('/guests'),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _QuickLinkTile(
-            icon: Icons.people_outline,
-            label: 'Convidados',
-            color: AppColors.green,
-            onTap: () => context.push('/guests'),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _QuickLinkTile(
-            icon: Icons.event_seat_outlined,
-            label: 'Lugares',
-            color: AppColors.blue,
-            onTap: () => context.push('/seating'),
-          ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickLinkTile(
+                icon: Icons.event_seat_outlined,
+                label: 'Lugares',
+                color: AppColors.blue,
+                onTap: () => context.push('/seating'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _QuickLinkTile(
+                icon: Icons.checklist_rtl_outlined,
+                label: 'Serviços já tratados',
+                color: AppColors.yellow,
+                onTap: () => context.push('/service-preferences'),
+              ),
+            ),
+          ],
         ),
       ],
     );

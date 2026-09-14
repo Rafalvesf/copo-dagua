@@ -98,8 +98,8 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             child: Column(
               children: [
                 PageHeader(
-                  title: 'Chat',
                   titleFontSize: 30,
+                  topPadding: 8,
                   showBack: false,
                   // Mesma arquitetura/layout do cabeçalho de
                   // "Parceiros" (`partners_list_screen.dart`): cabeçalho

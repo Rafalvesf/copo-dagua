@@ -38,7 +38,7 @@ class GuestBottomNav extends StatelessWidget {
           boxShadow: AppTheme.navBarShadow,
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
             children: [
               Expanded(
@@ -46,7 +46,6 @@ class GuestBottomNav extends StatelessWidget {
                   child: _GuestNavIcon(
                     icon: Icons.home_outlined,
                     activeIcon: Icons.home_rounded,
-                    label: 'Início',
                     active: current == GuestTab.home,
                     onTap: () => context.go(_path('/guest-home')),
                   ),
@@ -57,7 +56,6 @@ class GuestBottomNav extends StatelessWidget {
                   child: _GuestNavIcon(
                     icon: Icons.card_giftcard_outlined,
                     activeIcon: Icons.card_giftcard_rounded,
-                    label: 'Presentes',
                     active: current == GuestTab.gifts,
                     onTap: () => context.go(_path('/guest-gifts')),
                   ),
@@ -68,7 +66,6 @@ class GuestBottomNav extends StatelessWidget {
                   child: _GuestNavIcon(
                     icon: Icons.photo_library_outlined,
                     activeIcon: Icons.photo_library_rounded,
-                    label: 'Galeria',
                     active: current == GuestTab.gallery,
                     onTap: () => context.go(_path('/guest-gallery')),
                   ),
@@ -79,7 +76,6 @@ class GuestBottomNav extends StatelessWidget {
                   child: _GuestNavIcon(
                     icon: Icons.person_outline_rounded,
                     activeIcon: Icons.person_rounded,
-                    label: 'Perfil',
                     active: current == GuestTab.profile,
                     onTap: () => context.go(_path('/guest-profile')),
                   ),
@@ -96,14 +92,12 @@ class GuestBottomNav extends StatelessWidget {
 class _GuestNavIcon extends StatelessWidget {
   final IconData icon;
   final IconData activeIcon;
-  final String label;
   final bool active;
   final VoidCallback onTap;
 
   const _GuestNavIcon({
     required this.icon,
     required this.activeIcon,
-    required this.label,
     required this.active,
     required this.onTap,
   });
@@ -115,24 +109,10 @@ class _GuestNavIcon extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: 32,
-              child: Center(child: Icon(active ? activeIcon : icon, color: color, size: 26)),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-          ],
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: SizedBox(
+          height: 42,
+          child: Center(child: Icon(active ? activeIcon : icon, color: color, size: 32)),
         ),
       ),
     );

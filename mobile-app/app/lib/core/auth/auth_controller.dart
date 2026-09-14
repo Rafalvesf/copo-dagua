@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
@@ -286,6 +287,7 @@ class AuthController extends Notifier<AuthState> {
       rejectionReason: partnerRow?['rejection_reason'] as String?,
       logoUrl: partnerRow?['cover_photo_url'] as String?,
       pricingMode: partnerRow?['pricing_mode'] as String?,
+      avatarUrl: row['avatar_url'] as String?,
     );
   }
 
@@ -337,6 +339,34 @@ class AuthController extends Notifier<AuthState> {
   /// login, ao contrário de [login]/[completeOnboarding].
   void refreshProfile(Profile updated) {
     state = state.copyWith(profile: updated);
+  }
+
+  /// Upload da foto de perfil da conta (`profiles.avatar_url`) — bucket
+  /// dedicado `avatars` (`072_avatar_storage.sql`), mesmo padrão que
+  /// `PartnerProfileController.uploadLogo` (ficheiro único por conta,
+  /// `upsert: true`, caminho `{user_id}/avatar.{ext}`). Partilhado por
+  /// toda a app, Modo convidado incluído — é a mesma coluna, por isso
+  /// não há nenhum upload separado do lado do convidado.
+  Future<void> uploadAvatarPhoto(XFile file) async {
+    final profile = state.profile;
+    if (profile == null) return;
+    final bytes = await file.readAsBytes();
+    final ext = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'jpg';
+    final path = '${profile.id}/avatar.$ext';
+
+    await supabase.storage.from('avatars').uploadBinary(
+      path,
+      bytes,
+      fileOptions: FileOptions(contentType: 'image/$ext', upsert: true),
+    );
+    final avatarUrl = supabase.storage.from('avatars').getPublicUrl(path);
+
+    await supabase
+        .from('profiles')
+        .update({'avatar_url': avatarUrl})
+        .eq('id', profile.id);
+
+    refreshProfile(profile.copyWith(avatarUrl: avatarUrl));
   }
 
   Future<void> logout() async {

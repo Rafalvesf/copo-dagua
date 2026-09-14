@@ -34,28 +34,25 @@ class PartnerBottomNav extends ConsumerWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+          padding: const EdgeInsets.fromLTRB(8, 16, 8, 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _NavIcon(
                 icon: Icons.home_outlined,
                 activeIcon: Icons.home_rounded,
-                label: 'Home',
                 active: current == PartnerTab.home,
                 onTap: () => context.go('/partner-home'),
               ),
               _NavIcon(
                 icon: Icons.inbox_outlined,
                 activeIcon: Icons.inbox_rounded,
-                label: 'Parceiros',
                 active: current == PartnerTab.requests,
                 onTap: () => context.go('/partner-requests'),
               ),
               _NavIcon(
                 icon: Icons.chat_bubble_outline_rounded,
                 activeIcon: Icons.chat_bubble_rounded,
-                label: 'Chat',
                 active: current == PartnerTab.chat,
                 badgeCount: unreadCount,
                 onTap: () => context.go('/partner-messages'),
@@ -63,7 +60,6 @@ class PartnerBottomNav extends ConsumerWidget {
               _NavIcon(
                 icon: Icons.storefront_outlined,
                 activeIcon: Icons.storefront_rounded,
-                label: 'Os nossos',
                 active: current == PartnerTab.profile,
                 onTap: () => context.go('/partner-profile'),
               ),
@@ -78,7 +74,6 @@ class PartnerBottomNav extends ConsumerWidget {
 class _NavIcon extends StatelessWidget {
   final IconData icon;
   final IconData activeIcon;
-  final String label;
   final bool active;
   final VoidCallback onTap;
   final int badgeCount;
@@ -86,7 +81,6 @@ class _NavIcon extends StatelessWidget {
   const _NavIcon({
     required this.icon,
     required this.activeIcon,
-    required this.label,
     required this.active,
     required this.onTap,
     this.badgeCount = 0,
@@ -99,13 +93,13 @@ class _NavIcon extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: 28,
-              height: 28,
+              width: 32,
+              height: 32,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -113,7 +107,7 @@ class _NavIcon extends StatelessWidget {
                     child: Icon(
                       active ? activeIcon : icon,
                       color: color,
-                      size: 28,
+                      size: 32,
                     ),
                   ),
                   if (badgeCount > 0)
@@ -123,15 +117,6 @@ class _NavIcon extends StatelessWidget {
                       child: _UnreadBadge(count: badgeCount),
                     ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ],

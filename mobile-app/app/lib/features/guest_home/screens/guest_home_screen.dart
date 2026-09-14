@@ -37,6 +37,21 @@ class GuestHomeScreen extends ConsumerWidget {
     final profile = ref.watch(authControllerProvider).profile;
     final weddingsAsync = ref.watch(guestWeddingsProvider);
 
+    // Completa um convite individual aberto sem sessão
+    // (`invite_token_screen.dart` guardou o token e mandou para
+    // login/registo) agora que a conta já está ativa.
+    final pendingToken = ref.watch(pendingInviteTokenProvider);
+    if (pendingToken != null) {
+      ref.read(pendingInviteTokenProvider.notifier).set(null);
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        try {
+          final result = await joinWeddingByInviteToken(pendingToken);
+          ref.invalidate(guestWeddingsProvider);
+          ref.invalidate(myGuestRowProvider(result.weddingId));
+        } catch (_) {}
+      });
+    }
+
     return GradientScaffold(
       background: AppBackground.subtle,
       body: Stack(
@@ -55,6 +70,21 @@ class GuestHomeScreen extends ConsumerWidget {
                 final wedding = weddingId == null
                     ? weddings.first
                     : weddings.where((w) => w.weddingId == weddingId).firstOrNull ?? weddings.first;
+
+                // Mostra o wizard "Vais ao casamento?" uma única vez,
+                // assim que a conta fica ligada a uma linha de `guests`
+                // (`onboarding_completed_at is null`) — pedido explícito
+                // do utilizador, ver `073_guest_onboarding_wizard.sql`.
+                ref.watch(myGuestRowProvider(wedding.weddingId)).whenData((guest) {
+                  if (guest != null && guest.onboardingCompletedAt == null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (context.mounted) {
+                        context.push('/guest-onboarding/${wedding.weddingId}', extra: guest);
+                      }
+                    });
+                  }
+                });
+
                 return _GuestHomeBody(wedding: wedding);
               },
             ),

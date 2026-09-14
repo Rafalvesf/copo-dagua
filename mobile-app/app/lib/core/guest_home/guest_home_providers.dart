@@ -132,11 +132,90 @@ final myTableRosterProvider = FutureProvider.family<List<TableMate>, String>((re
       .toList();
 });
 
+/// Resultado de `join_wedding_by_code`/`join_wedding_by_invite_token`
+/// (`071_guest_join_mode_and_invite_token.sql`) — [guestMatched] indica
+/// se a conta ficou ligada a uma linha de `guests` (para o chamador
+/// decidir entre mostrar o onboarding ou o estado "ainda não
+/// encontrámos a tua entrada"), distinto de a chamada em si ter
+/// sucesso (que só falha com exceção, ex: código inválido).
+class GuestJoinResult {
+  final String weddingId;
+  final bool guestMatched;
+
+  const GuestJoinResult({required this.weddingId, required this.guestMatched});
+
+  factory GuestJoinResult.fromRow(Map<String, dynamic> row) => GuestJoinResult(
+    weddingId: row['wedding_id'] as String,
+    guestMatched: row['guest_matched'] as bool? ?? false,
+  );
+}
+
 /// Liga a conta atual (qualquer role — couple ou guest, `join_wedding_by_code`
 /// não distingue) a um casamento via `guest_code`, para uma conta de casal
 /// poder também acompanhar outro casamento como convidado sem precisar de
 /// uma segunda conta (`050_wedding_guest_code.sql`). Lança se o código for
 /// inválido — o chamador decide a mensagem.
-Future<void> joinWeddingByCode(String code) async {
-  await supabase.rpc('join_wedding_by_code', params: {'p_code': code.trim()});
+Future<GuestJoinResult> joinWeddingByCode(String code) async {
+  final rows =
+      await supabase.rpc('join_wedding_by_code', params: {'p_code': code.trim()}) as List;
+  return GuestJoinResult.fromRow(rows.first as Map<String, dynamic>);
+}
+
+/// Token de convite individual (`/i/:token`, `invite_token_screen.dart`)
+/// aberto por alguém ainda sem sessão — guardado aqui até o login/registo
+/// terminar, para `GuestHomeScreen` completar o `joinWeddingByInviteToken`
+/// assim que a conta ficar ativa, sem precisar de um fluxo de registo
+/// paralelo dedicado a tokens. `Notifier` em vez de `StateProvider`
+/// (removido no Riverpod 3, ver `pubspec.yaml`), mesma convenção de
+/// `AuthController`.
+class PendingInviteTokenNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void set(String? token) => state = token;
+}
+
+final pendingInviteTokenProvider = NotifierProvider<PendingInviteTokenNotifier, String?>(
+  PendingInviteTokenNotifier.new,
+);
+
+/// Liga a conta atual a uma linha de `guests` específica através do seu
+/// convite individual (`guests.rsvp_token`, reaproveitado como link/
+/// código individual — ver `071_guest_join_mode_and_invite_token.sql`).
+/// Ao contrário de [joinWeddingByCode], nunca cria uma linha nova — um
+/// token só existe para uma linha que o casal já criou.
+Future<GuestJoinResult> joinWeddingByInviteToken(String token) async {
+  final rows =
+      await supabase.rpc('join_wedding_by_invite_token', params: {'p_token': token.trim()})
+          as List;
+  return GuestJoinResult.fromRow(rows.first as Map<String, dynamic>);
+}
+
+/// Conclui o wizard "Vais ao casamento?" (`complete_guest_onboarding()`,
+/// `073_guest_onboarding_wizard.sql`) — só produz efeito uma vez por
+/// convidado (a função ignora silenciosamente uma segunda chamada,
+/// `onboarding_completed_at is null` na cláusula `where`).
+Future<void> completeGuestOnboarding({
+  required bool attending,
+  String? plusOneName,
+  String? menuSelection,
+  String? dietaryRestrictions,
+  required WeddingSide side,
+  String? groupLabel,
+}) async {
+  await supabase.rpc(
+    'complete_guest_onboarding',
+    params: {
+      'p_attending': attending,
+      'p_plus_one_name': plusOneName,
+      'p_menu_selection': menuSelection,
+      'p_dietary_restrictions': dietaryRestrictions,
+      'p_side': switch (side) {
+        WeddingSide.groom => 'couple_a',
+        WeddingSide.bride => 'couple_b',
+        WeddingSide.both => 'both',
+      },
+      'p_group_label': groupLabel,
+    },
+  );
 }

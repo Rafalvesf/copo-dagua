@@ -54,10 +54,11 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
       _codeError = null;
     });
     try {
-      await joinWeddingByCode(code);
+      final result = await joinWeddingByCode(code);
       if (!mounted) return;
       _code.clear();
       ref.invalidate(guestWeddingsProvider);
+      ref.invalidate(myGuestRowProvider(result.weddingId));
     } catch (e) {
       if (!mounted) return;
       setState(() {

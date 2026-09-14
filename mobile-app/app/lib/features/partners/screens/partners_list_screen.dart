@@ -6,6 +6,7 @@ import '../../../core/partner_profile/partner_profile_controller.dart';
 import '../../../core/partners/favorite_partners_controller.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
@@ -32,6 +33,12 @@ class PartnersListScreen extends ConsumerStatefulWidget {
 class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   late String? _filter = widget.categorySlug;
   final _search = TextEditingController();
+
+  /// Localização escolhida pelo cliente para filtrar parceiros — `null`
+  /// = ainda não escolheu nada, usa a localização do casamento como
+  /// sugestão inicial; `''` = escolheu explicitamente "Todas as
+  /// localizações" (sem filtro); qualquer outro valor filtra a lista.
+  String? _selectedLocation;
 
   @override
   void initState() {
@@ -60,6 +67,40 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
     );
   }
 
+  /// Localizações disponíveis para o cliente escolher — derivadas dos
+  /// parceiros já carregados (`service_areas`, via `Partner.location`)
+  /// em vez de uma lista fixa, para refletir sempre onde os parceiros
+  /// reais estão, e nunca oferecer uma área sem nenhum parceiro.
+  void _showLocationPicker(List<String> options) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.public),
+              title: const Text('Todas as localizações'),
+              onTap: () {
+                setState(() => _selectedLocation = '');
+                Navigator.of(context).pop();
+              },
+            ),
+            for (final location in options)
+              ListTile(
+                leading: const Icon(Icons.location_on_outlined),
+                title: Text(location),
+                onTap: () {
+                  setState(() => _selectedLocation = location);
+                  Navigator.of(context).pop();
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final categoryOptionsAsync = ref.watch(partnerCategoryOptionsProvider);
@@ -70,6 +111,22 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
       data: (options) => options.where((o) => o.slug == _filter).firstOrNull?.label,
       orElse: () => null,
     );
+    final weddingLocation = ref.watch(weddingControllerProvider).wedding?.location;
+    // Localização efetiva: o que o cliente escolheu explicitamente
+    // (incluindo "Todas as localizações", `''`), ou a localização do
+    // casamento como sugestão inicial antes de escolher alguma.
+    final effectiveLocation = _selectedLocation ?? weddingLocation ?? '';
+    final locationOptions = partnersAsync
+        .maybeWhen(
+          data: (list) => list
+              .where((p) => p.location != 'Âmbito nacional')
+              .expand((p) => p.location.split(', '))
+              .where((l) => l.isNotEmpty),
+          orElse: () => const Iterable<String>.empty(),
+        )
+        .toSet()
+        .toList()
+      ..sort();
 
     return GradientScaffold(
       background: AppBackground.feed,
@@ -80,8 +137,8 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
             child: Column(
               children: [
                 PageHeader(
-                  title: 'Parceiros',
                   titleFontSize: 30,
+                  topPadding: 8,
                   showBack: widget.selectionMode,
                   // Mantém a altura do cabeçalho igual à de antes de o
                   // coração ter saído daqui para junto da barra de
@@ -90,6 +147,41 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                   // sobe, perdendo o alinhamento vertical com o resto
                   // da app.
                   trailing: widget.selectionMode ? null : const SizedBox(width: 46, height: 46),
+                ),
+                SnappyTap(
+                  onTap: () => _showLocationPicker(locationOptions),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.screenMargin,
+                      6,
+                      AppTheme.screenMargin,
+                      0,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: AppTheme.inkMuted,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          effectiveLocation.isEmpty ? 'Todas as localizações' : effectiveLocation,
+                          style: const TextStyle(
+                            color: AppTheme.inkMuted,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        const Icon(
+                          Icons.expand_more,
+                          size: 16,
+                          color: AppTheme.inkMuted,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -220,10 +312,24 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       child: Text('Não foi possível carregar parceiros.'),
                     ),
                     data: (allPartners) {
-                      final query = _search.text.trim().toLowerCase();
-                      final partners = query.isEmpty
+                      // Filtra pela localização escolhida pelo cliente
+                      // — "Âmbito nacional" nunca é excluído (esse
+                      // parceiro serve qualquer área).
+                      final byLocation = effectiveLocation.isEmpty
                           ? allPartners
                           : allPartners
+                                .where(
+                                  (s) =>
+                                      s.location == 'Âmbito nacional' ||
+                                      s.location.toLowerCase().contains(
+                                        effectiveLocation.toLowerCase(),
+                                      ),
+                                )
+                                .toList();
+                      final query = _search.text.trim().toLowerCase();
+                      final partners = query.isEmpty
+                          ? byLocation
+                          : byLocation
                                 .where(
                                   (s) => s.name.toLowerCase().contains(query),
                                 )
@@ -232,7 +338,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         return Center(
                           child: Text(
                             query.isEmpty
-                                ? 'Sem parceiros nesta categoria.'
+                                ? 'Sem parceiros nesta localização.'
                                 : 'Sem parceiros para "${_search.text.trim()}".',
                           ),
                         );
@@ -641,7 +747,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${partner.primaryCategoryLabel} · ${partner.location}',
+                      partner.primaryCategoryLabel,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -649,6 +755,35 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                         fontWeight: FontWeight.w600,
                         fontSize: 12.5,
                       ),
+                    ),
+                    const SizedBox(height: 3),
+                    // Área de serviço definida pelo próprio parceiro
+                    // (`service_areas`/`nationwide`, editável em
+                    // "Área de serviço" no perfil do negócio) — linha
+                    // própria com ícone em vez de espremida com a
+                    // categoria, para ficar visível mesmo quando o
+                    // nome/categoria já ocupam o espaço disponível.
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 13,
+                          color: AppTheme.inkMuted,
+                        ),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            partner.location,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppTheme.inkMuted,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

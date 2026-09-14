@@ -95,6 +95,11 @@ class Profile {
   /// 'quote_only') — null para casais. Ver [ServicePackage].
   final String? pricingMode;
 
+  /// Foto de perfil da conta (`profiles.avatar_url`) — partilhada por
+  /// toda a app (Modo convidado incluído): é a mesma coluna, por isso
+  /// não há sincronização a fazer, só um único caminho de upload.
+  final String? avatarUrl;
+
   const Profile({
     required this.id,
     required this.fullName,
@@ -121,6 +126,7 @@ class Profile {
     this.rejectionReason,
     this.logoUrl,
     this.pricingMode,
+    this.avatarUrl,
   });
 
   Profile copyWith({
@@ -142,6 +148,7 @@ class Profile {
     String? rejectionReason,
     String? logoUrl,
     String? pricingMode,
+    String? avatarUrl,
   }) {
     return Profile(
       id: id,
@@ -169,6 +176,7 @@ class Profile {
       rejectionReason: rejectionReason ?? this.rejectionReason,
       logoUrl: logoUrl ?? this.logoUrl,
       pricingMode: pricingMode ?? this.pricingMode,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
     );
   }
 }
@@ -377,6 +385,15 @@ class Guest {
   /// só `null` aqui em código antigo/mock que ainda não o preenchia.
   final String? rsvpToken;
 
+  /// `guests.menu_selection` — escolha de menu do próprio convidado,
+  /// preenchida no wizard "Vais ao casamento?" (`GuestOnboardingWizard`).
+  final String? menuSelection;
+
+  /// `guests.onboarding_completed_at` — marca que o convidado já passou
+  /// pelo wizard uma vez; usado só para decidir se o wizard volta a
+  /// aparecer, nunca mostrado na UI.
+  final DateTime? onboardingCompletedAt;
+
   const Guest({
     required this.id,
     required this.weddingId,
@@ -395,6 +412,8 @@ class Guest {
     this.inviteSentAt,
     this.rsvpRespondedAt,
     this.rsvpToken,
+    this.menuSelection,
+    this.onboardingCompletedAt,
   });
 
   Guest copyWith({
@@ -409,6 +428,8 @@ class Guest {
     String? dietaryRestrictions,
     String? note,
     String? notes,
+    String? menuSelection,
+    DateTime? onboardingCompletedAt,
   }) {
     return Guest(
       id: id,
@@ -428,6 +449,8 @@ class Guest {
       inviteSentAt: inviteSentAt,
       rsvpRespondedAt: rsvpRespondedAt,
       rsvpToken: rsvpToken,
+      menuSelection: menuSelection ?? this.menuSelection,
+      onboardingCompletedAt: onboardingCompletedAt ?? this.onboardingCompletedAt,
     );
   }
 }
