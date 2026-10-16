@@ -273,21 +273,27 @@ class _PartnerDashboardSummary extends ConsumerWidget {
         Row(
           children: [
             Expanded(
-              child: _MetricCard(
+              child: SnappyTap(
+                onTap: () => context.push('/partner-requests'),
+                child: _MetricCard(
                 label: 'Reservas pendentes',
                 value: '${pendingBookings.length}',
                 color: AppColors.blue,
               ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _MetricCard(
+              child: SnappyTap(
+                onTap: () => context.push('/partner-stats'),
+                child: _MetricCard(
                 label: 'Vendas este mês',
                 value: statsAsync.maybeWhen(
                   data: (s) => '${s.revenue.toStringAsFixed(0)} €',
                   orElse: () => '—',
                 ),
                 color: AppColors.green,
+              ),
               ),
             ),
           ],
