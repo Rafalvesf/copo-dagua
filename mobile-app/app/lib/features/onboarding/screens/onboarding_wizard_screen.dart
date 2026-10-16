@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../core/partner_profile/partner_profile_controller.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
