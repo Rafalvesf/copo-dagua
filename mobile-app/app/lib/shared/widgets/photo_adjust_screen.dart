@@ -83,7 +83,7 @@ class _PhotoAdjustScreenState extends State<_PhotoAdjustScreen> {
             const SizedBox(height: 8),
             const Text(
               'Arrasta e afasta os dedos para ajustar',
-              style: TextStyle(color: Colors.white70, fontSize: 12.5),
+              style: TextStyle(color: Colors.white70, fontSize: AppFontSize.sm),
             ),
             const SizedBox(height: 16),
             Expanded(

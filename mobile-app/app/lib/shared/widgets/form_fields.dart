@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_theme.dart';
+
 class AuthTextField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
@@ -93,7 +95,7 @@ class DatePickerField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
           onTap: unknown
               ? null
               : () async {

@@ -47,7 +47,7 @@ class AssigneeCluster extends StatelessWidget {
                     '+$overflow',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 9,
+                      fontSize: AppFontSize.xxxs,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

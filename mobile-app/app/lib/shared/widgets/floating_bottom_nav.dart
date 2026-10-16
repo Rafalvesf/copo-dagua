@@ -40,7 +40,7 @@ class FloatingBottomNav extends ConsumerWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
           boxShadow: AppTheme.navBarShadow,
         ),
         child: Padding(
@@ -137,7 +137,7 @@ class _NavIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = active ? AppTheme.accentOliveDark : AppTheme.navIconMuted;
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -200,7 +200,7 @@ class _UnreadBadge extends StatelessWidget {
         count > 99 ? '99+' : '$count',
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 9,
+          fontSize: AppFontSize.xxxs,
           fontWeight: FontWeight.w700,
           height: 1,
         ),
@@ -228,7 +228,7 @@ class _WeddingNavTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

@@ -119,7 +119,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                             Expanded(
                               child: Container(
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(999),
+                                  borderRadius: BorderRadius.circular(AppRadius.pill),
                                   boxShadow: AppTheme.searchBarShadow,
                                 ),
                                 child: TextField(
@@ -130,7 +130,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                                     filled: true,
                                     fillColor: Colors.white,
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(999),
+                                      borderRadius: BorderRadius.circular(AppRadius.pill),
                                       borderSide: const BorderSide(
                                         color: AppTheme.accentOliveDark,
                                       ),
@@ -319,7 +319,7 @@ class _StatTile extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: big ? 13 : 12, horizontal: 8),
         decoration: BoxDecoration(
           color: background ?? AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Column(
           children: [
@@ -348,7 +348,7 @@ class _StatTile extends StatelessWidget {
               Text(
                 '$pct%',
                 style: TextStyle(
-                  fontSize: 9.5,
+                  fontSize: AppFontSize.xxxs,
                   color: iconColor,
                   fontWeight: FontWeight.w700,
                 ),
@@ -404,14 +404,14 @@ class InviteShareSheetState extends State<InviteShareSheet> {
           Text(
             'Envia este link aos teus convidados — vão precisar de criar '
             'conta para confirmar presença.',
-            style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.green,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Row(
               children: [
@@ -420,7 +420,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
                     widget.wedding.inviteUrl,
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      fontSize: AppFontSize.md,
                     ),
                   ),
                 ),
@@ -443,14 +443,14 @@ class InviteShareSheetState extends State<InviteShareSheet> {
             Text(
               'Se já têm a app instalada, os convidados usam este código '
               'ao criar conta para ficar ligados ao vosso casamento.',
-              style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+              style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
             ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: AppColors.green,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Row(
                 children: [
@@ -459,7 +459,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
                       guestCode,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                        fontSize: AppFontSize.lg,
                         letterSpacing: 0.5,
                       ),
                     ),

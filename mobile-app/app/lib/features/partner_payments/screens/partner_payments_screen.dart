@@ -149,7 +149,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
                         'Já podes receber sinais de reservas por cartão.',
                         style: TextStyle(
                           color: AppTheme.inkMuted,
-                          fontSize: 13.5,
+                          fontSize: AppFontSize.md,
                         ),
                       ),
                     const SizedBox(height: 16),
@@ -157,7 +157,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
                       'A configuração é feita numa página segura da Stripe — nunca partilhas dados de cartão ou de conta bancária com a Copo d\'Água.',
                       style: TextStyle(
                         color: AppTheme.inkMuted,
-                        fontSize: 12.5,
+                        fontSize: AppFontSize.sm,
                         height: 1.4,
                       ),
                     ),
@@ -209,7 +209,7 @@ class _BalanceSection extends ConsumerWidget {
           'Saldo',
           style: TextStyle(
             fontWeight: FontWeight.w700,
-            fontSize: 16,
+            fontSize: AppFontSize.lg,
             color: AppTheme.ink,
           ),
         ),
@@ -224,7 +224,7 @@ class _BalanceSection extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.lg),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +259,7 @@ class _BalanceSection extends ConsumerWidget {
                       : 'Disponível assim que "Pode receber transferências" ficar ativo acima.',
                   style: TextStyle(
                     color: AppTheme.inkMuted,
-                    fontSize: 12,
+                    fontSize: AppFontSize.sm,
                     height: 1.4,
                   ),
                 ),
@@ -285,14 +285,14 @@ class _BalanceRow extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
           ),
         ),
         Text(
           '${amount.toStringAsFixed(0)} €',
           style: const TextStyle(
             fontWeight: FontWeight.w700,
-            fontSize: 14,
+            fontSize: AppFontSize.base,
             color: AppTheme.ink,
           ),
         ),
@@ -327,13 +327,13 @@ class _StatusRow extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(fontSize: 14, color: AppTheme.ink),
+            style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.ink),
           ),
         ),
         Text(
           ok ? okLabel : pendingLabel,
           style: TextStyle(
-            fontSize: 12.5,
+            fontSize: AppFontSize.sm,
             fontWeight: FontWeight.w600,
             color: ok ? AppTheme.accentOliveDark : AppTheme.inkMuted,
           ),

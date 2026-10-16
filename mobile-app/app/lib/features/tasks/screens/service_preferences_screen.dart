@@ -142,9 +142,9 @@ class _ServicePreferencesScreenState extends ConsumerState<ServicePreferencesScr
                                 decoration: InputDecoration(
                                   isDense: true,
                                   hintText: 'Nome do fornecedor (opcional)',
-                                  hintStyle: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+                                  hintStyle: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(AppRadius.sm),
                                   ),
                                 ),
                               ),
@@ -182,12 +182,12 @@ class _CategoryPreferenceRow extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.md)),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -233,7 +233,7 @@ class _PreferenceChip extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected ? AppTheme.ink : Colors.white,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
             border: Border.all(color: AppTheme.borderMuted),
           ),
           child: Text(
@@ -242,7 +242,7 @@ class _PreferenceChip extends StatelessWidget {
             style: TextStyle(
               color: selected ? Colors.white : AppTheme.ink,
               fontWeight: FontWeight.w600,
-              fontSize: 11,
+              fontSize: AppFontSize.xs,
             ),
           ),
         ),

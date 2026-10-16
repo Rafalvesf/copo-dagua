@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/initials_avatar.dart';
+import '../../../shared/widgets/feedback.dart';
 
 /// "A tua mesa" — pedido explícito do utilizador (mockup de
 /// referência), aberto a partir da linha "A tua mesa" em
@@ -38,7 +39,7 @@ class GuestTableScreen extends ConsumerWidget {
                   const SizedBox(width: 4),
                   const Text(
                     'A tua mesa',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                    style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink),
                   ),
                 ],
               ),
@@ -46,18 +47,12 @@ class GuestTableScreen extends ConsumerWidget {
             Expanded(
               child: rosterAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) => const Center(child: Text('Não foi possível carregar.')),
+                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(myTableRosterProvider(weddingId))),
                 data: (roster) {
                   if (roster.isEmpty) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(AppTheme.screenMargin),
-                        child: Text(
-                          'Ainda não foste colocado em nenhuma mesa.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: AppTheme.inkMuted),
-                        ),
-                      ),
+                    return const EmptyStateView(
+                      message: 'Ainda não foste colocado em nenhuma mesa.',
+                      icon: Icons.table_restaurant_outlined,
                     );
                   }
                   final groups = roster.map((m) => m.group).where((g) => g.isNotEmpty).toSet().toList();
@@ -71,19 +66,19 @@ class GuestTableScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         decoration: BoxDecoration(
                           color: AppColors.pink,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(AppRadius.xl),
                         ),
                         child: Column(
                           children: [
                             Text(
                               tableNumber == null ? 'A tua mesa' : 'Mesa $tableNumber',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                              style: const TextStyle(fontSize: AppFontSize.xxl, fontWeight: FontWeight.w700, color: AppTheme.ink),
                             ),
                             if (groups.isNotEmpty) ...[
                               const SizedBox(height: 4),
                               Text(
                                 groups.join(' e '),
-                                style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                                style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                               ),
                             ],
                           ],
@@ -96,7 +91,7 @@ class GuestTableScreen extends ConsumerWidget {
                       const SizedBox(height: 28),
                       const Text(
                         'Com quem vais estar?',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink),
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 12),
                       for (final mate in roster)
@@ -142,11 +137,11 @@ class _Badge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink),
+        style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.ink),
       ),
     );
   }

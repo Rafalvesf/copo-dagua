@@ -221,7 +221,7 @@ class _DateShortcut extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -235,7 +235,7 @@ class _DateShortcut extends StatelessWidget {
             Text(
               formatShortDatePt(DateTime.now()),
               style: const TextStyle(
-                fontSize: 12.5,
+                fontSize: AppFontSize.sm,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.ink,
               ),
@@ -266,7 +266,7 @@ class _OverallProgressCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -277,20 +277,20 @@ class _OverallProgressCard extends StatelessWidget {
               children: [
                 const Text(
                   'Progresso geral',
-                  style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                  style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '$pct%',
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 26,
+                    fontSize: AppFontSize.h2,
                     color: AppTheme.accentOliveDark,
                   ),
                 ),
                 const SizedBox(height: 10),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 7,
@@ -304,7 +304,7 @@ class _OverallProgressCard extends StatelessWidget {
                 Text(
                   '$done de $total tarefas concluídas',
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: AppFontSize.sm,
                     color: AppTheme.inkMuted,
                   ),
                 ),
@@ -391,7 +391,7 @@ class _FilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -401,7 +401,7 @@ class _FilterChip extends StatelessWidget {
               style: TextStyle(
                 color: selected ? Colors.white : AppTheme.ink,
                 fontWeight: FontWeight.w700,
-                fontSize: 13,
+                fontSize: AppFontSize.md,
               ),
             ),
             const SizedBox(width: 6),
@@ -411,14 +411,14 @@ class _FilterChip extends StatelessWidget {
                 color: selected
                     ? Colors.white.withValues(alpha: 0.25)
                     : AppColors.muted,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: Text(
                 '$count',
                 style: TextStyle(
                   color: selected ? Colors.white : AppTheme.inkMuted,
                   fontWeight: FontWeight.w700,
-                  fontSize: 11.5,
+                  fontSize: AppFontSize.xs,
                 ),
               ),
             ),
@@ -474,13 +474,13 @@ class _StatusGroup extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: AppColors.muted,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: Text(
                 '${sorted.length}',
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
-                  fontSize: 11.5,
+                  fontSize: AppFontSize.xs,
                   color: AppTheme.inkMuted,
                 ),
               ),
@@ -509,7 +509,7 @@ class _StatusGroup extends StatelessWidget {
                   style: const TextStyle(
                     color: AppTheme.accentOliveDark,
                     fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                    fontSize: AppFontSize.md,
                   ),
                 ),
                 Icon(
@@ -545,7 +545,7 @@ class _TaskTile extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Row(
         children: [
@@ -564,7 +564,7 @@ class _TaskTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
+                    fontSize: AppFontSize.md,
                     decoration: item.done ? TextDecoration.lineThrough : null,
                     color: item.done ? AppTheme.inkMuted : AppTheme.ink,
                   ),
@@ -575,7 +575,7 @@ class _TaskTile extends StatelessWidget {
                     item.done
                         ? 'Concluída a ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}'
                         : 'Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}',
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 11.5),
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
                   ),
                 ],
               ],

@@ -75,7 +75,7 @@ class RoleSelectorCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(
             color: selected ? colorScheme.primary : colorScheme.outlineVariant,
             width: selected ? 2 : 1,
@@ -119,7 +119,7 @@ class GuestListItem extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Row(
           children: [
@@ -139,14 +139,14 @@ class GuestListItem extends StatelessWidget {
                     guest.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 15,
+                      fontSize: AppFontSize.lg,
                       color: AppTheme.ink,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${guest.group.isEmpty ? 'Sem grupo' : guest.group} · $_adultsLabel',
-                    style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+                    style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                   ),
                 ],
               ),
@@ -194,7 +194,7 @@ class ConversationListItem extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Row(
           children: [
@@ -219,7 +219,7 @@ class ConversationListItem extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
-                            fontSize: 14.5,
+                            fontSize: AppFontSize.base,
                           ),
                         ),
                       ),
@@ -228,7 +228,7 @@ class ConversationListItem extends StatelessWidget {
                           _timeLabel!,
                           style: const TextStyle(
                             color: AppTheme.inkMuted,
-                            fontSize: 11.5,
+                            fontSize: AppFontSize.xs,
                           ),
                         ),
                     ],
@@ -243,7 +243,7 @@ class ConversationListItem extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: AppTheme.inkMuted,
-                            fontSize: 13,
+                            fontSize: AppFontSize.md,
                           ),
                         ),
                       ),
@@ -261,7 +261,7 @@ class ConversationListItem extends StatelessWidget {
                             '${conversation.unreadCount}',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 11,
+                              fontSize: AppFontSize.xs,
                               fontWeight: FontWeight.w700,
                             ),
                           ),

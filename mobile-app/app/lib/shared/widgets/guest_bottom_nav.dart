@@ -34,7 +34,7 @@ class GuestBottomNav extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
           boxShadow: AppTheme.navBarShadow,
         ),
         child: Padding(
@@ -106,7 +106,7 @@ class _GuestNavIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = active ? AppTheme.accentOliveDark : AppTheme.navIconMuted;
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

@@ -284,7 +284,7 @@ class _ShortcutRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Row(
           children: [
@@ -347,7 +347,7 @@ class _NavIconOptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(AppRadius.lg),
       child: Transform.scale(
         scale: option.zoom,
         child: Image.asset(
@@ -371,7 +371,7 @@ class _MoreNavIconTile extends StatelessWidget {
       height: _NavIconPicker._maxExtent,
       decoration: BoxDecoration(
         color: AppColors.muted,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: const Icon(Icons.add, color: AppTheme.inkMuted, size: 28),
     );

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_theme.dart';
+
 class ErrorBanner extends StatelessWidget {
   final String message;
 
@@ -14,7 +16,7 @@ class ErrorBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Row(
         children: [
@@ -43,7 +45,7 @@ class PersistentWarningBanner extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: colorScheme.tertiaryContainer,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
@@ -54,6 +56,103 @@ class PersistentWarningBanner extends StatelessWidget {
           if (actionLabel != null)
             TextButton(onPressed: onAction, child: Text(actionLabel!)),
         ],
+      ),
+    );
+  }
+}
+
+/// Estado de erro de um `AsyncValue.when(error: ...)` — substitui os
+/// `Center(child: Text('Não foi possível carregar.'))` soltos que havia
+/// em cada ecrã. Mesmo aspeto em toda a app e, quando há [onRetry]
+/// (normalmente `() => ref.invalidate(<provider>)`), um botão para
+/// tentar de novo em vez de obrigar a sair e voltar ao ecrã.
+class AsyncErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback? onRetry;
+
+  const AsyncErrorView({
+    super.key,
+    this.message = 'Não foi possível carregar.',
+    this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.cloud_off_outlined,
+              size: 32,
+              color: AppTheme.navIconMuted,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: AppFontSize.base,
+                color: AppTheme.ink,
+              ),
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Tentar de novo'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.accentOliveDark,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Estado vazio de uma lista/ecrã inteiro — ícone + mensagem centrados,
+/// mesmo ritmo visual que [AsyncErrorView]. Para caixas de altura fixa
+/// (ex: uma secção pequena dentro de um card) continua a usar-se só um
+/// `Text`, que é o que cabe.
+class EmptyStateView extends StatelessWidget {
+  final String message;
+  final IconData icon;
+
+  const EmptyStateView({
+    super.key,
+    required this.message,
+    this.icon = Icons.inbox_outlined,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.screenMargin,
+          vertical: 32,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 32, color: AppTheme.navIconMuted),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: AppFontSize.base,
+                color: AppTheme.inkMuted,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

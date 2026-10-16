@@ -71,7 +71,7 @@ class PageHeader extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppTheme.inkMuted,
-                        fontSize: 13.5,
+                        fontSize: AppFontSize.md,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -106,7 +106,7 @@ class AddActionButton extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         onTap: onTap,
         child: Container(
           width: 46,
@@ -137,13 +137,13 @@ class StatusPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
         label,
         style: TextStyle(
           color: color,
-          fontSize: 11,
+          fontSize: AppFontSize.xs,
           fontWeight: FontWeight.w700,
         ),
       ),

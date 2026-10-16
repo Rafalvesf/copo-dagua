@@ -16,6 +16,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import 'guest_mode_screen.dart' show showGuestModeSheet;
 import 'guest_table_screen.dart';
+import '../../../shared/widgets/feedback.dart';
 
 /// "O meu perfil" — pedido explícito do utilizador (mockup de
 /// referência): o próprio convidado a ver/editar a sua presença
@@ -71,10 +72,10 @@ class GuestProfileScreen extends ConsumerWidget {
                 Expanded(
                   child: weddingsAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => const Center(child: Text('Não foi possível carregar.')),
+                    error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider)),
                     data: (weddings) {
                       if (weddings.isEmpty || profile == null) {
-                        return const Center(child: Text('Ainda sem casamento associado.'));
+                        return const EmptyStateView(message: 'Ainda sem casamento associado.', icon: Icons.favorite_border);
                       }
                       final resolvedWeddingId = weddingId == null
                           ? weddings.first.weddingId
@@ -233,7 +234,7 @@ class _GuestProfileBody extends ConsumerWidget {
 
     return guestAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, st) => const Center(child: Text('Não foi possível carregar.')),
+      error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(myGuestRowProvider(weddingId))),
       data: (guest) {
         return ListView(
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 120),
@@ -268,31 +269,31 @@ class _GuestProfileBody extends ConsumerWidget {
             Text(
               profile.fullName,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink),
+              style: const TextStyle(fontSize: AppFontSize.xxl, fontWeight: FontWeight.w700, color: AppTheme.ink),
             ),
             const SizedBox(height: 2),
             Text(
               profile.email,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13.5),
+              style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
             ),
             const SizedBox(height: 24),
             if (guest == null)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(18)),
+                decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.lg)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
                       'Ainda não encontrámos a tua entrada na lista de convidados.',
-                      style: TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w700, fontSize: 14),
+                      style: TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
                     ),
                     const SizedBox(height: 6),
                     const Text(
                       'Se recebeste um link ou código deste casamento, usa-o para associares a tua conta.',
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                      style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                     ),
                     const SizedBox(height: 16),
                     PrimaryButton(
@@ -362,7 +363,7 @@ class _GuestProfileBody extends ConsumerWidget {
               const SizedBox(height: 20),
               const Text(
                 'Informações adicionais',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg, color: AppTheme.ink),
               ),
               const SizedBox(height: 10),
               _ProfileRow(
@@ -427,7 +428,7 @@ class _ProfileRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(18)),
+      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.lg)),
       child: Row(
         children: [
           Icon(icon, size: 20, color: AppTheme.inkMuted),
@@ -436,9 +437,9 @@ class _ProfileRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12.5)),
+                Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm)),
                 const SizedBox(height: 2),
-                Text(value, style: const TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w600, fontSize: 14)),
+                Text(value, style: const TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w600, fontSize: AppFontSize.base)),
               ],
             ),
           ),

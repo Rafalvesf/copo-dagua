@@ -29,7 +29,7 @@ class MaintenanceScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               Text(
                 'Voltamos já',
-                style: AppTypography.displaySerif(fontSize: 28, color: AppTheme.ink),
+                style: AppTypography.displaySerif(fontSize: AppFontSize.h1, color: AppTheme.ink),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
@@ -37,7 +37,7 @@ class MaintenanceScreen extends ConsumerWidget {
                 'Estamos a fazer manutenção nesta parte da app. '
                 'Tenta novamente daqui a pouco.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.inkMuted, fontSize: 14.5, height: 1.4),
+                style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.base, height: 1.4),
               ),
               const SizedBox(height: 28),
               PrimaryButton(

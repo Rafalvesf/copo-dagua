@@ -246,7 +246,7 @@ class _ChoiceRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(color: selected ? AppTheme.ink : Colors.transparent, width: 1.5),
         ),
         child: Row(

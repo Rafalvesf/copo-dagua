@@ -88,19 +88,19 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
         children: [
           const Text(
             'Modo convidado',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink),
+            style: TextStyle(fontSize: AppFontSize.xxl, fontWeight: FontWeight.w700, color: AppTheme.ink),
           ),
           const SizedBox(height: 4),
           const Text(
             'Junta-te a outro casamento com o código do casal, usando a mesma conta.',
-            style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
           ),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.lg),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -141,7 +141,7 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
                 children: [
                   const Text(
                     'Os teus casamentos',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.ink),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, color: AppTheme.ink),
                   ),
                   const SizedBox(height: 10),
                   for (final wedding in weddings)

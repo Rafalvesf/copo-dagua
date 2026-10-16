@@ -149,7 +149,7 @@ class _PartnerChatScreenState extends ConsumerState<PartnerChatScreen> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: TextField(
                         controller: _messageController,
@@ -159,7 +159,7 @@ class _PartnerChatScreenState extends ConsumerState<PartnerChatScreen> {
                           filled: true,
                           fillColor: Colors.white,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                             borderSide: BorderSide.none,
                           ),
                           contentPadding: const EdgeInsets.symmetric(
@@ -203,7 +203,7 @@ class _TextBubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: fromPartner ? AppColors.greenDark : AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Text(
           text,
@@ -232,7 +232,7 @@ class _ContractBubble extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(color: AppColors.greenDark, width: 1.5),
         ),
         child: Row(
@@ -255,7 +255,7 @@ class _ContractBubble extends StatelessWidget {
                   const SizedBox(height: 2),
                   const Text(
                     'Contrato',
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                   ),
                 ],
               ),

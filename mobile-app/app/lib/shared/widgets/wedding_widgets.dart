@@ -21,7 +21,7 @@ class WeddingCoverHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
+      borderRadius: BorderRadius.circular(AppRadius.xxl),
       child: Stack(
         children: [
           Positioned.fill(
@@ -50,7 +50,7 @@ class WeddingCoverHeader extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     _agesLabel!,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white.withValues(alpha: 0.85)),
+                    style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w600, color: Colors.white.withValues(alpha: 0.85)),
                   ),
                 ],
                 const SizedBox(height: 12),
@@ -83,13 +83,13 @@ class _InfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(999)),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(AppRadius.pill)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 15, color: AppTheme.ink),
           const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.ink)),
+          Text(label, style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w600, color: AppTheme.ink)),
         ],
       ),
     );

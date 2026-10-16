@@ -26,8 +26,8 @@ class PartnerBottomNav extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(28),
+          topLeft: Radius.circular(AppRadius.xxl),
+          topRight: Radius.circular(AppRadius.xxl),
         ),
         boxShadow: AppTheme.navBarShadow,
       ),
@@ -90,7 +90,7 @@ class _NavIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = active ? AppTheme.accentOliveDark : AppTheme.navIconMuted;
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -150,7 +150,7 @@ class _UnreadBadge extends StatelessWidget {
         count > 99 ? '99+' : '$count',
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 9,
+          fontSize: AppFontSize.xxxs,
           fontWeight: FontWeight.w700,
           height: 1,
         ),

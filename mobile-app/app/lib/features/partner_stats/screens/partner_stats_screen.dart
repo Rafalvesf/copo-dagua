@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 class PartnerStatsScreen extends ConsumerStatefulWidget {
   const PartnerStatsScreen({super.key});
@@ -56,8 +57,7 @@ class _PartnerStatsScreenState extends ConsumerState<PartnerStatsScreen> {
             Expanded(
               child: statsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) =>
-                    const Center(child: Text('Não foi possível carregar.')),
+                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerStatsProvider(_period))),
                 data: (stats) => ListView(
                   padding: const EdgeInsets.fromLTRB(
                     AppTheme.screenMargin,
@@ -125,7 +125,7 @@ class _PeriodFilterPill extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
           border: Border.all(color: AppTheme.borderMuted),
         ),
         child: Row(
@@ -133,7 +133,7 @@ class _PeriodFilterPill extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w600),
             ),
             const SizedBox(width: 4),
             const Icon(Icons.expand_more, size: 18, color: AppTheme.inkMuted),
@@ -163,14 +163,14 @@ class _StatHeroCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+            style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
           ),
           const SizedBox(height: 6),
           Row(
@@ -179,7 +179,7 @@ class _StatHeroCard extends StatelessWidget {
               Text(
                 value,
                 style: AppTypography.displaySerif(
-                  fontSize: 34,
+                  fontSize: AppFontSize.display,
                   color: AppTheme.ink,
                 ),
               ),
@@ -198,7 +198,7 @@ class _StatHeroCard extends StatelessWidget {
             style: const TextStyle(
               color: AppStatusColors.confirmed,
               fontWeight: FontWeight.w700,
-              fontSize: 12.5,
+              fontSize: AppFontSize.sm,
             ),
           ),
         ],
@@ -268,21 +268,21 @@ class _StatTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+            style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
           ),
           const SizedBox(height: 6),
           Text(
             value,
             style: const TextStyle(
               fontWeight: FontWeight.w800,
-              fontSize: 22,
+              fontSize: AppFontSize.h3,
               color: AppTheme.ink,
             ),
           ),
@@ -292,7 +292,7 @@ class _StatTile extends StatelessWidget {
             style: const TextStyle(
               color: AppStatusColors.confirmed,
               fontWeight: FontWeight.w700,
-              fontSize: 12,
+              fontSize: AppFontSize.sm,
             ),
           ),
         ],
@@ -313,14 +313,14 @@ class _AverageRatingCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Avaliação média',
-            style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
           ),
           const SizedBox(height: 6),
           Row(
@@ -329,7 +329,7 @@ class _AverageRatingCard extends StatelessWidget {
                 rating.toStringAsFixed(1),
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
-                  fontSize: 22,
+                  fontSize: AppFontSize.h3,
                   color: AppTheme.ink,
                 ),
               ),
@@ -352,7 +352,7 @@ class _AverageRatingCard extends StatelessWidget {
                 style: const TextStyle(
                   color: AppStatusColors.confirmed,
                   fontWeight: FontWeight.w700,
-                  fontSize: 12.5,
+                  fontSize: AppFontSize.sm,
                 ),
               ),
             ],

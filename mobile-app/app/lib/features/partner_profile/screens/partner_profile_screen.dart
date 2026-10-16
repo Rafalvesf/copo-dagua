@@ -125,7 +125,7 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                         ? (profile?.fullName ?? '')
                         : profile!.businessName!,
                     style: AppTypography.displaySerif(
-                      fontSize: 24,
+                      fontSize: AppFontSize.h2,
                       color: AppTheme.ink,
                     ),
                   ),
@@ -137,7 +137,7 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                       profile!.category!.label,
                       style: const TextStyle(
                         color: AppTheme.inkMuted,
-                        fontSize: 13.5,
+                        fontSize: AppFontSize.md,
                       ),
                     ),
                   ),
@@ -254,7 +254,7 @@ class _ProfileMenuRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
           ),
           child: Row(
             children: [
@@ -274,7 +274,7 @@ class _ProfileMenuRow extends StatelessWidget {
                   label,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 14.5,
+                    fontSize: AppFontSize.base,
                     color: AppTheme.ink,
                   ),
                 ),
@@ -333,7 +333,7 @@ class _ReviewStatusCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.gray),
       ),
       child: Column(
@@ -341,13 +341,13 @@ class _ReviewStatusCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: color),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.md, color: color),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 6),
             Text(
               subtitle,
-              style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted),
+              style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
             ),
           ],
           if ((status == 'changes_required' || status == 'rejected') &&
@@ -356,7 +356,7 @@ class _ReviewStatusCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               rejectionReason!,
-              style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted),
+              style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
             ),
           ],
         ],

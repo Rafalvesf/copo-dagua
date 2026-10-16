@@ -50,14 +50,14 @@ class CoupleBookingDetailScreen extends StatelessWidget {
                   Center(
                     child: Text(
                       booking.partnerName,
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.xxl),
                     ),
                   ),
                   if (booking.category != null)
                     Center(
                       child: Text(
                         booking.category!,
-                        style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                        style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                       ),
                     ),
                   const SizedBox(height: 20),
@@ -65,7 +65,7 @@ class CoupleBookingDetailScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
                     child: Column(
                       children: [
@@ -94,7 +94,7 @@ class CoupleBookingDetailScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppTheme.surface,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
                       ),
                       child: ReviewAction(booking: booking),
                     ),
@@ -121,12 +121,12 @@ class _InfoRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: AppTheme.inkMuted, fontSize: 13)),
+        Text(label, style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md)),
         Text(
           value,
           style: TextStyle(
             fontWeight: FontWeight.w700,
-            fontSize: 13.5,
+            fontSize: AppFontSize.md,
             color: valueColor ?? AppTheme.ink,
           ),
         ),

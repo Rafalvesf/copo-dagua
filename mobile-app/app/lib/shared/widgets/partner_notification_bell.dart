@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/notifications/partner_notifications_providers.dart';
 import '../../core/theme/app_theme.dart';
+import 'feedback.dart';
 
 /// Sino de notificações do parceiro — versão simples do sino do casal
 /// (`home_feed_screen.dart`, `_NotificationsSheet`), sem os separadores
@@ -59,7 +60,7 @@ class _PartnerNotificationsSheet extends ConsumerWidget {
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
           ),
           child: Column(
             children: [
@@ -75,17 +76,16 @@ class _PartnerNotificationsSheet extends ConsumerWidget {
               const SizedBox(height: 16),
               const Text(
                 'Notificações',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg),
               ),
               const SizedBox(height: 12),
               Expanded(
                 child: notificationsAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (err, st) =>
-                      const Center(child: Text('Não foi possível carregar.')),
+                  error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerNotificationsProvider)),
                   data: (notifications) {
                     if (notifications.isEmpty) {
-                      return const Center(child: Text('Sem notificações.'));
+                      return const EmptyStateView(message: 'Sem notificações.', icon: Icons.notifications_none_outlined);
                     }
                     return ListView.builder(
                       controller: scrollController,

@@ -10,6 +10,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -39,10 +40,10 @@ class GuestGalleryScreen extends ConsumerWidget {
     final weddingsAsync = ref.watch(guestWeddingsProvider);
     return weddingsAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (err, st) => const Scaffold(body: Center(child: Text('Não foi possível carregar.'))),
+      error: (err, st) => Scaffold(body: AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider))),
       data: (weddings) {
         if (weddings.isEmpty) {
-          return const Scaffold(body: Center(child: Text('Sem casamento associado.')));
+          return const Scaffold(body: EmptyStateView(message: 'Sem casamento associado.', icon: Icons.favorite_border));
         }
         return _GuestGalleryBody(weddingId: weddings.first.weddingId);
       },
@@ -123,7 +124,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                 Expanded(
                   child: photosAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => const Center(child: Text('Não foi possível carregar.')),
+                    error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId))),
                     data: (photos) {
                       var approved = photos.where((p) => p.status == 'approved').toList();
                       if (_tab == _GalleryTab.mine) {
@@ -173,7 +174,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: AppColors.pink,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(AppRadius.lg),
                             ),
                             child: Column(
                               children: [
@@ -189,7 +190,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                                     const Expanded(
                                       child: Text(
                                         'Ajuda-nos a guardar estes momentos! Carrega aqui as tuas fotos do casamento.',
-                                        style: TextStyle(fontSize: 13, color: AppTheme.ink),
+                                        style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink),
                                       ),
                                     ),
                                   ],
@@ -203,11 +204,11 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
                                       color: AppTheme.accentOliveDark,
-                                      borderRadius: BorderRadius.circular(999),
+                                      borderRadius: BorderRadius.circular(AppRadius.pill),
                                     ),
                                     child: const Text(
                                       'Adicionar fotos',
-                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13.5),
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
                                     ),
                                   ),
                                 ),
@@ -234,7 +235,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                                 final photo = approved[index];
                                 final favorited = _favorites.contains(photo.id);
                                 return ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(AppRadius.sm),
                                   child: Stack(
                                     fit: StackFit.expand,
                                     children: [
@@ -294,7 +295,7 @@ class _GalleryTabChip extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           label,
@@ -304,7 +305,7 @@ class _GalleryTabChip extends StatelessWidget {
           style: TextStyle(
             color: selected ? Colors.white : AppTheme.ink,
             fontWeight: FontWeight.w600,
-            fontSize: 12,
+            fontSize: AppFontSize.sm,
           ),
         ),
       ),

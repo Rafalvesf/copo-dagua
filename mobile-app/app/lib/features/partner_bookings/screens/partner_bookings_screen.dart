@@ -12,6 +12,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../booking_style.dart';
+import '../../../shared/widgets/feedback.dart';
 
 enum _BookingSegment { recebidos, confirmados, concluidos }
 
@@ -108,13 +109,13 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                   child: bookingsAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (err, st) =>
-                        const Center(child: Text('Não foi possível carregar.')),
+                    error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerBookingsProvider(null))),
                     data: (allBookings) {
                       final bookings = allBookings.where(_matches).toList();
                       if (bookings.isEmpty) {
-                        return const Center(
-                          child: Text('Sem pedidos nesta categoria.'),
+                        return const EmptyStateView(
+                          message: 'Sem pedidos nesta categoria.',
+                          icon: Icons.event_note_outlined,
                         );
                       }
                       return ListView.builder(
@@ -173,14 +174,14 @@ class _SegmentButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           label,
           style: TextStyle(
             color: selected ? Colors.white : AppTheme.ink,
             fontWeight: FontWeight.w700,
-            fontSize: 12.5,
+            fontSize: AppFontSize.sm,
           ),
         ),
       ),
@@ -206,7 +207,7 @@ class _BookingRow extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Row(
           children: [
@@ -220,7 +221,7 @@ class _BookingRow extends StatelessWidget {
                     booking.clientName,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 14.5,
+                      fontSize: AppFontSize.base,
                       color: AppTheme.ink,
                     ),
                   ),
@@ -229,7 +230,7 @@ class _BookingRow extends StatelessWidget {
                     '$dateLabel · ${booking.category ?? 'Serviço'}',
                     style: const TextStyle(
                       color: AppTheme.inkMuted,
-                      fontSize: 12.5,
+                      fontSize: AppFontSize.sm,
                     ),
                   ),
                 ],

@@ -123,7 +123,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                             boxShadow: AppTheme.searchBarShadow,
                           ),
                           child: TextField(
@@ -134,7 +134,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(AppRadius.pill),
                                 borderSide: const BorderSide(
                                   color: AppTheme.accentOliveDark,
                                 ),

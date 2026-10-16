@@ -94,23 +94,35 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
         onContinue: () async {
           setState(() => _saving = true);
           final wedding = _createdWedding!;
-          if (_alreadyBookedSlugs.isNotEmpty) {
-            await supabase.from('wedding_service_preferences').upsert([
-              for (final slug in _alreadyBookedSlugs)
-                {
-                  'wedding_id': wedding.id,
-                  'partner_category_slug': slug,
-                  'preference': 'already_booked',
-                  'updated_at': DateTime.now().toIso8601String(),
-                },
-            ]);
+          // Guardado antes dos `await`: o messenger vive acima do router,
+          // por isso continua válido depois do `context.go('/home')`.
+          final messenger = ScaffoldMessenger.of(context);
+          try {
+            if (_alreadyBookedSlugs.isNotEmpty) {
+              await supabase.from('wedding_service_preferences').upsert([
+                for (final slug in _alreadyBookedSlugs)
+                  {
+                    'wedding_id': wedding.id,
+                    'partner_category_slug': slug,
+                    'preference': 'already_booked',
+                    'updated_at': DateTime.now().toIso8601String(),
+                  },
+              ]);
+            }
+            if (!context.mounted) return;
+            await ref.read(authControllerProvider.notifier).completeOnboarding();
+          } catch (_) {
+            // Antes, uma falha aqui deixava o botão preso a carregar para
+            // sempre (`_saving` nunca voltava a `false`).
+            if (mounted) setState(() => _saving = false);
+            messenger.showSnackBar(
+              const SnackBar(content: Text('Não foi possível guardar. Tenta de novo.')),
+            );
+            return;
           }
           if (!context.mounted) return;
-          await ref.read(authControllerProvider.notifier).completeOnboarding();
-          if (!context.mounted) return;
           context.go('/home');
-          // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             SnackBar(content: Text('Casamento "${wedding.displayNames}" criado.')),
           );
         },
@@ -386,7 +398,7 @@ class _AlreadyBookedRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(color: checked ? AppTheme.ink : Colors.transparent, width: 1.5),
         ),
         child: Row(

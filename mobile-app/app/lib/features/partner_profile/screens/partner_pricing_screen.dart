@@ -10,6 +10,7 @@ import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 const _maxPackages = 3;
 
@@ -102,8 +103,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
             Expanded(
               child: pricingAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) =>
-                    const Center(child: Text('Não foi possível carregar.')),
+                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerPricingProvider)),
                 data: (pricing) {
                   final packages = pricing.packages;
                   final isPackages = pricing.pricingMode == 'packages';
@@ -139,14 +139,14 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: AppTheme.surface,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
                                 'Os casais vão pedir-te um orçamento à medida — sem pacotes fixos com preço.',
-                                style: TextStyle(color: AppTheme.inkMuted, fontSize: 13.5, height: 1.4),
+                                style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md, height: 1.4),
                               ),
                               const SizedBox(height: 16),
                               _AverageQuoteField(
@@ -176,14 +176,14 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                               decoration: BoxDecoration(
                                 color: AppTheme.surface,
                                 border: Border.all(color: AppTheme.accentOliveDark),
-                                borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(AppRadius.pill),
                               ),
                               child: const Text(
                                 '+ Adicionar pacote',
                                 style: TextStyle(
                                   color: AppTheme.accentOliveDark,
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 15,
+                                  fontSize: AppFontSize.lg,
                                 ),
                               ),
                             ),
@@ -220,14 +220,14 @@ class _SegmentButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
           color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           label,
           style: TextStyle(
             color: selected ? Colors.white : AppTheme.ink,
             fontWeight: FontWeight.w700,
-            fontSize: 13.5,
+            fontSize: AppFontSize.md,
           ),
         ),
       ),
@@ -311,7 +311,7 @@ class _PackageCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,7 +323,7 @@ class _PackageCard extends StatelessWidget {
                   '${pkg.name}  $priceLabel',
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 16,
+                    fontSize: AppFontSize.lg,
                     color: AppTheme.ink,
                   ),
                 ),
@@ -349,7 +349,7 @@ class _PackageCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               pkg.description,
-              style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+              style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
             ),
           ],
         ],
@@ -446,13 +446,13 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         decoration: const BoxDecoration(
           color: AppTheme.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Pacote', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            const Text('Pacote', style: TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.xl)),
             const SizedBox(height: 16),
             TextField(
               controller: _name,
@@ -476,7 +476,7 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
               onChanged: (v) => setState(() => _isStartingPrice = v ?? false),
               controlAffinity: ListTileControlAffinity.leading,
               contentPadding: EdgeInsets.zero,
-              title: const Text('Mostrar como "A partir de"', style: TextStyle(fontSize: 13.5)),
+              title: const Text('Mostrar como "A partir de"', style: TextStyle(fontSize: AppFontSize.md)),
             ),
             const SizedBox(height: 8),
             PrimaryButton(label: 'Guardar', onPressed: _save),

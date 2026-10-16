@@ -239,7 +239,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         partner.name,
                         style: const TextStyle(
                           fontWeight: FontWeight.w800,
-                          fontSize: 20,
+                          fontSize: AppFontSize.xxl,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -261,7 +261,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                   summary.average.toStringAsFixed(1),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 13.5,
+                                    fontSize: AppFontSize.md,
                                   ),
                                 ),
                                 const SizedBox(width: 4),
@@ -269,7 +269,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                   '(${summary.count} avaliações)',
                                   style: TextStyle(
                                     color: AppTheme.inkMuted,
-                                    fontSize: 12.5,
+                                    fontSize: AppFontSize.sm,
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -286,7 +286,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: AppTheme.inkMuted,
-                                    fontSize: 12.5,
+                                    fontSize: AppFontSize.sm,
                                   ),
                                 ),
                               ),
@@ -427,7 +427,7 @@ class _DetailTabs extends StatelessWidget {
                       entry.value,
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 14,
+                        fontSize: AppFontSize.base,
                         color: selected == entry.key
                             ? AppTheme.ink
                             : AppTheme.inkMuted,
@@ -441,7 +441,7 @@ class _DetailTabs extends StatelessWidget {
                         color: selected == entry.key
                             ? AppTheme.ink
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                     ),
                   ],
@@ -466,7 +466,7 @@ class _AboutSection extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -484,12 +484,12 @@ class _AboutSection extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.gray,
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                     child: Text(
                       label,
                       style: const TextStyle(
-                        fontSize: 11.5,
+                        fontSize: AppFontSize.xs,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -500,14 +500,14 @@ class _AboutSection extends StatelessWidget {
           ],
           Text(
             partner.location,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
           ),
           const SizedBox(height: 10),
           Text(
             partner.description.isEmpty
                 ? 'Sem descrição.'
                 : partner.description,
-            style: const TextStyle(fontSize: 13.5, height: 1.5),
+            style: const TextStyle(fontSize: AppFontSize.md, height: 1.5),
           ),
         ],
       ),
@@ -566,25 +566,25 @@ class _PackageCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 14),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             package.name,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
           ),
           const SizedBox(height: 4),
           Text(
             '${package.isStartingPrice ? "Desde " : ""}€${package.price.toStringAsFixed(0)}',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.lg),
           ),
           if (package.description.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               package.description,
-              style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted),
+              style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted),
             ),
           ],
         ],
@@ -622,7 +622,7 @@ class _GallerySection extends ConsumerWidget {
           children: [
             for (final item in items)
               ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 child: item.mediaType == PortfolioMediaType.video
                     ? Container(
                         color: AppTheme.ink,
@@ -698,7 +698,7 @@ class _ReviewCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -719,14 +719,14 @@ class _ReviewCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
+                    fontSize: AppFontSize.md,
                     color: AppTheme.ink,
                   ),
                 ),
               ),
               Text(
                 '${review.createdAt.day.toString().padLeft(2, '0')}/${review.createdAt.month.toString().padLeft(2, '0')}/${review.createdAt.year}',
-                style: TextStyle(color: AppTheme.inkMuted, fontSize: 11.5),
+                style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
               ),
             ],
           ),
@@ -748,7 +748,7 @@ class _ReviewCard extends StatelessWidget {
               review.comment!,
               style: TextStyle(
                 color: AppTheme.inkMuted,
-                fontSize: 13,
+                fontSize: AppFontSize.md,
                 height: 1.4,
               ),
             ),
@@ -759,7 +759,7 @@ class _ReviewCard extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppColors.muted,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -768,7 +768,7 @@ class _ReviewCard extends StatelessWidget {
                     'Resposta do parceiro',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 11.5,
+                      fontSize: AppFontSize.xs,
                       color: AppTheme.accentOliveDark,
                     ),
                   ),
@@ -777,7 +777,7 @@ class _ReviewCard extends StatelessWidget {
                     review.response!,
                     style: TextStyle(
                       color: AppTheme.ink,
-                      fontSize: 12.5,
+                      fontSize: AppFontSize.sm,
                       height: 1.4,
                     ),
                   ),
@@ -803,7 +803,7 @@ class _ComingSoonSection extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Text(
         message,
@@ -895,11 +895,11 @@ class _RequestQuoteSheetState extends State<_RequestQuoteSheet> {
           const SizedBox(height: 4),
           Text(
             'Envia os detalhes do teu casamento — o parceiro responde diretamente pelo Chat.',
-            style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
           ),
           const SizedBox(height: 16),
           InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
             onTap: _pickDate,
             child: InputDecorator(
               decoration: const InputDecoration(

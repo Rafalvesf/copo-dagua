@@ -85,7 +85,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       'Compromissos de ${formatShortDatePt(selected)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
-                        fontSize: 15,
+                        fontSize: AppFontSize.lg,
                         color: AppTheme.ink,
                       ),
                     ),
@@ -131,7 +131,7 @@ class _TaskAgendaCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.gray),
       ),
       child: Row(
@@ -143,7 +143,7 @@ class _TaskAgendaCard extends StatelessWidget {
               formatTimePt(item.dueDate!),
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
-                fontSize: 13.5,
+                fontSize: AppFontSize.md,
                 color: AppTheme.accentOliveDark,
               ),
             ),
@@ -156,7 +156,7 @@ class _TaskAgendaCard extends StatelessWidget {
                   item.title,
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 15,
+                    fontSize: AppFontSize.lg,
                     color: AppTheme.ink,
                   ),
                 ),
@@ -165,7 +165,7 @@ class _TaskAgendaCard extends StatelessWidget {
                   item.category,
                   style: TextStyle(
                     color: colorForTagLabel(item.category),
-                    fontSize: 12.5,
+                    fontSize: AppFontSize.sm,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -180,7 +180,7 @@ class _TaskAgendaCard extends StatelessWidget {
                           _whoLabel(item.assigneeSeeds),
                           style: const TextStyle(
                             color: AppTheme.inkMuted,
-                            fontSize: 12,
+                            fontSize: AppFontSize.sm,
                           ),
                         ),
                       ),

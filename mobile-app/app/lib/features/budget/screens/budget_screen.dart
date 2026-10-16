@@ -174,7 +174,7 @@ class _SummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,7 +209,7 @@ class _SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           ClipRRect(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
             child: LinearProgressIndicator(
               value: budget.progress,
               minHeight: 7,
@@ -222,7 +222,7 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '$pct% do orçamento utilizado',
-            style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
+            style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
           ),
         ],
       ),
@@ -243,12 +243,12 @@ class _SummaryStat extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 11.5, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted),
         ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.lg),
         ),
       ],
     );
@@ -329,7 +329,7 @@ class _FilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -339,7 +339,7 @@ class _FilterChip extends StatelessWidget {
               style: TextStyle(
                 color: selected ? Colors.white : AppTheme.ink,
                 fontWeight: FontWeight.w700,
-                fontSize: 13,
+                fontSize: AppFontSize.md,
               ),
             ),
             if (count != null) ...[
@@ -350,14 +350,14 @@ class _FilterChip extends StatelessWidget {
                   color: selected
                       ? Colors.white.withValues(alpha: 0.25)
                       : AppColors.muted,
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text(
                   '$count',
                   style: TextStyle(
                     color: selected ? Colors.white : AppTheme.inkMuted,
                     fontWeight: FontWeight.w700,
-                    fontSize: 11.5,
+                    fontSize: AppFontSize.xs,
                   ),
                 ),
               ),
@@ -402,7 +402,7 @@ class _CategoriesSection extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
           ),
           child: Column(
             children: [
@@ -427,7 +427,7 @@ class _CategoriesSection extends StatelessWidget {
                   style: const TextStyle(
                     color: AppTheme.accentOliveDark,
                     fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                    fontSize: AppFontSize.md,
                   ),
                 ),
                 Icon(
@@ -472,7 +472,7 @@ class _CategoryRow extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: AppColors.green,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Icon(icon, size: 18, color: AppTheme.accentOliveDark),
             ),
@@ -490,14 +490,14 @@ class _CategoryRow extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
-                            fontSize: 13.5,
+                            fontSize: AppFontSize.md,
                           ),
                         ),
                       ),
                       Text(
                         '$pctLabel%',
                         style: const TextStyle(
-                          fontSize: 11.5,
+                          fontSize: AppFontSize.xs,
                           color: AppTheme.inkMuted,
                           fontWeight: FontWeight.w600,
                         ),
@@ -506,7 +506,7 @@ class _CategoryRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                     child: LinearProgressIndicator(
                       value: ratio > 1 ? 1 : ratio.toDouble(),
                       minHeight: 5,
@@ -540,7 +540,7 @@ class _CategoryRow extends StatelessWidget {
                   '${allocated.toStringAsFixed(0)}€',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                    fontSize: AppFontSize.md,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -548,7 +548,7 @@ class _CategoryRow extends StatelessWidget {
                   '${category.amount.toStringAsFixed(0)}€',
                   style: const TextStyle(
                     color: AppTheme.inkMuted,
-                    fontSize: 11.5,
+                    fontSize: AppFontSize.xs,
                   ),
                 ),
               ],
@@ -620,7 +620,7 @@ class _ExpenseRow extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Row(
           children: [
@@ -629,7 +629,7 @@ class _ExpenseRow extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: AppColors.green,
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Icon(icon, size: 16, color: AppTheme.accentOliveDark),
             ),
@@ -644,7 +644,7 @@ class _ExpenseRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 13.5,
+                      fontSize: AppFontSize.md,
                     ),
                   ),
                   if (due != null) ...[
@@ -653,7 +653,7 @@ class _ExpenseRow extends StatelessWidget {
                       'Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}',
                       style: TextStyle(
                         color: AppTheme.inkMuted,
-                        fontSize: 11.5,
+                        fontSize: AppFontSize.xs,
                       ),
                     ),
                   ],
@@ -671,7 +671,7 @@ class _ExpenseRow extends StatelessWidget {
               '${expense.amount.toStringAsFixed(0)}€',
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
-                fontSize: 13.5,
+                fontSize: AppFontSize.md,
               ),
             ),
             const SizedBox(width: 4),

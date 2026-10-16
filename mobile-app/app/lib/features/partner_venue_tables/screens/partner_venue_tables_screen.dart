@@ -61,7 +61,7 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
                   'Total: ${state.totalTables} mesas',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 14,
+                    fontSize: AppFontSize.base,
                     color: AppTheme.ink,
                   ),
                 ),
@@ -77,7 +77,7 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
                             child: Text(
                               'Ainda não configuraste nenhum tipo de mesa. Os casais só veem um número real de mesas depois de adicionares pelo menos um tipo.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: AppTheme.inkMuted, fontSize: 13.5),
+                              style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                             ),
                           ),
                         )
@@ -127,7 +127,7 @@ class _TableTypeCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Row(
         children: [
@@ -145,12 +145,12 @@ class _TableTypeCard extends StatelessWidget {
               children: [
                 Text(
                   '${table.quantity}× Mesa ${table.shape.label.toLowerCase()}',
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5, color: AppTheme.ink),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, color: AppTheme.ink),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '${table.seats} lugares por mesa',
-                  style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+                  style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                 ),
               ],
             ),
@@ -236,17 +236,17 @@ class _TableTypeSheetState extends State<_TableTypeSheet> {
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         decoration: const BoxDecoration(
           color: AppTheme.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Tipo de mesa', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            const Text('Tipo de mesa', style: TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.xl)),
             const SizedBox(height: 16),
             const Text(
               'Forma',
-              style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.inkMuted, fontSize: 12.5),
+              style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
             ),
             const SizedBox(height: 8),
             Row(

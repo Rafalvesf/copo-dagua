@@ -27,7 +27,7 @@ class ArrowCtaButton extends StatelessWidget {
         padding: const EdgeInsets.only(left: 20, right: 5),
         decoration: BoxDecoration(
           color: AppTheme.ink,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(
           mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,

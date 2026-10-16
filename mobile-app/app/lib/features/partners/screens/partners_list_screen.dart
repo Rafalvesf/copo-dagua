@@ -15,6 +15,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../partner_style.dart';
 import 'partner_detail_screen.dart';
+import '../../../shared/widgets/feedback.dart';
 
 class PartnersListScreen extends ConsumerStatefulWidget {
   final String? categorySlug;
@@ -170,7 +171,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                           style: const TextStyle(
                             color: AppTheme.inkMuted,
                             fontWeight: FontWeight.w600,
-                            fontSize: 12.5,
+                            fontSize: AppFontSize.sm,
                           ),
                         ),
                         const SizedBox(width: 2),
@@ -195,7 +196,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                             boxShadow: AppTheme.searchBarShadow,
                           ),
                           child: TextField(
@@ -206,7 +207,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(AppRadius.pill),
                                 borderSide: const BorderSide(
                                   color: AppTheme.accentOliveDark,
                                 ),
@@ -308,9 +309,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                   child: partnersAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => const Center(
-                      child: Text('Não foi possível carregar parceiros.'),
-                    ),
+                    error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar parceiros.', onRetry: () => ref.invalidate(
+                      partnersProvider(widget.selectionMode ? widget.categorySlug : _filter),
+                    )),
                     data: (allPartners) {
                       // Filtra pela localização escolhida pelo cliente
                       // — "Âmbito nacional" nunca é excluído (esse
@@ -427,7 +428,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
         pageBuilder: (context, animation, secondaryAnimation) => Padding(
           padding: const EdgeInsets.only(top: 40),
           child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
             child: PartnerDetailScreen(
               partner: partner,
               selectionMode: widget.selectionMode,
@@ -632,7 +633,7 @@ class _CategoryIconTile extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 10.5,
+                fontSize: AppFontSize.xxs,
                 fontWeight: FontWeight.w600,
                 height: 1.1,
                 color: AppTheme.ink,
@@ -674,7 +675,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             child: SizedBox(
               height: 150,
               width: double.infinity,
@@ -702,13 +703,13 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                         ),
                         decoration: BoxDecoration(
                           color: AppTheme.ink,
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
                         ),
                         child: const Text(
                           'Mais popular',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 11,
+                            fontSize: AppFontSize.xs,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -742,7 +743,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
-                        fontSize: 15,
+                        fontSize: AppFontSize.lg,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -753,7 +754,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                       style: const TextStyle(
                         color: AppTheme.ink,
                         fontWeight: FontWeight.w600,
-                        fontSize: 12.5,
+                        fontSize: AppFontSize.sm,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -779,7 +780,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                             style: const TextStyle(
                               color: AppTheme.inkMuted,
                               fontWeight: FontWeight.w600,
-                              fontSize: 11.5,
+                              fontSize: AppFontSize.xs,
                             ),
                           ),
                         ),
@@ -798,7 +799,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -808,7 +809,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                         style: TextStyle(
                           color: AppTheme.ink,
                           fontWeight: FontWeight.w700,
-                          fontSize: 12,
+                          fontSize: AppFontSize.sm,
                         ),
                       ),
                       SizedBox(width: 4),
@@ -851,7 +852,7 @@ class _FavoritesSheet extends ConsumerWidget {
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
           ),
           child: SafeArea(
             child: Column(
@@ -862,7 +863,7 @@ class _FavoritesSheet extends ConsumerWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     color: AppTheme.borderMuted,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                 ),
                 Padding(
@@ -879,9 +880,7 @@ class _FavoritesSheet extends ConsumerWidget {
                 Expanded(
                   child: partnersAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => const Center(
-                      child: Text('Não foi possível carregar os favoritos.'),
-                    ),
+                    error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar os favoritos.', onRetry: () => ref.invalidate(partnersProvider(null))),
                     data: (allPartners) {
                       final favorites = allPartners.where((p) => favoriteIds.contains(p.id)).toList();
                       if (favorites.isEmpty) {
@@ -912,7 +911,7 @@ class _FavoritesSheet extends ConsumerWidget {
                                     pageBuilder: (context, animation, secondaryAnimation) => Padding(
                                       padding: const EdgeInsets.only(top: 40),
                                       child: ClipRRect(
-                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
                                         child: PartnerDetailScreen(partner: partner),
                                       ),
                                     ),

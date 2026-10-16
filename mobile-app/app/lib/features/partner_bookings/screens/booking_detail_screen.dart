@@ -68,7 +68,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                   const Text(
                     'Pedido recebido',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: AppFontSize.xl,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.ink,
                     ),
@@ -93,7 +93,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                     child: Text(
                       booking.clientName,
                       style: AppTypography.displaySerif(
-                        fontSize: 22,
+                        fontSize: AppFontSize.h3,
                         color: AppTheme.ink,
                       ),
                     ),
@@ -104,7 +104,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                       dateLabel,
                       style: const TextStyle(
                         color: AppTheme.inkMuted,
-                        fontSize: 13.5,
+                        fontSize: AppFontSize.md,
                       ),
                     ),
                   ),
@@ -113,7 +113,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                       booking.city,
                       style: const TextStyle(
                         color: AppTheme.inkMuted,
-                        fontSize: 13.5,
+                        fontSize: AppFontSize.md,
                       ),
                     ),
                   ),
@@ -249,7 +249,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                       Center(
                         child: Text(
                           'Proposta enviada — a aguardar resposta do casal.',
-                          style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                          style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                         ),
                       )
                     else
@@ -284,7 +284,7 @@ class _InfoCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,7 +293,7 @@ class _InfoCard extends StatelessWidget {
             label,
             style: const TextStyle(
               color: AppTheme.inkMuted,
-              fontSize: 12,
+              fontSize: AppFontSize.sm,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -302,7 +302,7 @@ class _InfoCard extends StatelessWidget {
             value,
             style: const TextStyle(
               color: AppTheme.ink,
-              fontSize: 14.5,
+              fontSize: AppFontSize.base,
               height: 1.4,
             ),
           ),

@@ -169,7 +169,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                             Text(
                               'Informações do negócio',
                               style: AppTypography.displaySerif(
-                                fontSize: 28,
+                                fontSize: AppFontSize.h1,
                                 color: AppTheme.ink,
                               ),
                             ),
@@ -179,7 +179,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                               'para que os casais te possam encontrar.',
                               style: TextStyle(
                                 color: AppTheme.inkMuted,
-                                fontSize: 13.5,
+                                fontSize: AppFontSize.md,
                                 height: 1.4,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -207,7 +207,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                     'Dados do negócio',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 14.5,
+                      fontSize: AppFontSize.base,
                       color: AppTheme.ink,
                     ),
                   ),
@@ -343,7 +343,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                     'Disponibilidade',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 14.5,
+                      fontSize: AppFontSize.base,
                       color: AppTheme.ink,
                     ),
                   ),
@@ -468,7 +468,7 @@ class _GroupedCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.gray),
       ),
       child: Column(children: rows),
@@ -518,7 +518,7 @@ class _InfoRow extends StatelessWidget {
                     label,
                     style: const TextStyle(
                       color: AppTheme.inkMuted,
-                      fontSize: 11.5,
+                      fontSize: AppFontSize.xs,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -528,7 +528,7 @@ class _InfoRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: AppTheme.ink,
-                      fontSize: 13.5,
+                      fontSize: AppFontSize.md,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -582,7 +582,7 @@ class _SwitchRow extends StatelessWidget {
                   label,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 13.5,
+                    fontSize: AppFontSize.md,
                     color: AppTheme.ink,
                   ),
                 ),
@@ -591,7 +591,7 @@ class _SwitchRow extends StatelessWidget {
                   subtitle,
                   style: const TextStyle(
                     color: AppTheme.inkMuted,
-                    fontSize: 11.5,
+                    fontSize: AppFontSize.xs,
                   ),
                 ),
               ],

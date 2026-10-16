@@ -135,14 +135,14 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                         constraints: const BoxConstraints(minWidth: 18),
                                         decoration: const BoxDecoration(
                                           color: AppStatusColors.declined,
-                                          borderRadius: BorderRadius.all(Radius.circular(999)),
+                                          borderRadius: BorderRadius.all(Radius.circular(AppRadius.pill)),
                                         ),
                                         child: Text(
                                           '$unreadNotifications',
                                           textAlign: TextAlign.center,
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 10.5,
+                                            fontSize: AppFontSize.xxs,
                                             fontWeight: FontWeight.w800,
                                           ),
                                         ),
@@ -241,7 +241,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                           accountName ?? '—',
                           textAlign: TextAlign.center,
                           style: AppTypography.displaySerif(
-                            fontSize: 30,
+                            fontSize: AppFontSize.h1,
                             color: AppTheme.ink,
                           ),
                         ),
@@ -271,7 +271,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                           style: const TextStyle(
                             fontStyle: FontStyle.italic,
                             color: AppTheme.inkMuted,
-                            fontSize: 14.5,
+                            fontSize: AppFontSize.base,
                             height: 1.5,
                           ),
                         ),
@@ -281,7 +281,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                         Container(
                           decoration: BoxDecoration(
                             color: AppTheme.surface,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
                           ),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -393,14 +393,14 @@ class _InfoRow extends StatelessWidget {
             height: 34,
             decoration: BoxDecoration(
               color: AppColors.green,
-              borderRadius: BorderRadius.circular(11),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Icon(icon, size: 16, color: AppTheme.accentOliveDark),
           ),
           const SizedBox(width: 12),
           Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: AppFontSize.md),
           ),
           const Spacer(),
           if (trailingLabel != null) ...[
@@ -409,7 +409,7 @@ class _InfoRow extends StatelessWidget {
               style: const TextStyle(
                 color: AppTheme.accentOliveDark,
                 fontWeight: FontWeight.w700,
-                fontSize: 13,
+                fontSize: AppFontSize.md,
               ),
             ),
             const SizedBox(width: 4),
@@ -426,7 +426,7 @@ class _InfoRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: AppTheme.inkMuted,
-                  fontSize: 13,
+                  fontSize: AppFontSize.md,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -464,7 +464,7 @@ class _SupportSummaryCard extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Row(
           children: [
@@ -477,7 +477,7 @@ class _SupportSummaryCard extends ConsumerWidget {
             Expanded(
               child: Text(
                 '$openCount pedido${openCount == 1 ? '' : 's'} de suporte em aberto',
-                style: const TextStyle(fontSize: 12.5, color: AppTheme.ink),
+                style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.ink),
               ),
             ),
             const Icon(
@@ -541,7 +541,7 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
           ),
           child: SafeArea(
             child: Column(
@@ -552,7 +552,7 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
                 height: 4,
                 decoration: BoxDecoration(
                   color: AppTheme.borderMuted,
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
               ),
               Padding(
@@ -650,7 +650,7 @@ class _SectionLabel extends StatelessWidget {
         label,
         style: const TextStyle(
           fontWeight: FontWeight.w700,
-          fontSize: 13,
+          fontSize: AppFontSize.md,
           color: AppTheme.inkMuted,
         ),
       ),
@@ -679,7 +679,7 @@ class _TabChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
           color: selected ? AppTheme.ink : AppTheme.surface,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -689,7 +689,7 @@ class _TabChip extends StatelessWidget {
               style: TextStyle(
                 color: selected ? Colors.white : AppTheme.ink,
                 fontWeight: FontWeight.w700,
-                fontSize: 12.5,
+                fontSize: AppFontSize.sm,
               ),
             ),
             const SizedBox(width: 5),
@@ -698,7 +698,7 @@ class _TabChip extends StatelessWidget {
               style: TextStyle(
                 color: selected ? Colors.white.withValues(alpha: 0.8) : AppTheme.inkMuted,
                 fontWeight: FontWeight.w600,
-                fontSize: 12,
+                fontSize: AppFontSize.sm,
               ),
             ),
           ],
@@ -766,7 +766,7 @@ class _NotificationRow extends ConsumerWidget {
                       ],
                       Text(
                         notification.title,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
                       ),
                     ],
                   ),
@@ -774,13 +774,13 @@ class _NotificationRow extends ConsumerWidget {
                     const SizedBox(height: 3),
                     Text(
                       notification.body!,
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+                      style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                     ),
                   ],
                   const SizedBox(height: 4),
                   Text(
                     _relativeTime(notification.createdAt),
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 11),
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
                   ),
                 ],
               ),
@@ -814,7 +814,7 @@ class _OptionCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

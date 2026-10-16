@@ -12,6 +12,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -50,7 +51,7 @@ class GalleryScreen extends ConsumerWidget {
     if (resolvedWeddingId == null) {
       return GradientScaffold(
         background: AppBackground.subtle,
-        body: const Center(child: Text('Sem casamento associado.')),
+        body: const EmptyStateView(message: 'Sem casamento associado.', icon: Icons.favorite_border),
       );
     }
 
@@ -168,7 +169,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
 
     return photosAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, st) => const Center(child: Text('Não foi possível carregar.')),
+      error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId))),
       data: (photos) {
         final pending = widget.isCouple
             ? photos.where((p) => p.status == 'pending').toList()
@@ -221,7 +222,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.pink,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
               child: Column(
                 children: [
@@ -237,7 +238,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                       const Expanded(
                         child: Text(
                           'Ajuda-nos a guardar estes momentos! Carrega aqui as tuas fotos do casamento.',
-                          style: TextStyle(fontSize: 13, color: AppTheme.ink),
+                          style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink),
                         ),
                       ),
                     ],
@@ -251,11 +252,11 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: AppTheme.accentOliveDark,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: const Text(
                         'Adicionar fotos',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13.5),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
                       ),
                     ),
                   ),
@@ -266,7 +267,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
             if (pending.isNotEmpty) ...[
               Text(
                 'Pendentes de aprovação (${pending.length})',
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
               ),
               const SizedBox(height: 10),
               for (final photo in pending)
@@ -295,7 +296,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                   final photo = approved[index];
                   final favorited = _favorites.contains(photo.id);
                   return ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -342,7 +343,7 @@ class _GalleryTabChip extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           label,
@@ -352,7 +353,7 @@ class _GalleryTabChip extends StatelessWidget {
           style: TextStyle(
             color: selected ? Colors.white : AppTheme.ink,
             fontWeight: FontWeight.w600,
-            fontSize: 12,
+            fontSize: AppFontSize.sm,
           ),
         ),
       ),
@@ -372,12 +373,12 @@ class _PendingPhotoCard extends ConsumerWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
             child: Image.network(
               photo.imageUrl,
               width: 56,
@@ -389,7 +390,7 @@ class _PendingPhotoCard extends ConsumerWidget {
           Expanded(
             child: Text(
               photo.caption ?? 'Foto por aprovar',
-              style: const TextStyle(fontSize: 13),
+              style: const TextStyle(fontSize: AppFontSize.md),
             ),
           ),
           IconButton(
