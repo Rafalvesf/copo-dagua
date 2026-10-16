@@ -6,6 +6,7 @@ import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_mark.dart';
+import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -37,8 +38,16 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
     _ => _BookingSegment.recebidos,
   };
 
-  bool _matches(Booking booking) {
-    switch (_segment) {
+  bool _matches(Booking booking) => _matchesSegment(booking, _segment);
+
+  static String _segmentLabel(_BookingSegment segment) => switch (segment) {
+        _BookingSegment.recebidos => 'Recebidos',
+        _BookingSegment.confirmados => 'Confirmados',
+        _BookingSegment.concluidos => 'Concluídos',
+      };
+
+  static bool _matchesSegment(Booking booking, _BookingSegment segment) {
+    switch (segment) {
       case _BookingSegment.recebidos:
         return booking.status == BookingStatus.novo ||
             booking.status == BookingStatus.emAnalise;
@@ -69,42 +78,6 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                   trailing: const AccountSwitcherBadge(),
                 ),
                 const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.screenMargin,
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _SegmentButton(
-                          label: 'Recebidos',
-                          selected: _segment == _BookingSegment.recebidos,
-                          onTap: () => setState(
-                            () => _segment = _BookingSegment.recebidos,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _SegmentButton(
-                          label: 'Confirmados',
-                          selected: _segment == _BookingSegment.confirmados,
-                          onTap: () => setState(
-                            () => _segment = _BookingSegment.confirmados,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _SegmentButton(
-                          label: 'Concluídos',
-                          selected: _segment == _BookingSegment.concluidos,
-                          onTap: () => setState(
-                            () => _segment = _BookingSegment.concluidos,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
                 Expanded(
                   child: bookingsAsync.when(
                     loading: () =>
@@ -123,7 +96,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                           AppTheme.screenMargin,
                           0,
                           AppTheme.screenMargin,
-                          140,
+                          200,
                         ),
                         itemCount: bookings.length,
                         itemBuilder: (context, index) => Padding(
@@ -143,11 +116,32 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
               ],
             ),
           ),
-          const Positioned(
+          Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            child: PartnerBottomNav(current: PartnerTab.requests),
+            child: PartnerBottomNav(
+              current: PartnerTab.requests,
+              // Estados como segunda navbar, ligados à doca (redesign
+              // 2026-10).
+              top: FilterChipsRow(
+                items: [
+                  for (final segment in _BookingSegment.values)
+                    FilterBarItem(
+                      _segmentLabel(segment),
+                      count: bookingsAsync.maybeWhen(
+                        data: (all) => all
+                            .where((b) => _matchesSegment(b, segment))
+                            .length,
+                        orElse: () => null,
+                      ),
+                    ),
+                ],
+                selected: _segment.index,
+                onSelected: (i) =>
+                    setState(() => _segment = _BookingSegment.values[i]),
+              ),
+            ),
           ),
         ],
       ),
@@ -155,39 +149,6 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
   }
 }
 
-class _SegmentButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _SegmentButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : AppTheme.ink,
-            fontWeight: FontWeight.w700,
-            fontSize: AppFontSize.sm,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _BookingRow extends StatelessWidget {
   final Booking booking;

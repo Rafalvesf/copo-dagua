@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/partner_app/partner_app_providers.dart';
 import '../../core/theme/app_theme.dart';
 import 'floating_bottom_nav.dart' show NavBubble;
+import 'floating_filter_bar.dart' show ConnectedFilterNav;
 
 enum PartnerTab { home, requests, chat, profile }
 
@@ -16,7 +17,11 @@ enum PartnerTab { home, requests, chat, profile }
 class PartnerBottomNav extends ConsumerWidget {
   final PartnerTab current;
 
-  const PartnerBottomNav({super.key, required this.current});
+  /// Filtros do ecrã ([FilterChipsRow]) ligados por cima dos separadores,
+  /// na mesma doca (redesign 2026-10).
+  final Widget? top;
+
+  const PartnerBottomNav({super.key, required this.current, this.top});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,8 +39,12 @@ class PartnerBottomNav extends ConsumerWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 16, 8, 12),
+        child: ConnectedFilterNav(
+          top: top == null
+              ? null
+              : Padding(padding: const EdgeInsets.fromLTRB(8, 4, 8, 0), child: top),
+          navRow: Padding(
+          padding: EdgeInsets.fromLTRB(8, top == null ? 16 : 10, 8, 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -66,6 +75,7 @@ class PartnerBottomNav extends ConsumerWidget {
               ),
             ],
           ),
+        ),
         ),
       ),
     );
