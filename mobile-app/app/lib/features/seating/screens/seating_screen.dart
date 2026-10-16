@@ -9,7 +9,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
-import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -104,7 +103,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                   bottom: false,
                   child: EdgeFade(
                     topFadeHeight: 8,
-                    bottomFadeHeight: 140,
+                    bottomFadeHeight: 32,
                     child: ListView(
                       padding: EdgeInsets.zero,
                       children: [
@@ -137,7 +136,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                             AppTheme.screenMargin,
                             16,
                             AppTheme.screenMargin,
-                            140,
+                            40,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,12 +227,6 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                       ],
                     ),
                   ),
-                ),
-                const Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.wedding),
                 ),
               ],
             ),

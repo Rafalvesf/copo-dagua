@@ -10,7 +10,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../features/partners/partner_style.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
-import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -78,7 +77,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                   bottom: false,
                   child: EdgeFade(
                     topFadeHeight: 8,
-                    bottomFadeHeight: 140,
+                    bottomFadeHeight: 32,
                     child: ListView(
                       padding: EdgeInsets.zero,
                       children: [
@@ -92,7 +91,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                             AppTheme.screenMargin,
                             16,
                             AppTheme.screenMargin,
-                            140,
+                            40,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,12 +145,6 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                       ],
                     ),
                   ),
-                ),
-                const Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.wedding),
                 ),
               ],
             ),

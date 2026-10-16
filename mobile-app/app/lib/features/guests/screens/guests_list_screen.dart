@@ -11,7 +11,6 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/cover_flow_picker.dart';
 import '../../../shared/widgets/fading_scroll.dart';
-import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_widgets.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -250,13 +249,13 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                             ? const EmptyStateView(message: 'Sem convidados nesta categoria.', icon: Icons.people_outline)
                             : EdgeFade(
                                 topFadeHeight: 32,
-                                bottomFadeHeight: 140,
+                                bottomFadeHeight: 32,
                                 child: ListView.builder(
                                   padding: const EdgeInsets.fromLTRB(
                                     AppTheme.screenMargin,
                                     16,
                                     AppTheme.screenMargin,
-                                    140,
+                                    40,
                                   ),
                                   itemCount: visible.length,
                                   itemBuilder: (context, index) {
@@ -272,12 +271,6 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                       ),
                     ],
                   ),
-                ),
-                const Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.wedding),
                 ),
               ],
             ),
