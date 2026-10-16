@@ -127,15 +127,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
               top: FilterChipsRow(
                 items: [
                   for (final segment in _BookingSegment.values)
-                    FilterBarItem(
-                      _segmentLabel(segment),
-                      count: bookingsAsync.maybeWhen(
-                        data: (all) => all
-                            .where((b) => _matchesSegment(b, segment))
-                            .length,
-                        orElse: () => null,
-                      ),
-                    ),
+                    FilterBarItem(_segmentLabel(segment)),
                 ],
                 selected: _segment.index,
                 onSelected: (i) =>

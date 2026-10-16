@@ -143,10 +143,10 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                   bottom: 0,
                   child: FloatingFilterBar(
                     items: [
-                      FilterBarItem('Todas', count: total),
-                      FilterBarItem('Pagas', count: paid.length),
-                      FilterBarItem('Pendentes', count: pending.length),
-                      FilterBarItem('Categorias', count: budget.categories.length),
+                      FilterBarItem('Todas'),
+                      FilterBarItem('Pagas'),
+                      FilterBarItem('Pendentes'),
+                      FilterBarItem('Categorias'),
                     ],
                     selected: const [
                       _BudgetFilter.all,

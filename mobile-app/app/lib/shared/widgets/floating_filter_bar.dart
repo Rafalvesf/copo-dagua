@@ -9,7 +9,6 @@ import 'snappy_tap.dart';
 class FilterBarItem {
   final String label;
   final IconData? icon;
-  final int? count;
 
   /// Quando escolhido, mostra só o ícone (categorias de Parceiros —
   /// pedido do utilizador: "fica só o ícone quando selecionado").
@@ -18,7 +17,6 @@ class FilterBarItem {
   const FilterBarItem(
     this.label, {
     this.icon,
-    this.count,
     this.iconOnlyWhenSelected = false,
   });
 }
@@ -319,29 +317,6 @@ class _FilterBarChip extends StatelessWidget {
                   color: fg,
                 ),
               ),
-              if (item.count != null) ...[
-                const SizedBox(width: 6),
-                Container(
-                  constraints: const BoxConstraints(minWidth: 22),
-                  height: 22,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? Colors.white.withValues(alpha: 0.22)
-                        : AppTheme.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: Text(
-                    '${item.count}',
-                    style: TextStyle(
-                      fontSize: AppFontSize.xs,
-                      fontWeight: FontWeight.w700,
-                      color: fg,
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
           ),

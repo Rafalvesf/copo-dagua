@@ -245,28 +245,11 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
             right: 0,
             bottom: 0,
             child: GuestBottomNav(current: GuestTab.gallery, weddingId: widget.weddingId, top: FilterChipsRow(
-              items: () {
-                final approved = photosAsync.maybeWhen(
-                  data: (photos) =>
-                      photos.where((p) => p.status == 'approved').toList(),
-                  orElse: () => null,
-                );
-                return [
-                  FilterBarItem('Todas', count: approved?.length),
-                  FilterBarItem(
-                    'As tuas',
-                    count: approved
-                        ?.where((p) => p.uploadedBy == myUserId)
-                        .length,
-                  ),
-                  FilterBarItem(
-                    'Favoritas',
-                    count: approved
-                        ?.where((p) => _favorites.contains(p.id))
-                        .length,
-                  ),
-                ];
-              }(),
+              items: const [
+                FilterBarItem('Todas'),
+                FilterBarItem('As tuas'),
+                FilterBarItem('Favoritas'),
+              ],
               selected: _GalleryTab.values.indexOf(_tab),
               onSelected: (i) => setState(() => _tab = _GalleryTab.values[i]),
             )),

@@ -403,13 +403,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       infinite: false,
                       items: [
                         for (final o in all)
-                          FilterBarItem(
-                            o?.label ?? 'Todos',
-                            iconOnlyWhenSelected: true,
-                            icon: o == null
+                          FilterBarItem(o?.label ?? 'Todos', iconOnlyWhenSelected: true, icon: o == null
                                 ? Icons.apps_rounded
-                                : iconForCategorySlug(o.slug),
-                          ),
+                                : iconForCategorySlug(o.slug)),
                       ],
                       selected: index < 0 ? 0 : index,
                       onSelected: (i) =>

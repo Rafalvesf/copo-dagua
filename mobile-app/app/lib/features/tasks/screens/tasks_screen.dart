@@ -266,14 +266,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             bottom: 0,
             child: FloatingBottomNav(current: AppTab.wedding, top: FilterChipsRow(
               items: [
-                FilterBarItem(
-                  'Por fazer',
-                  count: state.systemActive.length +
-                      state.userTasks
-                          .where((t) => t.status != TaskStatus.completed)
-                          .length,
-                ),
-                FilterBarItem('Feito', count: doneItems.length),
+                FilterBarItem('Por fazer'),
+                FilterBarItem('Feito'),
               ],
               selected: _tab == _TasksTab.todo ? 0 : 1,
               onSelected: (i) => setState(

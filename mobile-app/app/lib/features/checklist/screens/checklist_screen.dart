@@ -186,19 +186,10 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                   bottom: 0,
                   child: FloatingBottomNav(current: AppTab.wedding, top: FilterChipsRow(
                     items: [
-                      FilterBarItem('Todas', count: state.items.length),
-                      FilterBarItem(
-                        'Por fazer',
-                        count: byStatus[ChecklistStatus.todo]!.length,
-                      ),
-                      FilterBarItem(
-                        'Em curso',
-                        count: byStatus[ChecklistStatus.inProgress]!.length,
-                      ),
-                      FilterBarItem(
-                        'Concluídas',
-                        count: byStatus[ChecklistStatus.done]!.length,
-                      ),
+                      FilterBarItem('Todas'),
+                      FilterBarItem('Por fazer'),
+                      FilterBarItem('Em curso'),
+                      FilterBarItem('Concluídas'),
                     ],
                     selected: _StatusFilter.values.indexOf(_filter),
                     onSelected: (i) =>
