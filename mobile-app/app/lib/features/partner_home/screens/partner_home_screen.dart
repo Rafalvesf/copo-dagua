@@ -165,7 +165,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                       color: AppColors.gray,
                       icon: Icons.description_outlined,
                       label: 'Contratos',
-                      onTap: () => context.push('/partner-chat'),
+                      onTap: () => context.push('/partner-contracts'),
                     ),
                     _PartnerTile(
                       color: AppColors.purple,
