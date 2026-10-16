@@ -17,6 +17,7 @@ import '../../guests/screens/guests_list_screen.dart' show InviteShareSheet;
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/photo_adjust_screen.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -39,7 +40,7 @@ class WeddingDetailsScreen extends ConsumerWidget {
     return GradientScaffold(
       background: AppBackground.feed,
       body: wedding == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const _WeddingSkeleton()
           : Stack(
               children: [
                 SafeArea(
@@ -975,6 +976,56 @@ class _BookingsSection extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// Estado "a carregar" do separador Casamento (canvas): a forma do cartão
+/// do casal e dos quadrados, a pulsar, com a navbar já no sítio.
+class _WeddingSkeleton extends StatelessWidget {
+  const _WeddingSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        SafeArea(
+          bottom: false,
+          child: ListView(
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.screenMargin,
+              16,
+              AppTheme.screenMargin,
+              140,
+            ),
+            children: [
+              const SkeletonBox(
+                height: 380,
+                radius: AppRadius.xxl,
+                color: AppColors.green,
+              ),
+              const SizedBox(height: 16),
+              for (var row = 0; row < 2; row++) ...[
+                const Row(
+                  children: [
+                    Expanded(child: SkeletonBox(height: 104)),
+                    SizedBox(width: 12),
+                    Expanded(child: SkeletonBox(height: 104)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+            ],
+          ),
+        ),
+        const Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: FloatingBottomNav(current: AppTab.wedding),
+        ),
+      ],
     );
   }
 }

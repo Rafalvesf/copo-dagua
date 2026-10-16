@@ -18,6 +18,39 @@ enum CeremonyType { civil, religious, both }
 
 enum WeddingStatus { planning, completed }
 
+/// Tipo de evento escolhido no onboarding (pedido do utilizador
+/// 2026-10-16: "adiciona uma opção para as pessoas escolherem entre
+/// eventos, e não só casamentos"). Guardado em `weddings.event_type`
+/// (`074_wedding_event_type.sql`); o resto da app continua por agora a
+/// tratar todos como "casamento".
+enum EventType {
+  wedding('Casamento', 'casamento'),
+  baptism('Batizado', 'batizado'),
+  birthday('Aniversário', 'aniversário'),
+  other('Outro evento', 'evento');
+
+  const EventType(this.label, this.noun);
+
+  /// Nome para mostrar ("Batizado").
+  final String label;
+
+  /// Em minúsculas, para frases ("o vosso batizado").
+  final String noun;
+
+  /// Valor guardado na base de dados.
+  String get dbValue => switch (this) {
+        EventType.wedding => 'wedding',
+        EventType.baptism => 'baptism',
+        EventType.birthday => 'birthday',
+        EventType.other => 'other',
+      };
+
+  static EventType fromDb(String? value) => EventType.values.firstWhere(
+        (t) => t.dbValue == value,
+        orElse: () => EventType.wedding,
+      );
+}
+
 enum RsvpStatus { pending, confirmed, declined }
 
 enum WeddingSide { groom, bride, both }
@@ -192,6 +225,7 @@ class Wedding {
   final String? location;
   final String? venue;
   final CeremonyType ceremonyType;
+  final EventType eventType;
   final int? estimatedGuests;
   final double? estimatedBudget;
   final WeddingStatus status;
@@ -237,6 +271,7 @@ class Wedding {
     this.location,
     this.venue,
     this.ceremonyType = CeremonyType.civil,
+    this.eventType = EventType.wedding,
     this.estimatedGuests,
     this.estimatedBudget,
     this.status = WeddingStatus.planning,
@@ -292,6 +327,7 @@ class Wedding {
     String? location,
     String? venue,
     CeremonyType? ceremonyType,
+    EventType? eventType,
     int? estimatedGuests,
     double? estimatedBudget,
     WeddingStatus? status,
@@ -316,6 +352,7 @@ class Wedding {
       location: location ?? this.location,
       venue: venue ?? this.venue,
       ceremonyType: ceremonyType ?? this.ceremonyType,
+      eventType: eventType ?? this.eventType,
       estimatedGuests: estimatedGuests ?? this.estimatedGuests,
       estimatedBudget: estimatedBudget ?? this.estimatedBudget,
       status: status ?? this.status,

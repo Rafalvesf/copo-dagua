@@ -30,6 +30,45 @@ class HomeFeedScreen extends ConsumerStatefulWidget {
 class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   bool _uploadingProfilePhoto = false;
 
+  Future<void> _invitePartner(BuildContext context, Wedding wedding) async {
+    final controller = TextEditingController();
+    final email = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Convidar o teu par'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(labelText: 'Email'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+            child: const Text('Enviar convite'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (email == null || email.isEmpty || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref
+          .read(weddingControllerProvider.notifier)
+          .inviteCollaborator(weddingId: wedding.id, email: email);
+      messenger.showSnackBar(SnackBar(content: Text('Convite enviado para $email.')));
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Não foi possível enviar o convite.')),
+      );
+    }
+  }
+
   void _openNotifications(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -82,14 +121,24 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(
                         AppTheme.screenMargin,
-                        40,
+                        20,
                         AppTheme.screenMargin,
                         140,
                       ),
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
+                            const Expanded(
+                              child: Text(
+                                'Perfil',
+                                style: TextStyle(
+                                  fontSize: AppFontSize.display,
+                                  height: 40 / 34,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.ink,
+                                ),
+                              ),
+                            ),
                             // Sino de notificações — pedido explícito
                             // do utilizador: "quero apenas um pop up
                             // quando clicas nas notificações" — sem
@@ -176,8 +225,14 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                           children: [
                             _MenuRow(
                               icon: Icons.person_outline_rounded,
-                              label: 'Dados pessoais e do casamento',
+                              label: 'Dados pessoais',
                               onTap: () => context.push('/settings'),
+                            ),
+                            _MenuRow(
+                              icon: Icons.person_add_alt_outlined,
+                              label: 'Convidar o teu par',
+                              value: wedding.partnerName2,
+                              onTap: () => _invitePartner(context, wedding),
                             ),
                             _MenuRow(
                               icon: Icons.notifications_none_rounded,
@@ -185,35 +240,87 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                               badge: unreadNotifications,
                               onTap: () => _openNotifications(context),
                             ),
-                            _MenuRow(
-                              icon: Icons.photo_library_outlined,
-                              label: 'Galeria',
-                              onTap: () => context.push('/gallery'),
-                            ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        _MenuGroup(
-                          children: [
-                            _MenuRow(
-                              icon: Icons.support_agent_outlined,
-                              label: 'Falar com a equipa',
-                              onTap: () => context.push('/support'),
-                            ),
-                          ],
+                        const SizedBox(height: 28),
+                        const Text(
+                          'Como podemos ajudar?',
+                          style: TextStyle(
+                            fontSize: AppFontSize.xl,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.ink,
+                          ),
                         ),
                         const SizedBox(height: 12),
-                        _MenuGroup(
-                          children: [
-                            _MenuRow(
-                              icon: Icons.logout_rounded,
-                              label: 'Terminar sessão',
-                              destructive: true,
-                              onTap: () => ref
-                                  .read(authControllerProvider.notifier)
-                                  .logout(),
+                        SnappyTap(
+                          onTap: () => context.push('/support'),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.green,
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.lg),
                             ),
-                          ],
+                            child: const Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 22,
+                                  backgroundColor: Colors.white,
+                                  child: Icon(
+                                    Icons.support_agent_outlined,
+                                    color: AppTheme.accentOliveDark,
+                                  ),
+                                ),
+                                SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Falar com a equipa',
+                                        style: TextStyle(
+                                          fontSize: AppFontSize.lg,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.ink,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Envia-nos uma mensagem',
+                                        style: TextStyle(
+                                          fontSize: AppFontSize.md,
+                                          color: AppTheme.inkMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: AppTheme.ink,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton(
+                            onPressed: () => ref
+                                .read(authControllerProvider.notifier)
+                                .logout(),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppStatusColors.declined,
+                              padding: EdgeInsets.zero,
+                              textStyle: const TextStyle(
+                                fontSize: AppFontSize.base + 1,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            child: const Text('Terminar sessão'),
+                          ),
                         ),
                       ],
                     ),
@@ -617,20 +724,20 @@ class _ProfileHeader extends StatelessWidget {
       child: Text(
         _initials,
         style: const TextStyle(
-          fontSize: AppFontSize.display,
+          fontSize: AppFontSize.h1,
           fontWeight: FontWeight.w700,
           color: AppTheme.accentOliveDark,
         ),
       ),
     );
-    return Column(
+    return Row(
       children: [
         Stack(
           clipBehavior: Clip.none,
           children: [
             Container(
-              width: 112,
-              height: 112,
+              width: 88,
+              height: 88,
               decoration: const BoxDecoration(
                 color: AppColors.green,
                 shape: BoxShape.circle,
@@ -687,10 +794,14 @@ class _ProfileHeader extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
         Text(
           name ?? '—',
-          textAlign: TextAlign.center,
+          textAlign: TextAlign.start,
           style: AppTypography.displaySerif(
             fontSize: AppFontSize.h2,
             color: AppTheme.ink,
@@ -700,7 +811,7 @@ class _ProfileHeader extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             email!,
-            textAlign: TextAlign.center,
+            textAlign: TextAlign.start,
             style: const TextStyle(
               fontSize: AppFontSize.base,
               fontWeight: FontWeight.w300,
@@ -726,6 +837,9 @@ class _ProfileHeader extends StatelessWidget {
             ),
           ),
         ],
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -765,6 +879,7 @@ class _MenuRow extends StatelessWidget {
   final VoidCallback onTap;
   final int badge;
   final bool destructive;
+  final String? value;
 
   const _MenuRow({
     required this.icon,
@@ -772,6 +887,7 @@ class _MenuRow extends StatelessWidget {
     required this.onTap,
     this.badge = 0,
     this.destructive = false,
+    this.value,
   });
 
   @override
@@ -804,6 +920,16 @@ class _MenuRow extends StatelessWidget {
                 ),
               ),
             ),
+            if (value != null && value!.isNotEmpty) ...[
+              Text(
+                value!,
+                style: const TextStyle(
+                  fontSize: AppFontSize.md,
+                  color: AppTheme.inkMuted,
+                ),
+              ),
+              const SizedBox(width: 4),
+            ],
             if (badge > 0) ...[
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
