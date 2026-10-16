@@ -54,7 +54,7 @@ class GuestProfileScreen extends ConsumerWidget {
                 // de definições mantém a linha de ícones (senão o
                 // título subia, tal como em `gallery_screen.dart`).
                 PageHeader(
-                  titleFontSize: 30,
+                  title: 'Perfil',
                   topPadding: 8,
                   showBack: false,
                   trailing: SnappyTap(
