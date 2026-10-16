@@ -523,7 +523,7 @@ class _KpiTile extends StatelessWidget {
               ),
               if (deltaText != null) ...[
                 const SizedBox(width: 6),
-                _DeltaLabel(up: up, text: deltaText, fontSize: AppFontSize.sm),
+                _DeltaLabel(up: up, text: deltaText!, fontSize: AppFontSize.sm),
               ],
             ],
           ),
