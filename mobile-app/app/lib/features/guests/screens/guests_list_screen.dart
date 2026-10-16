@@ -236,6 +236,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                                     groups.isEmpty
                                         ? 40
                                         : FloatingFilterBar.bottomPadding(
+                                            aboveNav: false,
                                           ),
                                   ),
                                   itemCount: visible.length,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'floating_bottom_nav.dart' show NavBubble;
 
 enum GuestTab { home, gifts, gallery, profile }
 
@@ -42,7 +43,7 @@ class GuestBottomNav extends StatelessWidget {
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppTheme.accentOliveDark,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.xxl),
           boxShadow: AppTheme.navBarShadow,
         ),
@@ -58,7 +59,7 @@ class GuestBottomNav extends StatelessWidget {
               thickness: 1,
               indent: 16,
               endIndent: 16,
-              color: Colors.white.withValues(alpha: 0.16),
+              color: AppTheme.borderMuted,
             ),
           ],
           Padding(
@@ -131,9 +132,9 @@ class _GuestNavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Navbar verde (redesign 2026-10): ativo a branco, restantes a
-    // branco translúcido.
-    final color = active ? Colors.white : Colors.white.withValues(alpha: 0.6);
+    // Redesign 2026-10 ("botão quando selecionado deve ser bolha
+    // verde"): o ativo fica numa bolha verde com o ícone a branco.
+    final color = active ? Colors.white : AppTheme.navIconMuted;
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
@@ -141,7 +142,17 @@ class _GuestNavIcon extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: SizedBox(
           height: 42,
-          child: Center(child: Icon(active ? activeIcon : icon, color: color, size: 32)),
+          child: Center(
+            child: NavBubble(
+              active: active,
+              size: 42,
+              child: Icon(
+                active ? activeIcon : icon,
+                color: color,
+                size: active ? 24 : 32,
+              ),
+            ),
+          ),
         ),
       ),
     );

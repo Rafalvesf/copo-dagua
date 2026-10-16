@@ -43,7 +43,7 @@ class FloatingBottomNav extends ConsumerWidget {
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppTheme.accentOliveDark,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.xxl),
           boxShadow: AppTheme.navBarShadow,
         ),
@@ -59,7 +59,7 @@ class FloatingBottomNav extends ConsumerWidget {
               thickness: 1,
               indent: 16,
               endIndent: 16,
-              color: Colors.white.withValues(alpha: 0.16),
+              color: AppTheme.borderMuted,
             ),
           ],
           Padding(
@@ -157,9 +157,9 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Navbar verde (redesign 2026-10): ativo a branco, restantes a
-    // branco translúcido.
-    final color = active ? Colors.white : Colors.white.withValues(alpha: 0.6);
+    // Redesign 2026-10 ("botão quando selecionado deve ser bolha
+    // verde"): o ativo fica numa bolha verde com o ícone a branco.
+    final color = active ? Colors.white : AppTheme.navIconMuted;
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
@@ -178,10 +178,14 @@ class _NavIcon extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Center(
-                    child: Icon(
-                      active ? activeIcon : icon,
-                      color: color,
-                      size: 32,
+                    child: NavBubble(
+                      active: active,
+                      size: 42,
+                      child: Icon(
+                        active ? activeIcon : icon,
+                        color: color,
+                        size: active ? 24 : 32,
+                      ),
                     ),
                   ),
                   if (badgeCount > 0)
@@ -216,14 +220,14 @@ class _UnreadBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 3),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.accentOliveDark,
         shape: BoxShape.circle,
-        border: Border.all(color: AppTheme.accentOliveDark, width: 1.5),
+        border: Border.all(color: Colors.white, width: 1.5),
       ),
       child: Text(
         count > 99 ? '99+' : '$count',
         style: const TextStyle(
-          color: AppTheme.accentOliveDark,
+          color: Colors.white,
           fontSize: AppFontSize.xxxs,
           fontWeight: FontWeight.w700,
           height: 1,
@@ -256,20 +260,59 @@ class _WeddingNavTab extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Opacity(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(2.5),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: active ? AppTheme.accentOliveDark : Colors.transparent,
+          ),
+          child: Opacity(
           opacity: active ? 1 : 0.55,
           child: ClipOval(
             child: SizedBox(
-              width: 42,
-              height: 42,
+              width: 37,
+              height: 37,
               child: Transform.scale(
                 scale: zoom,
                 child: Image.asset(assetPath, fit: BoxFit.cover),
               ),
             ),
           ),
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// Bolha verde por trás do separador ativo (redesign 2026-10) — partilhada
+/// pelas três navbars (casal, convidado, parceiro).
+class NavBubble extends StatelessWidget {
+  final bool active;
+  final double size;
+  final Widget child;
+
+  const NavBubble({
+    super.key,
+    required this.active,
+    required this.size,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: active ? AppTheme.accentOliveDark : Colors.transparent,
+        shape: BoxShape.circle,
+      ),
+      child: child,
     );
   }
 }

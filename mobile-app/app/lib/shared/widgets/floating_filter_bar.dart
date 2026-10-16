@@ -18,10 +18,11 @@ class FilterBarItem {
 /// conectadas".
 ///
 /// - Em ecrãs com navbar, passa-se [FilterChipsRow] como `top` da
-///   `FloatingBottomNav` / `GuestBottomNav` — ficam uma só ilha verde,
-///   filtros em cima e separadores em baixo.
+///   `FloatingBottomNav` / `GuestBottomNav` — ficam uma só ilha,
+///   filtros em cima e separadores em baixo. O selecionado, em ambos, é
+///   uma bolha verde ("botão quando selecionado deve ser bolha verde").
 /// - Em ecrãs sem navbar (Orçamento, Convidados), usa-se
-///   [FloatingFilterBar], a mesma ilha verde só com os filtros.
+///   [FloatingFilterBar], a mesma ilha só com os filtros.
 class FilterChipsRow extends StatefulWidget {
   final List<FilterBarItem> items;
   final int selected;
@@ -118,7 +119,7 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
   }
 }
 
-/// Ilha verde só com filtros, no lugar da navbar (ecrãs sem navbar).
+/// Ilha só com filtros, no lugar da navbar (ecrãs sem navbar).
 /// Usar dentro de um `Stack` com `Positioned(left: 0, right: 0, bottom: 0)`.
 class FloatingFilterBar extends StatelessWidget {
   final List<FilterBarItem> items;
@@ -147,7 +148,7 @@ class FloatingFilterBar extends StatelessWidget {
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),
       child: Container(
         decoration: BoxDecoration(
-          color: AppTheme.accentOliveDark,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.xxl),
           boxShadow: AppTheme.navBarShadow,
         ),
@@ -178,11 +179,9 @@ class _FilterBarChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Sobre o verde: selecionado = pílula branca com texto verde;
-    // restantes = texto branco translúcido.
-    final fg = selected
-        ? AppTheme.accentOliveDark
-        : Colors.white.withValues(alpha: 0.82);
+    // Selecionado = bolha verde com texto branco; restantes = texto
+    // secundário sobre o branco da ilha.
+    final fg = selected ? Colors.white : AppTheme.inkMuted;
     return Semantics(
       button: true,
       selected: selected,
@@ -197,7 +196,7 @@ class _FilterBarChip extends StatelessWidget {
             right: item.count == null ? 18 : 10,
           ),
           decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.transparent,
+            color: selected ? AppTheme.accentOliveDark : Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.pill),
           ),
           child: Row(
@@ -224,8 +223,8 @@ class _FilterBarChip extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: selected
-                        ? AppTheme.accentOliveDark.withValues(alpha: 0.12)
-                        : Colors.white.withValues(alpha: 0.18),
+                        ? Colors.white.withValues(alpha: 0.22)
+                        : AppTheme.surface,
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
