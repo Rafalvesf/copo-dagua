@@ -10,6 +10,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 class PartnerMessagesScreen extends ConsumerWidget {
   const PartnerMessagesScreen({super.key});
@@ -37,8 +38,7 @@ class PartnerMessagesScreen extends ConsumerWidget {
                   child: conversationsAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (err, st) =>
-                        const Center(child: Text('Não foi possível carregar.')),
+                    error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerConversationsProvider)),
                     data: (conversations) => ListView.builder(
                       padding: const EdgeInsets.fromLTRB(
                         AppTheme.screenMargin,
@@ -78,14 +78,14 @@ class PartnerMessagesScreen extends ConsumerWidget {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: AppTheme.accentOliveDark,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: const Text(
                         'Ver todas as conversas',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
-                          fontSize: 15,
+                          fontSize: AppFontSize.lg,
                         ),
                       ),
                     ),

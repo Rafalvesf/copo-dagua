@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/partner_app/partner_app_providers.dart';
 import '../../core/theme/app_theme.dart';
+import 'floating_bottom_nav.dart' show NavBubble;
+import 'floating_filter_bar.dart' show ConnectedFilterNav;
 
 enum PartnerTab { home, requests, chat, profile }
 
@@ -15,7 +17,11 @@ enum PartnerTab { home, requests, chat, profile }
 class PartnerBottomNav extends ConsumerWidget {
   final PartnerTab current;
 
-  const PartnerBottomNav({super.key, required this.current});
+  /// Filtros do ecrã ([FilterChipsRow]) ligados por cima dos separadores,
+  /// na mesma doca (redesign 2026-10).
+  final Widget? top;
+
+  const PartnerBottomNav({super.key, required this.current, this.top});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,15 +32,19 @@ class PartnerBottomNav extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(28),
+          topLeft: Radius.circular(AppRadius.xxl),
+          topRight: Radius.circular(AppRadius.xxl),
         ),
         boxShadow: AppTheme.navBarShadow,
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 16, 8, 12),
+        child: ConnectedFilterNav(
+          top: top == null
+              ? null
+              : Padding(padding: const EdgeInsets.fromLTRB(8, 4, 8, 0), child: top),
+          navRow: Padding(
+          padding: EdgeInsets.fromLTRB(8, top == null ? 16 : 10, 8, 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -66,6 +76,7 @@ class PartnerBottomNav extends ConsumerWidget {
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -88,9 +99,11 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppTheme.accentOliveDark : AppTheme.navIconMuted;
+    // Redesign 2026-10 ("botão quando selecionado deve ser bolha
+    // verde"): o ativo fica numa bolha verde com o ícone a branco.
+    final color = active ? Colors.white : AppTheme.navIconMuted;
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -98,22 +111,26 @@ class _NavIcon extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: 32,
-              height: 32,
+              width: 42,
+              height: 42,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
                   Center(
-                    child: Icon(
-                      active ? activeIcon : icon,
-                      color: color,
-                      size: 32,
+                    child: NavBubble(
+                      active: active,
+                      size: 42,
+                      child: Icon(
+                        active ? activeIcon : icon,
+                        color: color,
+                        size: active ? 24 : 32,
+                      ),
                     ),
                   ),
                   if (badgeCount > 0)
                     Positioned(
-                      top: -4,
-                      right: -6,
+                      top: 0,
+                      right: -2,
                       child: _UnreadBadge(count: badgeCount),
                     ),
                 ],
@@ -150,7 +167,7 @@ class _UnreadBadge extends StatelessWidget {
         count > 99 ? '99+' : '$count',
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 9,
+          fontSize: AppFontSize.xxxs,
           fontWeight: FontWeight.w700,
           height: 1,
         ),

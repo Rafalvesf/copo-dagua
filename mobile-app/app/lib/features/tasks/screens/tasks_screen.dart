@@ -10,6 +10,7 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -126,45 +127,18 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               topFadeHeight: 8,
               bottomFadeHeight: 140,
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 140),
+                padding: EdgeInsets.only(
+                  bottom: FloatingFilterBar.bottomPadding(aboveNav: true),
+                ),
                 children: [
                   PageHeader(
                     title: 'Tarefas',
                     subtitle: 'O plano guia-vos, vocês executam.',
-                    showBack: false,
-                    // Espaçador invisível — mantém a altura do
-                    // cabeçalho (ver o mesmo comentário em
-                    // `partners_list_screen.dart`); o "+" real fica ao
-                    // lado das abas Por fazer/Feito, na linha por
-                    // baixo, mesma arquitetura de Parceiros/Chat/
-                    // Orçamento/Lugares.
-                    trailing: const SizedBox(width: 46, height: 46),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      12,
-                      AppTheme.screenMargin,
-                      0,
-                    ),
-                    child: Row(
-                      children: [
-                        _MainTabChip(
-                          label: 'Por fazer',
-                          selected: _tab == _TasksTab.todo,
-                          onTap: () => setState(() => _tab = _TasksTab.todo),
-                        ),
-                        const SizedBox(width: 8),
-                        _MainTabChip(
-                          label: 'Feito',
-                          selected: _tab == _TasksTab.done,
-                          onTap: () => setState(() => _tab = _TasksTab.done),
-                        ),
-                        const Spacer(),
-                        AddActionButton(
-                          onTap: () => _showNewTaskSheet(context, ref),
-                        ),
-                      ],
+                    // Redesign 2026-10: mesmo topo que Orçamento/Lugares —
+                    // voltar · título ao centro · "+".
+                    centered: true,
+                    trailing: AddActionButton(
+                      onTap: () => _showNewTaskSheet(context, ref),
                     ),
                   ),
                   Padding(
@@ -196,7 +170,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                   padding: const EdgeInsets.all(18),
                                   decoration: BoxDecoration(
                                     color: AppTheme.surface,
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.circular(AppRadius.lg),
                                   ),
                                   child: const Text(
                                     'Sem tarefas recomendadas por agora — bom trabalho! 🎉',
@@ -222,7 +196,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                 'Criadas por vocês — sem limite, sem pressa.',
                                 style: TextStyle(
                                   color: AppTheme.inkMuted,
-                                  fontSize: 12.5,
+                                  fontSize: AppFontSize.sm,
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -234,7 +208,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                   padding: const EdgeInsets.all(18),
                                   decoration: BoxDecoration(
                                     color: AppTheme.surface,
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.circular(AppRadius.lg),
                                   ),
                                   child: const Text(
                                     'Ainda não criaram nenhuma tarefa vossa.',
@@ -265,7 +239,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                   padding: const EdgeInsets.all(18),
                                   decoration: BoxDecoration(
                                     color: AppTheme.surface,
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.circular(AppRadius.lg),
                                   ),
                                   child: const Text(
                                     'Ainda não concluíram nenhuma tarefa.',
@@ -286,11 +260,20 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               ),
             ),
           ),
-          const Positioned(
+          Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            child: FloatingBottomNav(current: AppTab.wedding),
+            child: FloatingBottomNav(current: AppTab.wedding, top: FilterChipsRow(
+              items: [
+                FilterBarItem('Por fazer'),
+                FilterBarItem('Feito'),
+              ],
+              selected: _tab == _TasksTab.todo ? 0 : 1,
+              onSelected: (i) => setState(
+                () => _tab = i == 0 ? _TasksTab.todo : _TasksTab.done,
+              ),
+            )),
           ),
         ],
       ),
@@ -314,39 +297,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 }
 
-class _MainTabChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _MainTabChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.ink : AppTheme.surface,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : AppTheme.ink,
-            fontWeight: FontWeight.w700,
-            fontSize: 12.5,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Selo discreto "SUGESTÃO"/"PARA CONCLUIR" — pedido explícito do
 /// utilizador: linguagem suave, tipografia pequena, nunca um badge
@@ -363,7 +313,7 @@ class _DisplayTypeLabel extends StatelessWidget {
       isSuggestion ? 'SUGESTÃO' : 'PARA CONCLUIR',
       style: TextStyle(
         color: isSuggestion ? AppTheme.inkMuted : AppTheme.accentOliveDark,
-        fontSize: 9.5,
+        fontSize: AppFontSize.xxxs,
         fontWeight: FontWeight.w800,
         letterSpacing: 0.6,
       ),
@@ -392,7 +342,7 @@ class _TaskRow extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +352,7 @@ class _TaskRow extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: AppColors.green,
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Icon(icon, size: 17, color: AppTheme.ink),
             ),
@@ -422,7 +372,7 @@ class _TaskRow extends StatelessWidget {
                           task.title,
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
-                            fontSize: 13.5,
+                            fontSize: AppFontSize.md,
                           ),
                         ),
                       ),
@@ -435,13 +385,13 @@ class _TaskRow extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: color,
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                           ),
                           child: const Text(
                             'NOVA',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 9.5,
+                              fontSize: AppFontSize.xxxs,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.4,
                             ),
@@ -456,7 +406,7 @@ class _TaskRow extends StatelessWidget {
                       task.description!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+                      style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                     ),
                   ],
                 ],
@@ -497,7 +447,7 @@ class _DoneTaskRow extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -507,7 +457,7 @@ class _DoneTaskRow extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: AppColors.green.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(11),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Icon(Icons.check_rounded, size: 18, color: AppTheme.ink),
           ),
@@ -520,13 +470,13 @@ class _DoneTaskRow extends StatelessWidget {
                   task.title,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
+                    fontSize: AppFontSize.md,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   label,
-                  style: TextStyle(color: AppTheme.inkMuted, fontSize: 11.5),
+                  style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
                 ),
               ],
             ),
@@ -549,7 +499,7 @@ class _UserTaskRow extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Row(
         children: [
@@ -573,14 +523,14 @@ class _UserTaskRow extends StatelessWidget {
                   task.title,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
+                    fontSize: AppFontSize.md,
                   ),
                 ),
                 if (task.dueDate != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     '${task.dueDate!.day.toString().padLeft(2, '0')}/${task.dueDate!.month.toString().padLeft(2, '0')}/${task.dueDate!.year}',
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 11.5),
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
                   ),
                 ],
               ],

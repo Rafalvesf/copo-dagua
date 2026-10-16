@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/guests/guest_controller.dart';
@@ -8,7 +9,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
-import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -103,13 +103,13 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                   bottom: false,
                   child: EdgeFade(
                     topFadeHeight: 8,
-                    bottomFadeHeight: 140,
+                    bottomFadeHeight: 32,
                     child: ListView(
                       padding: EdgeInsets.zero,
                       children: [
                         PageHeader(
                           title: 'Lugares',
-                          titleFontSize: 26,
+                          centered: true,
                           trailing: AddActionButton(
                             onTap: state.isFull
                                 ? () => ScaffoldMessenger.of(context).showSnackBar(
@@ -136,7 +136,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                             AppTheme.screenMargin,
                             16,
                             AppTheme.screenMargin,
-                            140,
+                            40,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,12 +228,6 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                     ),
                   ),
                 ),
-                const Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.wedding),
-                ),
               ],
             ),
     );
@@ -319,39 +313,55 @@ class _NoTablesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(24),
-      ),
+    // Redesign 2026-10: sem caixa de fundo (pedido do utilizador: "remove
+    // o fundo") — ilustração da mesa, título em Bold e, sem local
+    // reservado, um atalho para procurar espaços.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         children: [
-          const Icon(
-            Icons.event_seat_outlined,
-            size: 32,
-            color: AppTheme.inkMuted,
+          Image.asset(
+            'assets/images/seating_table_1.png',
+            width: 150,
+            height: 150,
+            fit: BoxFit.contain,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
-            hasVenue
-                ? 'O local que reservaste ainda não configurou as mesas disponíveis.'
-                : 'Ainda não reservaste o local do casamento.',
+            hasVenue ? 'Mesas por configurar' : 'Ainda sem local reservado',
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontWeight: FontWeight.w700,
-              fontSize: 14.5,
+              fontSize: AppFontSize.h3,
               color: AppTheme.ink,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            hasVenue
-                ? 'Fala com o parceiro ou volta mais tarde — assim que ele indicar as mesas, aparecem aqui.'
-                : 'Assim que reservares um espaço, o número real de mesas aparece aqui e podes começar a organizar os lugares.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+          const SizedBox(height: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 300),
+            child: Text(
+              hasVenue
+                  ? 'O local que reservaste ainda não indicou as mesas disponíveis. Assim que o fizer, aparecem aqui.'
+                  : 'Assim que reservares um espaço, o número real de mesas aparece aqui e podes começar a organizar os lugares.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppTheme.inkMuted,
+                fontWeight: FontWeight.w300,
+                fontSize: AppFontSize.base,
+                height: 1.5,
+              ),
+            ),
           ),
+          if (!hasVenue) ...[
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => context.go('/partners'),
+                child: const Text('Procurar espaços'),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -377,7 +387,7 @@ class _StatCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,7 +403,7 @@ class _StatCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: AppFontSize.xs,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.inkMuted,
                   ),
@@ -404,14 +414,14 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.xl),
           ),
           if (caption != null)
             Text(
               caption!,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 10.5, color: AppTheme.inkMuted),
+              style: const TextStyle(fontSize: AppFontSize.xxs, color: AppTheme.inkMuted),
             ),
         ],
       ),
@@ -431,7 +441,7 @@ class _ViewToggle extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Row(
         children: [
@@ -478,7 +488,7 @@ class _ViewToggleTab extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: selected ? AppColors.green : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -493,7 +503,7 @@ class _ViewToggleTab extends StatelessWidget {
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 13,
+                fontSize: AppFontSize.md,
                 color: selected ? AppTheme.accentOliveDark : AppTheme.inkMuted,
               ),
             ),
@@ -524,7 +534,7 @@ class _PlanGrid extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -603,7 +613,7 @@ class _HonorTableStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Text(
       'Mesa de Honra',
-      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+      style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.sm),
     );
   }
 }
@@ -666,7 +676,7 @@ class _TableListRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: selected
             ? Border.all(color: AppTheme.accentOliveDark, width: 1.5)
             : null,
@@ -692,13 +702,13 @@ class _TableListRow extends StatelessWidget {
               'Mesa ${index + 1}',
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 13.5,
+                fontSize: AppFontSize.md,
               ),
             ),
           ),
           Text(
             isFilled || isNext ? '$count/$seatsPerTable lugares' : 'Bloqueada',
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+            style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
           ),
         ],
       ),
@@ -745,7 +755,7 @@ class _LegendItem extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(fontSize: 11.5, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted),
         ),
       ],
     );
@@ -793,12 +803,12 @@ class _SelectedTableCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.muted,
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                     child: Text(
                       '${seated.length} lugares',
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: AppFontSize.xs,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.inkMuted,
                       ),
@@ -816,7 +826,7 @@ class _SelectedTableCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -827,7 +837,7 @@ class _SelectedTableCard extends StatelessWidget {
                       'Editar mesa',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 12.5,
+                        fontSize: AppFontSize.sm,
                       ),
                     ),
                   ],
@@ -843,7 +853,7 @@ class _SelectedTableCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Text('Ainda sem convidados nesta mesa.'),
           )
@@ -876,7 +886,7 @@ class _SeatedGuestTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Row(
         children: [
@@ -899,7 +909,7 @@ class _SeatedGuestTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 12,
+                    fontSize: AppFontSize.sm,
                   ),
                 ),
                 if (guest.group.isNotEmpty)
@@ -908,7 +918,7 @@ class _SeatedGuestTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 10.5,
+                      fontSize: AppFontSize.xxs,
                       color: AppTheme.inkMuted,
                     ),
                   ),
@@ -1017,7 +1027,7 @@ class _TableCell extends StatelessWidget {
                   ? '$draftCount/$seatsPerTable'
                   : 'M$number',
               style: TextStyle(
-                fontSize: 9.5,
+                fontSize: AppFontSize.xxxs,
                 fontWeight: FontWeight.w700,
                 color: isLocked ? AppTheme.inkMuted : AppTheme.ink,
               ),
@@ -1154,14 +1164,14 @@ class _TableConfigSheetState extends State<_TableConfigSheet> {
           const SizedBox(height: 4),
           Text(
             '${_selected.length}/$seatsPerTable convidados',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
           ),
           const SizedBox(height: 2),
           Text(
             widget.requireFull
                 ? 'Esta mesa já está completa — mantém $seatsPerTable convidados para guardar.'
                 : 'Só fica marcada como concluída ao chegar aos $seatsPerTable convidados. Podes guardar antes disso e continuar depois.',
-            style: TextStyle(color: AppTheme.inkMuted, fontSize: 11.5),
+            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
           ),
           const SizedBox(height: 12),
           ConstrainedBox(
@@ -1226,7 +1236,7 @@ class _GuestPickRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: selected ? AppColors.green : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: selected ? AppStatusColors.confirmed : AppTheme.borderMuted,
         ),
@@ -1249,18 +1259,18 @@ class _GuestPickRow extends StatelessWidget {
                   guest.name,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 14,
+                    fontSize: AppFontSize.base,
                   ),
                 ),
                 if (disabled)
                   Text(
                     'Já sentado noutra mesa',
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 11.5),
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
                   )
                 else if (guest.group.isNotEmpty)
                   Text(
                     guest.group,
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 11.5),
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
                   ),
               ],
             ),

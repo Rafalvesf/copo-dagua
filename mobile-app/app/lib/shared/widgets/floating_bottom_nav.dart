@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/chat/chat_list_controller.dart';
 import '../../core/theme/app_theme.dart';
+import 'floating_filter_bar.dart' show ConnectedFilterNav;
 import '../../core/wedding/wedding_nav_icon.dart';
 
 enum AppTab { home, partners, chat, wedding, gallery }
@@ -22,7 +23,11 @@ enum AppTab { home, partners, chat, wedding, gallery }
 class FloatingBottomNav extends ConsumerWidget {
   final AppTab current;
 
-  const FloatingBottomNav({super.key, required this.current});
+  /// Filtros do ecrã ([FilterChipsRow]) ligados por cima dos
+  /// separadores, na mesma ilha (redesign 2026-10).
+  final Widget? top;
+
+  const FloatingBottomNav({super.key, required this.current, this.top});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,10 +45,14 @@ class FloatingBottomNav extends ConsumerWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
           boxShadow: AppTheme.navBarShadow,
         ),
-        child: Padding(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
+          child: ConnectedFilterNav(
+          top: top,
+          navRow: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
             // Cada separador ocupa uma fatia igual da largura (em vez
@@ -108,6 +117,8 @@ class FloatingBottomNav extends ConsumerWidget {
               ),
             ],
           ),
+          ),
+          ),
         ),
       ),
     );
@@ -135,9 +146,11 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppTheme.accentOliveDark : AppTheme.navIconMuted;
+    // Redesign 2026-10 ("botão quando selecionado deve ser bolha
+    // verde"): o ativo fica numa bolha verde com o ícone a branco.
+    final color = active ? Colors.white : AppTheme.navIconMuted;
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -154,10 +167,14 @@ class _NavIcon extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Center(
-                    child: Icon(
-                      active ? activeIcon : icon,
-                      color: color,
-                      size: 32,
+                    child: NavBubble(
+                      active: active,
+                      size: 42,
+                      child: Icon(
+                        active ? activeIcon : icon,
+                        color: color,
+                        size: active ? 24 : 32,
+                      ),
                     ),
                   ),
                   if (badgeCount > 0)
@@ -200,7 +217,7 @@ class _UnreadBadge extends StatelessWidget {
         count > 99 ? '99+' : '$count',
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 9,
+          fontSize: AppFontSize.xxxs,
           fontWeight: FontWeight.w700,
           height: 1,
         ),
@@ -228,24 +245,63 @@ class _WeddingNavTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Opacity(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(2.5),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: active ? AppTheme.accentOliveDark : Colors.transparent,
+          ),
+          child: Opacity(
           opacity: active ? 1 : 0.55,
           child: ClipOval(
             child: SizedBox(
-              width: 42,
-              height: 42,
+              width: 37,
+              height: 37,
               child: Transform.scale(
                 scale: zoom,
                 child: Image.asset(assetPath, fit: BoxFit.cover),
               ),
             ),
           ),
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// Bolha verde por trás do separador ativo (redesign 2026-10) — partilhada
+/// pelas três navbars (casal, convidado, parceiro).
+class NavBubble extends StatelessWidget {
+  final bool active;
+  final double size;
+  final Widget child;
+
+  const NavBubble({
+    super.key,
+    required this.active,
+    required this.size,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: active ? AppTheme.accentOliveDark : Colors.transparent,
+        shape: BoxShape.circle,
+      ),
+      child: child,
     );
   }
 }

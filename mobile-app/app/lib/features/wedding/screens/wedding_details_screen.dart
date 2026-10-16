@@ -77,7 +77,7 @@ class WeddingDetailsScreen extends ConsumerWidget {
                                 style: TextStyle(
                                   color: AppTheme.accentOliveDark,
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 13,
+                                  fontSize: AppFontSize.md,
                                 ),
                               ),
                             ),
@@ -160,7 +160,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 40),
       decoration: BoxDecoration(
         color: AppTheme.accentOliveDark,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadius.xxl),
       ),
       child: Stack(
         children: [
@@ -190,7 +190,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                   SnappyTap(
                     onTap: _uploading ? null : _pickBanner,
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
                       child: SizedBox(
                         height: 214,
                         width: double.infinity,
@@ -221,7 +221,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                                       'Adicionar foto',
                                       style: TextStyle(
                                         color: Colors.white.withValues(alpha: 0.85),
-                                        fontSize: 12.5,
+                                        fontSize: AppFontSize.sm,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
@@ -269,7 +269,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
                       decoration: BoxDecoration(
                         color: AppTheme.accentOliveDark,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -279,7 +279,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.85),
-                              fontSize: 11.5,
+                              fontSize: AppFontSize.xs,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.4,
                             ),
@@ -291,9 +291,11 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.displaySerif(
-                              fontSize: 20,
+                              fontSize: AppFontSize.xxl,
                               color: Colors.white,
                             ).copyWith(
+                              // Bold Italic — como num convite (redesign 2026-10).
+                              fontStyle: FontStyle.italic,
                               decoration: TextDecoration.underline,
                               decorationColor: Colors.white,
                             ),
@@ -325,7 +327,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 12.5,
+                  fontSize: AppFontSize.sm,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
                 ),
@@ -337,7 +339,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.75),
-                    fontSize: 11.5,
+                    fontSize: AppFontSize.xs,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.6,
                   ),
@@ -392,7 +394,7 @@ class _CountdownRowState extends State<_CountdownRow> {
         style: TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w700,
-          fontSize: 16,
+          fontSize: AppFontSize.lg,
         ),
       );
     }
@@ -408,7 +410,7 @@ class _CountdownRowState extends State<_CountdownRow> {
           'FALTAM',
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.75),
-            fontSize: 11,
+            fontSize: AppFontSize.xs,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,
           ),
@@ -445,7 +447,7 @@ class _CountdownBox extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: Text(
             value.toString().padLeft(2, '0'),
@@ -453,7 +455,7 @@ class _CountdownBox extends StatelessWidget {
             style: const TextStyle(
               color: AppTheme.accentOliveDark,
               fontWeight: FontWeight.w800,
-              fontSize: 18,
+              fontSize: AppFontSize.xl,
             ),
           ),
         ),
@@ -462,7 +464,7 @@ class _CountdownBox extends StatelessWidget {
           label,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.75),
-            fontSize: 10,
+            fontSize: AppFontSize.xxs,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.6,
           ),
@@ -552,7 +554,7 @@ class _QuickLinkTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -564,7 +566,7 @@ class _QuickLinkTile extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.sm),
             ),
           ],
         ),
@@ -598,7 +600,7 @@ class _ShareWeddingButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -607,7 +609,7 @@ class _ShareWeddingButton extends StatelessWidget {
             SizedBox(width: 8),
             Text(
               'Partilhar convite',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
             ),
           ],
         ),
@@ -651,7 +653,7 @@ class _UpcomingTasksSection extends ConsumerWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: const Text('Sem tarefas pendentes — bom trabalho! 🎉'),
       );
@@ -700,7 +702,7 @@ class _TaskRow extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Row(
           children: [
@@ -709,7 +711,7 @@ class _TaskRow extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: AppColors.green,
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Icon(icon, size: 17, color: AppTheme.ink),
             ),
@@ -724,7 +726,7 @@ class _TaskRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 13.5,
+                      fontSize: AppFontSize.md,
                     ),
                   ),
                   if (description != null) ...[
@@ -733,7 +735,7 @@ class _TaskRow extends StatelessWidget {
                       description!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 11.5),
+                      style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
                     ),
                   ],
                 ],
@@ -802,7 +804,7 @@ class _SummaryTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -817,14 +819,14 @@ class _SummaryTile extends StatelessWidget {
             value,
             style: const TextStyle(
               fontWeight: FontWeight.w800,
-              fontSize: 18,
+              fontSize: AppFontSize.xl,
               color: AppTheme.ink,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+            style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
           ),
         ],
       ),
@@ -850,7 +852,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppStatusColors.declined.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -859,7 +861,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
             'Assuntos urgentes — pagamentos (${withDueDate.length})',
             style: const TextStyle(
               fontWeight: FontWeight.w700,
-              fontSize: 13,
+              fontSize: AppFontSize.md,
               color: AppTheme.ink,
             ),
           ),
@@ -871,7 +873,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
                 '${expense.title} — ${expense.amount.toStringAsFixed(0)} € até '
                 '${expense.dueDate!.day.toString().padLeft(2, '0')} '
                 '${monthNamesPt[expense.dueDate!.month - 1].substring(0, 3)}',
-                style: const TextStyle(fontSize: 12.5, color: AppTheme.ink),
+                style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.ink),
               ),
             ),
         ],
@@ -910,7 +912,7 @@ class _BookingsSection extends ConsumerWidget {
                     style: TextStyle(
                       color: AppTheme.accentOliveDark,
                       fontWeight: FontWeight.w700,
-                      fontSize: 13,
+                      fontSize: AppFontSize.md,
                     ),
                   ),
                 ),
@@ -924,7 +926,7 @@ class _BookingsSection extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -952,7 +954,7 @@ class _BookingsSection extends ConsumerWidget {
                                 booking.partnerName,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 13,
+                                  fontSize: AppFontSize.md,
                                 ),
                               ),
                             ),
@@ -960,7 +962,7 @@ class _BookingsSection extends ConsumerWidget {
                               '${booking.amount.toStringAsFixed(0)} €',
                               style: const TextStyle(
                                 color: AppTheme.inkMuted,
-                                fontSize: 12.5,
+                                fontSize: AppFontSize.sm,
                               ),
                             ),
                           ],

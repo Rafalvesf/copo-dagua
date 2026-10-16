@@ -11,6 +11,7 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 /// "Falar com a equipa" — pedidos de suporte reais
 /// (`support_tickets`, 047_support_tickets.sql). Inclui a categoria
@@ -63,7 +64,7 @@ class SupportScreen extends ConsumerWidget {
             Expanded(
               child: ticketsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) => const Center(child: Text('Não foi possível carregar.')),
+                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(coupleSupportTicketsProvider)),
                 data: (tickets) {
                   if (tickets.isEmpty) {
                     return Center(
@@ -108,7 +109,7 @@ class SupportScreen extends ConsumerWidget {
                     backgroundColor: AppTheme.accentOliveDark,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
                   ),
                   child: const Text('Novo pedido de suporte'),
                 ),
@@ -138,7 +139,7 @@ class _TicketRow extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,13 +151,13 @@ class _TicketRow extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: AppStatusColors.declined.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
                     'Disputa / atraso',
                     style: TextStyle(
                       color: AppStatusColors.declined,
-                      fontSize: 10,
+                      fontSize: AppFontSize.xxs,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -166,7 +167,7 @@ class _TicketRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   ticket.subject,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
                 ),
               ),
               StatusPill(label: ticket.status.label, color: _statusColor),
@@ -178,7 +179,7 @@ class _TicketRow extends StatelessWidget {
               ticket.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+              style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
             ),
           ],
           if (ticket.resolutionNote != null) ...[
@@ -187,7 +188,7 @@ class _TicketRow extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppColors.muted,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,14 +197,14 @@ class _TicketRow extends StatelessWidget {
                     'Resposta da equipa',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 11.5,
+                      fontSize: AppFontSize.xs,
                       color: AppTheme.accentOliveDark,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     ticket.resolutionNote!,
-                    style: TextStyle(color: AppTheme.ink, fontSize: 12.5, height: 1.4),
+                    style: TextStyle(color: AppTheme.ink, fontSize: AppFontSize.sm, height: 1.4),
                   ),
                 ],
               ),
@@ -276,7 +277,7 @@ class _NewTicketSheetState extends ConsumerState<_NewTicketSheet> {
         children: [
           Text('Novo pedido de suporte', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 16),
-          Text('Tipo de pedido', style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5)),
+          Text('Tipo de pedido', style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm)),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -328,14 +329,14 @@ class _CategoryChip extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppTheme.ink : AppTheme.surface,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           label,
           style: TextStyle(
             color: selected ? Colors.white : AppTheme.ink,
             fontWeight: FontWeight.w700,
-            fontSize: 12.5,
+            fontSize: AppFontSize.sm,
           ),
         ),
       ),

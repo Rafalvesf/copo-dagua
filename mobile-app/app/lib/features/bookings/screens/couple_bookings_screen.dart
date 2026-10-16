@@ -13,6 +13,7 @@ import '../../../features/partner_bookings/booking_style.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 /// Reservas do lado do casal — lê `coupleBookingsProvider`
 /// (`core/home/home_providers.dart`), mesmos dados mock que alimentam
@@ -35,22 +36,23 @@ class CoupleBookingsScreen extends ConsumerWidget {
           children: [
             const PageHeader(
               title: 'Reservas',
+              centered: true,
               subtitle: 'Parceiros contratados para o teu casamento.',
             ),
             const SizedBox(height: 16),
             Expanded(
               child: bookingsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) =>
-                    const Center(child: Text('Não foi possível carregar.')),
+                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(coupleBookingsProvider)),
                 data: (bookings) {
                   final proposals = proposalsAsync.maybeWhen(
                     data: (p) => p,
                     orElse: () => const <ReceivedProposal>[],
                   );
                   if (bookings.isEmpty && proposals.isEmpty) {
-                    return const Center(
-                      child: Text('Ainda sem parceiros reservados.'),
+                    return const EmptyStateView(
+                      message: 'Ainda sem parceiros reservados.',
+                      icon: Icons.storefront_outlined,
                     );
                   }
                   return ListView(
@@ -66,7 +68,7 @@ class CoupleBookingsScreen extends ConsumerWidget {
                           'Propostas recebidas',
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            fontSize: 15,
+                            fontSize: AppFontSize.lg,
                             color: AppTheme.ink,
                           ),
                         ),
@@ -236,7 +238,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -248,7 +250,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: AppColors.green,
-                    borderRadius: BorderRadius.circular(13),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Icon(_icon, size: 18, color: AppTheme.ink),
                 ),
@@ -261,7 +263,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                         booking.partnerName,
                         style: const TextStyle(
                           fontWeight: FontWeight.w700,
-                          fontSize: 14.5,
+                          fontSize: AppFontSize.base,
                           color: AppTheme.ink,
                         ),
                       ),
@@ -270,7 +272,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                         '$dateLabel · ${booking.amount.toStringAsFixed(0)} €',
                         style: const TextStyle(
                           color: AppTheme.inkMuted,
-                          fontSize: 12.5,
+                          fontSize: AppFontSize.sm,
                         ),
                       ),
                     ],
@@ -306,7 +308,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                   ),
                   child: Text(
@@ -330,7 +332,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                   ),
                   child: Text(
@@ -441,7 +443,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
           color: AppTheme.accentOliveDark.withValues(alpha: 0.4),
         ),
@@ -453,14 +455,14 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
             proposal.partnerName,
             style: const TextStyle(
               fontWeight: FontWeight.w700,
-              fontSize: 14.5,
+              fontSize: AppFontSize.base,
               color: AppTheme.ink,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             proposal.title,
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+            style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
           ),
           const SizedBox(height: 2),
           Text(
@@ -468,7 +470,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
               if (dateLabel != null) dateLabel,
               '${proposal.price.toStringAsFixed(0)} € · sinal ${proposal.depositAmount.toStringAsFixed(0)} €',
             ].join(' · '),
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+            style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -480,7 +482,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
               ),
               child: Text(_accepting ? 'A aceitar...' : 'Aceitar proposta'),
@@ -521,7 +523,7 @@ class ReviewAction extends ConsumerWidget {
               children: [
                 Text(
                   'A tua avaliação:',
-                  style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+                  style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                 ),
                 const SizedBox(width: 6),
                 _InlineStars(rating: review.rating),
@@ -540,7 +542,7 @@ class ReviewAction extends ConsumerWidget {
               side: const BorderSide(color: AppTheme.accentOliveDark),
               padding: const EdgeInsets.symmetric(vertical: 10),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
             ),
             child: Text('Avaliar ${booking.partnerName}'),
@@ -692,7 +694,7 @@ class ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
           const SizedBox(height: 4),
           Text(
             'Como foi a vossa experiência?',
-            style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
           ),
           const SizedBox(height: 16),
           Row(
@@ -730,7 +732,7 @@ class ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
             ),
             child: Text(

@@ -6,10 +6,12 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -39,10 +41,10 @@ class GuestGalleryScreen extends ConsumerWidget {
     final weddingsAsync = ref.watch(guestWeddingsProvider);
     return weddingsAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (err, st) => const Scaffold(body: Center(child: Text('Não foi possível carregar.'))),
+      error: (err, st) => Scaffold(body: AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider))),
       data: (weddings) {
         if (weddings.isEmpty) {
-          return const Scaffold(body: Center(child: Text('Sem casamento associado.')));
+          return const Scaffold(body: EmptyStateView(message: 'Sem casamento associado.', icon: Icons.favorite_border));
         }
         return _GuestGalleryBody(weddingId: weddings.first.weddingId);
       },
@@ -123,7 +125,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                 Expanded(
                   child: photosAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => const Center(child: Text('Não foi possível carregar.')),
+                    error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId))),
                     data: (photos) {
                       var approved = photos.where((p) => p.status == 'approved').toList();
                       if (_tab == _GalleryTab.mine) {
@@ -133,47 +135,19 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                       }
 
                       return ListView(
-                        padding: const EdgeInsets.fromLTRB(
+                        padding: EdgeInsets.fromLTRB(
                           AppTheme.screenMargin,
                           0,
                           AppTheme.screenMargin,
-                          140,
+                          FloatingFilterBar.bottomPadding(aboveNav: true),
                         ),
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _GalleryTabChip(
-                                  label: 'Todas as fotos',
-                                  selected: _tab == _GalleryTab.all,
-                                  onTap: () => setState(() => _tab = _GalleryTab.all),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _GalleryTabChip(
-                                  label: 'As tuas fotos',
-                                  selected: _tab == _GalleryTab.mine,
-                                  onTap: () => setState(() => _tab = _GalleryTab.mine),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _GalleryTabChip(
-                                  label: 'Favoritas',
-                                  selected: _tab == _GalleryTab.favorites,
-                                  onTap: () => setState(() => _tab = _GalleryTab.favorites),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: AppColors.pink,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(AppRadius.lg),
                             ),
                             child: Column(
                               children: [
@@ -189,7 +163,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                                     const Expanded(
                                       child: Text(
                                         'Ajuda-nos a guardar estes momentos! Carrega aqui as tuas fotos do casamento.',
-                                        style: TextStyle(fontSize: 13, color: AppTheme.ink),
+                                        style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink),
                                       ),
                                     ),
                                   ],
@@ -203,11 +177,11 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
                                       color: AppTheme.accentOliveDark,
-                                      borderRadius: BorderRadius.circular(999),
+                                      borderRadius: BorderRadius.circular(AppRadius.pill),
                                     ),
                                     child: const Text(
                                       'Adicionar fotos',
-                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13.5),
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
                                     ),
                                   ),
                                 ),
@@ -234,7 +208,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                                 final photo = approved[index];
                                 final favorited = _favorites.contains(photo.id);
                                 return ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(AppRadius.sm),
                                   child: Stack(
                                     fit: StackFit.expand,
                                     children: [
@@ -270,7 +244,15 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: GuestBottomNav(current: GuestTab.gallery, weddingId: widget.weddingId),
+            child: GuestBottomNav(current: GuestTab.gallery, weddingId: widget.weddingId, top: FilterChipsRow(
+              items: const [
+                FilterBarItem('Todas'),
+                FilterBarItem('As tuas'),
+                FilterBarItem('Favoritas'),
+              ],
+              selected: _GalleryTab.values.indexOf(_tab),
+              onSelected: (i) => setState(() => _tab = _GalleryTab.values[i]),
+            )),
           ),
         ],
       ),
@@ -278,36 +260,3 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
   }
 }
 
-class _GalleryTabChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _GalleryTabChip({required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: selected ? Colors.white : AppTheme.ink,
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
-        ),
-      ),
-    );
-  }
-}

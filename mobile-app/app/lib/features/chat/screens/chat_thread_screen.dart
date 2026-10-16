@@ -165,7 +165,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: TextField(
                         controller: _messageController,
@@ -175,7 +175,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                           filled: true,
                           fillColor: Colors.white,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                             borderSide: BorderSide.none,
                           ),
                           contentPadding: const EdgeInsets.symmetric(
@@ -219,7 +219,7 @@ class _TextBubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isMe ? AppTheme.accentOliveDark : AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Text(
           text,
@@ -313,7 +313,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(
             color: AppTheme.accentOliveDark.withValues(alpha: 0.4),
           ),
@@ -325,7 +325,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
               'Proposta',
               style: TextStyle(
                 color: AppTheme.inkMuted,
-                fontSize: 11,
+                fontSize: AppFontSize.xs,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -334,14 +334,14 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
               message.proposalTitle ?? 'Proposta',
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 14.5,
+                fontSize: AppFontSize.base,
                 color: AppTheme.ink,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               '${message.proposalPrice?.toStringAsFixed(0)} € · sinal ${message.proposalDepositAmount?.toStringAsFixed(0)} €',
-              style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+              style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
             ),
             const SizedBox(height: 10),
             SizedBox(
@@ -353,7 +353,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                 ),
                 child: Text(

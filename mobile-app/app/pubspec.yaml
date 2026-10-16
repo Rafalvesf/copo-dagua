@@ -36,7 +36,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.4.2
   go_router: ^17.4.0
-  google_fonts: ^6.2.1
   supabase_flutter: ^2.5.0
   url_launcher: ^6.3.1
   image_picker: ^1.1.2
@@ -72,5 +71,51 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
 
-  # Fonte trocada para Inter (via pacote google_fonts) — os ficheiros
-  # Aeonik trial em assets/fonts/ ficaram por usar, ver nota nesse README.
+  # Roboto embutida como família própria (antes vinha do pacote
+  # google_fonts, descarregada em runtime de fonts.gstatic.com). Com os
+  # pesos declarados aqui, `fontWeight: w600/w700/w800` usa o ficheiro
+  # certo em vez de negrito sintetizado, a app funciona offline e os
+  # testes de widgets deixam de depender de rede.
+  # Ficheiros gerados a partir do Roboto variável de google/fonts
+  # (OFL, ver assets/fonts/roboto/OFL.txt), instanciados por peso e
+  # reduzidos a Latin + Latin-1 + Latin Extended-A + pontuação/€.
+  # Os ficheiros Aeonik trial em assets/fonts/ continuam por usar.
+  fonts:
+    # Fonte principal da app (redesign 2026-10): Louis George Café,
+    # grátis para uso pessoal e comercial (assets/fonts/louis_george_cafe/
+    # LICENSE.txt). Subset Latin + Latin-1 + Latin Ext-A. A Roboto fica como
+    # fallback (o Bold não tem travessão, por exemplo).
+    - family: LouisGeorgeCafe
+      fonts:
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Light.ttf
+          weight: 300
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-LightItalic.ttf
+          weight: 300
+          style: italic
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-BoldItalic.ttf
+          weight: 700
+          style: italic
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/roboto/Roboto-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/roboto/Roboto-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/roboto/Roboto-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/roboto/Roboto-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/roboto/Roboto-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/roboto/Roboto-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/roboto/Roboto-Black.ttf
+          weight: 900

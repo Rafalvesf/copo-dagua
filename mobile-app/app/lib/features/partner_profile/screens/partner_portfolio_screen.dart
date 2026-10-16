@@ -10,6 +10,7 @@ import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 /// Portefólio real — liga-se a `partner_portfolio_items`
 /// (`database/migrations/023_portfolio_storage.sql`). Mín. 3 imagens
@@ -104,8 +105,7 @@ class _PartnerPortfolioScreenState extends ConsumerState<PartnerPortfolioScreen>
             Expanded(
               child: itemsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) =>
-                    const Center(child: Text('Não foi possível carregar.')),
+                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerPortfolioProvider)),
                 data: (items) {
                   final images = items.where((i) => i.mediaType == PortfolioMediaType.image).toList();
                   final videos = items.where((i) => i.mediaType == PortfolioMediaType.video).toList();
@@ -174,7 +174,7 @@ class _RequirementBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: complete ? AppColors.green.withValues(alpha: 0.4) : AppColors.yellow.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Row(
         children: [
@@ -189,7 +189,7 @@ class _RequirementBanner extends StatelessWidget {
               complete
                   ? 'Já tens o mínimo de $_minImages fotos para poderes submeter o perfil.'
                   : '$imageCount/$_minImages fotos — mínimo obrigatório para submeter o perfil.',
-              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppTheme.ink),
+              style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w600, color: AppTheme.ink),
             ),
           ),
         ],
@@ -212,14 +212,14 @@ class _ActionPill extends StatelessWidget {
       decoration: BoxDecoration(
         color: outlined ? AppTheme.surface : AppTheme.accentOliveDark,
         border: outlined ? Border.all(color: AppTheme.accentOliveDark) : null,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
         label,
         style: TextStyle(
           color: outlined ? AppTheme.accentOliveDark : Colors.white,
           fontWeight: FontWeight.w700,
-          fontSize: 15,
+          fontSize: AppFontSize.lg,
         ),
       ),
     );
@@ -235,7 +235,7 @@ class _PortfolioTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(AppRadius.lg),
       child: Stack(
         fit: StackFit.expand,
         children: [

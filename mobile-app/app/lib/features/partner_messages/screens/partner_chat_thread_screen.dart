@@ -130,7 +130,7 @@ class _PartnerChatThreadScreenState
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: TextField(
                         controller: _messageController,
@@ -140,7 +140,7 @@ class _PartnerChatThreadScreenState
                           filled: true,
                           fillColor: Colors.white,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                             borderSide: BorderSide.none,
                           ),
                           contentPadding: const EdgeInsets.symmetric(
@@ -184,7 +184,7 @@ class _TextBubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: fromPartner ? AppColors.greenDark : AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Text(
           text,
@@ -213,7 +213,7 @@ class _ProposalCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(color: AppColors.greenDark.withValues(alpha: 0.4)),
         ),
         child: Column(
@@ -223,7 +223,7 @@ class _ProposalCard extends StatelessWidget {
               'Proposta enviada',
               style: TextStyle(
                 color: AppTheme.inkMuted,
-                fontSize: 11,
+                fontSize: AppFontSize.xs,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -232,14 +232,14 @@ class _ProposalCard extends StatelessWidget {
               message.proposalTitle ?? 'Proposta',
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 14.5,
+                fontSize: AppFontSize.base,
                 color: AppTheme.ink,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               '${message.proposalPrice?.toStringAsFixed(0)} € · sinal ${message.proposalDepositAmount?.toStringAsFixed(0)} €',
-              style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+              style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
             ),
           ],
         ),

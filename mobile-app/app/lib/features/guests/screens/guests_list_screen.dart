@@ -9,13 +9,13 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
-import '../../../shared/widgets/cover_flow_picker.dart';
 import '../../../shared/widgets/fading_scroll.dart';
-import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_widgets.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/floating_filter_bar.dart';
 
 class GuestsListScreen extends ConsumerStatefulWidget {
   const GuestsListScreen({super.key});
@@ -105,7 +105,8 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                     children: [
                       PageHeader(
                         title: 'Convidados',
-                        titleFontSize: 26,
+                        centered: true,
+                        trailing: AddActionButton(onTap: _addGuest),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(
@@ -119,7 +120,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                             Expanded(
                               child: Container(
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(999),
+                                  borderRadius: BorderRadius.circular(AppRadius.pill),
                                   boxShadow: AppTheme.searchBarShadow,
                                 ),
                                 child: TextField(
@@ -130,7 +131,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                                     filled: true,
                                     fillColor: Colors.white,
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(999),
+                                      borderRadius: BorderRadius.circular(AppRadius.pill),
                                       borderSide: const BorderSide(
                                         color: AppTheme.accentOliveDark,
                                       ),
@@ -151,39 +152,9 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                                 onTap: () => _shareInvite(wedding),
                               ),
                             ],
-                            const SizedBox(width: 10),
-                            CircleIconButton(
-                              icon: Icons.add,
-                              background: AppTheme.ink,
-                              foreground: Colors.white,
-                              size: 46,
-                              onTap: _addGuest,
-                            ),
                           ],
                         ),
                       ),
-                      if (groups.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppTheme.screenMargin,
-                            14,
-                            AppTheme.screenMargin,
-                            0,
-                          ),
-                          child: CoverFlowPicker<String?>(
-                            options: [null, ...groups],
-                            selected: _groupFilter,
-                            itemExtent: 20,
-                            itemBuilder: (context, group, isSelected) =>
-                                CategoryPillLabel(
-                                  label: group ?? 'Todos',
-                                  big: group == null,
-                                  selected: isSelected,
-                                ),
-                            onChanged: (group) =>
-                                setState(() => _groupFilter = group),
-                          ),
-                        ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(
                           AppTheme.screenMargin,
@@ -242,19 +213,31 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                         ),
                       ),
                       Expanded(
-                        child: visible.isEmpty
-                            ? const Center(
-                                child: Text('Sem convidados nesta categoria.'),
+                        child: state.guests.isEmpty
+                            ? IllustratedEmptyState(
+                                imageAsset: 'assets/images/nav_icon_bears.png',
+                                title: 'Quem vem celebrar convosco?',
+                                message: 'Comecem pela família mais próxima. A lista pode crescer aos poucos, e cada convidado confirma pelo link do convite.',
+                                primaryLabel: 'Adicionar o primeiro convidado',
+                                onPrimary: _addGuest,
+                                secondaryLabel: wedding == null ? null : 'Partilhar convite',
+                                onSecondary: wedding == null ? null : () => _shareInvite(wedding),
                               )
+                            : visible.isEmpty
+                            ? const EmptyStateView(message: 'Sem convidados nesta categoria.', icon: Icons.people_outline)
                             : EdgeFade(
                                 topFadeHeight: 32,
-                                bottomFadeHeight: 140,
+                                bottomFadeHeight: 32,
                                 child: ListView.builder(
-                                  padding: const EdgeInsets.fromLTRB(
+                                  padding: EdgeInsets.fromLTRB(
                                     AppTheme.screenMargin,
                                     16,
                                     AppTheme.screenMargin,
-                                    140,
+                                    groups.isEmpty
+                                        ? 40
+                                        : FloatingFilterBar.bottomPadding(
+                                            aboveNav: false,
+                                          ),
                                   ),
                                   itemCount: visible.length,
                                   itemBuilder: (context, index) {
@@ -271,12 +254,25 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                     ],
                   ),
                 ),
-                const Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.wedding),
-                ),
+                if (groups.isNotEmpty)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: FloatingFilterBar(
+                      items: [
+                        FilterBarItem('Todos'),
+                        for (final group in groups)
+                          FilterBarItem(group),
+                      ],
+                      selected: _groupFilter == null
+                          ? 0
+                          : groups.indexOf(_groupFilter!) + 1,
+                      onSelected: (i) => setState(
+                        () => _groupFilter = i == 0 ? null : groups[i - 1],
+                      ),
+                    ),
+                  ),
               ],
             ),
     );
@@ -319,7 +315,7 @@ class _StatTile extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: big ? 13 : 12, horizontal: 8),
         decoration: BoxDecoration(
           color: background ?? AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Column(
           children: [
@@ -348,7 +344,7 @@ class _StatTile extends StatelessWidget {
               Text(
                 '$pct%',
                 style: TextStyle(
-                  fontSize: 9.5,
+                  fontSize: AppFontSize.xxxs,
                   color: iconColor,
                   fontWeight: FontWeight.w700,
                 ),
@@ -404,14 +400,14 @@ class InviteShareSheetState extends State<InviteShareSheet> {
           Text(
             'Envia este link aos teus convidados — vão precisar de criar '
             'conta para confirmar presença.',
-            style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.green,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Row(
               children: [
@@ -420,7 +416,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
                     widget.wedding.inviteUrl,
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      fontSize: AppFontSize.md,
                     ),
                   ),
                 ),
@@ -443,14 +439,14 @@ class InviteShareSheetState extends State<InviteShareSheet> {
             Text(
               'Se já têm a app instalada, os convidados usam este código '
               'ao criar conta para ficar ligados ao vosso casamento.',
-              style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+              style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
             ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: AppColors.green,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Row(
                 children: [
@@ -459,7 +455,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
                       guestCode,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                        fontSize: AppFontSize.lg,
                         letterSpacing: 0.5,
                       ),
                     ),

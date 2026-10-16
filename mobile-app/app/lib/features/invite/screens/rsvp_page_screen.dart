@@ -135,7 +135,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                       const Text(
                         'Resposta enviada. Obrigado!',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.xl),
                       ),
                     ],
                   ),
@@ -166,7 +166,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                   Text(
                     'Olá, $guestName',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.h3),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -174,7 +174,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                     '${weddingDate != null ? ' — $weddingDate' : ''}'
                     '${location != null && location.isNotEmpty ? ' · $location' : ''}',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                   ),
                   const SizedBox(height: 24),
                   Row(

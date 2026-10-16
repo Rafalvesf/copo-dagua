@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'floating_filter_bar.dart' show ConnectedFilterNav;
+import 'floating_bottom_nav.dart' show NavBubble;
 
 enum GuestTab { home, gifts, gallery, profile }
 
@@ -22,7 +24,16 @@ class GuestBottomNav extends StatelessWidget {
   /// 100% convidado. `null` = comportamento normal de sempre.
   final String? weddingId;
 
-  const GuestBottomNav({super.key, required this.current, this.weddingId});
+  /// Filtros do ecrã ([FilterChipsRow]) ligados por cima dos
+  /// separadores, na mesma ilha (redesign 2026-10).
+  final Widget? top;
+
+  const GuestBottomNav({
+    super.key,
+    required this.current,
+    this.weddingId,
+    this.top,
+  });
 
   String _path(String base) => weddingId == null ? base : '$base/$weddingId';
 
@@ -34,10 +45,14 @@ class GuestBottomNav extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
           boxShadow: AppTheme.navBarShadow,
         ),
-        child: Padding(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
+          child: ConnectedFilterNav(
+          top: top,
+          navRow: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
             children: [
@@ -83,6 +98,8 @@ class GuestBottomNav extends StatelessWidget {
               ),
             ],
           ),
+          ),
+          ),
         ),
       ),
     );
@@ -104,15 +121,27 @@ class _GuestNavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppTheme.accentOliveDark : AppTheme.navIconMuted;
+    // Redesign 2026-10 ("botão quando selecionado deve ser bolha
+    // verde"): o ativo fica numa bolha verde com o ícone a branco.
+    final color = active ? Colors.white : AppTheme.navIconMuted;
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: SizedBox(
           height: 42,
-          child: Center(child: Icon(active ? activeIcon : icon, color: color, size: 32)),
+          child: Center(
+            child: NavBubble(
+              active: active,
+              size: 42,
+              child: Icon(
+                active ? activeIcon : icon,
+                color: color,
+                size: active ? 24 : 32,
+              ),
+            ),
+          ),
         ),
       ),
     );

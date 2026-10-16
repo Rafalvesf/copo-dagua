@@ -36,7 +36,7 @@ class GuestWeddingDetailsScreen extends StatelessWidget {
                       const SizedBox(width: 4),
                       const Text(
                         'Detalhes do casamento',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                        style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink),
                       ),
                     ],
                   ),
@@ -46,7 +46,7 @@ class GuestWeddingDetailsScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 120),
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
                     child: AspectRatio(
                       aspectRatio: 16 / 9,
                       child: wedding.coverPhotoUrl == null
@@ -62,7 +62,7 @@ class GuestWeddingDetailsScreen extends StatelessWidget {
                   Text(
                     wedding.displayNames,
                     textAlign: TextAlign.center,
-                    style: AppTypography.displaySerif(fontSize: 24, color: AppTheme.ink),
+                    style: AppTypography.displaySerif(fontSize: AppFontSize.h2, color: AppTheme.ink),
                   ),
                   const SizedBox(height: 20),
                   _DetailRow(
@@ -89,14 +89,14 @@ class GuestWeddingDetailsScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     Text(
                       wedding.welcomeMessage!,
-                      style: const TextStyle(color: AppTheme.ink, fontSize: 14.5, height: 1.5),
+                      style: const TextStyle(color: AppTheme.ink, fontSize: AppFontSize.base, height: 1.5),
                     ),
                   ],
                   if (wedding.themeColors.isNotEmpty) ...[
                     const SizedBox(height: 24),
                     const Text(
                       'Cores do casamento',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink),
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg, color: AppTheme.ink),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -116,7 +116,7 @@ class GuestWeddingDetailsScreen extends StatelessWidget {
                       children: [
                         TextSpan(
                           text: '"${wedding.quote?.isNotEmpty == true ? wedding.quote : 'O amor está nos detalhes.'}"  ',
-                          style: const TextStyle(fontStyle: FontStyle.italic, color: AppTheme.ink, fontSize: 14.5),
+                          style: const TextStyle(fontStyle: FontStyle.italic, color: AppTheme.ink, fontSize: AppFontSize.base),
                         ),
                         const WidgetSpan(
                           alignment: PlaceholderAlignment.middle,
@@ -157,7 +157,7 @@ class _DetailRow extends StatelessWidget {
         Icon(icon, size: 18, color: AppTheme.inkMuted),
         const SizedBox(width: 10),
         Expanded(
-          child: Text(label, style: const TextStyle(color: AppTheme.ink, fontSize: 14.5)),
+          child: Text(label, style: const TextStyle(color: AppTheme.ink, fontSize: AppFontSize.base)),
         ),
       ],
     );

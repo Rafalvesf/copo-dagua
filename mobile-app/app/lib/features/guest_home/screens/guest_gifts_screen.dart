@@ -46,7 +46,7 @@ class GuestGiftsScreen extends StatelessWidget {
                     ),
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(AppRadius.xl),
                         child: AspectRatio(
                           aspectRatio: 16 / 10,
                           child: Image.asset('assets/images/gifts_hero.png', fit: BoxFit.cover),
@@ -58,7 +58,7 @@ class GuestGiftsScreen extends StatelessWidget {
                         children: const [
                           Text(
                             'O vosso apoio significa tudo ',
-                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                            style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink),
                           ),
                           Icon(Icons.favorite_border, size: 16, color: AppStatusColors.declined),
                         ],
@@ -67,7 +67,7 @@ class GuestGiftsScreen extends StatelessWidget {
                       const Text(
                         'A tua presença é o nosso maior presente. Mas, se quiseres ajudar-nos a construir o nosso futuro, deixamos aqui algumas sugestões.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: AppTheme.inkMuted, fontSize: 13.5, height: 1.4),
+                        style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md, height: 1.4),
                       ),
                       const SizedBox(height: 24),
                       SnappyTap(
@@ -78,7 +78,7 @@ class GuestGiftsScreen extends StatelessWidget {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: AppColors.pink,
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                           ),
                           child: const Text(
                             'Ver lista de presentes',
@@ -92,7 +92,7 @@ class GuestGiftsScreen extends StatelessWidget {
                           Expanded(child: Divider(color: AppTheme.borderMuted)),
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 10),
-                            child: Text('ou', style: TextStyle(color: AppTheme.inkMuted, fontSize: 12)),
+                            child: Text('ou', style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm)),
                           ),
                           Expanded(child: Divider(color: AppTheme.borderMuted)),
                         ],
@@ -106,7 +106,7 @@ class GuestGiftsScreen extends StatelessWidget {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: AppTheme.surface,
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
@@ -124,7 +124,7 @@ class GuestGiftsScreen extends StatelessWidget {
                         children: const [
                           Text(
                             'Todo o apoio é recebido com muito carinho! ',
-                            style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+                            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                           ),
                           Icon(Icons.favorite_border, size: 13, color: AppStatusColors.declined),
                         ],

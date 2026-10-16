@@ -170,7 +170,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
                   const Text(
                     'Enviar proposta',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: AppFontSize.xl,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.ink,
                     ),
@@ -180,7 +180,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
               const SizedBox(height: 16),
               Text(
                 'Para ${widget.booking.clientName}',
-                style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
               ),
               const SizedBox(height: 16),
               if (_formError != null) ErrorBanner(message: _formError!),
@@ -248,18 +248,18 @@ class _DepositPreview extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: Row(
             children: [
               Text(
                 'Sinal (${pct.toStringAsFixed(0)}%, fixo pela plataforma)',
-                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
               ),
               const Spacer(),
               Text(
                 deposit == null ? '—' : '${deposit.toStringAsFixed(2)} €',
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
               ),
             ],
           ),

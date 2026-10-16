@@ -228,7 +228,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     padding: EdgeInsets.only(top: 6),
                     child: Text(
                       'A verificar código...',
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+                      style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                     ),
                   )
                 else if (_foundWeddingNames != null)
@@ -238,7 +238,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       '✓ Vais juntar-te ao casamento de $_foundWeddingNames',
                       style: const TextStyle(
                         color: AppStatusColors.confirmed,
-                        fontSize: 12.5,
+                        fontSize: AppFontSize.sm,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

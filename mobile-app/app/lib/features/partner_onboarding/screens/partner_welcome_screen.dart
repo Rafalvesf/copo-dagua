@@ -503,7 +503,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     decoration: BoxDecoration(
                       border: Border.all(color: AppTheme.accentOliveDark),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                     child: Text(
                       _pickedLogo != null || (_existingLogoUrl?.isNotEmpty ?? false)
@@ -512,7 +512,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                       style: const TextStyle(
                         color: AppTheme.accentOliveDark,
                         fontWeight: FontWeight.w700,
-                        fontSize: 14,
+                        fontSize: AppFontSize.base,
                       ),
                     ),
                   ),
@@ -546,7 +546,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                     itemBuilder: (context, index) {
                       final item = index < images.length ? images[index] : videos[index - images.length];
                       return ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
@@ -584,11 +584,11 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: AppTheme.accentOliveDark,
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                     child: Text(
                       _portfolioBusy ? 'A enviar...' : '+ Adicionar fotos',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
                     ),
                   ),
                 ),
@@ -601,11 +601,11 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         border: Border.all(color: AppTheme.accentOliveDark),
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: const Text(
                         '+ Adicionar vídeo (opcional)',
-                        style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 14),
+                        style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
                       ),
                     ),
                   ),
@@ -684,7 +684,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
                       ),
                       child: Row(
                         children: [
@@ -759,12 +759,12 @@ class _IntroView extends StatelessWidget {
                     children: [
                       Text(
                         'Olá, parceiro!',
-                        style: AppTypography.displaySerif(fontSize: 34, color: AppTheme.ink),
+                        style: AppTypography.displaySerif(fontSize: AppFontSize.display, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 14),
                       const Text(
                         'Estamos felizes por ter-te aqui.',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                        style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -773,7 +773,7 @@ class _IntroView extends StatelessWidget {
                         'logótipo, portefólio de fotos, descrição, área '
                         'de serviço, NIF e preços, mais dois passos '
                         'opcionais no fim.',
-                        style: TextStyle(fontSize: 14.5, height: 1.4, color: AppTheme.inkMuted),
+                        style: TextStyle(fontSize: AppFontSize.base, height: 1.4, color: AppTheme.inkMuted),
                       ),
                       const SizedBox(height: 32),
                       Center(
@@ -840,14 +840,14 @@ class _PricingModeChip extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           label,
           style: TextStyle(
             color: selected ? Colors.white : AppTheme.ink,
             fontWeight: FontWeight.w700,
-            fontSize: 13.5,
+            fontSize: AppFontSize.md,
           ),
         ),
       ),
@@ -868,7 +868,7 @@ class SnappyCategoryPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.sm),
       child: InputDecorator(
         decoration: const InputDecoration(labelText: 'Categorias'),
         child: Text(

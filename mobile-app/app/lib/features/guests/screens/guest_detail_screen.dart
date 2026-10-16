@@ -101,7 +101,7 @@ class _GuestDetailHeader extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: AppTheme.surface,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
@@ -269,12 +269,12 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
                 children: [
                   Text(
                     guest.name,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                    style: const TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: AppTheme.ink),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     guest.group.isEmpty ? 'Convidado' : guest.group,
-                    style: const TextStyle(color: AppTheme.inkMuted, fontSize: 14),
+                    style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.base),
                   ),
                   const SizedBox(height: 8),
                   SnappyTap(
@@ -331,7 +331,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
         Container(
           decoration: BoxDecoration(
             color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
           ),
           child: Column(
             children: [
@@ -371,7 +371,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
           const SizedBox(height: 28),
           const Text(
             'Histórico',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink),
+            style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink),
           ),
           const SizedBox(height: 12),
           for (var i = 0; i < history.length; i++)
@@ -399,7 +399,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
@@ -420,7 +420,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: AppStatusColors.declined.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -495,7 +495,7 @@ class _ContactActionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Column(
           children: [
@@ -504,7 +504,7 @@ class _ContactActionButton extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: AppFontSize.sm,
                 fontWeight: FontWeight.w600,
                 color: disabled ? AppTheme.inkMuted.withValues(alpha: 0.4) : AppTheme.ink,
               ),
@@ -549,7 +549,7 @@ class _InfoRow extends StatelessWidget {
                   Text(label, style: const TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w500)),
                   if (subtitle != null) ...[
                     const SizedBox(height: 4),
-                    Text(subtitle!, style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13)),
+                    Text(subtitle!, style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md)),
                   ],
                 ],
               ),
@@ -605,7 +605,7 @@ class _HistoryTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     _formatHistoryDate(entry.time),
-                    style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12.5),
+                    style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                   ),
                 ],
               ),

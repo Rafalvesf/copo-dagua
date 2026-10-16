@@ -8,10 +8,12 @@ import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -50,7 +52,7 @@ class GalleryScreen extends ConsumerWidget {
     if (resolvedWeddingId == null) {
       return GradientScaffold(
         background: AppBackground.subtle,
-        body: const Center(child: Text('Sem casamento associado.')),
+        body: const EmptyStateView(message: 'Sem casamento associado.', icon: Icons.favorite_border),
       );
     }
 
@@ -63,14 +65,11 @@ class GalleryScreen extends ConsumerWidget {
             child: Column(
               children: [
                 PageHeader(
-                  titleFontSize: 30,
+                  title: 'Galeria',
                   topPadding: 8,
                   // Sem seta de voltar sempre que há navbar (casal ou
-                  // convidado, incluindo "Modo convidado" com
-                  // `weddingId` explícito) — mesma convenção de todos
-                  // os outros ecrãs raiz da app.
+                  // convidado) — mesma convenção dos outros ecrãs raiz.
                   showBack: !(showNav || showGuestNav),
-                  trailing: (showNav || showGuestNav) ? const SizedBox(width: 46, height: 46) : null,
                 ),
                 const SizedBox(height: 16),
                 Expanded(
@@ -78,25 +77,26 @@ class GalleryScreen extends ConsumerWidget {
                     weddingId: resolvedWeddingId,
                     isCouple: isCouple,
                     currentUserId: profile?.id,
+                    aboveNav: showNav || showGuestNav,
+                    // A navbar vive dentro do corpo para os filtros da
+                    // galeria ficarem ligados a ela (redesign 2026-10).
+                    navBuilder: showNav
+                        ? (top) => FloatingBottomNav(
+                            current: AppTab.gallery,
+                            top: top,
+                          )
+                        : showGuestNav
+                        ? (top) => GuestBottomNav(
+                            current: GuestTab.gallery,
+                            weddingId: weddingId,
+                            top: top,
+                          )
+                        : null,
                   ),
                 ),
               ],
             ),
           ),
-          if (showNav)
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: FloatingBottomNav(current: AppTab.gallery),
-            ),
-          if (showGuestNav)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: GuestBottomNav(current: GuestTab.gallery, weddingId: weddingId),
-            ),
         ],
       ),
     );
@@ -151,8 +151,16 @@ class _GalleryBody extends ConsumerStatefulWidget {
   final String weddingId;
   final bool isCouple;
   final String? currentUserId;
+  final bool aboveNav;
+  final Widget Function(Widget? top)? navBuilder;
 
-  const _GalleryBody({required this.weddingId, required this.isCouple, required this.currentUserId});
+  const _GalleryBody({
+    required this.weddingId,
+    required this.isCouple,
+    required this.currentUserId,
+    required this.aboveNav,
+    required this.navBuilder,
+  });
 
   @override
   ConsumerState<_GalleryBody> createState() => _GalleryBodyState();
@@ -166,9 +174,22 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
   Widget build(BuildContext context) {
     final photosAsync = ref.watch(weddingGalleryPhotosProvider(widget.weddingId));
 
+    Widget withNav(Widget child, {Widget? top}) => Stack(
+          children: [
+            Positioned.fill(child: child),
+            if (widget.navBuilder != null)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: widget.navBuilder!(top),
+              ),
+          ],
+        );
+
     return photosAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, st) => const Center(child: Text('Não foi possível carregar.')),
+      loading: () => withNav(const Center(child: CircularProgressIndicator())),
+      error: (err, st) => withNav(AsyncErrorView(onRetry: () => ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId)))),
       data: (photos) {
         final pending = widget.isCouple
             ? photos.where((p) => p.status == 'pending').toList()
@@ -180,48 +201,25 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
           approved = approved.where((p) => _favorites.contains(p.id)).toList();
         }
 
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(
+        const tabs = [
+          _GalleryTab.all,
+          _GalleryTab.mine,
+          _GalleryTab.favorites,
+        ];
+        final list = ListView(
+          padding: EdgeInsets.fromLTRB(
             AppTheme.screenMargin,
             0,
             AppTheme.screenMargin,
-            140,
+            FloatingFilterBar.bottomPadding(aboveNav: widget.aboveNav),
           ),
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _GalleryTabChip(
-                    label: 'Todas as fotos',
-                    selected: _tab == _GalleryTab.all,
-                    onTap: () => setState(() => _tab = _GalleryTab.all),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _GalleryTabChip(
-                    label: 'As tuas fotos',
-                    selected: _tab == _GalleryTab.mine,
-                    onTap: () => setState(() => _tab = _GalleryTab.mine),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _GalleryTabChip(
-                    label: 'Favoritas',
-                    selected: _tab == _GalleryTab.favorites,
-                    onTap: () => setState(() => _tab = _GalleryTab.favorites),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.pink,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
               child: Column(
                 children: [
@@ -237,7 +235,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                       const Expanded(
                         child: Text(
                           'Ajuda-nos a guardar estes momentos! Carrega aqui as tuas fotos do casamento.',
-                          style: TextStyle(fontSize: 13, color: AppTheme.ink),
+                          style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink),
                         ),
                       ),
                     ],
@@ -251,11 +249,11 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: AppTheme.accentOliveDark,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: const Text(
                         'Adicionar fotos',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13.5),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
                       ),
                     ),
                   ),
@@ -266,7 +264,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
             if (pending.isNotEmpty) ...[
               Text(
                 'Pendentes de aprovação (${pending.length})',
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
               ),
               const SizedBox(height: 10),
               for (final photo in pending)
@@ -295,7 +293,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                   final photo = approved[index];
                   final favorited = _favorites.contains(photo.id);
                   return ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -321,44 +319,36 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
               ),
           ],
         );
+        final filters = FilterChipsRow(
+          items: const [
+            FilterBarItem('Todas'),
+            FilterBarItem('As tuas'),
+            FilterBarItem('Favoritas'),
+          ],
+          selected: tabs.indexOf(_tab),
+          onSelected: (i) => setState(() => _tab = tabs[i]),
+        );
+        if (widget.navBuilder != null) return withNav(list, top: filters);
+        return Stack(
+          children: [
+            Positioned.fill(child: list),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: FloatingFilterBar(
+                items: filters.items,
+                selected: filters.selected,
+                onSelected: filters.onSelected,
+              ),
+            ),
+          ],
+        );
       },
     );
   }
 }
 
-class _GalleryTabChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _GalleryTabChip({required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: selected ? Colors.white : AppTheme.ink,
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _PendingPhotoCard extends ConsumerWidget {
   final GalleryPhoto photo;
@@ -372,12 +362,12 @@ class _PendingPhotoCard extends ConsumerWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
             child: Image.network(
               photo.imageUrl,
               width: 56,
@@ -389,7 +379,7 @@ class _PendingPhotoCard extends ConsumerWidget {
           Expanded(
             child: Text(
               photo.caption ?? 'Foto por aprovar',
-              style: const TextStyle(fontSize: 13),
+              style: const TextStyle(fontSize: AppFontSize.md),
             ),
           ),
           IconButton(

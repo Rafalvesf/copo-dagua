@@ -93,7 +93,7 @@ class _InviteTokenScreenState extends ConsumerState<InviteTokenScreen> {
                       const Text(
                         'Este é um convite individual do casamento.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: AppTheme.ink),
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.xl, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 8),
                       const Text(

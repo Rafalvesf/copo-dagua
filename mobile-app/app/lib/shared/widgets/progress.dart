@@ -20,7 +20,7 @@ class StepProgressBar extends StatelessWidget {
             margin: EdgeInsets.only(right: i == totalSteps - 1 ? 0 : 4),
             decoration: BoxDecoration(
               color: active ? colorScheme.primary : colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
             ),
           ),
         );
@@ -51,7 +51,7 @@ class CountdownBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: light ? Colors.white.withValues(alpha: 0.6) : colorScheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
         text,

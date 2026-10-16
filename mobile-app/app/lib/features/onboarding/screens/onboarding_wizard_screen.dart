@@ -18,6 +18,18 @@ import '../../partner_onboarding/screens/partner_welcome_screen.dart';
 
 const _totalSteps = 7;
 
+/// Regiões sugeridas no passo da localização (redesign 2026-10) — um toque
+/// preenche o campo, que continua editável para uma localidade concreta.
+const _regions = [
+  'Norte',
+  'Centro',
+  'Lisboa',
+  'Alentejo',
+  'Algarve',
+  'Açores',
+  'Madeira',
+];
+
 /// Categorias "grandes" perguntadas logo no onboarding (RN37/38 do motor
 /// de tarefas) — as restantes ficam para `/service-preferences`, mais
 /// tarde, para não alongar o wizard.
@@ -94,23 +106,35 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
         onContinue: () async {
           setState(() => _saving = true);
           final wedding = _createdWedding!;
-          if (_alreadyBookedSlugs.isNotEmpty) {
-            await supabase.from('wedding_service_preferences').upsert([
-              for (final slug in _alreadyBookedSlugs)
-                {
-                  'wedding_id': wedding.id,
-                  'partner_category_slug': slug,
-                  'preference': 'already_booked',
-                  'updated_at': DateTime.now().toIso8601String(),
-                },
-            ]);
+          // Guardado antes dos `await`: o messenger vive acima do router,
+          // por isso continua válido depois do `context.go('/home')`.
+          final messenger = ScaffoldMessenger.of(context);
+          try {
+            if (_alreadyBookedSlugs.isNotEmpty) {
+              await supabase.from('wedding_service_preferences').upsert([
+                for (final slug in _alreadyBookedSlugs)
+                  {
+                    'wedding_id': wedding.id,
+                    'partner_category_slug': slug,
+                    'preference': 'already_booked',
+                    'updated_at': DateTime.now().toIso8601String(),
+                  },
+              ]);
+            }
+            if (!context.mounted) return;
+            await ref.read(authControllerProvider.notifier).completeOnboarding();
+          } catch (_) {
+            // Antes, uma falha aqui deixava o botão preso a carregar para
+            // sempre (`_saving` nunca voltava a `false`).
+            if (mounted) setState(() => _saving = false);
+            messenger.showSnackBar(
+              const SnackBar(content: Text('Não foi possível guardar. Tenta de novo.')),
+            );
+            return;
           }
           if (!context.mounted) return;
-          await ref.read(authControllerProvider.notifier).completeOnboarding();
-          if (!context.mounted) return;
           context.go('/home');
-          // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             SnackBar(content: Text('Casamento "${wedding.displayNames}" criado.')),
           );
         },
@@ -248,13 +272,38 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
         return _StepScaffold(
           question: 'Em que parte do país vai ser o casamento?',
           subtitle: 'Localização aproximada — podes afinar depois.',
-          child: AuthTextField(label: 'Localização', controller: _location),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final region in _regions)
+                    _ChoiceChip(
+                      label: region,
+                      selected: _location.text.trim() == region,
+                      onTap: () => setState(() => _location.text = region),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              AuthTextField(
+                label: 'Ou escreve a localidade',
+                controller: _location,
+                onChanged: (_) => setState(() {}),
+              ),
+            ],
+          ),
         );
       case 4:
         return _StepScaffold(
           question: 'Mais ou menos quantos convidados?',
           subtitle: 'Só uma estimativa — a lista real fica em Convidados.',
-          child: AuthTextField(label: 'Nº estimado de convidados', controller: _guests, keyboardType: TextInputType.number),
+          child: _GuestEstimate(
+            value: int.tryParse(_guests.text.trim()),
+            onChanged: (v) => setState(() => _guests.text = v == null ? '' : '$v'),
+          ),
         );
       case 5:
         return _StepScaffold(
@@ -386,7 +435,7 @@ class _AlreadyBookedRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(color: checked ? AppTheme.ink : Colors.transparent, width: 1.5),
         ),
         child: Row(
@@ -426,6 +475,131 @@ class _StepScaffold extends StatelessWidget {
         ],
         const SizedBox(height: 24),
         child,
+      ],
+    );
+  }
+}
+
+class _ChoiceChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ChoiceChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SnappyTap(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppTheme.ink : AppTheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: AppFontSize.base,
+            fontWeight: FontWeight.w700,
+            color: selected ? Colors.white : AppTheme.ink,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Estimativa de convidados (redesign 2026-10): número grande com − / +
+/// (de 10 em 10) e atalhos de escala, em vez de um campo de texto.
+class _GuestEstimate extends StatelessWidget {
+  final int? value;
+  final ValueChanged<int?> onChanged;
+
+  const _GuestEstimate({required this.value, required this.onChanged});
+
+  static const _presets = [50, 100, 150, 200];
+
+  @override
+  Widget build(BuildContext context) {
+    final current = value;
+    Widget stepButton(IconData icon, String label, int? next) => Semantics(
+          button: true,
+          label: label,
+          child: SnappyTap(
+            onTap: () => onChanged(next),
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                color: AppTheme.surface,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: AppTheme.ink),
+            ),
+          ),
+        );
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            stepButton(
+              Icons.remove_rounded,
+              'Menos 10',
+              current == null || current <= 10 ? null : current - 10,
+            ),
+            SizedBox(
+              width: 150,
+              child: Text(
+                current == null ? '—' : '$current',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: AppFontSize.hero,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.ink,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            stepButton(
+              Icons.add_rounded,
+              'Mais 10',
+              (current ?? 0) + 10,
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'convidados',
+          style: TextStyle(
+            fontSize: AppFontSize.base,
+            fontWeight: FontWeight.w300,
+            color: AppTheme.inkMuted,
+          ),
+        ),
+        const SizedBox(height: 24),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: [
+            for (final preset in _presets)
+              _ChoiceChip(
+                label: preset == 200 ? '200+' : '~$preset',
+                selected: current == preset,
+                onTap: () => onChanged(preset),
+              ),
+          ],
+        ),
       ],
     );
   }

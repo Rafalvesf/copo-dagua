@@ -68,7 +68,13 @@ class _SnappyTapState extends State<SnappyTap> {
         onTapDown: (_) => _setPressed(true),
         onTapUp: (_) => _setPressed(false),
         onTapCancel: () => _setPressed(false),
-        child: TweenAnimationBuilder<double>(
+        // Redesign 2026-10 (painel "Movimento"): encolhe para 96% ao tocar
+        // e volta com um ligeiro ressalto.
+        child: AnimatedScale(
+          scale: _pressed ? 0.96 : 1.0,
+          duration: Duration(milliseconds: _pressed ? 120 : 220),
+          curve: _pressed ? Curves.easeOut : Curves.easeOutBack,
+          child: TweenAnimationBuilder<double>(
           tween: Tween(end: _amount),
           duration: const Duration(milliseconds: 100),
           builder: (context, amount, child) {
@@ -82,6 +88,7 @@ class _SnappyTapState extends State<SnappyTap> {
             );
           },
           child: content,
+        ),
         ),
       ),
     );

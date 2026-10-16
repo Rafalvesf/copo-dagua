@@ -12,6 +12,7 @@ import '../../../core/wedding/date_format_pt.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 /// Home de quem se regista com `UserRole.guest` (`role_selection_screen.dart`,
 /// "Sou convidado") — pedido explícito do utilizador (mockup de
@@ -60,9 +61,7 @@ class GuestHomeScreen extends ConsumerWidget {
             bottom: false,
             child: weddingsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, st) => const Center(
-                child: Text('Não foi possível carregar o teu casamento.'),
-              ),
+              error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar o teu casamento.', onRetry: () => ref.invalidate(guestWeddingsProvider)),
               data: (weddings) {
                 if (weddings.isEmpty) {
                   return _EmptyState(profile: profile, ref: ref);
@@ -165,13 +164,13 @@ class _GuestHomeBody extends StatelessWidget {
         Text(
           'O nosso casamento',
           textAlign: TextAlign.center,
-          style: AppTypography.displaySerif(fontSize: 26, color: AppTheme.ink),
+          style: AppTypography.displaySerif(fontSize: AppFontSize.h2, color: AppTheme.ink),
         ),
         const SizedBox(height: 8),
         Text(
           wedding.displayNames,
           textAlign: TextAlign.center,
-          style: AppTypography.displaySerif(fontSize: 20, color: AppTheme.ink),
+          style: AppTypography.displaySerif(fontSize: AppFontSize.xxl, color: AppTheme.ink),
         ),
         const SizedBox(height: 8),
         const Text(
@@ -181,7 +180,7 @@ class _GuestHomeBody extends StatelessWidget {
         ),
         const SizedBox(height: 28),
         ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
           child: AspectRatio(
             aspectRatio: 4 / 3,
             child: wedding.coverPhotoUrl == null
@@ -204,7 +203,7 @@ class _GuestHomeBody extends StatelessWidget {
               children: [
                 Text(
                   'Mais detalhes',
-                  style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 13),
+                  style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
                 ),
                 SizedBox(width: 4),
                 Icon(Icons.chevron_right, size: 16, color: AppTheme.accentOliveDark),
@@ -256,7 +255,7 @@ class _GuestHomeBody extends StatelessWidget {
             style: const TextStyle(
               fontStyle: FontStyle.italic,
               color: AppTheme.ink,
-              fontSize: 14.5,
+              fontSize: AppFontSize.base,
             ),
           ),
         ),
@@ -283,7 +282,7 @@ class _FactColumn extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppTheme.ink),
+          style: const TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w600, color: AppTheme.ink),
         ),
       ],
     );
@@ -328,13 +327,13 @@ class _CountdownCardState extends State<_CountdownCard> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: remaining.isNegative
           ? const Text(
               'É hoje! 🎉',
               textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppTheme.ink),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg, color: AppTheme.ink),
             )
           : Column(
               children: [
@@ -345,7 +344,7 @@ class _CountdownCardState extends State<_CountdownCard> {
                     SizedBox(width: 6),
                     Text(
                       'Faltam apenas',
-                      style: TextStyle(color: AppTheme.inkMuted, fontWeight: FontWeight.w600, fontSize: 12.5),
+                      style: TextStyle(color: AppTheme.inkMuted, fontWeight: FontWeight.w600, fontSize: AppFontSize.sm),
                     ),
                   ],
                 ),
@@ -390,7 +389,7 @@ class GuestWeddingCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,7 +398,7 @@ class GuestWeddingCard extends StatelessWidget {
               wedding.displayNames,
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
-                fontSize: 16,
+                fontSize: AppFontSize.lg,
                 color: AppTheme.ink,
               ),
             ),
@@ -410,7 +409,7 @@ class GuestWeddingCard extends StatelessWidget {
                   if (dateLabel != null) dateLabel,
                   if (wedding.venue != null) wedding.venue!,
                 ].join(' · '),
-                style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
               ),
             ],
           ],
@@ -432,10 +431,10 @@ class _CountdownBox extends StatelessWidget {
       children: [
         Text(
           value.toString().padLeft(2, '0'),
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22, color: AppTheme.ink),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.h3, color: AppTheme.ink),
         ),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: 11)),
+        Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs)),
       ],
     );
   }

@@ -10,8 +10,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../features/partners/partner_style.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
-import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/form_fields.dart';
+import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -78,37 +78,27 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                   bottom: false,
                   child: EdgeFade(
                     topFadeHeight: 8,
-                    bottomFadeHeight: 140,
+                    bottomFadeHeight: 32,
                     child: ListView(
                       padding: EdgeInsets.zero,
                       children: [
                         PageHeader(
                           title: 'Orçamento',
-                          titleFontSize: 26,
+                          centered: true,
                           trailing: AddActionButton(onTap: _addExpense),
                         ),
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(
+                          padding: EdgeInsets.fromLTRB(
                             AppTheme.screenMargin,
                             16,
                             AppTheme.screenMargin,
-                            140,
+                            FloatingFilterBar.bottomPadding(aboveNav: false),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _SummaryCard(budget: budget),
-                              const SizedBox(height: 18),
-                              _FilterChipsRow(
-                                selected: _filter,
-                                total: total,
-                                paid: paid.length,
-                                pending: pending.length,
-                                onChanged: (f) => setState(() => _filter = f),
-                              ),
-                              const SizedBox(height: 14),
-                              Divider(color: AppTheme.borderMuted, height: 1),
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 24),
                               if (_filter == _BudgetFilter.paid)
                                 _ExpenseList(expenses: paid)
                               else if (_filter == _BudgetFilter.pending)
@@ -147,11 +137,32 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                     ),
                   ),
                 ),
-                const Positioned(
+                Positioned(
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.wedding),
+                  child: FloatingFilterBar(
+                    items: [
+                      FilterBarItem('Todas'),
+                      FilterBarItem('Pagas'),
+                      FilterBarItem('Pendentes'),
+                      FilterBarItem('Categorias'),
+                    ],
+                    selected: const [
+                      _BudgetFilter.all,
+                      _BudgetFilter.paid,
+                      _BudgetFilter.pending,
+                      _BudgetFilter.categories,
+                    ].indexOf(_filter),
+                    onSelected: (i) => setState(
+                      () => _filter = const [
+                        _BudgetFilter.all,
+                        _BudgetFilter.paid,
+                        _BudgetFilter.pending,
+                        _BudgetFilter.categories,
+                      ][i],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -174,7 +185,7 @@ class _SummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,7 +220,7 @@ class _SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           ClipRRect(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
             child: LinearProgressIndicator(
               value: budget.progress,
               minHeight: 7,
@@ -222,7 +233,7 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '$pct% do orçamento utilizado',
-            style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
+            style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
           ),
         ],
       ),
@@ -243,138 +254,18 @@ class _SummaryStat extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 11.5, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted),
         ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.lg),
         ),
       ],
     );
   }
 }
 
-class _FilterChipsRow extends StatelessWidget {
-  final _BudgetFilter selected;
-  final int total;
-  final int paid;
-  final int pending;
-  final ValueChanged<_BudgetFilter> onChanged;
-
-  const _FilterChipsRow({
-    required this.selected,
-    required this.total,
-    required this.paid,
-    required this.pending,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _FilterChip(
-            label: 'Todas',
-            count: total,
-            selected: selected == _BudgetFilter.all,
-            onTap: () => onChanged(_BudgetFilter.all),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            label: 'Pagas',
-            count: paid,
-            selected: selected == _BudgetFilter.paid,
-            onTap: () => onChanged(_BudgetFilter.paid),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            label: 'Pendentes',
-            count: pending,
-            selected: selected == _BudgetFilter.pending,
-            onTap: () => onChanged(_BudgetFilter.pending),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            label: 'Categorias',
-            selected: selected == _BudgetFilter.categories,
-            onTap: () => onChanged(_BudgetFilter.categories),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final int? count;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    this.count,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: selected ? Colors.white : AppTheme.ink,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
-            ),
-            if (count != null) ...[
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? Colors.white.withValues(alpha: 0.25)
-                      : AppColors.muted,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  '$count',
-                  style: TextStyle(
-                    color: selected ? Colors.white : AppTheme.inkMuted,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11.5,
-                  ),
-                ),
-              ),
-            ] else ...[
-              const SizedBox(width: 4),
-              Icon(
-                Icons.sort,
-                size: 15,
-                color: selected ? Colors.white : AppTheme.inkMuted,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _CategoriesSection extends StatelessWidget {
   final List<EffectiveBudgetCategory> categories;
@@ -402,7 +293,7 @@ class _CategoriesSection extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
           ),
           child: Column(
             children: [
@@ -427,7 +318,7 @@ class _CategoriesSection extends StatelessWidget {
                   style: const TextStyle(
                     color: AppTheme.accentOliveDark,
                     fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                    fontSize: AppFontSize.md,
                   ),
                 ),
                 Icon(
@@ -472,7 +363,7 @@ class _CategoryRow extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: AppColors.green,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Icon(icon, size: 18, color: AppTheme.accentOliveDark),
             ),
@@ -490,14 +381,14 @@ class _CategoryRow extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
-                            fontSize: 13.5,
+                            fontSize: AppFontSize.md,
                           ),
                         ),
                       ),
                       Text(
                         '$pctLabel%',
                         style: const TextStyle(
-                          fontSize: 11.5,
+                          fontSize: AppFontSize.xs,
                           color: AppTheme.inkMuted,
                           fontWeight: FontWeight.w600,
                         ),
@@ -506,7 +397,7 @@ class _CategoryRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                     child: LinearProgressIndicator(
                       value: ratio > 1 ? 1 : ratio.toDouble(),
                       minHeight: 5,
@@ -540,7 +431,7 @@ class _CategoryRow extends StatelessWidget {
                   '${allocated.toStringAsFixed(0)}€',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                    fontSize: AppFontSize.md,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -548,7 +439,7 @@ class _CategoryRow extends StatelessWidget {
                   '${category.amount.toStringAsFixed(0)}€',
                   style: const TextStyle(
                     color: AppTheme.inkMuted,
-                    fontSize: 11.5,
+                    fontSize: AppFontSize.xs,
                   ),
                 ),
               ],
@@ -569,9 +460,40 @@ class _ExpenseList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (expenses.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Center(child: Text('Sem despesas nesta vista.')),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Column(
+          children: [
+            ClipOval(
+              child: Image.asset(
+                'assets/images/nav_icon_capybaras.png',
+                width: 96,
+                height: 96,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Sem despesas nesta vista',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: AppFontSize.lg,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.ink,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Usa o + para registar a primeira.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: AppFontSize.base,
+                fontWeight: FontWeight.w300,
+                color: AppTheme.inkMuted,
+              ),
+            ),
+          ],
+        ),
       );
     }
     return Column(
@@ -620,7 +542,7 @@ class _ExpenseRow extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Row(
           children: [
@@ -629,7 +551,7 @@ class _ExpenseRow extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: AppColors.green,
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Icon(icon, size: 16, color: AppTheme.accentOliveDark),
             ),
@@ -644,7 +566,7 @@ class _ExpenseRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 13.5,
+                      fontSize: AppFontSize.md,
                     ),
                   ),
                   if (due != null) ...[
@@ -653,7 +575,7 @@ class _ExpenseRow extends StatelessWidget {
                       'Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}',
                       style: TextStyle(
                         color: AppTheme.inkMuted,
-                        fontSize: 11.5,
+                        fontSize: AppFontSize.xs,
                       ),
                     ),
                   ],
@@ -671,7 +593,7 @@ class _ExpenseRow extends StatelessWidget {
               '${expense.amount.toStringAsFixed(0)}€',
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
-                fontSize: 13.5,
+                fontSize: AppFontSize.md,
               ),
             ),
             const SizedBox(width: 4),

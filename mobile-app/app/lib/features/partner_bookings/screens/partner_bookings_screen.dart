@@ -6,12 +6,14 @@ import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_mark.dart';
+import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../booking_style.dart';
+import '../../../shared/widgets/feedback.dart';
 
 enum _BookingSegment { recebidos, confirmados, concluidos }
 
@@ -36,8 +38,16 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
     _ => _BookingSegment.recebidos,
   };
 
-  bool _matches(Booking booking) {
-    switch (_segment) {
+  bool _matches(Booking booking) => _matchesSegment(booking, _segment);
+
+  static String _segmentLabel(_BookingSegment segment) => switch (segment) {
+        _BookingSegment.recebidos => 'Recebidos',
+        _BookingSegment.confirmados => 'Confirmados',
+        _BookingSegment.concluidos => 'Concluídos',
+      };
+
+  static bool _matchesSegment(Booking booking, _BookingSegment segment) {
+    switch (segment) {
       case _BookingSegment.recebidos:
         return booking.status == BookingStatus.novo ||
             booking.status == BookingStatus.emAnalise;
@@ -68,53 +78,17 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                   trailing: const AccountSwitcherBadge(),
                 ),
                 const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.screenMargin,
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _SegmentButton(
-                          label: 'Recebidos',
-                          selected: _segment == _BookingSegment.recebidos,
-                          onTap: () => setState(
-                            () => _segment = _BookingSegment.recebidos,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _SegmentButton(
-                          label: 'Confirmados',
-                          selected: _segment == _BookingSegment.confirmados,
-                          onTap: () => setState(
-                            () => _segment = _BookingSegment.confirmados,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _SegmentButton(
-                          label: 'Concluídos',
-                          selected: _segment == _BookingSegment.concluidos,
-                          onTap: () => setState(
-                            () => _segment = _BookingSegment.concluidos,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
                 Expanded(
                   child: bookingsAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (err, st) =>
-                        const Center(child: Text('Não foi possível carregar.')),
+                    error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerBookingsProvider(null))),
                     data: (allBookings) {
                       final bookings = allBookings.where(_matches).toList();
                       if (bookings.isEmpty) {
-                        return const Center(
-                          child: Text('Sem pedidos nesta categoria.'),
+                        return const EmptyStateView(
+                          message: 'Sem pedidos nesta categoria.',
+                          icon: Icons.event_note_outlined,
                         );
                       }
                       return ListView.builder(
@@ -122,7 +96,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                           AppTheme.screenMargin,
                           0,
                           AppTheme.screenMargin,
-                          140,
+                          200,
                         ),
                         itemCount: bookings.length,
                         itemBuilder: (context, index) => Padding(
@@ -142,11 +116,24 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
               ],
             ),
           ),
-          const Positioned(
+          Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            child: PartnerBottomNav(current: PartnerTab.requests),
+            child: PartnerBottomNav(
+              current: PartnerTab.requests,
+              // Estados como segunda navbar, ligados à doca (redesign
+              // 2026-10).
+              top: FilterChipsRow(
+                items: [
+                  for (final segment in _BookingSegment.values)
+                    FilterBarItem(_segmentLabel(segment)),
+                ],
+                selected: _segment.index,
+                onSelected: (i) =>
+                    setState(() => _segment = _BookingSegment.values[i]),
+              ),
+            ),
           ),
         ],
       ),
@@ -154,39 +141,6 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
   }
 }
 
-class _SegmentButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _SegmentButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : AppTheme.ink,
-            fontWeight: FontWeight.w700,
-            fontSize: 12.5,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _BookingRow extends StatelessWidget {
   final Booking booking;
@@ -206,7 +160,7 @@ class _BookingRow extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Row(
           children: [
@@ -220,7 +174,7 @@ class _BookingRow extends StatelessWidget {
                     booking.clientName,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 14.5,
+                      fontSize: AppFontSize.base,
                       color: AppTheme.ink,
                     ),
                   ),
@@ -229,7 +183,7 @@ class _BookingRow extends StatelessWidget {
                     '$dateLabel · ${booking.category ?? 'Serviço'}',
                     style: const TextStyle(
                       color: AppTheme.inkMuted,
-                      fontSize: 12.5,
+                      fontSize: AppFontSize.sm,
                     ),
                   ),
                 ],

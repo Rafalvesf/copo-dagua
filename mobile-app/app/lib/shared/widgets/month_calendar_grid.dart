@@ -64,7 +64,7 @@ class MonthCalendarGrid extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.gray),
       ),
       child: Column(
@@ -84,7 +84,7 @@ class MonthCalendarGrid extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 15,
+                    fontSize: AppFontSize.lg,
                     color: AppTheme.ink,
                   ),
                 ),
@@ -107,7 +107,7 @@ class MonthCalendarGrid extends StatelessWidget {
                     child: Text(
                       label.substring(0, 1),
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: AppFontSize.xs,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.inkMuted,
                       ),
@@ -168,7 +168,7 @@ class _DayCell extends StatelessWidget {
               Text(
                 '$day',
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: AppFontSize.sm,
                   fontWeight: FontWeight.w700,
                   color: isSelected ? Colors.white : AppTheme.ink,
                 ),

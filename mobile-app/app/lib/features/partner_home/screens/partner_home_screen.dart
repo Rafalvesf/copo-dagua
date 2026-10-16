@@ -160,7 +160,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                               'PAINEL',
                               style: TextStyle(
                                 color: AppTheme.inkMuted,
-                                fontSize: 12,
+                                fontSize: AppFontSize.sm,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1.2,
                               ),
@@ -197,7 +197,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                               style: Theme.of(
                                 context,
                               ).textTheme.headlineMedium?.copyWith(
-                                fontSize: 42,
+                                fontSize: AppFontSize.displayLg,
                                 height: 1.15,
                               ),
                             ),
@@ -310,7 +310,7 @@ class _MetricCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,14 +325,14 @@ class _MetricCard extends StatelessWidget {
             value,
             style: const TextStyle(
               fontWeight: FontWeight.w800,
-              fontSize: 22,
+              fontSize: AppFontSize.h3,
               color: AppTheme.ink,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+            style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
           ),
         ],
       ),
@@ -356,7 +356,7 @@ class _UrgentMattersCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppStatusColors.declined.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,7 +365,7 @@ class _UrgentMattersCard extends StatelessWidget {
             'Assuntos urgentes (${bookings.length})',
             style: const TextStyle(
               fontWeight: FontWeight.w700,
-              fontSize: 13,
+              fontSize: AppFontSize.md,
               color: AppTheme.ink,
             ),
           ),
@@ -375,7 +375,7 @@ class _UrgentMattersCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 '${booking.clientName} — sem resposta ainda',
-                style: const TextStyle(fontSize: 12.5, color: AppTheme.ink),
+                style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.ink),
               ),
             ),
         ],
@@ -396,7 +396,7 @@ class _SupportSummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Row(
         children: [
@@ -411,7 +411,7 @@ class _SupportSummaryCard extends StatelessWidget {
               openCount == 0
                   ? 'Sem pedidos de suporte em aberto'
                   : '$openCount pedido${openCount == 1 ? '' : 's'} de suporte em aberto',
-              style: const TextStyle(fontSize: 12.5, color: AppTheme.ink),
+              style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.ink),
             ),
           ),
         ],
@@ -445,7 +445,7 @@ class _PartnerTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,7 +466,7 @@ class _PartnerTile extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 12.5,
+                fontSize: AppFontSize.sm,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.ink,
                 height: 1.2,

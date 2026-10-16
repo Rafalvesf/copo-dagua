@@ -27,7 +27,7 @@ class ArrowCtaButton extends StatelessWidget {
         padding: const EdgeInsets.only(left: 20, right: 5),
         decoration: BoxDecoration(
           color: AppTheme.ink,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(
           mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
@@ -116,28 +116,30 @@ class CircleBackButton extends StatelessWidget {
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     } else {
-      context.go('/home');
+      context.go('/wedding');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Alinhamento à esquerda (em vez do centro por omissão) para o
-    // glifo da seta ficar rente à margem do ecrã, tal como o resto do
-    // conteúdo — a caixa de toque continua 46px, só cresce para a
-    // direita, sem empurrar o desenho da seta para dentro.
-    return IconButton(
-      onPressed: onTap ?? () => _handleBack(context),
-      icon: const Icon(Icons.arrow_back, color: AppTheme.ink),
-      iconSize: 24,
-      padding: EdgeInsets.zero,
-      alignment: Alignment.centerLeft,
-      constraints: const BoxConstraints(minWidth: 46, minHeight: 46),
-      // Pedido explícito do utilizador (2026-09-04): sem o círculo de
-      // hover/splash por omissão do Material — só a seta.
-      style: IconButton.styleFrom(
-        overlayColor: Colors.transparent,
-        highlightColor: Colors.transparent,
+    // Redesign 2026-10 (canvas aprovado): círculo cinzento quente de 44px
+    // com a seta ao centro — o mesmo tamanho do botão "+" do lado oposto,
+    // para o título poder ficar centrado entre os dois.
+    return Semantics(
+      button: true,
+      label: 'Voltar',
+      child: SnappyTap(
+        onTap: onTap ?? () => _handleBack(context),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: const BoxDecoration(
+            color: AppTheme.surface,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: const Icon(Icons.chevron_left_rounded, color: AppTheme.ink, size: 26),
+        ),
       ),
     );
   }

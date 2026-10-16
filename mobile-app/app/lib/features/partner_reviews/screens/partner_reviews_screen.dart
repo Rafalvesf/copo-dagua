@@ -9,6 +9,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 /// "Há quanto tempo tem conta" — só a antiguidade, nunca a data exata
 /// (evita ler como um dado pessoal/sensível). Pedido explícito do
@@ -114,7 +115,7 @@ class PartnerReviewsScreen extends ConsumerWidget {
                   Text(
                     summary.average.toStringAsFixed(1),
                     style: AppTypography.displaySerif(
-                      fontSize: 34,
+                      fontSize: AppFontSize.display,
                       color: AppTheme.ink,
                     ),
                   ),
@@ -125,7 +126,7 @@ class PartnerReviewsScreen extends ConsumerWidget {
                     '(${summary.count} avaliações)',
                     style: const TextStyle(
                       color: AppTheme.inkMuted,
-                      fontSize: 13,
+                      fontSize: AppFontSize.md,
                     ),
                   ),
                 ],
@@ -135,8 +136,7 @@ class PartnerReviewsScreen extends ConsumerWidget {
             Expanded(
               child: reviewsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) =>
-                    const Center(child: Text('Não foi possível carregar.')),
+                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerReviewsProvider)),
                 data: (reviews) => reviews.isEmpty
                     ? Center(
                         child: Padding(
@@ -185,14 +185,14 @@ class PartnerReviewsScreen extends ConsumerWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: AppTheme.accentOliveDark,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: const Text(
                     'Ver todas as avaliações',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
-                      fontSize: 15,
+                      fontSize: AppFontSize.lg,
                     ),
                   ),
                 ),
@@ -222,7 +222,7 @@ class _ReviewCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,7 +250,7 @@ class _ReviewCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
-                              fontSize: 13.5,
+                              fontSize: AppFontSize.md,
                               color: AppTheme.ink,
                             ),
                           ),
@@ -259,7 +259,7 @@ class _ReviewCard extends StatelessWidget {
                           '${review.createdAt.day.toString().padLeft(2, '0')}/${review.createdAt.month.toString().padLeft(2, '0')}/${review.createdAt.year}',
                           style: const TextStyle(
                             color: AppTheme.inkMuted,
-                            fontSize: 11.5,
+                            fontSize: AppFontSize.xs,
                           ),
                         ),
                       ],
@@ -279,7 +279,7 @@ class _ReviewCard extends StatelessWidget {
                         if (review.estimatedGuests != null)
                           '~${review.estimatedGuests} convidados',
                       ].join(' · '),
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: 11),
+                      style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
                     ),
                     const SizedBox(height: 6),
                     Row(
@@ -293,12 +293,12 @@ class _ReviewCard extends StatelessWidget {
                               color: review.status == 'flagged'
                                   ? AppStatusColors.declined.withValues(alpha: 0.15)
                                   : AppTheme.borderMuted,
-                              borderRadius: BorderRadius.circular(999),
+                              borderRadius: BorderRadius.circular(AppRadius.pill),
                             ),
                             child: Text(
                               review.status == 'flagged' ? 'Denunciada' : 'Removida',
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: AppFontSize.xxs,
                                 fontWeight: FontWeight.w700,
                                 color: review.status == 'flagged'
                                     ? AppStatusColors.declined
@@ -315,7 +315,7 @@ class _ReviewCard extends StatelessWidget {
                         review.comment!,
                         style: const TextStyle(
                           color: AppTheme.inkMuted,
-                          fontSize: 13,
+                          fontSize: AppFontSize.md,
                           height: 1.4,
                         ),
                       ),
@@ -355,7 +355,7 @@ class _ReviewCard extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppColors.muted,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,7 +364,7 @@ class _ReviewCard extends StatelessWidget {
                     'A tua resposta',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 11.5,
+                      fontSize: AppFontSize.xs,
                       color: AppTheme.accentOliveDark,
                     ),
                   ),
@@ -373,7 +373,7 @@ class _ReviewCard extends StatelessWidget {
                     review.response!,
                     style: const TextStyle(
                       color: AppTheme.ink,
-                      fontSize: 12.5,
+                      fontSize: AppFontSize.sm,
                       height: 1.4,
                     ),
                   ),

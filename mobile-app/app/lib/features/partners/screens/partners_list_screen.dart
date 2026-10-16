@@ -10,11 +10,13 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../partner_style.dart';
 import 'partner_detail_screen.dart';
+import '../../../shared/widgets/feedback.dart';
 
 class PartnersListScreen extends ConsumerStatefulWidget {
   final String? categorySlug;
@@ -136,50 +138,43 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
             bottom: false,
             child: Column(
               children: [
+                // Redesign 2026-10: título "Parceiros" com a localização
+                // ao lado direito, na mesma linha.
                 PageHeader(
-                  titleFontSize: 30,
+                  title: widget.selectionMode ? null : 'Parceiros',
                   topPadding: 8,
                   showBack: widget.selectionMode,
-                  // Mantém a altura do cabeçalho igual à de antes de o
-                  // coração ter saído daqui para junto da barra de
-                  // pesquisa — sem isto, `hasIconRow` no PageHeader fica
-                  // `false` (nem back button nem trailing) e o título
-                  // sobe, perdendo o alinhamento vertical com o resto
-                  // da app.
-                  trailing: widget.selectionMode ? null : const SizedBox(width: 46, height: 46),
-                ),
-                SnappyTap(
-                  onTap: () => _showLocationPicker(locationOptions),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      6,
-                      AppTheme.screenMargin,
-                      0,
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_outlined,
-                          size: 14,
-                          color: AppTheme.inkMuted,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          effectiveLocation.isEmpty ? 'Todas as localizações' : effectiveLocation,
-                          style: const TextStyle(
-                            color: AppTheme.inkMuted,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12.5,
+                  trailing: SnappyTap(
+                    onTap: () => _showLocationPicker(locationOptions),
+                    child: Container(
+                      height: 44,
+                      constraints: const BoxConstraints(maxWidth: 170),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.location_on_outlined, size: 16, color: AppTheme.inkMuted),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              effectiveLocation.isEmpty ? 'Todas' : effectiveLocation,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppTheme.inkMuted,
+                                fontWeight: FontWeight.w700,
+                                fontSize: AppFontSize.md,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 2),
-                        const Icon(
-                          Icons.expand_more,
-                          size: 16,
-                          color: AppTheme.inkMuted,
-                        ),
-                      ],
+                          const SizedBox(width: 2),
+                          const Icon(Icons.expand_more, size: 16, color: AppTheme.inkMuted),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -195,7 +190,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                             boxShadow: AppTheme.searchBarShadow,
                           ),
                           child: TextField(
@@ -206,7 +201,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(AppRadius.pill),
                                 borderSide: const BorderSide(
                                   color: AppTheme.accentOliveDark,
                                 ),
@@ -278,39 +273,14 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                     ),
                   )
                 else
-                  categoryOptionsAsync.when(
-                    loading: () => const SizedBox(height: 82),
-                    error: (err, st) => const SizedBox.shrink(),
-                    data: (options) => Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 14, 0, 0),
-                          child: _CategoryNavBar(
-                            options: options,
-                            selected: _filter,
-                            onChanged: (c) => setState(() => _filter = c),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppTheme.screenMargin,
-                          ),
-                          child: Divider(
-                            color: AppTheme.borderMuted,
-                            height: 1,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 8),
                 Expanded(
                   child: partnersAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => const Center(
-                      child: Text('Não foi possível carregar parceiros.'),
-                    ),
+                    error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar parceiros.', onRetry: () => ref.invalidate(
+                      partnersProvider(widget.selectionMode ? widget.categorySlug : _filter),
+                    )),
                     data: (allPartners) {
                       // Filtra pela localização escolhida pelo cliente
                       // — "Âmbito nacional" nunca é excluído (esse
@@ -351,7 +321,16 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         topFadeHeight: 32,
                         bottomFadeHeight: 140,
                         child: ListView(
-                          padding: const EdgeInsets.fromLTRB(0, 32, 0, 140),
+                          padding: EdgeInsets.fromLTRB(
+                            0,
+                            24,
+                            0,
+                            widget.selectionMode
+                                ? 40
+                                : FloatingFilterBar.bottomPadding(
+                                    aboveNav: true,
+                                  ),
+                          ),
                           children: [
                             if (!widget.selectionMode)
                               Padding(
@@ -407,11 +386,35 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
             ),
           ),
           if (!widget.selectionMode)
-            const Positioned(
+            Positioned(
               left: 0,
               right: 0,
               bottom: 0,
-              child: FloatingBottomNav(current: AppTab.partners),
+              child: FloatingBottomNav(
+                current: AppTab.partners,
+                // Categorias ligadas à navbar (redesign 2026-10).
+                top: categoryOptionsAsync.maybeWhen(
+                  data: (options) {
+                    final all = <PartnerCategoryOption?>[null, ...options];
+                    final index = all.indexWhere((o) => o?.slug == _filter);
+                    return FilterChipsRow(
+                      // Categorias de Parceiros: carrossel normal, sem
+                      // repetir (pedido do utilizador).
+                      infinite: false,
+                      items: [
+                        for (final o in all)
+                          FilterBarItem(o?.label ?? 'Todos', iconOnlyWhenSelected: true, icon: o == null
+                                ? Icons.apps_rounded
+                                : iconForCategorySlug(o.slug)),
+                      ],
+                      selected: index < 0 ? 0 : index,
+                      onSelected: (i) =>
+                          setState(() => _filter = all[i]?.slug),
+                    );
+                  },
+                  orElse: () => null,
+                ),
+              ),
             ),
         ],
       ),
@@ -427,7 +430,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
         pageBuilder: (context, animation, secondaryAnimation) => Padding(
           padding: const EdgeInsets.only(top: 40),
           child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
             child: PartnerDetailScreen(
               partner: partner,
               selectionMode: widget.selectionMode,
@@ -463,187 +466,6 @@ extension _FirstOrNull<T> on Iterable<T> {
 /// [CoverFlowPicker] partilhado (que centra a opção), aqui a opção
 /// selecionada fica maior e encostada à esquerda — mostra sempre 3 a 4
 /// categorias de cada vez, com espaço visível entre elas.
-class _CategoryNavBar extends StatefulWidget {
-  final List<PartnerCategoryOption> options;
-  final String? selected;
-  final ValueChanged<String?> onChanged;
-
-  const _CategoryNavBar({required this.options, required this.selected, required this.onChanged});
-
-  @override
-  State<_CategoryNavBar> createState() => _CategoryNavBarState();
-}
-
-class _CategoryNavBarState extends State<_CategoryNavBar> {
-  final _controller = ScrollController();
-
-  static const _tileWidth = 64.0;
-  static const _tileWidthSelected = 84.0;
-  static const _spacing = 6.0;
-
-  List<PartnerCategoryOption?> get _options => [null, ...widget.options];
-
-  @override
-  void didUpdateWidget(covariant _CategoryNavBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.selected != widget.selected) _scrollToSelected();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _scrollToSelected() {
-    if (!_controller.hasClients) return;
-    final index = _options.indexWhere((o) => o?.slug == widget.selected);
-    if (index < 0) return;
-    // Fica uma casa para a direita do início — a opção anterior nunca
-    // desaparece por completo, para se conseguir sempre voltar a
-    // percorrer as restantes categorias. Usa _cumulativeOffset (não uma
-    // largura fixa) porque o tile selecionado é mais largo que os
-    // outros — uma aproximação por largura constante desalinha o scroll
-    // depois de algumas seleções seguidas.
-    final anchor = (index - 1).clamp(0, _options.length - 1);
-    _animateTo(_cumulativeOffset(anchor));
-  }
-
-  double _widthOf(int index) =>
-      _options[index]?.slug == widget.selected ? _tileWidthSelected : _tileWidth;
-
-  double _cumulativeOffset(int index) {
-    var offset = 0.0;
-    for (var i = 0; i < index; i++) {
-      offset += _widthOf(i) + _spacing;
-    }
-    return offset;
-  }
-
-  void _animateTo(double offset) {
-    if (!_controller.hasClients) return;
-    _controller.animateTo(
-      offset.clamp(0.0, _controller.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutBack,
-    );
-  }
-
-  // Depois de largar um gesto de arrastar, a fila "bloqueia" (encaixa)
-  // sempre no início do separador mais próximo — nunca fica parada a
-  // meio de um tile — com a mesma animação snappy usada ao selecionar.
-  bool _onScrollEnd(ScrollEndNotification notification) {
-    if (!_controller.hasClients) return false;
-    final current = _controller.offset;
-    var nearest = 0.0;
-    var nearestDistance = double.infinity;
-    for (var i = 0; i < _options.length; i++) {
-      final start = _cumulativeOffset(i);
-      final distance = (start - current).abs();
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearest = start;
-      }
-    }
-    if (nearestDistance > 0.5) _animateTo(nearest);
-    return false;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 82,
-      child: NotificationListener<ScrollEndNotification>(
-        onNotification: _onScrollEnd,
-        child: ListView.builder(
-          controller: _controller,
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.screenMargin,
-          ),
-          itemCount: _options.length,
-          itemBuilder: (context, index) {
-            final option = _options[index];
-            final isSelected = option?.slug == widget.selected;
-            return Padding(
-              padding: EdgeInsets.only(
-                right: index == _options.length - 1 ? 0 : _spacing,
-              ),
-              child: SnappyTap(
-                onTap: () => widget.onChanged(option?.slug),
-                child: SizedBox(
-                  width: isSelected ? _tileWidthSelected : _tileWidth,
-                  child: _CategoryIconTile(
-                    icon: option == null
-                        ? Icons.apps_rounded
-                        : iconForCategorySlug(option.slug),
-                    label: option?.label ?? 'Todos',
-                    selected: isSelected,
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-/// Bolha circular com ícone — a opção selecionada fica maior e
-/// preenchida a verde-oliva escuro, sem rótulo por baixo; as restantes
-/// ficam mais pequenas, com o nome da categoria por baixo.
-class _CategoryIconTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-
-  const _CategoryIconTile({
-    required this.icon,
-    required this.label,
-    required this.selected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          width: selected ? 72 : 44,
-          height: selected ? 72 : 44,
-          decoration: BoxDecoration(
-            color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            size: selected ? 32 : 22,
-            color: selected ? Colors.white : AppTheme.ink,
-          ),
-        ),
-        if (!selected) ...[
-          const SizedBox(height: 6),
-          Flexible(
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-                height: 1.1,
-                color: AppTheme.ink,
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
 
 class _PartnerCard extends ConsumerStatefulWidget {
   final Partner partner;
@@ -674,7 +496,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             child: SizedBox(
               height: 150,
               width: double.infinity,
@@ -702,13 +524,13 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                         ),
                         decoration: BoxDecoration(
                           color: AppTheme.ink,
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
                         ),
                         child: const Text(
                           'Mais popular',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 11,
+                            fontSize: AppFontSize.xs,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -742,7 +564,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
-                        fontSize: 15,
+                        fontSize: AppFontSize.lg,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -753,7 +575,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                       style: const TextStyle(
                         color: AppTheme.ink,
                         fontWeight: FontWeight.w600,
-                        fontSize: 12.5,
+                        fontSize: AppFontSize.sm,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -779,7 +601,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                             style: const TextStyle(
                               color: AppTheme.inkMuted,
                               fontWeight: FontWeight.w600,
-                              fontSize: 11.5,
+                              fontSize: AppFontSize.xs,
                             ),
                           ),
                         ),
@@ -798,7 +620,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -808,7 +630,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                         style: TextStyle(
                           color: AppTheme.ink,
                           fontWeight: FontWeight.w700,
-                          fontSize: 12,
+                          fontSize: AppFontSize.sm,
                         ),
                       ),
                       SizedBox(width: 4),
@@ -851,7 +673,7 @@ class _FavoritesSheet extends ConsumerWidget {
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
           ),
           child: SafeArea(
             child: Column(
@@ -862,7 +684,7 @@ class _FavoritesSheet extends ConsumerWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     color: AppTheme.borderMuted,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                 ),
                 Padding(
@@ -879,9 +701,7 @@ class _FavoritesSheet extends ConsumerWidget {
                 Expanded(
                   child: partnersAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => const Center(
-                      child: Text('Não foi possível carregar os favoritos.'),
-                    ),
+                    error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar os favoritos.', onRetry: () => ref.invalidate(partnersProvider(null))),
                     data: (allPartners) {
                       final favorites = allPartners.where((p) => favoriteIds.contains(p.id)).toList();
                       if (favorites.isEmpty) {
@@ -912,7 +732,7 @@ class _FavoritesSheet extends ConsumerWidget {
                                     pageBuilder: (context, animation, secondaryAnimation) => Padding(
                                       padding: const EdgeInsets.only(top: 40),
                                       child: ClipRRect(
-                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
                                         child: PartnerDetailScreen(partner: partner),
                                       ),
                                     ),

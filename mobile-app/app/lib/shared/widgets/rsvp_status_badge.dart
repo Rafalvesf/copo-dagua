@@ -38,7 +38,7 @@ class RsvpStatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -51,7 +51,7 @@ class RsvpStatusBadge extends StatelessWidget {
             label,
             style: TextStyle(
               color: color,
-              fontSize: 13,
+              fontSize: AppFontSize.md,
               fontWeight: FontWeight.w600,
             ),
           ),

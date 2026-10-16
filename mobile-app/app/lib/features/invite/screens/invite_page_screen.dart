@@ -67,7 +67,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
                     child: SizedBox(
                       height: 260,
                       child: PhotoCardBackground(
@@ -81,7 +81,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                   Text(
                     'Estás convidado para o casamento de',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -89,7 +89,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
-                      fontSize: 26,
+                      fontSize: AppFontSize.h2,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -102,7 +102,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: AppTheme.ink,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: Text(
                         'Faltam $daysLeft dias',
@@ -117,7 +117,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
                     child: Column(
                       children: [
@@ -154,7 +154,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                     'É preciso criar conta para confirmar presença e '
                     'acompanhar o casamento.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: 12),
+                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                   ),
                 ],
               ),
@@ -185,7 +185,7 @@ class _InfoLine extends StatelessWidget {
               label,
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 13.5,
+                fontSize: AppFontSize.md,
               ),
             ),
           ),

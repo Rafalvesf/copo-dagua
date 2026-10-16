@@ -12,6 +12,7 @@ import '../../../shared/widgets/month_calendar_grid.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/staggered_fade_in.dart';
+import '../../../shared/widgets/feedback.dart';
 
 class PartnerCalendarScreen extends ConsumerStatefulWidget {
   const PartnerCalendarScreen({super.key});
@@ -45,8 +46,7 @@ class _PartnerCalendarScreenState
             Expanded(
               child: bookingsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) =>
-                    const Center(child: Text('Não foi possível carregar.')),
+                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerBookingsProvider(null))),
                 data: (bookings) {
                   final markedDays = bookings
                       .map((b) => dayOnly(b.eventDate))
@@ -78,7 +78,7 @@ class _PartnerCalendarScreenState
                           'Compromissos de ${formatShortDatePt(_selected)}',
                           style: const TextStyle(
                             fontWeight: FontWeight.w800,
-                            fontSize: 15,
+                            fontSize: AppFontSize.lg,
                             color: AppTheme.ink,
                           ),
                         ),
@@ -131,7 +131,7 @@ class _BookingAgendaCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
             color: hovered ? AppTheme.borderMuted : AppColors.gray,
           ),
@@ -145,7 +145,7 @@ class _BookingAgendaCard extends StatelessWidget {
                 formatTimePt(booking.eventDate),
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
-                  fontSize: 13.5,
+                  fontSize: AppFontSize.md,
                   color: AppTheme.accentOliveDark,
                 ),
               ),
@@ -158,7 +158,7 @@ class _BookingAgendaCard extends StatelessWidget {
                     booking.clientName,
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
-                      fontSize: 15,
+                      fontSize: AppFontSize.lg,
                       color: AppTheme.ink,
                     ),
                   ),
@@ -167,7 +167,7 @@ class _BookingAgendaCard extends StatelessWidget {
                     '${booking.category ?? 'Serviço'} · ${booking.packageLabel}',
                     style: const TextStyle(
                       color: AppTheme.inkMuted,
-                      fontSize: 12.5,
+                      fontSize: AppFontSize.sm,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -177,7 +177,7 @@ class _BookingAgendaCard extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                       border: Border.all(color: AppTheme.accentOliveDark),
                     ),
                     child: const Text(
@@ -185,7 +185,7 @@ class _BookingAgendaCard extends StatelessWidget {
                       style: TextStyle(
                         color: AppTheme.accentOliveDark,
                         fontWeight: FontWeight.w700,
-                        fontSize: 12.5,
+                        fontSize: AppFontSize.sm,
                       ),
                     ),
                   ),
