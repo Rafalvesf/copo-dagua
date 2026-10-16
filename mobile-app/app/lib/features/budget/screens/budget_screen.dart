@@ -11,6 +11,7 @@ import '../../../features/partners/partner_style.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/form_fields.dart';
+import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -87,27 +88,17 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                           trailing: AddActionButton(onTap: _addExpense),
                         ),
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(
+                          padding: EdgeInsets.fromLTRB(
                             AppTheme.screenMargin,
                             16,
                             AppTheme.screenMargin,
-                            40,
+                            FloatingFilterBar.bottomPadding(aboveNav: false),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _SummaryCard(budget: budget),
-                              const SizedBox(height: 18),
-                              _FilterChipsRow(
-                                selected: _filter,
-                                total: total,
-                                paid: paid.length,
-                                pending: pending.length,
-                                onChanged: (f) => setState(() => _filter = f),
-                              ),
-                              const SizedBox(height: 14),
-                              Divider(color: AppTheme.borderMuted, height: 1),
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 24),
                               if (_filter == _BudgetFilter.paid)
                                 _ExpenseList(expenses: paid)
                               else if (_filter == _BudgetFilter.pending)
@@ -143,6 +134,33 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: FloatingFilterBar(
+                    items: [
+                      FilterBarItem('Todas', count: total),
+                      FilterBarItem('Pagas', count: paid.length),
+                      FilterBarItem('Pendentes', count: pending.length),
+                      const FilterBarItem('Categorias'),
+                    ],
+                    selected: const [
+                      _BudgetFilter.all,
+                      _BudgetFilter.paid,
+                      _BudgetFilter.pending,
+                      _BudgetFilter.categories,
+                    ].indexOf(_filter),
+                    onSelected: (i) => setState(
+                      () => _filter = const [
+                        _BudgetFilter.all,
+                        _BudgetFilter.paid,
+                        _BudgetFilter.pending,
+                        _BudgetFilter.categories,
+                      ][i],
                     ),
                   ),
                 ),
@@ -248,126 +266,6 @@ class _SummaryStat extends StatelessWidget {
   }
 }
 
-class _FilterChipsRow extends StatelessWidget {
-  final _BudgetFilter selected;
-  final int total;
-  final int paid;
-  final int pending;
-  final ValueChanged<_BudgetFilter> onChanged;
-
-  const _FilterChipsRow({
-    required this.selected,
-    required this.total,
-    required this.paid,
-    required this.pending,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _FilterChip(
-            label: 'Todas',
-            count: total,
-            selected: selected == _BudgetFilter.all,
-            onTap: () => onChanged(_BudgetFilter.all),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            label: 'Pagas',
-            count: paid,
-            selected: selected == _BudgetFilter.paid,
-            onTap: () => onChanged(_BudgetFilter.paid),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            label: 'Pendentes',
-            count: pending,
-            selected: selected == _BudgetFilter.pending,
-            onTap: () => onChanged(_BudgetFilter.pending),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            label: 'Categorias',
-            selected: selected == _BudgetFilter.categories,
-            onTap: () => onChanged(_BudgetFilter.categories),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final int? count;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    this.count,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: selected ? Colors.white : AppTheme.ink,
-                fontWeight: FontWeight.w700,
-                fontSize: AppFontSize.md,
-              ),
-            ),
-            if (count != null) ...[
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? Colors.white.withValues(alpha: 0.25)
-                      : AppColors.muted,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                ),
-                child: Text(
-                  '$count',
-                  style: TextStyle(
-                    color: selected ? Colors.white : AppTheme.inkMuted,
-                    fontWeight: FontWeight.w700,
-                    fontSize: AppFontSize.xs,
-                  ),
-                ),
-              ),
-            ] else ...[
-              const SizedBox(width: 4),
-              Icon(
-                Icons.sort,
-                size: 15,
-                color: selected ? Colors.white : AppTheme.inkMuted,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _CategoriesSection extends StatelessWidget {
   final List<EffectiveBudgetCategory> categories;

@@ -13,6 +13,7 @@ import '../../partners/partner_style.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -123,11 +124,11 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(
+                          padding: EdgeInsets.fromLTRB(
                             AppTheme.screenMargin,
                             20,
                             AppTheme.screenMargin,
-                            140,
+                            FloatingFilterBar.bottomPadding(aboveNav: true),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,20 +140,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                                     ? 0
                                     : state.doneCount / state.totalCount,
                               ),
-                              const SizedBox(height: 18),
-                              _FilterChipsRow(
-                                selected: _filter,
-                                total: state.items.length,
-                                todo: byStatus[ChecklistStatus.todo]!.length,
-                                inProgress:
-                                    byStatus[ChecklistStatus.inProgress]!
-                                        .length,
-                                done: byStatus[ChecklistStatus.done]!.length,
-                                onChanged: (f) => setState(() => _filter = f),
-                              ),
-                              const SizedBox(height: 14),
-                              Divider(color: AppTheme.borderMuted, height: 1),
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 24),
                               if (state.items.isEmpty)
                                 const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 40),
@@ -192,11 +180,30 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                     ),
                   ),
                 ),
-                const Positioned(
+                Positioned(
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.wedding),
+                  child: FloatingBottomNav(current: AppTab.wedding, top: FilterChipsRow(
+                    items: [
+                      FilterBarItem('Todas', count: state.items.length),
+                      FilterBarItem(
+                        'Por fazer',
+                        count: byStatus[ChecklistStatus.todo]!.length,
+                      ),
+                      FilterBarItem(
+                        'Em curso',
+                        count: byStatus[ChecklistStatus.inProgress]!.length,
+                      ),
+                      FilterBarItem(
+                        'Concluídas',
+                        count: byStatus[ChecklistStatus.done]!.length,
+                      ),
+                    ],
+                    selected: _StatusFilter.values.indexOf(_filter),
+                    onSelected: (i) =>
+                        setState(() => _filter = _StatusFilter.values[i]),
+                  )),
                 ),
               ],
             ),
@@ -326,108 +333,6 @@ class _OverallProgressCard extends StatelessWidget {
   }
 }
 
-class _FilterChipsRow extends StatelessWidget {
-  final _StatusFilter selected;
-  final int total;
-  final int todo;
-  final int inProgress;
-  final int done;
-  final ValueChanged<_StatusFilter> onChanged;
-
-  const _FilterChipsRow({
-    required this.selected,
-    required this.total,
-    required this.todo,
-    required this.inProgress,
-    required this.done,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final entries = [
-      (_StatusFilter.all, 'Todas', total),
-      (_StatusFilter.todo, 'Por fazer', todo),
-      (_StatusFilter.inProgress, 'Em curso', inProgress),
-      (_StatusFilter.done, 'Concluídas', done),
-    ];
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (final (index, entry) in entries.indexed) ...[
-            _FilterChip(
-              label: entry.$2,
-              count: entry.$3,
-              selected: selected == entry.$1,
-              onTap: () => onChanged(entry.$1),
-            ),
-            if (index != entries.length - 1) const SizedBox(width: 8),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final int count;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    required this.count,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: selected ? Colors.white : AppTheme.ink,
-                fontWeight: FontWeight.w700,
-                fontSize: AppFontSize.md,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: selected
-                    ? Colors.white.withValues(alpha: 0.25)
-                    : AppColors.muted,
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-              ),
-              child: Text(
-                '$count',
-                style: TextStyle(
-                  color: selected ? Colors.white : AppTheme.inkMuted,
-                  fontWeight: FontWeight.w700,
-                  fontSize: AppFontSize.xs,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _StatusGroup extends StatelessWidget {
   final String title;

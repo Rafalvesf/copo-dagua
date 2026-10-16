@@ -22,7 +22,11 @@ enum AppTab { home, partners, chat, wedding, gallery }
 class FloatingBottomNav extends ConsumerWidget {
   final AppTab current;
 
-  const FloatingBottomNav({super.key, required this.current});
+  /// Filtros do ecrã ([FilterChipsRow]) ligados por cima dos
+  /// separadores, na mesma ilha (redesign 2026-10).
+  final Widget? top;
+
+  const FloatingBottomNav({super.key, required this.current, this.top});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,11 +43,26 @@ class FloatingBottomNav extends ConsumerWidget {
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.accentOliveDark,
           borderRadius: BorderRadius.circular(AppRadius.xxl),
           boxShadow: AppTheme.navBarShadow,
         ),
-        child: Padding(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
+          child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+          if (top != null) ...[
+            top!,
+            Divider(
+              height: 1,
+              thickness: 1,
+              indent: 16,
+              endIndent: 16,
+              color: Colors.white.withValues(alpha: 0.16),
+            ),
+          ],
+          Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
             // Cada separador ocupa uma fatia igual da largura (em vez
@@ -108,6 +127,9 @@ class FloatingBottomNav extends ConsumerWidget {
               ),
             ],
           ),
+          ),
+          ],
+          ),
         ),
       ),
     );
@@ -135,7 +157,9 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppTheme.accentOliveDark : AppTheme.navIconMuted;
+    // Navbar verde (redesign 2026-10): ativo a branco, restantes a
+    // branco translúcido.
+    final color = active ? Colors.white : Colors.white.withValues(alpha: 0.6);
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
@@ -192,14 +216,14 @@ class _UnreadBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 3),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppTheme.accentOliveDark,
+        color: Colors.white,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 1.5),
+        border: Border.all(color: AppTheme.accentOliveDark, width: 1.5),
       ),
       child: Text(
         count > 99 ? '99+' : '$count',
         style: const TextStyle(
-          color: Colors.white,
+          color: AppTheme.accentOliveDark,
           fontSize: AppFontSize.xxxs,
           fontWeight: FontWeight.w700,
           height: 1,

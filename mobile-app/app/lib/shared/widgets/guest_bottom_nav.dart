@@ -22,7 +22,16 @@ class GuestBottomNav extends StatelessWidget {
   /// 100% convidado. `null` = comportamento normal de sempre.
   final String? weddingId;
 
-  const GuestBottomNav({super.key, required this.current, this.weddingId});
+  /// Filtros do ecrã ([FilterChipsRow]) ligados por cima dos
+  /// separadores, na mesma ilha (redesign 2026-10).
+  final Widget? top;
+
+  const GuestBottomNav({
+    super.key,
+    required this.current,
+    this.weddingId,
+    this.top,
+  });
 
   String _path(String base) => weddingId == null ? base : '$base/$weddingId';
 
@@ -33,11 +42,26 @@ class GuestBottomNav extends StatelessWidget {
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.accentOliveDark,
           borderRadius: BorderRadius.circular(AppRadius.xxl),
           boxShadow: AppTheme.navBarShadow,
         ),
-        child: Padding(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
+          child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+          if (top != null) ...[
+            top!,
+            Divider(
+              height: 1,
+              thickness: 1,
+              indent: 16,
+              endIndent: 16,
+              color: Colors.white.withValues(alpha: 0.16),
+            ),
+          ],
+          Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
             children: [
@@ -83,6 +107,9 @@ class GuestBottomNav extends StatelessWidget {
               ),
             ],
           ),
+          ),
+          ],
+          ),
         ),
       ),
     );
@@ -104,7 +131,9 @@ class _GuestNavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppTheme.accentOliveDark : AppTheme.navIconMuted;
+    // Navbar verde (redesign 2026-10): ativo a branco, restantes a
+    // branco translúcido.
+    final color = active ? Colors.white : Colors.white.withValues(alpha: 0.6);
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,

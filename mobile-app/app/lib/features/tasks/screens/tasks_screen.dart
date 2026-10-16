@@ -10,6 +10,7 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -126,7 +127,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               topFadeHeight: 8,
               bottomFadeHeight: 140,
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 140),
+                padding: EdgeInsets.only(
+                  bottom: FloatingFilterBar.bottomPadding(aboveNav: true),
+                ),
                 children: [
                   PageHeader(
                     title: 'Tarefas',
@@ -136,29 +139,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                     centered: true,
                     trailing: AddActionButton(
                       onTap: () => _showNewTaskSheet(context, ref),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      12,
-                      AppTheme.screenMargin,
-                      0,
-                    ),
-                    child: Row(
-                      children: [
-                        _MainTabChip(
-                          label: 'Por fazer',
-                          selected: _tab == _TasksTab.todo,
-                          onTap: () => setState(() => _tab = _TasksTab.todo),
-                        ),
-                        const SizedBox(width: 8),
-                        _MainTabChip(
-                          label: 'Feito',
-                          selected: _tab == _TasksTab.done,
-                          onTap: () => setState(() => _tab = _TasksTab.done),
-                        ),
-                      ],
                     ),
                   ),
                   Padding(
@@ -280,11 +260,20 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               ),
             ),
           ),
-          const Positioned(
+          Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            child: FloatingBottomNav(current: AppTab.wedding),
+            child: FloatingBottomNav(current: AppTab.wedding, top: FilterChipsRow(
+              items: [
+                const FilterBarItem('Por fazer'),
+                FilterBarItem('Feito', count: doneItems.length),
+              ],
+              selected: _tab == _TasksTab.todo ? 0 : 1,
+              onSelected: (i) => setState(
+                () => _tab = i == 0 ? _TasksTab.todo : _TasksTab.done,
+              ),
+            )),
           ),
         ],
       ),
@@ -308,39 +297,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 }
 
-class _MainTabChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _MainTabChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.ink : AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : AppTheme.ink,
-            fontWeight: FontWeight.w700,
-            fontSize: AppFontSize.sm,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Selo discreto "SUGESTÃO"/"PARA CONCLUIR" — pedido explícito do
 /// utilizador: linguagem suave, tipografia pequena, nunca um badge
