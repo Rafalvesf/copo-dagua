@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'floating_filter_bar.dart' show ConnectedFilterNav;
 import 'floating_bottom_nav.dart' show NavBubble;
 
 enum GuestTab { home, gifts, gallery, profile }
@@ -49,20 +50,11 @@ class GuestBottomNav extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.xxl),
-          child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-          if (top != null) ...[
-            top!,
-            Divider(
-              height: 1,
-              thickness: 1,
-              indent: 16,
-              endIndent: 16,
-              color: AppTheme.borderMuted,
-            ),
-          ],
-          Padding(
+          child: ConnectedFilterNav(
+          top: top,
+          activeIndex: current.index,
+          slots: 4,
+          navRow: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
             children: [
@@ -109,7 +101,6 @@ class GuestBottomNav extends StatelessWidget {
             ],
           ),
           ),
-          ],
           ),
         ),
       ),

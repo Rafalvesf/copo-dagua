@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -64,6 +66,24 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
   /// (e não a primeira) depois de reconstruir.
   int? _tappedVirtual;
 
+  /// Depois de o utilizador arrastar o carrossel, o escolhido volta a
+  /// alinhar-se sozinho ("alinha sempre"), com uma pausa para dar tempo
+  /// de tocar noutro filtro.
+  Timer? _snapBack;
+  bool _userScrolling = false;
+
+  bool _onScroll(ScrollNotification n) {
+    if (n is ScrollStartNotification && n.dragDetails != null) {
+      _userScrolling = true;
+      _snapBack?.cancel();
+    } else if (n is ScrollEndNotification && _userScrolling) {
+      _userScrolling = false;
+      _snapBack?.cancel();
+      _snapBack = Timer(const Duration(milliseconds: 1600), _center);
+    }
+    return false;
+  }
+
   GlobalKey _keyFor(int virtual) => _keys.putIfAbsent(virtual, GlobalKey.new);
 
   @override
@@ -87,6 +107,7 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
 
   @override
   void dispose() {
+    _snapBack?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -99,10 +120,19 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
     final tapped = _tappedVirtual;
     final virtual = tapped != null && _real(tapped) == index ? tapped : index;
     final ctx = _keys[virtual]?.currentContext;
-    if (ctx == null) return;
+    if (ctx == null || !_controller.hasClients) return;
+    // Centro do escolhido em `fraction` da largura (0.5 = meio; com a
+    // navbar, por cima do separador ativo). `alignment` do ensureVisible
+    // é a posição da borda esquerda em (largura − largura do botão).
+    final fraction = FilterAnchorScope.of(context);
+    final viewport = _controller.position.viewportDimension;
+    final chipWidth = (ctx.findRenderObject() as RenderBox?)?.size.width ?? 0;
+    final room = viewport - chipWidth;
+    final alignment =
+        room <= 0 ? 0.5 : (fraction * viewport - chipWidth / 2) / room;
     Scrollable.ensureVisible(
       ctx,
-      alignment: 0.5,
+      alignment: alignment,
       duration: animate ? const Duration(milliseconds: 320) : Duration.zero,
       curve: Curves.easeOutCubic,
     );
@@ -136,7 +166,9 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
     if (n == 0) return const SizedBox(height: FilterChipsRow.height);
     return SizedBox(
       height: FilterChipsRow.height,
-      child: widget.infinite
+      child: NotificationListener<ScrollNotification>(
+        onNotification: _onScroll,
+        child: widget.infinite
           ? CustomScrollView(
               controller: _controller,
               scrollDirection: Axis.horizontal,
@@ -159,9 +191,8 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
           : LayoutBuilder(
               builder: (context, constraints) {
                 // Margem lateral para o primeiro e o último também
-                // conseguirem ficar ao centro.
-                final side =
-                    (constraints.maxWidth / 2 - 60).clamp(0.0, 400.0);
+                // conseguirem chegar ao ponto de alinhamento.
+                final side = constraints.maxWidth;
                 return SingleChildScrollView(
                   controller: _controller,
                   scrollDirection: Axis.horizontal,
@@ -172,6 +203,7 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
                 );
               },
             ),
+      )
     );
   }
 }
@@ -298,6 +330,110 @@ class _FilterBarChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Onde centrar o filtro escolhido, como fração da largura (0–1). Posto
+/// pela navbar à volta dos filtros para o escolhido ficar sempre alinhado
+/// com o separador ativo (pedido do utilizador: "alinha sempre com o botão
+/// selecionado na navbar principal e une-os").
+class FilterAnchorScope extends InheritedWidget {
+  final double fraction;
+
+  const FilterAnchorScope({
+    super.key,
+    required this.fraction,
+    required super.child,
+  });
+
+  static double of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<FilterAnchorScope>()?.fraction ??
+      0.5;
+
+  @override
+  bool updateShouldNotify(FilterAnchorScope oldWidget) =>
+      oldWidget.fraction != fraction;
+}
+
+/// Corpo da navbar com filtros ligados por cima ([top]). Sem [top] devolve
+/// só [navRow]. Com [top]: filtros, linha divisória e separadores; por
+/// trás, uma "coluna" verde da largura da bolha do separador ativo que
+/// sobe até aos filtros — o filtro escolhido (alinhado por cima dela) e a
+/// bolha ficam unidos numa só forma.
+class ConnectedFilterNav extends StatelessWidget {
+  final Widget? top;
+  final Widget navRow;
+  final int activeIndex;
+  final int slots;
+
+  const ConnectedFilterNav({
+    super.key,
+    required this.top,
+    required this.navRow,
+    required this.activeIndex,
+    required this.slots,
+  });
+
+  /// Padding horizontal da linha de separadores (igual nas navbars).
+  static const double _rowPadding = 8;
+
+  /// Bolha do separador ativo: 42 de diâmetro, centrada a
+  /// 10 (padding da navbar) + 4 (padding do separador) + 21 abaixo da
+  /// linha divisória.
+  static const double _bubble = 42;
+  static const double _bubbleCenterBelowDivider = 10 + 4 + 21;
+
+  @override
+  Widget build(BuildContext context) {
+    final filters = top;
+    if (filters == null) return navRow;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final slot = (width - 2 * _rowPadding) / slots;
+        final x = _rowPadding + slot * (activeIndex + 0.5);
+        const dividerY = FilterChipsRow.height;
+        const bubbleBottom =
+            dividerY + 1 + _bubbleCenterBelowDivider + _bubble / 2;
+        return Stack(
+          children: [
+            const Positioned(
+              left: 16,
+              right: 16,
+              top: dividerY,
+              height: 1,
+              child: ColoredBox(color: AppTheme.borderMuted),
+            ),
+            if (activeIndex >= 0)
+              Positioned(
+                left: x - _bubble / 2,
+                width: _bubble,
+                top: 0,
+                height: bubbleBottom,
+                child: const DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentOliveDark,
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(_bubble / 2),
+                    ),
+                  ),
+                ),
+              ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FilterAnchorScope(
+                  fraction: activeIndex >= 0 ? x / width : 0.5,
+                  child: filters,
+                ),
+                const SizedBox(height: 1),
+                navRow,
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 }

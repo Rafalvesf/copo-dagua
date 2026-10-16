@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/chat/chat_list_controller.dart';
 import '../../core/theme/app_theme.dart';
+import 'floating_filter_bar.dart' show ConnectedFilterNav;
 import '../../core/wedding/wedding_nav_icon.dart';
 
 enum AppTab { home, partners, chat, wedding, gallery }
@@ -49,20 +50,18 @@ class FloatingBottomNav extends ConsumerWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.xxl),
-          child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-          if (top != null) ...[
-            top!,
-            Divider(
-              height: 1,
-              thickness: 1,
-              indent: 16,
-              endIndent: 16,
-              color: AppTheme.borderMuted,
-            ),
-          ],
-          Padding(
+          child: ConnectedFilterNav(
+          top: top,
+          // Ordem visual dos separadores (≠ ordem do enum).
+          activeIndex: const [
+            AppTab.gallery,
+            AppTab.partners,
+            AppTab.wedding,
+            AppTab.chat,
+            AppTab.home,
+          ].indexOf(current),
+          slots: 5,
+          navRow: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
             // Cada separador ocupa uma fatia igual da largura (em vez
@@ -128,7 +127,6 @@ class FloatingBottomNav extends ConsumerWidget {
             ],
           ),
           ),
-          ],
           ),
         ),
       ),
