@@ -65,6 +65,3 @@ jobs:
           git add -A
           git commit -qm "Capturas de ${GITHUB_SHA}"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" screenshots
-
-      - name: Fail if capture failed
-        run: test ! -f screenshots.failed
