@@ -64,14 +64,11 @@ class GalleryScreen extends ConsumerWidget {
             child: Column(
               children: [
                 PageHeader(
-                  titleFontSize: 30,
+                  title: 'Galeria',
                   topPadding: 8,
                   // Sem seta de voltar sempre que há navbar (casal ou
-                  // convidado, incluindo "Modo convidado" com
-                  // `weddingId` explícito) — mesma convenção de todos
-                  // os outros ecrãs raiz da app.
+                  // convidado) — mesma convenção dos outros ecrãs raiz.
                   showBack: !(showNav || showGuestNav),
-                  trailing: (showNav || showGuestNav) ? const SizedBox(width: 46, height: 46) : null,
                 ),
                 const SizedBox(height: 16),
                 Expanded(

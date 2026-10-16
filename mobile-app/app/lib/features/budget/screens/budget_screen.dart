@@ -84,7 +84,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                       children: [
                         PageHeader(
                           title: 'Orçamento',
-                          titleFontSize: 26,
+                          centered: true,
                           trailing: AddActionButton(onTap: _addExpense),
                         ),
                         Padding(

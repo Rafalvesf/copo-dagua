@@ -294,6 +294,8 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                               fontSize: AppFontSize.xxl,
                               color: Colors.white,
                             ).copyWith(
+                              // Bold Italic — como num convite (redesign 2026-10).
+                              fontStyle: FontStyle.italic,
                               decoration: TextDecoration.underline,
                               decorationColor: Colors.white,
                             ),

@@ -109,7 +109,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                       children: [
                         PageHeader(
                           title: 'Lugares',
-                          titleFontSize: 26,
+                          centered: true,
                           trailing: AddActionButton(
                             onTap: state.isFull
                                 ? () => ScaffoldMessenger.of(context).showSnackBar(

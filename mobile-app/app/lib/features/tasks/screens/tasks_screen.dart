@@ -131,14 +131,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                   PageHeader(
                     title: 'Tarefas',
                     subtitle: 'O plano guia-vos, vocês executam.',
-                    showBack: false,
-                    // Espaçador invisível — mantém a altura do
-                    // cabeçalho (ver o mesmo comentário em
-                    // `partners_list_screen.dart`); o "+" real fica ao
-                    // lado das abas Por fazer/Feito, na linha por
-                    // baixo, mesma arquitetura de Parceiros/Chat/
-                    // Orçamento/Lugares.
-                    trailing: const SizedBox(width: 46, height: 46),
+                    // Redesign 2026-10: mesmo topo que Orçamento/Lugares —
+                    // voltar · título ao centro · "+".
+                    centered: true,
+                    trailing: AddActionButton(
+                      onTap: () => _showNewTaskSheet(context, ref),
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
@@ -159,10 +157,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                           label: 'Feito',
                           selected: _tab == _TasksTab.done,
                           onTap: () => setState(() => _tab = _TasksTab.done),
-                        ),
-                        const Spacer(),
-                        AddActionButton(
-                          onTap: () => _showNewTaskSheet(context, ref),
                         ),
                       ],
                     ),

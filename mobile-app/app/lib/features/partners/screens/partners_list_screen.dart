@@ -137,50 +137,43 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
             bottom: false,
             child: Column(
               children: [
+                // Redesign 2026-10: título "Parceiros" com a localização
+                // ao lado direito, na mesma linha.
                 PageHeader(
-                  titleFontSize: 30,
+                  title: widget.selectionMode ? null : 'Parceiros',
                   topPadding: 8,
                   showBack: widget.selectionMode,
-                  // Mantém a altura do cabeçalho igual à de antes de o
-                  // coração ter saído daqui para junto da barra de
-                  // pesquisa — sem isto, `hasIconRow` no PageHeader fica
-                  // `false` (nem back button nem trailing) e o título
-                  // sobe, perdendo o alinhamento vertical com o resto
-                  // da app.
-                  trailing: widget.selectionMode ? null : const SizedBox(width: 46, height: 46),
-                ),
-                SnappyTap(
-                  onTap: () => _showLocationPicker(locationOptions),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      6,
-                      AppTheme.screenMargin,
-                      0,
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_outlined,
-                          size: 14,
-                          color: AppTheme.inkMuted,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          effectiveLocation.isEmpty ? 'Todas as localizações' : effectiveLocation,
-                          style: const TextStyle(
-                            color: AppTheme.inkMuted,
-                            fontWeight: FontWeight.w600,
-                            fontSize: AppFontSize.sm,
+                  trailing: SnappyTap(
+                    onTap: () => _showLocationPicker(locationOptions),
+                    child: Container(
+                      height: 44,
+                      constraints: const BoxConstraints(maxWidth: 170),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.location_on_outlined, size: 16, color: AppTheme.inkMuted),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              effectiveLocation.isEmpty ? 'Todas' : effectiveLocation,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppTheme.inkMuted,
+                                fontWeight: FontWeight.w700,
+                                fontSize: AppFontSize.md,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 2),
-                        const Icon(
-                          Icons.expand_more,
-                          size: 16,
-                          color: AppTheme.inkMuted,
-                        ),
-                      ],
+                          const SizedBox(width: 2),
+                          const Icon(Icons.expand_more, size: 16, color: AppTheme.inkMuted),
+                        ],
+                      ),
                     ),
                   ),
                 ),

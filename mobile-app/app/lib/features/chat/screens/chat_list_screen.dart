@@ -14,6 +14,7 @@ import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   const ChatListScreen({super.key});
@@ -98,18 +99,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             child: Column(
               children: [
                 PageHeader(
-                  titleFontSize: 30,
+                  title: 'Mensagens',
                   topPadding: 8,
                   showBack: false,
-                  // Mesma arquitetura/layout do cabeçalho de
-                  // "Parceiros" (`partners_list_screen.dart`): cabeçalho
-                  // só com o título, e o ícone de ação (lá é o coração,
-                  // aqui é o "+" de nova conversa) ao lado da barra de
-                  // pesquisa, na linha por baixo. `trailing` aqui é só
-                  // um espaçador invisível — mantém a altura do
-                  // cabeçalho (ver o mesmo comentário em
-                  // `partners_list_screen.dart`).
-                  trailing: const SizedBox(width: 46, height: 46),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -169,13 +161,19 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                 Expanded(
                   child: state.loading && state.conversations.isEmpty
                       ? const Center(child: CircularProgressIndicator())
+                      : conversations.isEmpty && query.isEmpty
+                      ? IllustratedEmptyState(
+                          imageAsset: 'assets/images/chat_icon.png',
+                          circularImage: false,
+                          imageSize: 180,
+                          title: 'Ainda sem conversas',
+                          message: 'Quando pedirem um orçamento a um parceiro, a conversa e as propostas aparecem aqui.',
+                          primaryLabel: 'Explorar parceiros',
+                          onPrimary: () => context.go('/partners'),
+                        )
                       : conversations.isEmpty
                       ? Center(
-                          child: Text(
-                            query.isEmpty
-                                ? 'Sem conversas ainda.'
-                                : 'Sem conversas para "${_search.text.trim()}".',
-                          ),
+                          child: Text('Sem conversas para "${_search.text.trim()}".'),
                         )
                       : EdgeFade(
                           topFadeHeight: 24,

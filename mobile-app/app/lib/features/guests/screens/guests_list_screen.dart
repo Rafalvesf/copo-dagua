@@ -16,6 +16,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_widgets.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/feedback.dart';
 
 class GuestsListScreen extends ConsumerStatefulWidget {
   const GuestsListScreen({super.key});
@@ -105,7 +106,8 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                     children: [
                       PageHeader(
                         title: 'Convidados',
-                        titleFontSize: 26,
+                        centered: true,
+                        trailing: AddActionButton(onTap: _addGuest),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(
@@ -151,14 +153,6 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                                 onTap: () => _shareInvite(wedding),
                               ),
                             ],
-                            const SizedBox(width: 10),
-                            CircleIconButton(
-                              icon: Icons.add,
-                              background: AppTheme.ink,
-                              foreground: Colors.white,
-                              size: 46,
-                              onTap: _addGuest,
-                            ),
                           ],
                         ),
                       ),
@@ -242,10 +236,18 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                         ),
                       ),
                       Expanded(
-                        child: visible.isEmpty
-                            ? const Center(
-                                child: Text('Sem convidados nesta categoria.'),
+                        child: state.guests.isEmpty
+                            ? IllustratedEmptyState(
+                                imageAsset: 'assets/images/nav_icon_bears.png',
+                                title: 'Quem vem celebrar convosco?',
+                                message: 'Comecem pela família mais próxima. A lista pode crescer aos poucos, e cada convidado confirma pelo link do convite.',
+                                primaryLabel: 'Adicionar o primeiro convidado',
+                                onPrimary: _addGuest,
+                                secondaryLabel: wedding == null ? null : 'Partilhar convite',
+                                onSecondary: wedding == null ? null : () => _shareInvite(wedding),
                               )
+                            : visible.isEmpty
+                            ? const EmptyStateView(message: 'Sem convidados nesta categoria.', icon: Icons.people_outline)
                             : EdgeFade(
                                 topFadeHeight: 32,
                                 bottomFadeHeight: 140,
