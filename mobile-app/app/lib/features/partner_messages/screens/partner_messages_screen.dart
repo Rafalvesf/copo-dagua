@@ -5,19 +5,41 @@ import 'package:go_router/go_router.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/cards.dart';
-import '../../../shared/widgets/gradient_mark.dart';
+import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
-import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/feedback.dart';
 
-class PartnerMessagesScreen extends ConsumerWidget {
+/// Mensagens do parceiro — igual ao canvas "Parceiro — mensagens" e à
+/// lista do casal: título, pesquisa e conversas. (Saiu o botão "Ver todas
+/// as conversas", que não fazia nada.)
+class PartnerMessagesScreen extends ConsumerStatefulWidget {
   const PartnerMessagesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PartnerMessagesScreen> createState() =>
+      _PartnerMessagesScreenState();
+}
+
+class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
+  final _search = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _search.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final conversationsAsync = ref.watch(partnerConversationsProvider);
+    final query = _search.text.trim().toLowerCase();
 
     return GradientScaffold(
       background: AppBackground.feed,
@@ -27,68 +49,82 @@ class PartnerMessagesScreen extends ConsumerWidget {
             bottom: false,
             child: Column(
               children: [
-                PageHeader(
-                  title: 'Mensagens',
-                  subtitle: 'Fala com os casais.',
-                  showBack: false,
-                  trailing: const AccountSwitcherBadge(),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: conversationsAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerConversationsProvider)),
-                    data: (conversations) => ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppTheme.screenMargin,
-                        0,
-                        AppTheme.screenMargin,
-                        16,
-                      ),
-                      itemCount: conversations.length,
-                      itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: ConversationListItem(
-                          conversation: conversations[index],
-                          onTap: () => context.push(
-                            '/partner-messages/${conversations[index].id}',
-                            extra: conversations[index],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                const PageHeader(title: 'Mensagens', showBack: false),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppTheme.screenMargin,
-                    0,
+                    16,
                     AppTheme.screenMargin,
-                    110,
+                    0,
                   ),
-                  child: SnappyTap(
-                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Já estás a ver todas as conversas.'),
-                      ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      boxShadow: AppTheme.searchBarShadow,
                     ),
-                    child: Container(
-                      height: 52,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppTheme.accentOliveDark,
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                      ),
-                      child: const Text(
-                        'Ver todas as conversas',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: AppFontSize.lg,
+                    child: TextField(
+                      controller: _search,
+                      decoration: InputDecoration(
+                        hintText: 'Pesquisar conversas',
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                          borderSide: const BorderSide(color: AppTheme.accentOliveDark),
                         ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
+                  ),
+                ),
+                Expanded(
+                  child: conversationsAsync.when(
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (err, st) => AsyncErrorView(
+                      onRetry: () => ref.invalidate(partnerConversationsProvider),
+                    ),
+                    data: (all) {
+                      final conversations = query.isEmpty
+                          ? all
+                          : all
+                              .where((c) => c.name.toLowerCase().contains(query))
+                              .toList();
+                      if (all.isEmpty) {
+                        return const IllustratedEmptyState(
+                          imageAsset: 'assets/images/chat_icon.png',
+                          circularImage: false,
+                          imageSize: 180,
+                          title: 'Ainda sem conversas',
+                          message:
+                              'Quando um casal te pedir um orçamento, a conversa aparece aqui.',
+                        );
+                      }
+                      if (conversations.isEmpty) {
+                        return Center(
+                          child: Text('Sem conversas para "${_search.text.trim()}".'),
+                        );
+                      }
+                      return ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppTheme.screenMargin,
+                          20,
+                          AppTheme.screenMargin,
+                          140,
+                        ),
+                        itemCount: conversations.length,
+                        itemBuilder: (context, index) => Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: ConversationListItem(
+                            conversation: conversations[index],
+                            onTap: () => context.push(
+                              '/partner-messages/${conversations[index].id}',
+                              extra: conversations[index],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],

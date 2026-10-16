@@ -6,11 +6,10 @@ import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
-import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../partner_bookings/widgets/request_row.dart';
 import '../../../shared/widgets/month_calendar_grid.dart';
 import '../../../shared/widgets/page_header.dart';
-import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/staggered_fade_in.dart';
 import '../../../shared/widgets/feedback.dart';
 
@@ -37,12 +36,8 @@ class _PartnerCalendarScreenState
         bottom: false,
         child: Column(
           children: [
-            PageHeader(
-              title: 'Calendário',
-              subtitle: 'Os teus compromissos.',
-              trailing: const AccountSwitcherBadge(),
-            ),
-            const SizedBox(height: 16),
+            const PageHeader(title: 'Calendário'),
+            const SizedBox(height: 20),
             Expanded(
               child: bookingsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
@@ -75,10 +70,10 @@ class _PartnerCalendarScreenState
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          'Compromissos de ${formatShortDatePt(_selected)}',
+                          _dayTitle(_selected),
                           style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: AppFontSize.lg,
+                            fontWeight: FontWeight.w700,
+                            fontSize: AppFontSize.xl,
                             color: AppTheme.ink,
                           ),
                         ),
@@ -98,7 +93,14 @@ class _PartnerCalendarScreenState
                               for (final booking in dayBookings)
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
-                                  child: _BookingAgendaCard(booking: booking),
+                                  child: RequestRow(
+                                    booking: booking,
+                                    compact: true,
+                                    onTap: () => context.push(
+                                      '/partner-requests/${booking.id}',
+                                      extra: booking,
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),
@@ -115,86 +117,10 @@ class _PartnerCalendarScreenState
   }
 }
 
-class _BookingAgendaCard extends StatelessWidget {
-  final Booking booking;
+const _weekdaysLong = [
+  'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira',
+  'Sexta-feira', 'Sábado', 'Domingo',
+];
 
-  const _BookingAgendaCard({required this.booking});
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap.builder(
-      onTap: () => context.push(
-        '/partner-requests/${booking.id}',
-        extra: booking,
-      ),
-      builder: (context, hovered) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(
-            color: hovered ? AppTheme.borderMuted : AppColors.gray,
-          ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 48,
-              child: Text(
-                formatTimePt(booking.eventDate),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: AppFontSize.md,
-                  color: AppTheme.accentOliveDark,
-                ),
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    booking.clientName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: AppFontSize.lg,
-                      color: AppTheme.ink,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${booking.category ?? 'Serviço'} · ${booking.packageLabel}',
-                    style: const TextStyle(
-                      color: AppTheme.inkMuted,
-                      fontSize: AppFontSize.sm,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                      border: Border.all(color: AppTheme.accentOliveDark),
-                    ),
-                    child: const Text(
-                      'Ver pedido',
-                      style: TextStyle(
-                        color: AppTheme.accentOliveDark,
-                        fontWeight: FontWeight.w700,
-                        fontSize: AppFontSize.sm,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+String _dayTitle(DateTime d) =>
+    '${_weekdaysLong[d.weekday - 1]}, ${d.day} de ${monthNamesPt[d.month - 1].toLowerCase()}';

@@ -40,6 +40,7 @@ import '../features/partner_home/screens/partner_chat_screen.dart';
 import '../features/partner_home/screens/partner_home_screen.dart';
 import '../features/partner_messages/screens/partner_chat_thread_screen.dart';
 import '../features/partner_messages/screens/partner_messages_screen.dart';
+import '../features/partner_contracts/screens/partner_contracts_screen.dart';
 import '../features/partner_onboarding/screens/partner_welcome_screen.dart';
 import '../features/partner_payments/screens/partner_payments_screen.dart';
 import '../features/partner_profile/screens/business_info_screen.dart';
@@ -272,6 +273,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/guest-gallery/:weddingId',
         builder: (context, state) =>
             GuestGalleryScreen(weddingId: state.pathParameters['weddingId']),
+      ),
+      GoRoute(
+        path: '/partner-contracts',
+        builder: (context, state) => const PartnerContractsScreen(),
       ),
       GoRoute(
         path: '/partner-chat',

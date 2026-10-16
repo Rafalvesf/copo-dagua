@@ -6,9 +6,7 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partner_profile/partner_profile_controller.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -38,12 +36,6 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
     );
   }
 
-  void _comingSoon(BuildContext context) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Em breve.')));
-  }
-
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(authControllerProvider).profile;
@@ -55,165 +47,110 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
           SafeArea(
             bottom: false,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(0, 8, 0, 140),
+              padding: const EdgeInsets.fromLTRB(28, 20, 28, 140),
               children: [
-                PageHeader(
-                  title: 'O meu perfil',
-                  subtitle: 'Gerir informações do teu negócio.',
-                  showBack: false,
-                  trailing: const Row(
-                    mainAxisSize: MainAxisSize.min,
+                // Redesign 2026-10, igual ao canvas "Parceiro — perfil".
+                const SizedBox(
+                  height: 46,
+                  child: Row(
                     children: [
+                      Expanded(
+                        child: Text(
+                          'Perfil',
+                          style: TextStyle(
+                            fontSize: AppFontSize.display,
+                            height: 40 / 34,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.ink,
+                          ),
+                        ),
+                      ),
                       PartnerNotificationBell(),
-                      AccountSwitcherBadge(),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                Center(
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        width: 140,
-                        height: 140,
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.surface,
-                          shape: BoxShape.circle,
-                        ),
-                        child: ClipOval(
-                          child: Image.network(
-                            'https://picsum.photos/seed/${profile?.id}-business/400/400',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(color: AppColors.green),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: SnappyTap(
-                          onTap: () => _comingSoon(context),
-                          child: Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: AppTheme.surface,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppTheme.background,
-                                width: 3,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt_outlined,
-                              size: 17,
-                              color: AppTheme.accentOliveDark,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Center(
-                  child: Text(
-                    (profile?.businessName?.isEmpty ?? true)
-                        ? (profile?.fullName ?? '')
-                        : profile!.businessName!,
-                    style: AppTypography.displaySerif(
-                      fontSize: AppFontSize.h2,
-                      color: AppTheme.ink,
-                    ),
-                  ),
-                ),
-                if (profile?.category != null) ...[
-                  const SizedBox(height: 2),
-                  Center(
-                    child: Text(
-                      profile!.category!.label,
-                      style: const TextStyle(
-                        color: AppTheme.inkMuted,
-                        fontSize: AppFontSize.md,
-                      ),
-                    ),
+                const SizedBox(height: 18),
+                _BusinessHeader(profile: profile),
+                if (profile?.partnerProfileStatus != null &&
+                    profile!.partnerProfileStatus != 'published') ...[
+                  const SizedBox(height: 16),
+                  _ReviewStatusCard(
+                    status: profile.partnerProfileStatus!,
+                    rejectionReason: profile.rejectionReason,
                   ),
                 ],
-                if (profile?.partnerProfileStatus != null) ...[
-                  const SizedBox(height: 18),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.screenMargin,
+                const SizedBox(height: 10),
+                _MenuGroup(
+                  rows: [
+                    _ProfileMenuRow(
+                      icon: Icons.info_outline,
+                      label: 'Informações do negócio',
+                      onTap: () => context.push('/partner-business-info'),
                     ),
-                    child: _ReviewStatusCard(
-                      status: profile!.partnerProfileStatus!,
-                      rejectionReason: profile.rejectionReason,
+                    _ProfileMenuRow(
+                      icon: Icons.sell_outlined,
+                      label: 'Serviços e preços',
+                      onTap: () => context.push('/partner-pricing'),
                     ),
-                  ),
-                ],
-                const SizedBox(height: 28),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.screenMargin,
-                  ),
-                  child: Column(
-                    children: [
+                    _ProfileMenuRow(
+                      icon: Icons.photo_library_outlined,
+                      label: 'Portefólio',
+                      onTap: () => context.push('/partner-portfolio'),
+                    ),
+                    // Só parceiros de categoria "venue" ("Espaço /
+                    // Quinta") gerem mesas — sem sentido para os
+                    // restantes. RLS confirma do lado do servidor.
+                    if (profile?.categoryLabels.contains('Espaço / Quinta') ?? false)
                       _ProfileMenuRow(
-                        icon: Icons.info_outline,
-                        label: 'Informações do negócio',
-                        onTap: () => context.push('/partner-business-info'),
+                        icon: Icons.event_seat_outlined,
+                        label: 'Mesas do local',
+                        onTap: () => context.push('/partner-venue-tables'),
                       ),
-                      _ProfileMenuRow(
-                        icon: Icons.photo_library_outlined,
-                        label: 'Portefólio',
-                        onTap: () => context.push('/partner-portfolio'),
+                  ],
+                ),
+                _MenuGroup(
+                  rows: [
+                    _ProfileMenuRow(
+                      icon: Icons.star_border_rounded,
+                      label: 'Avaliações',
+                      onTap: () => context.push('/partner-reviews'),
+                    ),
+                    _ProfileMenuRow(
+                      icon: Icons.bar_chart_rounded,
+                      label: 'Estatísticas',
+                      onTap: () => context.push('/partner-stats'),
+                    ),
+                    _ProfileMenuRow(
+                      icon: Icons.payments_outlined,
+                      label: 'Pagamentos',
+                      onTap: () => context.push('/partner-payments'),
+                    ),
+                  ],
+                ),
+                _MenuGroup(
+                  rows: [
+                    _ProfileMenuRow(
+                      icon: Icons.settings_outlined,
+                      label: 'Definições da conta',
+                      onTap: () => context.push('/settings'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () =>
+                        ref.read(authControllerProvider.notifier).logout(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppStatusColors.declined,
+                      padding: EdgeInsets.zero,
+                      textStyle: const TextStyle(
+                        fontSize: AppFontSize.base + 1,
+                        fontWeight: FontWeight.w700,
                       ),
-                      _ProfileMenuRow(
-                        icon: Icons.sell_outlined,
-                        label: 'Serviços e preços',
-                        onTap: () => context.push('/partner-pricing'),
-                      ),
-                      _ProfileMenuRow(
-                        icon: Icons.payments_outlined,
-                        label: 'Pagamentos',
-                        onTap: () => context.push('/partner-payments'),
-                      ),
-                      // Só parceiros de categoria "venue" ("Espaço /
-                      // Quinta") gerem mesas — sem sentido para os
-                      // restantes. RLS confirma do lado do servidor
-                      // (partner_venue_tables), isto é só para não
-                      // mostrar uma opção sem sentido no menu.
-                      if (profile?.categoryLabels.contains('Espaço / Quinta') ?? false)
-                        _ProfileMenuRow(
-                          icon: Icons.event_seat_outlined,
-                          label: 'Mesas do local',
-                          onTap: () => context.push('/partner-venue-tables'),
-                        ),
-                      _ProfileMenuRow(
-                        icon: Icons.place_outlined,
-                        label: 'Localização',
-                        onTap: () => _comingSoon(context),
-                      ),
-                      _ProfileMenuRow(
-                        icon: Icons.star_border_rounded,
-                        label: 'Avaliações',
-                        onTap: () => context.push('/partner-reviews'),
-                      ),
-                      _ProfileMenuRow(
-                        icon: Icons.bar_chart_rounded,
-                        label: 'Estatísticas',
-                        onTap: () => context.push('/partner-stats'),
-                      ),
-                      _ProfileMenuRow(
-                        icon: Icons.settings_outlined,
-                        label: 'Definições da conta',
-                        isLast: true,
-                        onTap: () => context.push('/settings'),
-                      ),
-                    ],
+                    ),
+                    child: const Text('Terminar sessão'),
                   ),
                 ),
               ],
@@ -231,60 +168,161 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
   }
 }
 
+class _BusinessHeader extends StatelessWidget {
+  final Profile? profile;
+
+  const _BusinessHeader({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = profile;
+    final name = (p?.businessName?.isEmpty ?? true)
+        ? (p?.fullName ?? '')
+        : p!.businessName!;
+    final parts = name.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    final initials = parts.isEmpty
+        ? '?'
+        : (parts.first[0] + (parts.length > 1 ? parts[1][0] : '')).toUpperCase();
+    final meta = [
+      if (p?.category != null) p!.category!.label,
+      if (p?.location != null && p!.location!.isNotEmpty) p.location!,
+    ].join(' · ');
+    final published = p?.partnerProfileStatus == 'published';
+    return Row(
+      children: [
+        Container(
+          width: 88,
+          height: 88,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.green,
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+          ),
+          child: Text(
+            initials,
+            style: const TextStyle(
+              fontSize: AppFontSize.h1,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.accentOliveDark,
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  fontSize: AppFontSize.h2,
+                  height: 30 / 24,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.ink,
+                ),
+              ),
+              if (meta.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  meta,
+                  style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
+                ),
+              ],
+              if (published) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE4EFE5),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: const Text(
+                    'Publicado — visível aos casais',
+                    style: TextStyle(
+                      fontSize: AppFontSize.xs,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2F6B45),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MenuGroup extends StatelessWidget {
+  final List<Widget> rows;
+
+  const _MenuGroup({required this.rows});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0)
+              const Divider(height: 1, indent: 14, endIndent: 14, color: AppTheme.borderMuted),
+            rows[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _ProfileMenuRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final bool isLast;
 
   const _ProfileMenuRow({
     required this.icon,
     required this.label,
     required this.onTap,
-    this.isLast = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
-      child: SnappyTap(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: AppColors.gray,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 18, color: AppTheme.ink),
+    return SnappyTap(
+      onTap: onTap,
+      child: Container(
+        color: Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: AppFontSize.base,
-                    color: AppTheme.ink,
-                  ),
+              child: Icon(icon, size: 18, color: AppTheme.ink),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: AppFontSize.md,
+                  color: AppTheme.ink,
                 ),
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppTheme.inkMuted,
-              ),
-            ],
-          ),
+            ),
+            const Icon(Icons.chevron_right_rounded, size: 20, color: AppTheme.inkMuted),
+          ],
         ),
       ),
     );
