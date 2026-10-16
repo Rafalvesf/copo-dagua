@@ -29,6 +29,51 @@ class PartnerDetailScreen extends ConsumerStatefulWidget {
     this.selectionMode = false,
   });
 
+  /// Abre o parceiro numa folha que sobe de baixo (canvas "Parceiro —
+  /// bottom sheet"): pega no topo, cantos de 28, fecha ao tocar fora ou
+  /// ao arrastar para baixo. Devolve o parceiro escolhido em
+  /// [selectionMode].
+  static Future<Partner?> show(
+    BuildContext context,
+    Partner partner, {
+    bool selectionMode = false,
+  }) {
+    return Navigator.of(context).push<Partner>(
+      PageRouteBuilder<Partner>(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black45,
+        transitionDuration: const Duration(milliseconds: 280),
+        reverseTransitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (context, animation, secondaryAnimation) => Padding(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + 56,
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadius.xxl),
+            ),
+            child: PartnerDetailScreen(
+              partner: partner,
+              selectionMode: selectionMode,
+            ),
+          ),
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 1),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+            ),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
   @override
   ConsumerState<PartnerDetailScreen> createState() =>
       _PartnerDetailScreenState();
@@ -166,10 +211,37 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Stack(
-                  children: [
-                    SizedBox(
-                      height: 280,
+                // Pega da folha — arrastar para baixo fecha.
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onVerticalDragEnd: (d) {
+                    if ((d.primaryVelocity ?? 0) > 250) {
+                      Navigator.of(context).maybePop();
+                    }
+                  },
+                  child: Semantics(
+                    button: true,
+                    label: 'Fechar',
+                    onTap: () => Navigator.of(context).maybePop(),
+                    child: Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 10, bottom: 14),
+                        width: 40,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: AppTheme.borderMuted,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    child: SizedBox(
+                      height: 200,
                       width: double.infinity,
                       child: Stack(
                         fit: StackFit.expand,
@@ -190,40 +262,35 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                               errorBuilder: (context, error, stackTrace) =>
                                   const SizedBox.shrink(),
                             ),
+                          Positioned(
+                            top: 12,
+                            right: 12,
+                            child: Semantics(
+                              label: favorited
+                                  ? 'Remover dos favoritos'
+                                  : 'Guardar nos favoritos',
+                              child: CircleIconButton(
+                                icon: favorited
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                background: Colors.white,
+                                foreground: favorited
+                                    ? AppStatusColors.declined
+                                    : AppTheme.ink,
+                                size: 44,
+                                onTap: () => ref
+                                    .read(
+                                      favoritePartnersControllerProvider
+                                          .notifier,
+                                    )
+                                    .toggle(partner.id),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: SafeArea(
-                        bottom: false,
-                        child: CircleIconButton(
-                          icon: Icons.arrow_back_rounded,
-                          background: Colors.white.withValues(alpha: 0.9),
-                          size: 46,
-                          onTap: () => Navigator.of(context).pop(),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: SafeArea(
-                        bottom: false,
-                        child: CircleIconButton(
-                          icon: favorited
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          background: Colors.white.withValues(alpha: 0.9),
-                          size: 46,
-                          onTap: () => ref
-                              .read(favoritePartnersControllerProvider.notifier)
-                              .toggle(partner.id),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -236,10 +303,25 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
+                        [
+                          partner.primaryCategoryLabel,
+                          if (partner.location.isNotEmpty) partner.location,
+                        ].join(' · ').toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: AppFontSize.sm,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                          color: AppTheme.accentOliveDark,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
                         partner.name,
                         style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: AppFontSize.xxl,
+                          fontWeight: FontWeight.w700,
+                          fontSize: AppFontSize.h2,
+                          height: 30 / 24,
+                          color: AppTheme.ink,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -248,47 +330,70 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                           final summary = ref.watch(
                             publicReviewSummaryForPartnerProvider(partner.id),
                           );
-                          return Row(
+                          final price =
+                              partner.startingPrice ?? partner.averageQuotePrice;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (summary.count > 0) ...[
-                                const Icon(
-                                  Icons.star_rounded,
-                                  size: 17,
-                                  color: Colors.amber,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  summary.average.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: AppFontSize.md,
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.star_rounded,
+                                    size: 17,
+                                    color: AppTheme.ink,
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '(${summary.count} avaliações)',
-                                  style: TextStyle(
-                                    color: AppTheme.inkMuted,
-                                    fontSize: AppFontSize.sm,
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    summary.count > 0
+                                        ? summary.average
+                                            .toStringAsFixed(1)
+                                            .replaceAll('.', ',')
+                                        : 'Novo',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: AppFontSize.base,
+                                      color: AppTheme.ink,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 10),
-                              ],
-                              const Icon(
-                                Icons.place_outlined,
-                                size: 15,
-                                color: AppTheme.inkMuted,
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    summary.count == 0
+                                        ? '· ainda sem avaliações'
+                                        : '· ${summary.count} ${summary.count == 1 ? 'avaliação' : 'avaliações'}',
+                                    style: const TextStyle(
+                                      color: AppTheme.inkMuted,
+                                      fontWeight: FontWeight.w300,
+                                      fontSize: AppFontSize.base,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 2),
-                              Expanded(
-                                child: Text(
-                                  partner.location,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: AppTheme.inkMuted,
-                                    fontSize: AppFontSize.sm,
+                              const SizedBox(height: 18),
+                              Row(
+                                children: [
+                                  _InfoTile(
+                                    label: partner.startingPrice != null
+                                        ? 'Desde'
+                                        : 'Orçamento médio',
+                                    value: price == null
+                                        ? 'Por orçamento'
+                                        : '${price.toStringAsFixed(0)} €',
                                   ),
-                                ),
+                                  const SizedBox(width: 8),
+                                  _InfoTile(
+                                    label: 'Zona',
+                                    value: partner.location.isEmpty
+                                        ? '—'
+                                        : partner.location,
+                                    highlight: true,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _InfoTile(
+                                    label: 'Serviços',
+                                    value:
+                                        '${partner.categoryLabels.length}',
+                                  ),
+                                ],
                               ),
                             ],
                           );
@@ -330,35 +435,49 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                   AppTheme.screenMargin,
                   12,
                   AppTheme.screenMargin,
-                  12,
+                  18,
                 ),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.accentOliveDark.withValues(alpha: 0.12),
-                      blurRadius: 24,
-                      offset: const Offset(0, -6),
-                    ),
-                  ],
+                  border: Border(top: BorderSide(color: AppTheme.borderMuted)),
                 ),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _openingChat ? null : _openChat,
-                        icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                        label: const Text('Chat'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.ink,
-                          side: const BorderSide(color: AppTheme.borderMuted),
+                    Semantics(
+                      button: true,
+                      label: 'Enviar mensagem',
+                      child: SizedBox(
+                        width: 54,
+                        height: 54,
+                        child: OutlinedButton(
+                          onPressed: _openingChat ? null : _openChat,
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            foregroundColor: AppTheme.ink,
+                            side: const BorderSide(color: AppTheme.borderMuted),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                            ),
+                          ),
+                          child: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      flex: 2,
-                      child: ElevatedButton.icon(
+                      child: SizedBox(
+                      height: 54,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppTheme.accentOliveDark,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: AppFontSize.lg,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                         onPressed: _requestingQuote || alreadyRelated
                             ? null
                             : () {
@@ -368,11 +487,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                   _requestQuote();
                                 }
                               },
-                        icon: Icon(
-                          widget.selectionMode ? Icons.check : Icons.add,
-                          size: 18,
-                        ),
-                        label: Text(
+                        child: Text(
                           widget.selectionMode
                               ? 'Escolher parceiro'
                               : switch (relationshipStatus) {
@@ -380,9 +495,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                     'Já reservado',
                                   PartnerRelationshipStatus.requestPending =>
                                     'Pedido já enviado',
-                                  _ => 'Reservar',
+                                  _ => 'Pedir orçamento',
                                 },
                         ),
+                      ),
                       ),
                     ),
                   ],
@@ -391,6 +507,61 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Quadrado de informação do topo (canvas: Capacidade / data / Desde),
+/// com os dados que a app tem de cada parceiro.
+class _InfoTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool highlight;
+
+  const _InfoTile({
+    required this.label,
+    required this.value,
+    this.highlight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = highlight ? AppTheme.accentOliveDark : AppTheme.ink;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: highlight ? AppColors.green : AppTheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: AppFontSize.sm,
+                color: highlight ? AppTheme.accentOliveDark : AppTheme.inkMuted,
+              ),
+            ),
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: AppFontSize.lg,
+                  fontWeight: FontWeight.w700,
+                  color: fg,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

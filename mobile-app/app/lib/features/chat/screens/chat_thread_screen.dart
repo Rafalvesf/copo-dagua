@@ -60,9 +60,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     if (partnerId == null) return;
     final partner = await ref.read(partnerByIdProvider(partnerId).future);
     if (!mounted || partner == null) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => PartnerDetailScreen(partner: partner)),
-    );
+    PartnerDetailScreen.show(context, partner);
   }
 
   Future<void> _send() async {
