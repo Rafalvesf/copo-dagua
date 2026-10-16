@@ -16,7 +16,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
-enum _BudgetFilter { all, paid, pending, categories }
+enum _BudgetFilter { all, paid, pending }
 
 const _categoriesCollapsedLimit = 5;
 
@@ -142,24 +142,21 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                   right: 0,
                   bottom: 0,
                   child: FloatingFilterBar(
-                    items: [
+                    items: const [
                       FilterBarItem('Todas'),
                       FilterBarItem('Pagas'),
                       FilterBarItem('Pendentes'),
-                      FilterBarItem('Categorias'),
                     ],
                     selected: const [
                       _BudgetFilter.all,
                       _BudgetFilter.paid,
                       _BudgetFilter.pending,
-                      _BudgetFilter.categories,
                     ].indexOf(_filter),
                     onSelected: (i) => setState(
                       () => _filter = const [
                         _BudgetFilter.all,
                         _BudgetFilter.paid,
                         _BudgetFilter.pending,
-                        _BudgetFilter.categories,
                       ][i],
                     ),
                   ),
