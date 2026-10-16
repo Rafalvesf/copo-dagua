@@ -31,6 +31,9 @@ class PageHeader extends StatelessWidget {
     this.centered = false,
   });
 
+  /// Altura da linha do título — a dos botões redondos do Perfil (46).
+  static const double _rowHeight = 46;
+
   Widget _subtitle({required bool center}) {
     return Row(
       mainAxisAlignment: center ? MainAxisAlignment.center : MainAxisAlignment.start,
@@ -55,19 +58,26 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pedido do utilizador (2026-10-16): "alinha os títulos todos à mesma
+    // altura que o título Perfil" — mesma margem de topo (20) e a linha
+    // do título sempre com 46 de altura (a dos botões redondos), em todos
+    // os ecrãs. Por isso [topPadding] nunca fica abaixo de 20, e os ecrãs
+    // com voltar usam sempre a forma de uma linha (voltar · título).
     final padding = EdgeInsets.fromLTRB(
       AppTheme.screenMargin,
-      topPadding,
+      topPadding < 20 ? 20 : topPadding,
       AppTheme.screenMargin,
       0,
     );
 
-    if (centered && title != null) {
+    if ((centered || showBack) && title != null) {
       return Padding(
         padding: padding,
         child: Column(
           children: [
-            Row(
+            SizedBox(
+              height: _rowHeight,
+              child: Row(
               children: [
                 showBack ? const CircleBackButton() : const SizedBox(width: 44, height: 44),
                 const SizedBox(width: 12),
@@ -87,6 +97,7 @@ class PageHeader extends StatelessWidget {
                 const SizedBox(width: 12),
                 trailing ?? const SizedBox(width: 44, height: 44),
               ],
+            ),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
@@ -117,12 +128,15 @@ class PageHeader extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(child: titleText),
-                const SizedBox(width: 12),
-                trailing!,
-              ],
+            SizedBox(
+              height: _rowHeight,
+              child: Row(
+                children: [
+                  Expanded(child: titleText),
+                  const SizedBox(width: 12),
+                  trailing!,
+                ],
+              ),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 6),
@@ -150,7 +164,13 @@ class PageHeader extends StatelessWidget {
             const SizedBox(height: 18),
           ],
           if (titleText != null) ...[
-            titleText,
+            if (hasIconRow)
+              titleText
+            else
+              SizedBox(
+                height: _rowHeight,
+                child: Align(alignment: Alignment.centerLeft, child: titleText),
+              ),
             if (subtitle != null) ...[
               const SizedBox(height: 6),
               _subtitle(center: false),
