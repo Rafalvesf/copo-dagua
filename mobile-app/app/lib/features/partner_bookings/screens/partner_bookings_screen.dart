@@ -8,11 +8,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/initials_avatar.dart';
+import '../widgets/request_row.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
-import '../../../shared/widgets/snappy_tap.dart';
-import '../booking_style.dart';
 import '../../../shared/widgets/feedback.dart';
 
 enum _BookingSegment { recebidos, confirmados, concluidos }
@@ -101,7 +99,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                         itemCount: bookings.length,
                         itemBuilder: (context, index) => Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: _BookingRow(
+                          child: RequestRow(
                             booking: bookings[index],
                             onTap: () => context.push(
                               '/partner-requests/${bookings[index].id}',
@@ -142,60 +140,3 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
 }
 
 
-class _BookingRow extends StatelessWidget {
-  final Booking booking;
-  final VoidCallback onTap;
-
-  const _BookingRow({required this.booking, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final date = booking.eventDate;
-    final dateLabel =
-        '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        child: Row(
-          children: [
-            InitialsAvatar(name: booking.clientName, radius: 24),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    booking.clientName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: AppFontSize.base,
-                      color: AppTheme.ink,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '$dateLabel · ${booking.category ?? 'Serviço'}',
-                    style: const TextStyle(
-                      color: AppTheme.inkMuted,
-                      fontSize: AppFontSize.sm,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            StatusPill(
-              label: booking.status.label,
-              color: bookingStatusColor(booking.status),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

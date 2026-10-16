@@ -10,7 +10,7 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/initials_avatar.dart';
+import '../widgets/request_row.dart';
 
 class BookingDetailScreen extends ConsumerStatefulWidget {
   final Booking booking;
@@ -45,8 +45,9 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final date = booking.eventDate;
+    const weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
     final dateLabel =
-        '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+        '${weekdays[date.weekday - 1]}, ${requestDateLabel(date)}';
 
     return GradientScaffold(
       background: AppBackground.subtle,
@@ -54,96 +55,215 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.screenMargin,
-                20,
-                AppTheme.screenMargin,
-                0,
-              ),
-              child: Row(
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(28, 20, 28, 24),
                 children: [
-                  const CircleBackButton(),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Pedido recebido',
-                    style: TextStyle(
-                      fontSize: AppFontSize.xl,
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: CircleBackButton(),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    switch (booking.status) {
+                      BookingStatus.novo || BookingStatus.emAnalise => 'PEDIDO RECEBIDO',
+                      BookingStatus.aceite => 'À ESPERA DO SINAL',
+                      BookingStatus.confirmado => 'RESERVA CONFIRMADA',
+                      BookingStatus.concluido => 'CONCLUÍDO',
+                      BookingStatus.recusado => 'RECUSADO',
+                    },
+                    style: const TextStyle(
+                      fontSize: AppFontSize.xs,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                      color: AppTheme.inkMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    booking.clientName,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      height: 32 / 26,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.ink,
                     ),
                   ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.screenMargin,
-                  20,
-                  AppTheme.screenMargin,
-                  24,
-                ),
-                children: [
-                  Center(
-                    child: InitialsAvatar(name: booking.clientName, radius: 48),
-                  ),
-                  const SizedBox(height: 14),
-                  Center(
-                    child: Text(
-                      booking.clientName,
-                      style: AppTypography.displaySerif(
-                        fontSize: AppFontSize.h3,
-                        color: AppTheme.ink,
+                  if (booking.fromQuoteRequest) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: booking.proposalSent
+                            ? AppColors.gray
+                            : const Color(0xFFFCEFD6),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            booking.proposalSent
+                                ? Icons.mark_email_read_outlined
+                                : Icons.schedule_rounded,
+                            size: 20,
+                            color: booking.proposalSent
+                                ? AppTheme.accentOliveDark
+                                : const Color(0xFF7A5000),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  booking.proposalSent
+                                      ? 'Proposta enviada'
+                                      : 'Por responder',
+                                  style: TextStyle(
+                                    fontSize: AppFontSize.base,
+                                    fontWeight: FontWeight.w700,
+                                    color: booking.proposalSent
+                                        ? AppTheme.accentOliveDark
+                                        : const Color(0xFF7A5000),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  booking.proposalSent
+                                      ? 'A aguardar resposta do casal.'
+                                      : 'O casal está à espera da tua proposta.',
+                                  style: TextStyle(
+                                    fontSize: AppFontSize.sm,
+                                    color: booking.proposalSent
+                                        ? AppTheme.accentOliveDark
+                                        : const Color(0xFF7A5000),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Center(
-                    child: Text(
-                      dateLabel,
-                      style: const TextStyle(
-                        color: AppTheme.inkMuted,
-                        fontSize: AppFontSize.md,
+                  ],
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _InfoCard(label: 'Data', value: dateLabel),
                       ),
-                    ),
-                  ),
-                  Center(
-                    child: Text(
-                      booking.city,
-                      style: const TextStyle(
-                        color: AppTheme.inkMuted,
-                        fontSize: AppFontSize.md,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _InfoCard(
+                          label: 'Local',
+                          value: booking.city.isEmpty ? '—' : booking.city,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 10),
                   _InfoCard(
                     label: 'Serviço',
-                    value: '${booking.category ?? 'Serviço'} — ${booking.packageLabel}',
+                    value: [
+                      booking.category ?? 'Serviço',
+                      if (booking.packageLabel.isNotEmpty) booking.packageLabel,
+                    ].join(' — '),
                   ),
-                  if (booking.messageFromCouple != null) ...[
-                    const SizedBox(height: 14),
+                  if (booking.messageFromCouple != null &&
+                      booking.messageFromCouple!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 10),
                     _InfoCard(
                       label: 'Mensagem do casal',
-                      value: booking.messageFromCouple!,
+                      value: '“${booking.messageFromCouple!.trim()}”',
+                      tinted: true,
                     ),
                   ],
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.screenMargin,
-                0,
-                AppTheme.screenMargin,
-                40,
+            Container(
+              padding: const EdgeInsets.fromLTRB(28, 14, 28, 24),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: AppTheme.borderMuted)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (booking.fromQuoteRequest && !booking.proposalSent) ...[
+                    SizedBox(
+                      height: 54,
+                      child: FilledButton(
+                        onPressed: () => context.push(
+                          '/partner-requests/${booking.id}/proposal',
+                          extra: booking,
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppTheme.accentOliveDark,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: AppFontSize.lg,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        child: const Text('Enviar proposta'),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
                   Row(
                     children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _busy
+                              ? null
+                              : () => _run(() async {
+                                  if (booking.fromQuoteRequest &&
+                                      booking.status == BookingStatus.novo) {
+                                    await supabase.rpc(
+                                      'mark_quote_request_viewed',
+                                      params: {'p_quote_request_id': booking.id},
+                                    );
+                                    ref.invalidate(partnerBookingsProvider);
+                                  }
+                                  final partnerId = ref.read(
+                                    authControllerProvider.select((s) => s.profile!.id),
+                                  );
+                                  final conversationId = await getOrCreateConversation(
+                                    weddingId: booking.weddingId,
+                                    partnerId: partnerId,
+                                  );
+                                  if (context.mounted) {
+                                    context.push(
+                                      '/partner-messages/$conversationId',
+                                      extra: ChatConversation(
+                                        id: conversationId,
+                                        weddingId: booking.weddingId,
+                                        partnerId: partnerId,
+                                        name: booking.clientName,
+                                        avatarSeed: booking.avatarSeed,
+                                      ),
+                                    );
+                                  }
+                                }),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            foregroundColor: AppTheme.accentOliveDark,
+                            side: const BorderSide(color: AppTheme.accentOliveDark),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: AppFontSize.base + 1,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          child: const Text('Conversar'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: OutlinedButton(
                           // Recusar só existe do lado `quote_requests`.
@@ -199,68 +319,26 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                                   });
                                 }
                               : null,
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            backgroundColor: AppTheme.surface,
+                            foregroundColor: const Color(0xFFA3412E),
+                            side: BorderSide.none,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: AppFontSize.base + 1,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                           child: Text(
                             booking.fromQuoteRequest ? 'Recusar' : 'Cancelar reserva',
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: _busy
-                              ? null
-                              : () => _run(() async {
-                                  if (booking.fromQuoteRequest &&
-                                      booking.status == BookingStatus.novo) {
-                                    await supabase.rpc(
-                                      'mark_quote_request_viewed',
-                                      params: {'p_quote_request_id': booking.id},
-                                    );
-                                    ref.invalidate(partnerBookingsProvider);
-                                  }
-                                  final partnerId = ref.read(
-                                    authControllerProvider.select((s) => s.profile!.id),
-                                  );
-                                  final conversationId = await getOrCreateConversation(
-                                    weddingId: booking.weddingId,
-                                    partnerId: partnerId,
-                                  );
-                                  if (context.mounted) {
-                                    context.push(
-                                      '/partner-messages/$conversationId',
-                                      extra: ChatConversation(
-                                        id: conversationId,
-                                        weddingId: booking.weddingId,
-                                        partnerId: partnerId,
-                                        name: booking.clientName,
-                                        avatarSeed: booking.avatarSeed,
-                                      ),
-                                    );
-                                  }
-                                }),
-                          child: const Text('Conversar'),
-                        ),
-                      ),
                     ],
                   ),
-                  if (booking.fromQuoteRequest) ...[
-                    const SizedBox(height: 12),
-                    if (booking.proposalSent)
-                      Center(
-                        child: Text(
-                          'Proposta enviada — a aguardar resposta do casal.',
-                          style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-                        ),
-                      )
-                    else
-                      PrimaryButton(
-                        label: 'Enviar proposta',
-                        onPressed: () => context.push(
-                          '/partner-requests/${booking.id}/proposal',
-                          extra: booking,
-                        ),
-                      ),
-                  ],
                 ],
               ),
             ),
@@ -274,16 +352,17 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
 class _InfoCard extends StatelessWidget {
   final String label;
   final String value;
+  final bool tinted;
 
-  const _InfoCard({required this.label, required this.value});
+  const _InfoCard({required this.label, required this.value, this.tinted = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: tinted ? AppColors.gray : AppTheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
@@ -291,19 +370,20 @@ class _InfoCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: AppTheme.inkMuted,
+            style: TextStyle(
+              color: tinted ? AppTheme.accentOliveDark : AppTheme.inkMuted,
               fontSize: AppFontSize.sm,
-              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppTheme.ink,
-              fontSize: AppFontSize.base,
-              height: 1.4,
+              fontSize: tinted ? AppFontSize.base : AppFontSize.base + 1,
+              height: tinted ? 1.5 : 1.3,
+              fontWeight: tinted ? FontWeight.w400 : FontWeight.w700,
+              fontStyle: tinted ? FontStyle.italic : FontStyle.normal,
             ),
           ),
         ],
