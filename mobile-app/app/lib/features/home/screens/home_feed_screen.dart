@@ -9,19 +9,17 @@ import '../../../core/models/models.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/tasks/task_models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
-/// Home — perfil simples do casal (foto, nome, frase, dados
-/// essenciais). Pedido explícito do utilizador (2026-09-01): "trocas
-/// o conteúdo do home com o conteúdo do os noivos, sem mexer no
-/// conteúdo" — este ecrã passou a ter o conteúdo que antes vivia em
-/// `wedding_details_screen.dart` (`WeddingDetailsScreen`), sem
-/// nenhuma alteração ao próprio conteúdo.
+/// Perfil — conta de quem está com sessão iniciada. Pedido explícito do
+/// utilizador (redesign 2026-10): "o perfil fica apenas de quem criou a
+/// conta". Foto/avatar, nome, email, atalhos para definições,
+/// notificações, galeria, suporte e terminar sessão. Os dados do
+/// casamento vivem no separador Casamento e em Definições.
 class HomeFeedScreen extends ConsumerStatefulWidget {
   const HomeFeedScreen({super.key});
 
@@ -32,10 +30,13 @@ class HomeFeedScreen extends ConsumerStatefulWidget {
 class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   bool _uploadingProfilePhoto = false;
 
-  void _showComingSoon(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+  void _openNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const _NotificationsSheet(),
+    );
   }
 
   Future<void> _pickProfilePhoto() async {
@@ -44,7 +45,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     if (file == null || !mounted) return;
     setState(() => _uploadingProfilePhoto = true);
     try {
-      await ref.read(weddingControllerProvider.notifier).uploadProfilePhoto(file);
+      await ref.read(authControllerProvider.notifier).uploadAvatarPhoto(file);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -56,21 +57,12 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     }
   }
 
-  String _locationLabel(Wedding wedding) {
-    final venue = wedding.venue;
-    final location = wedding.location;
-    if (venue != null && venue.isNotEmpty && location != null && location.isNotEmpty) {
-      return '$venue, $location';
-    }
-    return venue ?? location ?? '—';
-  }
-
   @override
   Widget build(BuildContext context) {
     final weddingState = ref.watch(weddingControllerProvider);
     final wedding = weddingState.wedding;
-    final accountName = ref.watch(
-      authControllerProvider.select((s) => s.profile?.fullName),
+    final profile = ref.watch(
+      authControllerProvider.select((s) => s.profile),
     );
     final unreadNotifications = ref.watch(
       taskEngineControllerProvider.select((s) => s.unreadNotificationCount),
@@ -104,12 +96,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                             // página própria, abre uma sheet simples
                             // por cima da página.
                             SnappyTap(
-                              onTap: () => showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) => const _NotificationsSheet(),
-                              ),
+                              onTap: () => _openNotifications(context),
                               child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
@@ -171,185 +158,62 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                           ],
                         ),
                         const SizedBox(height: 18),
-                        Center(
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Container(
-                                width: 140,
-                                height: 140,
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.surface,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: ClipOval(
-                                  child: Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      if (wedding.profilePhotoUrlCacheBusted != null)
-                                        Image.network(
-                                          wedding.profilePhotoUrlCacheBusted!,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) =>
-                                              Container(color: AppColors.green),
-                                        )
-                                      else
-                                        Container(color: AppColors.green),
-                                      if (_uploadingProfilePhoto)
-                                        Container(
-                                          color: Colors.black.withValues(alpha: 0.35),
-                                          alignment: Alignment.center,
-                                          child: const CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2.5,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: SnappyTap(
-                                  onTap: _uploadingProfilePhoto ? null : _pickProfilePhoto,
-                                  child: Container(
-                                    width: 38,
-                                    height: 38,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.surface,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: AppTheme.background,
-                                        width: 3,
-                                      ),
-                                    ),
-                                    child: const Icon(
-                                      Icons.camera_alt_outlined,
-                                      size: 17,
-                                      color: AppTheme.accentOliveDark,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                        _ProfileHeader(
+                          name: profile?.fullName,
+                          email: profile?.email,
+                          avatarUrl: profile?.avatarUrl,
+                          createdWedding: profile != null &&
+                              wedding.ownerId == profile.id,
+                          uploading: _uploadingProfilePhoto,
+                          onChangePhoto: _uploadingProfilePhoto
+                              ? null
+                              : _pickProfilePhoto,
                         ),
-                        const SizedBox(height: 20),
-                        Text(
-                          accountName ?? '—',
-                          textAlign: TextAlign.center,
-                          style: AppTypography.displaySerif(
-                            fontSize: AppFontSize.h1,
-                            color: AppTheme.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
+                        const SizedBox(height: 24),
+                        const _SupportSummaryCard(),
+                        const SizedBox(height: 12),
+                        _MenuGroup(
                           children: [
-                            Expanded(
-                              child: Divider(color: AppTheme.borderMuted),
+                            _MenuRow(
+                              icon: Icons.person_outline_rounded,
+                              label: 'Dados pessoais e do casamento',
+                              onTap: () => context.push('/settings'),
                             ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 8),
-                              child: Icon(
-                                Icons.favorite,
-                                size: 12,
-                                color: AppTheme.accentOliveDark,
-                              ),
+                            _MenuRow(
+                              icon: Icons.notifications_none_rounded,
+                              label: 'Notificações',
+                              badge: unreadNotifications,
+                              onTap: () => _openNotifications(context),
                             ),
-                            Expanded(
-                              child: Divider(color: AppTheme.borderMuted),
+                            _MenuRow(
+                              icon: Icons.photo_library_outlined,
+                              label: 'Galeria',
+                              onTap: () => context.push('/gallery'),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          '"${wedding.displayQuote}"',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontStyle: FontStyle.italic,
-                            color: AppTheme.inkMuted,
-                            fontSize: AppFontSize.base,
-                            height: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const _SupportSummaryCard(),
-                        const SizedBox(height: 20),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppTheme.surface,
-                            borderRadius: BorderRadius.circular(AppRadius.lg),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          child: Column(
-                            children: [
-                              _InfoRow(
-                                icon: Icons.calendar_today_outlined,
-                                label: 'Data',
-                                value: wedding.weddingDate == null
-                                    ? 'Por definir'
-                                    : formatWeddingDateCaps(
-                                        wedding.weddingDate!,
-                                      ),
-                              ),
-                              const Divider(
-                                height: 1,
-                                color: AppTheme.borderMuted,
-                              ),
-                              _InfoRow(
-                                icon: Icons.place_outlined,
-                                label: 'Local',
-                                value: _locationLabel(wedding),
-                              ),
-                              const Divider(
-                                height: 1,
-                                color: AppTheme.borderMuted,
-                              ),
-                              _InfoRow(
-                                icon: Icons.language,
-                                label: 'Website',
-                                value: wedding.websiteDomain,
-                              ),
-                              const Divider(
-                                height: 1,
-                                color: AppTheme.borderMuted,
-                              ),
-                              _InfoRow(
-                                icon: Icons.card_giftcard_outlined,
-                                label: 'Lista de presentes',
-                                trailingLabel: 'Ver lista',
-                                onTap: () => _showComingSoon(
-                                  context,
-                                  'Em breve: lista de presentes.',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 26),
-                        Text(
-                          'Como podemos ajudar?',
-                          style: Theme.of(context).textTheme.titleMedium,
+                        const SizedBox(height: 12),
+                        _MenuGroup(
+                          children: [
+                            _MenuRow(
+                              icon: Icons.support_agent_outlined,
+                              label: 'Falar com a equipa',
+                              onTap: () => context.push('/support'),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
-                        SizedBox(
-                          height: 130,
-                          width: double.infinity,
-                          child: _OptionCard(
-                            color: AppColors.green,
-                            icon: Icons.support_agent,
-                            label: 'Falar com a equipa',
-                            onTap: () => _showComingSoon(
-                              context,
-                              'Ainda sem assistente real ligado — em breve.',
+                        _MenuGroup(
+                          children: [
+                            _MenuRow(
+                              icon: Icons.logout_rounded,
+                              label: 'Terminar sessão',
+                              destructive: true,
+                              onTap: () => ref
+                                  .read(authControllerProvider.notifier)
+                                  .logout(),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
@@ -364,79 +228,6 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
               ],
             ),
     );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String? value;
-  final String? trailingLabel;
-  final VoidCallback? onTap;
-
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    this.value,
-    this.trailingLabel,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final row = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: AppColors.green,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
-            child: Icon(icon, size: 16, color: AppTheme.accentOliveDark),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: AppFontSize.md),
-          ),
-          const Spacer(),
-          if (trailingLabel != null) ...[
-            Text(
-              trailingLabel!,
-              style: const TextStyle(
-                color: AppTheme.accentOliveDark,
-                fontWeight: FontWeight.w700,
-                fontSize: AppFontSize.md,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.chevron_right,
-              size: 18,
-              color: AppTheme.accentOliveDark,
-            ),
-          ] else
-            Flexible(
-              child: Text(
-                value ?? '—',
-                textAlign: TextAlign.right,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppTheme.inkMuted,
-                  fontSize: AppFontSize.md,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-
-    if (onTap == null) return row;
-    return SnappyTap(onTap: onTap, child: row);
   }
 }
 
@@ -793,46 +584,250 @@ class _NotificationRow extends ConsumerWidget {
   }
 }
 
-class _OptionCard extends StatelessWidget {
-  final Color color;
+
+class _ProfileHeader extends StatelessWidget {
+  final String? name;
+  final String? email;
+  final String? avatarUrl;
+  final bool createdWedding;
+  final bool uploading;
+  final VoidCallback? onChangePhoto;
+
+  const _ProfileHeader({
+    required this.name,
+    required this.email,
+    required this.avatarUrl,
+    required this.createdWedding,
+    required this.uploading,
+    required this.onChangePhoto,
+  });
+
+  String get _initials {
+    final parts = (name ?? '').trim().split(RegExp(r'\s+'))
+      ..removeWhere((p) => p.isEmpty);
+    if (parts.isEmpty) return '?';
+    final first = parts.first[0];
+    final last = parts.length > 1 ? parts.last[0] : '';
+    return (first + last).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = Center(
+      child: Text(
+        _initials,
+        style: const TextStyle(
+          fontSize: AppFontSize.display,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.accentOliveDark,
+        ),
+      ),
+    );
+    return Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 112,
+              height: 112,
+              decoration: const BoxDecoration(
+                color: AppColors.green,
+                shape: BoxShape.circle,
+              ),
+              child: ClipOval(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (avatarUrl != null)
+                      Image.network(
+                        avatarUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => initials,
+                      )
+                    else
+                      initials,
+                    if (uploading)
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        alignment: Alignment.center,
+                        child: const CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -2,
+              right: -2,
+              child: Semantics(
+                button: true,
+                label: 'Mudar foto',
+                child: SnappyTap(
+                  onTap: onChangePhoto,
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppTheme.background, width: 3),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_outlined,
+                      size: 17,
+                      color: AppTheme.accentOliveDark,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          name ?? '—',
+          textAlign: TextAlign.center,
+          style: AppTypography.displaySerif(
+            fontSize: AppFontSize.h2,
+            color: AppTheme.ink,
+          ).copyWith(fontWeight: FontWeight.w700),
+        ),
+        if (email != null && email!.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            email!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: AppFontSize.base,
+              fontWeight: FontWeight.w300,
+              color: AppTheme.inkMuted,
+            ),
+          ),
+        ],
+        if (createdWedding) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.green,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: const Text(
+              'Criou o casamento',
+              style: TextStyle(
+                fontSize: AppFontSize.xs,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.accentOliveDark,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _MenuGroup extends StatelessWidget {
+  final List<Widget> children;
+
+  const _MenuGroup({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <Widget>[];
+    for (var i = 0; i < children.length; i++) {
+      if (i > 0) {
+        items.add(const Divider(
+          height: 1,
+          indent: 60,
+          color: AppTheme.borderMuted,
+        ));
+      }
+      items.add(children[i]);
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Column(children: items),
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final int badge;
+  final bool destructive;
 
-  const _OptionCard({
-    required this.color,
+  const _MenuRow({
     required this.icon,
     required this.label,
     required this.onTap,
+    this.badge = 0,
+    this.destructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = destructive ? AppStatusColors.declined : AppTheme.ink;
     return SnappyTap(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        color: Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: AppTheme.background,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              child: Icon(icon, size: 18, color: AppTheme.ink),
+              child: Icon(icon, size: 18, color: color),
             ),
-            const Spacer(),
-            Text(
-              label,
-              style: AppTypography.moduleTitle.copyWith(color: AppTheme.ink),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: AppFontSize.md,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
             ),
+            if (badge > 0) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: const BoxDecoration(
+                  color: AppStatusColors.declined,
+                  borderRadius: BorderRadius.all(Radius.circular(AppRadius.pill)),
+                ),
+                child: Text(
+                  '$badge',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: AppFontSize.xxs,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
+            if (!destructive)
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: AppTheme.inkMuted,
+              ),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/guests/guest_controller.dart';
@@ -319,39 +320,55 @@ class _NoTablesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-      ),
+    // Redesign 2026-10: sem caixa de fundo (pedido do utilizador: "remove
+    // o fundo") — ilustração da mesa, título em Bold e, sem local
+    // reservado, um atalho para procurar espaços.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         children: [
-          const Icon(
-            Icons.event_seat_outlined,
-            size: 32,
-            color: AppTheme.inkMuted,
+          Image.asset(
+            'assets/images/seating_table_1.png',
+            width: 150,
+            height: 150,
+            fit: BoxFit.contain,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
-            hasVenue
-                ? 'O local que reservaste ainda não configurou as mesas disponíveis.'
-                : 'Ainda não reservaste o local do casamento.',
+            hasVenue ? 'Mesas por configurar' : 'Ainda sem local reservado',
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontWeight: FontWeight.w700,
-              fontSize: AppFontSize.base,
+              fontSize: AppFontSize.h3,
               color: AppTheme.ink,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            hasVenue
-                ? 'Fala com o parceiro ou volta mais tarde — assim que ele indicar as mesas, aparecem aqui.'
-                : 'Assim que reservares um espaço, o número real de mesas aparece aqui e podes começar a organizar os lugares.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
+          const SizedBox(height: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 300),
+            child: Text(
+              hasVenue
+                  ? 'O local que reservaste ainda não indicou as mesas disponíveis. Assim que o fizer, aparecem aqui.'
+                  : 'Assim que reservares um espaço, o número real de mesas aparece aqui e podes começar a organizar os lugares.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppTheme.inkMuted,
+                fontWeight: FontWeight.w300,
+                fontSize: AppFontSize.base,
+                height: 1.5,
+              ),
+            ),
           ),
+          if (!hasVenue) ...[
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => context.go('/partners'),
+                child: const Text('Procurar espaços'),
+              ),
+            ),
+          ],
         ],
       ),
     );

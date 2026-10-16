@@ -569,9 +569,40 @@ class _ExpenseList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (expenses.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Center(child: Text('Sem despesas nesta vista.')),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Column(
+          children: [
+            ClipOval(
+              child: Image.asset(
+                'assets/images/nav_icon_capybaras.png',
+                width: 96,
+                height: 96,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Sem despesas nesta vista',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: AppFontSize.lg,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.ink,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Usa o + para registar a primeira.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: AppFontSize.base,
+                fontWeight: FontWeight.w300,
+                color: AppTheme.inkMuted,
+              ),
+            ),
+          ],
+        ),
       );
     }
     return Column(
