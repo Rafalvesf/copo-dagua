@@ -17,6 +17,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../partner_style.dart';
 import 'partner_detail_screen.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/money.dart';
 
 class PartnersListScreen extends ConsumerStatefulWidget {
   final String? categorySlug;
@@ -42,6 +43,15 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   /// localizações" (sem filtro); qualquer outro valor filtra a lista.
   String? _selectedLocation;
 
+  /// Filtros avançados (folha do botão de filtros) — tudo do lado do
+  /// cliente, sobre os parceiros já carregados.
+  double? _maxPrice;
+  double? _minRating;
+  _PartnerSort _sort = _PartnerSort.relevance;
+
+  bool get _hasAdvancedFilters =>
+      _maxPrice != null || _minRating != null || _sort != _PartnerSort.relevance;
+
   @override
   void initState() {
     super.initState();
@@ -63,10 +73,44 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
     );
   }
 
-  void _showFiltersComingSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Filtros avançados em breve.')),
+  Future<void> _showFilters() async {
+    final result = await showModalBottomSheet<_AdvancedFilters>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (_) => _FiltersSheet(
+        initial: _AdvancedFilters(_maxPrice, _minRating, _sort),
+      ),
     );
+    if (result == null) return;
+    setState(() {
+      _maxPrice = result.maxPrice;
+      _minRating = result.minRating;
+      _sort = result.sort;
+    });
+  }
+
+  List<Partner> _applyAdvanced(List<Partner> list) {
+    double? price(Partner p) => p.startingPrice ?? p.averageQuotePrice;
+    var out = list.where((p) {
+      if (_maxPrice != null) {
+        final v = price(p);
+        if (v == null || v > _maxPrice!) return false;
+      }
+      if (_minRating != null && (p.rating ?? 0) < _minRating!) return false;
+      return true;
+    }).toList();
+    switch (_sort) {
+      case _PartnerSort.relevance:
+        break;
+      case _PartnerSort.priceAsc:
+        out.sort((a, b) => (price(a) ?? double.infinity).compareTo(price(b) ?? double.infinity));
+      case _PartnerSort.rating:
+        out.sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
+    }
+    return out;
   }
 
   /// Localizações disponíveis para o cliente escolher — derivadas dos
@@ -235,7 +279,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       ],
                       const SizedBox(width: 10),
                       SnappyTap(
-                        onTap: _showFiltersComingSoon,
+                        onTap: _showFilters,
                         child: Container(
                           width: 46,
                           height: 46,
@@ -297,17 +341,19 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 )
                                 .toList();
                       final query = _search.text.trim().toLowerCase();
-                      final partners = query.isEmpty
+                      final partners = _applyAdvanced(query.isEmpty
                           ? byLocation
                           : byLocation
                                 .where(
                                   (s) => s.name.toLowerCase().contains(query),
                                 )
-                                .toList();
+                                .toList());
                       if (partners.isEmpty) {
                         return Center(
                           child: Text(
-                            query.isEmpty
+                            _hasAdvancedFilters
+                                ? 'Sem parceiros com estes filtros.'
+                                : query.isEmpty
                                 ? 'Sem parceiros nesta localização.'
                                 : 'Sem parceiros para "${_search.text.trim()}".',
                           ),
@@ -715,6 +761,123 @@ class _FavoritesSheet extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+
+enum _PartnerSort { relevance, priceAsc, rating }
+
+class _AdvancedFilters {
+  final double? maxPrice;
+  final double? minRating;
+  final _PartnerSort sort;
+
+  const _AdvancedFilters(this.maxPrice, this.minRating, this.sort);
+}
+
+/// Filtros avançados de parceiros — preço máximo, avaliação mínima e
+/// ordenação. Antes o botão mostrava "Filtros avançados em breve".
+class _FiltersSheet extends StatefulWidget {
+  final _AdvancedFilters initial;
+
+  const _FiltersSheet({required this.initial});
+
+  @override
+  State<_FiltersSheet> createState() => _FiltersSheetState();
+}
+
+class _FiltersSheetState extends State<_FiltersSheet> {
+  late double? _maxPrice = widget.initial.maxPrice;
+  late double? _minRating = widget.initial.minRating;
+  late _PartnerSort _sort = widget.initial.sort;
+
+  static const _prices = <double?>[null, 1000, 2500, 5000, 10000];
+  static const _ratings = <double?>[null, 4, 4.5];
+
+  Widget _chips<T>(List<T> values, T selected, String Function(T) label, ValueChanged<T> onTap) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final v in values)
+          ChoiceChip(
+            label: Text(label(v)),
+            selected: v == selected,
+            showCheckmark: false,
+            selectedColor: AppTheme.accentOliveDark,
+            labelStyle: TextStyle(
+              color: v == selected ? Colors.white : AppTheme.ink,
+              fontWeight: FontWeight.w600,
+            ),
+            onSelected: (_) => setState(() => onTap(v)),
+          ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final title = Theme.of(context).textTheme.titleMedium;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Filtros', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 18),
+            Text('Preço até', style: title),
+            const SizedBox(height: 8),
+            _chips<double?>(_prices, _maxPrice, (v) => v == null ? 'Qualquer' : euros(v), (v) => _maxPrice = v),
+            const SizedBox(height: 18),
+            Text('Avaliação', style: title),
+            const SizedBox(height: 8),
+            _chips<double?>(
+              _ratings,
+              _minRating,
+              (v) => v == null ? 'Qualquer' : '${v.toString().replaceAll('.', ',')}+',
+              (v) => _minRating = v,
+            ),
+            const SizedBox(height: 18),
+            Text('Ordenar por', style: title),
+            const SizedBox(height: 8),
+            _chips<_PartnerSort>(
+              _PartnerSort.values,
+              _sort,
+              (v) => switch (v) {
+                _PartnerSort.relevance => 'Relevância',
+                _PartnerSort.priceAsc => 'Preço mais baixo',
+                _PartnerSort.rating => 'Melhor avaliação',
+              },
+              (v) => _sort = v,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(
+                      const _AdvancedFilters(null, null, _PartnerSort.relevance),
+                    ),
+                    child: const Text('Limpar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(
+                      _AdvancedFilters(_maxPrice, _minRating, _sort),
+                    ),
+                    child: const Text('Aplicar'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

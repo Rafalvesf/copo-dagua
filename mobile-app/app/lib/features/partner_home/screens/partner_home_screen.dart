@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../core/partner_app/partner_analytics.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -244,17 +245,19 @@ class PartnerHomeScreen extends ConsumerWidget {
   }
 }
 
-/// Resumo de painel — reservas, vendas, assuntos urgentes e suporte.
-/// Dados mock (`core/mock/mock_backend.dart`), mesmo padrão de
-/// `partner_stats_screen.dart`; ver `partner-app/dashboard/README.md`
-/// para a nota sobre isto ainda não estar ligado a um backend real.
+/// Resumo de painel — reservas pendentes e vendas dos últimos 30 dias,
+/// ambos de dados reais (`partnerBookingsProvider`,
+/// `partnerAnalyticsProvider`).
 class _PartnerDashboardSummary extends ConsumerWidget {
   const _PartnerDashboardSummary();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bookingsAsync = ref.watch(partnerBookingsProvider(null));
-    final statsAsync = ref.watch(partnerStatsProvider('Este mês'));
+    // Mesmos números do ecrã Resultados (`partnerAnalyticsProvider`,
+    // reservas confirmadas reais) — antes vinha de `partnerStatsProvider`,
+    // que misturava valores de exemplo do MockBackend.
+    final statsAsync = ref.watch(partnerAnalyticsProvider(AnalyticsPeriod.month));
 
     final pendingBookings = bookingsAsync.maybeWhen(
       data: (list) => list
@@ -286,7 +289,7 @@ class _PartnerDashboardSummary extends ConsumerWidget {
               child: SnappyTap(
                 onTap: () => context.push('/partner-stats'),
                 child: _MetricCard(
-                label: 'Vendas este mês',
+                label: 'Vendas · 30 dias',
                 value: statsAsync.maybeWhen(
                   data: (s) => euros(s.revenue),
                   orElse: () => '—',

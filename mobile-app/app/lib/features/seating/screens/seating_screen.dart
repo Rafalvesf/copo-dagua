@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -162,12 +163,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                     ),
                                     const SizedBox(width: 10),
                                     SnappyTap(
-                                      onTap: () =>
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Mais opções em breve.'),
-                                            ),
-                                          ),
+                                      onTap: () => _showMoreOptions(context),
                                       child: Container(
                                         width: 46,
                                         height: 46,
@@ -1292,4 +1288,93 @@ class _GuestPickRow extends StatelessWidget {
 
 extension _FirstOrNull<T> on Iterable<T> {
   T? get firstOrNull => isEmpty ? null : first;
+}
+
+
+/// "Mais opções" de Lugares — copiar a distribuição das mesas (para
+/// enviar ao local/catering) e recomeçar a distribuição. Antes mostrava
+/// "Mais opções em breve".
+Future<void> _showMoreOptions(BuildContext context) async {
+  final container = ProviderScope.containerOf(context);
+  final tables = container.read(seatingControllerProvider).tables;
+  final guests = {for (final g in container.read(guestsControllerProvider).guests) g.id: g};
+
+  final action = await showModalBottomSheet<String>(
+    context: context,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+    ),
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          ListTile(
+            leading: const Icon(Icons.copy_all_outlined),
+            title: const Text('Copiar lista das mesas'),
+            subtitle: const Text('Para enviar ao local ou ao catering.'),
+            enabled: tables.isNotEmpty,
+            onTap: () => Navigator.of(context).pop('copy'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.restart_alt, color: AppStatusColors.declined),
+            title: const Text('Recomeçar distribuição', style: TextStyle(color: AppStatusColors.declined)),
+            subtitle: const Text('Remove todas as mesas preenchidas.'),
+            enabled: tables.isNotEmpty,
+            onTap: () => Navigator.of(context).pop('reset'),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
+  if (!context.mounted || action == null) return;
+
+  if (action == 'copy') {
+    final buf = StringBuffer();
+    for (var i = 0; i < tables.length; i++) {
+      final names = [
+        for (final id in tables[i].guestIds)
+          if (guests[id] != null) guests[id]!.name,
+      ];
+      buf.writeln('Mesa ${i + 1} (${names.length})');
+      for (final n in names) {
+        buf.writeln('  • $n');
+      }
+      buf.writeln();
+    }
+    await Clipboard.setData(ClipboardData(text: buf.toString().trim()));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lista das mesas copiada.')),
+      );
+    }
+    return;
+  }
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Recomeçar distribuição?'),
+      content: const Text('Todas as mesas ficam vazias. Os convidados não são apagados.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Recomeçar')),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+  final controller = container.read(seatingControllerProvider.notifier);
+  try {
+    for (final t in List.of(tables.reversed)) {
+      await controller.removeTable(t.id);
+    }
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível recomeçar. Tenta outra vez.')),
+      );
+    }
+  }
 }

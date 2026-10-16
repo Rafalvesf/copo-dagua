@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/mock/mock_backend.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/cards.dart';
@@ -9,7 +9,10 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 
 /// Página pública de convite — acessível sem sessão iniciada, para os
 /// convidados abrirem a partir do link partilhado pelos noivos
-/// (`copodeagua.pt/invite/{slug}`).
+/// (`.../#/invite/<código de convidado>`, ver `Wedding.inviteUrl`).
+/// Lê o casamento real por `get_public_invite()`
+/// (`075_connect_remaining.sql`); se essa migração ainda não correu,
+/// cai em `lookup_wedding_by_guest_code()` (050), que só dá os nomes.
 class InvitePageScreen extends StatefulWidget {
   final String slug;
 
@@ -25,7 +28,31 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
   @override
   void initState() {
     super.initState();
-    _weddingFuture = MockBackend.instance.getWeddingBySlug(widget.slug);
+    _weddingFuture = _load(widget.slug);
+  }
+
+  static Future<Wedding?> _load(String code) async {
+    List rows;
+    try {
+      rows = await supabase.rpc('get_public_invite', params: {'p_code': code}) as List;
+    } catch (_) {
+      rows = await supabase.rpc('lookup_wedding_by_guest_code', params: {'p_code': code}) as List;
+    }
+    if (rows.isEmpty) return null;
+    final r = rows.first as Map<String, dynamic>;
+    final date = r['wedding_date'] as String?;
+    return Wedding(
+      id: r['wedding_id'] as String,
+      ownerId: '',
+      partnerName1: (r['partner_name_1'] as String?) ?? '',
+      partnerName2: r['partner_name_2'] as String?,
+      weddingDate: date == null ? null : DateTime.parse(date),
+      location: r['location'] as String?,
+      venue: r['venue'] as String?,
+      coverPhotoUrl: r['cover_photo_url'] as String?,
+      quote: r['quote'] as String?,
+      guestCode: (r['guest_code'] as String?) ?? code.trim().toUpperCase(),
+    );
   }
 
   @override
@@ -71,8 +98,9 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                     child: SizedBox(
                       height: 260,
                       child: PhotoCardBackground(
-                        imageUrl:
-                            'https://picsum.photos/seed/${wedding.id}-venue/900/700',
+                        // Foto de capa real do casal (antes: uma foto
+                        // aleatória do picsum.photos).
+                        imageUrl: wedding.coverPhotoUrl ?? '',
                         fallbackColor: AppColors.blue,
                       ),
                     ),

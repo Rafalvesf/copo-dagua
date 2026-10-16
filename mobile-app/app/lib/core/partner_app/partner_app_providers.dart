@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 
 import '../auth/auth_controller.dart';
 import '../home/home_providers.dart' show mapRealBookingStatus;
-import '../mock/mock_backend.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 
@@ -286,65 +285,9 @@ Future<void> flagReview(WidgetRef ref, String reviewId) async {
   ref.invalidate(partnerReviewsProvider);
 }
 
-/// Só `revenue`/`revenueDeltaPct` são reais aqui (soma de
-/// `bookings.total_amount` confirmadas/concluídas no período) — os
-/// restantes campos (`views`, `requestCount`, `conversionPct`,
-/// `avgRating`, `viewsTrend`) continuam a vir do mock porque não existe
-/// nenhum evento de "visualização de perfil" nem sistema de avaliações
-/// ligado ainda (fora do âmbito desta ronda, ver `ROADMAP.md`, Fase 4).
-final partnerStatsProvider = FutureProvider.family<PartnerStats, String>((
-  ref,
-  period,
-) async {
-  final partnerId = _partnerId(ref);
-  final mock = MockBackend.instance.getPartnerStats(partnerId, period: period);
 
-  final now = DateTime.now();
-  final currentStart = switch (period) {
-    'Últimos 3 meses' => DateTime(now.year, now.month - 2, 1),
-    'Este ano' => DateTime(now.year, 1, 1),
-    _ => DateTime(now.year, now.month, 1), // 'Este mês' e default
-  };
-  final spanDays = now.difference(currentStart).inDays.clamp(1, 3650);
-  final previousStart = currentStart.subtract(Duration(days: spanDays));
-
-  final rows = await supabase
-      .from('bookings')
-      .select('total_amount, status, event_date')
-      .eq('partner_id', partnerId)
-      .inFilter('status', ['confirmed', 'completed']);
-
-  double sumSince(DateTime start, DateTime end) {
-    double total = 0;
-    for (final row in rows) {
-      final eventDate = DateTime.parse(row['event_date'] as String);
-      if (!eventDate.isBefore(start) && eventDate.isBefore(end)) {
-        total += (row['total_amount'] as num).toDouble();
-      }
-    }
-    return total;
-  }
-
-  final currentRevenue = sumSince(currentStart, now);
-  final previousRevenue = sumSince(previousStart, currentStart);
-  final revenueDeltaPct = previousRevenue == 0
-      ? (currentRevenue > 0 ? 100.0 : 0.0)
-      : ((currentRevenue - previousRevenue) / previousRevenue) * 100;
-
-  return PartnerStats(
-    views: mock.views,
-    viewsDeltaPct: mock.viewsDeltaPct,
-    requestCount: mock.requestCount,
-    requestDeltaPct: mock.requestDeltaPct,
-    conversionPct: mock.conversionPct,
-    conversionDeltaPct: mock.conversionDeltaPct,
-    avgRating: mock.avgRating,
-    avgRatingDelta: mock.avgRatingDelta,
-    revenue: currentRevenue,
-    revenueDeltaPct: revenueDeltaPct,
-    viewsTrend: mock.viewsTrend,
-  );
-});
+// `partnerStatsProvider` removido (2026-10-16): misturava valores de
+// exemplo do MockBackend; o painel usa agora `partnerAnalyticsProvider`.
 
 /// Liga-se a `conversations` real (036_chat.sql) — substitui
 /// `MockBackend.listConversationsForPartner`.

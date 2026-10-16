@@ -371,7 +371,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
 
   Future<void> _copyLink() async {
     await Clipboard.setData(
-      ClipboardData(text: 'https://${widget.wedding.inviteUrl}'),
+      ClipboardData(text: widget.wedding.inviteUrl ?? ''),
     );
     if (!mounted) return;
     setState(() => _linkCopied = true);
@@ -386,6 +386,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
   @override
   Widget build(BuildContext context) {
     final guestCode = widget.wedding.guestCode;
+    final inviteUrl = widget.wedding.inviteUrl;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
       child: Column(
@@ -402,6 +403,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
             'conta para confirmar presença.',
             style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
           ),
+          if (inviteUrl != null) ...[
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -413,7 +415,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    widget.wedding.inviteUrl,
+                    inviteUrl,
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: AppFontSize.md,
@@ -429,6 +431,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
             icon: Icon(_linkCopied ? Icons.check : Icons.copy, size: 18),
             label: Text(_linkCopied ? 'Copiado!' : 'Copiar link'),
           ),
+          ],
           if (guestCode != null) ...[
             const SizedBox(height: 24),
             Text(

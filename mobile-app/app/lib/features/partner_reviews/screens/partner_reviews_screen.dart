@@ -8,7 +8,6 @@ import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
-import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 
 /// "Há quanto tempo tem conta" — só a antiguidade, nunca a data exata
@@ -167,37 +166,8 @@ class PartnerReviewsScreen extends ConsumerWidget {
                       ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.screenMargin,
-                0,
-                AppTheme.screenMargin,
-                16,
-              ),
-              child: SnappyTap(
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Já estás a ver todas as avaliações.'),
-                  ),
-                ),
-                child: Container(
-                  height: 52,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentOliveDark,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: const Text(
-                    'Ver todas as avaliações',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: AppFontSize.lg,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            // Saiu o botão "Ver todas as avaliações": a lista acima já
+            // mostra todas, e o botão só dizia isso numa mensagem.
           ],
         ),
       ),

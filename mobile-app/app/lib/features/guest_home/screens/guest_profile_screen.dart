@@ -223,7 +223,16 @@ class _GuestProfileBody extends ConsumerWidget {
       ),
     );
     if (result == null) return;
-    await onSave(result.isEmpty ? null : result);
+    try {
+      await onSave(result.isEmpty ? null : result);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')),
+        );
+      }
+      return;
+    }
     ref.invalidate(myGuestRowProvider(weddingId));
   }
 
@@ -336,9 +345,14 @@ class _GuestProfileBody extends ConsumerWidget {
               _ProfileRow(
                 icon: Icons.restaurant_outlined,
                 label: 'Menu escolhido',
-                value: 'Menu normal',
-                onEdit: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Escolha de menu em breve.')),
+                value: guest.menuSelection?.isNotEmpty == true ? guest.menuSelection! : 'Por escolher',
+                onEdit: () => _editField(
+                  context,
+                  ref,
+                  title: 'Menu escolhido',
+                  guest: guest,
+                  currentValue: (g) => g.menuSelection,
+                  onSave: updateOwnGuestMenu,
                 ),
               ),
               _ProfileRow(

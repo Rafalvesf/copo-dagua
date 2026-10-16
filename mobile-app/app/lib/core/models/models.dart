@@ -1,3 +1,5 @@
+import '../../shared/public_link.dart';
+
 /// Sentinel para distinguir "parâmetro omitido" de "parâmetro passado como
 /// null" em copyWith — necessário para campos int? que precisam de poder
 /// ser limpos explicitamente (ex: idade), ao contrário de String? onde uma
@@ -177,6 +179,7 @@ class Profile {
     String? contactEmail,
     bool? acceptingRequests,
     bool? travelsForEvents,
+    int? maxTravelDistanceKm,
     String? partnerProfileStatus,
     String? rejectionReason,
     String? logoUrl,
@@ -204,7 +207,7 @@ class Profile {
       contactEmail: contactEmail ?? this.contactEmail,
       acceptingRequests: acceptingRequests ?? this.acceptingRequests,
       travelsForEvents: travelsForEvents ?? this.travelsForEvents,
-      maxTravelDistanceKm: maxTravelDistanceKm,
+      maxTravelDistanceKm: maxTravelDistanceKm ?? this.maxTravelDistanceKm,
       partnerProfileStatus: partnerProfileStatus ?? this.partnerProfileStatus,
       rejectionReason: rejectionReason ?? this.rejectionReason,
       logoUrl: logoUrl ?? this.logoUrl,
@@ -316,7 +319,9 @@ class Wedding {
         .replaceAll(RegExp(r'^-+|-+$'), '');
   }
 
-  String get inviteUrl => 'www.copodeagua.pt/invite/$inviteSlug';
+  /// Link público de convite (`/invite/<código>`, `075_connect_remaining.sql`)
+  /// — `null` enquanto o casamento ainda não tem código de convidado.
+  String? get inviteUrl => guestCode == null ? null : publicLink('/invite/$guestCode');
 
   Wedding copyWith({
     String? partnerName1,
@@ -537,7 +542,16 @@ class GuestWedding {
     this.welcomeMessage,
     this.themeColors = const [],
     this.updatedAt,
+    this.giftListUrl,
+    this.giftIban,
+    this.giftMessage,
   });
+
+  /// Presentes (`weddings.gift_*`, `075_connect_remaining.sql`) — definidos
+  /// pelo casal nas Definições; `null` quando não indicaram nada.
+  final String? giftListUrl;
+  final String? giftIban;
+  final String? giftMessage;
 
   String? get coverPhotoUrlCacheBusted {
     if (coverPhotoUrl == null) return null;
