@@ -11,7 +11,16 @@ class FilterBarItem {
   final IconData? icon;
   final int? count;
 
-  const FilterBarItem(this.label, {this.icon, this.count});
+  /// Quando escolhido, mostra só o ícone (categorias de Parceiros —
+  /// pedido do utilizador: "fica só o ícone quando selecionado").
+  final bool iconOnlyWhenSelected;
+
+  const FilterBarItem(
+    this.label, {
+    this.icon,
+    this.count,
+    this.iconOnlyWhenSelected = false,
+  });
 }
 
 /// Filtros como "segunda navbar" (redesign 2026-10). Pedidos do
@@ -291,7 +300,9 @@ class _FilterBarChip extends StatelessWidget {
           ),
           // O texto nunca é cortado: se não couber no terço da barra,
           // encolhe.
-          child: FittedBox(
+          child: selected && item.iconOnlyWhenSelected && item.icon != null
+              ? Icon(item.icon, size: 22, color: fg, semanticLabel: item.label)
+              : FittedBox(
             fit: BoxFit.scaleDown,
             child: Row(
             mainAxisSize: MainAxisSize.min,
