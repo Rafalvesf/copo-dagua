@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Implementação executável do design system documentado em
 /// mobile-app/shared/design-system.md — fundo branco (creme quente
 /// antes, pedido explícito do utilizador 2026-08-31: "make the bg
 /// white on all pages instead of that cream") com acentos
-/// verde-oliva, cards brancos com sombra difusa, tipografia Roboto
+/// verde-oliva, cards cinzento-claro sem sombra, tipografia Roboto
 /// Black para títulos e Roboto Regular para o resto. Escala definida
 /// para um ecrã de referência de 375px.
 class AppTheme {
   static const seedColor = accentOliveDark;
+
+  /// Família única da app — Roboto embutida em `assets/fonts/roboto/`
+  /// (declarada no pubspec com todos os pesos 400–900 + itálico), em vez
+  /// de descarregada em runtime pelo pacote google_fonts.
+  static const fontFamily = 'Roboto';
 
   static const background = Colors.white;
   static const ink = Color(0xFF171713);
@@ -41,15 +45,9 @@ class AppTheme {
   static const screenMargin = 28.0;
 
   /// Pedido explícito do utilizador 2026-08-31: "remove shadows from
-  /// boxes" — cards deixaram de ter sombra própria; a separação do
-  /// fundo branco vem agora da cor [surface] (cinzento claro), não de
-  /// um halo. Mantidas como listas vazias (em vez de remover o campo)
-  /// para não obrigar a tocar nos ~30 ficheiros que já referenciam
-  /// [cardShadow]/[cardShadowStrong] no seu `boxShadow:`.
-  static const cardShadow = <BoxShadow>[];
-
-  static const cardShadowStrong = <BoxShadow>[];
-
+  /// boxes" — cards não têm sombra; a separação do fundo branco vem da
+  /// cor [surface] (cinzento claro), não de um halo.
+  ///
   /// Superfície cinzenta clara para cards/caixas — pedido explícito do
   /// utilizador 2026-08-31: "if the boxes are white turn them
   /// greyish" (depois de remover a sombra dos cards, um card branco
@@ -58,15 +56,13 @@ class AppTheme {
 
   /// Sombra exclusiva das barras de pesquisa — pedido explícito do
   /// utilizador 2026-08-31: "only leave the shadow on the
-  /// searchbar(s)" (depois de [cardShadow]/[cardShadowStrong] ficarem
-  /// vazias para todas as outras caixas). Mesmos valores que
-  /// [cardShadow] tinha antes de ser esvaziada.
+  /// searchbar(s)" (todas as outras caixas ficaram sem sombra).
   static const searchBarShadow = [
     BoxShadow(color: Color(0x1F3F4A30), blurRadius: 24, offset: Offset(0, 10)),
   ];
 
   /// Sombra virada para cima — para elementos ancorados ao fundo do
-  /// ecrã (FloatingBottomNav/PartnerBottomNav). [cardShadow] projeta
+  /// ecrã (FloatingBottomNav/PartnerBottomNav). Uma sombra normal projeta
   /// para baixo (offset Y positivo), o que não dá nenhum contraste
   /// visível numa doca já encostada à borda inferior — a sombra ficava
   /// fora do ecrã. Pedido explícito do utilizador: "add a shadow to
@@ -76,46 +72,37 @@ class AppTheme {
     BoxShadow(color: Color(0x293F4A30), blurRadius: 20, offset: Offset(0, -6)),
   ];
 
-  /// Escurece uma cor de superfície ~10% para o estado pressionado —
-  /// mesma cor base, sem introduzir tons novos, sem alterar tamanho,
-  /// posição ou border-radius.
-  static Color pressedOverlay(Color base) =>
-      Color.alphaBlend(Colors.black.withValues(alpha: 0.1), base);
-
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: seedColor,
       brightness: Brightness.light,
     ).copyWith(surface: background);
 
-    final baseText = GoogleFonts.robotoTextTheme(ThemeData.light().textTheme);
+    final baseText = ThemeData.light().textTheme.apply(fontFamily: fontFamily);
+    final buttonText = AppTypography.buttonLabel.copyWith(fontFamily: fontFamily);
 
     return ThemeData(
       useMaterial3: true,
-      fontFamily: GoogleFonts.roboto().fontFamily,
+      fontFamily: fontFamily,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
       textTheme: baseText.copyWith(
         // Saudação (headline) — Roboto Black, forte e direta.
-        headlineMedium: GoogleFonts.roboto(
-          textStyle: baseText.headlineMedium?.copyWith(
-            fontSize: 50,
-            height: 40 / 34,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
-            color: ink,
-          ),
+        headlineMedium: baseText.headlineMedium?.copyWith(
+          fontSize: AppFontSize.hero,
+          height: 40 / 34,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -0.5,
+          color: ink,
         ),
-        headlineSmall: GoogleFonts.roboto(
-          textStyle: baseText.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w900,
-            color: ink,
-            height: 1.15,
-          ),
+        headlineSmall: baseText.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w900,
+          color: ink,
+          height: 1.15,
         ),
         // Título do card principal
         titleLarge: baseText.titleLarge?.copyWith(
-          fontSize: 22,
+          fontSize: AppFontSize.h3,
           height: 28 / 22,
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
@@ -123,7 +110,7 @@ class AppTheme {
         ),
         // Títulos dos módulos
         titleMedium: baseText.titleMedium?.copyWith(
-          fontSize: 18,
+          fontSize: AppFontSize.xl,
           height: 24 / 18,
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
@@ -132,7 +119,7 @@ class AppTheme {
         bodyLarge: baseText.bodyLarge?.copyWith(letterSpacing: 0, color: ink),
         // Subtítulo do card / descrições dos módulos
         bodyMedium: baseText.bodyMedium?.copyWith(
-          fontSize: 14,
+          fontSize: AppFontSize.base,
           height: 20 / 14,
           fontWeight: FontWeight.w400,
           letterSpacing: 0,
@@ -144,7 +131,7 @@ class AppTheme {
         ),
         // Texto do botão "Ver mais"
         labelLarge: baseText.labelLarge?.copyWith(
-          fontSize: 16,
+          fontSize: AppFontSize.lg,
           height: 24 / 16,
           fontWeight: FontWeight.w500,
           letterSpacing: 0,
@@ -156,9 +143,10 @@ class AppTheme {
         foregroundColor: ink,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.roboto(
+        titleTextStyle: const TextStyle(
+          fontFamily: fontFamily,
           color: ink,
-          fontSize: 22,
+          fontSize: AppFontSize.h3,
           height: 28 / 22,
           fontWeight: FontWeight.w600,
         ),
@@ -167,7 +155,7 @@ class AppTheme {
         filled: true,
         fillColor: AppColors.gray,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           borderSide: BorderSide.none,
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -181,13 +169,9 @@ class AppTheme {
           backgroundColor: accentOliveDark,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          textStyle: GoogleFonts.inter(
-            fontSize: 16,
-            height: 24 / 16,
-            fontWeight: FontWeight.w500,
-          ),
+          textStyle: buttonText,
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -196,13 +180,9 @@ class AppTheme {
           backgroundColor: accentOliveDark,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          textStyle: GoogleFonts.inter(
-            fontSize: 16,
-            height: 24 / 16,
-            fontWeight: FontWeight.w500,
-          ),
+          textStyle: buttonText,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -211,26 +191,28 @@ class AppTheme {
           foregroundColor: accentOliveDark,
           side: const BorderSide(color: accentOliveDark),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          textStyle: GoogleFonts.inter(
-            fontSize: 16,
-            height: 24 / 16,
-            fontWeight: FontWeight.w500,
-          ),
+          textStyle: buttonText,
         ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
         color: surface,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
+      ),
+      // Spinners (52 `CircularProgressIndicator` na app) no verde da
+      // marca em vez do tom derivado do seed pelo ColorScheme.
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: accentOliveDark,
+        linearTrackColor: borderMuted,
       ),
       chipTheme: ChipThemeData(
         backgroundColor: surface,
         selectedColor: AppColors.green,
         side: const BorderSide(color: borderMuted),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
       ),
     );
   }
@@ -242,27 +224,27 @@ class AppTheme {
 /// não pode vir do tema, ex: texto branco sobre um botão preto).
 class AppTypography {
   static const cardTitle = TextStyle(
-    fontSize: 22,
+    fontSize: AppFontSize.h3,
     height: 28 / 22,
     fontWeight: FontWeight.w600,
   );
   static const cardSubtitle = TextStyle(
-    fontSize: 14,
+    fontSize: AppFontSize.base,
     height: 20 / 14,
     fontWeight: FontWeight.w400,
   );
   static const buttonLabel = TextStyle(
-    fontSize: 16,
+    fontSize: AppFontSize.lg,
     height: 24 / 16,
     fontWeight: FontWeight.w500,
   );
   static const moduleTitle = TextStyle(
-    fontSize: 18,
+    fontSize: AppFontSize.xl,
     height: 24 / 18,
     fontWeight: FontWeight.w600,
   );
   static const moduleDescription = TextStyle(
-    fontSize: 14,
+    fontSize: AppFontSize.base,
     height: 20 / 14,
     fontWeight: FontWeight.w400,
   );
@@ -273,15 +255,53 @@ class AppTypography {
   /// histórico `displaySerif` (já usado em dezenas de ecrãs) mesmo não
   /// sendo serifado — só a família/peso mudaram.
   static TextStyle displaySerif({
-    double fontSize = 28,
+    double fontSize = AppFontSize.h1,
     FontWeight fontWeight = FontWeight.w900,
     Color? color,
-  }) => GoogleFonts.roboto(
+  }) => TextStyle(
+    fontFamily: AppTheme.fontFamily,
     fontSize: fontSize,
     height: 1.2,
     fontWeight: fontWeight,
     color: color,
   );
+}
+
+/// Escala tipográfica — os únicos tamanhos de letra permitidos na app.
+/// Substitui os ~25 valores soltos que existiam (12.5, 13.5, 11.5, …):
+/// cada meio-ponto foi arredondado para baixo, para nunca aumentar texto
+/// em sítios apertados (badges, navbar, chips). Um tamanho novo entra
+/// aqui, nunca como literal num ecrã.
+class AppFontSize {
+  static const double xxxs = 9; // micro-labels (navbar, avatares agrupados)
+  static const double xxs = 10;
+  static const double xs = 11; // badges, meta-info
+  static const double sm = 12;
+  static const double md = 13; // texto secundário
+  static const double base = 14; // corpo
+  static const double lg = 16; // nomes, botões
+  static const double xl = 18; // títulos de módulo
+  static const double xxl = 20;
+  static const double h3 = 22; // título de card/ecrã
+  static const double h2 = 24;
+  static const double h1 = 28;
+  static const double display = 34;
+  static const double displayLg = 42;
+  static const double hero = 50; // saudação (headlineMedium)
+}
+
+/// Raios de canto — os únicos valores de `BorderRadius.circular` a usar.
+/// Grelha de 4px que consolida os 14 valores soltos anteriores (10, 11,
+/// 12, 13, 14, 16, 18, 20, 22, …): 10–13 → [sm], 14 → [md], 18 → [lg],
+/// 22 → [xl].
+class AppRadius {
+  static const double xs = 4; // barras de progresso, indicadores finos
+  static const double sm = 12; // chips pequenos, thumbnails, badges
+  static const double md = 16; // botões, campos compactos, tiles
+  static const double lg = 20; // inputs, cards secundários
+  static const double xl = 24; // cards principais
+  static const double xxl = 28; // sheets, cards hero
+  static const double pill = 999; // pílulas e círculos
 }
 
 /// Paleta extraída dos mockups de referência — superfícies pastel
