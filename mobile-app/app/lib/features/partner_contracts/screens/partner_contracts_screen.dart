@@ -82,7 +82,7 @@ class PartnerContractsScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
-                    textStyle: const TextStyle(
+                    textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                       fontSize: AppFontSize.lg,
                       fontWeight: FontWeight.w700,
                     ),

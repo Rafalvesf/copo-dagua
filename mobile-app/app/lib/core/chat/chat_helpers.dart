@@ -1,5 +1,6 @@
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
+import '../../shared/money.dart';
 
 /// Devolve o id da conversa real entre este casamento e este parceiro
 /// (036_chat.sql), criando-a se ainda não existir. Usado tanto pelo
@@ -129,7 +130,7 @@ Future<void> sendProposalMessage({
     'sender_role': 'partner',
     'sender_id': supabase.auth.currentUser!.id,
     'body':
-        'Enviou uma proposta: $title — ${price.toStringAsFixed(0)} € (sinal ${depositAmount.toStringAsFixed(0)} €)',
+        'Enviou uma proposta: $title — ${euros(price)} (sinal ${euros(depositAmount)})',
     'proposal_id': proposalId,
     'proposal_title': title,
     'proposal_price': price,

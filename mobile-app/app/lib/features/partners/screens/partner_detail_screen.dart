@@ -15,6 +15,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../partner_style.dart';
+import '../../../shared/money.dart';
 
 
 class PartnerDetailScreen extends ConsumerStatefulWidget {
@@ -360,7 +361,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                           label: 'Desde',
                           value: fromPrice == null
                               ? 'Orçamento'
-                              : '${fromPrice.toStringAsFixed(0)} €',
+                              : euros(fromPrice),
                         ),
                       ],
                     ),
@@ -475,7 +476,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppRadius.md),
                           ),
-                          textStyle: const TextStyle(
+                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                             fontSize: AppFontSize.lg,
                             fontWeight: FontWeight.w700,
                           ),

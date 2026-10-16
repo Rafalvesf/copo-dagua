@@ -8,21 +8,14 @@ import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/money.dart';
 
 const _monthsShort = [
   'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
   'jul', 'ago', 'set', 'out', 'nov', 'dez',
 ];
 
-String _eur(double v) {
-  final s = v.round().abs().toString();
-  final buf = StringBuffer();
-  for (var i = 0; i < s.length; i++) {
-    if (i > 0 && (s.length - i) % 3 == 0) buf.write(' ');
-    buf.write(s[i]);
-  }
-  return '${v < 0 ? '-' : ''}$buf €';
-}
+String _eur(double v) => euros(v);
 
 String _compactEur(double v) {
   if (v >= 1000) {
@@ -406,13 +399,37 @@ class _Delta extends StatelessWidget {
     final p = pct;
     if (p == null || p.round() == 0) return const SizedBox.shrink();
     final up = p > 0;
-    return Text(
-      '${up ? '↑' : '↓'} ${p.abs().round()}%',
-      style: TextStyle(
-        fontSize: AppFontSize.md,
-        fontWeight: FontWeight.w700,
-        color: up ? const Color(0xFF2F6B45) : const Color(0xFFA3412E),
-      ),
+    return _DeltaLabel(up: up, text: '${p.abs().round()}%', fontSize: AppFontSize.md);
+  }
+}
+
+/// Seta + variação. A seta é um ícone e não o carácter "↑": a Louis
+/// George Café não tem setas e o carácter dependia de uma letra de
+/// reserva.
+class _DeltaLabel extends StatelessWidget {
+  final bool up;
+  final String text;
+  final double fontSize;
+
+  const _DeltaLabel({required this.up, required this.text, required this.fontSize});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = up ? const Color(0xFF2F6B45) : const Color(0xFFA3412E);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+          size: fontSize,
+          color: color,
+        ),
+        const SizedBox(width: 2),
+        Text(
+          text,
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w700, color: color),
+        ),
+      ],
     );
   }
 }
@@ -506,14 +523,7 @@ class _KpiTile extends StatelessWidget {
               ),
               if (deltaText != null) ...[
                 const SizedBox(width: 6),
-                Text(
-                  '${up ? '↑' : '↓'} $deltaText',
-                  style: TextStyle(
-                    fontSize: AppFontSize.sm,
-                    fontWeight: FontWeight.w700,
-                    color: up ? const Color(0xFF2F6B45) : const Color(0xFFA3412E),
-                  ),
-                ),
+                _DeltaLabel(up: up, text: deltaText!, fontSize: AppFontSize.sm),
               ],
             ],
           ),

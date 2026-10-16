@@ -203,7 +203,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppRadius.md),
                           ),
-                          textStyle: const TextStyle(
+                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                             fontSize: AppFontSize.lg,
                             fontWeight: FontWeight.w700,
                           ),
@@ -255,7 +255,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppRadius.md),
                             ),
-                            textStyle: const TextStyle(
+                            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                               fontSize: AppFontSize.base + 1,
                               fontWeight: FontWeight.w700,
                             ),
@@ -327,7 +327,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppRadius.md),
                             ),
-                            textStyle: const TextStyle(
+                            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                               fontSize: AppFontSize.base + 1,
                               fontWeight: FontWeight.w700,
                             ),

@@ -13,6 +13,8 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/page_header.dart';
+import '../../../shared/money.dart';
 
 /// Proposta formal em resposta a um pedido de orçamento — chama
 /// `send_proposal()` (`database/migrations/009_quotations_bookings.sql`),
@@ -158,31 +160,18 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+          PageHeader(
+            title: 'Enviar proposta',
+            subtitle: 'Para ${widget.booking.clientName}',
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  const CircleBackButton(),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Enviar proposta',
-                    style: TextStyle(
-                      fontSize: AppFontSize.xl,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.ink,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Para ${widget.booking.clientName}',
-                style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-              ),
-              const SizedBox(height: 16),
               if (_formError != null) ErrorBanner(message: _formError!),
               AuthTextField(
                 label: 'Título do serviço',
@@ -221,6 +210,9 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
               ),
             ],
           ),
+            ),
+          ),
+          ],
         ),
       ),
     );
@@ -258,7 +250,7 @@ class _DepositPreview extends ConsumerWidget {
               ),
               const Spacer(),
               Text(
-                deposit == null ? '—' : '${deposit.toStringAsFixed(2)} €',
+                deposit == null ? '—' : euros(deposit, cents: true),
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
               ),
             ],

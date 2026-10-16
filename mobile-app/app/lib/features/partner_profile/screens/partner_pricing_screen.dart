@@ -11,6 +11,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/money.dart';
 
 const _maxPackages = 3;
 
@@ -306,7 +307,7 @@ class _PackageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final priceLabel = '${pkg.isStartingPrice ? "A partir de " : ""}€${pkg.price.toStringAsFixed(0)}';
+    final priceLabel = '${pkg.isStartingPrice ? "A partir de " : ""}${euros(pkg.price)}';
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

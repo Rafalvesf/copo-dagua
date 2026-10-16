@@ -21,6 +21,7 @@ import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/photo_adjust_screen.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/money.dart';
 
 /// "Os noivos" — cartão banner "O nosso casamento" (foto de capa +
 /// contagem decrescente) e o resumo do dashboard (orçamento, atalhos,
@@ -771,7 +772,7 @@ class _FinancialSummaryRow extends ConsumerWidget {
             label: 'Orçamento gasto',
             value: budget == null
                 ? '—'
-                : '${budget.spent.toStringAsFixed(0)} € / ${budget.total.toStringAsFixed(0)} €',
+                : '${euros(budget.spent)} / ${euros(budget.total)}',
             color: AppColors.purple,
           ),
         ),
@@ -871,7 +872,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                '${expense.title} — ${expense.amount.toStringAsFixed(0)} € até '
+                '${expense.title} — ${euros(expense.amount)} até '
                 '${expense.dueDate!.day.toString().padLeft(2, '0')} '
                 '${monthNamesPt[expense.dueDate!.month - 1].substring(0, 3)}',
                 style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.ink),
@@ -960,7 +961,7 @@ class _BookingsSection extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              '${booking.amount.toStringAsFixed(0)} €',
+                              euros(booking.amount),
                               style: const TextStyle(
                                 color: AppTheme.inkMuted,
                                 fontSize: AppFontSize.sm,

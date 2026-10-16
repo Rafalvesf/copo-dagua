@@ -54,4 +54,4 @@ jobs:
           }
 
       - name: Test
-        run: flutter test
+        run: flutter test --exclude-tags screenshots

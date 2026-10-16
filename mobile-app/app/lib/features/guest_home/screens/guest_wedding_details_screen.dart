@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
+import '../../../shared/widgets/page_header.dart';
 
 /// "Detalhes do casamento" do lado do convidado — pedido explícito do
 /// utilizador (mockup de referência), aberto a partir do cartão de
@@ -28,19 +28,7 @@ class GuestWeddingDetailsScreen extends StatelessWidget {
             bottom: false,
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 0),
-                  child: Row(
-                    children: [
-                      const CircleBackButton(),
-                      const SizedBox(width: 4),
-                      const Text(
-                        'Detalhes do casamento',
-                        style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                      ),
-                    ],
-                  ),
-                ),
+                const PageHeader(title: 'Detalhes'),
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 120),
@@ -110,9 +98,11 @@ class GuestWeddingDetailsScreen extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 28),
-                  RichText(
+                  // `Text.rich` e não `RichText`: só o primeiro herda a letra
+                  // da app (o `RichText` caía na letra por omissão).
+                  Text.rich(
                     textAlign: TextAlign.center,
-                    text: TextSpan(
+                    TextSpan(
                       children: [
                         TextSpan(
                           text: '"${wedding.quote?.isNotEmpty == true ? wedding.quote : 'O amor está nos detalhes.'}"  ',

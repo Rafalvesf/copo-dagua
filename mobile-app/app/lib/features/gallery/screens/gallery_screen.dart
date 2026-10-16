@@ -248,7 +248,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                       onPressed: () => setState(() => _showPending = !_showPending),
                       style: TextButton.styleFrom(
                         foregroundColor: const Color(0xFF7A5000),
-                        textStyle: const TextStyle(
+                        textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                           fontWeight: FontWeight.w700,
                           decoration: TextDecoration.underline,
                         ),

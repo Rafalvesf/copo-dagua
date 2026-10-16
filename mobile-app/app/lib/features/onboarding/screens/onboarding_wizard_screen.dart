@@ -269,7 +269,7 @@ class _OnboardingWizardScreenState
                         onPressed: _saving ? null : () => _next(profile),
                         style: TextButton.styleFrom(
                           foregroundColor: AppTheme.inkMuted,
-                          textStyle: const TextStyle(
+                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                             fontSize: AppFontSize.base,
                             fontWeight: FontWeight.w300,
                           ),
@@ -512,7 +512,7 @@ class _BigButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          textStyle: const TextStyle(
+          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
             fontSize: AppFontSize.lg,
             fontWeight: FontWeight.w700,
           ),
@@ -1622,7 +1622,7 @@ class _DoneView extends StatelessWidget {
                 onPressed: saving ? null : () => onStart('/wedding', null),
                 style: TextButton.styleFrom(
                   foregroundColor: AppTheme.ink,
-                  textStyle: const TextStyle(fontSize: AppFontSize.base + 1),
+                  textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.base + 1),
                 ),
                 child: Text('Ir para o ${eventType.noun}'),
               ),
