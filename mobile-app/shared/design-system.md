@@ -1,85 +1,117 @@
 # Shared — design system
 
-Fonte de verdade visual da app. Todas as telas, componentes e estados novos devem reutilizar estes tokens — paleta, gradientes, tipografia, espaçamento, border-radius, sombras, ícones e hierarquia — em vez de inventar valores ad-hoc. Em caso de dúvida, prioriza a semelhança com o ecrã de Boas-vindas (`mobile-app/app/lib/features/auth/screens/welcome_screen.dart`) ou o Feed principal (`mobile-app/app/lib/features/home/screens/home_feed_screen.dart`), que serviram de referência visual principal para este redesign.
+Fonte de verdade visual da app. Todas as telas, componentes e estados novos reutilizam estes tokens — cor, fundo, tipografia, raios, sombras e estados — em vez de inventar valores ad hoc.
 
-Os tokens abaixo estão implementados em `mobile-app/app/lib/core/theme/app_theme.dart` (`AppTheme`, `AppColors`, `AppGradients`, `AppStatusColors`, `AppTypography`) — este documento descreve a intenção; o código é a implementação executável.
+Os tokens estão implementados em `mobile-app/app/lib/core/theme/app_theme.dart` (`AppTheme`, `AppColors`, `AppGradients`, `AppStatusColors`, `AppTypography`, `AppFontSize`, `AppRadius`). **O código é a fonte de verdade**; este documento descreve a intenção e tem de ser atualizado na mesma alteração que mudar um token.
 
 ## DNA visual
 
-Wellness/journaling — quente, suave, acolhedor, ainda assim elegante e moderno. Fundos em gradiente pastel suave (lavanda → creme, creme → rosa), cards brancos que "flutuam" com sombra difusa e tingida (nunca cinzenta/dura), formas em pílula/circulares, títulos serifados misturados com corpo de texto sans-serif limpo.
+Limpo e calmo: fundo branco liso, um único verde-oliva como acento, caixas em cinzento-claro **sem sombra** (pedido explícito 2026-08-31), formas em pílula, títulos em Roboto Black e o resto em Roboto Regular/SemiBold. Sombra só onde dá contraste necessário: barras de pesquisa e a navbar flutuante.
 
 ## Cor
 
 | Token | Valor | Uso |
 |---|---|---|
-| `AppTheme.ink` | `#1E1A22` | Texto principal, ícones, botão primário (pílula escura) |
-| `AppTheme.inkMuted` | `#7A7480` | Texto secundário |
-| `AppTheme.background` | `#FBF6F0` | Fundo plano de reserva (quando um ecrã não usa `GradientScaffold`) |
-| `AppTheme.accentLavender` | `#9C8FD9` | Acento de marca — estados selecionados/ativos, `GradientMark` |
-| `AppTheme.accentDeep` | `#6C56B3` | Variante mais escura do acento — tinge as sombras dos cards |
-| `AppTheme.borderMuted` | `#E6DFD6` | Contorno neutro e quente (chips, botões outline, separadores) |
-| `AppColors.green` | `#E7F0DE` | Verde suave — destaque/seleção (chips, pills, tile "Todos") |
+| `AppTheme.background` | `#FFFFFF` | Fundo de todos os ecrãs |
+| `AppTheme.ink` | `#171713` | Texto, ícones |
+| `AppTheme.inkMuted` | = `ink` | Texto secundário — mesmo preto sólido de propósito; a hierarquia faz-se por tamanho/peso, não por cinza |
+| `AppTheme.navIconMuted` | `#57534E` | Só ícones inativos da navbar e ícones de estados vazio/erro |
+| `AppTheme.accentOliveDark` | `#5F7545` | Única cor de acento: botões primários, estado ativo, progresso, spinners |
+| `AppTheme.surface` | `#F0F0F0` | Cards e caixas (substitui a sombra) |
+| `AppTheme.borderMuted` | `#E6E0D2` | Contornos subtis (chips, outline, separadores, trilho de progresso) |
+| `AppTheme.outerBackdrop` | `#EAE3D1` | Fundo atrás da moldura de telemóvel em janelas largas |
+| `AppColors.green` | `#DDE5D3` | Seleção suave (chips, pills) |
+| `AppColors.gray` / `muted` | `#EEF2E9` | Campos de input, pesquisa |
+| `AppColors.blue/yellow/pink/purple` | pastéis | Cards de destaque por categoria |
 | `AppStatusColors.confirmed` | `#2EAD65` | Confirmado / ativo |
-| `AppColors.greenDark` | `#174D3B` | Destaque forte — com moderação (cards de destaque, progresso importante, ícones/números que precisam de mais peso). Nunca como cor de base. |
-| `AppStatusColors.pending` | `#F2A01B` | Pendente (fundo creme suave = a própria cor a 15% alpha) |
-| `AppStatusColors.declined` | `#EF5350` | Recusado (fundo vermelho muito claro = a própria cor a 15% alpha) |
+| `AppStatusColors.pending` | `#F2A01B` | Pendente |
+| `AppStatusColors.declined` | `#EF5350` | Recusado |
 
-As cores de estado nunca aparecem em bloco sólido sobre fundo — os badges (`RsvpStatusBadge`) usam a cor a `alpha: 0.15` como fundo e a cor cheia no texto/ícone, gerando o tom pastel suave a partir de uma única fonte de verdade.
+Cores de estado nunca aparecem em bloco sólido: os badges usam a cor a `alpha: 0.15` como fundo e a cor cheia no texto/ícone.
 
-Hierarquia dos três verdes: `AppColors.green` (normal) → `AppStatusColors.confirmed` (ativo/confirmado) → `AppColors.greenDark` (destaque forte, usado com moderação, nunca em todo o lado).
+## Fundos (`AppGradients` via `GradientScaffold`)
 
-## Gradientes (`AppGradients`)
-
-Fundo em gradiente é a principal assinatura visual do redesign. Aplica-se sempre através de `GradientScaffold` (`mobile-app/app/lib/shared/widgets/gradient_scaffold.dart`) — nunca diretamente num `Scaffold`, que só aceita uma `Color` sólida.
-
-| Gradiente | Composição | Quando usar |
+| Fundo | Valor | Quando |
 |---|---|---|
-| `AppGradients.hero` | lavanda `#DCD3F0` → creme `#FBF6F0`, diagonal | Primeira impressão / emoção — boas-vindas, onboarding, seleção de papel |
-| `AppGradients.feed` | creme `#FBF6F0` → rosa `#F9E6E9`, vertical | Ecrãs de lista/dashboard (feed, convidados, checklist, orçamento, lugares, parceiros) |
-| `AppGradients.subtle` | creme `#FBF6F0` → branco, vertical | Ecrãs de formulário/detalhe, onde um gradiente forte prejudicaria a legibilidade |
-| `AppGradients.moodSolid` | lavanda sólido `#D9CEF0` | Momento único e celebratório (ex: fim do onboarding) — usar com moderação |
+| `AppBackground.hero` | sálvia `#E6E7D5` → branco, diagonal | Primeira impressão: boas-vindas, onboarding, escolha de papel |
+| `AppBackground.feed` | branco liso | Listas e dashboard |
+| `AppBackground.subtle` | branco liso | Formulários e detalhe |
+| `AppBackground.mood` | sálvia sólido `#DCE3C8` | Momento celebratório único (fim do onboarding) |
 
-`GradientScaffold(background: AppBackground.hero|feed|subtle|mood, ...)` substitui `Scaffold(...)` sem alterar mais nada no ecrã — só o fundo muda.
-
-## Layout
-
-- Mobile-first.
-- Margem lateral partilhada por **todos** os ecrãs: `AppTheme.screenMargin` (28px) — conteúdo e navbar flutuante alinham-se à mesma largura.
-- Header no topo (título + `CircleBackButton` + ações), conteúdo central, `FloatingBottomNav` fixo no fundo.
-- Elementos organizados verticalmente, alinhados à mesma margem.
-- `AppBarTheme` é transparente por omissão — deixa o gradiente do `GradientScaffold` mostrar-se através de qualquer `AppBar` sem precisar de configuração por ecrã.
-
-## Componentes
-
-- **Cards**: fundo branco (contraste sobre o gradiente/fundo creme), `border-radius` 18–24px, sombra sempre a mesma dupla: `AppTheme.cardShadow` (normal) / `AppTheme.cardShadowStrong` (hover/destaque) — difusa, tingida com `AppTheme.accentDeep` a baixa opacidade, nunca cinzenta/dura.
-- **Botões/filtros**: formato pill (`border-radius: 999`). Seleção usa `AppColors.green` como fundo — nunca preto (isso é reservado ao CTA primário).
-- **Seletor de opções** (categorias, filtros, ícone da navbar): `CoverFlowPicker` — carrossel horizontal em loop infinito, a opção centrada fica maior/opaca, snap suave ao largar. Rótulos de texto usam `CategoryPillLabel` (fundo verde + sombra só quando selecionado).
-- **Campo de pesquisa**: grande, `AppColors.gray`, pill.
-- **Avatares**: circulares.
-- **Botão primário**: pílula escura (`AppTheme.ink`) — `PrimaryButton` para ações simples, `ArrowCtaButton` quando o padrão pede a seta circular branca embutida no canto.
-- **Marca/logo** (`GradientMark`): círculo com gradiente lavanda (`accentLavender` → `accentDeep`), nunca preenchimento sólido.
-- **Bottom nav** (`FloatingBottomNav`): pílula branca flutuante com sombra suave, ícones em `AppTheme.ink`; o item ativo ganha um círculo preenchido a `accentLavender` com ícone branco. O "boneco" do casal fica encostado ao lado direito da pílula, ligeiramente sobreposto por cima dela.
-- **Botões circulares de ícone** (`CircleIconButton`): fundo branco, sombra igual à dos cards, feedback de toque via `SnappyTap` (encolhe ligeiramente e volta com leve ressalto).
-- **Ícones**: `Icons` do Material, sempre em variante `_outlined` quando disponível — finos, nunca preenchidos a não ser para indicar estado ativo.
+Usar sempre `GradientScaffold(background: ...)` em vez de `Scaffold` para manter a escolha centralizada.
 
 ## Tipografia
 
-Dois papéis, nunca misturados dentro do mesmo bloco de texto:
+Uma só família: **Roboto, embutida em `assets/fonts/roboto/`** (pesos 400, 500, 600, 700, 800, 900 + itálico 400; subset Latin + Latin-1 + Latin Extended-A). Não usar `google_fonts` nem outra família. Como os pesos estão declarados no `pubspec.yaml`, `FontWeight.w700` usa o ficheiro Bold real, sem negrito sintetizado.
 
-- **Serifado (Fraunces, via `google_fonts`)** — só para títulos de página/saudações/perguntas de destaque (`textTheme.headlineMedium`/`headlineSmall`, ou `AppTypography.displaySerif()` fora do `textTheme`). Editorial mas arredondado/amigável, nunca formal-rígido.
-- **Sans (Inter, via `google_fonts`)** — tudo o resto: corpo de texto, botões, labels, nomes, badges.
+- Títulos de destaque (`headlineMedium`/`headlineSmall`, `AppTypography.displaySerif()`): Roboto Black (w900). O nome `displaySerif` é histórico e não tem serifa.
+- Todo o resto: Roboto 400–800.
 
-Escala definida para ecrã de referência 375px:
+### Escala (`AppFontSize`) — os únicos tamanhos permitidos
 
-| Papel | Fonte | Tamanho | Peso |
-|---|---|---|---|
-| Saudação/pergunta de destaque (`headlineMedium`/`headlineSmall`) | Fraunces | 34–50px | w600 |
-| Títulos (`textTheme.titleLarge`) | Inter | 22px | w600 |
-| Nomes (convidado, parceiro) | Inter | ~16px | w600–w700 |
-| Texto secundário/subtítulos | Inter | ~13px | w400–w600 |
-| Labels / status (badges) | Inter | 13–14px | w600 |
-| Números de destaque (stat tiles) | Inter | 17–18px | w800 |
+| Token | px | Uso típico |
+|---|---|---|
+| `xxxs` | 9 | Micro-labels (navbar, avatares agrupados) |
+| `xxs` | 10 | Contadores, legendas mínimas |
+| `xs` | 11 | Badges, meta-info |
+| `sm` | 12 | Texto auxiliar |
+| `md` | 13 | Texto secundário |
+| `base` | 14 | Corpo (`bodyMedium`) |
+| `lg` | 16 | Nomes, botões (`labelLarge`) |
+| `xl` | 18 | Títulos de módulo (`titleMedium`) |
+| `xxl` | 20 | Subtítulos de secção |
+| `h3` | 22 | Título de ecrã/card (`titleLarge`, AppBar) |
+| `h2` | 24 | |
+| `h1` | 28 | `displaySerif()` por omissão |
+| `display` | 34 | |
+| `displayLg` | 42 | |
+| `hero` | 50 | Saudação (`headlineMedium`) |
+
+Na migração (2026-10), os meios-pontos foram arredondados para baixo (12.5 → 12, 13.5 → 13…) para nunca aumentar texto em sítios apertados. Exceções: 15 → 16 (nomes), 17 → 16, 26 → 24, 30 → 28. Fica um único literal, `7.5`, no badge numérico do checklist.
+
+## Raios (`AppRadius`)
+
+| Token | px | Uso |
+|---|---|---|
+| `xs` | 4 | Barras de progresso, indicadores finos |
+| `sm` | 12 | Chips pequenos, thumbnails, badges |
+| `md` | 16 | Botões, tiles, campos compactos |
+| `lg` | 20 | Inputs, cards secundários |
+| `xl` | 24 | Cards principais, topo de bottom sheets |
+| `xxl` | 28 | Sheets/cards hero, topo da navbar de parceiro |
+| `pill` | 999 | Pílulas e círculos |
+
+Exceções que ficaram como literal: a moldura de telemóvel (`phone_frame.dart`, 40) e o ponto de notificação (2).
+
+## Sombras
+
+- `AppTheme.searchBarShadow` — só barras de pesquisa.
+- `AppTheme.navBarShadow` — só docas ancoradas ao fundo (offset para cima).
+- Nenhuma outra caixa tem sombra; o contraste vem de `AppTheme.surface`.
+
+## Layout
+
+- Mobile-first, ecrã de referência 375px.
+- Margem lateral partilhada: `AppTheme.screenMargin` (28px). Conteúdo e navbar alinham-se a ela.
+- AppBar transparente por omissão.
+
+## Componentes
+
+- **Botões primários** (`FilledButton`/`ElevatedButton` do tema): verde `accentOliveDark`, altura 54, raio `AppRadius.md`. `ArrowCtaButton` é a variante com seta circular embutida.
+- **Botões/filtros**: pílula (`AppRadius.pill`); seleção com fundo `AppColors.green`.
+- **Seletor de opções**: `CoverFlowPicker` (carrossel em loop, item central maior).
+- **Pesquisa**: grande, `AppColors.gray`, pílula, `searchBarShadow`.
+- **Avatares**: circulares (`InitialsAvatar`).
+- **Toque**: `SnappyTap` (encolhe ligeiramente e volta com ressalto).
+- **Ícones**: Material, variante `_outlined` sempre que exista; preenchido só para estado ativo.
+
+## Estados
+
+- **Erro** (`AsyncValue.when(error: ...)`): `AsyncErrorView(message?, onRetry?)` de `shared/widgets/feedback.dart`, com `onRetry: () => ref.invalidate(<provider>)`. Não escrever `Center(child: Text('Não foi possível carregar.'))` à mão.
+- **Vazio** (ecrã ou lista inteira): `EmptyStateView(message, icon)`. Dentro de caixas de altura fixa basta um `Text`.
+- **A carregar**: `CircularProgressIndicator()` sem cor própria; o tema já o pinta com `accentOliveDark`. Bloqueio de ecrã durante uma ação: `LoadingOverlay`.
+- **Avisos**: `ErrorBanner` (erro de formulário), `PersistentWarningBanner` (aviso persistente com ação).
 
 ## Regra de consistência
 
-Não criar novos padrões visuais sem necessidade. Componentes novos reutilizam os tokens acima; se um valor não existir ainda (nova cor, novo gradiente, novo raio), adiciona-o a `AppTheme`/`AppColors`/`AppGradients` em vez de o hardcodar localmente — assim uma correção futura propaga-se à app inteira em vez de ficar presa a um ecrã.
+Não criar padrões visuais novos sem necessidade. Se um valor não existir ainda (cor, tamanho, raio), adiciona-se a `app_theme.dart`, nunca como literal num ecrã. Assim uma correção futura chega à app inteira e não fica presa a um ecrã.
