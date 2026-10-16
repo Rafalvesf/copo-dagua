@@ -1,0 +1,50 @@
+name: App screenshots
+
+# Gera capturas de todos os ecrãs (casal, parceiro, convidado) com dados
+# de exemplo — ver mobile-app/app/test/screenshots/app_screens_test.dart.
+# As imagens ficam no artefacto "app-screenshots" desta execução.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'mobile-app/app/lib/**'
+      - 'mobile-app/app/test/screenshots/**'
+      - '.github/workflows/app-screenshots.yml'
+
+concurrency:
+  group: app-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile-app/app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Capture screens
+        run: |
+          set -o pipefail
+          flutter test --update-goldens --tags screenshots test/screenshots 2>&1 | tee screenshots.log || {
+            grep -E "^(Error|.*Exception|.*error)" screenshots.log | head -40 | while read -r line; do echo "::warning::$line"; done
+            exit 1
+          }
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-screenshots
+          path: |
+            mobile-app/app/test/screenshots/goldens/*.png
+            mobile-app/app/screenshots.log
+          if-no-files-found: warn
