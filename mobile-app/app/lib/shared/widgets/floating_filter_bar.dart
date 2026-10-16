@@ -50,27 +50,103 @@ class FilterChipsRow extends StatefulWidget {
   State<FilterChipsRow> createState() => _FilterChipsRowState();
 }
 
-/// Carrossel (pedido do utilizador: "os filtros tem que ser em
-/// carrossel"): ocupa a largura toda da ilha e o filtro escolhido desliza
-/// sempre para o centro.
+/// Carrossel de filtros (redesign 2026-10). Pedidos do utilizador:
+/// "carrossel", "infinito" (exceto categorias de Parceiros), "sempre o
+/// selecionado à esquerda" e "para cada filtro mostra apenas até 3, sem
+/// cortares o texto": a barra mostra no máximo 3 filtros inteiros, cada
+/// um com um terço da largura (o texto encolhe se não couber, nunca é
+/// cortado), e desliza de filtro em filtro. Com 3 ou menos opções não há
+/// carrossel — ficam todas lado a lado, em partes iguais.
 class _FilterChipsRowState extends State<FilterChipsRow> {
-  final _controller = ScrollController();
-  final _centerKey = UniqueKey();
+  static const int _visible = 3;
 
-  /// Chave por posição "virtual" no carrossel: no modo infinito o índice
-  /// real `i % n` repete-se, e cada repetição tem a sua posição. Valores
-  /// ≥ 0 vão para a direita, < 0 para a esquerda.
-  final Map<int, GlobalKey> _keys = {};
+  /// Centro "virtual" do carrossel infinito: as páginas repetem as opções
+  /// para os dois lados a partir daqui.
+  static const int _loopBase = 1000;
 
-  /// Posição virtual do último filtro tocado, para centrar essa cópia
-  /// (e não a primeira) depois de reconstruir.
-  int? _tappedVirtual;
+  PageController? _controller;
 
-  /// Depois de o utilizador arrastar o carrossel, o escolhido volta a
-  /// alinhar-se sozinho ("alinha sempre"), com uma pausa para dar tempo
-  /// de tocar noutro filtro.
+  /// Depois de o utilizador arrastar, o escolhido volta sozinho à esquerda
+  /// ("sempre o selecionado à esquerda"), com uma pausa para dar tempo de
+  /// tocar noutro filtro.
   Timer? _snapBack;
   bool _userScrolling = false;
+
+  int get _n => widget.items.length;
+  bool get _scrolls => _n > _visible;
+  bool get _loops => _scrolls && widget.infinite;
+
+  int _initialPage() => _loops ? _loopBase * _n + widget.selected : widget.selected;
+
+  PageController _controllerFor() => _controller ??= PageController(
+        viewportFraction: 1 / _visible,
+        initialPage: _initialPage(),
+      );
+
+  int _real(int page) => ((page % _n) + _n) % _n;
+
+  /// Página onde está a cópia do escolhido mais perto da posição atual.
+  int _targetPage() {
+    final controller = _controller;
+    final current = (controller != null && controller.hasClients)
+        ? (controller.page ?? controller.initialPage.toDouble()).round()
+        : _initialPage();
+    if (!_loops) return widget.selected.clamp(0, _n - 1);
+    final base = current - _real(current);
+    final candidates = [
+      base - _n + widget.selected,
+      base + widget.selected,
+      base + _n + widget.selected,
+    ];
+    candidates.sort(
+      (a, b) => (a - current).abs().compareTo((b - current).abs()),
+    );
+    return candidates.first;
+  }
+
+  void _goToSelected({bool animate = true, int? page}) {
+    final controller = _controller;
+    if (!mounted || controller == null || !controller.hasClients) return;
+    final target = page ?? _targetPage();
+    if (animate) {
+      controller.animateToPage(
+        target,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      controller.jumpToPage(target);
+    }
+  }
+
+  int? _tappedPage;
+
+  @override
+  void didUpdateWidget(covariant FilterChipsRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final layoutChanged = oldWidget.items.length != widget.items.length ||
+        oldWidget.infinite != widget.infinite;
+    if (layoutChanged) {
+      _controller?.dispose();
+      _controller = null;
+      _tappedPage = null;
+      return;
+    }
+    if (oldWidget.selected != widget.selected) {
+      final page = _tappedPage;
+      _tappedPage = null;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _goToSelected(page: page),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _snapBack?.cancel();
+    _controller?.dispose();
+    super.dispose();
+  }
 
   bool _onScroll(ScrollNotification n) {
     if (n is ScrollStartNotification && n.dragDetails != null) {
@@ -79,75 +155,22 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
     } else if (n is ScrollEndNotification && _userScrolling) {
       _userScrolling = false;
       _snapBack?.cancel();
-      _snapBack = Timer(const Duration(milliseconds: 1600), _center);
+      _snapBack = Timer(const Duration(milliseconds: 1600), _goToSelected);
     }
     return false;
   }
 
-  GlobalKey _keyFor(int virtual) => _keys.putIfAbsent(virtual, GlobalKey.new);
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _center(animate: false));
-  }
-
-  @override
-  void didUpdateWidget(covariant FilterChipsRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.items.length != widget.items.length) {
-      _keys.clear();
-      _tappedVirtual = null;
-    }
-    if (oldWidget.selected != widget.selected ||
-        oldWidget.items.length != widget.items.length) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _center());
-    }
-  }
-
-  @override
-  void dispose() {
-    _snapBack?.cancel();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _center({bool animate = true}) {
-    if (!mounted) return;
-    final n = widget.items.length;
-    final index = widget.selected;
-    if (index < 0 || index >= n) return;
-    final tapped = _tappedVirtual;
-    final virtual = tapped != null && _real(tapped) == index ? tapped : index;
-    final ctx = _keys[virtual]?.currentContext;
-    if (ctx == null || !_controller.hasClients) return;
-    // O escolhido fica sempre encostado à esquerda (pedido do
-    // utilizador: "coloca sempre o selecionado à esquerda").
-    Scrollable.ensureVisible(
-      ctx,
-      alignment: 0,
-      duration: animate ? const Duration(milliseconds: 320) : Duration.zero,
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  int _real(int virtual) {
-    final n = widget.items.length;
-    return ((virtual % n) + n) % n;
-  }
-
-  Widget _chip(int virtual) {
-    final i = _real(virtual);
+  Widget _chip(int index, {int? page}) {
     return _FilterBarChip(
-      key: _keyFor(virtual),
-      item: widget.items[i],
-      selected: i == widget.selected,
+      item: widget.items[index],
+      selected: index == widget.selected,
       onTap: () {
-        _tappedVirtual = virtual;
-        if (i == widget.selected) {
-          _center();
+        _snapBack?.cancel();
+        if (index == widget.selected) {
+          _goToSelected(page: page);
         } else {
-          widget.onSelected(i);
+          _tappedPage = page;
+          widget.onSelected(index);
         }
       },
     );
@@ -155,48 +178,29 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
 
   @override
   Widget build(BuildContext context) {
-    final n = widget.items.length;
-    if (n == 0) return const SizedBox(height: FilterChipsRow.height);
+    if (_n == 0) return const SizedBox(height: FilterChipsRow.height);
+    if (!_scrolls) {
+      return SizedBox(
+        height: FilterChipsRow.height,
+        child: Row(
+          children: [
+            for (var i = 0; i < _n; i++) Expanded(child: _chip(i)),
+          ],
+        ),
+      );
+    }
     return SizedBox(
       height: FilterChipsRow.height,
       child: NotificationListener<ScrollNotification>(
         onNotification: _onScroll,
-        child: widget.infinite
-          ? CustomScrollView(
-              controller: _controller,
-              scrollDirection: Axis.horizontal,
-              center: _centerKey,
-              slivers: [
-                // Para a esquerda: -1, -2, … (lista "ao contrário").
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, j) => _chip(-(j + 1)),
-                  ),
-                ),
-                SliverList(
-                  key: _centerKey,
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) => _chip(i),
-                  ),
-                ),
-              ],
-            )
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                // Margem à direita para o último também conseguir
-                // chegar à esquerda.
-                final side = constraints.maxWidth;
-                return SingleChildScrollView(
-                  controller: _controller,
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.only(right: side),
-                  child: Row(
-                    children: [for (var i = 0; i < n; i++) _chip(i)],
-                  ),
-                );
-              },
-            ),
-      )
+        child: PageView.builder(
+          controller: _controllerFor(),
+          padEnds: false,
+          itemCount: _loops ? null : _n,
+          itemBuilder: (context, page) =>
+              _chip(_loops ? _real(page) : page, page: page),
+        ),
+      ),
     );
   }
 }
@@ -279,15 +283,17 @@ class _FilterBarChip extends StatelessWidget {
           // vez de encostar à borda e chocar com o raio da navbar.
           height: FilterChipsRow.height - 2 * _inset,
           margin: const EdgeInsets.all(_inset),
-          padding: EdgeInsets.only(
-            left: 18,
-            right: item.count == null ? 18 : 10,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected ? AppTheme.accentOliveDark : Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.pill),
           ),
-          child: Row(
+          // O texto nunca é cortado: se não couber no terço da barra,
+          // encolhe.
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (item.icon != null) ...[
@@ -326,6 +332,7 @@ class _FilterBarChip extends StatelessWidget {
                 ),
               ],
             ],
+          ),
           ),
         ),
       ),
