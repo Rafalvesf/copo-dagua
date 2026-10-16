@@ -1,0 +1,50 @@
+name: Mobile app CI
+
+# Corre em cada PR (e em push para master) que toque na app Flutter:
+# análise estática + testes. O deploy para gh-pages continua em
+# deploy-gh-pages.yml; este workflow só valida.
+on:
+  pull_request:
+    paths:
+      - 'mobile-app/app/**'
+      - '.github/workflows/mobile-ci.yml'
+  push:
+    branches:
+      - master
+    paths:
+      - 'mobile-app/app/**'
+      - '.github/workflows/mobile-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile-app/app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Só erros falham o build por agora; infos/avisos aparecem no log.
+      # Quando a base estiver limpa, apertar para `flutter analyze`.
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Test
+        run: flutter test
