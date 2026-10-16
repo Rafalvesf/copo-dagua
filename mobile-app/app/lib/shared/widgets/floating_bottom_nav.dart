@@ -52,15 +52,6 @@ class FloatingBottomNav extends ConsumerWidget {
           borderRadius: BorderRadius.circular(AppRadius.xxl),
           child: ConnectedFilterNav(
           top: top,
-          // Ordem visual dos separadores (≠ ordem do enum).
-          activeIndex: const [
-            AppTab.gallery,
-            AppTab.partners,
-            AppTab.wedding,
-            AppTab.chat,
-            AppTab.home,
-          ].indexOf(current),
-          slots: 5,
           navRow: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
