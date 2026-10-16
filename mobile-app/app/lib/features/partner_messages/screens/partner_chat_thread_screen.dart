@@ -5,8 +5,8 @@ import '../../../core/chat/partner_chat_thread_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/page_header.dart';
 
 /// Fio de conversa com um cliente específico das Mensagens — versão
 /// parametrizada de `PartnerChatScreen` (que fica hardcoded a uma única
@@ -80,10 +80,7 @@ class _PartnerChatThreadScreenState
         children: [
           SafeArea(
             bottom: false,
-            child: PageHeader(
-              title: widget.conversation.name,
-              titleFontSize: 26,
-            ),
+            child: ChatHeader(name: widget.conversation.name),
           ),
           Expanded(
             child: chat.loading && chat.messages.isEmpty

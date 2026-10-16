@@ -8,8 +8,8 @@ import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/page_header.dart';
 import '../../partners/screens/partner_detail_screen.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
@@ -102,9 +102,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         children: [
           SafeArea(
             bottom: false,
-            child: PageHeader(
-              title: widget.conversation.name,
-              titleFontSize: 26,
+            child: ChatHeader(
+              name: widget.conversation.name,
+              avatarUrl: widget.conversation.avatarUrl,
+              subtitle: widget.conversation.partnerId == null ? null : 'Ver perfil',
+              onOpenProfile: widget.conversation.partnerId == null
+                  ? null
+                  : _openPartnerProfile,
             ),
           ),
           Expanded(
