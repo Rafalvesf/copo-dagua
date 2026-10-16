@@ -144,6 +144,23 @@ final partnerPackagesForProvider =
           .toList();
     });
 
+/// Capacidade de um espaço: soma de lugares (`seats × quantity`) dos
+/// tipos de mesa que o parceiro indicou (`022_venue_tables.sql`). `null`
+/// quando não há mesas registadas (ex: parceiros que não são espaços).
+final partnerVenueCapacityProvider =
+    FutureProvider.family<int?, String>((ref, partnerId) async {
+      final rows = await supabase
+          .from('partner_venue_tables')
+          .select('seats, quantity')
+          .eq('partner_id', partnerId);
+      if (rows.isEmpty) return null;
+      var total = 0;
+      for (final row in rows) {
+        total += (row['seats'] as int) * (row['quantity'] as int);
+      }
+      return total;
+    });
+
 /// Portefólio real de um parceiro específico — usado no separador
 /// "Galeria" do perfil público.
 final partnerPortfolioForProvider =
