@@ -109,27 +109,11 @@ class GuestProfileScreen extends ConsumerWidget {
 /// por isso mostra uma folha mínima com só "Sair" em vez de abrir esse
 /// ecrã, que nunca foi desenhado para este caso.
 void _openSettings(BuildContext context, WidgetRef ref, bool isCouple) {
-  if (isCouple) {
-    context.push('/settings', extra: true);
-    return;
-  }
-  showModalBottomSheet(
-    context: context,
-    builder: (context) => SafeArea(
-      child: Wrap(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Sair'),
-            onTap: () {
-              Navigator.of(context).pop();
-              ref.read(authControllerProvider.notifier).logout();
-            },
-          ),
-        ],
-      ),
-    ),
-  );
+  // Casal em modo convidado volta às definições do casamento; convidado
+  // abre as Definições da conta dele (mesmo ecrã, conteúdo por tipo de
+  // conta — ver `settings_screen.dart`). Antes o convidado só tinha um
+  // menu com "Sair".
+  context.push('/settings', extra: isCouple);
 }
 
 /// Substitui a antiga snackbar "Foto de perfil em breve." — mesma

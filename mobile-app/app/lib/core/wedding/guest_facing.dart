@@ -16,7 +16,12 @@ class GuestFacingInfo {
   /// presentes ficam escondidos em vez de falharem ao guardar.
   final bool giftsAvailable;
 
+  /// `weddings.guest_join_mode` (071/076): 'code_open', 'code_with_match'
+  /// ou 'invite_only'.
+  final String? joinMode;
+
   const GuestFacingInfo({
+    this.joinMode,
     this.ceremonyTime,
     this.welcomeMessage,
     this.giftListUrl,
@@ -26,7 +31,7 @@ class GuestFacingInfo {
   });
 }
 
-const _base = 'ceremony_time, welcome_message';
+const _base = 'ceremony_time, welcome_message, guest_join_mode';
 const _gifts = 'gift_list_url, gift_iban, gift_message';
 
 Future<GuestFacingInfo> loadGuestFacingInfo(String weddingId) async {
@@ -38,12 +43,14 @@ Future<GuestFacingInfo> loadGuestFacingInfo(String weddingId) async {
       giftListUrl: r['gift_list_url'] as String?,
       giftIban: r['gift_iban'] as String?,
       giftMessage: r['gift_message'] as String?,
+      joinMode: r['guest_join_mode'] as String?,
     );
   } on PostgrestException {
     final r = await supabase.from('weddings').select(_base).eq('id', weddingId).single();
     return GuestFacingInfo(
       ceremonyTime: r['ceremony_time'] as String?,
       welcomeMessage: r['welcome_message'] as String?,
+      joinMode: r['guest_join_mode'] as String?,
       giftsAvailable: false,
     );
   }
@@ -55,6 +62,7 @@ Future<void> saveGuestFacingInfo(String weddingId, GuestFacingInfo info) async {
   await supabase.from('weddings').update({
     'ceremony_time': _clean(info.ceremonyTime),
     'welcome_message': _clean(info.welcomeMessage),
+    if (info.joinMode != null) 'guest_join_mode': info.joinMode,
     if (info.giftsAvailable) ...{
       'gift_list_url': _clean(info.giftListUrl),
       'gift_iban': _clean(info.giftIban),

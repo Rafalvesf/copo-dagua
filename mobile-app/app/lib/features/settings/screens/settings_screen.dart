@@ -78,6 +78,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Definições por tipo de conta — antes o parceiro e o convidado
+    // caíam neste mesmo ecrã de "editar casamento" (que nem sequer
+    // carregava para eles, por não terem casamento).
+    final role = ref.watch(authControllerProvider.select((s) => s.profile?.role));
+    if (role == UserRole.partner || role == UserRole.guest) {
+      return _AccountSettingsScreen(role: role!);
+    }
     final weddingState = ref.watch(weddingControllerProvider);
     final wedding = weddingState.wedding;
 
@@ -235,11 +242,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         const SizedBox(height: 32),
                         _GuestFacingSection(weddingId: wedding.id),
                         const SizedBox(height: 32),
-                        Text(
-                          'Conta',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 12),
+                        const _AccountSection(),
+                        const SizedBox(height: 10),
                         _ShortcutRow(
                           icon: Icons.swap_horizontal_circle_outlined,
                           label: widget.fromGuestMode ? 'Ver em modo casamento' : 'Ver como convidado',
@@ -250,7 +254,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         const SizedBox(height: 10),
                         _ShortcutRow(
                           icon: Icons.logout,
-                          label: 'Sair',
+                          label: 'Terminar sessão',
                           onTap: () => ref
                               .read(authControllerProvider.notifier)
                               .logout(),
@@ -403,6 +407,7 @@ class _GuestFacingSectionState extends State<_GuestFacingSection> {
   bool _loading = true;
   bool _saving = false;
   bool _giftsAvailable = true;
+  String? _joinMode;
 
   @override
   void initState() {
@@ -419,6 +424,7 @@ class _GuestFacingSectionState extends State<_GuestFacingSection> {
       _iban.text = info.giftIban ?? '';
       _giftMessage.text = info.giftMessage ?? '';
       _giftsAvailable = info.giftsAvailable;
+      _joinMode = info.joinMode;
     } catch (_) {
       // Fica com os campos vazios; guardar continua possível.
     }
@@ -438,6 +444,7 @@ class _GuestFacingSectionState extends State<_GuestFacingSection> {
           giftIban: _iban.text,
           giftMessage: _giftMessage.text,
           giftsAvailable: _giftsAvailable,
+          joinMode: _joinMode,
         ),
       );
     } catch (_) {
@@ -471,6 +478,20 @@ class _GuestFacingSectionState extends State<_GuestFacingSection> {
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 12),
+        if (_joinMode != null) ...[
+          DropdownButtonFormField<String>(
+            initialValue: _joinMode,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Quem pode entrar com o código do casal'),
+            items: const [
+              DropdownMenuItem(value: 'code_open', child: Text('Qualquer pessoa com o código')),
+              DropdownMenuItem(value: 'code_with_match', child: Text('Só quem já está na lista (email/telefone)')),
+              DropdownMenuItem(value: 'invite_only', child: Text('Só com convite individual')),
+            ],
+            onChanged: (v) => setState(() => _joinMode = v),
+          ),
+          const SizedBox(height: 12),
+        ],
         AuthTextField(label: 'Hora da cerimónia (ex: 16:00)', controller: _time),
         const SizedBox(height: 12),
         AuthTextField(label: 'Mensagem de boas-vindas', controller: _welcome),
@@ -484,6 +505,165 @@ class _GuestFacingSectionState extends State<_GuestFacingSection> {
         ],
         const SizedBox(height: 20),
         PrimaryButton(label: 'Guardar para os convidados', loading: _saving, onPressed: _save),
+      ],
+    );
+  }
+}
+
+
+/// Definições do parceiro e do convidado — só a conta (e, para o
+/// convidado, juntar-se a outro casamento com um código).
+class _AccountSettingsScreen extends ConsumerWidget {
+  final UserRole role;
+
+  const _AccountSettingsScreen({required this.role});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GradientScaffold(
+      background: AppBackground.subtle,
+      body: SafeArea(
+        bottom: false,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const PageHeader(title: 'Definições', centered: true),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 24, AppTheme.screenMargin, 60),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const _AccountSection(),
+                  if (role == UserRole.partner) ...[
+                    const SizedBox(height: 10),
+                    _ShortcutRow(
+                      icon: Icons.storefront_outlined,
+                      label: 'Informações do negócio',
+                      onTap: () => context.push('/partner-business-info'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ShortcutRow(
+                      icon: Icons.account_balance_outlined,
+                      label: 'Pagamentos e conta Stripe',
+                      onTap: () => context.push('/partner-payments'),
+                    ),
+                  ],
+                  if (role == UserRole.guest) ...[
+                    const SizedBox(height: 10),
+                    _ShortcutRow(
+                      icon: Icons.favorite_border,
+                      label: 'Juntar-me a outro casamento',
+                      onTap: () => showGuestModeSheet(context),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  _ShortcutRow(
+                    icon: Icons.support_agent_outlined,
+                    label: 'Falar com a equipa',
+                    onTap: () => context.push('/support'),
+                  ),
+                  const SizedBox(height: 10),
+                  _ShortcutRow(
+                    icon: Icons.logout,
+                    label: 'Terminar sessão',
+                    onTap: () => ref.read(authControllerProvider.notifier).logout(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Conta" — nome, email e alterar password. Igual para todos os tipos
+/// de conta.
+class _AccountSection extends ConsumerWidget {
+  const _AccountSection();
+
+  Future<void> _editName(BuildContext context, WidgetRef ref, String current) async {
+    final controller = TextEditingController(text: current);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('O teu nome'),
+        content: TextField(controller: controller, autofocus: true),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (result == null || result.isEmpty) return;
+    try {
+      await ref.read(authControllerProvider.notifier).updateFullName(result);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível guardar o nome.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _resetPassword(BuildContext context, WidgetRef ref, String email) async {
+    var message = 'Enviámos um email para $email com o link para mudar a password.';
+    try {
+      await ref.read(authControllerProvider.notifier).requestPasswordReset(email);
+    } catch (_) {
+      message = 'Não foi possível enviar o email. Tenta daqui a uns minutos.';
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(authControllerProvider).profile;
+    if (profile == null) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Conta', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 12),
+        _ShortcutRow(
+          icon: Icons.person_outline,
+          label: 'Nome · ${profile.fullName}',
+          onTap: () => _editName(context, ref, profile.fullName),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.mail_outline, size: 18, color: AppTheme.accentOliveDark),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  profile.email,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        _ShortcutRow(
+          icon: Icons.lock_outline,
+          label: 'Mudar password',
+          onTap: () => _resetPassword(context, ref, profile.email),
+        ),
       ],
     );
   }

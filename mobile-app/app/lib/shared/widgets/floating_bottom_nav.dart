@@ -7,7 +7,7 @@ import '../../core/theme/app_theme.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
 import '../../core/wedding/wedding_nav_icon.dart';
 
-enum AppTab { home, partners, chat, wedding, gallery }
+enum AppTab { home, partners, chat, wedding }
 
 /// Ilha flutuante com margem de todos os lados (pedido explícito do
 /// utilizador: "a navbar deve ser uma ilha em vez de se estender até à
@@ -64,16 +64,6 @@ class FloatingBottomNav extends ConsumerWidget {
             // "centra o icon os noivos e coloca as margens iguais em
             // todos os icons".
             children: [
-              Expanded(
-                child: Center(
-                  child: _NavIcon(
-                    icon: Icons.photo_library_outlined,
-                    activeIcon: Icons.photo_library_rounded,
-                    active: current == AppTab.gallery,
-                    onTap: () => context.go('/gallery'),
-                  ),
-                ),
-              ),
               Expanded(
                 child: Center(
                   child: _NavIcon(

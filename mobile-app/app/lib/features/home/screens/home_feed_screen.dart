@@ -139,71 +139,10 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                 ),
                               ),
                             ),
-                            // Sino de notificações — pedido explícito
-                            // do utilizador: "quero apenas um pop up
-                            // quando clicas nas notificações" — sem
-                            // página própria, abre uma sheet simples
-                            // por cima da página.
-                            SnappyTap(
-                              onTap: () => _openNotifications(context),
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Container(
-                                    width: 46,
-                                    height: 46,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.surface,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.notifications_outlined,
-                                      color: AppTheme.ink,
-                                    ),
-                                  ),
-                                  if (unreadNotifications > 0)
-                                    Positioned(
-                                      top: -2,
-                                      right: -2,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                        constraints: const BoxConstraints(minWidth: 18),
-                                        decoration: const BoxDecoration(
-                                          color: AppStatusColors.declined,
-                                          borderRadius: BorderRadius.all(Radius.circular(AppRadius.pill)),
-                                        ),
-                                        child: Text(
-                                          '$unreadNotifications',
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: AppFontSize.xxs,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            SnappyTap(
-                              onTap: () => context.push('/settings'),
-                              child: Container(
-                                width: 46,
-                                height: 46,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.surface,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.more_horiz,
-                                  color: AppTheme.ink,
-                                ),
-                              ),
-                            ),
+                            // Sem sino nem "⋯" aqui (2026-10-17): repetiam
+                            // as linhas "Notificações" e "Definições" logo
+                            // abaixo, na mesma página.
+                            const SizedBox(height: 46),
                           ],
                         ),
                         const SizedBox(height: 18),
@@ -224,8 +163,8 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                         _MenuGroup(
                           children: [
                             _MenuRow(
-                              icon: Icons.person_outline_rounded,
-                              label: 'Dados pessoais',
+                              icon: Icons.settings_outlined,
+                              label: 'Definições',
                               onTap: () => context.push('/settings'),
                             ),
                             _MenuRow(

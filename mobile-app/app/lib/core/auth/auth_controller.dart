@@ -95,7 +95,16 @@ class AuthController extends Notifier<AuthState> {
       final response = await supabase.auth.signUp(
         email: email,
         password: password,
-        data: {'role': role.name, 'full_name': fullName},
+        data: {
+          'role': role.name,
+          'full_name': fullName,
+          // Guardado na conta para ser aplicado no primeiro login quando
+          // o email ainda tem de ser confirmado (sem sessão aqui, o
+          // `join_wedding_by_code` não pode correr já) — antes o código
+          // perdia-se nesse caso e o convidado ficava sem casamento.
+          if (role == UserRole.guest && weddingCode != null && weddingCode.isNotEmpty)
+            'wedding_code': weddingCode.trim(),
+        },
       );
       final user = response.user;
       if (user == null) {
@@ -203,6 +212,7 @@ class AuthController extends Notifier<AuthState> {
         );
         return;
       }
+      await _applyPendingWeddingCode(user);
       final profile = await _loadProfile(user);
       state = AuthState(status: AuthState.statusFor(profile), profile: profile);
     } on AuthException catch (e) {
@@ -302,6 +312,7 @@ class AuthController extends Notifier<AuthState> {
     state = state.copyWith(status: AuthStatus.authenticating);
     final user = supabase.auth.currentUser;
     if (user != null && user.emailConfirmedAt != null) {
+      await _applyPendingWeddingCode(user);
       final profile = await _loadProfile(user);
       state = AuthState(status: AuthState.statusFor(profile), profile: profile);
       return;
@@ -311,6 +322,34 @@ class AuthController extends Notifier<AuthState> {
       errorMessage:
           'Ainda não detetámos a confirmação — depois de clicares no link do email, entra novamente.',
     );
+  }
+
+  /// Nome da pessoa (`profiles.full_name`) — Definições → Conta.
+  Future<void> updateFullName(String fullName) async {
+    final profile = state.profile;
+    final name = fullName.trim();
+    if (profile == null || name.isEmpty) return;
+    await supabase.from('profiles').update({'full_name': name}).eq('id', profile.id);
+    state = state.copyWith(profile: profile.copyWith(fullName: name));
+  }
+
+  /// Código do casal guardado no registo (`wedding_code` nos metadados da
+  /// conta) e ainda não aplicado — liga o convidado ao casamento e limpa
+  /// o código para não repetir. Nunca bloqueia o login.
+  Future<void> _applyPendingWeddingCode(User user) async {
+    final code = user.userMetadata?['wedding_code'] as String?;
+    if (code == null || code.trim().isEmpty) return;
+    try {
+      await supabase.rpc('join_wedding_by_code', params: {'p_code': code.trim()});
+    } on PostgrestException catch (e) {
+      // Código que deixou de existir — não vale a pena tentar outra vez.
+      if (e.code != 'P0002') return;
+    } catch (_) {
+      return;
+    }
+    try {
+      await supabase.auth.updateUser(UserAttributes(data: {'wedding_code': null}));
+    } catch (_) {}
   }
 
   Future<void> requestPasswordReset(String email) async {

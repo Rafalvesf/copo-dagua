@@ -7,7 +7,6 @@ import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
-import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
@@ -40,7 +39,10 @@ class GalleryScreen extends ConsumerWidget {
         weddingId ?? ref.watch(weddingControllerProvider).wedding?.id;
     final isCouple = profile?.role == UserRole.couple;
     final isGuest = profile?.role == UserRole.guest;
-    final showNav = weddingId == null && isCouple;
+    // O casal abre a Galeria a partir do Casamento (atalho ao lado de
+    // Orçamento/Convidados/…) — deixou de ter separador na navbar
+    // (pedido 2026-10-17), por isso aqui tem seta de voltar e os
+    // filtros flutuam sozinhos.
     // Um `weddingId` explícito só acontece hoje vindo de "Modo
     // convidado" (`GuestWeddingCard`, uma conta de casal a acompanhar
     // OUTRO casamento) — esse caso também mostra a navbar de
@@ -68,7 +70,7 @@ class GalleryScreen extends ConsumerWidget {
                   topPadding: 8,
                   // Sem seta de voltar sempre que há navbar (casal ou
                   // convidado) — mesma convenção dos outros ecrãs raiz.
-                  showBack: !(showNav || showGuestNav),
+                  showBack: !showGuestNav,
                   // Redesign 2026-10: "+" para carregar fotos, no mesmo
                   // sítio que nos outros ecrãs (antes era um cartão rosa).
                   trailing: AddActionButton(
@@ -81,15 +83,10 @@ class GalleryScreen extends ConsumerWidget {
                     weddingId: resolvedWeddingId,
                     isCouple: isCouple,
                     currentUserId: profile?.id,
-                    aboveNav: showNav || showGuestNav,
+                    aboveNav: showGuestNav,
                     // A navbar vive dentro do corpo para os filtros da
                     // galeria ficarem ligados a ela (redesign 2026-10).
-                    navBuilder: showNav
-                        ? (top) => FloatingBottomNav(
-                            current: AppTab.gallery,
-                            top: top,
-                          )
-                        : showGuestNav
+                    navBuilder: showGuestNav
                         ? (top) => GuestBottomNav(
                             current: GuestTab.gallery,
                             weddingId: weddingId,

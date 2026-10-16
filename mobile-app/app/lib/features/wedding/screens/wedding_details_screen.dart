@@ -522,13 +522,21 @@ class _QuickLinksRow extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _QuickLinkTile(
-                icon: Icons.checklist_rtl_outlined,
-                label: 'Serviços já tratados',
-                color: AppColors.yellow,
-                onTap: () => context.push('/service-preferences'),
+                icon: Icons.photo_library_outlined,
+                label: 'Galeria',
+                color: AppColors.pink,
+                onTap: () => context.push('/gallery'),
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        // Galeria saiu da navbar do casal (2026-10-17) e entrou aqui.
+        _QuickLinkTile(
+          icon: Icons.checklist_rtl_outlined,
+          label: 'Serviços já tratados',
+          color: AppColors.yellow,
+          onTap: () => context.push('/service-preferences'),
         ),
       ],
     );
