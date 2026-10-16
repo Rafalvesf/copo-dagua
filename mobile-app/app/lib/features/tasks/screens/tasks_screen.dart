@@ -9,7 +9,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
-import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -128,7 +127,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               bottomFadeHeight: 140,
               child: ListView(
                 padding: EdgeInsets.only(
-                  bottom: FloatingFilterBar.bottomPadding(aboveNav: true),
+                  bottom: FloatingFilterBar.bottomPadding(aboveNav: false),
                 ),
                 children: [
                   PageHeader(
@@ -264,7 +263,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: FloatingBottomNav(current: AppTab.wedding, top: FilterChipsRow(
+            child: FloatingFilterBar(
               items: [
                 FilterBarItem('Por fazer'),
                 FilterBarItem('Feito'),
@@ -273,7 +272,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               onSelected: (i) => setState(
                 () => _tab = i == 0 ? _TasksTab.todo : _TasksTab.done,
               ),
-            )),
+            ),
           ),
         ],
       ),
