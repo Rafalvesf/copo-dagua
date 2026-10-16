@@ -127,21 +127,16 @@ class PartnerHomeScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
+                // Sem os atalhos que já estão na barra de baixo (Pedidos e
+                // Perfil de negócio) — pedido do utilizador 2026-10-16.
                 GridView.count(
-                  crossAxisCount: 3,
+                  crossAxisCount: 2,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
-                  childAspectRatio: 1.08,
+                  childAspectRatio: 1.9,
                   children: [
-                    _PartnerTile(
-                      color: AppColors.blue,
-                      icon: Icons.request_quote_outlined,
-                      label: 'Pedidos de orçamento',
-                      count: newRequests.length,
-                      onTap: () => context.push('/partner-requests'),
-                    ),
                     _PartnerTile(
                       color: AppColors.green,
                       icon: Icons.event_available_outlined,
@@ -154,12 +149,6 @@ class PartnerHomeScreen extends ConsumerWidget {
                       icon: Icons.calendar_month_outlined,
                       label: 'Calendário',
                       onTap: () => context.push('/partner-calendar'),
-                    ),
-                    _PartnerTile(
-                      color: AppColors.pink,
-                      icon: Icons.storefront_outlined,
-                      label: 'Perfil de negócio',
-                      onTap: () => context.push('/partner-profile'),
                     ),
                     _PartnerTile(
                       color: AppColors.gray,
