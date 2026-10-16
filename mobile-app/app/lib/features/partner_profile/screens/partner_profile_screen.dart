@@ -117,7 +117,7 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                     ),
                     _ProfileMenuRow(
                       icon: Icons.bar_chart_rounded,
-                      label: 'Estatísticas',
+                      label: 'Resultados',
                       onTap: () => context.push('/partner-stats'),
                     ),
                     _ProfileMenuRow(
