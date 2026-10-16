@@ -10,17 +10,24 @@ import 'package:flutter/material.dart';
 class AppTheme {
   static const seedColor = accentOliveDark;
 
-  /// Família única da app — Roboto embutida em `assets/fonts/roboto/`
-  /// (declarada no pubspec com todos os pesos 400–900 + itálico), em vez
-  /// de descarregada em runtime pelo pacote google_fonts.
-  static const fontFamily = 'Roboto';
+  /// Família da app — Louis George Café embutida em
+  /// `assets/fonts/louis_george_cafe/` (Light 300, Regular 400, Bold 700,
+  /// cada um com itálico). Pesos intermédios pedidos no código (500, 600,
+  /// 800, 900) resolvem para o peso declarado mais próximo. A Roboto fica
+  /// como fallback para os poucos glifos que a Louis George Café não tem.
+  ///
+  /// Papéis: Bold → títulos, nomes, números e botões; Regular → texto
+  /// corrente; Light → texto explicativo ≥14px em [inkMuted]; Italic →
+  /// citações; Bold Italic → o nome do casal no cartão do Casamento.
+  static const fontFamily = 'LouisGeorgeCafe';
+  static const fontFamilyFallback = ['Roboto'];
 
   static const background = Colors.white;
   static const ink = Color(0xFF171713);
 
-  /// Alias de [ink] — texto "secundário"/"muted" deixou de ter um tom
-  /// mais claro próprio; usa-se preto sólido em todo o lado.
-  static const inkMuted = ink;
+  /// Texto secundário (legendas, descrições). Cinzento quente — antes era
+  /// igual a [ink], o que deixava a app com um só nível de texto.
+  static const inkMuted = Color(0xFF57534E);
 
   /// Cinza escuro neutro — só para o estado inativo dos ícones da
   /// navbar (Home/FloatingBottomNav/PartnerBottomNav), distinto do
@@ -52,7 +59,7 @@ class AppTheme {
   /// utilizador 2026-08-31: "if the boxes are white turn them
   /// greyish" (depois de remover a sombra dos cards, um card branco
   /// sobre o novo fundo branco liso ficava sem nenhum contraste).
-  static const surface = Color(0xFFF0F0F0);
+  static const surface = Color(0xFFF2F0EB);
 
   /// Sombra exclusiva das barras de pesquisa — pedido explícito do
   /// utilizador 2026-08-31: "only leave the shadow on the
@@ -78,12 +85,19 @@ class AppTheme {
       brightness: Brightness.light,
     ).copyWith(surface: background);
 
-    final baseText = ThemeData.light().textTheme.apply(fontFamily: fontFamily);
-    final buttonText = AppTypography.buttonLabel.copyWith(fontFamily: fontFamily);
+    final baseText = ThemeData.light().textTheme.apply(
+      fontFamily: fontFamily,
+      fontFamilyFallback: fontFamilyFallback,
+    );
+    final buttonText = AppTypography.buttonLabel.copyWith(
+      fontFamily: fontFamily,
+      fontFamilyFallback: fontFamilyFallback,
+    );
 
     return ThemeData(
       useMaterial3: true,
       fontFamily: fontFamily,
+      fontFamilyFallback: fontFamilyFallback,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
       textTheme: baseText.copyWith(
@@ -92,7 +106,7 @@ class AppTheme {
           fontSize: AppFontSize.hero,
           height: 40 / 34,
           fontWeight: FontWeight.w900,
-          letterSpacing: -0.5,
+          letterSpacing: 0,
           color: ink,
         ),
         headlineSmall: baseText.headlineSmall?.copyWith(
@@ -145,6 +159,7 @@ class AppTheme {
         centerTitle: false,
         titleTextStyle: const TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           color: ink,
           fontSize: AppFontSize.h3,
           height: 28 / 22,
@@ -236,7 +251,7 @@ class AppTypography {
   static const buttonLabel = TextStyle(
     fontSize: AppFontSize.lg,
     height: 24 / 16,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w700,
   );
   static const moduleTitle = TextStyle(
     fontSize: AppFontSize.xl,
@@ -260,6 +275,7 @@ class AppTypography {
     Color? color,
   }) => TextStyle(
     fontFamily: AppTheme.fontFamily,
+    fontFamilyFallback: AppTheme.fontFamilyFallback,
     fontSize: fontSize,
     height: 1.2,
     fontWeight: fontWeight,
@@ -308,12 +324,15 @@ class AppRadius {
 /// quentes para os cartões de destaque, pensadas para funcionar sobre
 /// os novos fundos em gradiente.
 class AppColors {
-  static const blue = Color(0xFFDCE3EF);
+  /// Areia — era azul (`#DCE3EF`); trocado no redesign 2026-10 para
+  /// manter só pastéis quentes. Nome mantido para não mexer nos usos.
+  static const blue = Color(0xFFECE7DC);
   static const green = Color(0xFFDDE5D3);
   static const yellow = Color(0xFFF7EACA);
   static const pink = Color(0xFFF3DEE0);
   static const gray = Color(0xFFEEF2E9);
-  static const purple = Color(0xFFDCD9EA);
+  /// Pêssego — era lilás (`#DCD9EA`), ver nota em [blue].
+  static const purple = Color(0xFFF4E1D2);
 
   static const muted = Color(0xFFEEF2E9);
 
@@ -360,7 +379,7 @@ class AppGradients {
 /// Cores semânticas de estado (ex: RSVP) — usadas em vez de emojis para
 /// comunicar estado, mantendo a app livre de emojis decorativos.
 class AppStatusColors {
-  static const confirmed = Color(0xFF2EAD65);
+  static const confirmed = Color(0xFF3F8A5A);
   static const pending = Color(0xFFF2A01B);
-  static const declined = Color(0xFFEF5350);
+  static const declined = Color(0xFFC8553D);
 }

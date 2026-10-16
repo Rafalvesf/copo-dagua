@@ -81,6 +81,27 @@ flutter:
   # reduzidos a Latin + Latin-1 + Latin Extended-A + pontuação/€.
   # Os ficheiros Aeonik trial em assets/fonts/ continuam por usar.
   fonts:
+    # Fonte principal da app (redesign 2026-10): Louis George Café,
+    # grátis para uso pessoal e comercial (assets/fonts/louis_george_cafe/
+    # LICENSE.txt). Subset Latin + Latin-1 + Latin Ext-A. A Roboto fica como
+    # fallback (o Bold não tem travessão, por exemplo).
+    - family: LouisGeorgeCafe
+      fonts:
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Light.ttf
+          weight: 300
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-LightItalic.ttf
+          weight: 300
+          style: italic
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-BoldItalic.ttf
+          weight: 700
+          style: italic
     - family: Roboto
       fonts:
         - asset: assets/fonts/roboto/Roboto-Regular.ttf
