@@ -260,8 +260,14 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                     bottom: 0,
                     child: FloatingFilterBar(
                       items: [
-                        const FilterBarItem('Todos'),
-                        for (final group in groups) FilterBarItem(group),
+                        FilterBarItem('Todos', count: state.guests.length),
+                        for (final group in groups)
+                          FilterBarItem(
+                            group,
+                            count: state.guests
+                                .where((g) => g.group == group)
+                                .length,
+                          ),
                       ],
                       selected: _groupFilter == null
                           ? 0

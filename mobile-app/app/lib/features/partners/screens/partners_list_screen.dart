@@ -397,11 +397,35 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                   data: (options) {
                     final all = <PartnerCategoryOption?>[null, ...options];
                     final index = all.indexWhere((o) => o?.slug == _filter);
+                    // Contagens por categoria na localização escolhida
+                    // (mesma regra da lista: "Âmbito nacional" conta
+                    // sempre).
+                    final everyone = ref
+                        .watch(partnersProvider(null))
+                        .maybeWhen(
+                          data: (list) => list
+                              .where(
+                                (s) =>
+                                    effectiveLocation.isEmpty ||
+                                    s.location == 'Âmbito nacional' ||
+                                    s.location.toLowerCase().contains(
+                                      effectiveLocation.toLowerCase(),
+                                    ),
+                              )
+                              .toList(),
+                          orElse: () => null,
+                        );
+                    int? countFor(PartnerCategoryOption? o) => everyone
+                        ?.where(
+                          (p) => o == null || p.categorySlugs.contains(o.slug),
+                        )
+                        .length;
                     return FilterChipsRow(
                       items: [
                         for (final o in all)
                           FilterBarItem(
                             o?.label ?? 'Todos',
+                            count: countFor(o),
                             icon: o == null
                                 ? Icons.apps_rounded
                                 : iconForCategorySlug(o.slug),

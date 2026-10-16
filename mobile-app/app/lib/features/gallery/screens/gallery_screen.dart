@@ -195,6 +195,11 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
             ? photos.where((p) => p.status == 'pending').toList()
             : const <GalleryPhoto>[];
         var approved = photos.where((p) => p.status == 'approved').toList();
+        final counts = [
+          approved.length,
+          approved.where((p) => p.uploadedBy == widget.currentUserId).length,
+          approved.where((p) => _favorites.contains(p.id)).length,
+        ];
         if (_tab == _GalleryTab.mine) {
           approved = approved.where((p) => p.uploadedBy == widget.currentUserId).toList();
         } else if (_tab == _GalleryTab.favorites) {
@@ -320,10 +325,10 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
           ],
         );
         final filters = FilterChipsRow(
-          items: const [
-            FilterBarItem('Todas'),
-            FilterBarItem('As tuas'),
-            FilterBarItem('Favoritas'),
+          items: [
+            FilterBarItem('Todas', count: counts[0]),
+            FilterBarItem('As tuas', count: counts[1]),
+            FilterBarItem('Favoritas', count: counts[2]),
           ],
           selected: tabs.indexOf(_tab),
           onSelected: (i) => setState(() => _tab = tabs[i]),

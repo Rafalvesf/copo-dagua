@@ -146,7 +146,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                       FilterBarItem('Todas', count: total),
                       FilterBarItem('Pagas', count: paid.length),
                       FilterBarItem('Pendentes', count: pending.length),
-                      const FilterBarItem('Categorias'),
+                      FilterBarItem('Categorias', count: budget.categories.length),
                     ],
                     selected: const [
                       _BudgetFilter.all,

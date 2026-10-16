@@ -22,7 +22,7 @@ class FilterBarItem {
 ///   filtros em cima e separadores em baixo.
 /// - Em ecrãs sem navbar (Orçamento, Convidados), usa-se
 ///   [FloatingFilterBar], a mesma ilha verde só com os filtros.
-class FilterChipsRow extends StatelessWidget {
+class FilterChipsRow extends StatefulWidget {
   final List<FilterBarItem> items;
   final int selected;
   final ValueChanged<int> onSelected;
@@ -34,23 +34,85 @@ class FilterChipsRow extends StatelessWidget {
     required this.onSelected,
   });
 
-  /// Altura da linha de filtros (6 + 40 + 6).
+  /// Altura da linha de filtros — os botões ocupam-na toda ("fill total").
   static const double height = 52;
+
+  @override
+  State<FilterChipsRow> createState() => _FilterChipsRowState();
+}
+
+/// Carrossel (pedido do utilizador: "os filtros tem que ser em
+/// carrossel"): ocupa a largura toda da ilha e o filtro escolhido desliza
+/// sempre para o centro.
+class _FilterChipsRowState extends State<FilterChipsRow> {
+  final _controller = ScrollController();
+  late List<GlobalKey> _keys;
+
+  @override
+  void initState() {
+    super.initState();
+    _keys = List.generate(widget.items.length, (_) => GlobalKey());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _center(animate: false));
+  }
+
+  @override
+  void didUpdateWidget(covariant FilterChipsRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.items.length != widget.items.length) {
+      _keys = List.generate(widget.items.length, (_) => GlobalKey());
+    }
+    if (oldWidget.selected != widget.selected ||
+        oldWidget.items.length != widget.items.length) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _center());
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _center({bool animate = true}) {
+    if (!mounted) return;
+    final index = widget.selected;
+    if (index < 0 || index >= _keys.length) return;
+    final ctx = _keys[index].currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      alignment: 0.5,
+      duration: animate ? const Duration(milliseconds: 320) : Duration.zero,
+      curve: Curves.easeOutCubic,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: height,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-        itemCount: items.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 4),
-        itemBuilder: (context, index) => _FilterBarChip(
-          item: items[index],
-          selected: index == selected,
-          onTap: () => onSelected(index),
-        ),
+      height: FilterChipsRow.height,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Margem lateral de meia largura menos um botão médio, para o
+          // primeiro e o último filtro também conseguirem ficar ao centro.
+          final side = (constraints.maxWidth / 2 - 60).clamp(0.0, 400.0);
+          return SingleChildScrollView(
+            controller: _controller,
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: side),
+            child: Row(
+              children: [
+                for (var i = 0; i < widget.items.length; i++)
+                  _FilterBarChip(
+                    key: _keys[i],
+                    item: widget.items[i],
+                    selected: i == widget.selected,
+                    onTap: () => widget.onSelected(i),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -108,6 +170,7 @@ class _FilterBarChip extends StatelessWidget {
   final VoidCallback onTap;
 
   const _FilterBarChip({
+    super.key,
     required this.item,
     required this.selected,
     required this.onTap,
@@ -128,10 +191,10 @@ class _FilterBarChip extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
-          height: 40,
+          height: FilterChipsRow.height,
           padding: EdgeInsets.only(
-            left: 14,
-            right: item.count == null ? 14 : 6,
+            left: 18,
+            right: item.count == null ? 18 : 10,
           ),
           decoration: BoxDecoration(
             color: selected ? Colors.white : Colors.transparent,
