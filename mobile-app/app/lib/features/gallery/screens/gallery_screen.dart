@@ -12,7 +12,6 @@ import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
-import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 
 enum _GalleryTab { all, mine, favorites }
@@ -70,6 +69,11 @@ class GalleryScreen extends ConsumerWidget {
                   // Sem seta de voltar sempre que há navbar (casal ou
                   // convidado) — mesma convenção dos outros ecrãs raiz.
                   showBack: !(showNav || showGuestNav),
+                  // Redesign 2026-10: "+" para carregar fotos, no mesmo
+                  // sítio que nos outros ecrãs (antes era um cartão rosa).
+                  trailing: AddActionButton(
+                    onTap: () => _upload(context, ref, resolvedWeddingId),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Expanded(
@@ -169,6 +173,7 @@ class _GalleryBody extends ConsumerStatefulWidget {
 class _GalleryBodyState extends ConsumerState<_GalleryBody> {
   _GalleryTab _tab = _GalleryTab.all;
   final Set<String> _favorites = {};
+  bool _showPending = false;
 
   @override
   Widget build(BuildContext context) {
@@ -214,65 +219,54 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
             FloatingFilterBar.bottomPadding(aboveNav: widget.aboveNav),
           ),
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.pink,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                        child: const Icon(Icons.camera_alt_outlined, size: 18, color: AppTheme.ink),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Ajuda-nos a guardar estes momentos! Carrega aqui as tuas fotos do casamento.',
-                          style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink),
+            if (pending.isNotEmpty) ...[
+              // Aviso amarelo (canvas): quantas fotos esperam aprovação;
+              // "Rever" abre a lista para aprovar ou recusar.
+              Container(
+                padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFCEFD6),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: AppStatusColors.pending),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.schedule_rounded, size: 18, color: Color(0xFF7A5000)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        pending.length == 1
+                            ? '1 foto de convidados à espera da vossa aprovação.'
+                            : '${pending.length} fotos de convidados à espera da vossa aprovação.',
+                        style: const TextStyle(
+                          fontSize: AppFontSize.md,
+                          color: Color(0xFF7A5000),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  SnappyTap(
-                    onTap: () => GalleryScreen._upload(context, ref, widget.weddingId),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppTheme.accentOliveDark,
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                      ),
-                      child: const Text(
-                        'Adicionar fotos',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
-                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            if (pending.isNotEmpty) ...[
-              Text(
-                'Pendentes de aprovação (${pending.length})',
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
-              ),
-              const SizedBox(height: 10),
-              for (final photo in pending)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _PendingPhotoCard(photo: photo, weddingId: widget.weddingId),
+                    TextButton(
+                      onPressed: () => setState(() => _showPending = !_showPending),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF7A5000),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                      child: Text(_showPending ? 'Fechar' : 'Rever'),
+                    ),
+                  ],
                 ),
-              const SizedBox(height: 20),
+              ),
+              const SizedBox(height: 12),
+              if (_showPending) ...[
+                for (final photo in pending)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _PendingPhotoCard(photo: photo, weddingId: widget.weddingId),
+                  ),
+              ],
+              const SizedBox(height: 8),
             ],
             if (approved.isEmpty)
               const Padding(
@@ -280,20 +274,22 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                 child: Center(child: Text('Ainda sem fotos aqui.')),
               )
             else
-              GridView.builder(
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 4,
+                  mainAxisSpacing: 4,
                 ),
                 itemCount: approved.length,
                 itemBuilder: (context, index) {
                   final photo = approved[index];
                   final favorited = _favorites.contains(photo.id);
                   return ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -316,6 +312,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                     ),
                   );
                 },
+              ),
               ),
           ],
         );
