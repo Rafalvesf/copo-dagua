@@ -422,34 +422,10 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   }
 
   Future<void> _openDetails(BuildContext context, Partner partner) async {
-    final chosen = await Navigator.of(context).push<Partner>(
-      PageRouteBuilder<Partner>(
-        opaque: false,
-        barrierColor: Colors.black45,
-        transitionDuration: const Duration(milliseconds: 280),
-        pageBuilder: (context, animation, secondaryAnimation) => Padding(
-          padding: const EdgeInsets.only(top: 40),
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-            child: PartnerDetailScreen(
-              partner: partner,
-              selectionMode: widget.selectionMode,
-            ),
-          ),
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-                .animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutCubic,
-                  ),
-                ),
-            child: child,
-          );
-        },
-      ),
+    final chosen = await PartnerDetailScreen.show(
+      context,
+      partner,
+      selectionMode: widget.selectionMode,
     );
     if (chosen != null && context.mounted) {
       Navigator.of(context).pop(chosen);
@@ -724,29 +700,7 @@ class _FavoritesSheet extends ConsumerWidget {
                             _PartnerCard(
                               partner: partner,
                               onTap: () async {
-                                await Navigator.of(context).push(
-                                  PageRouteBuilder(
-                                    opaque: false,
-                                    barrierColor: Colors.black45,
-                                    transitionDuration: const Duration(milliseconds: 280),
-                                    pageBuilder: (context, animation, secondaryAnimation) => Padding(
-                                      padding: const EdgeInsets.only(top: 40),
-                                      child: ClipRRect(
-                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-                                        child: PartnerDetailScreen(partner: partner),
-                                      ),
-                                    ),
-                                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                      return SlideTransition(
-                                        position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-                                            .animate(
-                                              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-                                            ),
-                                        child: child,
-                                      );
-                                    },
-                                  ),
-                                );
+                                await PartnerDetailScreen.show(context, partner);
                               },
                             ),
                             const SizedBox(height: 16),
