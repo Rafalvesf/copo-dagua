@@ -15,6 +15,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
+import '../../../core/wedding/guest_facing.dart';
 
 /// Ecrã de catch-all para tudo o que os mockups do redesign não
 /// mostram diretamente — o formulário de edição do casamento, o
@@ -232,6 +233,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           },
                         ),
                         const SizedBox(height: 32),
+                        _GuestFacingSection(weddingId: wedding.id),
+                        const SizedBox(height: 32),
                         Text(
                           'Conta',
                           style: Theme.of(context).textTheme.titleMedium,
@@ -374,6 +377,114 @@ class _MoreNavIconTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: const Icon(Icons.add, color: AppTheme.inkMuted, size: 28),
+    );
+  }
+}
+
+
+/// "Para os convidados" — hora da cerimónia, mensagem de boas-vindas e
+/// presentes (lista/IBAN). Até aqui os convidados tinham estes campos no
+/// ecrã deles mas o casal não tinha onde os preencher.
+class _GuestFacingSection extends StatefulWidget {
+  final String weddingId;
+
+  const _GuestFacingSection({required this.weddingId});
+
+  @override
+  State<_GuestFacingSection> createState() => _GuestFacingSectionState();
+}
+
+class _GuestFacingSectionState extends State<_GuestFacingSection> {
+  final _time = TextEditingController();
+  final _welcome = TextEditingController();
+  final _giftUrl = TextEditingController();
+  final _iban = TextEditingController();
+  final _giftMessage = TextEditingController();
+  bool _loading = true;
+  bool _saving = false;
+  bool _giftsAvailable = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final info = await loadGuestFacingInfo(widget.weddingId);
+      _time.text = info.ceremonyTime ?? '';
+      _welcome.text = info.welcomeMessage ?? '';
+      _giftUrl.text = info.giftListUrl ?? '';
+      _iban.text = info.giftIban ?? '';
+      _giftMessage.text = info.giftMessage ?? '';
+      _giftsAvailable = info.giftsAvailable;
+    } catch (_) {
+      // Fica com os campos vazios; guardar continua possível.
+    }
+    if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    String message = 'Guardado. Os convidados já veem as alterações.';
+    try {
+      await saveGuestFacingInfo(
+        widget.weddingId,
+        GuestFacingInfo(
+          ceremonyTime: _time.text,
+          welcomeMessage: _welcome.text,
+          giftListUrl: _giftUrl.text,
+          giftIban: _iban.text,
+          giftMessage: _giftMessage.text,
+          giftsAvailable: _giftsAvailable,
+        ),
+      );
+    } catch (_) {
+      message = 'Não foi possível guardar. Tenta outra vez.';
+    }
+    if (!mounted) return;
+    setState(() => _saving = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  void dispose() {
+    _time.dispose();
+    _welcome.dispose();
+    _giftUrl.dispose();
+    _iban.dispose();
+    _giftMessage.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) return const SizedBox(height: 40);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Para os convidados', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 4),
+        Text(
+          'Aparece no ecrã dos convidados (Detalhes e Presentes).',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 12),
+        AuthTextField(label: 'Hora da cerimónia (ex: 16:00)', controller: _time),
+        const SizedBox(height: 12),
+        AuthTextField(label: 'Mensagem de boas-vindas', controller: _welcome),
+        if (_giftsAvailable) ...[
+          const SizedBox(height: 12),
+          AuthTextField(label: 'Link da lista de presentes', controller: _giftUrl),
+          const SizedBox(height: 12),
+          AuthTextField(label: 'IBAN para contribuições', controller: _iban),
+          const SizedBox(height: 12),
+          AuthTextField(label: 'Mensagem nos presentes', controller: _giftMessage),
+        ],
+        const SizedBox(height: 20),
+        PrimaryButton(label: 'Guardar para os convidados', loading: _saving, onPressed: _save),
+      ],
     );
   }
 }

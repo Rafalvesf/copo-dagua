@@ -13,6 +13,7 @@ import '../../../shared/widgets/guest_widgets.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/rsvp_status_badge.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/public_link.dart';
 
 String _formatHistoryDate(DateTime dt) {
   final local = dt.toLocal();
@@ -58,7 +59,7 @@ class _GuestDetailHeader extends ConsumerWidget {
   const _GuestDetailHeader({required this.guest});
 
   Future<void> _copyInviteLink(BuildContext context) async {
-    final link = '${Uri.base.origin}/rsvp/${guest.rsvpToken}';
+    final link = publicLink('/rsvp/${guest.rsvpToken}');
     await Clipboard.setData(ClipboardData(text: link));
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -352,12 +353,19 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
                     );
                   },
                 ),
+              // Menu e restrições vêm do próprio convidado (antes mostrava
+              // sempre "Menu normal" quando não havia restrições).
               _InfoRow(
                 icon: Icons.restaurant_outlined,
-                label: guest.dietaryRestrictions?.isNotEmpty == true
-                    ? guest.dietaryRestrictions!
-                    : 'Menu normal',
+                label: guest.menuSelection?.isNotEmpty == true
+                    ? 'Menu: ${guest.menuSelection}'
+                    : 'Menu por escolher',
               ),
+              if (guest.dietaryRestrictions?.isNotEmpty == true)
+                _InfoRow(
+                  icon: Icons.no_food_outlined,
+                  label: guest.dietaryRestrictions!,
+                ),
               _InfoRow(
                 icon: Icons.edit_note_outlined,
                 label: 'Notas',

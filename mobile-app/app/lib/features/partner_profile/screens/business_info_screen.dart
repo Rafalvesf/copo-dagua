@@ -97,10 +97,17 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
     setState(() => _profile = ref.read(authControllerProvider).profile!);
   }
 
-  void _comingSoon() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Em breve.')));
+  Future<void> _editTravelDistance() async {
+    await _editField(
+      label: 'Distância máxima (km)',
+      value: _profile.maxTravelDistanceKm?.toString() ?? '',
+      onSaved: (v) {
+        final km = int.tryParse(v.replaceAll(RegExp(r'[^0-9]'), ''));
+        if (km != null && km > 0 && km <= 2000) {
+          _profile = _profile.copyWith(maxTravelDistanceKm: km);
+        }
+      },
+    );
   }
 
   Future<void> _save() async {
@@ -116,6 +123,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
           contactEmail: _profile.contactEmail,
           acceptingRequests: _profile.acceptingRequests,
           travelsForEvents: _profile.travelsForEvents,
+          maxTravelDistanceKm: _profile.maxTravelDistanceKm,
         );
     if (!mounted) return;
     setState(() => _saving = false);
@@ -377,7 +385,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                             ? '—'
                             : '${_profile.maxTravelDistanceKm} km',
                         isLast: true,
-                        onTap: _comingSoon,
+                        onTap: _editTravelDistance,
                       ),
                     ],
                   ),

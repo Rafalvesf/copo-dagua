@@ -93,6 +93,36 @@ class BudgetController extends Notifier<BudgetState> {
     );
   }
 
+  /// Verba de uma categoria (`budget_categories.allocated`), pela
+  /// folha de detalhe da categoria em Orçamento.
+  Future<void> updateAllocated(String categoryName, double allocated) async {
+    final weddingId = currentWeddingId;
+    final current = state.budget;
+    if (weddingId == null || current == null) return;
+    await supabase
+        .from('budget_categories')
+        .update({'allocated': allocated})
+        .eq('wedding_id', weddingId)
+        .eq('name', categoryName);
+    state = state.copyWith(
+      budget: Budget(
+        weddingId: weddingId,
+        total: current.total,
+        categories: [
+          for (final c in current.categories)
+            c.name == categoryName
+                ? BudgetCategory(
+                    name: c.name,
+                    amount: c.amount,
+                    partnerCategory: c.partnerCategory,
+                    allocated: allocated,
+                  )
+                : c,
+        ],
+      ),
+    );
+  }
+
   Future<void> updateTotal(double total) async {
     final weddingId = currentWeddingId;
     if (weddingId == null) return;

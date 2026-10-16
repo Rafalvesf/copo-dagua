@@ -36,7 +36,6 @@ import '../features/partner_bookings/screens/booking_detail_screen.dart';
 import '../features/partner_bookings/screens/partner_bookings_screen.dart';
 import '../features/partner_bookings/screens/send_proposal_screen.dart';
 import '../features/partner_calendar/screens/partner_calendar_screen.dart';
-import '../features/partner_home/screens/partner_chat_screen.dart';
 import '../features/partner_home/screens/partner_home_screen.dart';
 import '../features/partner_messages/screens/partner_chat_thread_screen.dart';
 import '../features/partner_messages/screens/partner_messages_screen.dart';
@@ -279,8 +278,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PartnerContractsScreen(),
       ),
       GoRoute(
+        // Chat antigo de demonstração (MockBackend) — removido; o link
+        // antigo leva às Mensagens reais.
         path: '/partner-chat',
-        builder: (context, state) => const PartnerChatScreen(),
+        redirect: (context, state) => '/partner-messages',
       ),
       GoRoute(
         path: '/partner-welcome',

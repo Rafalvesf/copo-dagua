@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../auth/auth_controller.dart';
 import '../guests/guest_controller.dart' show guestFromRow;
@@ -14,14 +15,21 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
   final userId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
   if (userId == null) return const [];
 
-  final rows = await supabase
-      .from('wedding_guest_members')
-      .select(
-        'wedding_id, weddings(partner_name_1, partner_name_2, wedding_date, venue, location, '
-        'quote, cover_photo_url, ceremony_time, welcome_message, theme_colors, updated_at)',
-      )
-      .eq('guest_id', userId)
-      .order('joined_at', ascending: false);
+  const baseColumns = 'partner_name_1, partner_name_2, wedding_date, venue, location, '
+      'quote, cover_photo_url, ceremony_time, welcome_message, theme_colors, updated_at';
+  Future<List<Map<String, dynamic>>> query(String columns) async => (await supabase
+          .from('wedding_guest_members')
+          .select('wedding_id, weddings($columns)')
+          .eq('guest_id', userId)
+          .order('joined_at', ascending: false))
+      .cast<Map<String, dynamic>>();
+  List<Map<String, dynamic>> rows;
+  try {
+    rows = await query('$baseColumns, gift_list_url, gift_iban, gift_message');
+  } on PostgrestException {
+    // Migração 075 ainda por correr — sem as colunas de presentes.
+    rows = await query(baseColumns);
+  }
 
   return rows.map<GuestWedding>((row) {
     final wedding = row['weddings'] as Map<String, dynamic>?;
@@ -40,6 +48,9 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
       welcomeMessage: wedding?['welcome_message'] as String?,
       themeColors: (wedding?['theme_colors'] as List?)?.cast<String>() ?? const [],
       updatedAt: updatedAt == null ? null : DateTime.parse(updatedAt),
+      giftListUrl: wedding?['gift_list_url'] as String?,
+      giftIban: wedding?['gift_iban'] as String?,
+      giftMessage: wedding?['gift_message'] as String?,
     );
   }).toList();
 });
@@ -90,6 +101,12 @@ Future<void> updateOwnGuestInfo({
       'p_plus_one_name': plusOneName,
     },
   );
+}
+
+/// Menu escolhido pelo próprio convidado (`update_own_guest_menu()`,
+/// `075_connect_remaining.sql`).
+Future<void> updateOwnGuestMenu(String? menu) async {
+  await supabase.rpc('update_own_guest_menu', params: {'p_menu_selection': menu});
 }
 
 /// Uma linha de `get_my_table_roster()` (`068_guest_table_roster.sql`) —

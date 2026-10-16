@@ -349,8 +349,14 @@ class _CategoryRow extends StatelessWidget {
         : iconForPartnerCategory(category.base.partnerCategory!);
 
     return SnappyTap(
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Detalhe da categoria em breve.')),
+      onTap: () => showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        ),
+        builder: (_) => _CategorySheet(category: category.base),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -691,6 +697,166 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
               );
             },
           ),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// Detalhe de uma categoria do orçamento — verba, gasto e as despesas
+/// dessa categoria (marcar como paga). Antes mostrava "em breve".
+class _CategorySheet extends ConsumerWidget {
+  final BudgetCategory category;
+
+  const _CategorySheet({required this.category});
+
+  Future<void> _editAllocated(BuildContext context, WidgetRef ref, double current) async {
+    final controller = TextEditingController(
+      text: current == 0 ? '' : current.toStringAsFixed(0),
+    );
+    final result = await showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Verba para ${category.name}'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(suffixText: '€'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(
+              double.tryParse(controller.text.trim().replaceAll(' ', '').replaceAll(',', '.')),
+            ),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (result == null || result < 0) return;
+    try {
+      await ref.read(budgetControllerProvider.notifier).updateAllocated(category.name, result);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível guardar a verba.')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final live = ref.watch(budgetControllerProvider).budget?.categories
+            .where((c) => c.name == category.name)
+            .firstOrNull ??
+        category;
+    final expenses = ref
+        .watch(expenseControllerProvider)
+        .expenses
+        .where((e) => e.category == category.partnerCategory)
+        .toList()
+      ..sort((a, b) => (a.dueDate ?? DateTime(2100)).compareTo(b.dueDate ?? DateTime(2100)));
+
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.borderMuted,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(live.name, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(child: _SheetStat(label: 'Gasto', value: euros(live.amount))),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: SnappyTap(
+                    onTap: () => _editAllocated(context, ref, live.allocated),
+                    child: _SheetStat(
+                      label: 'Verba · tocar para mudar',
+                      value: live.allocated == 0 ? 'Definir' : euros(live.allocated),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text('Despesas', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            if (expenses.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  'Ainda não há despesas nesta categoria.',
+                  style: TextStyle(color: AppTheme.inkMuted),
+                ),
+              )
+            else
+              for (final e in expenses)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(e.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  subtitle: e.dueDate == null
+                      ? null
+                      : Text(
+                          'Até ${e.dueDate!.day.toString().padLeft(2, '0')}/${e.dueDate!.month.toString().padLeft(2, '0')}/${e.dueDate!.year}',
+                        ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(euros(e.amount), style: const TextStyle(fontWeight: FontWeight.w800)),
+                      const SizedBox(width: 8),
+                      Checkbox(
+                        value: e.paid,
+                        activeColor: AppTheme.accentOliveDark,
+                        onChanged: (_) => ref.read(expenseControllerProvider.notifier).togglePaid(e.id),
+                      ),
+                    ],
+                  ),
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SheetStat extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _SheetStat({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm)),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.lg)),
         ],
       ),
     );
