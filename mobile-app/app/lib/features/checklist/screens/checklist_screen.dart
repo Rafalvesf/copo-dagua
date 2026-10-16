@@ -12,7 +12,6 @@ import '../../../shared/widgets/assignee_cluster.dart';
 import '../../partners/partner_style.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
-import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -128,7 +127,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                             AppTheme.screenMargin,
                             20,
                             AppTheme.screenMargin,
-                            FloatingFilterBar.bottomPadding(aboveNav: true),
+                            FloatingFilterBar.bottomPadding(aboveNav: false),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,7 +183,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.wedding, top: FilterChipsRow(
+                  child: FloatingFilterBar(
                     items: [
                       FilterBarItem('Todas'),
                       FilterBarItem('Por fazer'),
@@ -194,7 +193,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
                     selected: _StatusFilter.values.indexOf(_filter),
                     onSelected: (i) =>
                         setState(() => _filter = _StatusFilter.values[i]),
-                  )),
+                  ),
                 ),
               ],
             ),
