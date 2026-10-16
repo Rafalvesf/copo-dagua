@@ -37463,11 +37463,11 @@ case 3:return B.lm
 case 4:return B.j7}},
 bsa(a){return B.a_v[B.j.bn(Math.abs(B.c.gB(a)),6)]},
 dy(a,b){var s,r,q,p=Math.abs(a),o=b?B.e.eD(p):B.e.aB(p),n=B.j.j(o),m=new A.da("")
-for(s=n.length,r=0,q="";r<s;++r){if(r>0&&B.j.bn(s-r,3)===0)q=m.a=q+" "
+for(s=n.length,r=0,q="";r<s;++r){if(r>0&&B.j.bn(s-r,3)===0)q=m.a=q+"\xa0"
 q+=n[r]
 m.a=q}if(b){s=","+B.c.bB(B.j.j(B.j.dk(B.e.aB((p-o)*100),0,99)),2,"0")
 m.a+=s}s=a<0?"-":""
-return s+m.j(0)+" \u20ac"},
+return s+m.j(0)+"\xa0\u20ac"},
 by3(a){return B.jP},
 bgr(a){v.G.console.error(a)
 A.bzl(a)},
