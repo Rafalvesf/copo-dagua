@@ -15,6 +15,7 @@ import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/money.dart';
 
 enum _BudgetFilter { all, paid, pending }
 
@@ -172,7 +173,7 @@ class _SummaryCard extends StatelessWidget {
 
   const _SummaryCard({required this.budget});
 
-  String _fmt(double v) => '${v.toStringAsFixed(0)}€';
+  String _fmt(double v) => euros(v);
 
   @override
   Widget build(BuildContext context) {
@@ -425,7 +426,7 @@ class _CategoryRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${allocated.toStringAsFixed(0)}€',
+                  euros(allocated),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: AppFontSize.md,
@@ -433,7 +434,7 @@ class _CategoryRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${category.amount.toStringAsFixed(0)}€',
+                  euros(category.amount),
                   style: const TextStyle(
                     color: AppTheme.inkMuted,
                     fontSize: AppFontSize.xs,
@@ -587,7 +588,7 @@ class _ExpenseRow extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Text(
-              '${expense.amount.toStringAsFixed(0)}€',
+              euros(expense.amount),
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: AppFontSize.md,

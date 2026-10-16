@@ -10,6 +10,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_bookings/widgets/request_row.dart';
+import '../../../shared/money.dart';
 
 /// Área do parceiro (fornecedor) — versão mínima. Os módulos reais
 /// (Quotations, Bookings, Calendar, Profile, Contracts, Payouts) estão
@@ -50,8 +51,13 @@ class PartnerHomeScreen extends ConsumerWidget {
                   height: 46,
                   child: Row(
                     children: [
+                      // `Expanded` + `Align` em vez de `Flexible` + `Spacer`: os
+                      // dois dividiam a largura a meias e cortavam o nome do
+                      // negócio a ~14 letras com espaço livre ao lado.
                       if (business != null && business.isNotEmpty)
-                        Flexible(
+                        Expanded(
+                          child: Align(
+                          alignment: Alignment.centerLeft,
                           child: Container(
                             height: 32,
                             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -79,8 +85,12 @@ class PartnerHomeScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
+                          ),
                         ),
-                      const Spacer(),
+                      if (business != null && business.isNotEmpty)
+                        const SizedBox(width: 12)
+                      else
+                        const Spacer(),
                       PopupMenuButton<String>(
                         tooltip: 'Mais opções',
                         onSelected: (value) {
@@ -185,7 +195,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.accentOliveDark,
                         padding: EdgeInsets.zero,
-                        textStyle: const TextStyle(
+                        textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                           fontSize: AppFontSize.md,
                           fontWeight: FontWeight.w700,
                         ),
@@ -278,7 +288,7 @@ class _PartnerDashboardSummary extends ConsumerWidget {
                 child: _MetricCard(
                 label: 'Vendas este mês',
                 value: statsAsync.maybeWhen(
-                  data: (s) => '${s.revenue.toStringAsFixed(0)} €',
+                  data: (s) => euros(s.revenue),
                   orElse: () => '—',
                 ),
                 color: AppColors.green,

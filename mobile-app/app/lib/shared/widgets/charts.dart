@@ -270,7 +270,12 @@ class _LineAreaPainter extends CustomPainter {
     final tp = TextPainter(
       text: TextSpan(
         text: s,
-        style: const TextStyle(fontSize: 10, color: AppTheme.inkMuted),
+        style: const TextStyle(
+          fontFamily: AppTheme.fontFamily,
+          fontFamilyFallback: AppTheme.fontFamilyFallback,
+          fontSize: 10,
+          color: AppTheme.inkMuted,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();

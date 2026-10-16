@@ -126,6 +126,7 @@ final _guests = [
       rsvpStatus: g.$3,
       plusOneAllowed: i.isEven,
       createdAt: _days(-30 + i),
+      onboardingCompletedAt: _days(-3),
     ),
 ];
 
@@ -236,7 +237,7 @@ final _conversations = [
 ];
 
 final _messages = [
-  ChatMessage(id: 'm1', conversationId: 'cv1', fromPartner: false, isQuoteRequestNotice: true, sentAt: _days(-2)),
+  ChatMessage(id: 'm1', conversationId: 'cv1', fromPartner: false, isQuoteRequestNotice: true, text: 'Pediu um orçamento para Quinta do Lago Azul. 18/05/2027 · 120 convidados', sentAt: _days(-2)),
   ChatMessage(id: 'm2', conversationId: 'cv1', fromPartner: false, text: 'Olá! Ainda têm disponibilidade para maio?', sentAt: _days(-2)),
   ChatMessage(id: 'm3', conversationId: 'cv1', fromPartner: true, text: 'Olá Sofia! Temos disponibilidade para essa data!', sentAt: _days(-1)),
   ChatMessage(id: 'm4', conversationId: 'cv1', fromPartner: true, proposalId: 'pr1', proposalTitle: 'Pacote Jardim', proposalPrice: 8500, proposalDepositAmount: 2550, sentAt: _days(0)),
@@ -535,6 +536,8 @@ Future<void> _shoot(
     await tester.pump(const Duration(milliseconds: 50));
     final context = tester.element(find.byType(Navigator).first);
     GoRouter.of(context).go(location, extra: extra);
+    // Deixa terminar o carregamento real de imagens locais (assets).
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 400)));
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 120));
     }

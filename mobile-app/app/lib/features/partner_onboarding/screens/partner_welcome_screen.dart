@@ -17,6 +17,7 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/progress.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/money.dart';
 
 /// Primeiro ecrã visto por uma conta de parceiro recém-registada.
 ///
@@ -690,7 +691,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              '${pkg.name}  ${pkg.isStartingPrice ? "A partir de " : ""}€${pkg.price.toStringAsFixed(0)}',
+                              '${pkg.name}  ${pkg.isStartingPrice ? "A partir de " : ""}${euros(pkg.price)}',
                               style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink),
                             ),
                           ),

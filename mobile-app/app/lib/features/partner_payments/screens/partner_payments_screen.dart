@@ -6,6 +6,7 @@ import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/money.dart';
 
 /// Ativação de pagamentos via Stripe Connect (Express) — ver
 /// `mobile-app/payments/stripe-connect.md`. Só o parceiro consegue abrir
@@ -283,15 +284,7 @@ class _BalanceCard extends ConsumerWidget {
   }
 }
 
-String _eur(double v) {
-  final s = v.toStringAsFixed(0);
-  final buf = StringBuffer();
-  for (var i = 0; i < s.length; i++) {
-    if (i > 0 && (s.length - i) % 3 == 0) buf.write(' ');
-    buf.write(s[i]);
-  }
-  return '$buf €';
-}
+String _eur(double v) => euros(v);
 
 class _BalanceTile extends StatelessWidget {
   final String label;
@@ -409,7 +402,7 @@ class _BigButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          textStyle: const TextStyle(
+          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
             fontSize: AppFontSize.lg,
             fontWeight: FontWeight.w700,
           ),

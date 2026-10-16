@@ -314,7 +314,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                             style: TextButton.styleFrom(
                               foregroundColor: AppStatusColors.declined,
                               padding: EdgeInsets.zero,
-                              textStyle: const TextStyle(
+                              textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                                 fontSize: AppFontSize.base + 1,
                                 fontWeight: FontWeight.w700,
                               ),

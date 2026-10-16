@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
@@ -37,28 +36,9 @@ class SupportScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.screenMargin,
-                20,
-                AppTheme.screenMargin,
-                0,
-              ),
-              child: Row(
-                children: [
-                  CircleIconButton(
-                    icon: Icons.arrow_back_rounded,
-                    size: 46,
-                    onTap: () => Navigator.of(context).canPop()
-                        ? Navigator.of(context).pop()
-                        : context.go('/home'),
-                  ),
-                  const Spacer(),
-                  Text('Falar com a equipa', style: Theme.of(context).textTheme.titleLarge),
-                  const Spacer(),
-                  const SizedBox(width: 46),
-                ],
-              ),
+            const PageHeader(
+              title: 'Falar com a equipa',
+              subtitle: 'Os vossos pedidos de ajuda.',
             ),
             const SizedBox(height: 16),
             Expanded(

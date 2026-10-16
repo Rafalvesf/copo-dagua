@@ -14,6 +14,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/money.dart';
 
 /// Reservas do lado do casal — lê `coupleBookingsProvider`
 /// (`core/home/home_providers.dart`), mesmos dados mock que alimentam
@@ -269,7 +270,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '$dateLabel · ${booking.amount.toStringAsFixed(0)} €',
+                        '$dateLabel · ${euros(booking.amount)}',
                         style: const TextStyle(
                           color: AppTheme.inkMuted,
                           fontSize: AppFontSize.sm,
@@ -314,7 +315,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                   child: Text(
                     _launchingCheckout
                         ? 'A abrir pagamento...'
-                        : 'Pagar sinal — ${amountWithCommission(booking.depositAmount ?? 0, commissionPct).toStringAsFixed(2)} €',
+                        : 'Pagar sinal — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}',
                   ),
                 ),
               ),
@@ -338,7 +339,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                   child: Text(
                     _launchingCheckout
                         ? 'A abrir pagamento...'
-                        : 'Pagar restante — ${amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct).toStringAsFixed(2)} €',
+                        : 'Pagar restante — ${euros(amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct), cents: true)}',
                   ),
                 ),
               ),
@@ -468,7 +469,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
           Text(
             [
               if (dateLabel != null) dateLabel,
-              '${proposal.price.toStringAsFixed(0)} € · sinal ${proposal.depositAmount.toStringAsFixed(0)} €',
+              '${euros(proposal.price)} · sinal ${euros(proposal.depositAmount)}',
             ].join(' · '),
             style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
           ),

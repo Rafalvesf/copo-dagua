@@ -11,6 +11,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../partners/screens/partner_detail_screen.dart';
+import '../../../shared/money.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
 /// e contactos do cortejo partilham este mesmo ecrã (ver
@@ -342,7 +343,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
             ),
             const SizedBox(height: 2),
             Text(
-              '${message.proposalPrice?.toStringAsFixed(0)} € · sinal ${message.proposalDepositAmount?.toStringAsFixed(0)} €',
+              '${euros(message.proposalPrice ?? 0)} · sinal ${euros(message.proposalDepositAmount ?? 0)}',
               style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
             ),
             const SizedBox(height: 10),

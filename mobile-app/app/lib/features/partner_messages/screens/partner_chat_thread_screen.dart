@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/money.dart';
 
 /// Fio de conversa com um cliente específico das Mensagens — versão
 /// parametrizada de `PartnerChatScreen` (que fica hardcoded a uma única
@@ -235,7 +236,7 @@ class _ProposalCard extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              '${message.proposalPrice?.toStringAsFixed(0)} € · sinal ${message.proposalDepositAmount?.toStringAsFixed(0)} €',
+              '${euros(message.proposalPrice ?? 0)} · sinal ${euros(message.proposalDepositAmount ?? 0)}',
               style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
             ),
           ],

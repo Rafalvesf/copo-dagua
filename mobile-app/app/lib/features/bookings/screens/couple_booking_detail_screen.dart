@@ -7,6 +7,7 @@ import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../partner_bookings/booking_style.dart' show bookingStatusColor;
 import 'couple_bookings_screen.dart' show ReviewAction;
+import '../../../shared/money.dart';
 
 /// Detalhes de uma reserva já confirmada/concluída — antes disto, tocar
 /// numa reserva em `couple_bookings_screen.dart` só mostrava "em
@@ -73,7 +74,7 @@ class CoupleBookingDetailScreen extends StatelessWidget {
                         const SizedBox(height: 10),
                         _InfoRow(
                           label: 'Valor total',
-                          value: '${booking.amount.toStringAsFixed(0)} €',
+                          value: euros(booking.amount),
                         ),
                         const SizedBox(height: 10),
                         _InfoRow(

@@ -13,6 +13,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/money.dart';
 
 /// Proposta formal em resposta a um pedido de orçamento — chama
 /// `send_proposal()` (`database/migrations/009_quotations_bookings.sql`),
@@ -258,7 +259,7 @@ class _DepositPreview extends ConsumerWidget {
               ),
               const Spacer(),
               Text(
-                deposit == null ? '—' : '${deposit.toStringAsFixed(2)} €',
+                deposit == null ? '—' : euros(deposit, cents: true),
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
               ),
             ],

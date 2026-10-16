@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../supabase/supabase_config.dart';
 import '../wedding/wedding_controller.dart';
 import 'task_models.dart';
+import '../../shared/money.dart';
 
 /// Máximo de tarefas `SYSTEM` visíveis em simultâneo (RN33/59 do
 /// pedido do utilizador) — tarefas `USER` não contam para este limite.
@@ -395,8 +396,8 @@ class TaskEngineController extends Notifier<TaskEngineState> {
                 'source_entity_id': paymentId,
                 'title': 'Pagar $typeLabel — $partnerName',
                 'description': dueAt == null
-                    ? '€${(p['amount'] as num).toStringAsFixed(2)} pendente.'
-                    : '€${(p['amount'] as num).toStringAsFixed(2)} até ${_formatDate(dueAt)}.',
+                    ? '${euros(p['amount'] as num, cents: true)} pendente.'
+                    : '${euros(p['amount'] as num, cents: true)} até ${_formatDate(dueAt)}.',
                 'category': 'pagamentos',
                 'priority': urgent ? 'urgent' : 'high',
                 'status': 'active',

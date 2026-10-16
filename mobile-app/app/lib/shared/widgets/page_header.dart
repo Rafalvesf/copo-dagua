@@ -223,16 +223,20 @@ class StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Cores pastel (ex: `colorForTagLabel`) como texto ficavam quase
+    // invisíveis sobre o cartão — nesse caso a cor passa a ser o fundo
+    // e o texto fica escuro.
+    final light = color.computeLuminance() > 0.5;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.18),
+        color: light ? color : color.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: color,
+          color: light ? AppTheme.inkMuted : color,
           fontSize: AppFontSize.xs,
           fontWeight: FontWeight.w700,
         ),
