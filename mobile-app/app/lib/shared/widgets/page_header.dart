@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import 'buttons.dart';
 
-/// Cabeçalho partilhado pela maioria dos ecrãs — botão de voltar e ação
-/// opcional (ex: badge de conta, "+ Nova tarefa") numa linha própria no
-/// topo, com o título grande serifado + subtítulo numa linha por baixo.
-/// Duas linhas separadas (em vez de tudo alinhado numa só) para seguir
-/// o ritmo vertical da referência partilhada (ícones colados ao topo,
-/// título logo a seguir, por baixo).
+/// Cabeçalho partilhado pela maioria dos ecrãs. Três formas:
+///
+/// * [centered] — subpáginas abertas a partir do Casamento (Convidados,
+///   Orçamento, Tarefas, Lugares): uma só linha com voltar à esquerda,
+///   título ao centro e a ação (ex: "+") à direita.
+/// * sem voltar e com [trailing] — separadores principais: título grande à
+///   esquerda e as ações na mesma linha, à direita.
+/// * o resto — voltar numa linha própria e título grande por baixo.
 class PageHeader extends StatelessWidget {
   final String? title;
   final String? subtitle;
@@ -16,6 +18,7 @@ class PageHeader extends StatelessWidget {
   final Widget? trailing;
   final double titleFontSize;
   final double topPadding;
+  final bool centered;
 
   const PageHeader({
     super.key,
@@ -25,18 +28,114 @@ class PageHeader extends StatelessWidget {
     this.trailing,
     this.titleFontSize = 34,
     this.topPadding = 20,
+    this.centered = false,
   });
+
+  Widget _subtitle({required bool center}) {
+    return Row(
+      mainAxisAlignment: center ? MainAxisAlignment.center : MainAxisAlignment.start,
+      children: [
+        Flexible(
+          child: Text(
+            subtitle!,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppTheme.inkMuted,
+              fontSize: AppFontSize.md,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        const Icon(Icons.favorite, size: 15, color: AppTheme.accentOliveDark),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final padding = EdgeInsets.fromLTRB(
+      AppTheme.screenMargin,
+      topPadding,
+      AppTheme.screenMargin,
+      0,
+    );
+
+    if (centered && title != null) {
+      return Padding(
+        padding: padding,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                showBack ? const CircleBackButton() : const SizedBox(width: 44, height: 44),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title!,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.displaySerif(
+                      fontSize: AppFontSize.h3,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.ink,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                trailing ?? const SizedBox(width: 44, height: 44),
+              ],
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 8),
+              _subtitle(center: true),
+            ],
+          ],
+        ),
+      );
+    }
+
+    final titleText = title == null
+        ? null
+        : Text(
+            title!,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.displaySerif(
+              fontSize: titleFontSize,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.ink,
+            ),
+          );
+
+    // Separador principal: título e ações na mesma linha.
+    if (!showBack && trailing != null && titleText != null) {
+      return Padding(
+        padding: padding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: titleText),
+                const SizedBox(width: 12),
+                trailing!,
+              ],
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 6),
+              _subtitle(center: false),
+            ],
+          ],
+        ),
+      );
+    }
+
     final hasIconRow = showBack || trailing != null;
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppTheme.screenMargin,
-        topPadding,
-        AppTheme.screenMargin,
-        0,
-      ),
+      padding: padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -50,40 +149,11 @@ class PageHeader extends StatelessWidget {
             ),
             const SizedBox(height: 18),
           ],
-          if (title != null) ...[
-            Text(
-              title!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.displaySerif(
-                fontSize: titleFontSize,
-                color: AppTheme.ink,
-              ),
-            ),
+          if (titleText != null) ...[
+            titleText,
             if (subtitle != null) ...[
               const SizedBox(height: 6),
-              Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      subtitle!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppTheme.inkMuted,
-                        fontSize: AppFontSize.md,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  const Icon(
-                    Icons.favorite,
-                    size: 15,
-                    color: AppTheme.accentOliveDark,
-                  ),
-                ],
-              ),
+              _subtitle(center: false),
             ],
           ],
         ],
@@ -109,8 +179,8 @@ class AddActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.pill),
         onTap: onTap,
         child: Container(
-          width: 46,
-          height: 46,
+          width: 44,
+          height: 44,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: AppTheme.accentOliveDark,

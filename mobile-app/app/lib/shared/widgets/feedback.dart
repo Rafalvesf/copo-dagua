@@ -180,3 +180,101 @@ class LoadingOverlay extends StatelessWidget {
     );
   }
 }
+
+/// Estado vazio de primeira utilização (redesign 2026-10): ilustração da
+/// app, título em Bold, explicação em Light e até duas ações. Usado quando
+/// uma lista inteira ainda não tem nada (0 convidados, sem orçamento, sem
+/// espaço, sem conversas) — para estados vazios pequenos dentro de um
+/// cartão continua a usar-se [EmptyStateView] ou um `Text`.
+class IllustratedEmptyState extends StatelessWidget {
+  final String imageAsset;
+  final String title;
+  final String message;
+  final String? primaryLabel;
+  final VoidCallback? onPrimary;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
+  final double imageSize;
+  final bool circularImage;
+
+  const IllustratedEmptyState({
+    super.key,
+    required this.imageAsset,
+    required this.title,
+    required this.message,
+    this.primaryLabel,
+    this.onPrimary,
+    this.secondaryLabel,
+    this.onSecondary,
+    this.imageSize = 168,
+    this.circularImage = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final image = Image.asset(
+      imageAsset,
+      width: imageSize,
+      height: imageSize,
+      fit: circularImage ? BoxFit.cover : BoxFit.contain,
+    );
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.screenMargin,
+        32,
+        AppTheme.screenMargin,
+        140,
+      ),
+      child: Column(
+        children: [
+          circularImage ? ClipOval(child: image) : image,
+          const SizedBox(height: 24),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: AppFontSize.h3,
+              height: 28 / 22,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.ink,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 290),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: AppFontSize.base,
+                height: 1.5,
+                fontWeight: FontWeight.w300,
+                color: AppTheme.inkMuted,
+              ),
+            ),
+          ),
+          if (primaryLabel != null) ...[
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: onPrimary,
+                child: Text(primaryLabel!),
+              ),
+            ),
+          ],
+          if (secondaryLabel != null) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: onSecondary,
+                child: Text(secondaryLabel!),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
