@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -53,8 +54,32 @@ class GradientScaffold extends StatelessWidget {
   Color? get _flatColor =>
       background == AppBackground.mood ? AppGradients.moodSolid : null;
 
+  /// Cor no topo do ecrã — a primeira do gradiente, ou a cor sólida.
+  Color get _topColor =>
+      _flatColor ?? _gradient?.colors.first ?? AppTheme.background;
+
+  /// Pedido do utilizador (2026-10-16): "passa [a barra do topo] para a
+  /// cor que a app tem nesse momento". No browser, isto atualiza o
+  /// `<meta name="theme-color">` (barra de estado/endereço do telemóvel);
+  /// nas apps nativas, a cor da app no seletor de apps. Só o ecrã da
+  /// rota visível muda a cor.
+  void _syncTopColor(BuildContext context) {
+    final color = _topColor;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
+      if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+      SystemChrome.setApplicationSwitcherDescription(
+        ApplicationSwitcherDescription(
+          label: "Copo d'Água",
+          primaryColor: color.toARGB32(),
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    _syncTopColor(context);
     return Container(
       decoration: BoxDecoration(gradient: _gradient, color: _flatColor),
       child: Scaffold(
