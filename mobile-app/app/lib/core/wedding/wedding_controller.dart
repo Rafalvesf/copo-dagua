@@ -2,7 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show FileOptions, PostgrestException;
 
 import '../auth/auth_controller.dart';
 import '../models/models.dart';
@@ -51,6 +52,7 @@ class WeddingController extends Notifier<WeddingState> {
     String? location,
     int? estimatedGuests,
     double? estimatedBudget,
+    EventType eventType = EventType.wedding,
   }) async {
     state = state.copyWith(loading: true);
     final ownerId = supabase.auth.currentUser!.id;
@@ -66,7 +68,7 @@ class WeddingController extends Notifier<WeddingState> {
     // comando começar) — só o INSERT precisa deste contorno. Descoberto
     // 2026-08-30 ao testar a Fase 2 contra o Supabase real; documentado
     // como padrão a repetir em `docs/architecture/RLS_POLICY.md`.
-    await supabase.from('weddings').insert({
+    final values = <String, dynamic>{
       'owner_id': ownerId,
       'partner_name_1': partnerName1,
       'partner_name_2': partnerName2,
@@ -76,7 +78,22 @@ class WeddingController extends Notifier<WeddingState> {
       'location': location,
       'estimated_guests': estimatedGuests,
       'estimated_budget': estimatedBudget,
-    });
+    };
+    try {
+      await supabase.from('weddings').insert({
+        ...values,
+        'event_type': eventType.dbValue,
+      });
+    } on PostgrestException catch (e) {
+      // Enquanto `074_wedding_event_type.sql` não estiver aplicada, a
+      // coluna não existe (PGRST204 / 42703): cria o evento na mesma, sem
+      // o tipo, para o onboarding nunca ficar bloqueado por isto.
+      final missingColumn = e.code == 'PGRST204' ||
+          e.code == '42703' ||
+          e.message.contains('event_type');
+      if (!missingColumn) rethrow;
+      await supabase.from('weddings').insert(values);
+    }
     final row = await supabase.from('weddings').select().eq('owner_id', ownerId).single();
     final wedding = _fromRow(row);
     state = WeddingState(loading: false, wedding: wedding);
@@ -205,6 +222,7 @@ class WeddingController extends Notifier<WeddingState> {
       location: row['location'] as String?,
       venue: row['venue'] as String?,
       ceremonyType: CeremonyType.values.byName((row['ceremony_type'] as String?) ?? 'civil'),
+      eventType: EventType.fromDb(row['event_type'] as String?),
       estimatedGuests: row['estimated_guests'] as int?,
       estimatedBudget: (row['estimated_budget'] as num?)?.toDouble(),
       status: WeddingStatus.values.byName((row['status'] as String?) ?? 'planning'),

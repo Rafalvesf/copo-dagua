@@ -16,7 +16,9 @@ import '../../../shared/widgets/progress.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_onboarding/screens/partner_welcome_screen.dart';
 
-const _totalSteps = 7;
+/// Passos do assistente. O do/a parceiro/a só aparece num casamento
+/// (pedido 2026-10-16: escolher o tipo de evento no início).
+enum _WizardStep { event, you, partner, date, location, guests, budget, invite }
 
 /// Regiões sugeridas no passo da localização (redesign 2026-10) — um toque
 /// preenche o campo, que continua editável para uma localidade concreta.
@@ -60,6 +62,14 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
   final _partnerEmail = TextEditingController();
   DateTime? _weddingDate;
   bool _dateUnknown = false;
+  EventType _eventType = EventType.wedding;
+
+  bool get _isWedding => _eventType == EventType.wedding;
+
+  List<_WizardStep> get _steps => [
+        for (final step in _WizardStep.values)
+          if (step != _WizardStep.partner || _isWedding) step,
+      ];
 
   @override
   void dispose() {
@@ -135,7 +145,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           if (!context.mounted) return;
           context.go('/home');
           messenger.showSnackBar(
-            SnackBar(content: Text('Casamento "${wedding.displayNames}" criado.')),
+            SnackBar(content: Text('${wedding.eventType.label} "${wedding.displayNames}" criado.')),
           );
         },
       );
@@ -153,13 +163,15 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                 Text('Tudo pronto, ${_ownName.text.trim().isEmpty ? profile.fullName.split(' ').first : _ownName.text.trim()}!',
                     style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 8),
-                const Text(
-                  'O vosso casamento já tem um lugar só dele.',
+                Text(
+                  _isWedding
+                      ? 'O vosso casamento já tem um lugar só dele.'
+                      : 'O teu ${_eventType.noun} já tem um lugar só dele.',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
                 PrimaryButton(
-                  label: 'Ver o meu casamento',
+                  label: 'Ver o meu ${_eventType.noun}',
                   loading: _saving,
                   onPressed: () async {
                     setState(() => _saving = true);
@@ -168,13 +180,16 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                         partnerName1: _ownName.text.trim().isEmpty
                             ? profile.fullName.split(' ').first
                             : _ownName.text.trim(),
-                        partnerName2: _partnerName.text.trim().isEmpty ? null : _partnerName.text.trim(),
+                        partnerName2: !_isWedding || _partnerName.text.trim().isEmpty
+                            ? null
+                            : _partnerName.text.trim(),
                         partner1Age: int.tryParse(_ownAge.text.trim()),
-                        partner2Age: int.tryParse(_partnerAge.text.trim()),
+                        partner2Age: _isWedding ? int.tryParse(_partnerAge.text.trim()) : null,
                         weddingDate: _dateUnknown ? null : _weddingDate,
                         location: _location.text.trim().isEmpty ? null : _location.text.trim(),
                         estimatedGuests: int.tryParse(_guests.text.trim()),
                         estimatedBudget: double.tryParse(_budget.text.trim()),
+                        eventType: _eventType,
                       );
                       if (_partnerEmail.text.trim().isNotEmpty) {
                         await ref.read(weddingControllerProvider.notifier).inviteCollaborator(
@@ -217,7 +232,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              StepProgressBar(totalSteps: _totalSteps, currentStep: _step),
+              StepProgressBar(totalSteps: _steps.length, currentStep: _step),
               const SizedBox(height: 24),
               Expanded(child: _buildStep(context)),
               _buildFooter(),
@@ -229,8 +244,29 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
   }
 
   Widget _buildStep(BuildContext context) {
-    switch (_step) {
-      case 0:
+    switch (_steps[_step]) {
+      case _WizardStep.event:
+        return _StepScaffold(
+          question: 'O que estão a organizar?',
+          subtitle: 'Podes mudar de ideias mais tarde.',
+          child: GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.15,
+            children: [
+              for (final type in EventType.values)
+                _EventTypeTile(
+                  type: type,
+                  selected: _eventType == type,
+                  onTap: () => setState(() => _eventType = type),
+                ),
+            ],
+          ),
+        );
+      case _WizardStep.you:
         return _StepScaffold(
           question: 'Fala-nos sobre ti',
           subtitle: 'O teu nome e idade.',
@@ -243,7 +279,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             ],
           ),
         );
-      case 1:
+      case _WizardStep.partner:
         return _StepScaffold(
           question: 'E sobre o/a teu/a parceiro/a?',
           subtitle: 'Podes deixar em branco por agora.',
@@ -256,11 +292,11 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             ],
           ),
         );
-      case 2:
+      case _WizardStep.date:
         return _StepScaffold(
           question: 'Quando é o grande dia?',
           child: DatePickerField(
-            label: 'Data do casamento',
+            label: 'Data do ${_eventType.noun}',
             value: _weddingDate,
             allowUnknown: true,
             unknown: _dateUnknown,
@@ -268,9 +304,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             onUnknownChanged: (v) => setState(() => _dateUnknown = v),
           ),
         );
-      case 3:
+      case _WizardStep.location:
         return _StepScaffold(
-          question: 'Em que parte do país vai ser o casamento?',
+          question: 'Em que parte do país vai ser o ${_eventType.noun}?',
           subtitle: 'Localização aproximada — podes afinar depois.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -296,7 +332,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             ],
           ),
         );
-      case 4:
+      case _WizardStep.guests:
         return _StepScaffold(
           question: 'Mais ou menos quantos convidados?',
           subtitle: 'Só uma estimativa — a lista real fica em Convidados.',
@@ -305,23 +341,29 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             onChanged: (v) => setState(() => _guests.text = v == null ? '' : '$v'),
           ),
         );
-      case 5:
+      case _WizardStep.budget:
         return _StepScaffold(
           question: 'Qual é a ideia de orçamento total?',
           subtitle: 'Opcional — editável mais tarde em Orçamento.',
           child: AuthTextField(label: 'Orçamento estimado (€)', controller: _budget, keyboardType: TextInputType.number),
         );
-      default:
+      case _WizardStep.invite:
         return _StepScaffold(
-          question: 'Queres convidar o/a teu/a parceiro/a para colaborar?',
+          question: _isWedding
+              ? 'Queres convidar o/a teu/a parceiro/a para colaborar?'
+              : 'Queres convidar alguém para organizar contigo?',
           subtitle: 'Nunca bloqueia o avanço — podes fazer isto depois.',
-          child: AuthTextField(label: 'Email do/a parceiro/a', controller: _partnerEmail, keyboardType: TextInputType.emailAddress),
+          child: AuthTextField(
+            label: _isWedding ? 'Email do/a parceiro/a' : 'Email',
+            controller: _partnerEmail,
+            keyboardType: TextInputType.emailAddress,
+          ),
         );
     }
   }
 
   Widget _buildFooter() {
-    final isLast = _step == _totalSteps - 1;
+    final isLast = _step == _steps.length - 1;
     void advance() {
       if (isLast) {
         setState(() => _done = true);
@@ -332,7 +374,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
 
     return WizardFooter(
       onBack: _step == 0 ? null : () => setState(() => _step--),
-      onSkip: advance,
+      // O tipo de evento tem sempre um valor (Casamento por defeito) —
+      // não há nada para saltar nesse passo.
+      onSkip: _steps[_step] == _WizardStep.event ? null : advance,
       continueButton: ArrowCtaButton(
         label: isLast ? 'Concluir' : 'Continuar',
         onTap: advance,
@@ -601,6 +645,63 @@ class _GuestEstimate extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _EventTypeTile extends StatelessWidget {
+  final EventType type;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _EventTypeTile({
+    required this.type,
+    required this.selected,
+    required this.onTap,
+  });
+
+  IconData get _icon => switch (type) {
+        EventType.wedding => Icons.favorite_rounded,
+        EventType.baptism => Icons.water_drop_rounded,
+        EventType.birthday => Icons.cake_rounded,
+        EventType.other => Icons.celebration_rounded,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: SnappyTap(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(
+                _icon,
+                size: 28,
+                color: selected ? Colors.white : AppTheme.accentOliveDark,
+              ),
+              Text(
+                type.label,
+                style: TextStyle(
+                  fontSize: AppFontSize.lg,
+                  fontWeight: FontWeight.w700,
+                  color: selected ? Colors.white : AppTheme.ink,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
