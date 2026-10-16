@@ -95,7 +95,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     child: ListView(
                       padding: EdgeInsets.zero,
                       children: [
-                        const PageHeader(title: 'Definições', titleFontSize: 26),
+                        const PageHeader(title: 'Definições', centered: true),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(
                             AppTheme.screenMargin,

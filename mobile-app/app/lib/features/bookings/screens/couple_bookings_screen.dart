@@ -36,6 +36,7 @@ class CoupleBookingsScreen extends ConsumerWidget {
           children: [
             const PageHeader(
               title: 'Reservas',
+              centered: true,
               subtitle: 'Parceiros contratados para o teu casamento.',
             ),
             const SizedBox(height: 16),

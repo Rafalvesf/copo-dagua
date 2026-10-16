@@ -32,7 +32,7 @@ class CoupleBookingDetailScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            PageHeader(title: 'Detalhes da reserva', titleFontSize: 20),
+            PageHeader(title: 'Detalhes da reserva', centered: true),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(AppTheme.screenMargin),

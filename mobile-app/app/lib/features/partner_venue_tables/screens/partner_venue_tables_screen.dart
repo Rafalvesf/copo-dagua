@@ -50,6 +50,7 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
           children: [
             PageHeader(
               title: 'Mesas do local',
+              centered: true,
               subtitle: 'Tipos de mesa disponíveis para os casais.',
               trailing: AddActionButton(onTap: () => _add(context, ref)),
             ),

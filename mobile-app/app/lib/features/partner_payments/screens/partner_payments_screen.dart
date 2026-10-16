@@ -99,6 +99,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
           children: [
             const PageHeader(
               title: 'Pagamentos',
+              centered: true,
               subtitle: 'Recebe os sinais das tuas reservas diretamente.',
             ),
             const SizedBox(height: 20),

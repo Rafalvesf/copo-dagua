@@ -58,6 +58,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           children: [
             const PageHeader(
               title: 'Calendário',
+              centered: true,
               subtitle: 'As reuniões e prazos do vosso casamento.',
             ),
             const SizedBox(height: 16),

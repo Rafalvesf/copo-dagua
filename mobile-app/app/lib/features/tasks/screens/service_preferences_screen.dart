@@ -106,7 +106,7 @@ class _ServicePreferencesScreenState extends ConsumerState<ServicePreferencesScr
               const PageHeader(
                 title: 'Já têm tratado?',
                 subtitle: 'Ajuda-nos a não sugerir o que já resolveram.',
-                titleFontSize: 26,
+                centered: true,
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(
