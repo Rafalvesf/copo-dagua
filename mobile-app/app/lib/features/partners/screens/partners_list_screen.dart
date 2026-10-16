@@ -421,6 +421,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         )
                         .length;
                     return FilterChipsRow(
+                      // Categorias de Parceiros: carrossel normal, sem
+                      // repetir (pedido do utilizador).
+                      infinite: false,
                       items: [
                         for (final o in all)
                           FilterBarItem(

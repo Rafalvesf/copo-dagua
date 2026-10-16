@@ -28,11 +28,17 @@ class FilterChipsRow extends StatefulWidget {
   final int selected;
   final ValueChanged<int> onSelected;
 
+  /// Carrossel infinito (pedido do utilizador: "faz um carrossel infinito
+  /// nos filtros. não nas categorias dos parceiros") — as opções repetem-se
+  /// nos dois sentidos. `false` só nas categorias de Parceiros.
+  final bool infinite;
+
   const FilterChipsRow({
     super.key,
     required this.items,
     required this.selected,
     required this.onSelected,
+    this.infinite = true,
   });
 
   /// Altura da linha de filtros — os botões ocupam-na toda ("fill total").
@@ -47,12 +53,22 @@ class FilterChipsRow extends StatefulWidget {
 /// sempre para o centro.
 class _FilterChipsRowState extends State<FilterChipsRow> {
   final _controller = ScrollController();
-  late List<GlobalKey> _keys;
+  final _centerKey = UniqueKey();
+
+  /// Chave por posição "virtual" no carrossel: no modo infinito o índice
+  /// real `i % n` repete-se, e cada repetição tem a sua posição. Valores
+  /// ≥ 0 vão para a direita, < 0 para a esquerda.
+  final Map<int, GlobalKey> _keys = {};
+
+  /// Posição virtual do último filtro tocado, para centrar essa cópia
+  /// (e não a primeira) depois de reconstruir.
+  int? _tappedVirtual;
+
+  GlobalKey _keyFor(int virtual) => _keys.putIfAbsent(virtual, GlobalKey.new);
 
   @override
   void initState() {
     super.initState();
-    _keys = List.generate(widget.items.length, (_) => GlobalKey());
     WidgetsBinding.instance.addPostFrameCallback((_) => _center(animate: false));
   }
 
@@ -60,7 +76,8 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
   void didUpdateWidget(covariant FilterChipsRow oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.items.length != widget.items.length) {
-      _keys = List.generate(widget.items.length, (_) => GlobalKey());
+      _keys.clear();
+      _tappedVirtual = null;
     }
     if (oldWidget.selected != widget.selected ||
         oldWidget.items.length != widget.items.length) {
@@ -76,9 +93,12 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
 
   void _center({bool animate = true}) {
     if (!mounted) return;
+    final n = widget.items.length;
     final index = widget.selected;
-    if (index < 0 || index >= _keys.length) return;
-    final ctx = _keys[index].currentContext;
+    if (index < 0 || index >= n) return;
+    final tapped = _tappedVirtual;
+    final virtual = tapped != null && _real(tapped) == index ? tapped : index;
+    final ctx = _keys[virtual]?.currentContext;
     if (ctx == null) return;
     Scrollable.ensureVisible(
       ctx,
@@ -88,33 +108,70 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
     );
   }
 
+  int _real(int virtual) {
+    final n = widget.items.length;
+    return ((virtual % n) + n) % n;
+  }
+
+  Widget _chip(int virtual) {
+    final i = _real(virtual);
+    return _FilterBarChip(
+      key: _keyFor(virtual),
+      item: widget.items[i],
+      selected: i == widget.selected,
+      onTap: () {
+        _tappedVirtual = virtual;
+        if (i == widget.selected) {
+          _center();
+        } else {
+          widget.onSelected(i);
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final n = widget.items.length;
+    if (n == 0) return const SizedBox(height: FilterChipsRow.height);
     return SizedBox(
       height: FilterChipsRow.height,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // Margem lateral de meia largura menos um botão médio, para o
-          // primeiro e o último filtro também conseguirem ficar ao centro.
-          final side = (constraints.maxWidth / 2 - 60).clamp(0.0, 400.0);
-          return SingleChildScrollView(
-            controller: _controller,
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: side),
-            child: Row(
-              children: [
-                for (var i = 0; i < widget.items.length; i++)
-                  _FilterBarChip(
-                    key: _keys[i],
-                    item: widget.items[i],
-                    selected: i == widget.selected,
-                    onTap: () => widget.onSelected(i),
+      child: widget.infinite
+          ? CustomScrollView(
+              controller: _controller,
+              scrollDirection: Axis.horizontal,
+              center: _centerKey,
+              slivers: [
+                // Para a esquerda: -1, -2, … (lista "ao contrário").
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, j) => _chip(-(j + 1)),
                   ),
+                ),
+                SliverList(
+                  key: _centerKey,
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => _chip(i),
+                  ),
+                ),
               ],
+            )
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                // Margem lateral para o primeiro e o último também
+                // conseguirem ficar ao centro.
+                final side =
+                    (constraints.maxWidth / 2 - 60).clamp(0.0, 400.0);
+                return SingleChildScrollView(
+                  controller: _controller,
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: side),
+                  child: Row(
+                    children: [for (var i = 0; i < n; i++) _chip(i)],
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }
