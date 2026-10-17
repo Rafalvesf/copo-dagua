@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
@@ -185,6 +186,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
   }
 
+  /// Google/Apple: o convidado precisa de um código válido antes (como
+  /// no registo com email); o papel escolhido segue para a conta nova.
+  Future<void> _social(OAuthProvider provider) async {
+    if (widget.role == UserRole.guest) {
+      final code = _weddingCode.text.trim();
+      if (code.isEmpty) {
+        setState(() => _weddingCodeError = 'Indica o código do casal');
+        return;
+      }
+      setState(() => _checkingCode = true);
+      List rows = const [];
+      try {
+        rows = await supabase.rpc('lookup_wedding_by_guest_code', params: {'p_code': code}) as List;
+      } catch (_) {}
+      if (!mounted) return;
+      setState(() => _checkingCode = false);
+      if (rows.isEmpty) {
+        setState(() => _weddingCodeError = 'Código inválido — confirma com o casal.');
+        return;
+      }
+    }
+    await ref.read(authControllerProvider.notifier).signInWithProvider(
+          provider,
+          role: widget.role,
+          weddingCode: widget.role == UserRole.guest ? _weddingCode.text.trim() : null,
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
@@ -284,13 +313,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       footer: [
         AuthPrimaryButton(label: 'Criar conta', loading: loading || _checkingCode, onPressed: _submit),
         const AuthOrDivider(),
-        const AuthSocialButton(
+        AuthSocialButton(
           label: 'Continuar com Google',
-          badge: Text('G', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          badge: const Text('G', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          onPressed: () => _social(OAuthProvider.google),
         ),
-        const AuthSocialButton(
+        AuthSocialButton(
           label: 'Continuar com Apple',
-          badge: Icon(Icons.apple, size: 14, color: AppTheme.ink),
+          badge: const Icon(Icons.apple, size: 14, color: AppTheme.ink),
+          onPressed: () => _social(OAuthProvider.apple),
         ),
       ],
     );
