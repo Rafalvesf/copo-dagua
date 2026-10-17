@@ -69417,21 +69417,21 @@ A.I2.prototype={
 a4g(a,b,c){var s=null,r=A.ab(A.t(a,s,s,s,B.by,s,s,s),1)
 return A.aa(A.a([r,A.t(b,s,s,s,A.aJ(s,s,B.q,s,s,s,s,s,s,s,s,c?17:14,s,s,B.x,s,s,!0,s,s,s,s,s,s,s,s),s,s,s)],t.p),B.d9,B.d,B.f,0,B.M)},
 aDF(a,b){return this.a4g(a,b,!1)},
-p(a){var s,r,q,p,o,n,m=this,l=null,k=A.bh(a,l,t.w).w,j=A.a0(16),i=A.dp(B.am,1),h=A.t(m.c,l,l,l,B.adg,l,l,l),g=A.t(m.d,l,l,l,B.dl,l,l,l),f=m.e
-f=m.a4g("Total",f==null?"\u2014":A.dh(f,!1),!0)
+p(a){var s,r,q,p,o,n,m=this,l=null,k=A.bh(a,l,t.w).w,j=A.a0(16),i=A.a0(16),h=A.dp(B.am,1),g=A.t(m.c,l,l,l,B.adg,l,l,l),f=A.t(m.d,l,l,l,B.dl,l,l,l),e=m.e
+e=m.a4g("Total",e==null?"\u2014":A.dh(e,!1),!0)
 s=m.f
 r=t.p
-s=A.a([new A.a7(B.bt,A.V(A.a([h,B.aN,g,B.a_,f,B.aA,m.aDF("Sinal para reservar",s==null?"\u2014":A.dh(s,!1))],r),B.u,B.d,B.f),l)],r)
-h=m.r
-if(h.length!==0){g=A.a([],r)
-for(q=0;q<h.length;++q){f=q===0?l:B.Lo
-r=h[q]
+s=A.a([new A.a7(B.bt,A.V(A.a([g,B.aN,f,B.a_,e,B.aA,m.aDF("Sinal para reservar",s==null?"\u2014":A.dh(s,!1))],r),B.u,B.d,B.f),l)],r)
+g=m.r
+if(g.length!==0){f=A.a([],r)
+for(q=0;q<g.length;++q){e=q===0?l:B.Lo
+r=g[q]
 p=r.b
 o=r.c
 n=o?B.x:B.eD
 if(p==null)o=B.t
 else o=o?B.r:B.t
-g.push(new A.er(1,B.bk,new A.vJ(new A.X(l,l,f,l,l,l,B.l),B.cF,new A.kN(A.U(B.D,A.t(r.a,l,l,l,new A.v(!0,o,l,l,l,l,14,n,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l),l,l,l),B.h,B.k,l,l,l,44,l,l,l,l,l),p,l),l),l))}s.push(A.me(A.aa(g,B.j,B.d,B.f,0,l),B.ix,B.cF))}return A.bU(A.U(l,A.V(s,B.U,B.d,B.f),B.aC,l,l,new A.X(B.k,l,i,j,l,l,B.l),l,l,l,l,l,l,l),l,k.a.a*0.78)}}
+f.push(new A.er(1,B.bk,new A.vJ(new A.X(l,l,e,l,l,l,B.l),B.cF,new A.kN(A.U(B.D,A.t(r.a,l,l,l,new A.v(!0,o,l,l,l,l,14,n,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l),l,l,l),B.h,B.k,l,l,l,44,l,l,l,l,l),p,l),l),l))}s.push(A.me(A.aa(f,B.j,B.d,B.f,0,l),B.ix,B.cF))}return A.bU(A.U(l,A.V(s,B.U,B.d,B.f),B.aC,l,l,new A.X(B.k,l,l,j,l,l,B.l),new A.X(l,l,h,i,l,l,B.l),l,l,l,l,l,l),l,k.a.a*0.78)}}
 A.I0.prototype={
 p(a){var s=null,r=A.a0(999)
 return A.U(s,A.bn(!0,new A.a7(B.RV,A.aa(A.a([A.ab(A.U(B.bM,A.dG(s,B.a5,!1,s,!0,B.o,s,A.dV(),this.c,s,s,s,s,s,2,B.X1,B.I,!0,s,!0,s,!1,s,B.at,s,s,s,s,s,s,s,s,1,s,s,!1,"\u2022",s,s,s,new A.akH(this),s,!1,s,s,!1,s,!0,s,B.ay,s,s,s,s,s,s,s,s,s,s,s,B.abX,!0,B.a2,s,B.aH,s,B.J9,s,s),B.h,s,s,new A.X(B.A,s,s,r,s,s,B.l),s,44,s,B.cj,s,s,s),1),B.aD,A.b1(A.U(B.D,B.x7,B.h,s,s,B.iw,s,44,s,s,s,s,44),this.d)],t.p),B.j,B.d,B.f,0,s),s),B.vo,!1),B.h,s,s,B.tR,s,s,s,s,s,s,s)}}
