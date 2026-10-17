@@ -251,10 +251,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         // (071/073), mostrado uma única vez por `GuestHomeScreen`
         // quando `guest.onboardingCompletedAt == null`.
         path: '/guest-onboarding/:weddingId',
-        builder: (context, state) => GuestOnboardingWizardScreen(
-          weddingId: state.pathParameters['weddingId']!,
-          guest: state.extra as Guest,
-        ),
+        builder: (context, state) {
+          final step = int.tryParse(state.uri.queryParameters['step'] ?? '') ?? 0;
+          return GuestOnboardingWizardScreen(
+            key: ValueKey('gonb$step'),
+            weddingId: state.pathParameters['weddingId']!,
+            guest: state.extra as Guest,
+            initialStep: step,
+          );
+        },
       ),
       GoRoute(
         path: '/guest-events',

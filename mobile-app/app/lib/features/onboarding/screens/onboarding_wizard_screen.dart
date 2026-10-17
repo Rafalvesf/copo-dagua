@@ -260,7 +260,7 @@ class _OnboardingWizardScreenState
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    if (profile.role == UserRole.partner) return const PartnerWelcomeScreen();
+    if (profile.role == UserRole.partner) return PartnerWelcomeScreen(initialStep: widget.initialStep);
     if (!_ownNamePrefilled) {
       _ownName.text = profile.fullName.split(' ').first;
       _ownNamePrefilled = true;

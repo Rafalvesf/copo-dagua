@@ -60,7 +60,10 @@ import '../../../shared/money.dart';
 /// Marketplace continua só a acontecer com `status = 'published'`, via
 /// `is_partner_profile_visible()` no servidor.
 class PartnerWelcomeScreen extends ConsumerStatefulWidget {
-  const PartnerWelcomeScreen({super.key});
+  /// Só para as capturas de ecrã (`/onboarding?step=N`).
+  final int initialStep;
+
+  const PartnerWelcomeScreen({super.key, this.initialStep = 0});
 
   @override
   ConsumerState<PartnerWelcomeScreen> createState() =>
@@ -90,7 +93,7 @@ const _steps = _Step.values;
 final _taxIdRegex = RegExp(r'^\d{9}$');
 
 class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
-  int _stepIndex = 0;
+  late int _stepIndex = widget.initialStep.clamp(0, _Step.values.length - 1);
   bool _saving = false;
 
   final _businessName = TextEditingController();
@@ -860,7 +863,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
               if (_pricingMode == 'packages') ...[
                 const SizedBox(height: 20),
                 for (final (i, pkg) in _packages.indexed) ...[
-                  Text(i == 0 ? 'Primeiro pacote' : '${i + 1}.º pacote', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  Text(const ['Primeiro pacote', 'Segundo pacote', 'Terceiro pacote'][i.clamp(0, 2)], style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   const SizedBox(height: 6),
                   Container(
                     constraints: const BoxConstraints(minHeight: 60),
@@ -1078,9 +1081,10 @@ class _Pill extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
+        // Sem `alignment`: assim o botão fica do tamanho do texto em vez
+        // de ocupar a linha toda dentro do Wrap.
         height: 40,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
           borderRadius: BorderRadius.circular(999),

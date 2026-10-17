@@ -20,7 +20,10 @@ class GuestOnboardingWizardScreen extends ConsumerStatefulWidget {
   final String weddingId;
   final Guest guest;
 
-  const GuestOnboardingWizardScreen({super.key, required this.weddingId, required this.guest});
+  /// Só para as capturas de ecrã (`?step=N`).
+  final int initialStep;
+
+  const GuestOnboardingWizardScreen({super.key, required this.weddingId, required this.guest, this.initialStep = 0});
 
   @override
   ConsumerState<GuestOnboardingWizardScreen> createState() => _GuestOnboardingWizardScreenState();
@@ -67,7 +70,7 @@ class _Person {
 }
 
 class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWizardScreen> {
-  int _index = 0;
+  late int _index = widget.initialStep;
   bool _saving = false;
   bool _confirmed = false;
   late final _Person _me = _Person(
@@ -561,17 +564,27 @@ class _PersonChoices extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         height: equal ? 36 : 32,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        alignment: Alignment.center,
+        // Só centra quando os botões têm largura fixa (refeição); nas
+        // alergias ficam do tamanho do texto.
+        alignment: equal ? Alignment.center : null,
         decoration: BoxDecoration(
           color: on ? AppTheme.accentOliveDark : Colors.white,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(color: on ? AppTheme.accentOliveDark : AppTheme.borderMuted),
         ),
-        child: Text(
-          o,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 13, fontWeight: on ? FontWeight.w700 : FontWeight.w400, color: on ? Colors.white : AppTheme.ink),
+        child: Row(
+          mainAxisSize: equal ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                o,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, fontWeight: on ? FontWeight.w700 : FontWeight.w400, color: on ? Colors.white : AppTheme.ink),
+              ),
+            ),
+          ],
         ),
       ),
     );
