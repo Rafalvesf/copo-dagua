@@ -60,13 +60,13 @@ class MenuStyleScreen extends ConsumerWidget {
                                       border: Border.all(color: Colors.white, width: 3),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: c.id == style.color.id ? c.color : const Color(0x22171713),
+                                          color: c.id == style.color.id ? c.accent : const Color(0x22171713),
                                           spreadRadius: c.id == style.color.id ? 2 : 0,
                                           blurRadius: c.id == style.color.id ? 0 : 8,
                                         ),
                                       ],
                                     ),
-                                    child: c.id == style.color.id ? const Icon(Icons.check, color: c.on, size: 22) : null,
+                                    child: c.id == style.color.id ? Icon(Icons.check, color: c.on, size: 22) : null,
                                   ),
                                   const SizedBox(height: 6),
                                   Text(c.label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: AppTheme.ink)),
