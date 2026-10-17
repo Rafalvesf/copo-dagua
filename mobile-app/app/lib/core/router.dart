@@ -205,9 +205,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => OnboardingWizardScreen(
-          initialStep: int.tryParse(state.uri.queryParameters['step'] ?? '') ?? 0,
-        ),
+        builder: (context, state) {
+          final step = int.tryParse(state.uri.queryParameters['step'] ?? '') ?? 0;
+          return OnboardingWizardScreen(key: ValueKey('onb$step'), initialStep: step);
+        },
       ),
       GoRoute(
         path: '/maintenance',
