@@ -242,8 +242,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        Align(
-                          alignment: Alignment.centerLeft,
+                        Center(
                           child: TextButton(
                             onPressed: () => ref
                                 .read(authControllerProvider.notifier)
