@@ -64,7 +64,7 @@ class FilterChipsRow extends StatefulWidget {
   static const double height = 52;
 
   /// Altura da linha com ícone e texto por baixo.
-  static const double stackedHeight = 80;
+  static const double stackedHeight = 72;
 
   double get rowHeight => stacked ? stackedHeight : height;
 
@@ -300,56 +300,61 @@ class _FilterBarChip extends StatelessWidget {
 
   /// Ícone dentro da mesma pílula da navbar (42 × 67) e o texto por
   /// baixo.
+  /// Escolhida: só a pílula, centrada e com a altura da linha. As
+  /// outras: ícone e, por baixo, o nome — em duas linhas quando tem mais
+  /// de 5 letras (pedido 2026-10-17).
   Widget _stacked() {
     return Semantics(
       button: true,
       selected: selected,
+      label: item.label,
       child: SnappyTap(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedContainer(
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final pillH = (c.maxHeight.isFinite ? c.maxHeight : FilterChipsRow.stackedHeight) - 2 * _inset;
+            return Center(
+              child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                width: selected ? _pillHeight * 1.6 : _pillHeight,
-                height: _pillHeight,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Icon(item.icon ?? Icons.circle_outlined, size: 22, color: selected ? Colors.white : AppTheme.inkMuted),
+                switchInCurve: Curves.easeOut,
+                child: selected
+                    ? Container(
+                        key: const ValueKey('on'),
+                        width: _pillHeight * 1.6,
+                        height: pillH,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentOliveDark,
+                          borderRadius: BorderRadius.circular(AppRadius.xxl - _inset),
+                        ),
+                        // Ícone um pouco maior quando escolhido (pedido 2026-10-17).
+                        child: Icon(item.icon ?? Icons.circle_outlined, size: 28, color: Colors.white),
+                      )
+                    : Padding(
+                        key: const ValueKey('off'),
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(item.icon ?? Icons.circle_outlined, size: 22, color: AppTheme.inkMuted),
+                            const SizedBox(height: 4),
+                            Text(
+                              splitFilterLabel(item.label),
+                              maxLines: 2,
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                height: 1.15,
+                                fontSize: AppFontSize.sm,
+                                color: AppTheme.inkMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
               ),
-              const SizedBox(height: 2),
-              // Sem texto na categoria escolhida — só a pílula (pedido
-              // 2026-10-17); o espaço fica para a linha não saltar.
-              Visibility(
-                visible: !selected,
-                maintainSize: true,
-                maintainAnimation: true,
-                maintainState: true,
-                child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    item.label,
-                    maxLines: 1,
-                    style: TextStyle(
-                      height: 1.2,
-                      fontSize: AppFontSize.sm,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                      color: selected ? AppTheme.ink : AppTheme.inkMuted,
-                    ),
-                  ),
-                ),
-              ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -448,4 +453,49 @@ class ConnectedFilterNav extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Parte um rótulo com mais de 5 letras em duas linhas: no espaço mais
+/// perto do meio, ou — numa só palavra — numa fronteira de sílaba
+/// (vogal | consoante + vogal), com hífen ("Espa-ços", "Foto-grafia").
+String splitFilterLabel(String label) {
+  final text = label.trim();
+  if (text.replaceAll(' ', '').length <= 5) return text;
+  final mid = text.length / 2;
+  if (text.contains(' ')) {
+    var best = -1;
+    for (var i = 0; i < text.length; i++) {
+      if (text[i] == ' ' && (best < 0 || (i - mid).abs() < (best - mid).abs())) best = i;
+    }
+    return '${text.substring(0, best)}\n${text.substring(best + 1)}';
+  }
+  bool vowel(String ch) => 'aeiouáàâãéêíóôõúAEIOUÁÀÂÃÉÊÍÓÔÕÚ'.contains(ch);
+  const keep = {'ch', 'lh', 'nh', 'qu', 'gu'};
+  var best = -1;
+  for (var i = 2; i < text.length - 2; i++) {
+    final prev = text[i - 1];
+    final cur = text[i];
+    final next = text[i + 1];
+    if (!vowel(prev) || vowel(cur) || !vowel(next)) continue;
+    if (keep.contains('$prev$cur'.toLowerCase())) continue;
+    if (best < 0 || (i - mid).abs() < (best - mid).abs()) best = i;
+  }
+  // Grupos consonânticos ("gr", "br", "pl"…): parte antes deles
+  // ("Foto-grafia").
+  for (var i = 2; i < text.length - 2; i++) {
+    final c1 = text[i];
+    final c2 = text[i + 1].toLowerCase();
+    if (vowel(text[i - 1]) && !vowel(c1) && (c2 == 'r' || c2 == 'l') && 'bcdfgptv'.contains(c1.toLowerCase()) && vowel(text[i + 2])) {
+      if (best < 0 || (i - mid).abs() < (best - mid).abs()) best = i;
+    }
+  }
+  // Dígrafos "ch/lh/nh": parte antes deles.
+  for (var i = 2; i < text.length - 2; i++) {
+    final pair = text.substring(i, i + 2).toLowerCase();
+    if ((pair == 'ch' || pair == 'lh' || pair == 'nh') && vowel(text[i - 1]) && vowel(text[i + 2])) {
+      if (best < 0 || (i - mid).abs() < (best - mid).abs()) best = i;
+    }
+  }
+  if (best < 0) best = mid.round();
+  return '${text.substring(0, best)}-\n${text.substring(best)}';
 }
