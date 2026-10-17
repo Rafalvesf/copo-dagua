@@ -386,7 +386,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
                           .map((c) => [
                                 c.name,
                                 if (c.ageGroup != 'adult') '(${ageGroupLabel(c.ageGroup).toLowerCase()})',
-                                if (c.linkedGuestId != null) '✓',
+                                if (c.linkedGuestId != null) '(na lista)',
                               ].join(' '))
                           .toList() ??
                       const <String>[];

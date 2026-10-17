@@ -367,7 +367,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   initials: _initials(c.name),
                   name: c.name,
                   subtitle: [
-                    c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}' : (c.ageGroup == 'senior' ? 'Sénior' : 'Adulto'),
+                    c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}' : ageGroupLabel(c.ageGroup),
                     if (c.ageGroup != 'adult' && c.accompaniedBy != null) 'vai com ${c.accompaniedBy == _me.name ? 'contigo' : c.accompaniedBy}',
                     if (c.email.trim().isNotEmpty) c.email.trim() else if (c.phone.trim().isNotEmpty) c.phone.trim(),
                   ].join(' · '),
@@ -418,11 +418,11 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
               for (final p in _people)
                 _PersonChoices(
                   title: p == _me ? '${p.name} (tu)' : p.name,
-                  options: const ['Adulto', 'Criança', 'Sénior'],
-                  equal: true,
+                  options: const ['Criança', 'Adolescente', 'Adulto', 'Sénior'],
                   selected: {
                     switch (p.ageGroup) {
                       'child' => 'Criança',
+                      'teen' => 'Adolescente',
                       'senior' => 'Sénior',
                       _ => 'Adulto',
                     },
@@ -430,6 +430,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   onTap: (o) => setState(() {
                     p.ageGroup = switch (o) {
                       'Criança' => 'child',
+                      'Adolescente' => 'teen',
                       'Sénior' => 'senior',
                       _ => 'adult',
                     };
@@ -743,19 +744,22 @@ class _CompanionPageState extends State<_CompanionPage> {
     }
     final email = _email.text.trim();
     final phone = _phone.text.trim();
-    // Adultos: email e telemóvel obrigatórios (093) — é com eles que a
-    // app liga esta pessoa à conta dela e evita entradas duplicadas.
-    if (_adult) {
-      final emailOk = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
-      final phoneOk = phone.replaceAll(RegExp(r'[^0-9]'), '').length >= 9;
-      if (!emailOk || !phoneOk) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(!emailOk && !phoneOk
-              ? 'Indica o email e o telemóvel desta pessoa.'
-              : (!emailOk ? 'Indica um email válido.' : 'Indica um telemóvel válido.')),
-        ));
-        return;
-      }
+    // Adultos: email OU telemóvel (pedido 2026-10-17: "não peças os
+    // dois") — é com ele que a app liga esta pessoa à conta dela, se
+    // instalar a app, sem entradas duplicadas.
+    final emailOk = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+    final phoneOk = phone.replaceAll(RegExp(r'[^0-9]'), '').length >= 9;
+    if (email.isNotEmpty && !emailOk) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Esse email não parece válido.')));
+      return;
+    }
+    if (phone.isNotEmpty && !phoneOk) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Esse telemóvel não parece válido.')));
+      return;
+    }
+    if (_adult && !emailOk && !phoneOk) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Indica o email ou o telemóvel desta pessoa.')));
+      return;
     }
     Navigator.of(context).pop(
       _Person(
@@ -793,17 +797,22 @@ class _CompanionPageState extends State<_CompanionPage> {
         const SizedBox(height: 10),
         _RadioRow(label: 'Criança', selected: _group == 'child', onTap: () => setState(() => _group = 'child')),
         const SizedBox(height: 10),
+        _RadioRow(label: 'Adolescente', selected: _group == 'teen', onTap: () => setState(() => _group = 'teen')),
+        const SizedBox(height: 10),
         _RadioRow(label: 'Sénior', selected: _group == 'senior', onTap: () => setState(() => _group = 'senior')),
         if (_child) AuthField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
         AuthField(
-          label: _adult ? 'Email' : 'Email (opcional)',
+          label: _adult ? 'Email ou telemóvel — basta um' : 'Email (opcional)',
           controller: _email,
           keyboardType: TextInputType.emailAddress,
+          hint: 'Email',
         ),
         AuthField(
-          label: _adult ? 'Telemóvel' : 'Telemóvel (opcional)',
+          label: _adult ? '' : 'Telemóvel (opcional)',
           controller: _phone,
           keyboardType: TextInputType.phone,
+          hint: 'Telemóvel',
+          topGap: _adult ? 10 : 16,
         ),
         if (!_adult && widget.others.isNotEmpty) ...[
           const SizedBox(height: 22),
@@ -820,8 +829,8 @@ class _CompanionPageState extends State<_CompanionPage> {
           decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(12)),
           child: Text(
             _adult
-                ? 'Pedimos o email e o telemóvel de cada adulto: se esta pessoa já estiver no evento, ou criar conta depois, fica logo ligada a esta resposta — só tem de confirmar e não há entradas repetidas.'
-                : 'Para crianças e seniores o contacto é opcional. Se o indicares, a pessoa fica ligada à conta dela quando a criar.',
+                ? 'É para o caso de esta pessoa também querer instalar a app e criar conta: com o mesmo email ou telemóvel, entra já com esta resposta preenchida — só tem de confirmar, sem entradas repetidas.'
+                : 'Opcional para crianças, adolescentes e seniores. Se esta pessoa quiser instalar a app e criar conta, com o mesmo contacto fica logo ligada a esta resposta.',
             style: const TextStyle(fontSize: 12, height: 17 / 12, color: AppTheme.inkMuted),
           ),
         ),
