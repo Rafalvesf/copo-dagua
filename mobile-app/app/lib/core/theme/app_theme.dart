@@ -166,17 +166,145 @@ class AppTheme {
           fontWeight: FontWeight.w600,
         ),
       ),
+      // Campos, diálogos, folhas e avisos no estilo novo em toda a app —
+      // revisão 2026-10-17: muitas folhas e diálogos abertos por botões
+      // ainda tinham o aspeto Material por omissão.
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.gray,
+        fillColor: surface,
+        hintStyle: const TextStyle(color: Color(0xFF8F8B84)),
+        labelStyle: const TextStyle(color: inkMuted),
+        floatingLabelStyle: const TextStyle(color: accentOliveDark, fontWeight: FontWeight.w700),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
           borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderSide: const BorderSide(color: accentOliveDark, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderSide: const BorderSide(color: Color(0xFFB4232C)),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderSide: const BorderSide(color: Color(0xFFB4232C), width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 16,
         ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        titleTextStyle: const TextStyle(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
+          fontSize: AppFontSize.xl,
+          fontWeight: FontWeight.w700,
+          color: ink,
+        ),
+        contentTextStyle: const TextStyle(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
+          fontSize: AppFontSize.base,
+          height: 1.45,
+          color: inkMuted,
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: Colors.white,
+        elevation: 0,
+        showDragHandle: false,
+        dragHandleColor: borderMuted,
+        dragHandleSize: Size(40, 4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: accentOliveDark,
+          textStyle: const TextStyle(
+            fontFamily: fontFamily,
+            fontFamilyFallback: fontFamilyFallback,
+            fontSize: AppFontSize.base,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: ink,
+        contentTextStyle: const TextStyle(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
+          fontSize: AppFontSize.base,
+          color: Colors.white,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+      ),
+      listTileTheme: const ListTileThemeData(
+        iconColor: inkMuted,
+        contentPadding: EdgeInsets.symmetric(horizontal: 24),
+        titleTextStyle: TextStyle(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
+          fontSize: AppFontSize.base + 1,
+          fontWeight: FontWeight.w700,
+          color: ink,
+        ),
+        subtitleTextStyle: TextStyle(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
+          fontSize: AppFontSize.sm,
+          color: inkMuted,
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((s) => Colors.white),
+        trackColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? accentOliveDark : const Color(0xFFD9D4C9),
+        ),
+        trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? accentOliveDark : Colors.transparent,
+        ),
+        side: const BorderSide(color: Color(0xFFCFC8B8), width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        textStyle: const TextStyle(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
+          fontSize: AppFontSize.base,
+          color: ink,
+        ),
+      ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        headerBackgroundColor: accentOliveDark,
+        headerForegroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

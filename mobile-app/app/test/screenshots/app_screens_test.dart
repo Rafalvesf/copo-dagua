@@ -19,6 +19,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, FlutterAuthClientOptions;
 
 import 'package:copo_dagua_app/core/auth/auth_controller.dart';
 import 'package:copo_dagua_app/core/budget/budget_controller.dart';
@@ -548,10 +550,41 @@ Future<void> _shoot(
   await tester.pump(const Duration(seconds: 2));
 }
 
+/// Toca no primeiro widget com este texto (ou ícone) — para fotografar as
+/// páginas e folhas que só abrem a partir de um botão.
+Future<void> Function(WidgetTester) _tapText(String text) => (t) async {
+      final f = find.text(text);
+      if (f.evaluate().isEmpty) return;
+      await t.ensureVisible(f.first);
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tap(f.first, warnIfMissed: false);
+    };
+
+Future<void> Function(WidgetTester) _tapIcon(IconData icon) => (t) async {
+      final f = find.byIcon(icon);
+      if (f.evaluate().isEmpty) return;
+      await t.tap(f.first, warnIfMissed: false);
+    };
+
 AuthState _active(Profile p) => AuthState(status: AuthStatus.active, profile: p);
 
 void main() {
-  setUpAll(_loadFonts);
+  setUpAll(() async {
+    await _loadFonts();
+    // Alguns ecrãs (Orçamento, Serviços tratados, Perfil do parceiro,
+    // onboarding do parceiro) chamam o Supabase diretamente. Sem isto o
+    // teste falhava com "You must initialize the supabase instance". Um
+    // endereço local que não responde: os pedidos falham logo (nunca
+    // chegam à base de dados real) e os ecrãs mostram o seu estado vazio.
+    SharedPreferences.setMockInitialValues({});
+    try {
+      await Supabase.initialize(
+        url: 'http://127.0.0.1:9',
+        publishableKey: 'test',
+        authOptions: const FlutterAuthClientOptions(autoRefreshToken: false),
+      );
+    } catch (_) {}
+  });
 
   final couple = _active(_coupleProfile);
   final partner = _active(_partnerProfile);
@@ -671,4 +704,41 @@ void main() {
         ));
   }
   testWidgets('54_convidado_detalhes', (t) => _shoot(t, '54_convidado_detalhes', guest, '/guest-wedding-details', extra: _guestWedding));
+
+  // Páginas e folhas abertas por botões (revisão 2026-10-17: "cada
+  // botão de cada página tem uma aba, alguns nem foram refeitos").
+  for (final (name, auth, path, after) in [
+    ('60_sub_editar_evento', couple, '/settings', _tapText('Detalhes do evento')),
+    ('61_sub_novo_convidado', couple, '/guests', _tapIcon(Icons.add)),
+    ('62_sub_nova_despesa', couple, '/budget', _tapIcon(Icons.add)),
+    ('63_sub_categoria', couple, '/budget', _tapText('Catering')),
+    ('64_sub_nova_tarefa', couple, '/tasks', _tapIcon(Icons.add)),
+    ('65_sub_checklist_nova', couple, '/checklist', _tapIcon(Icons.add)),
+    ('66_sub_mesa', couple, '/seating', _tapIcon(Icons.add)),
+    ('67_sub_reserva', couple, '/bookings', _tapText('Quinta do Lago Azul')),
+    ('68_sub_suporte_novo', couple, '/support', _tapText('Novo pedido de suporte')),
+    ('69_sub_partilhar', couple, '/guests', _tapIcon(Icons.ios_share)),
+    ('70_sub_modo_convidado', guest, '/guest-events', _tapText('Tenho um código')),
+    ('71_sub_editar_convidado', couple, '/guests/g0', _tapText('Editar convidado')),
+    ('72_sub_pacote', partner, '/partner-pricing', _tapText('+ Adicionar pacote')),
+    ('73_sub_negocio_editar', partner, '/partner-business-info', _tapText('Quinta do Lago Azul')),
+    ('74_sub_bloquear_data', partner, '/partner-calendar', _tapText('20')),
+    ('75_sub_mesa_local', partner, '/partner-venue-tables', _tapIcon(Icons.add)),
+    ('76_sub_avaliacao', partner, '/partner-reviews', _tapIcon(Icons.more_horiz)),
+    ('77_sub_tua_mesa', guest, '/guest-profile', _tapText('A tua mesa')),
+    ('78_sub_editar_eu', guest, '/guest-profile', _tapText('Tu')),
+    ('79_sub_icone_barra', couple, '/settings', _tapText('Ícone da barra')),
+    ('80_sub_nome', couple, '/settings', _tapText('Nome')),
+    ('81_sub_pedir_orcamento', couple, '/partners', (WidgetTester t) async {
+      final ctx = t.element(find.byType(PartnersListScreen));
+      PartnerDetailScreen.show(ctx, _partners.first);
+      for (var i = 0; i < 8; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+      }
+      await _tapText('Pedir orçamento')(t);
+    }),
+  ]) {
+    testWidgets(name, (t) => _shoot(t, name, auth, path, after: after));
+  }
+  testWidgets('82_esqueci_password', (t) => _shoot(t, '82_esqueci_password', signedOut, '/forgot-password'));
 }
