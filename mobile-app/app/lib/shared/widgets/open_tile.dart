@@ -13,12 +13,16 @@ class OpenTile extends StatelessWidget {
   final Color color;
   final double radius;
 
+  /// Corre ao tocar, antes de abrir (ex.: marcar uma tarefa como vista).
+  final VoidCallback? onOpen;
+
   const OpenTile({
     super.key,
     required this.child,
     required this.page,
     required this.color,
     this.radius = 20,
+    this.onOpen,
   });
 
   @override
@@ -34,7 +38,13 @@ class OpenTile extends StatelessWidget {
       closedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
       openShape: const RoundedRectangleBorder(),
       tappable: false,
-      closedBuilder: (context, open) => SnappyTap(onTap: open, child: child),
+      closedBuilder: (context, open) => SnappyTap(
+        onTap: () {
+          onOpen?.call();
+          open();
+        },
+        child: child,
+      ),
       openBuilder: (context, _) => page(context),
     );
   }

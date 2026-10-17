@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/open_tile.dart';
+import 'guest_wedding_details_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -231,17 +233,13 @@ class _GuestHomeBody extends ConsumerWidget {
               icon: Icons.schedule_outlined,
               title: 'Programa',
               subtitle: wedding.ceremonyTime?.isNotEmpty == true ? 'Começa às ${wedding.ceremonyTime}' : 'Horários e local',
-              onTap: () => context.push('/guest-wedding-details', extra: wedding),
+              page: (_) => GuestWeddingDetailsScreen(wedding: wedding),
             ),
             _Tile(
               icon: Icons.table_restaurant_outlined,
               title: 'A tua mesa',
               subtitle: table == null ? 'Ainda não atribuída' : 'Mesa $table',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => GuestTableScreen(weddingId: wedding.weddingId, tableNumber: table),
-                ),
-              ),
+              page: (_) => GuestTableScreen(weddingId: wedding.weddingId, tableNumber: table),
             ),
             _Tile(
               icon: Icons.card_giftcard_outlined,
@@ -390,15 +388,23 @@ class _Tile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Color? tint;
-  const _Tile({required this.icon, required this.title, required this.subtitle, required this.onTap, this.tint});
+
+  /// Programa e A tua mesa abrem a crescer a partir do cartão; Presentes
+  /// e Galeria são separadores da barra de baixo e navegam normalmente.
+  final WidgetBuilder? page;
+  const _Tile({required this.icon, required this.title, required this.subtitle, this.onTap, this.tint, this.page});
 
   @override
   Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
+    final card = _card();
+    if (page != null) return OpenTile(color: tint ?? AppTheme.surface, page: page!, child: card);
+    return SnappyTap(onTap: onTap, child: card);
+  }
+
+  Widget _card() {
+    return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(color: tint ?? AppTheme.surface, borderRadius: BorderRadius.circular(20)),
         child: Column(
@@ -416,8 +422,7 @@ class _Tile extends StatelessWidget {
             Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 

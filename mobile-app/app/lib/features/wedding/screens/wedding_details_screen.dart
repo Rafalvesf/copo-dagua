@@ -20,6 +20,8 @@ import '../../gallery/screens/gallery_screen.dart';
 import '../../settings/screens/guest_facing_screen.dart' show GuestPageRoute;
 import '../../tasks/screens/service_preferences_screen.dart';
 import '../../../shared/widgets/open_tile.dart';
+import '../../tasks/screens/tasks_screen.dart';
+import '../../bookings/screens/couple_bookings_screen.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -730,14 +732,16 @@ class _UpcomingTasksSection extends ConsumerWidget {
     _ => Icons.task_alt_outlined,
   };
 
-  static String? _routeForCategory(String? category) => switch (category) {
-    'orcamento' => '/budget',
-    'convidados' => '/guests',
-    'lugares' => '/seating',
-    'parceiros' => '/partners',
+  /// Página que a tarefa abre (a crescer a partir do cartão). Parceiros é
+  /// um separador da barra de baixo: aí continua a navegar normalmente.
+  static WidgetBuilder? _pageForCategory(String? category) => switch (category) {
+    'orcamento' => (_) => const BudgetScreen(),
+    'convidados' => (_) => const GuestsListScreen(),
+    'lugares' => (_) => const SeatingScreen(),
+    'parceiros' => null,
     // "Pagar sinal — …": leva às Reservas, onde está o botão de pagar.
-    'pagamentos' => '/bookings',
-    _ => null,
+    'pagamentos' => (_) => const CoupleBookingsScreen(),
+    _ => (_) => const TasksScreen(),
   };
 
   @override
@@ -765,12 +769,12 @@ class _UpcomingTasksSection extends ConsumerWidget {
             // Menos texto (design): só a primeira frase.
             description: task.description?.split(RegExp(r'(?<=[.!?])\s')).first.trim(),
             icon: _iconForCategory(task.category),
+            page: _pageForCategory(task.category),
             onTap: () {
               if (!task.seen) {
                 ref.read(taskEngineControllerProvider.notifier).markTaskSeen(task.id);
               }
-              final route = _routeForCategory(task.category);
-              context.push(route ?? '/tasks');
+              if (_pageForCategory(task.category) == null) context.push('/partners');
             },
           ),
           if (index != top.length - 1) const SizedBox(height: 10),
@@ -785,19 +789,25 @@ class _TaskRow extends StatelessWidget {
   final String? description;
   final IconData icon;
   final VoidCallback onTap;
+  final WidgetBuilder? page;
 
   const _TaskRow({
     required this.title,
     this.description,
     required this.icon,
     required this.onTap,
+    this.page,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
+    final card = _card();
+    if (page == null) return SnappyTap(onTap: onTap, child: card);
+    return OpenTile(color: AppTheme.surface, page: page!, onOpen: onTap, child: card);
+  }
+
+  Widget _card() {
+    return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
@@ -843,8 +853,7 @@ class _TaskRow extends StatelessWidget {
             const Icon(Icons.chevron_right, size: 18, color: Color(0xFF8F8B84)),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -1012,8 +1021,10 @@ class _BookingsSection extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            SnappyTap(
-              onTap: () => context.push('/bookings'),
+            OpenTile(
+              color: AppTheme.surface,
+              radius: AppRadius.lg,
+              page: (_) => const CoupleBookingsScreen(),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
