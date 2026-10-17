@@ -790,5 +790,21 @@ void main() {
       _maintenanceOn = false;
     }
   });
+  testWidgets('57_convidado_acompanhante', (t) => _shoot(
+        t,
+        '57_convidado_acompanhante',
+        guest,
+        '/guest-onboarding/w1?step=1',
+        extra: Guest(
+          id: 'g0',
+          weddingId: 'w1',
+          name: 'Rita Mendes',
+          rsvpStatus: RsvpStatus.pending,
+          plusOneAllowed: true,
+          maxCompanions: 2,
+          createdAt: _days(-3),
+        ),
+        after: _tapText('Adicionar acompanhante'),
+      ));
   testWidgets('82_esqueci_password', (t) => _shoot(t, '82_esqueci_password', signedOut, '/forgot-password'));
 }
