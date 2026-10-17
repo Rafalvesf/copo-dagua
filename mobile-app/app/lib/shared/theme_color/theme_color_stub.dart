@@ -1,0 +1,1 @@
+void setThemeColor(String hex) {}

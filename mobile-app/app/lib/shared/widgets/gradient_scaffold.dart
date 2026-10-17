@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../theme_color/theme_color.dart';
+
 import '../../core/theme/app_theme.dart';
 
 /// Qual tratamento de fundo em gradiente um ecrã deve usar — ver
@@ -74,6 +76,7 @@ class GradientScaffold extends StatelessWidget {
           primaryColor: color.toARGB32(),
         ),
       );
+      setBarColor(color);
     });
   }
 
