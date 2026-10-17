@@ -702,6 +702,7 @@ class _UpcomingTasksSection extends ConsumerWidget {
     'convidados' => Icons.people_outline,
     'lugares' => Icons.event_seat_outlined,
     'parceiros' => Icons.storefront_outlined,
+    'pagamentos' => Icons.euro_rounded,
     _ => Icons.task_alt_outlined,
   };
 
@@ -710,6 +711,8 @@ class _UpcomingTasksSection extends ConsumerWidget {
     'convidados' => '/guests',
     'lugares' => '/seating',
     'parceiros' => '/partners',
+    // "Pagar sinal — …": leva às Reservas, onde está o botão de pagar.
+    'pagamentos' => '/bookings',
     _ => null,
   };
 

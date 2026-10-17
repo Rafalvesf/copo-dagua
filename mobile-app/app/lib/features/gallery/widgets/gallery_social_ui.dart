@@ -378,7 +378,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                 _Action(
                   icon: Icons.download_rounded,
                   tooltip: 'Descarregar',
-                  onTap: () => launchUrl(Uri.parse(widget.photo.imageUrl), mode: LaunchMode.externalApplication),
+                  onTap: () => launchUrl(_downloadUri(widget.photo.imageUrl), mode: LaunchMode.platformDefault, webOnlyWindowName: '_self'),
                 ),
               ],
             ),
@@ -780,4 +780,15 @@ class _Stat extends StatelessWidget {
       ],
     );
   }
+}
+
+
+/// Link da foto que descarrega em vez de abrir a página do Supabase:
+/// o Supabase Storage aceita `download` no link assinado e responde com
+/// "Content-Disposition: attachment" (pedido 2026-10-17: "vai para a
+/// Supabase em vez de fazer logo download").
+Uri _downloadUri(String url) {
+  final uri = Uri.parse(url);
+  final name = uri.pathSegments.isEmpty ? 'foto.jpg' : uri.pathSegments.last;
+  return uri.replace(queryParameters: {...uri.queryParameters, 'download': 'tchin-tchin-$name'});
 }

@@ -52,6 +52,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     'convidados' => '/guests',
     'lugares' => '/seating',
     'parceiros' => '/partners',
+    // "Pagar sinal — …": leva às Reservas, onde está o botão de pagar.
+    'pagamentos' => '/bookings',
     _ => null,
   };
 
