@@ -141,6 +141,34 @@ class PartnerHomeScreen extends ConsumerWidget {
                 // Canvas "Parceiro — painel": só os números e os novos pedidos
                 // (calendário, contratos e pagamentos estão no Perfil).
                 const _PartnerDashboardSummary(),
+                const SizedBox(height: 14),
+                // Atalhos do negócio (pedido 2026-10-17): saíram do Perfil.
+                GridView.count(
+                  crossAxisCount: 4,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 0.92,
+                  children: [
+                    for (final (icon, label, route) in const [
+                      (Icons.sell_outlined, 'Serviços e preços', '/partner-pricing'),
+                      (Icons.photo_library_outlined, 'Portefólio', '/partner-portfolio'),
+                      (Icons.star_border_rounded, 'Avaliações', '/partner-reviews'),
+                      (Icons.bar_chart_rounded, 'Resultados', '/partner-stats'),
+                      (Icons.payments_outlined, 'Pagamentos', '/partner-payments'),
+                      (Icons.description_outlined, 'Contratos', '/partner-contracts'),
+                      (Icons.event_available_outlined, 'Reservas', '/partner-requests'),
+                    ])
+                      _PartnerTile(
+                        color: AppTheme.surface,
+                        icon: icon,
+                        label: label,
+                        count: route == '/partner-requests' ? newRequests.length : 0,
+                        onTap: () => context.push(route),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 22),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,

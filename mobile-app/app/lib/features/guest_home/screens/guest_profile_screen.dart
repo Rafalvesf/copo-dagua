@@ -392,6 +392,8 @@ class _GuestProfileBody extends ConsumerWidget {
                 ),
               ),
             ],
+            // Definições da conta dentro do Perfil (pedido 2026-10-17).
+            if (profile.role == UserRole.guest) const GuestAccountSections(),
           ],
         );
       },
