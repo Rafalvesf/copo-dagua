@@ -6,8 +6,8 @@ import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
 /// "Os teus eventos" (canvas "Convidado · Os teus eventos") — todos os
@@ -25,25 +25,28 @@ class GuestEventsScreen extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider)),
           data: (weddings) => ListView(
-            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 40),
+            padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
             children: [
-              const Align(alignment: Alignment.centerLeft, child: CircleBackButton()),
-              const SizedBox(height: 12),
-              const Text(
-                'Os teus eventos',
-                style: TextStyle(fontSize: AppFontSize.display, height: 40 / 34, fontWeight: FontWeight.w700, color: AppTheme.ink),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Tudo para onde foste convidado, num só lugar.',
-                style: TextStyle(fontSize: AppFontSize.base + 1, color: AppTheme.inkMuted),
+              // Mesmo cabeçalho de "Convidados"/"Orçamento" do organizador
+              // (pedido 2026-10-17).
+              const PageHeader(title: 'Os teus eventos', centered: true),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                child: Text(
+                  'Tudo para onde foste convidado, num só lugar.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: AppFontSize.base + 1, color: AppTheme.inkMuted),
+                ),
               ),
               const SizedBox(height: 22),
-              for (final w in weddings) ...[
-                _EventCard(wedding: w),
-                const SizedBox(height: 12),
-              ],
-              SnappyTap(
+              for (final w in weddings)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 12),
+                  child: _EventCard(wedding: w),
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                child: SnappyTap(
                 onTap: () => context.push('/settings'),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -70,6 +73,7 @@ class GuestEventsScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+              ),
               ),
             ],
           ),
