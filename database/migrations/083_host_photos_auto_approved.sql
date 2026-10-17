@@ -40,3 +40,6 @@ where p.status = 'pending'
       where wc.wedding_id = p.wedding_id and wc.user_id = p.uploaded_by
     )
   );
+
+-- Só o trigger usa esta função; ninguém a chama por RPC.
+revoke execute on function public.gallery_photo_host_auto_approve() from public, anon, authenticated;
