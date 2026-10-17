@@ -319,14 +319,21 @@ class _PackageCard extends StatelessWidget {
         children: [
           Row(
             children: [
+              // Nome numa linha e o preço por baixo (antes partia a meio).
               Expanded(
-                child: Text(
-                  '${pkg.name}  $priceLabel',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: AppFontSize.lg,
-                    color: AppTheme.ink,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pkg.name,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg, color: AppTheme.ink),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      priceLabel,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, color: AppTheme.accentOliveDark),
+                    ),
+                  ],
                 ),
               ),
               SnappyTap(
