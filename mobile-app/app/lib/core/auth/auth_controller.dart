@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
@@ -113,6 +114,7 @@ class AuthController extends Notifier<AuthState> {
     BrindeGate.pending = true;
     state = state.copyWith(status: AuthStatus.authenticating, errorMessage: null);
     try {
+      await _applyPendingSocialChoices();
       final profile = await _loadProfile(session.user);
       state = AuthState(status: AuthState.statusFor(profile), profile: profile);
     } catch (_) {
@@ -121,6 +123,66 @@ class AuthController extends Notifier<AuthState> {
         await supabase.auth.signOut();
       } catch (_) {}
       state = const AuthState.unauthenticated();
+    }
+  }
+
+  static const _pendingRoleKey = 'pending_social_role';
+  static const _pendingCodeKey = 'pending_social_wedding_code';
+
+  /// Entrar ou criar conta com Google/Apple (pedido 2026-10-17). Abre a
+  /// página do Google/Apple; ao voltar, a app retoma a sessão em
+  /// [_restoreSession]. [role] e [weddingCode] vêm do ecrã de registo e
+  /// são aplicados à conta nova logo a seguir.
+  Future<void> signInWithProvider(OAuthProvider provider, {UserRole? role, String? weddingCode}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keepKey, true);
+      if (role != null) {
+        await prefs.setString(_pendingRoleKey, role.name);
+      } else {
+        await prefs.remove(_pendingRoleKey);
+      }
+      if (weddingCode != null && weddingCode.trim().isNotEmpty) {
+        await prefs.setString(_pendingCodeKey, weddingCode.trim());
+      } else {
+        await prefs.remove(_pendingCodeKey);
+      }
+    } catch (_) {}
+    try {
+      await supabase.auth.signInWithOAuth(
+        provider,
+        // Volta para a própria app (ex.: https://…/copo-dagua/).
+        redirectTo: kIsWeb ? '${Uri.base.origin}${Uri.base.path}' : null,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: 'Não foi possível abrir o ${provider == OAuthProvider.apple ? 'Apple' : 'Google'}. Tenta novamente.',
+      );
+    }
+  }
+
+  /// Papel e código escolhidos antes de ir ao Google/Apple.
+  Future<void> _applyPendingSocialChoices() async {
+    SharedPreferences prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+    } catch (_) {
+      return;
+    }
+    final role = prefs.getString(_pendingRoleKey);
+    final code = prefs.getString(_pendingCodeKey);
+    await prefs.remove(_pendingRoleKey);
+    await prefs.remove(_pendingCodeKey);
+    if (role != null) {
+      try {
+        await supabase.rpc('set_new_account_role', params: {'p_role': role});
+      } catch (_) {}
+    }
+    if (code != null && code.isNotEmpty) {
+      try {
+        await supabase.rpc('join_wedding_by_code', params: {'p_code': code});
+      } catch (_) {}
     }
   }
 

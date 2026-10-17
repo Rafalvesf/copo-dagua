@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
@@ -116,6 +117,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             TextInput.finishAutofillContext();
             ref.read(authControllerProvider.notifier).login(email: _email.text.trim(), password: _password.text, keepSignedIn: _keep);
           },
+        ),
+        const AuthOrDivider(),
+        AuthSocialButton(
+          label: 'Continuar com Google',
+          badge: const Text('G', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          onPressed: () => ref.read(authControllerProvider.notifier).signInWithProvider(OAuthProvider.google),
+        ),
+        AuthSocialButton(
+          label: 'Continuar com Apple',
+          badge: const Icon(Icons.apple, size: 14, color: AppTheme.ink),
+          onPressed: () => ref.read(authControllerProvider.notifier).signInWithProvider(OAuthProvider.apple),
         ),
         const SizedBox(height: 16),
         GestureDetector(
