@@ -26,20 +26,23 @@ class CategoryFigure {
   String format(int n) => [if (prefix.isNotEmpty) prefix, '$n', if (unit.isNotEmpty) unit].join(' ');
 }
 
+// Uma pergunta própria por categoria (pedido 2026-10-17: "nem todos
+// vão querer saber quantas pessoas servem — talvez quantas flores no
+// mínimo"). Mesmas perguntas do passo 4 do onboarding no design.
 const _bySlug = <String, CategoryFigure>{
-  'venue': CategoryFigure(label: 'Capacidade', question: 'Capacidade máxima (pessoas)', unit: '', prefix: 'até'),
-  'catering': CategoryFigure(label: 'Serve até', question: 'Até quantas pessoas servem', unit: 'pessoas'),
-  'flowers_decor': CategoryFigure(label: 'Arranjos', question: 'Arranjos florais por evento (até)', unit: 'arranjos', prefix: 'até'),
-  'photography': CategoryFigure(label: 'Fotos entregues', question: 'Fotos entregues (média)', unit: 'fotos', prefix: '±'),
+  'venue': CategoryFigure(label: 'Capacidade', question: 'Quantas pessoas recebem, no máximo', unit: 'pessoas', prefix: 'até'),
+  'catering': CategoryFigure(label: 'Mínimo', question: 'A partir de quantas pessoas servem', unit: 'pessoas', prefix: 'desde'),
+  'flowers_decor': CategoryFigure(label: 'Encomenda mín.', question: 'Encomenda mínima (arranjos)', unit: 'arranjos'),
+  'photography': CategoryFigure(label: 'Cobertura', question: 'Horas de cobertura incluídas', unit: 'h'),
   'videography': CategoryFigure(label: 'Filme', question: 'Duração do filme (minutos)', unit: 'min'),
   'music_dj': CategoryFigure(label: 'Música', question: 'Horas de música incluídas', unit: 'h'),
   'bands_musicians': CategoryFigure(label: 'Atuação', question: 'Horas de atuação incluídas', unit: 'h'),
   'photobooth_entertainment': CategoryFigure(label: 'Animação', question: 'Horas de animação incluídas', unit: 'h'),
-  'wedding_planner': CategoryFigure(label: 'Por ano', question: 'Casamentos organizados por ano', unit: 'casamentos'),
+  'wedding_planner': CategoryFigure(label: 'Por ano', question: 'Eventos organizados por ano', unit: 'eventos'),
   'transport': CategoryFigure(label: 'Lugares', question: 'Lugares por viatura', unit: 'lugares'),
-  'beauty': CategoryFigure(label: 'Por dia', question: 'Pessoas atendidas por dia (até)', unit: 'pessoas', prefix: 'até'),
-  'cake': CategoryFigure(label: 'Serve até', question: 'Até quantas pessoas serve o bolo', unit: 'pessoas'),
-  'invitations': CategoryFigure(label: 'Mínimo', question: 'Encomenda mínima (convites)', unit: 'convites'),
+  'beauty': CategoryFigure(label: 'Por dia', question: 'Pessoas atendidas por dia', unit: 'pessoas', prefix: 'até'),
+  'cake': CategoryFigure(label: 'Mínimo', question: 'Mínimo de fatias por bolo', unit: 'fatias', prefix: 'desde'),
+  'invitations': CategoryFigure(label: 'Encomenda mín.', question: 'Encomenda mínima (convites)', unit: 'convites'),
   'officiant': CategoryFigure(label: 'Cerimónia', question: 'Duração da cerimónia (minutos)', unit: 'min'),
   'rentals': CategoryFigure(label: 'Peças', question: 'Peças disponíveis', unit: 'peças'),
 };
