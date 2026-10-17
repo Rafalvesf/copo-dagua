@@ -754,8 +754,7 @@ class _QuickLinkTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Canvas "Menu · Casamento": ícone num autocolante branco inclinado e
-    // o mesmo ícone, grande e suave, no canto.
+    // Canvas "Menu · Casamento": ícone num autocolante branco inclinado.
     const tilts = [-6.0, 5.0, 4.0, -5.0, -3.0, 6.0];
     final tilt = tilts[index % tilts.length] * 3.14159 / 180;
     return SnappyTap(
@@ -766,14 +765,6 @@ class _QuickLinkTile extends StatelessWidget {
         decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(22), boxShadow: _softShadow),
         child: Stack(
           children: [
-            Positioned(
-              right: -10,
-              bottom: -12,
-              child: Transform.rotate(
-                angle: -tilt * 2,
-                child: Icon(icon, size: 74, color: accent.withValues(alpha: 0.12)),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
               child: Column(
