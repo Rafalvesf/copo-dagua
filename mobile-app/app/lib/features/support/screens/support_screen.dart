@@ -308,7 +308,7 @@ class _CategoryChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppTheme.ink : AppTheme.surface,
+          color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(

@@ -37,7 +37,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   void initState() {
     super.initState();
     // Sinais pagos entretanto entram logo no "Gasto".
-    Future.microtask(() => ref.read(budgetControllerProvider.notifier).reload());
+    Future.microtask(() => ref.read(budgetControllerProvider.notifier).reload().catchError((_) {}));
   }
 
   Future<void> _addExpense() async {
