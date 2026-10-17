@@ -108,7 +108,7 @@ class GuestListItem extends StatelessWidget {
 
   const GuestListItem({super.key, required this.guest, required this.onTap});
 
-  String get _adultsLabel => guest.plusOneAllowed ? '2 adultos' : '1 adulto';
+  String get _adultsLabel => guest.maxCompanions == 0 ? '1 pessoa' : '${guest.maxCompanions + 1} pessoas';
 
   @override
   Widget build(BuildContext context) {

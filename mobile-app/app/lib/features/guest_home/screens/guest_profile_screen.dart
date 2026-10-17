@@ -314,24 +314,44 @@ class _GuestProfileBody extends ConsumerWidget {
                       style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF8F8B84)),
                     ),
                   ),
-                  if (guest.plusOneAllowed)
+                  // Só enquanto houver lugar, segundo o limite dado pelo
+                  // organizador (091).
+                  if (companions.length < guest.maxCompanions)
                     SnappyTap(
-                      onTap: () => _editField(
-                        context,
-                        ref,
-                        title: 'Nome do acompanhante',
-                        guest: guest,
-                        currentValue: (g) => g.plusOneName,
-                        onSave: (value) => updateOwnGuestInfo(
-                          phone: guest.phone,
-                          dietaryRestrictions: guest.dietaryRestrictions,
-                          plusOneName: value,
-                        ),
-                      ),
+                      onTap: () async {
+                        final controller = TextEditingController();
+                        final name = await showDialog<String>(
+                          context: context,
+                          builder: (d) => AlertDialog(
+                            title: const Text('Nome do acompanhante'),
+                            content: TextField(controller: controller, autofocus: true, textCapitalization: TextCapitalization.words),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.of(d).pop(), child: const Text('Cancelar')),
+                              FilledButton(onPressed: () => Navigator.of(d).pop(controller.text.trim()), child: const Text('Adicionar')),
+                            ],
+                          ),
+                        );
+                        if (name == null || name.isEmpty) return;
+                        await saveGuestCompanions(
+                          guestId: guest.id,
+                          weddingId: weddingId,
+                          companions: [...companions, GuestCompanion(name: name)],
+                        );
+                        ref.invalidate(guestCompanionsProvider(guest.id));
+                      },
                       child: const Text('+ Acompanhante', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
                     ),
                 ],
               ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  guest.maxCompanions == 0
+                      ? 'Este convite é só para ti.'
+                      : 'Podes levar até ${guest.maxCompanions} ${guest.maxCompanions == 1 ? 'pessoa' : 'pessoas'} (${companions.length} indicada${companions.length == 1 ? '' : 's'}).',
+                  style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
+                ),
               ),
               _PersonLine(
                 initials: _initialsOf(profile.fullName),

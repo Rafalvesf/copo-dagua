@@ -31,7 +31,6 @@ class GuestOnboardingWizardScreen extends ConsumerStatefulWidget {
 
 enum _Step { attending, companions, menu, allergies, side, relationship }
 
-const _maxCompanions = 5;
 const _adultMenus = ['Carne', 'Peixe', 'Vegetariano'];
 const _childMenus = ['Menu criança', 'Carne', 'Peixe'];
 const _allergyOptions = ['Glúten', 'Lactose', 'Marisco', 'Frutos secos', 'Outra'];
@@ -108,9 +107,12 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   EventType get _eventType => _wedding?.eventType ?? EventType.wedding;
   String get _hosts => _wedding?.displayNames ?? 'os anfitriões';
 
+  /// Limite definido pelo organizador (091); antes era sempre 5.
+  int get _limit => widget.guest.maxCompanions > 0 ? widget.guest.maxCompanions : (widget.guest.plusOneAllowed ? 1 : 0);
+
   List<_Step> get _steps => [
         _Step.attending,
-        if (widget.guest.plusOneAllowed) _Step.companions,
+        if (_limit > 0) _Step.companions,
         _Step.menu,
         _Step.allergies,
         if (_eventType == EventType.wedding) _Step.side,
@@ -317,7 +319,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       case _Step.companions:
         return _StepScaffold(
           question: 'Quem vai contigo?',
-          subtitle: 'Os anfitriões deixaram levar até $_maxCompanions pessoas.',
+          subtitle: _limit == 1 ? 'Os anfitriões deixaram levar 1 pessoa.' : 'Os anfitriões deixaram levar até $_limit pessoas.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -329,7 +331,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   subtitle: [c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}' : 'Adulto', if (c.phone.trim().isNotEmpty) c.phone.trim()].join(' · '),
                   onEdit: () => _editCompanion(c),
                 ),
-              if (_companions.length < _maxCompanions)
+              if (_companions.length < _limit)
                 SnappyTap(
                   onTap: () => _editCompanion(),
                   child: CustomPaint(

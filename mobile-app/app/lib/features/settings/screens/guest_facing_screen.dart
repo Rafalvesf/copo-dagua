@@ -4,12 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/models/models.dart';
+import '../../../core/guests/guest_controller.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/guest_facing.dart';
 import '../../../core/wedding/pastel_colors.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/wedding_venue.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/guest_widgets.dart' show CompanionLimitRow;
 import '../../../shared/widgets/navigation_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -293,6 +296,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                         const SizedBox(height: 12),
                         _PreviewButton(onTap: _preview),
                         if (_joinMode != null) ..._joinSection(),
+                        _CompanionsSection(weddingId: widget.wedding.id),
                         const _Caps('Boas-vindas'),
                         _Field(
                           controller: _welcome,
@@ -977,6 +981,114 @@ class _SaveBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+
+/// "Acompanhantes" — quantas pessoas cada convidado pode trazer
+/// (091). O valor por omissão vale para quem entra pelo código; o botão
+/// aplica-o a todos os convidados que já existem. Cada convidado também
+/// pode ter o seu limite na ficha dele (Convidados). Guarda logo.
+class _CompanionsSection extends ConsumerStatefulWidget {
+  final String weddingId;
+  const _CompanionsSection({required this.weddingId});
+
+  @override
+  ConsumerState<_CompanionsSection> createState() => _CompanionsSectionState();
+}
+
+class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
+  int? _value;
+  bool _available = true;
+  bool _applying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final r = await supabase.from('weddings').select('default_max_companions').eq('id', widget.weddingId).single();
+      if (mounted) setState(() => _value = (r['default_max_companions'] as int?) ?? 1);
+    } catch (_) {
+      if (mounted) setState(() => _available = false);
+    }
+  }
+
+  Future<void> _set(int v) async {
+    setState(() => _value = v);
+    try {
+      await supabase.from('weddings').update({'default_max_companions': v}).eq('id', widget.weddingId);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar.')));
+      }
+    }
+  }
+
+  Future<void> _applyAll() async {
+    final v = _value ?? 1;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (d) => AlertDialog(
+        title: const Text('Aplicar a todos?'),
+        content: Text(v == 0
+            ? 'Todos os convidados passam a poder vir só eles.'
+            : 'Todos os convidados passam a poder trazer até $v ${v == 1 ? 'pessoa' : 'pessoas'}. Podes depois mudar um a um.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(d).pop(false), child: const Text('Cancelar')),
+          FilledButton(onPressed: () => Navigator.of(d).pop(true), child: const Text('Aplicar')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    setState(() => _applying = true);
+    var msg = 'Aplicado a todos os convidados.';
+    try {
+      await supabase.from('guests').update({'max_companions': v}).eq('wedding_id', widget.weddingId);
+      await ref.read(guestsControllerProvider.notifier).load(widget.weddingId);
+    } catch (_) {
+      msg = 'Não foi possível aplicar. Tenta outra vez.';
+    }
+    if (!mounted) return;
+    setState(() => _applying = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_available) return const SizedBox.shrink();
+    final v = _value;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _Caps('Acompanhantes'),
+        if (v == null)
+          const SizedBox(height: 60, child: Center(child: CircularProgressIndicator()))
+        else ...[
+          CompanionLimitRow(
+            title: 'Cada convidado pode trazer',
+            subtitle: v == 0 ? 'Ninguém traz acompanhantes' : (v == 1 ? 'Até 1 pessoa' : 'Até $v pessoas'),
+            value: v,
+            onChanged: _set,
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Vale para quem entra com o código. Na ficha de cada convidado podes dar mais ou menos lugares.',
+            style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: _applying ? null : _applyAll,
+              child: Text(_applying ? 'A aplicar…' : 'Aplicar a todos os convidados'),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

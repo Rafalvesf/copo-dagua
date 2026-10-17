@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/guest_home/guest_home_providers.dart' show guestCompanionsProvider;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -79,6 +80,7 @@ class _GuestDetailHeader extends ConsumerWidget {
             group: result.group,
             side: result.side,
             plusOneAllowed: result.plusOneAllowed,
+            maxCompanions: result.maxCompanions,
           ),
         );
   }
@@ -148,6 +150,45 @@ class _GuestDetailBody extends ConsumerStatefulWidget {
 }
 
 class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
+  Future<void> _editCompanionLimit(BuildContext context, Guest guest) async {
+    var value = guest.maxCompanions;
+    final result = await showModalBottomSheet<int>(
+      context: context,
+      builder: (sheet) => StatefulBuilder(
+        builder: (sheet, setSheet) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 22, AppTheme.screenMargin, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Quantas pessoas pode trazer ${guest.name.split(' ').first}?',
+                    style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                const SizedBox(height: 6),
+                const Text('Conta adultos e crianças. O convidado não consegue indicar mais pessoas do que isto.',
+                    style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
+                const SizedBox(height: 16),
+                CompanionLimitRow(title: 'Acompanhantes', value: value, onChanged: (v) => setSheet(() => value = v)),
+                const SizedBox(height: 16),
+                FilledButton(onPressed: () => Navigator.of(sheet).pop(value), child: const Text('Guardar')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (result == null || result == guest.maxCompanions) return;
+    try {
+      await ref.read(guestsControllerProvider.notifier).updateGuest(
+            guest.copyWith(maxCompanions: result, plusOneAllowed: result > 0),
+          );
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar.')));
+      }
+    }
+  }
+
   // Convidados não têm nenhum conceito de "favorito" na base de dados —
   // só um toque visual local, pedido explícito do utilizador (imagem de
   // referência). Não persiste, por isso volta sempre a `false` ao
@@ -336,23 +377,18 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
           ),
           child: Column(
             children: [
-              if (guest.plusOneAllowed)
-                _InfoRow(
-                  icon: Icons.people_outline,
-                  label: '+1 acompanhante',
-                  trailing: const Icon(Icons.chevron_right, color: AppTheme.inkMuted),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          guest.plusOneName?.isNotEmpty == true
-                              ? 'Acompanhante: ${guest.plusOneName}'
-                              : 'Ainda sem nome de acompanhante indicado.',
-                        ),
-                      ),
-                    );
-                  },
-                ),
+              // Limite de acompanhantes, editável aqui (091), e quem o
+              // convidado indicou que traz.
+              _InfoRow(
+                icon: Icons.people_outline,
+                label: () {
+                  final names = ref.watch(guestCompanionsProvider(guest.id)).asData?.value.map((c) => c.name).toList() ?? const <String>[];
+                  final limit = guest.maxCompanions == 0 ? 'Vem sozinho' : 'Pode trazer ${CompanionLimitRow.label(guest.maxCompanions)}';
+                  return names.isEmpty ? limit : '$limit · traz ${names.join(', ')}';
+                }(),
+                trailing: const Icon(Icons.chevron_right, color: AppTheme.inkMuted),
+                onTap: () => _editCompanionLimit(context, guest),
+              ),
               // Menu e restrições vêm do próprio convidado (antes mostrava
               // sempre "Menu normal" quando não havia restrições).
               _InfoRow(
@@ -398,6 +434,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
                     group: result.group,
                     side: result.side,
                     plusOneAllowed: result.plusOneAllowed,
+                    maxCompanions: result.maxCompanions,
                   ),
                 );
           },
