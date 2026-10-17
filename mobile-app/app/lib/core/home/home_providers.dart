@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, FunctionResponse;
 
 import '../auth/auth_controller.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
+import '../../shared/public_link.dart';
 
 /// Providers para o painel do casal (`home_feed_screen.dart`) — mesmo
 /// padrão de `core/partner_app/partner_app_providers.dart`, num ficheiro
@@ -184,15 +187,33 @@ BookingStatus mapRealBookingStatus(String status) => switch (status) {
 /// não está registado em nenhuma plataforma, por isso o retorno à app
 /// não é automático ainda; o pagamento em si e a confirmação via webhook
 /// não dependem disso.
+/// Motivo legível quando o checkout não pode abrir (409 da função).
+class CheckoutUnavailable implements Exception {
+  final String reason;
+  const CheckoutUnavailable(this.reason);
+}
+
 Future<String> createDepositCheckoutUrl(String paymentId) async {
-  final response = await supabase.functions.invoke(
-    'create-deposit-checkout',
-    body: {
-      'payment_id': paymentId,
-      'success_url': 'copodagua://payment-success',
-      'cancel_url': 'copodagua://payment-cancelled',
-    },
-  );
+  // Na web volta às Reservas da app depois de pagar (antes era um
+  // esquema `copodagua://` que o browser não sabe abrir).
+  final success = kIsWeb ? publicLink('/bookings') : 'copodagua://payment-success';
+  final cancel = kIsWeb ? publicLink('/bookings') : 'copodagua://payment-cancelled';
+  final FunctionResponse response;
+  try {
+    response = await supabase.functions.invoke(
+      'create-deposit-checkout',
+      body: {
+        'payment_id': paymentId,
+        'success_url': success,
+        'cancel_url': cancel,
+      },
+    );
+  } on FunctionException catch (e) {
+    final details = e.details;
+    final code = details is Map ? details['error'] as String? : null;
+    if (code != null) throw CheckoutUnavailable(code);
+    rethrow;
+  }
   final data = response.data as Map<String, dynamic>?;
   final url = data?['url'] as String?;
   if (url == null) {
