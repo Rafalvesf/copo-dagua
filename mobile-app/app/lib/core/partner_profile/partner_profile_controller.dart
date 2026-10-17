@@ -145,6 +145,25 @@ class PartnerProfileController extends Notifier<bool> {
   /// nunca teve nenhum ecrã de edição até agora, apesar de já ser exigido
   /// por `submit_partner_profile_for_review()`. Pedido explícito do
   /// utilizador: "nif from the company is mandatory too".
+  /// Passo 4 do onboarding (081): número principal (ou mínimo), máximo
+  /// e o que oferecem. Cada coluna à parte, para uma base de dados sem a
+  /// migração não impedir de concluir.
+  Future<void> saveCategoryDetails({int? keyFigure, int? keyFigureMax, List<String> offerings = const []}) async {
+    final id = ref.read(authControllerProvider).profile?.id;
+    if (id == null) return;
+    if (keyFigure != null) {
+      try {
+        await supabase.from('partner_profiles').update({'key_figure': keyFigure}).eq('id', id);
+      } catch (_) {}
+    }
+    try {
+      await supabase.from('partner_profiles').update({
+        'key_figure_max': keyFigureMax,
+        'offerings': offerings,
+      }).eq('id', id);
+    } catch (_) {}
+  }
+
   Future<void> updateTaxId(String taxId) async {
     state = true;
     final profile = ref.read(authControllerProvider).profile!;

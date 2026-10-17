@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
+import 'role_selection_screen.dart' show authTitle;
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -41,8 +43,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               const CircleBackButton(),
               const SizedBox(height: 8),
-              Text('Entrar', style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+              authTitle('Bem-vindo de volta', 'Entra para continuar a organizar.'),
+              const SizedBox(height: 24),
               if (auth.status == AuthStatus.error && auth.errorMessage != null)
                 ErrorBanner(message: auth.errorMessage!),
               AuthTextField(
@@ -66,6 +69,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: () => ref
                     .read(authControllerProvider.notifier)
                     .login(email: _email.text.trim(), password: _password.text),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Ainda não tens conta? ', style: TextStyle(color: AppTheme.inkMuted)),
+                  TextButton(onPressed: () => context.push('/role'), child: const Text('Criar conta')),
+                ],
               ),
             ],
           ),

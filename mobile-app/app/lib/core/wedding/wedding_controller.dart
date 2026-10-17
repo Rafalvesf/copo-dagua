@@ -58,6 +58,31 @@ class WeddingController extends Notifier<WeddingState> {
     state = WeddingState(loading: false, wedding: row == null ? null : _fromRow(row));
   }
 
+  /// Dados do onboarding v2 (081): tipos de evento escolhidos (até 2),
+  /// "Qual?" quando é "Outro" e telemóveis de quem organiza. Ignora em
+  /// silêncio se a migração ainda não correu.
+  Future<void> saveOnboardingExtras({
+    required String weddingId,
+    required List<EventType> eventTypes,
+    String? otherLabel,
+    String? phone1,
+    String? phone2,
+  }) async {
+    try {
+      await supabase.from('weddings').update({
+        'event_types': [for (final t in eventTypes) t.dbValue],
+        'event_type_other': otherLabel,
+        'partner1_phone': phone1,
+        'partner2_phone': phone2,
+      }).eq('id', weddingId);
+    } catch (_) {}
+    if (phone1 != null && phone1.isNotEmpty) {
+      try {
+        await supabase.from('profiles').update({'phone': phone1}).eq('id', supabase.auth.currentUser!.id);
+      } catch (_) {}
+    }
+  }
+
   Future<Wedding> create({
     required String partnerName1,
     String? partnerName2,
@@ -103,11 +128,17 @@ class WeddingController extends Notifier<WeddingState> {
       // Enquanto `074_wedding_event_type.sql` não estiver aplicada, a
       // coluna não existe (PGRST204 / 42703): cria o evento na mesma, sem
       // o tipo, para o onboarding nunca ficar bloqueado por isto.
-      final missingColumn = e.code == 'PGRST204' ||
-          e.code == '42703' ||
-          e.message.contains('event_type');
-      if (!missingColumn) rethrow;
-      await supabase.from('weddings').insert(values);
+      // Tipos novos (081) numa base de dados que ainda só aceita os 4
+      // antigos: grava como "other" em vez de falhar.
+      if (e.code == '23514' && !eventType.legacy) {
+        await supabase.from('weddings').insert({...values, 'event_type': 'other'});
+      } else {
+        final missingColumn = e.code == 'PGRST204' ||
+            e.code == '42703' ||
+            e.message.contains('event_type');
+        if (!missingColumn) rethrow;
+        await supabase.from('weddings').insert(values);
+      }
     }
     final row = await supabase.from('weddings').select().eq('owner_id', ownerId).single();
     final wedding = _fromRow(row);

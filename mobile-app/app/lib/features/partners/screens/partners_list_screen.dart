@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,6 +20,7 @@ import '../partner_style.dart';
 import 'partner_detail_screen.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/money.dart';
+import '../../../core/partner_profile/partner_location.dart';
 
 class PartnersListScreen extends ConsumerStatefulWidget {
   final String? categorySlug;
@@ -117,34 +120,20 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   /// parceiros já carregados (`service_areas`, via `Partner.location`)
   /// em vez de uma lista fixa, para refletir sempre onde os parceiros
   /// reais estão, e nunca oferecer uma área sem nenhum parceiro.
-  void _showLocationPicker(List<String> options) {
-    showModalBottomSheet(
+  /// Pedido do utilizador (2026-10-17): "aplica a localização atual e
+  /// outras opções quando vais escolher o parceiro" — localização do
+  /// telemóvel, local do evento, pesquisa de localidade ou as zonas onde
+  /// já há parceiros.
+  Future<void> _showLocationPicker(List<String> options) async {
+    final weddingLocation = ref.read(weddingControllerProvider).wedding?.location;
+    final result = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.public),
-              title: const Text('Todas as localizações'),
-              onTap: () {
-                setState(() => _selectedLocation = '');
-                Navigator.of(context).pop();
-              },
-            ),
-            for (final location in options)
-              ListTile(
-                leading: const Icon(Icons.location_on_outlined),
-                title: Text(location),
-                onTap: () {
-                  setState(() => _selectedLocation = location);
-                  Navigator.of(context).pop();
-                },
-              ),
-          ],
-        ),
-      ),
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xxl))),
+      builder: (context) => LocationPickerSheet(options: options, eventLocation: weddingLocation),
     );
+    if (result != null && mounted) setState(() => _selectedLocation = result);
   }
 
   @override
@@ -876,6 +865,127 @@ class _FiltersSheetState extends State<_FiltersSheet> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class LocationPickerSheet extends StatefulWidget {
+  final List<String> options;
+  final String? eventLocation;
+
+  const LocationPickerSheet({super.key, required this.options, this.eventLocation});
+
+  @override
+  State<LocationPickerSheet> createState() => _LocationPickerSheetState();
+}
+
+class _LocationPickerSheetState extends State<LocationPickerSheet> {
+  final _query = TextEditingController();
+  Timer? _debounce;
+  bool _locating = false;
+  List<String> _results = const [];
+
+  @override
+  void dispose() {
+    _query.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _useCurrent() async {
+    setState(() => _locating = true);
+    try {
+      final pos = await currentPosition();
+      final loc = await reverseGeocode(pos.latitude, pos.longitude);
+      final place = loc.city.isNotEmpty ? loc.city : loc.region;
+      if (!mounted) return;
+      if (place.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível perceber a localidade.')));
+      } else {
+        Navigator.of(context).pop(place);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e is LocationException ? e.message : 'Não foi possível obter a localização.')),
+      );
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
+  void _onSearch(String q) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 450), () async {
+      try {
+        final r = await searchAddress(q);
+        final places = <String>{
+          for (final (_, l) in r)
+            if (l.city.isNotEmpty) l.city else if (l.region.isNotEmpty) l.region,
+        }.toList();
+        if (mounted) setState(() => _results = places);
+      } catch (_) {}
+    });
+  }
+
+  Widget _tile(IconData icon, String title, {String? subtitle, required VoidCallback onTap, Widget? leading}) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: leading ?? Icon(icon, color: AppTheme.accentOliveDark),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      subtitle: subtitle == null ? null : Text(subtitle, style: const TextStyle(color: AppTheme.inkMuted)),
+      onTap: onTap,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final event = widget.eventLocation?.trim() ?? '';
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(24, 16, 24, 16 + MediaQuery.of(context).viewInsets.bottom),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              Center(
+                child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.borderMuted, borderRadius: BorderRadius.circular(2))),
+              ),
+              const SizedBox(height: 14),
+              const Text('Onde procurar parceiros?', style: TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 8),
+              _tile(
+                Icons.my_location,
+                'Usar a minha localização atual',
+                subtitle: 'Parceiros perto de onde estás',
+                leading: _locating
+                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))
+                    : null,
+                onTap: _locating ? () {} : _useCurrent,
+              ),
+              if (event.isNotEmpty)
+                _tile(Icons.celebration_outlined, 'Local do evento', subtitle: event, onTap: () => Navigator.of(context).pop(event)),
+              _tile(Icons.public, 'Todas as localizações', onTap: () => Navigator.of(context).pop('')),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _query,
+                onChanged: _onSearch,
+                decoration: const InputDecoration(hintText: 'Escreve uma localidade', prefixIcon: Icon(Icons.search)),
+              ),
+              for (final r in _results)
+                _tile(Icons.location_on_outlined, r, onTap: () => Navigator.of(context).pop(r)),
+              if (widget.options.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text('ONDE HÁ PARCEIROS', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF8F8B84))),
+                for (final o in widget.options)
+                  _tile(Icons.location_on_outlined, o, onTap: () => Navigator.of(context).pop(o)),
+              ],
+            ],
+          ),
         ),
       ),
     );

@@ -241,3 +241,48 @@ Future<void> completeGuestOnboarding({
     },
   );
 }
+
+/// Um acompanhante do convidado (`guest_companions`, 081).
+class GuestCompanion {
+  final String name;
+  final bool isChild;
+  final int? childAge;
+  final String? phone;
+  final String? menu;
+  final List<String> allergies;
+
+  const GuestCompanion({
+    required this.name,
+    this.isChild = false,
+    this.childAge,
+    this.phone,
+    this.menu,
+    this.allergies = const [],
+  });
+}
+
+/// Substitui os acompanhantes do convidado. Sem a migração 081 não faz
+/// nada (o nome continua guardado em `plus_one_name`).
+Future<void> saveGuestCompanions({
+  required String guestId,
+  required String weddingId,
+  required List<GuestCompanion> companions,
+}) async {
+  try {
+    await supabase.from('guest_companions').delete().eq('guest_id', guestId);
+    if (companions.isEmpty) return;
+    await supabase.from('guest_companions').insert([
+      for (final c in companions)
+        {
+          'guest_id': guestId,
+          'wedding_id': weddingId,
+          'name': c.name,
+          'is_child': c.isChild,
+          'child_age': c.childAge,
+          'phone': c.phone,
+          'menu': c.menu,
+          'allergies': c.allergies,
+        },
+    ]);
+  } catch (_) {}
+}

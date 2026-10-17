@@ -9,6 +9,7 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/partner_profile/partner_profile_controller.dart';
+import '../../../core/partners/category_details.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../features/partner_profile/screens/business_info_screen.dart' show CategoryPickerDialog;
 import '../../../features/partner_profile/screens/partner_pricing_screen.dart' show showEditPackageSheet;
@@ -71,6 +72,7 @@ enum _Step {
   intro,
   businessName,
   category,
+  details,
   logo,
   portfolio,
   description,
@@ -186,6 +188,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
     _Step.intro => true,
     _Step.businessName => _businessName.text.trim().isNotEmpty,
     _Step.category => _selectedCategoryIds.isNotEmpty,
+    _Step.details => true,
     _Step.logo => _pickedLogo != null || (_existingLogoUrl?.isNotEmpty ?? false),
     _Step.portfolio =>
       _portfolioItems.where((i) => i.mediaType == PortfolioMediaType.image).length >=
@@ -360,6 +363,17 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
   }
 
   bool _sent = false;
+  int? _figureMin;
+  int? _figureMax;
+  final Set<String> _offerings = {};
+
+  /// Categoria principal (a primeira escolhida) — define o passo 4.
+  String? get _primarySlug {
+    for (final o in _categoryOptions) {
+      if (_selectedCategoryIds.contains(o.id)) return o.slug;
+    }
+    return null;
+  }
 
   Future<void> _finish() async {
     setState(() => _saving = true);
@@ -383,6 +397,11 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
             instagram: _instagram.text.trim().isEmpty ? null : _instagram.text.trim(),
           );
       await ref.read(partnerProfileControllerProvider.notifier).updateTaxId(_taxId.text.trim());
+      await ref.read(partnerProfileControllerProvider.notifier).saveCategoryDetails(
+            keyFigure: _figureMin,
+            keyFigureMax: _figureMax,
+            offerings: _offerings.toList(),
+          );
       if (!mounted) return;
       // Pedido do utilizador (2026-10-17): "anima o perfil enviado" — ecrã
       // "Perfil enviado!" (avião de papel → visto) antes do painel.
@@ -489,6 +508,73 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                 .map((o) => o.label)
                 .toList(),
             onTap: _categoryOptions.isEmpty ? null : _pickCategories,
+          ),
+        );
+      case _Step.details:
+        final spec = categoryDetailSpec(_primarySlug);
+        final labels = _categoryOptions.where((o) => _selectedCategoryIds.contains(o.id)).map((o) => o.label);
+        final label = labels.isEmpty ? '' : labels.first;
+        return _StepScaffold(
+          question: spec.question,
+          subtitle: [if (label.isNotEmpty) label, if (spec.hint.isNotEmpty) spec.hint].join(' · '),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (spec.range)
+                Row(
+                  children: [
+                    Expanded(
+                      child: _NumberStepper(
+                        label: 'Mínimo',
+                        unit: spec.unit,
+                        value: _figureMin,
+                        onChanged: (v) => setState(() => _figureMin = v),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _NumberStepper(
+                        label: 'Máximo',
+                        unit: spec.unit,
+                        value: _figureMax,
+                        onChanged: (v) => setState(() => _figureMax = v),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                _NumberStepper(
+                  label: spec.singleLabel,
+                  unit: spec.unit,
+                  value: _figureMin,
+                  onChanged: (v) => setState(() => _figureMin = v),
+                ),
+              if (spec.offerings.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Text(spec.offeringsTitle, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base + 1, color: AppTheme.ink)),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final o in spec.offerings)
+                      FilterChip(
+                        label: Text(o),
+                        selected: _offerings.contains(o),
+                        showCheckmark: false,
+                        selectedColor: AppTheme.accentOliveDark,
+                        labelStyle: TextStyle(
+                          fontFamily: AppTheme.fontFamily,
+                          fontFamilyFallback: AppTheme.fontFamilyFallback,
+                          fontWeight: FontWeight.w700,
+                          color: _offerings.contains(o) ? Colors.white : AppTheme.ink,
+                        ),
+                        onSelected: (on) => setState(() => on ? _offerings.add(o) : _offerings.remove(o)),
+                      ),
+                  ],
+                ),
+              ],
+            ],
           ),
         );
       case _Step.logo:
@@ -1054,6 +1140,59 @@ class _SentViewState extends State<_SentView> with SingleTickerProviderStateMixi
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// Campo numérico com − / + (passo 4 do parceiro).
+class _NumberStepper extends StatelessWidget {
+  final String label;
+  final String unit;
+  final int? value;
+  final ValueChanged<int?> onChanged;
+
+  const _NumberStepper({required this.label, required this.unit, required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final v = value ?? 0;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppTheme.borderMuted),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              IconButton(
+                onPressed: v <= 0 ? null : () => onChanged(v - 1 <= 0 ? null : v - 1),
+                icon: const Icon(Icons.remove_rounded),
+                tooltip: 'Menos',
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(value == null ? '—' : '$v', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    Text(unit, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () => onChanged(v + (v >= 50 ? 10 : 1)),
+                icon: const Icon(Icons.add_rounded),
+                tooltip: 'Mais',
+              ),
+            ],
           ),
         ],
       ),

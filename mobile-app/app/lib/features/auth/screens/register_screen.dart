@@ -9,6 +9,7 @@ import '../../../core/models/models.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
+import 'role_selection_screen.dart' show authTitle;
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -207,7 +208,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const CircleBackButton(),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
+              authTitle(
+                'Cria a tua conta',
+                switch (widget.role) {
+                  UserRole.partner => 'Parceiro',
+                  UserRole.guest => 'Convidado',
+                  _ => 'Organizar um evento',
+                },
+              ),
+              const SizedBox(height: 24),
               if (auth.status == AuthStatus.error && auth.errorMessage != null)
                 ErrorBanner(message: auth.errorMessage!),
               AuthTextField(
