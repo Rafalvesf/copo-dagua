@@ -73,7 +73,6 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                   title: 'Pedidos',
                   subtitle: 'Acompanha os pedidos recebidos.',
                   showBack: false,
-                  trailing: const AccountSwitcherBadge(),
                 ),
                 const SizedBox(height: 16),
                 Expanded(

@@ -5,11 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/wedding/date_format_pt.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
-import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/mascot.dart';
-import '../../../shared/widgets/progress.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/staggered_fade_in.dart';
 
@@ -188,20 +187,56 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
     if (_index >= steps.length) _index = steps.length - 1;
     final step = steps[_index];
 
-    return GradientScaffold(
-      background: AppBackground.hero,
-      extendBodyBehindAppBar: false,
-      appBar: AppBar(automaticallyImplyLeading: false),
+    // Canvas "Convidado 1–8": branco, "Passo X de N", barra fina,
+    // pergunta 28/34 e botão verde em baixo.
+    return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
+          padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              StepProgressBar(totalSteps: steps.length, currentStep: _index),
-              const SizedBox(height: 24),
+              SizedBox(
+                height: 44,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: _index > 0 ? CircleBackButton(onTap: () => setState(() => _index--)) : const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Passo ${_index + 1} de ${steps.length}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: (_index + 1) / steps.length),
+                  duration: const Duration(milliseconds: 260),
+                  builder: (context, v, _) => LinearProgressIndicator(
+                    value: v,
+                    minHeight: 3,
+                    backgroundColor: AppTheme.borderMuted,
+                    color: AppTheme.accentOliveDark,
+                  ),
+                ),
+              ),
               Expanded(child: SingleChildScrollView(child: _buildStep(step))),
-              if (step != _Step.attending) _buildFooter(steps),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 54,
+                child: FilledButton(
+                  onPressed: _saving ? null : () => _continue(steps),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.accentOliveDark,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  child: _saving
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                      : Text(_index == steps.length - 1 ? 'Concluir' : 'Continuar'),
+                ),
+              ),
             ],
           ),
         ),
@@ -209,21 +244,36 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
     );
   }
 
+  bool _going = true;
+
+  void _continue(List<_Step> steps) {
+    final step = steps[_index];
+    if (step == _Step.attending && !_going) {
+      _finish(attending: false);
+      return;
+    }
+    if (_index == steps.length - 1) {
+      _finish(attending: true);
+    } else {
+      setState(() => _index++);
+    }
+  }
+
   Widget _buildStep(_Step step) {
     switch (step) {
       case _Step.attending:
+        final sub = [
+            if (_wedding?.weddingDate != null) formatWeddingDateCaps(_wedding!.weddingDate!),
+            if (_wedding?.venue?.isNotEmpty == true) _wedding!.venue!,
+          ].join(' · ');
         return _StepScaffold(
-          question: 'Vais ao ${_eventType.noun}?',
-          subtitle: 'Responde a $_hosts — demora um minuto.',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          question: 'Vais ao ${_eventType.noun}${_wedding == null ? '' : ' de ${_wedding!.displayNames}'}?',
+          subtitle: sub.isEmpty ? null : sub,
+          child: Row(
             children: [
-              PrimaryButton(label: 'Sim, vou!', loading: _saving, onPressed: () => setState(() => _index++)),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: _saving ? null : () => _finish(attending: false),
-                child: const Text('Não vou poder ir'),
-              ),
+              Expanded(child: _BigChoice(icon: Icons.check_circle_outline, label: 'Sim, vou!', selected: _going, onTap: () => setState(() => _going = true))),
+              const SizedBox(width: 12),
+              Expanded(child: _BigChoice(icon: Icons.close_rounded, label: 'Não vou poder ir', selected: !_going, onTap: () => setState(() => _going = false))),
             ],
           ),
         );
@@ -330,16 +380,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
     }
   }
 
-  Widget _buildFooter(List<_Step> steps) {
-    final isLast = _index == steps.length - 1;
-    return WizardFooter(
-      onBack: () => setState(() => _index--),
-      continueButton: ArrowCtaButton(
-        label: isLast ? 'Concluir' : 'Continuar',
-        onTap: _saving ? () {} : (isLast ? () => _finish(attending: true) : () => setState(() => _index++)),
-      ),
-    );
-  }
+
 }
 
 String _initials(String name) => name
@@ -535,14 +576,48 @@ class _StepScaffold extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(question, style: Theme.of(context).textTheme.headlineSmall),
+        const SizedBox(height: 32),
+        Text(question, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         if (subtitle != null) ...[
-          const SizedBox(height: 6),
-          Text(subtitle!, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 8),
+          Text(subtitle!, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted)),
         ],
         const SizedBox(height: 24),
         child,
       ],
+    );
+  }
+}
+
+class _BigChoice extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _BigChoice({required this.icon, required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SnappyTap(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: 132,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(icon, size: 28, color: selected ? Colors.white : AppTheme.accentOliveDark),
+            Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
+          ],
+        ),
+      ),
     );
   }
 }

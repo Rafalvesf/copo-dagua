@@ -354,7 +354,9 @@ class AppGradients {
   static const hero = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFE6E7D5), Colors.white],
+    // Branco, como em todos os ecrãs do canvas (pedido 2026-10-17:
+    // "colocaste um gradiente no fundo" — os modelos são brancos).
+    colors: [Colors.white, Colors.white],
   );
 
   /// Branco sólido. Ecrãs de lista/dashboard.

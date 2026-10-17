@@ -7,7 +7,6 @@ import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
-import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -114,15 +113,16 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
     final photosAsync = ref.watch(weddingGalleryPhotosProvider(widget.weddingId));
     final myUserId = ref.watch(authControllerProvider).profile?.id;
 
-    return GradientScaffold(
-      background: AppBackground.feed,
+    return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           SafeArea(
             bottom: false,
             child: Column(
               children: [
-                const PageHeader(title: 'Galeria', showBack: false, centered: true),
+                // Canvas "Convidado · Galeria": título ao centro e "+" verde.
+                PageHeader(title: 'Galeria', showBack: false, centered: true, trailing: AddActionButton(onTap: _upload)),
                 const SizedBox(height: 16),
                 Expanded(
                   child: photosAsync.when(
@@ -146,52 +146,27 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                         ),
                         children: [
                           Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: AppColors.pink,
-                              borderRadius: BorderRadius.circular(AppRadius.lg),
-                            ),
-                            child: Column(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(12)),
+                            child: const Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                      child: const Icon(Icons.camera_alt_outlined, size: 18, color: AppTheme.ink),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Expanded(
-                                      child: Text(
-                                        'Ajuda-nos a guardar estes momentos! Carrega aqui as tuas fotos do casamento.',
-                                        style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                SnappyTap(
-                                  onTap: _upload,
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.accentOliveDark,
-                                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                                    ),
-                                    child: const Text(
-                                      'Adicionar fotos',
-                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
-                                    ),
+                                Icon(Icons.schedule, size: 18, color: AppTheme.inkMuted),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'As tuas fotos aparecem depois de os anfitriões aprovarem.',
+                                    style: TextStyle(fontSize: 13, height: 18 / 13, color: AppTheme.inkMuted),
                                   ),
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(height: 20),
+                          const Text(
+                            'ESTA SEMANA',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppTheme.inkMuted),
+                          ),
+                          const SizedBox(height: 10),
                           if (approved.isEmpty)
                             const GalleryEmptyState(
                               message: 'Ainda não existem fotos. Carrega as primeiras.',

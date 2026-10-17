@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -101,110 +100,131 @@ class GuestGiftsScreen extends ConsumerWidget {
       }
     }
     final message = wedding?.giftMessage?.trim();
-    return GradientScaffold(
-      background: AppBackground.subtle,
+    final iban = wedding?.giftIban?.trim();
+    final hasList = wedding?.giftListUrl?.trim().isNotEmpty == true;
+    // Canvas "Convidado · Presentes".
+    return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           SafeArea(
             bottom: false,
-            child: Column(
+            child: ListView(
+              padding: const EdgeInsets.only(bottom: 140),
               children: [
                 const PageHeader(title: 'Presentes', showBack: false, centered: true),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      12,
-                      AppTheme.screenMargin,
-                      120,
-                    ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, AppTheme.screenMargin, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.xl),
-                        child: AspectRatio(
-                          aspectRatio: 16 / 10,
-                          child: Image.asset('assets/images/gifts_hero.png', fit: BoxFit.cover),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: const Color(0xFFFBF6E9), borderRadius: BorderRadius.circular(20)),
+                        child: Text(
+                          message?.isNotEmpty == true
+                              ? message!
+                              : 'A vossa presença é o melhor presente. Se quiserem mesmo oferecer algo, deixamos aqui as opções.',
+                          style: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF3F3A2E)),
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Text(
-                            'O vosso apoio significa tudo ',
-                            style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                          ),
-                          Icon(Icons.favorite_border, size: 16, color: AppStatusColors.declined),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        message?.isNotEmpty == true
-                            ? message!
-                            : 'A tua presença é o nosso maior presente. Mas, se quiseres ajudar-nos a construir o nosso futuro, deixamos aqui algumas sugestões.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md, height: 1.4),
-                      ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 14),
                       SnappyTap(
                         onTap: () => _openList(context, wedding),
                         child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           decoration: BoxDecoration(
-                            color: AppColors.pink,
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFEFEBE3)),
                           ),
-                          child: const Text(
-                            'Ver lista de presentes',
-                            style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      const Row(
-                        children: [
-                          Expanded(child: Divider(color: AppTheme.borderMuted)),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10),
-                            child: Text('ou', style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm)),
-                          ),
-                          Expanded(child: Divider(color: AppTheme.borderMuted)),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      SnappyTap(
-                        onTap: () => _showIban(context, wedding),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: AppTheme.surface,
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
+                          child: Row(
                             children: [
-                              Icon(Icons.edit_outlined, size: 16, color: AppTheme.ink),
-                              SizedBox(width: 8),
-                              Text('Contribuir com um valor', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(12)),
+                                child: const Icon(Icons.link, size: 20, color: AppTheme.accentOliveDark),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Lista de presentes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                    Text(
+                                      hasList ? 'Abre a lista dos anfitriões' : 'Os anfitriões ainda não indicaram',
+                                      style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right, size: 18, color: AppTheme.inkMuted),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Text(
-                            'Todo o apoio é recebido com muito carinho! ',
-                            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
-                          ),
-                          Icon(Icons.favorite_border, size: 13, color: AppStatusColors.declined),
-                        ],
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        child: Row(
+                          children: [
+                            Expanded(child: Divider(color: AppTheme.borderMuted)),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 10),
+                              child: Text('ou', style: TextStyle(fontSize: 12, color: Color(0xFF8F8B84))),
+                            ),
+                            Expanded(child: Divider(color: AppTheme.borderMuted)),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color(0xFFEFEBE3)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text('Contribuir com um valor', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            const SizedBox(height: 10),
+                            if (iban?.isNotEmpty == true)
+                              SnappyTap(
+                                onTap: () async {
+                                  await Clipboard.setData(ClipboardData(text: iban!.replaceAll(' ', '')));
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('IBAN copiado.')));
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(14)),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('IBAN · ${wedding?.partnerName1 ?? ''}', style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
+                                            Text(iban!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.3, color: AppTheme.ink)),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(Icons.copy_rounded, size: 18, color: AppTheme.accentOliveDark),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else
+                              const Text('Os anfitriões ainda não indicaram um IBAN.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Na descrição, escreve o teu nome para saberem de quem é.',
+                              style: TextStyle(fontSize: 12, color: Color(0xFF8F8B84)),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

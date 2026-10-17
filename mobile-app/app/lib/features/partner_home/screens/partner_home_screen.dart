@@ -138,44 +138,8 @@ class PartnerHomeScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Sem os atalhos que já estão na barra de baixo (Pedidos e
-                // Perfil de negócio) — pedido do utilizador 2026-10-16.
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1.9,
-                  children: [
-                    _PartnerTile(
-                      color: AppColors.green,
-                      icon: Icons.event_available_outlined,
-                      label: 'Reservas',
-                      onTap: () =>
-                          context.push('/partner-requests?segment=confirmados'),
-                    ),
-                    _PartnerTile(
-                      color: AppColors.yellow,
-                      icon: Icons.calendar_month_outlined,
-                      label: 'Calendário',
-                      onTap: () => context.push('/partner-calendar'),
-                    ),
-                    _PartnerTile(
-                      color: AppColors.gray,
-                      icon: Icons.description_outlined,
-                      label: 'Contratos',
-                      onTap: () => context.push('/partner-contracts'),
-                    ),
-                    _PartnerTile(
-                      color: AppColors.purple,
-                      icon: Icons.payments_outlined,
-                      label: 'Pagamentos',
-                      onTap: () => context.push('/partner-payments'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                // Canvas "Parceiro — painel": só os números e os novos pedidos
+                // (calendário, contratos e pagamentos estão no Perfil).
                 const _PartnerDashboardSummary(),
                 const SizedBox(height: 22),
                 Row(

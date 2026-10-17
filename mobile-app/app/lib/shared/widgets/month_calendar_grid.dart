@@ -65,36 +65,33 @@ class MonthCalendarGrid extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.gray),
+        border: Border.all(color: AppTheme.borderMuted),
       ),
       child: Column(
         children: [
+          // Canvas "Parceiro — calendário": mês à esquerda, setas à direita.
           Row(
             children: [
-              IconButton(
-                onPressed: () => onMonthChanged(
-                  DateTime(visibleMonth.year, visibleMonth.month - 1),
-                ),
-                icon: const Icon(Icons.chevron_left),
-                color: AppTheme.inkMuted,
-              ),
               Expanded(
-                child: Text(
-                  '${monthNamesPt[visibleMonth.month - 1]} ${visibleMonth.year}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: AppFontSize.lg,
-                    color: AppTheme.ink,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: Text(
+                    '${monthNamesPt[visibleMonth.month - 1]} de ${visibleMonth.year}',
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base + 1, color: AppTheme.ink),
                   ),
                 ),
               ),
               IconButton(
-                onPressed: () => onMonthChanged(
-                  DateTime(visibleMonth.year, visibleMonth.month + 1),
-                ),
+                onPressed: () => onMonthChanged(DateTime(visibleMonth.year, visibleMonth.month - 1)),
+                icon: const Icon(Icons.chevron_left),
+                color: AppTheme.ink,
+                tooltip: 'Mês anterior',
+              ),
+              IconButton(
+                onPressed: () => onMonthChanged(DateTime(visibleMonth.year, visibleMonth.month + 1)),
                 icon: const Icon(Icons.chevron_right),
-                color: AppTheme.inkMuted,
+                color: AppTheme.ink,
+                tooltip: 'Mês seguinte',
               ),
             ],
           ),
@@ -105,10 +102,10 @@ class MonthCalendarGrid extends StatelessWidget {
                 Expanded(
                   child: Center(
                     child: Text(
-                      label.substring(0, 1),
+                      label,
                       style: const TextStyle(
-                        fontSize: AppFontSize.xs,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
                         color: AppTheme.inkMuted,
                       ),
                     ),
