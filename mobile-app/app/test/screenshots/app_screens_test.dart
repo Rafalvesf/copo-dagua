@@ -642,5 +642,29 @@ void main() {
   ]) {
     testWidgets(name, (t) => _shoot(t, name, guest, path));
   }
+  for (var i = 0; i < 6; i++) {
+    testWidgets('55 convidado onboarding ${i + 1}', (t) => _shoot(
+          t,
+          '55_convidado_onb_${i + 1}',
+          guest,
+          '/guest-onboarding/w1?step=$i',
+          extra: Guest(
+            id: 'g0',
+            weddingId: 'w1',
+            name: 'Rita Mendes',
+            rsvpStatus: RsvpStatus.pending,
+            plusOneAllowed: true,
+            createdAt: _days(-3),
+          ),
+        ));
+  }
+  for (var i = 0; i < 12; i++) {
+    testWidgets('46 parceiro onboarding ${i + 1}', (t) => _shoot(
+          t,
+          '46_parceiro_onb_${(i + 1).toString().padLeft(2, '0')}',
+          const AuthState(status: AuthStatus.onboardingIncomplete, profile: _partnerProfile),
+          '/onboarding?step=$i',
+        ));
+  }
   testWidgets('54_convidado_detalhes', (t) => _shoot(t, '54_convidado_detalhes', guest, '/guest-wedding-details', extra: _guestWedding));
 }

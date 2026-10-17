@@ -20,7 +20,10 @@ class GuestOnboardingWizardScreen extends ConsumerStatefulWidget {
   final String weddingId;
   final Guest guest;
 
-  const GuestOnboardingWizardScreen({super.key, required this.weddingId, required this.guest});
+  /// Só para as capturas de ecrã (`?step=N`).
+  final int initialStep;
+
+  const GuestOnboardingWizardScreen({super.key, required this.weddingId, required this.guest, this.initialStep = 0});
 
   @override
   ConsumerState<GuestOnboardingWizardScreen> createState() => _GuestOnboardingWizardScreenState();
@@ -67,7 +70,7 @@ class _Person {
 }
 
 class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWizardScreen> {
-  int _index = 0;
+  late int _index = widget.initialStep;
   bool _saving = false;
   bool _confirmed = false;
   late final _Person _me = _Person(

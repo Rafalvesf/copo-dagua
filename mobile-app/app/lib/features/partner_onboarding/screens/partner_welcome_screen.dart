@@ -60,7 +60,10 @@ import '../../../shared/money.dart';
 /// Marketplace continua só a acontecer com `status = 'published'`, via
 /// `is_partner_profile_visible()` no servidor.
 class PartnerWelcomeScreen extends ConsumerStatefulWidget {
-  const PartnerWelcomeScreen({super.key});
+  /// Só para as capturas de ecrã (`/onboarding?step=N`).
+  final int initialStep;
+
+  const PartnerWelcomeScreen({super.key, this.initialStep = 0});
 
   @override
   ConsumerState<PartnerWelcomeScreen> createState() =>
@@ -90,7 +93,7 @@ const _steps = _Step.values;
 final _taxIdRegex = RegExp(r'^\d{9}$');
 
 class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
-  int _stepIndex = 0;
+  late int _stepIndex = widget.initialStep.clamp(0, _Step.values.length - 1);
   bool _saving = false;
 
   final _businessName = TextEditingController();
