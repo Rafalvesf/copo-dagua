@@ -109,7 +109,7 @@ class GuestGiftsScreen extends ConsumerWidget {
             bottom: false,
             child: Column(
               children: [
-                const PageHeader(title: 'Presentes', topPadding: 8, showBack: false),
+                const PageHeader(title: 'Presentes', showBack: false, centered: true),
                 const SizedBox(height: 16),
                 Expanded(
                   child: ListView(

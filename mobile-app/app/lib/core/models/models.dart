@@ -551,7 +551,11 @@ class GuestWedding {
     this.giftListUrl,
     this.giftIban,
     this.giftMessage,
+    this.eventType = EventType.wedding,
   });
+
+  /// `weddings.event_type` (074) — casamento por omissão.
+  final EventType eventType;
 
   /// Presentes (`weddings.gift_*`, `075_connect_remaining.sql`) — definidos
   /// pelo casal nas Definições; `null` quando não indicaram nada.

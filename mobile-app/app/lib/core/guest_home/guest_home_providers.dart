@@ -25,10 +25,14 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
       .cast<Map<String, dynamic>>();
   List<Map<String, dynamic>> rows;
   try {
-    rows = await query('$baseColumns, gift_list_url, gift_iban, gift_message');
+    rows = await query('$baseColumns, gift_list_url, gift_iban, gift_message, event_type');
   } on PostgrestException {
-    // Migração 075 ainda por correr — sem as colunas de presentes.
-    rows = await query(baseColumns);
+    try {
+      rows = await query('$baseColumns, gift_list_url, gift_iban, gift_message');
+    } on PostgrestException {
+      // Migração 075 ainda por correr — sem as colunas de presentes.
+      rows = await query(baseColumns);
+    }
   }
 
   return rows.map<GuestWedding>((row) {
@@ -51,6 +55,7 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
       giftListUrl: wedding?['gift_list_url'] as String?,
       giftIban: wedding?['gift_iban'] as String?,
       giftMessage: wedding?['gift_message'] as String?,
+      eventType: EventType.fromDb(wedding?['event_type'] as String?),
     );
   }).toList();
 });
