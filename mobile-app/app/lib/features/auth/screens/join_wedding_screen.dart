@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/public_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
@@ -70,7 +72,7 @@ class _JoinWeddingScreenState extends ConsumerState<JoinWeddingScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     return GradientScaffold(
-      background: AppBackground.hero,
+      background: AppBackground.subtle,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -78,13 +80,11 @@ class _JoinWeddingScreenState extends ConsumerState<JoinWeddingScreen> {
             child: auth.status == AuthStatus.active
                 ? (_error == null
                     ? const CircularProgressIndicator()
-                    : Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_error!, textAlign: TextAlign.center),
-                          const SizedBox(height: 20),
-                          PrimaryButton(label: 'Voltar', onPressed: () => context.go('/home')),
-                        ],
+                    : PublicStateView(
+                        pose: MascotPose.sad,
+                        title: 'Não deu para entrar',
+                        message: _error,
+                        actions: [PrimaryButton(label: 'Voltar', onPressed: () => context.go('/home'))],
                       ))
                 : FutureBuilder(
                     future: _invite,
@@ -94,36 +94,20 @@ class _JoinWeddingScreenState extends ConsumerState<JoinWeddingScreen> {
                       }
                       final invite = snap.data;
                       if (invite == null || !invite.valid) {
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              invite == null ? 'Este link de convite não é válido.' : 'Este convite já foi usado ou expirou.',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg),
-                            ),
-                            const SizedBox(height: 20),
-                            PrimaryButton(label: 'Ir para o início', onPressed: () => context.go('/welcome')),
-                          ],
+                        return PublicStateView(
+                          pose: MascotPose.sad,
+                          title: invite == null ? 'Link inválido' : 'Convite já usado',
+                          message: invite == null
+                              ? 'Este link de convite não é válido. Pede um novo a quem te convidou.'
+                              : 'Este convite já foi usado ou expirou. Pede um novo link.',
+                          actions: [PrimaryButton(label: 'Ir para o início', onPressed: () => context.go('/welcome'))],
                         );
                       }
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.favorite_rounded, color: AppTheme.accentOliveDark, size: 40),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Organiza o casamento de ${invite.names}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.xl, color: AppTheme.ink),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Cria conta ou entra para ficares com acesso ao casamento.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: AppTheme.inkMuted),
-                          ),
-                          const SizedBox(height: 24),
+                      return PublicStateView(
+                        pose: MascotPose.clink,
+                        title: 'Organiza com ${invite.names}',
+                        message: 'Cria conta ou entra para ficares com acesso ao evento.',
+                        actions: [
                           PrimaryButton(
                             label: 'Criar conta',
                             onPressed: () {
@@ -131,7 +115,6 @@ class _JoinWeddingScreenState extends ConsumerState<JoinWeddingScreen> {
                               context.push('/register?role=couple');
                             },
                           ),
-                          const SizedBox(height: 12),
                           OutlinedButton(
                             onPressed: () {
                               ref.read(pendingPartnerInviteProvider.notifier).set(widget.token);

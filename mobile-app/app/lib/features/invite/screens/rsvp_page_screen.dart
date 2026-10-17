@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:go_router/go_router.dart';
+import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/public_state.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -109,37 +113,18 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
             }
             final data = snapshot.data;
             if (data == null) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'Convite não encontrado.',
-                    style: TextStyle(color: AppTheme.inkMuted),
-                  ),
-                ),
+              return PublicStateView(
+                pose: MascotPose.sad,
+                title: 'Convite não encontrado',
+                message: 'O link pode estar incompleto ou já não existir. Confirma com quem te convidou.',
+                actions: [PrimaryButton(label: 'Ir para o início', onPressed: () => context.go('/welcome'))],
               );
             }
             if (_submitted) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.check_circle_outline,
-                        size: 56,
-                        color: AppTheme.accentOliveDark,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Resposta enviada. Obrigado!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.xl),
-                      ),
-                    ],
-                  ),
-                ),
+              return const PublicStateView(
+                pose: MascotPose.clink,
+                title: 'Resposta enviada!',
+                message: 'Obrigado. Os anfitriões já sabem a tua resposta.',
               );
             }
 

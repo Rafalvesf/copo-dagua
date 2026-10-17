@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/public_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,35 +45,27 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     final loading = auth.status == AuthStatus.authenticating;
 
     return GradientScaffold(
-      background: AppBackground.hero,
+      background: AppBackground.subtle,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.mark_email_unread_outlined, size: 56, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(height: 20),
-              Text(
-                'Enviámos um link para\n$email',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium,
+        child: PublicStateView(
+          pose: MascotPose.chat,
+          title: 'Confirma o teu email',
+          message: email.isEmpty
+              ? 'Enviámos-te um link. Abre-o para continuar.'
+              : 'Enviámos um link para $email. Abre-o e volta aqui.',
+          actions: [
+            PrimaryButton(
+              label: 'Já verifiquei',
+              loading: loading,
+              onPressed: () => ref.read(authControllerProvider.notifier).confirmEmailVerified(),
+            ),
+            TextButton(
+              onPressed: _resendCooldown == 0 ? () => setState(() => _resendCooldown = 60) : null,
+              child: Text(
+                _resendCooldown == 0 ? 'Reenviar email' : 'Reenviar email (daqui a ${_resendCooldown}s)',
               ),
-              const SizedBox(height: 32),
-              TextButton(
-                onPressed: _resendCooldown == 0 ? () => setState(() => _resendCooldown = 60) : null,
-                child: Text(
-                  _resendCooldown == 0 ? 'Reenviar email' : 'Reenviar email (disponível em ${_resendCooldown}s)',
-                ),
-              ),
-              const SizedBox(height: 12),
-              PrimaryButton(
-                label: 'Já verifiquei',
-                loading: loading,
-                onPressed: () => ref.read(authControllerProvider.notifier).confirmEmailVerified(),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

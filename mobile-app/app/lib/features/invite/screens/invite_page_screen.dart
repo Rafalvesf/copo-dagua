@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/public_state.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/supabase/supabase_config.dart';
@@ -68,14 +71,11 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
             }
             final wedding = snapshot.data;
             if (wedding == null) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'Convite não encontrado.',
-                    style: TextStyle(color: AppTheme.inkMuted),
-                  ),
-                ),
+              return PublicStateView(
+                pose: MascotPose.sad,
+                title: 'Convite não encontrado',
+                message: 'O link pode estar incompleto ou já não existir. Confirma com quem te convidou.',
+                actions: [PrimaryButton(label: 'Ir para o início', onPressed: () => context.go('/welcome'))],
               );
             }
 
