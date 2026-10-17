@@ -33,7 +33,25 @@ class MenuColor {
   final Color tint;
   final Color comp;
 
-  const MenuColor(this.id, this.label, this.color, this.tint, this.comp);
+  /// Cor do texto e ícones por cima de [color] (branco nas cores fortes,
+  /// tinta escura nos pastéis).
+  final Color on;
+  final Color? _accent;
+
+  /// Cor dos ícones e textos de destaque em fundo claro: a própria cor
+  /// nas cores fortes; um tom mais escuro nos pastéis (para se ler bem).
+  Color get accent => _accent ?? color;
+
+  /// Pastel: capa clara com texto escuro.
+  bool get pastel => _accent != null;
+
+  const MenuColor(this.id, this.label, this.color, this.tint, this.comp)
+      : on = const Color(0xFFFFFFFF),
+        _accent = null;
+
+  const MenuColor.pastel(this.id, this.label, this.color, this.tint, this.comp, Color accent)
+      : on = const Color(0xFF171713),
+        _accent = accent;
 
   static const all = [
     MenuColor('eucalyptus', 'Eucalipto', Color(0xFF4F6B4A), Color(0xFFDCE4D8), Color(0xFFF3EBDD)),
@@ -47,7 +65,19 @@ class MenuColor {
     MenuColor('teal', 'Verde-água', Color(0xFF3F6B66), Color(0xFFDCEBE8), Color(0xFFF6E6E4)),
     MenuColor('olive', 'Oliva', Color(0xFF5F7545), Color(0xFFDDE5D3), Color(0xFFF3EBDD)),
     MenuColor('graphite', 'Grafite', Color(0xFF3A4750), Color(0xFFE3E7EA), Color(0xFFF1ECE4)),
+    // Pastéis (pedido 2026-10-18).
+    MenuColor.pastel('p-sage', 'Sálvia', Color(0xFFC9D8C2), Color(0xFFE6EEE2), Color(0xFFF4EDE2), Color(0xFF4F6B4A)),
+    MenuColor.pastel('p-pink', 'Rosa-bebé', Color(0xFFF4C9D6), Color(0xFFFAE6EC), Color(0xFFE9F1E8), Color(0xFFA8476A)),
+    MenuColor.pastel('p-peach', 'Pêssego', Color(0xFFF7D3BE), Color(0xFFFBE9DE), Color(0xFFE3EEEC), Color(0xFFA4532F)),
+    MenuColor.pastel('p-lavender', 'Lavanda', Color(0xFFD9D0EE), Color(0xFFEDE8F7), Color(0xFFF6F0DF), Color(0xFF5F4F95)),
+    MenuColor.pastel('p-sky', 'Céu', Color(0xFFCFE2F1), Color(0xFFE7F0F8), Color(0xFFF8ECE1), Color(0xFF2F5F86)),
+    MenuColor.pastel('p-mint', 'Menta', Color(0xFFCDEBE0), Color(0xFFE6F5EF), Color(0xFFF8E9E6), Color(0xFF2F6B5B)),
+    MenuColor.pastel('p-butter', 'Manteiga', Color(0xFFF6E7B4), Color(0xFFFBF3D9), Color(0xFFE6ECF3), Color(0xFF7A5C22)),
+    MenuColor.pastel('p-sand', 'Areia', Color(0xFFEADFCB), Color(0xFFF5EFE4), Color(0xFFE8EEF0), Color(0xFF6B5A3E)),
   ];
+
+  static List<MenuColor> get strong => all.where((c) => !c.pastel).toList();
+  static List<MenuColor> get pastels => all.where((c) => c.pastel).toList();
 
   static MenuColor fromId(String? id) =>
       all.firstWhere((c) => c.id == id, orElse: () => all.first);

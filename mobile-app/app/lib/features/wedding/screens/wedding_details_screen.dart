@@ -33,6 +33,8 @@ import '../../../core/supabase/supabase_config.dart';
 /// frase/desenhos do tipo de evento (canvas "Menu principal").
 class _Look {
   final Color color;
+  final Color on;
+  final Color accent;
   final Color tint;
   final Color comp;
   final String tagline;
@@ -41,6 +43,8 @@ class _Look {
 
   const _Look({
     required this.color,
+    required this.on,
+    required this.accent,
     required this.tint,
     required this.comp,
     required this.tagline,
@@ -53,7 +57,7 @@ final _lookProvider = Provider<_Look>((ref) {
   final type = ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType)) ?? EventType.wedding;
   final c = ref.watch(currentMenuStyleProvider).color;
   final d = EventDecor.of(type);
-  return _Look(color: c.color, tint: c.tint, comp: c.comp, tagline: d.tagline, motif: d.motif, doodles: d.doodles);
+  return _Look(color: c.color, on: c.on, accent: c.accent, tint: c.tint, comp: c.comp, tagline: d.tagline, motif: d.motif, doodles: d.doodles);
 });
 
 /// Sombra suave dos cartões (canvas, 2026-10-17).
@@ -124,7 +128,7 @@ class WeddingDetailsScreen extends ConsumerWidget {
                             const SizedBox(width: 8),
                             Transform.rotate(
                               angle: -0.17,
-                              child: Icon(look.doodles[1], size: 18, color: look.color),
+                              child: Icon(look.doodles[1], size: 18, color: look.accent),
                             ),
                             const Spacer(),
                             SnappyTap(
@@ -132,7 +136,7 @@ class WeddingDetailsScreen extends ConsumerWidget {
                               child: Text(
                                 'Ver todas',
                                 style: TextStyle(
-                                  color: look.color,
+                                  color: look.accent,
                                   fontWeight: FontWeight.w700,
                                   fontSize: AppFontSize.md,
                                 ),
@@ -145,7 +149,7 @@ class WeddingDetailsScreen extends ConsumerWidget {
                         const SizedBox(height: 26),
                         const _FinancialSummaryRow(),
                         const SizedBox(height: 22),
-                        _ShareWeddingButton(wedding: wedding, color: look.color),
+                        _ShareWeddingButton(wedding: wedding, color: look.color, on: look.on),
                       ],
                     ),
                   ),
@@ -215,12 +219,12 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
     final look = ref.watch(_lookProvider);
     Widget doodle(IconData icon, double size, double angle) => Opacity(
           opacity: 0.22,
-          child: Transform.rotate(angle: angle, child: Icon(icon, size: size, color: Colors.white)),
+          child: Transform.rotate(angle: angle, child: Icon(icon, size: size, color: look.on)),
         );
     Widget dot(double d, double o) => Container(
           width: d,
           height: d,
-          decoration: BoxDecoration(color: Colors.white.withValues(alpha: o), shape: BoxShape.circle),
+          decoration: BoxDecoration(color: look.on.withValues(alpha: o), shape: BoxShape.circle),
         );
     return Container(
       width: double.infinity,
@@ -276,13 +280,13 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                                     Icon(
                                       Icons.add_photo_alternate_outlined,
                                       size: 30,
-                                      color: look.color,
+                                      color: look.accent,
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
                                       'Adicionar foto',
                                       style: TextStyle(
-                                        color: look.color,
+                                        color: look.accent,
                                         fontSize: AppFontSize.sm,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -319,7 +323,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                         child: Icon(
                           Icons.camera_alt_outlined,
                           size: 15,
-                          color: look.color,
+                          color: look.accent,
                         ),
                       ),
                     ),
@@ -340,11 +344,11 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(look.motif, size: 16, color: look.color),
+                            Icon(look.motif, size: 16, color: look.accent),
                             const SizedBox(width: 6),
                             Text(
                               look.tagline,
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.color),
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent),
                             ),
                           ],
                         ),
@@ -365,7 +369,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 3),
                         ),
-                        child: Icon(look.doodles[2], size: 22, color: Colors.white),
+                        child: Icon(look.doodles[2], size: 22, color: look.on),
                       ),
                     ),
                   ),
@@ -385,7 +389,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                             wedding.eventType == EventType.wedding ? 'O nosso casamento' : wedding.eventType.label,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.85),
+                              color: look.on.withValues(alpha: 0.85),
                               fontSize: AppFontSize.xs,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.4,
@@ -399,12 +403,12 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.displaySerif(
                               fontSize: AppFontSize.xxl,
-                              color: Colors.white,
+                              color: look.on,
                             ).copyWith(
                               // Bold Italic — como num convite (redesign 2026-10).
                               fontStyle: FontStyle.italic,
                               decoration: TextDecoration.underline,
-                              decorationColor: Colors.white,
+                              decorationColor: look.on,
                             ),
                           ),
                         ],
@@ -417,14 +421,14 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
               Row(
                 children: [
                   Expanded(
-                    child: Divider(color: Colors.white.withValues(alpha: 0.24)),
+                    child: Divider(color: look.on.withValues(alpha: 0.24)),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Icon(Icons.favorite, size: 12, color: Colors.white),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Icon(Icons.favorite, size: 12, color: look.on),
                   ),
                   Expanded(
-                    child: Divider(color: Colors.white.withValues(alpha: 0.24)),
+                    child: Divider(color: look.on.withValues(alpha: 0.24)),
                   ),
                 ],
               ),
@@ -432,8 +436,8 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
               Text(
                 _dateLabel,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: look.on,
                   fontSize: AppFontSize.sm,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
@@ -445,7 +449,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                   wedding.location!.toUpperCase(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75),
+                    color: look.on.withValues(alpha: 0.75),
                     fontSize: AppFontSize.xs,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.6,
@@ -453,7 +457,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                 ),
               ],
               const SizedBox(height: 18),
-              _CountdownRow(weddingDate: wedding.weddingDate, color: look.color),
+              _CountdownRow(weddingDate: wedding.weddingDate, color: look.accent, on: look.on),
             ],
           ),
         ],
@@ -465,8 +469,9 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
 class _CountdownRow extends StatefulWidget {
   final DateTime? weddingDate;
   final Color color;
+  final Color on;
 
-  const _CountdownRow({required this.weddingDate, required this.color});
+  const _CountdownRow({required this.weddingDate, required this.color, required this.on});
 
   @override
   State<_CountdownRow> createState() => _CountdownRowState();
@@ -496,11 +501,11 @@ class _CountdownRowState extends State<_CountdownRow> {
 
     final remaining = date.difference(DateTime.now());
     if (remaining.isNegative) {
-      return const Text(
+      return Text(
         'É hoje! 🎉',
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: Colors.white,
+          color: widget.on,
           fontWeight: FontWeight.w700,
           fontSize: AppFontSize.lg,
         ),
@@ -517,7 +522,7 @@ class _CountdownRowState extends State<_CountdownRow> {
         Text(
           'FALTAM',
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.75),
+            color: widget.on.withValues(alpha: 0.75),
             fontSize: AppFontSize.xs,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,
@@ -526,13 +531,13 @@ class _CountdownRowState extends State<_CountdownRow> {
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(child: _CountdownBox(value: days, label: 'DIAS', color: widget.color)),
+            Expanded(child: _CountdownBox(value: days, label: 'DIAS', color: widget.color, on: widget.on)),
             const SizedBox(width: 8),
-            Expanded(child: _CountdownBox(value: hours, label: 'HORAS', color: widget.color)),
+            Expanded(child: _CountdownBox(value: hours, label: 'HORAS', color: widget.color, on: widget.on)),
             const SizedBox(width: 8),
-            Expanded(child: _CountdownBox(value: minutes, label: 'MIN', color: widget.color)),
+            Expanded(child: _CountdownBox(value: minutes, label: 'MIN', color: widget.color, on: widget.on)),
             const SizedBox(width: 8),
-            Expanded(child: _CountdownBox(value: seconds, label: 'SEG', color: widget.color)),
+            Expanded(child: _CountdownBox(value: seconds, label: 'SEG', color: widget.color, on: widget.on)),
           ],
         ),
       ],
@@ -544,8 +549,9 @@ class _CountdownBox extends StatelessWidget {
   final int value;
   final String label;
   final Color color;
+  final Color on;
 
-  const _CountdownBox({required this.value, required this.label, required this.color});
+  const _CountdownBox({required this.value, required this.label, required this.color, required this.on});
 
   @override
   Widget build(BuildContext context) {
@@ -572,7 +578,7 @@ class _CountdownBox extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.75),
+            color: on.withValues(alpha: 0.75),
             fontSize: AppFontSize.xxs,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.6,
@@ -639,7 +645,7 @@ class _QuickLinksRow extends ConsumerWidget {
           subtitle: items[i].subtitle,
           color: bg[i] == 0 ? look.tint : look.comp,
           index: i,
-          accent: look.color,
+          accent: look.accent,
           onTap: () => context.push(items[i].route),
         );
     return Column(
@@ -761,8 +767,9 @@ class _QuickLinkTile extends StatelessWidget {
 class _ShareWeddingButton extends StatelessWidget {
   final Wedding wedding;
   final Color color;
+  final Color on;
 
-  const _ShareWeddingButton({required this.wedding, required this.color});
+  const _ShareWeddingButton({required this.wedding, required this.color, required this.on});
 
   @override
   Widget build(BuildContext context) {
@@ -780,15 +787,15 @@ class _ShareWeddingButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [BoxShadow(color: Color(0x29171713), blurRadius: 20, offset: Offset(0, 8))],
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Dois copos a brindar — o "tchin tchin".
-            Icon(Icons.wine_bar_outlined, size: 22, color: Colors.white),
-            SizedBox(width: 10),
+            Icon(Icons.wine_bar_outlined, size: 22, color: on),
+            const SizedBox(width: 10),
             Text(
               'Partilhar convite',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.white),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: on),
             ),
           ],
         ),
@@ -1270,9 +1277,9 @@ class _CoverPhoto extends ConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.add_photo_alternate_outlined, size: 28, color: look.color),
+                      Icon(Icons.add_photo_alternate_outlined, size: 28, color: look.accent),
                       const SizedBox(height: 4),
-                      Text('Adicionar foto', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.color)),
+                      Text('Adicionar foto', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent)),
                     ],
                   ),
                 ),
@@ -1315,7 +1322,7 @@ Widget _namesAndDate(Wedding w, _Look look, {double size = 20}) => Column(
           w.displayNames,
           textAlign: TextAlign.center,
           maxLines: 2,
-          style: TextStyle(fontSize: size, height: 1.2, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: look.color),
+          style: TextStyle(fontSize: size, height: 1.2, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: look.accent),
         ),
         const SizedBox(height: 4),
         Text(
@@ -1368,7 +1375,7 @@ class _StickersTop extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                   decoration: BoxDecoration(color: look.color, borderRadius: BorderRadius.circular(999)),
-                  child: Text('$days ${days == 1 ? 'dia' : 'dias'}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                  child: Text('$days ${days == 1 ? 'dia' : 'dias'}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: look.on)),
                 ),
               ),
               Text(' para ${_eventNoun(wedding)}', style: const TextStyle(fontSize: 16, color: AppTheme.inkMuted)),
@@ -1399,9 +1406,9 @@ class _StickersTop extends ConsumerWidget {
                   ),
                 ),
               ),
-              Positioned(left: 8, top: 8, child: _roundSticker(look.doodles[0], look.color, Colors.white, -0.24)),
-              Positioned(right: 10, top: 40, child: _roundSticker(look.doodles[2], look.comp, look.color, 0.21)),
-              Positioned(right: 34, bottom: 6, child: _roundSticker(look.doodles[4], look.tint, look.color, -0.1)),
+              Positioned(left: 8, top: 8, child: _roundSticker(look.doodles[0], look.color, look.on, -0.24)),
+              Positioned(right: 10, top: 40, child: _roundSticker(look.doodles[2], look.comp, look.accent, 0.21)),
+              Positioned(right: 34, bottom: 6, child: _roundSticker(look.doodles[4], look.tint, look.accent, -0.1)),
             ],
           ),
         ),
@@ -1429,7 +1436,7 @@ class _StickersTop extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(26),
                           boxShadow: _softShadow,
                         ),
-                        child: Icon(it.icon, size: 32, color: look.color),
+                        child: Icon(it.icon, size: 32, color: look.accent),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -1469,7 +1476,7 @@ class _MuralTop extends ConsumerWidget {
           width: 190,
           angle: angle,
           padding: const EdgeInsets.fromLTRB(9, 9, 9, 40),
-          child: Container(height: 170, color: bg, alignment: Alignment.center, child: Icon(icon, size: 40, color: look.color)),
+          child: Container(height: 170, color: bg, alignment: Alignment.center, child: Icon(icon, size: 40, color: look.accent)),
         );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1491,9 +1498,9 @@ class _MuralTop extends ConsumerWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(look.motif, size: 14, color: look.color),
+                  Icon(look.motif, size: 14, color: look.accent),
                   const SizedBox(width: 6),
-                  Text(wedding.eventType.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.color)),
+                  Text(wedding.eventType.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent)),
                 ],
               ),
             ),
@@ -1541,9 +1548,9 @@ class _MuralTop extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text('FALTAM', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: Colors.white)),
-                          Text('$days', style: const TextStyle(fontSize: 24, height: 1.1, fontWeight: FontWeight.w700, color: Colors.white)),
-                          Text(days == 1 ? 'DIA' : 'DIAS', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: Colors.white)),
+                          Text('FALTAM', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: look.on)),
+                          Text('$days', style: TextStyle(fontSize: 24, height: 1.1, fontWeight: FontWeight.w700, color: look.on)),
+                          Text(days == 1 ? 'DIA' : 'DIAS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: look.on)),
                         ],
                       ),
                     ),
@@ -1586,7 +1593,7 @@ class _MuralTop extends ConsumerWidget {
                                 width: double.infinity,
                                 color: i.isEven ? look.tint : look.comp,
                                 alignment: Alignment.center,
-                                child: Icon(it.icon, size: 34, color: look.color),
+                                child: Icon(it.icon, size: 34, color: look.accent),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -1603,7 +1610,7 @@ class _MuralTop extends ConsumerWidget {
                         width: 14,
                         height: 14,
                         decoration: BoxDecoration(
-                          color: look.color,
+                          color: look.accent,
                           shape: BoxShape.circle,
                           boxShadow: const [BoxShadow(color: Color(0x4D171713), blurRadius: 3, offset: Offset(0, 2))],
                         ),
@@ -1641,7 +1648,7 @@ class _ClotheslineTop extends ConsumerWidget {
           width: 130,
           angle: angle,
           padding: const EdgeInsets.fromLTRB(7, 7, 7, 22),
-          child: Container(height: 110, color: bg, alignment: Alignment.center, child: Icon(icon, size: 30, color: look.color)),
+          child: Container(height: 110, color: bg, alignment: Alignment.center, child: Icon(icon, size: 30, color: look.accent)),
         );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1655,7 +1662,7 @@ class _ClotheslineTop extends ConsumerWidget {
                 children: [
                   Text(
                     (wedding.eventType == EventType.wedding ? 'O nosso casamento' : wedding.eventType.label).toUpperCase(),
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.4, color: look.color),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.4, color: look.accent),
                   ),
                   Text(
                     wedding.displayNames,
@@ -1669,7 +1676,7 @@ class _ClotheslineTop extends ConsumerWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(color: look.tint, shape: BoxShape.circle),
-              child: Icon(look.motif, size: 22, color: look.color),
+              child: Icon(look.motif, size: 22, color: look.accent),
             ),
           ],
         ),
@@ -1698,7 +1705,7 @@ class _ClotheslineTop extends ConsumerWidget {
                           children: [
                             _CoverPhoto(wedding: wedding, height: 200, radius: 2),
                             const SizedBox(height: 8),
-                            Text(look.tagline, textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: look.color)),
+                            Text(look.tagline, textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: look.accent)),
                             const SizedBox(height: 2),
                             Text(
                               wedding.weddingDate == null ? 'Data por definir' : formatWeddingDateCaps(wedding.weddingDate!),
@@ -1749,7 +1756,7 @@ class _ClotheslineTop extends ConsumerWidget {
                               width: double.infinity,
                               color: i.isEven ? look.tint : look.comp,
                               alignment: Alignment.center,
-                              child: Icon(it.icon, size: 30, color: look.color),
+                              child: Icon(it.icon, size: 30, color: look.accent),
                             ),
                           ),
                           const SizedBox(height: 8),

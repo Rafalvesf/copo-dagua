@@ -33,7 +33,50 @@ class MenuStyleScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final style = ref.watch(currentMenuStyleProvider);
-    final accent = style.color.color;
+    final accent = style.color.accent;
+    Widget swatches(List<MenuColor> colors) =>
+                  Wrap(
+                    spacing: 14,
+                    runSpacing: 16,
+                    children: [
+                      for (final c in colors)
+                        SizedBox(
+                          width: 64,
+                          child: Semantics(
+                            button: true,
+                            selected: c.id == style.color.id,
+                            label: c.label,
+                            child: SnappyTap(
+                              onTap: () => _save(context, ref, color: c),
+                              child: Column(
+                                children: [
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 160),
+                                    width: 52,
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      color: c.color,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 3),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: c.id == style.color.id ? c.color : const Color(0x22171713),
+                                          spreadRadius: c.id == style.color.id ? 2 : 0,
+                                          blurRadius: c.id == style.color.id ? 0 : 8,
+                                        ),
+                                      ],
+                                    ),
+                                    child: c.id == style.color.id ? const Icon(Icons.check, color: c.on, size: 22) : null,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(c.label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: AppTheme.ink)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -95,48 +138,13 @@ class MenuStyleScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   const Text('O verde-eucalipto é a cor de todos os eventos; podes trocar.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   const SizedBox(height: 14),
-                  Wrap(
-                    spacing: 14,
-                    runSpacing: 16,
-                    children: [
-                      for (final c in MenuColor.all)
-                        SizedBox(
-                          width: 64,
-                          child: Semantics(
-                            button: true,
-                            selected: c.id == style.color.id,
-                            label: c.label,
-                            child: SnappyTap(
-                              onTap: () => _save(context, ref, color: c),
-                              child: Column(
-                                children: [
-                                  AnimatedContainer(
-                                    duration: const Duration(milliseconds: 160),
-                                    width: 52,
-                                    height: 52,
-                                    decoration: BoxDecoration(
-                                      color: c.color,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 3),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: c.id == style.color.id ? c.color : const Color(0x22171713),
-                                          spreadRadius: c.id == style.color.id ? 2 : 0,
-                                          blurRadius: c.id == style.color.id ? 0 : 8,
-                                        ),
-                                      ],
-                                    ),
-                                    child: c.id == style.color.id ? const Icon(Icons.check, color: Colors.white, size: 22) : null,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(c.label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: AppTheme.ink)),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                  const Text('Fortes', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  const SizedBox(height: 10),
+                  swatches(MenuColor.strong),
+                  const SizedBox(height: 20),
+                  const Text('Pastel', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  const SizedBox(height: 10),
+                  swatches(MenuColor.pastels),
                 ],
               ),
             ),

@@ -812,7 +812,8 @@ void main() {
   testWidgets('87_juntar_par', (t) => _shoot(t, '87_juntar_par', signedOut, '/juntar/00000000-0000-0000-0000-000000000000'));
   for (final (name, layout, color) in [
     ('11b_menu_autocolantes', MenuLayout.stickers, 'eucalyptus'),
-    ('11c_menu_mural', MenuLayout.mural, 'pink'),
+    ('11c_menu_mural', MenuLayout.mural, 'p-pink'),
+    ('11f_menu_classico_pastel', MenuLayout.classic, 'p-sky'),
     ('11d_menu_estendal', MenuLayout.clothesline, 'blue'),
   ]) {
     testWidgets(name, (t) async {
