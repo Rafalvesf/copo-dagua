@@ -19,13 +19,15 @@ class TchinSplash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 0–0.3 entrada e brinde · 0.3–0.62 pausa · 0.62–0.86 círculo fecha.
-    final enter = Curves.easeOutBack.transform(_seg(t, 0, 0.26));
-    final knock = t > 0.26 && t < 0.34 ? math.sin(_seg(t, 0.26, 0.34) * math.pi) : 0.0;
-    final spark = t < 0.24 ? 0.0 : (t < 0.3 ? _seg(t, 0.24, 0.3) : 1 - _seg(t, 0.3, 0.46));
-    final taglineOpacity = _seg(t, 0.32, 0.42) * (1 - _seg(t, 0.6, 0.7));
-    final lift = Curves.easeIn.transform(_seg(t, 0.6, 0.72));
-    final close = Curves.easeInOutCubic.transform(_seg(t, 0.64, 0.86));
+    // Mesmos tempos do canvas (ciclo de 5 s): 0–0.22 entrada · 0.22–0.32
+    // brinde · 0.32–0.64 pausa com a frase · 0.64–0.78 o verde fecha em
+    // círculo · 0.78–1 confetti.
+    final enter = Curves.easeOutBack.transform(_seg(t, 0, 0.22));
+    final knock = t > 0.22 && t < 0.32 ? math.sin(_seg(t, 0.22, 0.32) * math.pi) : 0.0;
+    final spark = t < 0.21 ? 0.0 : (t < 0.25 ? _seg(t, 0.21, 0.25) : 1 - _seg(t, 0.25, 0.42));
+    final taglineOpacity = _seg(t, 0.32, 0.42) * (1 - _seg(t, 0.62, 0.70));
+    final lift = Curves.easeIn.transform(_seg(t, 0.64, 0.74));
+    final close = Curves.easeInOutCubic.transform(_seg(t, 0.64, 0.78));
     final word = TextStyle(
       fontFamily: AppTheme.fontFamily,
       fontFamilyFallback: AppTheme.fontFamilyFallback,
@@ -118,7 +120,7 @@ class TchinSplash extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(9),
                         child: LinearProgressIndicator(
-                          value: _seg(t, 0.3, 0.62),
+                          value: _seg(t, 0.32, 0.62),
                           minHeight: 4,
                           backgroundColor: Colors.white.withValues(alpha: 0.22),
                           color: const Color(0xFFF2D98D),
