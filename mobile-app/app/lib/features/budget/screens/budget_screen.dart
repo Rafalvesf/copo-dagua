@@ -9,6 +9,7 @@ import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../features/partners/partner_style.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
@@ -468,14 +469,7 @@ class _ExpenseList extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Column(
           children: [
-            ClipOval(
-              child: Image.asset(
-                'assets/images/nav_icon_capybaras.png',
-                width: 96,
-                height: 96,
-                fit: BoxFit.cover,
-              ),
-            ),
+            const TchinMascot(pose: MascotPose.budget, width: 170),
             const SizedBox(height: 14),
             const Text(
               'Sem despesas nesta vista',

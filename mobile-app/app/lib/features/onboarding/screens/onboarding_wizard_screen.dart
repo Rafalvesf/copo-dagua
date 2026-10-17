@@ -14,6 +14,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_onboarding/screens/partner_welcome_screen.dart';
+import '../../../shared/widgets/mascot.dart';
 
 /// Onboarding do organizador — uma pergunta por ecrã, igual ao canvas
 /// aprovado (redesign 2026-10): tipo de evento, nome (+ par num
@@ -1522,25 +1523,19 @@ class _DoneView extends StatelessWidget {
 
     return GradientScaffold(
       background: AppBackground.hero,
-      body: SafeArea(
+      body: Stack(
+        children: [
+      const Positioned.fill(child: ConfettiBurst(origin: Offset(0.5, 0.14), delay: Duration(milliseconds: 1050))),
+      SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
+          padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.accentOliveDark,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check_rounded, color: Colors.white, size: 28),
-                ),
-              ),
-              const SizedBox(height: 24),
+              // Pedido do utilizador (2026-10-17): "anima o do organizador"
+              // — o Tchin e o Tchin brindam uma vez, com confetti.
+              const Center(child: TchinClink(width: 200)),
+              const SizedBox(height: 16),
               Text(
                 'Tudo pronto, $name.',
                 style: const TextStyle(
@@ -1629,6 +1624,8 @@ class _DoneView extends StatelessWidget {
             ],
           ),
         ),
+      ),
+        ],
       ),
     );
   }

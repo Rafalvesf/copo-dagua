@@ -15,6 +15,7 @@ import '../../../shared/widgets/guest_widgets.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
 
 class GuestsListScreen extends ConsumerStatefulWidget {
@@ -215,7 +216,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                       Expanded(
                         child: state.guests.isEmpty
                             ? IllustratedEmptyState(
-                                imageAsset: 'assets/images/nav_icon_bears.png',
+                                mascot: MascotPose.wave,
                                 title: 'Quem vem celebrar convosco?',
                                 message: 'Comecem pela família mais próxima. A lista pode crescer aos poucos, e cada convidado confirma pelo link do convite.',
                                 primaryLabel: 'Adicionar o primeiro convidado',

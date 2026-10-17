@@ -9,6 +9,7 @@ import '../../../core/seating/seating_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -316,12 +317,7 @@ class _NoTablesCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         children: [
-          Image.asset(
-            'assets/images/seating_table_1.png',
-            width: 150,
-            height: 150,
-            fit: BoxFit.contain,
-          ),
+          const TchinMascot(pose: MascotPose.sleep, width: 210),
           const SizedBox(height: 16),
           Text(
             hasVenue ? 'Mesas por configurar' : 'Ainda sem local reservado',

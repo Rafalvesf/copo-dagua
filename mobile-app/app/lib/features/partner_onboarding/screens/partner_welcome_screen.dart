@@ -15,8 +15,10 @@ import '../../../features/partner_profile/screens/partner_pricing_screen.dart' s
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/progress.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/staggered_fade_in.dart';
 import '../../../shared/money.dart';
 
 /// Primeiro ecrã visto por uma conta de parceiro recém-registada.
@@ -357,6 +359,8 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
     await _finish();
   }
 
+  bool _sent = false;
+
   Future<void> _finish() async {
     setState(() => _saving = true);
     try {
@@ -380,7 +384,9 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
           );
       await ref.read(partnerProfileControllerProvider.notifier).updateTaxId(_taxId.text.trim());
       if (!mounted) return;
-      await ref.read(authControllerProvider.notifier).completeOnboarding();
+      // Pedido do utilizador (2026-10-17): "anima o perfil enviado" — ecrã
+      // "Perfil enviado!" (avião de papel → visto) antes do painel.
+      setState(() => _sent = true);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -404,6 +410,21 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_sent) {
+      final cats = _categoryOptions
+          .where((o) => _selectedCategoryIds.contains(o.id))
+          .map((o) => o.label)
+          .join(' e ');
+      final areas = _serviceAreasText.text.trim();
+      return _SentView(
+        rows: [
+          [_businessName.text.trim(), if (cats.isNotEmpty) cats].where((t) => t.isNotEmpty).join(' · '),
+          if (areas.isNotEmpty) areas,
+          'Fica visível aos clientes depois de aprovado',
+        ].where((t) => t.isNotEmpty).toList(),
+        onContinue: () => ref.read(authControllerProvider.notifier).completeOnboarding(),
+      );
+    }
     if (_step == _Step.intro) {
       return _IntroView(onStart: () => setState(() => _stepIndex++));
     }
@@ -878,6 +899,163 @@ class SnappyCategoryPicker extends StatelessWidget {
             color: selectedLabels.isEmpty ? AppTheme.inkMuted : AppTheme.ink,
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+class _SentView extends StatefulWidget {
+  final List<String> rows;
+  final Future<void> Function() onContinue;
+
+  const _SentView({required this.rows, required this.onContinue});
+
+  @override
+  State<_SentView> createState() => _SentViewState();
+}
+
+class _SentViewState extends State<_SentView> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1800),
+  );
+  bool _busy = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_c.value == 0 && !_c.isAnimating) {
+      if (MediaQuery.of(context).disableAnimations) {
+        _c.value = 1;
+      } else {
+        _c.forward();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          const Positioned.fill(
+            child: ConfettiBurst(origin: Offset(0.2, 0.2), delay: Duration(milliseconds: 1150)),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 56, 28, 34),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AnimatedBuilder(
+                    animation: _c,
+                    builder: (context, _) {
+                      final t = _c.value;
+                      final fly = Curves.easeInCubic.transform(((t - 0.05) / 0.55).clamp(0.0, 1.0));
+                      final done = Curves.easeOutBack.transform(((t - 0.6) / 0.25).clamp(0.0, 1.0));
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: SizedBox(
+                          width: 88,
+                          height: 88,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Transform.scale(
+                                scale: 1 + 0.12 * (done > 0 && done < 1 ? 1 - (done - 0.5).abs() * 2 : 0),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Color.lerp(AppColors.gray, AppTheme.accentOliveDark, done.clamp(0.0, 1.0)),
+                                  ),
+                                ),
+                              ),
+                              if (fly < 1)
+                                Positioned(
+                                  left: 24 + 230 * fly,
+                                  top: 24 - 150 * fly,
+                                  child: Opacity(
+                                    opacity: 1 - fly * 0.6,
+                                    child: Transform.rotate(
+                                      angle: -0.2 + 0.4 * fly,
+                                      child: Transform.scale(
+                                        scale: 1 - 0.4 * fly,
+                                        child: const Icon(Icons.send_rounded, size: 40, color: AppTheme.accentOliveDark),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              if (done > 0)
+                                Center(
+                                  child: Transform.scale(
+                                    scale: done,
+                                    child: const Icon(Icons.check_rounded, size: 42, color: Colors.white),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 28),
+                  StaggeredFadeIn(
+                    stagger: const Duration(milliseconds: 110),
+                    itemDuration: const Duration(milliseconds: 420),
+                    children: [
+                      const Text(
+                        'Perfil enviado!',
+                        style: TextStyle(fontSize: AppFontSize.h1, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'A equipa revê o perfil e fica visível aos clientes assim que estiver aprovado.',
+                        style: TextStyle(fontSize: AppFontSize.base + 1, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
+                      ),
+                      const SizedBox(height: 24),
+                      for (final r in widget.rows)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.md)),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.check_rounded, size: 18, color: AppTheme.accentOliveDark),
+                                const SizedBox(width: 12),
+                                Expanded(child: Text(r, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.ink))),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const Spacer(),
+                  PrimaryButton(
+                    label: 'Ir para o painel',
+                    loading: _busy,
+                    onPressed: () async {
+                      setState(() => _busy = true);
+                      try {
+                        await widget.onContinue();
+                      } finally {
+                        if (mounted) setState(() => _busy = false);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

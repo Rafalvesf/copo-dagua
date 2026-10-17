@@ -15,6 +15,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/search_pill.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/mascot.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   const ChatListScreen({super.key});
@@ -123,7 +124,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                       ? const Center(child: CircularProgressIndicator())
                       : conversations.isEmpty && query.isEmpty
                       ? IllustratedEmptyState(
-                          imageAsset: 'assets/images/chat_icon.png',
+                          mascot: MascotPose.chat,
                           circularImage: false,
                           imageSize: 180,
                           title: 'Ainda sem conversas',

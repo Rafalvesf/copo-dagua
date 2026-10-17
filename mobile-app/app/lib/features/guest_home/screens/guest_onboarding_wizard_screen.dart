@@ -8,8 +8,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/progress.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/staggered_fade_in.dart';
 
 /// Wizard "Vais ao casamento?" — pedido explícito do utilizador: assim
 /// que uma conta fica ligada a uma linha de `guests` (por código ou por
@@ -42,6 +44,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   ];
   int _index = 0;
   bool _saving = false;
+  bool _confirmed = false;
 
   final _plusOneName = TextEditingController();
   final _menu = TextEditingController();
@@ -77,6 +80,12 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       );
       ref.invalidate(myGuestRowProvider(widget.weddingId));
       if (!mounted) return;
+      // Pedido do utilizador (2026-10-17): "Presença confirmada" com o
+      // Tchin e o Tchin a brindar antes de entrar no evento.
+      if (attending) {
+        setState(() => _confirmed = true);
+        return;
+      }
       context.go('/guest-home/${widget.weddingId}');
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -85,6 +94,20 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
 
   @override
   Widget build(BuildContext context) {
+    if (_confirmed) {
+      final plusOne = _plusOneName.text.trim();
+      final menu = _menu.text.trim();
+      final allergies = _allergies.text.trim();
+      return _ConfirmedView(
+        rows: [
+          plusOne.isEmpty ? 'Vais tu' : 'Vais tu e $plusOne',
+          if (menu.isNotEmpty) 'Menu: $menu',
+          allergies.isEmpty ? 'Sem alergias indicadas' : 'Alergias: $allergies',
+          'Podes mudar tudo no teu perfil',
+        ],
+        onContinue: () => context.go('/guest-home/${widget.weddingId}'),
+      );
+    }
     final step = _steps[_index];
 
     return GradientScaffold(
@@ -260,6 +283,94 @@ class _ChoiceRow extends StatelessWidget {
             Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600))),
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+class _ConfirmedView extends StatelessWidget {
+  final List<String> rows;
+  final VoidCallback onContinue;
+
+  const _ConfirmedView({required this.rows, required this.onContinue});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          const Positioned.fill(
+            child: ConfettiBurst(origin: Offset(0.5, 0.16), delay: Duration(milliseconds: 1050)),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 24, 28, 34),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 24),
+                  const Center(child: TchinClink(width: 210)),
+                  const SizedBox(height: 20),
+                  StaggeredFadeIn(
+                    stagger: const Duration(milliseconds: 110),
+                    itemDuration: const Duration(milliseconds: 420),
+                    children: [
+                      const Text(
+                        'Presença confirmada!',
+                        style: TextStyle(
+                          fontSize: AppFontSize.h1,
+                          height: 34 / 28,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Os anfitriões já sabem. Podes mudar as respostas no teu perfil.',
+                        style: TextStyle(
+                          fontSize: AppFontSize.base + 1,
+                          height: 22 / 15,
+                          fontWeight: FontWeight.w300,
+                          color: AppTheme.inkMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      for (final r in rows)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _CheckRow(text: r),
+                        ),
+                    ],
+                  ),
+                  const Spacer(),
+                  PrimaryButton(label: 'Ver o evento →', onPressed: onContinue),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CheckRow extends StatelessWidget {
+  final String text;
+  const _CheckRow({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.md)),
+      child: Row(
+        children: [
+          const Icon(Icons.check_rounded, size: 18, color: AppTheme.accentOliveDark),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.ink))),
+        ],
       ),
     );
   }
