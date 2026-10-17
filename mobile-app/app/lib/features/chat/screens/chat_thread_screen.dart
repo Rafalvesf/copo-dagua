@@ -7,6 +7,7 @@ import '../../../core/chat/chat_thread_controller.dart';
 import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
+import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -213,8 +214,16 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
   @override
   Widget build(BuildContext context) {
     final message = widget.message;
+    // Como no design: "Casamento · 12 jun 2027" e o serviço por baixo.
+    final wedding = ref.watch(weddingControllerProvider).wedding;
+    final date = wedding?.weddingDate;
+    const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    final heading = date == null
+        ? null
+        : '${wedding!.eventType.label} · ${date.day} ${months[date.month - 1]} ${date.year}';
     return ChatProposalCard(
-      title: message.proposalTitle ?? 'Proposta',
+      title: heading ?? message.proposalTitle ?? 'Proposta',
+      subtitle: heading == null ? null : message.proposalTitle,
       price: message.proposalPrice,
       deposit: message.proposalDepositAmount,
       actions: [

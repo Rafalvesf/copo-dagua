@@ -135,6 +135,9 @@ class ChatCardAction {
 class ChatProposalCard extends StatelessWidget {
   final String eyebrow;
   final String title;
+
+  /// Linha por baixo do título (design: "120 pessoas · espaço + catering").
+  final String? subtitle;
   final double? price;
   final double? deposit;
   final List<ChatCardAction> actions;
@@ -143,6 +146,7 @@ class ChatProposalCard extends StatelessWidget {
     super.key,
     this.eyebrow = 'PROPOSTA',
     required this.title,
+    this.subtitle,
     required this.price,
     required this.deposit,
     this.actions = const [],
@@ -197,6 +201,10 @@ class ChatProposalCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  if (subtitle != null && subtitle!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  ],
                   const SizedBox(height: 10),
                   _row('Total', price == null ? '—' : euros(price!), big: true),
                   const SizedBox(height: 2),
@@ -257,10 +265,8 @@ class ChatComposer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: _border)),
-      ),
+      // Sem linha por cima (pedido 2026-10-17).
+      color: Colors.white,
       child: SafeArea(
         top: false,
         minimum: const EdgeInsets.only(bottom: 20),
