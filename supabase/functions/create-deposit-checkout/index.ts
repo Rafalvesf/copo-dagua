@@ -101,8 +101,30 @@ Deno.serve(async (req) => {
     stripe_charges_enabled: boolean;
     business_name: string;
   } | null;
-  if (!partner?.stripe_account_id || !partner.stripe_charges_enabled) {
+  if (!partner?.stripe_account_id) {
     return jsonError("partner_not_onboarded", 409);
+  }
+  if (!partner.stripe_charges_enabled) {
+    // O webhook `account.updated` pode não ter chegado: confirma o estado
+    // diretamente na Stripe antes de recusar e guarda-o (service role).
+    try {
+      const account = await stripeClient().accounts.retrieve(partner.stripe_account_id);
+      const admin = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      await admin.rpc("sync_stripe_account_status", {
+        p_account_id: account.id,
+        p_charges_enabled: account.charges_enabled,
+        p_payouts_enabled: account.payouts_enabled,
+      });
+      if (!account.charges_enabled) {
+        return jsonError("partner_not_onboarded", 409);
+      }
+    } catch (e) {
+      console.error("stripe account refresh failed", e);
+      return jsonError("partner_not_onboarded", 409);
+    }
   }
 
   const { data: settings } = await supabase
