@@ -38,7 +38,7 @@ class AuthPage extends StatelessWidget {
                       height: 44,
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: showBack && context.canPop() ? const AuthBackButton() : const SizedBox.shrink(),
+                        child: showBack ? const AuthBackButton() : const SizedBox.shrink(),
                       ),
                     ),
                     ...children,
@@ -65,7 +65,7 @@ class AuthBackButton extends StatelessWidget {
       button: true,
       label: 'Voltar',
       child: SnappyTap(
-        onTap: () => context.pop(),
+        onTap: () => context.canPop() ? context.pop() : context.go('/welcome'),
         child: Container(
           width: 44,
           height: 44,
