@@ -18,6 +18,7 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
+import 'menu_style_screen.dart';
 
 /// Definições — uma por tipo de conta (organizadores, parceiros,
 /// convidados). Redesign 2026-10-17 (canvas "Organizadores · Definições",
@@ -274,6 +275,11 @@ class _CoupleSettings extends ConsumerWidget {
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EditEventPage(wedding: wedding))),
           ),
           _Row(icon: Icons.emoji_emotions_outlined, label: 'Ícone da barra', onTap: () => _pickNavIcon(context)),
+          _Row(
+            icon: Icons.palette_outlined,
+            label: 'Aparência do menu',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MenuStyleScreen())),
+          ),
         ],
       ),
       // "Para os convidados" saiu do perfil para um tile próprio na

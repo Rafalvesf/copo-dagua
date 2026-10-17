@@ -13,6 +13,7 @@ import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/wedding/menu_style.dart';
 import '../../guests/screens/guests_list_screen.dart' show InviteShareSheet;
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
@@ -28,9 +29,8 @@ import '../../../core/seating/seating_controller.dart';
 import '../../../core/supabase/supabase_config.dart';
 
 
-/// Cores e ícones do menu principal por tipo de evento (canvas "Menu ·
-/// Casamento", 2026-10-17). Por agora só o casamento tem os seus; os
-/// outros tipos usam o verde da marca até terem design próprio.
+/// Cor escolhida pelo organizador (verde-eucalipto por defeito, 098) e
+/// frase/desenhos do tipo de evento (canvas "Menu principal").
 class _Look {
   final Color color;
   final Color tint;
@@ -47,31 +47,14 @@ class _Look {
     required this.motif,
     required this.doodles,
   });
-
-  static const wedding = _Look(
-    color: Color(0xFF4F6B4A),
-    tint: Color(0xFFDCE4D8),
-    comp: Color(0xFFF3EBDD),
-    tagline: 'Sim, aceitamos!',
-    motif: Icons.favorite_border,
-    doodles: [Icons.favorite_border, Icons.diamond_outlined, Icons.wine_bar_outlined, Icons.local_florist_outlined, Icons.eco_outlined],
-  );
-
-  static const other = _Look(
-    color: AppTheme.accentOliveDark,
-    tint: AppColors.green,
-    comp: Color(0xFFF3EBDD),
-    tagline: 'Vamos celebrar',
-    motif: Icons.auto_awesome_outlined,
-    doodles: [Icons.auto_awesome_outlined, Icons.star_border, Icons.wine_bar_outlined, Icons.celebration_outlined, Icons.eco_outlined],
-  );
-
-  static _Look of(EventType? type) => (type ?? EventType.wedding) == EventType.wedding ? wedding : other;
 }
 
-final _lookProvider = Provider<_Look>(
-  (ref) => _Look.of(ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType))),
-);
+final _lookProvider = Provider<_Look>((ref) {
+  final type = ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType)) ?? EventType.wedding;
+  final c = ref.watch(currentMenuStyleProvider).color;
+  final d = EventDecor.of(type);
+  return _Look(color: c.color, tint: c.tint, comp: c.comp, tagline: d.tagline, motif: d.motif, doodles: d.doodles);
+});
 
 /// Sombra suave dos cartões (canvas, 2026-10-17).
 const _softShadow = [
@@ -94,6 +77,7 @@ class WeddingDetailsScreen extends ConsumerWidget {
     final weddingState = ref.watch(weddingControllerProvider);
     final wedding = weddingState.wedding;
     final look = ref.watch(_lookProvider);
+    final layout = ref.watch(currentMenuStyleProvider).layout;
 
     return GradientScaffold(
       background: AppBackground.feed,
@@ -114,9 +98,18 @@ class WeddingDetailsScreen extends ConsumerWidget {
                         140,
                       ),
                       children: [
-                        _HeroCard(wedding: wedding),
-                        const SizedBox(height: 22),
-                        const _QuickLinksRow(),
+                        // Aparência escolhida nas Definições (098): o
+                        // clássico por defeito, ou uma das três opções.
+                        ...switch (layout) {
+                          MenuLayout.classic => [
+                              _HeroCard(wedding: wedding),
+                              const SizedBox(height: 22),
+                              const _QuickLinksRow(),
+                            ],
+                          MenuLayout.stickers => [_StickersTop(wedding: wedding)],
+                          MenuLayout.mural => [_MuralTop(wedding: wedding)],
+                          MenuLayout.clothesline => [_ClotheslineTop(wedding: wedding)],
+                        },
                         const SizedBox(height: 22),
                         const _BookingsSection(),
                         const SizedBox(height: 14),
@@ -594,127 +587,73 @@ class _CountdownBox extends StatelessWidget {
 /// grid antigo — Orçamento, Convidados, Lugares e Serviços já tratados
 /// (movido de Definições, 2026-09-14) continuam a precisar de um ponto
 /// de entrada visível, além de Definições.
+/// Um atalho do menu (Orçamento, Convidados…), partilhado pelos quatro
+/// estilos de menu.
+class _Shortcut {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final String route;
+  const _Shortcut(this.icon, this.label, this.subtitle, this.route);
+}
+
+List<_Shortcut> _shortcuts(WidgetRef ref) {
+  final budget = ref.watch(budgetControllerProvider).budget;
+  final guests = ref.watch(guestsControllerProvider).guests;
+  final tables = ref.watch(seatingControllerProvider).tables;
+  final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+  final photos = weddingId == null
+      ? const <GalleryPhoto>[]
+      : ref.watch(weddingGalleryPhotosProvider(weddingId)).asData?.value ?? const <GalleryPhoto>[];
+  final handled = ref.watch(_servicesHandledProvider).asData?.value;
+  final confirmed = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).length;
+  final seated = tables.fold<int>(0, (n, t) => n + t.guestIds.length);
+  final pending = photos.where((p) => p.status == 'pending').length;
+  final approved = photos.where((p) => p.status == 'approved').length;
+  String plural(int n, String one, String many) => n == 1 ? one : many;
+  return [
+    _Shortcut(Icons.savings_outlined, 'Orçamento',
+        budget == null || budget.total == 0 ? 'Por definir' : '${euros(budget.spent)} de ${euros(budget.total)}', '/budget'),
+    _Shortcut(Icons.people_outline, 'Convidados',
+        guests.isEmpty ? 'Ainda sem convidados' : '$confirmed ${plural(confirmed, 'confirmado', 'confirmados')} de ${guests.length}', '/guests'),
+    _Shortcut(Icons.event_seat_outlined, 'Lugares', guests.isEmpty ? 'Sem convidados' : '$seated de ${guests.length} sentados', '/seating'),
+    _Shortcut(Icons.photo_library_outlined, 'Galeria',
+        pending > 0 ? '$pending ${plural(pending, 'foto por aprovar', 'fotos por aprovar')}' : '$approved ${plural(approved, 'foto', 'fotos')}', '/gallery'),
+    const _Shortcut(Icons.card_giftcard_outlined, 'Para os convidados', 'Programa e presentes', '/guest-page'),
+    _Shortcut(Icons.checklist_rtl_outlined, 'Serviços tratados',
+        handled == null ? '—' : handled == 0 ? 'Nenhum ainda' : '$handled ${plural(handled, 'categoria', 'categorias')}', '/service-preferences'),
+  ];
+}
+
 class _QuickLinksRow extends ConsumerWidget {
   const _QuickLinksRow();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Texto por baixo de cada atalho, como no design (Casamento): dados
-    // reais de cada módulo.
-    final budget = ref.watch(budgetControllerProvider).budget;
-    final guests = ref.watch(guestsControllerProvider).guests;
-    final tables = ref.watch(seatingControllerProvider).tables;
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-    final photos = weddingId == null
-        ? const <GalleryPhoto>[]
-        : ref.watch(weddingGalleryPhotosProvider(weddingId)).asData?.value ?? const <GalleryPhoto>[];
-    final handled = ref.watch(_servicesHandledProvider).asData?.value;
+    final items = _shortcuts(ref);
     final look = ref.watch(_lookProvider);
-
-    final confirmed = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).length;
-    final seated = tables.fold<int>(0, (n, t) => n + t.guestIds.length);
-    final pending = photos.where((p) => p.status == 'pending').length;
-    final approved = photos.where((p) => p.status == 'approved').length;
-
-    String plural(int n, String one, String many) => n == 1 ? one : many;
-
+    const bg = [0, 1, 1, 0, 0, 1];
+    Widget tile(int i) => _QuickLinkTile(
+          icon: items[i].icon,
+          label: items[i].label,
+          subtitle: items[i].subtitle,
+          color: bg[i] == 0 ? look.tint : look.comp,
+          index: i,
+          accent: look.color,
+          onTap: () => context.push(items[i].route),
+        );
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _QuickLinkTile(
-                icon: Icons.savings_outlined,
-                label: 'Orçamento',
-                subtitle: budget == null || budget.total == 0
-                    ? 'Por definir'
-                    : '${euros(budget.spent)} de ${euros(budget.total)}',
-                color: look.tint,
-                index: 0,
-                accent: look.color,
-                onTap: () => context.push('/budget'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _QuickLinkTile(
-                icon: Icons.people_outline,
-                label: 'Convidados',
-                subtitle: guests.isEmpty
-                    ? 'Ainda sem convidados'
-                    : '$confirmed ${plural(confirmed, 'confirmado', 'confirmados')} de ${guests.length}',
-                color: look.comp,
-                index: 1,
-                accent: look.color,
-                onTap: () => context.push('/guests'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _QuickLinkTile(
-                icon: Icons.event_seat_outlined,
-                label: 'Lugares',
-                subtitle: guests.isEmpty ? 'Sem convidados' : '$seated de ${guests.length} sentados',
-                color: look.comp,
-                index: 2,
-                accent: look.color,
-                onTap: () => context.push('/seating'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _QuickLinkTile(
-                icon: Icons.photo_library_outlined,
-                label: 'Galeria',
-                subtitle: pending > 0
-                    ? '$pending ${plural(pending, 'foto por aprovar', 'fotos por aprovar')}'
-                    : '$approved ${plural(approved, 'foto', 'fotos')}',
-                color: look.tint,
-                index: 3,
-                accent: look.color,
-                onTap: () => context.push('/gallery'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            // "Para os convidados" numa página só: programa, mensagem,
-            // local, dress code, presentes e entrada (pedido 2026-10-17).
-            Expanded(
-              child: _QuickLinkTile(
-                icon: Icons.card_giftcard_outlined,
-                label: 'Para os convidados',
-                subtitle: 'Programa e presentes',
-                color: look.tint,
-                index: 4,
-                accent: look.color,
-                onTap: () => context.push('/guest-page'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _QuickLinkTile(
-                icon: Icons.checklist_rtl_outlined,
-                label: 'Serviços tratados',
-                subtitle: handled == null
-                    ? '—'
-                    : handled == 0
-                        ? 'Nenhum ainda'
-                        : '$handled ${plural(handled, 'categoria', 'categorias')}',
-                color: look.comp,
-                index: 5,
-                accent: look.color,
-                onTap: () => context.push('/service-preferences'),
-              ),
-            ),
-          ],
-        ),
+        for (var r = 0; r < 3; r++) ...[
+          if (r > 0) const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: tile(r * 2)),
+              const SizedBox(width: 12),
+              Expanded(child: tile(r * 2 + 1)),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -1269,6 +1208,661 @@ class _WeddingSkeleton extends StatelessWidget {
           child: FloatingBottomNav(current: AppTab.wedding),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------
+// Estilos alternativos do menu (098, pedido 2026-10-17): Autocolantes,
+// Polaroid Mural e Polaroid Estendal, do canvas. Usam os mesmos atalhos
+// ([_shortcuts]) e a mesma cor ([_lookProvider]) que o clássico.
+// ---------------------------------------------------------------------
+
+Future<void> _pickBannerFrom(BuildContext context, WidgetRef ref) async {
+  final picker = ImagePicker();
+  final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+  if (file == null || !context.mounted) return;
+  final raw = await file.readAsBytes();
+  if (!context.mounted) return;
+  final adjusted = await showPhotoAdjustScreen(context, imageBytes: raw);
+  if (adjusted == null || !context.mounted) return;
+  try {
+    await ref.read(weddingControllerProvider.notifier).uploadBannerBytes(adjusted);
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível carregar a foto.')));
+    }
+  }
+}
+
+int? _daysLeft(Wedding w) {
+  final d = w.weddingDate;
+  if (d == null) return null;
+  final n = d.difference(DateTime.now()).inDays;
+  return n < 0 ? 0 : n;
+}
+
+String _eventNoun(Wedding w) => w.eventType == EventType.wedding ? 'o casamento' : 'o ${w.eventType.noun}';
+
+/// Foto de capa (ou espaço para a pôr), usada dentro das polaroids.
+class _CoverPhoto extends ConsumerWidget {
+  final Wedding wedding;
+  final double height;
+  final double radius;
+  const _CoverPhoto({required this.wedding, required this.height, this.radius = 3});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final look = ref.watch(_lookProvider);
+    final url = wedding.coverPhotoUrlCacheBusted;
+    return SnappyTap(
+      onTap: () => _pickBannerFrom(context, ref),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: SizedBox(
+          height: height,
+          width: double.infinity,
+          child: url != null
+              ? Image.network(url, fit: BoxFit.cover, errorBuilder: (c, e, s) => Container(color: look.tint))
+              : Container(
+                  color: look.tint,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add_photo_alternate_outlined, size: 28, color: look.color),
+                      const SizedBox(height: 4),
+                      Text('Adicionar foto', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.color)),
+                    ],
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Moldura branca de polaroid, com sombra e inclinação.
+class _Polaroid extends StatelessWidget {
+  final double width;
+  final double angle;
+  final Widget child;
+  final EdgeInsets padding;
+  const _Polaroid({required this.width, required this.angle, required this.child, this.padding = const EdgeInsets.fromLTRB(10, 10, 10, 14)});
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: angle,
+      child: Container(
+        width: width,
+        padding: padding,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(4),
+          boxShadow: const [BoxShadow(color: Color(0x26171713), blurRadius: 26, offset: Offset(0, 10))],
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+Widget _namesAndDate(Wedding w, _Look look, {double size = 20}) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          w.displayNames,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          style: TextStyle(fontSize: size, height: 1.2, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: look.color),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          [if (w.weddingDate != null) formatWeddingDateCaps(w.weddingDate!), if (w.location?.isNotEmpty == true) w.location!].join(' · '),
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
+        ),
+      ],
+    );
+
+Widget _roundSticker(IconData icon, Color bg, Color fg, double angle) => Transform.rotate(
+      angle: angle,
+      child: Container(
+        width: 54,
+        height: 54,
+        decoration: BoxDecoration(
+          color: bg,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: const [BoxShadow(color: Color(0x1F171713), blurRadius: 14, offset: Offset(0, 6))],
+        ),
+        child: Icon(icon, size: 26, color: fg),
+      ),
+    );
+
+// ---------- Autocolantes ----------
+class _StickersTop extends ConsumerWidget {
+  final Wedding wedding;
+  const _StickersTop({required this.wedding});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final look = ref.watch(_lookProvider);
+    final items = _shortcuts(ref);
+    final days = _daysLeft(wedding);
+    final first = wedding.partnerName1.trim().split(' ').first;
+    const tilts = [-8.0, 6.0, -4.0, 8.0, -6.0, 4.0];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Olá, $first!', style: const TextStyle(fontSize: 30, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 6),
+        if (days != null)
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const Text('Faltam ', style: TextStyle(fontSize: 16, color: AppTheme.inkMuted)),
+              Transform.rotate(
+                angle: -0.05,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                  decoration: BoxDecoration(color: look.color, borderRadius: BorderRadius.circular(999)),
+                  child: Text('$days ${days == 1 ? 'dia' : 'dias'}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                ),
+              ),
+              Text(' para ${_eventNoun(wedding)}', style: const TextStyle(fontSize: 16, color: AppTheme.inkMuted)),
+            ],
+          ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 320,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                top: 22,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: _Polaroid(
+                    width: 250,
+                    angle: -0.05,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _CoverPhoto(wedding: wedding, height: 190),
+                        const SizedBox(height: 10),
+                        _namesAndDate(wedding, look),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(left: 8, top: 8, child: _roundSticker(look.doodles[0], look.color, Colors.white, -0.24)),
+              Positioned(right: 10, top: 40, child: _roundSticker(look.doodles[2], look.comp, look.color, 0.21)),
+              Positioned(right: 34, bottom: 6, child: _roundSticker(look.doodles[4], look.tint, look.color, -0.1)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 18,
+          crossAxisSpacing: 10,
+          childAspectRatio: 0.82,
+          children: [
+            for (final (i, it) in items.indexed)
+              SnappyTap(
+                onTap: () => context.push(it.route),
+                child: Column(
+                  children: [
+                    Transform.rotate(
+                      angle: tilts[i % tilts.length] * 3.14159 / 180,
+                      child: Container(
+                        width: 78,
+                        height: 78,
+                        decoration: BoxDecoration(
+                          color: i.isEven ? look.tint : look.comp,
+                          borderRadius: BorderRadius.circular(26),
+                          boxShadow: _softShadow,
+                        ),
+                        child: Icon(it.icon, size: 32, color: look.color),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      it.label,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      style: const TextStyle(fontSize: 13, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ---------- Polaroid Mural ----------
+class _MuralTop extends ConsumerWidget {
+  final Wedding wedding;
+  const _MuralTop({required this.wedding});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final look = ref.watch(_lookProvider);
+    final items = _shortcuts(ref);
+    final days = _daysLeft(wedding);
+    final first = wedding.partnerName1.trim().split(' ').first;
+    const tilts = [-3.0, 2.5, 2.0, -2.5, -2.0, 3.0];
+    Widget tape(Color c, double angle) => Transform.rotate(
+          angle: angle,
+          child: Container(width: 78, height: 24, decoration: BoxDecoration(color: c.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(3))),
+        );
+    Widget backPhoto(IconData icon, Color bg, double angle) => _Polaroid(
+          width: 190,
+          angle: angle,
+          padding: const EdgeInsets.fromLTRB(9, 9, 9, 40),
+          child: Container(height: 170, color: bg, alignment: Alignment.center, child: Icon(icon, size: 40, color: look.color)),
+        );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Olá, $first!', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  const Text('O nosso mural', style: TextStyle(fontSize: 26, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999), boxShadow: _softShadow),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(look.motif, size: 14, color: look.color),
+                  const SizedBox(width: 6),
+                  Text(wedding.eventType.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.color)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        SizedBox(
+          height: 360,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              Positioned(left: 0, top: 44, child: backPhoto(look.doodles[0], look.comp, -0.16)),
+              Positioned(right: 0, top: 34, child: backPhoto(look.doodles[2], look.tint, 0.14)),
+              Positioned(
+                top: 24,
+                child: _Polaroid(
+                  width: 246,
+                  angle: -0.035,
+                  padding: const EdgeInsets.fromLTRB(11, 11, 11, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _CoverPhoto(wedding: wedding, height: 210, radius: 2),
+                      const SizedBox(height: 10),
+                      _namesAndDate(wedding, look, size: 22),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(top: 12, child: tape(look.color, -0.07)),
+              if (days != null)
+                Positioned(
+                  right: 14,
+                  top: 262,
+                  child: Transform.rotate(
+                    angle: 0.21,
+                    child: Container(
+                      width: 84,
+                      height: 84,
+                      decoration: BoxDecoration(
+                        color: look.color,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 4),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('FALTAM', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: Colors.white)),
+                          Text('$days', style: const TextStyle(fontSize: 24, height: 1.1, fontWeight: FontWeight.w700, color: Colors.white)),
+                          Text(days == 1 ? 'DIA' : 'DIAS', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 22,
+          crossAxisSpacing: 18,
+          childAspectRatio: 0.98,
+          clipBehavior: Clip.none,
+          children: [
+            for (final (i, it) in items.indexed)
+              SnappyTap(
+                onTap: () => context.push(it.route),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.topCenter,
+                  children: [
+                    Transform.rotate(
+                      angle: tilts[i % tilts.length] * 3.14159 / 180,
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: const [BoxShadow(color: Color(0x1F171713), blurRadius: 16, offset: Offset(0, 6))],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                width: double.infinity,
+                                color: i.isEven ? look.tint : look.comp,
+                                alignment: Alignment.center,
+                                child: Icon(it.icon, size: 34, color: look.color),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(it.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Pionés.
+                    Positioned(
+                      top: -6,
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: look.color,
+                          shape: BoxShape.circle,
+                          boxShadow: const [BoxShadow(color: Color(0x4D171713), blurRadius: 3, offset: Offset(0, 2))],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ---------- Polaroid Estendal ----------
+class _ClotheslineTop extends ConsumerWidget {
+  final Wedding wedding;
+  const _ClotheslineTop({required this.wedding});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final look = ref.watch(_lookProvider);
+    final items = _shortcuts(ref);
+    Widget peg() => Container(
+          width: 12,
+          height: 26,
+          decoration: BoxDecoration(
+            color: const Color(0xFFC9A77C),
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: const Color(0x26171713)),
+          ),
+        );
+    Widget sidePhoto(IconData icon, Color bg, double angle) => _Polaroid(
+          width: 130,
+          angle: angle,
+          padding: const EdgeInsets.fromLTRB(7, 7, 7, 22),
+          child: Container(height: 110, color: bg, alignment: Alignment.center, child: Icon(icon, size: 30, color: look.color)),
+        );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    (wedding.eventType == EventType.wedding ? 'O nosso casamento' : wedding.eventType.label).toUpperCase(),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.4, color: look.color),
+                  ),
+                  Text(
+                    wedding.displayNames,
+                    maxLines: 2,
+                    style: const TextStyle(fontSize: 26, height: 1.2, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: AppTheme.ink),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(color: look.tint, shape: BoxShape.circle),
+              child: Icon(look.motif, size: 22, color: look.color),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          height: 340,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              Positioned.fill(child: CustomPaint(painter: _LinePainter())),
+              Positioned(left: -46, top: 28, child: Column(children: [peg(), Transform.translate(offset: const Offset(0, -8), child: sidePhoto(look.doodles[0], look.comp, -0.12))])),
+              Positioned(right: -46, top: 28, child: Column(children: [peg(), Transform.translate(offset: const Offset(0, -8), child: sidePhoto(look.doodles[2], look.tint, 0.12))])),
+              Positioned(
+                top: 34,
+                child: Column(
+                  children: [
+                    peg(),
+                    Transform.translate(
+                      offset: const Offset(0, -8),
+                      child: _Polaroid(
+                        width: 236,
+                        angle: 0.035,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _CoverPhoto(wedding: wedding, height: 200, radius: 2),
+                            const SizedBox(height: 8),
+                            Text(look.tagline, textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: look.color)),
+                            const SizedBox(height: 2),
+                            Text(
+                              wedding.weddingDate == null ? 'Data por definir' : formatWeddingDateCaps(wedding.weddingDate!),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        _FilmStrip(date: wedding.weddingDate),
+        const SizedBox(height: 30),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 28,
+          crossAxisSpacing: 14,
+          childAspectRatio: 1.0,
+          clipBehavior: Clip.none,
+          children: [
+            for (final (i, it) in items.indexed)
+              SnappyTap(
+                onTap: () => context.push(it.route),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.topCenter,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: const Color(0xFFECE7DC)),
+                        boxShadow: _softShadow,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              width: double.infinity,
+                              color: i.isEven ? look.tint : look.comp,
+                              alignment: Alignment.center,
+                              child: Icon(it.icon, size: 30, color: look.color),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(it.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
+                        ],
+                      ),
+                    ),
+                    Positioned(top: -14, child: peg()),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Fio do estendal.
+class _LinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF8F8B84)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+    final path = Path()
+      ..moveTo(-60, 14)
+      ..quadraticBezierTo(size.width / 2, 64, size.width + 60, 14);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Contagem decrescente numa tira de rolo fotográfico.
+class _FilmStrip extends StatefulWidget {
+  final DateTime? date;
+  const _FilmStrip({required this.date});
+
+  @override
+  State<_FilmStrip> createState() => _FilmStripState();
+}
+
+class _FilmStripState extends State<_FilmStrip> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final date = widget.date;
+    if (date == null) return const SizedBox.shrink();
+    var left = date.difference(DateTime.now());
+    if (left.isNegative) left = Duration.zero;
+    final cells = [
+      ('${left.inDays}', 'DIAS'),
+      ((left.inHours % 24).toString().padLeft(2, '0'), 'HORAS'),
+      ((left.inMinutes % 60).toString().padLeft(2, '0'), 'MIN'),
+      ((left.inSeconds % 60).toString().padLeft(2, '0'), 'SEG'),
+    ];
+    Widget holes() => Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            for (var i = 0; i < 14; i++)
+              Container(width: 10, height: 6, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.85), borderRadius: BorderRadius.circular(2))),
+          ],
+        );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(color: const Color(0xFF171713), borderRadius: BorderRadius.circular(6)),
+      child: Column(
+        children: [
+          holes(),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              for (final (i, (v, l)) in cells.indexed) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    height: 56,
+                    decoration: BoxDecoration(color: const Color(0xFF2A2A25), borderRadius: BorderRadius.circular(6)),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(v, style: const TextStyle(fontSize: 20, height: 1.1, fontWeight: FontWeight.w700, color: Colors.white)),
+                        Text(l, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFFD9D6CF))),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          holes(),
+        ],
+      ),
     );
   }
 }
