@@ -144,9 +144,9 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
       _instagram.text = profile.instagram ?? '';
       _existingLogoUrl = profile.logoUrl;
     }
-    Future.microtask(_loadCategories);
-    Future.microtask(_loadPricing);
-    Future.microtask(_loadPortfolio);
+    Future.microtask(() => _loadCategories().catchError((_) {}));
+    Future.microtask(() => _loadPricing().catchError((_) {}));
+    Future.microtask(() => _loadPortfolio().catchError((_) {}));
   }
 
   Future<void> _loadPortfolio() async {

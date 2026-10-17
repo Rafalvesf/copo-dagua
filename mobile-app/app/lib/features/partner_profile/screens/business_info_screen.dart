@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/partners/category_figure.dart';
 import '../../../core/partner_profile/partner_location.dart';
@@ -147,20 +148,12 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
         bottom: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.screenMargin,
-                20,
-                AppTheme.screenMargin,
-                0,
-              ),
-              child: Row(
-                children: [
-                  const CircleBackButton(),
-                  const Spacer(),
-                  const AccountSwitcherBadge(),
-                ],
-              ),
+            // Mesmo cabeçalho centrado das outras páginas do parceiro
+            // (revisão 2026-10-17).
+            const PageHeader(
+              title: 'Informações do negócio',
+              subtitle: 'O que os casais veem sobre ti.',
+              centered: true,
             ),
             Expanded(
               child: ListView(
@@ -171,56 +164,13 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                   48,
                 ),
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Informações do negócio',
-                              style: AppTypography.displaySerif(
-                                fontSize: AppFontSize.h1,
-                                color: AppTheme.ink,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            const Text(
-                              'Mantém os dados do teu negócio atualizados '
-                              'para que os casais te possam encontrar.',
-                              style: TextStyle(
-                                color: AppTheme.inkMuted,
-                                fontSize: AppFontSize.md,
-                                height: 1.4,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      ClipOval(
-                        child: Container(
-                          width: 84,
-                          height: 84,
-                          color: AppColors.green,
-                          padding: const EdgeInsets.all(10),
-                          child: Image.asset(
-                            'assets/images/nav_icon_bears.png',
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
                   const Text(
-                    'Dados do negócio',
+                    'DADOS DO NEGÓCIO',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: AppFontSize.base,
-                      color: AppTheme.ink,
+                      fontSize: AppFontSize.sm,
+                      letterSpacing: 1,
+                      color: Color(0xFF8F8B84),
                     ),
                   ),
                   const SizedBox(height: 10),

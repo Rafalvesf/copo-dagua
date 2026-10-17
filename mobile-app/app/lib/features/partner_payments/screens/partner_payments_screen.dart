@@ -175,20 +175,27 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
                         loading: _launching,
                         onPressed: _launching ? null : _startOnboarding,
                       )
+                    else if (!status.payoutsEnabled)
+                      // Antes ficava um "Levantar para o IBAN" desativado,
+                      // sem caminho; agora leva a concluir os dados
+                      // bancários na Stripe (revisão 2026-10-17).
+                      _BigButton(
+                        label: 'Concluir dados bancários',
+                        loading: _launching,
+                        onPressed: _launching ? null : _startOnboarding,
+                      )
                     else
                       _BigButton(
                         label: 'Levantar para o IBAN',
                         loading: _openingDashboard,
-                        onPressed: status.payoutsEnabled && !_openingDashboard
-                            ? _openDashboard
-                            : null,
+                        onPressed: _openingDashboard ? null : _openDashboard,
                       ),
                     const SizedBox(height: 12),
                     Text(
                       status.chargesEnabled
                           ? (status.payoutsEnabled
                               ? 'O levantamento é feito no teu Dashboard Stripe — é lá que confirmas o IBAN, nunca dentro desta app.'
-                              : 'Disponível assim que "Pode receber transferências" ficar ativo.')
+                              : 'Falta indicar a conta bancária na Stripe para poderes receber transferências.')
                           : 'A configuração é feita numa página segura da Stripe — nunca partilhas dados de cartão ou de conta bancária com o Tchin Tchin.',
                       textAlign: TextAlign.center,
                       style: const TextStyle(

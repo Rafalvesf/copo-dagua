@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/page_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/guest_home/guest_home_providers.dart';
@@ -31,19 +32,7 @@ class GuestTableScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 0),
-              child: Row(
-                children: [
-                  const CircleBackButton(),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'A tua mesa',
-                    style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                  ),
-                ],
-              ),
-            ),
+            const PageHeader(title: 'A tua mesa', centered: true),
             Expanded(
               child: rosterAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),

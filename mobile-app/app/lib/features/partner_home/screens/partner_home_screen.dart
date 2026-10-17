@@ -143,31 +143,41 @@ class PartnerHomeScreen extends ConsumerWidget {
                 const _PartnerDashboardSummary(),
                 const SizedBox(height: 14),
                 // Atalhos do negócio (pedido 2026-10-17): saíram do Perfil.
-                GridView.count(
-                  crossAxisCount: 3,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  childAspectRatio: 1.25,
-                  children: [
-                    for (final (icon, label, route) in const [
-                      (Icons.event_available_outlined, 'Reservas', '/partner-requests'),
-                      (Icons.sell_outlined, 'Serviços e preços', '/partner-pricing'),
-                      (Icons.photo_library_outlined, 'Portefólio', '/partner-portfolio'),
-                      (Icons.star_border_rounded, 'Avaliações', '/partner-reviews'),
-                      (Icons.bar_chart_rounded, 'Resultados', '/partner-stats'),
-                      (Icons.payments_outlined, 'Pagamentos', '/partner-payments'),
-                      (Icons.description_outlined, 'Contratos', '/partner-contracts'),
-                    ])
-                      _PartnerTile(
-                        color: AppTheme.surface,
-                        icon: icon,
-                        label: label,
-                        count: route == '/partner-requests' ? newRequests.length : 0,
-                        onTap: () => context.push(route),
-                      ),
-                  ],
+                // 3 linhas cheias (Reservas e Contratos ocupam duas colunas)
+                // em vez de "Contratos" sozinho na última linha (revisão
+                // 2026-10-17).
+                LayoutBuilder(
+                  builder: (context, c) {
+                    const gap = 8.0;
+                    final unit = (c.maxWidth - 2 * gap) / 3;
+                    final height = unit / 1.25;
+                    return Wrap(
+                      spacing: gap,
+                      runSpacing: gap,
+                      children: [
+                        for (final (icon, label, route, span) in const [
+                          (Icons.event_available_outlined, 'Reservas', '/partner-requests', 2),
+                          (Icons.sell_outlined, 'Serviços e preços', '/partner-pricing', 1),
+                          (Icons.photo_library_outlined, 'Portefólio', '/partner-portfolio', 1),
+                          (Icons.star_border_rounded, 'Avaliações', '/partner-reviews', 1),
+                          (Icons.bar_chart_rounded, 'Resultados', '/partner-stats', 1),
+                          (Icons.payments_outlined, 'Pagamentos', '/partner-payments', 1),
+                          (Icons.description_outlined, 'Contratos', '/partner-contracts', 2),
+                        ])
+                          SizedBox(
+                            width: unit * span + gap * (span - 1),
+                            height: height,
+                            child: _PartnerTile(
+                              color: route == '/partner-requests' ? AppColors.gray : AppTheme.surface,
+                              icon: icon,
+                              label: label,
+                              count: route == '/partner-requests' ? newRequests.length : 0,
+                              onTap: () => context.push(route),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 22),
                 Row(

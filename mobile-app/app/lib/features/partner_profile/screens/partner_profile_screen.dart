@@ -31,7 +31,7 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
     // padrão de `refreshReviewStatus()` já usado depois de cada escrita
     // do próprio parceiro (`partner_profile_controller.dart`).
     Future.microtask(
-      () => ref.read(partnerProfileControllerProvider.notifier).refreshReviewStatus(),
+      () => ref.read(partnerProfileControllerProvider.notifier).refreshReviewStatus().catchError((_) {}),
     );
   }
 

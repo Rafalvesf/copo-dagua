@@ -45,20 +45,32 @@ class _ServicePreferencesScreenState extends ConsumerState<ServicePreferencesScr
 
   Future<void> _load() async {
     final weddingId = ref.read(weddingControllerProvider).wedding?.id;
-    if (weddingId == null) return;
-    final rows = await supabase
-        .from('wedding_service_preferences')
-        .select('partner_category_slug, preference, external_partner_name')
-        .eq('wedding_id', weddingId);
-    for (final r in (rows as List).cast<Map<String, dynamic>>()) {
-      final slug = r['partner_category_slug'] as String;
-      _preferences[slug] = r['preference'] as String;
-      final name = r['external_partner_name'] as String?;
-      if (name != null) {
-        _externalNameControllers[slug] = TextEditingController(text: name);
-      }
+    // Antes: sem casamento carregado ou com um erro de rede, o ecrã
+    // ficava a carregar para sempre (revisão 2026-10-17).
+    if (weddingId == null) {
+      ref.listenManual(weddingControllerProvider.select((s) => s.wedding?.id), (prev, next) {
+        if (next != null && _loading) _load();
+      });
+      return;
     }
-    if (mounted) setState(() => _loading = false);
+    try {
+      final rows = await supabase
+          .from('wedding_service_preferences')
+          .select('partner_category_slug, preference, external_partner_name')
+          .eq('wedding_id', weddingId);
+      for (final r in (rows as List).cast<Map<String, dynamic>>()) {
+        final slug = r['partner_category_slug'] as String;
+        _preferences[slug] = r['preference'] as String;
+        final name = r['external_partner_name'] as String?;
+        if (name != null) {
+          _externalNameControllers[slug] = TextEditingController(text: name);
+        }
+      }
+    } catch (_) {
+      // Mostra as categorias com "Ainda preciso" por omissão.
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _setPreference(String slug, String preference) async {
@@ -232,7 +244,7 @@ class _PreferenceChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: selected ? AppTheme.ink : Colors.white,
+            color: selected ? AppTheme.accentOliveDark : Colors.white,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             border: Border.all(color: AppTheme.borderMuted),
           ),
