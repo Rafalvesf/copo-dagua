@@ -41,7 +41,7 @@ const _bySlug = <String, CategoryFigure>{
   'wedding_planner': CategoryFigure(label: 'Por ano', question: 'Eventos organizados por ano', unit: 'eventos'),
   'transport': CategoryFigure(label: 'Lugares', question: 'Lugares por viatura', unit: 'lugares'),
   'beauty': CategoryFigure(label: 'Por dia', question: 'Pessoas atendidas por dia', unit: 'pessoas', prefix: 'até'),
-  'cake': CategoryFigure(label: 'Mínimo', question: 'Mínimo de fatias por bolo', unit: 'fatias', prefix: 'desde'),
+  'cake': CategoryFigure(label: 'Serve', question: 'Para quantas pessoas fazem bolos (mínimo)', unit: 'pessoas', prefix: 'desde'),
   'invitations': CategoryFigure(label: 'Encomenda mín.', question: 'Encomenda mínima (convites)', unit: 'convites'),
   'officiant': CategoryFigure(label: 'Cerimónia', question: 'Duração da cerimónia (minutos)', unit: 'min'),
   'rentals': CategoryFigure(label: 'Peças', question: 'Peças disponíveis', unit: 'peças'),
