@@ -29,7 +29,13 @@ enum EventType {
   wedding('Casamento', 'casamento'),
   baptism('Batizado', 'batizado'),
   birthday('Aniversário', 'aniversário'),
-  other('Outro evento', 'evento');
+  communion('Comunhão', 'comunhão'),
+  engagement('Noivado', 'noivado'),
+  vowRenewal('Renovação de votos', 'renovação de votos'),
+  graduation('Festa de curso', 'festa de curso'),
+  corporate('Evento de empresa', 'evento de empresa'),
+  babyShower('Chá de bebé', 'chá de bebé'),
+  other('Outro', 'evento');
 
   const EventType(this.label, this.noun);
 
@@ -44,8 +50,17 @@ enum EventType {
         EventType.wedding => 'wedding',
         EventType.baptism => 'baptism',
         EventType.birthday => 'birthday',
+        EventType.communion => 'communion',
+        EventType.engagement => 'engagement',
+        EventType.vowRenewal => 'vow_renewal',
+        EventType.graduation => 'graduation',
+        EventType.corporate => 'corporate',
+        EventType.babyShower => 'baby_shower',
         EventType.other => 'other',
       };
+
+  /// Valores que a base de dados aceita antes da migração 081.
+  bool get legacy => this == EventType.wedding || this == EventType.baptism || this == EventType.birthday || this == EventType.other;
 
   static EventType fromDb(String? value) => EventType.values.firstWhere(
         (t) => t.dbValue == value,

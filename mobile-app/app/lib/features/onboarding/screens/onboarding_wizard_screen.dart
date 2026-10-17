@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,6 +12,7 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
+import '../../../shared/public_link.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -68,7 +71,13 @@ class _OnboardingWizardScreenState
   final _partnerName = TextEditingController();
   final _location = TextEditingController();
   final _budget = TextEditingController();
-  EventType _eventType = EventType.wedding;
+  // Até 2 tipos (pedido 2026-10-17: "os organizadores podem selecionar
+  // mais que uma opção (até 2)"); o primeiro é o principal.
+  final List<EventType> _eventTypes = [EventType.wedding];
+  final _otherLabel = TextEditingController();
+  final _ownPhone = TextEditingController();
+  final _partnerPhone = TextEditingController();
+  EventType get _eventType => _eventTypes.isEmpty ? EventType.other : _eventTypes.first;
   _DateMode _dateMode = _DateMode.exact;
   DateTime? _date;
   int? _guests;
@@ -79,7 +88,7 @@ class _OnboardingWizardScreenState
   @override
   void initState() {
     super.initState();
-    for (final c in [_ownName, _partnerName, _location, _budget]) {
+    for (final c in [_ownName, _partnerName, _location, _budget, _otherLabel, _ownPhone, _partnerPhone]) {
       c.addListener(() => setState(() {}));
     }
   }
@@ -90,6 +99,9 @@ class _OnboardingWizardScreenState
     _partnerName.dispose();
     _location.dispose();
     _budget.dispose();
+    _otherLabel.dispose();
+    _ownPhone.dispose();
+    _partnerPhone.dispose();
     super.dispose();
   }
 
@@ -104,9 +116,21 @@ class _OnboardingWizardScreenState
   }
 
   bool get _canContinue => switch (_current) {
-        _WizardStep.names => _ownName.text.trim().isNotEmpty,
+        _WizardStep.event => _eventTypes.isNotEmpty &&
+            (!_eventTypes.contains(EventType.other) || _otherLabel.text.trim().isNotEmpty),
+        // "o nome do par não é opcional" (2026-10-17) — num casamento.
+        _WizardStep.names => _ownName.text.trim().isNotEmpty &&
+            (!_isWedding || _partnerName.text.trim().isNotEmpty),
         _ => true,
       };
+
+  void _toggleType(EventType type) {
+    setState(() {
+      if (_eventTypes.remove(type)) return;
+      if (_eventTypes.length >= 2) _eventTypes.removeAt(0);
+      _eventTypes.add(type);
+    });
+  }
 
   void _back() {
     if (_step > 0) setState(() => _step--);
@@ -131,7 +155,7 @@ class _OnboardingWizardScreenState
       final wedding = existing ??
           await ref.read(weddingControllerProvider.notifier).create(
                 partnerName1: _firstName(profile),
-                partnerName2: _isWedding && _partnerName.text.trim().isNotEmpty
+                partnerName2: _partnerName.text.trim().isNotEmpty
                     ? _partnerName.text.trim()
                     : null,
                 weddingDate: _savedDate,
@@ -144,6 +168,15 @@ class _OnboardingWizardScreenState
                 ),
                 eventType: _eventType,
               );
+      if (existing == null) {
+        await ref.read(weddingControllerProvider.notifier).saveOnboardingExtras(
+              weddingId: wedding.id,
+              eventTypes: List.of(_eventTypes),
+              otherLabel: _eventTypes.contains(EventType.other) ? _otherLabel.text.trim() : null,
+              phone1: _ownPhone.text.trim().isEmpty ? null : _ownPhone.text.trim(),
+              phone2: _partnerPhone.text.trim().isEmpty ? null : _partnerPhone.text.trim(),
+            );
+      }
       if (_alreadyBookedSlugs.isNotEmpty) {
         await supabase.from('wedding_service_preferences').upsert([
           for (final slug in _alreadyBookedSlugs)
@@ -190,31 +223,28 @@ class _OnboardingWizardScreenState
     context.go(route, extra: extra);
   }
 
+  /// Convida quem organiza contigo por link (079) — abre o menu de
+  /// partilha do telemóvel; sem menu, copia o link.
   Future<void> _invite(Wedding wedding) async {
-    final email = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xxl)),
-      ),
-      builder: (context) => _InviteSheet(
-        title: _isWedding && wedding.partnerName2 != null
-            ? 'Convidar ${wedding.partnerName2}'
-            : 'Convidar alguém para organizar',
-      ),
-    );
-    if (email == null || email.isEmpty || !mounted) return;
     final messenger = ScaffoldMessenger.of(context);
+    String link;
     try {
-      await ref
-          .read(weddingControllerProvider.notifier)
-          .inviteCollaborator(weddingId: wedding.id, email: email);
-      messenger.showSnackBar(SnackBar(content: Text('Convite enviado para $email.')));
+      final token = await ref.read(weddingControllerProvider.notifier).createPartnerInviteToken(wedding.id);
+      link = publicLink('/juntar/$token');
     } catch (_) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Não foi possível enviar o convite.')),
+      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível criar o link de convite.')));
+      return;
+    }
+    var shared = false;
+    try {
+      final result = await SharePlus.instance.share(
+        ShareParams(text: 'Junta-te a mim para organizarmos o ${_eventType.noun} no Tchin Tchin: $link'),
       );
+      shared = result.status != ShareResultStatus.unavailable;
+    } catch (_) {}
+    if (!shared) {
+      await Clipboard.setData(ClipboardData(text: link));
+      messenger.showSnackBar(const SnackBar(content: Text('Link copiado.')));
     }
   }
 
@@ -349,44 +379,69 @@ class _OnboardingWizardScreenState
       case _WizardStep.event:
         return _StepScaffold(
           question: 'O que estão a organizar?',
-          subtitle: 'Podes mudar de ideias mais tarde.',
-          child: GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.25,
+          subtitle: 'Podem escolher até 2 — ex.: casamento e batizado no mesmo dia.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final type in EventType.values)
-                _EventTypeTile(
-                  type: type,
-                  selected: _eventType == type,
-                  onTap: () => setState(() => _eventType = type),
-                ),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 2.6,
+                children: [
+                  for (final type in EventType.values)
+                    _EventTypeTile(
+                      type: type,
+                      selected: _eventTypes.contains(type),
+                      onTap: () => _toggleType(type),
+                    ),
+                ],
+              ),
+              if (_eventTypes.contains(EventType.other)) ...[
+                const SizedBox(height: 16),
+                _LabeledField(label: 'Qual?', controller: _otherLabel, hint: 'Ex.: Chá de bebé, jantar de família…', autofocus: true),
+              ],
+              const SizedBox(height: 12),
+              Text(
+                '${_eventTypes.length} de 2 escolhidos',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
+              ),
             ],
           ),
         );
       case _WizardStep.names:
         return _StepScaffold(
-          question: 'Como te chamas?',
-          subtitle: 'É assim que te tratamos na app e nos convites.',
+          question: 'Quem organiza?',
+          subtitle: _isWedding
+              ? 'Tu e o teu par. O telemóvel liga as vossas contas, tal como nos convidados.'
+              : 'Tu e quem organiza contigo, se houver.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              _LabeledField(label: 'Primeiro nome', controller: _ownName, autofocus: true),
+              const SizedBox(height: 16),
+              _LabeledField(label: 'O teu telemóvel', controller: _ownPhone, hint: '912 345 678', keyboardType: TextInputType.phone),
+              const SizedBox(height: 16),
               _LabeledField(
-                label: 'Primeiro nome',
-                controller: _ownName,
-                autofocus: true,
+                label: _isWedding ? 'Nome do teu par' : 'Quem organiza contigo · opcional',
+                controller: _partnerName,
+                hint: 'Ex.: Tomás',
               ),
-              if (_isWedding) ...[
-                const SizedBox(height: 20),
-                _LabeledField(
-                  label: 'Nome do teu par · opcional',
-                  controller: _partnerName,
-                  hint: 'Ex.: Tomás',
-                ),
-              ],
+              const SizedBox(height: 16),
+              _LabeledField(
+                label: _isWedding ? 'Telemóvel do teu par' : 'Telemóvel · opcional',
+                controller: _partnerPhone,
+                hint: '912 345 678',
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'No fim podes enviar-lhe o link para entrar e organizarem juntos.',
+                style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
+              ),
             ],
           ),
         );
@@ -639,6 +694,12 @@ class _EventTypeTile extends StatelessWidget {
         EventType.wedding => Icons.favorite_border_rounded,
         EventType.baptism => Icons.water_drop_outlined,
         EventType.birthday => Icons.cake_outlined,
+        EventType.communion => Icons.church_outlined,
+        EventType.engagement => Icons.diamond_outlined,
+        EventType.vowRenewal => Icons.all_inclusive_rounded,
+        EventType.graduation => Icons.school_outlined,
+        EventType.corporate => Icons.business_center_outlined,
+        EventType.babyShower => Icons.child_friendly_outlined,
         EventType.other => Icons.celebration_outlined,
       };
 
@@ -651,26 +712,26 @@ class _EventTypeTile extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Row(
             children: [
-              Icon(
-                _icon,
-                size: 28,
-                color: selected ? Colors.white : AppTheme.accentOliveDark,
-              ),
-              Text(
-                type.label,
-                style: TextStyle(
-                  fontSize: AppFontSize.lg,
-                  fontWeight: FontWeight.w700,
-                  color: selected ? Colors.white : AppTheme.ink,
+              Icon(_icon, size: 20, color: selected ? Colors.white : AppTheme.accentOliveDark),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  type.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: AppFontSize.base,
+                    height: 1.15,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? Colors.white : AppTheme.ink,
+                  ),
                 ),
               ),
             ],
