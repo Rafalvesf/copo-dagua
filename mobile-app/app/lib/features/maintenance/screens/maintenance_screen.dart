@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/public_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/auth_controller.dart';
@@ -17,40 +19,25 @@ class MaintenanceScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return GradientScaffold(
-      background: AppBackground.mood,
+    // Mesmo formato das outras páginas de estado, com a mascote a dormir
+    // (revisão 2026-10-17).
+    return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.build_circle_outlined, size: 56, color: AppTheme.ink),
-              const SizedBox(height: 20),
-              Text(
-                'Voltamos já',
-                style: AppTypography.displaySerif(fontSize: AppFontSize.h1, color: AppTheme.ink),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Estamos a fazer manutenção nesta parte da app. '
-                'Tenta novamente daqui a pouco.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.base, height: 1.4),
-              ),
-              const SizedBox(height: 28),
-              PrimaryButton(
-                label: 'Tentar novamente',
-                onPressed: () => ref.read(maintenanceControllerProvider.notifier).retry(),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-                child: const Text('Sair'),
-              ),
-            ],
-          ),
+        child: PublicStateView(
+          pose: MascotPose.sleep,
+          title: 'Voltamos já',
+          message: 'Estamos a fazer manutenção nesta parte da app. Tenta novamente daqui a pouco.',
+          actions: [
+            PrimaryButton(
+              label: 'Tentar novamente',
+              onPressed: () => ref.read(maintenanceControllerProvider.notifier).retry(),
+            ),
+            TextButton(
+              onPressed: () => ref.read(authControllerProvider.notifier).logout(),
+              child: const Text('Sair'),
+            ),
+          ],
         ),
       ),
     );
