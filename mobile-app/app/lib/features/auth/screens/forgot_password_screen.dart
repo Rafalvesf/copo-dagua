@@ -2,17 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/auth_controller.dart';
-import '../../../shared/widgets/buttons.dart';
-import 'role_selection_screen.dart' show authTitle;
-import '../../../shared/widgets/form_fields.dart';
-import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/auth_ui.dart';
 
+/// "Início 6 · Recuperar password" — igual ao canvas.
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() =>
-      _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -26,68 +24,50 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  Future<void> _send() async {
+    setState(() => _loading = true);
+    try {
+      await ref.read(authControllerProvider.notifier).requestPasswordReset(_email.text.trim());
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _sent = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const CircleBackButton(),
-              const SizedBox(height: 8),
-              Expanded(
-                child: _sent
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.mark_email_read_outlined,
-                            size: 56,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Se esse email existir na nossa plataforma, vais receber um link para repor a password.',
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 16),
-                          authTitle('Esqueceste-te da password?', 'Enviamos-te um link para criares uma nova.'),
-                          const SizedBox(height: 24),
-                          AuthTextField(
-                            label: 'Email',
-                            controller: _email,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          const SizedBox(height: 20),
-                          PrimaryButton(
-                            label: 'Enviar link',
-                            loading: _loading,
-                            onPressed: () async {
-                              setState(() => _loading = true);
-                              await ref
-                                  .read(authControllerProvider.notifier)
-                                  .requestPasswordReset(_email.text.trim());
-                              setState(() {
-                                _loading = false;
-                                _sent = true;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-              ),
-            ],
-          ),
+    return AuthPage(
+      children: [
+        const AuthHeading(
+          icon: Icons.lock_reset_rounded,
+          title: 'Esqueceste-te da password?',
+          subtitle: 'Enviamos-te um link para criares uma nova.',
         ),
-      ),
+        AuthField(label: 'Email', controller: _email, hint: 'nome@email.pt', keyboardType: TextInputType.emailAddress, topGap: 24),
+      ],
+      footer: [
+        AuthPrimaryButton(label: 'Enviar link', loading: _loading, onPressed: _send),
+        if (_sent)
+          Container(
+            margin: const EdgeInsets.only(top: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(12)),
+            child: const Row(
+              children: [
+                Icon(Icons.check_circle_outline, size: 18, color: Color(0xFF4A5D35)),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Link enviado — vê o teu email.',
+                    style: TextStyle(fontSize: 13, color: Color(0xFF4A5D35)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
