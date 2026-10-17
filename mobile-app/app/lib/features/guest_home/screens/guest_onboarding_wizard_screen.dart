@@ -6,6 +6,7 @@ import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
+import '../../../shared/widgets/auth_ui.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/mascot.dart';
@@ -31,7 +32,15 @@ enum _Step { attending, companions, menu, allergies, side, relationship }
 const _maxCompanions = 5;
 const _adultMenus = ['Carne', 'Peixe', 'Vegetariano'];
 const _childMenus = ['Menu criança', 'Carne', 'Peixe'];
-const _allergyOptions = ['Glúten', 'Lactose', 'Marisco', 'Frutos secos'];
+const _allergyOptions = ['Glúten', 'Lactose', 'Marisco', 'Frutos secos', 'Outra'];
+const _relationOptions = <(String, IconData)>[
+  ('Família', Icons.favorite_border),
+  ('Amigos', Icons.groups_2_outlined),
+  ('Trabalho', Icons.work_outline),
+  ('Vizinhos', Icons.home_outlined),
+  ('Escola / Faculdade', Icons.school_outlined),
+  ('Outro', Icons.star_border_rounded),
+];
 
 class _Person {
   String name;
@@ -52,7 +61,10 @@ class _Person {
     this.otherAllergy = '',
   }) : allergies = allergies ?? {};
 
-  List<String> get allAllergies => [...allergies, if (otherAllergy.trim().isNotEmpty) otherAllergy.trim()];
+  List<String> get allAllergies => [
+        ...allergies.where((a) => a != 'Outra'),
+        if (allergies.contains('Outra') && otherAllergy.trim().isNotEmpty) otherAllergy.trim(),
+      ];
 }
 
 class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWizardScreen> {
@@ -67,6 +79,13 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   final List<_Person> _companions = [];
   WeddingSide? _side;
   String? _relationship;
+  final _relationOther = TextEditingController();
+
+  @override
+  void dispose() {
+    _relationOther.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -107,7 +126,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         menuSelection: _me.menu,
         dietaryRestrictions: _me.allAllergies.isEmpty ? null : _me.allAllergies.join(', '),
         side: _side ?? widget.guest.side,
-        groupLabel: _relationship,
+        groupLabel: _relationship == 'Outro' && _relationOther.text.trim().isNotEmpty ? _relationOther.text.trim() : _relationship,
       );
       if (attending) {
         await saveGuestCompanions(
@@ -145,14 +164,14 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   }
 
   Future<void> _editCompanion([_Person? existing]) async {
-    final result = await showModalBottomSheet<_Person>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xxl))),
-      builder: (_) => _CompanionSheet(existing: existing),
+    final result = await Navigator.of(context).push<_Person>(
+      MaterialPageRoute(builder: (_) => _CompanionPage(existing: existing, step: _index + 1, total: _steps.length)),
     );
     if (result == null) return;
+    if (result.name.isEmpty) {
+      if (existing != null) setState(() => _companions.remove(existing));
+      return;
+    }
     setState(() {
       if (existing == null) {
         _companions.add(result);
@@ -199,9 +218,25 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
             children: [
               SizedBox(
                 height: 44,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: _index > 0 ? CircleBackButton(onTap: () => setState(() => _index--)) : const SizedBox.shrink(),
+                child: Row(
+                  children: [
+                    if (_index > 0) CircleBackButton(onTap: () => setState(() => _index--)),
+                    const Spacer(),
+                    if (step == _Step.allergies)
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            for (final p in _people) {
+                              p.allergies.clear();
+                              p.otherAllergy = '';
+                            }
+                          });
+                          _continue(steps);
+                        },
+                        style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted),
+                        child: const Text('Ninguém tem', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(height: 20),
@@ -280,7 +315,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       case _Step.companions:
         return _StepScaffold(
           question: 'Quem vai contigo?',
-          subtitle: 'Junta cada pessoa. Se ninguém vai contigo, continua.',
+          subtitle: 'Os anfitriões deixaram levar até $_maxCompanions pessoas.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -291,20 +326,37 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   name: c.name,
                   subtitle: [c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}' : 'Adulto', if (c.phone.trim().isNotEmpty) c.phone.trim()].join(' · '),
                   onEdit: () => _editCompanion(c),
-                  onRemove: () => setState(() => _companions.remove(c)),
                 ),
-              if (_companions.length < _maxCompanions) ...[
-                const SizedBox(height: 10),
-                OutlinedButton.icon(
-                  onPressed: () => _editCompanion(),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Adicionar acompanhante'),
+              if (_companions.length < _maxCompanions)
+                SnappyTap(
+                  onTap: () => _editCompanion(),
+                  child: CustomPaint(
+                    painter: const _DashedBorder(),
+                    child: const SizedBox(
+                      height: 52,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add, size: 18, color: AppTheme.accentOliveDark),
+                          SizedBox(width: 8),
+                          Text('Adicionar acompanhante', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ],
-              const SizedBox(height: 14),
-              const Text(
-                'O telemóvel é opcional: ajuda os anfitriões a contactar e, mais tarde, a ligar a conta da pessoa à tua resposta.',
-                style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFD9D6CF)),
+                ),
+                child: const Text(
+                  'O telemóvel é opcional: se a pessoa criar conta com esse número, fica logo ligada à tua resposta.',
+                  style: TextStyle(fontSize: 12, height: 17 / 12, color: AppTheme.inkMuted),
+                ),
               ),
             ],
           ),
@@ -312,7 +364,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       case _Step.menu:
         return _StepScaffold(
           question: _people.length == 1 ? 'Que refeição preferes?' : 'Que refeição para cada pessoa?',
-          subtitle: 'Cada um escolhe a sua. Podes mudar depois.',
+          subtitle: _people.length == 1 ? 'Podes mudar depois.' : 'Cada um escolhe a sua.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -320,6 +372,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                 _PersonChoices(
                   title: p == _me ? '${p.name} (tu)' : p.name,
                   options: p.isChild ? _childMenus : _adultMenus,
+                  equal: true,
                   selected: {if (p.menu != null) p.menu!},
                   onTap: (o) => setState(() => p.menu = p.menu == o ? null : o),
                 ),
@@ -347,15 +400,25 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         );
       case _Step.side:
         return _StepScaffold(
-          question: 'De que lado és?',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          question: 'És convidado de quem?',
+          child: Row(
             children: [
-              _ChoiceRow(label: 'Lado da noiva', selected: _side == WeddingSide.bride, onTap: () => setState(() => _side = WeddingSide.bride)),
-              const SizedBox(height: 10),
-              _ChoiceRow(label: 'Lado do noivo', selected: _side == WeddingSide.groom, onTap: () => setState(() => _side = WeddingSide.groom)),
-              const SizedBox(height: 10),
-              _ChoiceRow(label: 'Ambos', selected: _side == WeddingSide.both, onTap: () => setState(() => _side = WeddingSide.both)),
+              for (final (i, (side, label, icon)) in const [
+                (WeddingSide.bride, 'Da noiva', Icons.person_outline),
+                (WeddingSide.groom, 'Do noivo', Icons.person_outline),
+                (WeddingSide.both, 'De ambos', Icons.groups_2_outlined),
+              ].indexed) ...[
+                if (i > 0) const SizedBox(width: 12),
+                Expanded(
+                  child: _BigChoice(
+                    icon: icon,
+                    label: label,
+                    height: 110,
+                    selected: _side == side,
+                    onTap: () => setState(() => _side = side),
+                  ),
+                ),
+              ],
             ],
           ),
         );
@@ -365,15 +428,30 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final option in const ['Família', 'Amigo', 'Colega', 'Outro'])
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _ChoiceRow(
-                    label: option,
-                    selected: _relationship == option,
-                    onTap: () => setState(() => _relationship = option),
-                  ),
+              GridView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  mainAxisExtent: 78,
                 ),
+                children: [
+                  for (final (label, icon) in _relationOptions)
+                    _BigChoice(
+                      icon: icon,
+                      label: label,
+                      height: 78,
+                      selected: _relationship == label,
+                      onTap: () => setState(() => _relationship = label),
+                    ),
+                ],
+              ),
+              if (_relationship == 'Outro') ...[
+                const SizedBox(height: 16),
+                AuthField(label: 'Qual?', controller: _relationOther, topGap: 0),
+              ],
             ],
           ),
         );
@@ -396,39 +474,63 @@ class _PersonRow extends StatelessWidget {
   final String name;
   final String subtitle;
   final VoidCallback? onEdit;
-  final VoidCallback? onRemove;
 
-  const _PersonRow({required this.initials, required this.name, required this.subtitle, this.onEdit, this.onRemove});
+  const _PersonRow({required this.initials, required this.name, required this.subtitle, this.onEdit});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.borderMuted))),
+    final row = Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16)),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: AppColors.yellow,
-            child: Text(initials, style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(color: Color(0xFFDDE5D3), shape: BoxShape.circle),
+            child: Text(initials, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text(subtitle, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                const SizedBox(height: 2),
+                Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
               ],
             ),
           ),
-          if (onEdit != null) TextButton(onPressed: onEdit, child: const Text('Editar')),
-          if (onRemove != null)
-            IconButton(onPressed: onRemove, tooltip: 'Remover', icon: const Icon(Icons.close, size: 18, color: AppTheme.inkMuted)),
+          if (onEdit != null)
+            const Text('Editar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
         ],
       ),
     );
+    return onEdit == null ? row : SnappyTap(onTap: onEdit!, child: row);
   }
+}
+
+class _DashedBorder extends CustomPainter {
+  const _DashedBorder();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFD9D6CF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final path = Path()..addRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(16)));
+    for (final m in path.computeMetrics()) {
+      for (double d = 0; d < m.length; d += 9) {
+        canvas.drawPath(m.extractPath(d, d + 5), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorder old) => false;
 }
 
 class _PersonChoices extends StatelessWidget {
@@ -439,6 +541,9 @@ class _PersonChoices extends StatelessWidget {
   final String? other;
   final ValueChanged<String>? onOther;
 
+  /// Refeição: três botões iguais lado a lado (canvas "Convidado 4").
+  final bool equal;
+
   const _PersonChoices({
     required this.title,
     required this.options,
@@ -446,43 +551,61 @@ class _PersonChoices extends StatelessWidget {
     required this.onTap,
     this.other,
     this.onOther,
+    this.equal = false,
   });
+
+  Widget _pill(String o) {
+    final on = selected.contains(o);
+    return SnappyTap(
+      onTap: () => onTap(o),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        height: equal ? 36 : 32,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: on ? AppTheme.accentOliveDark : Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: on ? AppTheme.accentOliveDark : AppTheme.borderMuted),
+        ),
+        child: Text(
+          o,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: 13, fontWeight: on ? FontWeight.w700 : FontWeight.w400, color: on ? Colors.white : AppTheme.ink),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16)),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final o in options)
-                ChoiceChip(
-                  label: Text(o),
-                  selected: selected.contains(o),
-                  onSelected: (_) => onTap(o),
-                  showCheckmark: false,
-                  selectedColor: AppTheme.accentOliveDark,
-                  labelStyle: TextStyle(
-                    fontFamily: AppTheme.fontFamily,
-                    fontFamilyFallback: AppTheme.fontFamilyFallback,
-                    color: selected.contains(o) ? Colors.white : AppTheme.ink,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-            ],
-          ),
-          if (onOther != null) ...[
+          if (equal)
+            Row(
+              children: [
+                for (final (i, o) in options.indexed) ...[
+                  if (i > 0) const SizedBox(width: 6),
+                  Expanded(child: _pill(o)),
+                ],
+              ],
+            )
+          else
+            Wrap(spacing: 6, runSpacing: 6, children: [for (final o in options) _pill(o)]),
+          if (onOther != null && selected.contains('Outra')) ...[
             const SizedBox(height: 8),
             TextFormField(
               initialValue: other,
               onChanged: onOther,
-              decoration: const InputDecoration(hintText: 'Outra (escreve)', isDense: true),
+              decoration: const InputDecoration(hintText: 'Qual?', isDense: true, filled: true, fillColor: Colors.white),
             ),
           ],
         ],
@@ -491,15 +614,19 @@ class _PersonChoices extends StatelessWidget {
   }
 }
 
-class _CompanionSheet extends StatefulWidget {
+/// "Convidado 3 · Acompanhante": página própria, no mesmo estilo dos
+/// passos. Devolve a pessoa, ou um nome vazio para a remover.
+class _CompanionPage extends StatefulWidget {
   final _Person? existing;
-  const _CompanionSheet({this.existing});
+  final int step;
+  final int total;
+  const _CompanionPage({this.existing, required this.step, required this.total});
 
   @override
-  State<_CompanionSheet> createState() => _CompanionSheetState();
+  State<_CompanionPage> createState() => _CompanionPageState();
 }
 
-class _CompanionSheetState extends State<_CompanionSheet> {
+class _CompanionPageState extends State<_CompanionPage> {
   late final _name = TextEditingController(text: widget.existing?.name ?? '');
   late final _age = TextEditingController(text: widget.existing?.age?.toString() ?? '');
   late final _phone = TextEditingController(text: widget.existing?.phone ?? '');
@@ -513,52 +640,107 @@ class _CompanionSheetState extends State<_CompanionSheet> {
     super.dispose();
   }
 
+  void _save() {
+    final name = _name.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Escreve o nome.')));
+      return;
+    }
+    Navigator.of(context).pop(
+      _Person(name: name, isChild: _child, age: _child ? int.tryParse(_age.text.trim()) : null, phone: _phone.text.trim()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text('Quem é o teu acompanhante?', style: TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          const SizedBox(height: 16),
-          AuthTextField(label: 'Nome', controller: _name),
-          const SizedBox(height: 12),
-          Row(
+    return AuthPage(
+      children: [
+        const SizedBox(height: 20),
+        Text('Passo ${widget.step} de ${widget.total}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: LinearProgressIndicator(
+            value: widget.step / widget.total,
+            minHeight: 3,
+            backgroundColor: AppTheme.borderMuted,
+            color: AppTheme.accentOliveDark,
+          ),
+        ),
+        const SizedBox(height: 32),
+        const Text('Quem é o teu acompanhante?', style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        AuthField(label: 'Nome', controller: _name, topGap: 24),
+        const SizedBox(height: 24),
+        _RadioRow(label: 'Adulto', selected: !_child, onTap: () => setState(() => _child = false)),
+        const SizedBox(height: 10),
+        _RadioRow(label: 'Criança', selected: _child, onTap: () => setState(() => _child = true)),
+        if (_child) AuthField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
+        AuthField(label: 'Telemóvel (opcional)', controller: _phone, keyboardType: TextInputType.phone),
+        const SizedBox(height: 12),
+        const Text(
+          'Enviamos-lhe um convite para criar conta e ver os detalhes do evento. Fica ligado a ti pelo número.',
+          style: TextStyle(fontSize: 13, height: 18 / 13, color: AppTheme.inkMuted),
+        ),
+      ],
+      footer: [
+        AuthPrimaryButton(label: 'Guardar acompanhante', onPressed: _save),
+        if (widget.existing != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(_Person(name: '')),
+              style: TextButton.styleFrom(foregroundColor: AppStatusColors.declined),
+              child: const Text('Remover acompanhante', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _RadioRow extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _RadioRow({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      inMutuallyExclusiveGroup: true,
+      checked: selected,
+      button: true,
+      child: SnappyTap(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: selected ? const Color(0xFFEEF2E9) : AppTheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: selected ? AppTheme.accentOliveDark : Colors.transparent, width: 1.5),
+          ),
+          child: Row(
             children: [
-              Expanded(
-                child: _ChoiceRow(label: 'Adulto', selected: !_child, onTap: () => setState(() => _child = false)),
+              Container(
+                width: 22,
+                height: 22,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFF8F8B84), width: 1.5),
+                ),
+                child: selected
+                    ? Container(width: 12, height: 12, decoration: const BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))
+                    : null,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _ChoiceRow(label: 'Criança', selected: _child, onTap: () => setState(() => _child = true)),
-              ),
+              const SizedBox(width: 12),
+              Text(label, style: TextStyle(fontSize: 15, fontWeight: selected ? FontWeight.w700 : FontWeight.w400, color: AppTheme.ink)),
             ],
           ),
-          if (_child) ...[
-            const SizedBox(height: 12),
-            AuthTextField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
-          ],
-          const SizedBox(height: 12),
-          AuthTextField(label: 'Telemóvel (opcional)', controller: _phone, keyboardType: TextInputType.phone),
-          const SizedBox(height: 20),
-          PrimaryButton(
-            label: 'Guardar acompanhante',
-            onPressed: () {
-              final name = _name.text.trim();
-              if (name.isEmpty) return;
-              Navigator.of(context).pop(
-                _Person(
-                  name: name,
-                  isChild: _child,
-                  age: _child ? int.tryParse(_age.text.trim()) : null,
-                  phone: _phone.text.trim(),
-                ),
-              );
-            },
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -582,7 +764,7 @@ class _StepScaffold extends StatelessWidget {
           const SizedBox(height: 8),
           Text(subtitle!, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted)),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         child,
       ],
     );
@@ -594,8 +776,9 @@ class _BigChoice extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final double height;
 
-  const _BigChoice({required this.icon, required this.label, required this.selected, required this.onTap});
+  const _BigChoice({required this.icon, required this.label, required this.selected, required this.onTap, this.height = 132});
 
   @override
   Widget build(BuildContext context) {
@@ -603,7 +786,7 @@ class _BigChoice extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        height: 132,
+        height: height,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
@@ -614,41 +797,7 @@ class _BigChoice extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Icon(icon, size: 28, color: selected ? Colors.white : AppTheme.accentOliveDark),
-            Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ChoiceRow extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _ChoiceRow({required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: selected ? AppTheme.accentOliveDark : Colors.transparent, width: 1.5),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              selected ? Icons.check_circle : Icons.circle_outlined,
-              size: 22,
-              color: selected ? AppTheme.accentOliveDark : AppTheme.inkMuted,
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600))),
+            Text(label, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, height: 1.15, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
           ],
         ),
       ),
