@@ -219,9 +219,12 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
   }
 }
 
-/// Mostra o sinal que `send_proposal()` vai calcular sozinho a partir de
-/// `platform_settings.deposit_percentage` — só leitura, o parceiro nunca
-/// escreve este valor (062_deposit_and_cancellation_rules.sql).
+/// Mostra logo, enquanto o parceiro escreve o valor, o que o cliente vai
+/// pagar: o valor do parceiro mais a comissão da plataforma por cima, e o
+/// sinal (percentagem fixa, `062`) também com a comissão. Pedido do
+/// utilizador (2026-10-17): "quando o parceiro coloca 300 € no orçamento,
+/// adiciona logo a comissão da app — no valor total e no do sinal".
+/// Mesma conta que o checkout ([amountWithCommission]).
 class _DepositPreview extends ConsumerWidget {
   final String priceText;
 
@@ -229,34 +232,62 @@ class _DepositPreview extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pctAsync = ref.watch(platformDepositPercentageProvider);
-    final price = double.tryParse(priceText.trim().replaceAll(',', '.'));
-    return pctAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (err, st) => const SizedBox.shrink(),
-      data: (pct) {
-        final deposit = price == null ? null : price * pct / 100;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
+    final depositPct = ref.watch(platformDepositPercentageProvider).value;
+    final commissionPct = ref.watch(platformCommissionPercentageProvider).value;
+    if (depositPct == null || commissionPct == null) return const SizedBox.shrink();
+    final price = double.tryParse(priceText.trim().replaceAll(' ', '').replaceAll(',', '.'));
+    String money(double? v) => v == null ? '—' : euros(v, cents: true);
+    final fee = price == null ? null : amountWithCommission(price, commissionPct) - price;
+    final total = price == null ? null : amountWithCommission(price, commissionPct);
+    final deposit = price == null ? null : price * depositPct / 100;
+    final depositTotal = deposit == null ? null : amountWithCommission(deposit, commissionPct);
+    final pct = commissionPct % 1 == 0 ? commissionPct.toStringAsFixed(0) : commissionPct.toStringAsFixed(1);
+
+    Widget line(String label, String value, {bool strong = false, bool muted = false}) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
           child: Row(
             children: [
-              Text(
-                'Sinal (${pct.toStringAsFixed(0)}%, fixo pela plataforma)',
-                style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: strong ? AppFontSize.base : AppFontSize.md,
+                    fontWeight: strong ? FontWeight.w700 : FontWeight.w400,
+                    color: strong ? AppTheme.ink : AppTheme.inkMuted,
+                  ),
+                ),
               ),
-              const Spacer(),
               Text(
-                deposit == null ? '—' : euros(deposit, cents: true),
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
+                value,
+                style: TextStyle(
+                  fontSize: strong ? AppFontSize.base : AppFontSize.md,
+                  fontWeight: strong ? FontWeight.w700 : FontWeight.w400,
+                  color: muted ? AppTheme.inkMuted : AppTheme.ink,
+                ),
               ),
             ],
           ),
         );
-      },
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.md)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          line('O teu valor', money(price), muted: true),
+          line('Comissão Tchin Tchin ($pct%)', fee == null ? '—' : '+ ${money(fee)}', muted: true),
+          line('Total para o cliente', money(total), strong: true),
+          const Divider(height: 16, color: AppTheme.borderMuted),
+          line('Sinal (${depositPct.toStringAsFixed(0)}%) para o cliente', money(depositTotal), strong: true),
+          line('Recebes de sinal', money(deposit), muted: true),
+          const SizedBox(height: 4),
+          const Text(
+            'A comissão é paga pelo cliente, por cima do teu valor — recebes o valor por inteiro.',
+            style: TextStyle(fontSize: AppFontSize.sm, height: 1.35, color: AppTheme.inkMuted),
+          ),
+        ],
+      ),
     );
   }
 }
