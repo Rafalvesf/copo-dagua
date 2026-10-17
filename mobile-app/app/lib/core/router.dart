@@ -16,6 +16,7 @@ import '../features/chat/screens/chat_thread_screen.dart';
 import '../features/checklist/screens/checklist_screen.dart';
 import '../features/tasks/screens/service_preferences_screen.dart';
 import '../features/tasks/screens/tasks_screen.dart';
+import '../features/guest_home/screens/guest_events_screen.dart';
 import '../features/guest_home/screens/guest_gallery_screen.dart';
 import '../features/guest_home/screens/guest_gifts_screen.dart';
 import '../features/guest_home/screens/guest_home_screen.dart';
@@ -248,6 +249,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           weddingId: state.pathParameters['weddingId']!,
           guest: state.extra as Guest,
         ),
+      ),
+      GoRoute(
+        path: '/guest-events',
+        builder: (context, state) => const GuestEventsScreen(),
       ),
       GoRoute(
         path: '/guest-wedding-details',

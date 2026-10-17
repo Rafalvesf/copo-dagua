@@ -64,7 +64,7 @@ class GuestProfileScreen extends ConsumerWidget {
                       height: 46,
                       alignment: Alignment.center,
                       decoration: const BoxDecoration(color: AppTheme.surface, shape: BoxShape.circle),
-                      child: const Icon(Icons.settings_outlined, color: AppTheme.ink),
+                      child: const Icon(Icons.more_horiz, color: AppTheme.ink),
                     ),
                   ),
                 ),

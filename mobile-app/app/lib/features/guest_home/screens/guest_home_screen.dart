@@ -13,6 +13,8 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/mascot.dart';
+import 'guest_table_screen.dart';
 
 /// Home de quem se regista com `UserRole.guest` (`role_selection_screen.dart`,
 /// "Sou convidado") — pedido explícito do utilizador (mockup de
@@ -84,7 +86,7 @@ class GuestHomeScreen extends ConsumerWidget {
                   }
                 });
 
-                return _GuestHomeBody(wedding: wedding);
+                return _GuestHomeBody(wedding: wedding, eventCount: weddings.length);
               },
             ),
           ),
@@ -140,126 +142,269 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _GuestHomeBody extends StatelessWidget {
+class _GuestHomeBody extends ConsumerWidget {
   final GuestWedding wedding;
+  final int eventCount;
 
-  const _GuestHomeBody({required this.wedding});
+  const _GuestHomeBody({required this.wedding, required this.eventCount});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Redesign 2026-10-17 (canvas "Convidado · Evento" e "É hoje!").
+    final date = wedding.weddingDate;
+    final now = DateTime.now();
+    final isToday = date != null && date.year == now.year && date.month == now.month && date.day == now.day;
+    final guestAsync = ref.watch(myGuestRowProvider(wedding.weddingId));
+    final tableAsync = ref.watch(mySeatingTableProvider(wedding.weddingId));
+    final table = tableAsync.maybeWhen(data: (t) => t, orElse: () => null);
+    final place = [
+      if (wedding.venue?.isNotEmpty == true) wedding.venue!,
+      if (wedding.location?.isNotEmpty == true) wedding.location!,
+    ].join(', ');
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 120),
+      children: [
+        if (eventCount > 1)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: SnappyTap(
+              onTap: () => context.push('/guest-events'),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.chevron_left, size: 18, color: AppTheme.inkMuted),
+                    Text('Os teus eventos', style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          const SizedBox(height: 18),
+        if (isToday) ...[
+          const Center(child: TchinMascot(pose: MascotPose.clink, width: 180)),
+          const SizedBox(height: 10),
+          Text(
+            '${wedding.eventType.label.toUpperCase()} · ${wedding.displayNames.toUpperCase()}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'É hoje!',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 36, height: 42 / 36, fontWeight: FontWeight.w700, color: AppTheme.ink),
+          ),
+          const SizedBox(height: 20),
+        ] else
+          _HeroCard(wedding: wedding, place: place),
+        const SizedBox(height: 14),
+        guestAsync.maybeWhen(
+          data: (guest) => guest == null ? const SizedBox.shrink() : _RsvpCard(guest: guest, weddingId: wedding.weddingId),
+          orElse: () => const SizedBox.shrink(),
+        ),
+        const SizedBox(height: 14),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 1.35,
+          children: [
+            _Tile(
+              icon: Icons.schedule_outlined,
+              title: 'Programa',
+              subtitle: wedding.ceremonyTime?.isNotEmpty == true ? 'Começa às ${wedding.ceremonyTime}' : 'Horários e local',
+              onTap: () => context.push('/guest-wedding-details', extra: wedding),
+            ),
+            _Tile(
+              icon: Icons.table_restaurant_outlined,
+              title: 'A tua mesa',
+              subtitle: table == null ? 'Ainda não atribuída' : 'Mesa $table',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => GuestTableScreen(weddingId: wedding.weddingId, tableNumber: table),
+                ),
+              ),
+            ),
+            _Tile(
+              icon: Icons.card_giftcard_outlined,
+              title: 'Presentes',
+              subtitle: 'Lista e contribuições',
+              onTap: () => context.go('/guest-gifts/${wedding.weddingId}'),
+            ),
+            _Tile(
+              icon: isToday ? Icons.photo_camera_outlined : Icons.photo_library_outlined,
+              title: isToday ? 'Partilhar fotos' : 'Galeria',
+              subtitle: isToday ? 'Vão para a galeria' : 'Fotos do evento',
+              tint: isToday ? const Color(0xFFFBF6E9) : null,
+              onTap: () => context.go('/guest-gallery/${wedding.weddingId}'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _HeroCard extends StatelessWidget {
+  final GuestWedding wedding;
+  final String place;
+  const _HeroCard({required this.wedding, required this.place});
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.screenMargin,
-        20,
-        AppTheme.screenMargin,
-        120,
+    final date = wedding.weddingDate;
+    final meta = [
+      if (date != null) formatWeddingDateCaps(date),
+      if (wedding.ceremonyTime?.isNotEmpty == true) wedding.ceremonyTime!,
+      if (place.isNotEmpty) place,
+    ].join(' · ');
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        image: wedding.coverPhotoUrl == null
+            ? null
+            : DecorationImage(
+                image: NetworkImage(wedding.coverPhotoUrlCacheBusted!),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.55), BlendMode.lighten),
+              ),
+        gradient: wedding.coverPhotoUrl != null
+            ? null
+            : const LinearGradient(
+                begin: Alignment(-0.6, -1),
+                end: Alignment(0.6, 1),
+                colors: [Color(0xFFDDE5D3), Color(0xFFF7EACA), Color(0xFFF3DEE0)],
+                stops: [0, 0.6, 1],
+              ),
       ),
-      children: [
-        // Espaçador invisível equivalente à linha de ícones + gap do
-        // PageHeader (46 + 18 = 64) — este título fica centrado (pedido
-        // explícito), mas sem isto arrancava a 20px do topo em vez de
-        // 84px como Galeria/Presentes/Perfil, ficando visivelmente mais
-        // alto que o resto da navbar de convidado.
-        const SizedBox(height: 64),
-        Text(
-          'O nosso casamento',
-          textAlign: TextAlign.center,
-          style: AppTypography.displaySerif(fontSize: AppFontSize.h2, color: AppTheme.ink),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          wedding.displayNames,
-          textAlign: TextAlign.center,
-          style: AppTypography.displaySerif(fontSize: AppFontSize.xxl, color: AppTheme.ink),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Estamos felizes por te ter connosco!',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: AppTheme.inkMuted),
-        ),
-        const SizedBox(height: 28),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          child: AspectRatio(
-            aspectRatio: 4 / 3,
-            child: wedding.coverPhotoUrl == null
-                ? Container(
-                    color: AppTheme.surface,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.favorite_border, size: 40, color: AppTheme.inkMuted),
-                  )
-                : Image.network(wedding.coverPhotoUrlCacheBusted!, fit: BoxFit.cover),
-          ),
-        ),
-        const SizedBox(height: 28),
-        _CountdownCard(weddingDate: wedding.weddingDate),
-        const SizedBox(height: 10),
-        Center(
-          child: SnappyTap(
-            onTap: () => context.push('/guest-wedding-details', extra: wedding),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Mais detalhes',
-                  style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
-                ),
-                SizedBox(width: 4),
-                Icon(Icons.chevron_right, size: 16, color: AppTheme.accentOliveDark),
-              ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(999)),
+            child: Text(
+              wedding.eventType.label,
+              style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
             ),
           ),
-        ),
-        const SizedBox(height: 24),
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _FactColumn(
-                  icon: Icons.calendar_today_outlined,
-                  label: wedding.weddingDate == null
-                      ? 'Data por definir'
-                      : formatWeddingDateCaps(wedding.weddingDate!),
-                ),
-              ),
-              const VerticalDivider(color: AppTheme.borderMuted, width: 1),
-              Expanded(
-                child: _FactColumn(
-                  icon: Icons.place_outlined,
-                  label: [
-                    if (wedding.venue?.isNotEmpty == true) wedding.venue!,
-                    if (wedding.location?.isNotEmpty == true) wedding.location!,
-                  ].join(', ').isEmpty
-                      ? 'Local a confirmar'
-                      : [
-                          if (wedding.venue?.isNotEmpty == true) wedding.venue!,
-                          if (wedding.location?.isNotEmpty == true) wedding.location!,
-                        ].join(', '),
-                ),
-              ),
-              const VerticalDivider(color: AppTheme.borderMuted, width: 1),
-              Expanded(
-                child: _FactColumn(icon: Icons.favorite_border, label: wedding.hashtag),
-              ),
-            ],
+          const SizedBox(height: 10),
+          Text(
+            wedding.displayNames,
+            style: const TextStyle(fontSize: 32, height: 36 / 32, fontWeight: FontWeight.w700, color: AppTheme.ink),
           ),
+          if (meta.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(meta, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted)),
+          ],
+          if (date != null) ...[
+            const SizedBox(height: 12),
+            _CountdownCard(weddingDate: date),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _RsvpCard extends StatelessWidget {
+  final Guest guest;
+  final String weddingId;
+  const _RsvpCard({required this.guest, required this.weddingId});
+
+  @override
+  Widget build(BuildContext context) {
+    final people = 1 + (guest.plusOneName?.isNotEmpty == true ? 1 : 0);
+    final (title, subtitle, icon, filled) = switch (guest.rsvpStatus) {
+      RsvpStatus.confirmed => (
+          'Vais · $people ${people == 1 ? 'pessoa' : 'pessoas'}',
+          [
+            guest.plusOneName?.isNotEmpty == true ? 'Tu e ${guest.plusOneName}' : 'Só tu',
+            if (guest.menuSelection?.isNotEmpty == true) 'menu escolhido',
+          ].join(' · '),
+          Icons.check_rounded,
+          true,
         ),
-        const SizedBox(height: 32),
-        SnappyTap(
-          onTap: () => context.push('/guest-wedding-details', extra: wedding),
-          child: Text(
-            '"${wedding.quote?.isNotEmpty == true ? wedding.quote : 'Grandes momentos são ainda melhores quando partilhados.'}"',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontStyle: FontStyle.italic,
-              color: AppTheme.ink,
-              fontSize: AppFontSize.base,
+      RsvpStatus.declined => ('Não vais', 'Podes mudar a resposta', Icons.close_rounded, false),
+      RsvpStatus.pending => ('Ainda não respondeste', 'Diz aos anfitriões se vais', Icons.help_outline_rounded, false),
+    };
+    return SnappyTap(
+      onTap: () => context.go('/guest-profile/$weddingId'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppTheme.accentOliveDark),
+          boxShadow: AppTheme.searchBarShadow,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: filled ? AppTheme.accentOliveDark : AppColors.gray,
+              ),
+              child: Icon(icon, size: 18, color: filled ? Colors.white : AppTheme.accentOliveDark),
             ),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text(subtitle, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                ],
+              ),
+            ),
+            const Text('Alterar', style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class _Tile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final Color? tint;
+  const _Tile({required this.icon, required this.title, required this.subtitle, required this.onTap, this.tint});
+
+  @override
+  Widget build(BuildContext context) {
+    return SnappyTap(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: tint ?? AppTheme.surface, borderRadius: BorderRadius.circular(20)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, size: 20, color: AppTheme.accentOliveDark),
+            ),
+            const Spacer(),
+            Text(title, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 2),
+            Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+          ],
+        ),
+      ),
     );
   }
 }
