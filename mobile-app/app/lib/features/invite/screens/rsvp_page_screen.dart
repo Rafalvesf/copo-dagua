@@ -149,10 +149,14 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
             final guestName = data['guest_name'] as String?;
             final plusOneAllowed = data['plus_one_allowed'] as bool? ?? false;
 
-            // Redesign 2026-10-17: mascote, cartão do evento com a data
-            // por extenso e campos no estilo novo.
+            // Convite "de papel" (pedido 2026-10-17: "faz um mais bonito
+            // para casamentos"): cartão branco com moldura fina, nomes em
+            // letra de título, ornamento e a data por extenso.
             final date = weddingDate == null ? null : DateTime.tryParse(weddingDate);
             final first = (guestName ?? '').trim().split(' ').first;
+            final isCouple = (name2 ?? '').trim().isNotEmpty;
+            const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+            const weekdays = ['segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado', 'domingo'];
             return Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 24, AppTheme.screenMargin, 32),
@@ -161,43 +165,87 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Center(child: TchinMascot(pose: MascotPose.wave, width: 150)),
-                      const SizedBox(height: 16),
-                      Text(
-                        first.isEmpty ? 'Olá!' : 'Olá, $first!',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Contas com a tua presença?',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: AppFontSize.base + 1, color: AppTheme.inkMuted),
-                      ),
-                      const SizedBox(height: 18),
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(AppRadius.xl),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFDDE5D3), Color(0xFFF7EACA), Color(0xFFF3DEE0)],
-                            stops: [0, 0.6, 1],
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: const [BoxShadow(color: Color(0x1A3F4A30), blurRadius: 30, offset: Offset(0, 12))],
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(22, 26, 22, 26),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: const Color(0xFFCBD5BE)),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFFFFFFFF), Color(0xFFFBF7EE)],
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              const TchinMascot(pose: MascotPose.clink, width: 96),
+                              const SizedBox(height: 14),
+                              Text(
+                                isCouple ? 'COM MUITA ALEGRIA' : 'ESTÁS CONVIDADO',
+                                style: const TextStyle(fontSize: 11, letterSpacing: 3, fontWeight: FontWeight.w700, color: Color(0xFF8F8B84)),
+                              ),
+                              const SizedBox(height: 12),
+                              if (isCouple) ...[
+                                Text(name1 ?? '', textAlign: TextAlign.center, style: AppTypography.displaySerif(fontSize: 38, color: AppTheme.ink)),
+                                Text('&', style: AppTypography.displaySerif(fontSize: 28, color: AppTheme.accentOliveDark).copyWith(fontStyle: FontStyle.italic)),
+                                Text(name2!, textAlign: TextAlign.center, style: AppTypography.displaySerif(fontSize: 38, color: AppTheme.ink)),
+                              ] else
+                                Text(coupleNames, textAlign: TextAlign.center, style: AppTypography.displaySerif(fontSize: 34, color: AppTheme.ink)),
+                              const SizedBox(height: 14),
+                              Text(
+                                isCouple ? 'convidam-te para celebrar o seu casamento' : 'convida-te para celebrar',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: AppFontSize.base, fontStyle: FontStyle.italic, color: AppTheme.inkMuted),
+                              ),
+                              const SizedBox(height: 18),
+                              const Row(
+                                children: [
+                                  Expanded(child: Divider(color: Color(0xFFCBD5BE), thickness: 1)),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 10),
+                                    child: Icon(Icons.favorite, size: 14, color: AppTheme.accentOliveDark),
+                                  ),
+                                  Expanded(child: Divider(color: Color(0xFFCBD5BE), thickness: 1)),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              if (date != null) ...[
+                                Text(weekdays[date.weekday - 1].toUpperCase(),
+                                    style: const TextStyle(fontSize: 11, letterSpacing: 2.5, fontWeight: FontWeight.w700, color: Color(0xFF8F8B84))),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${date.day} de ${months[date.month - 1]} de ${date.year}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                                ),
+                              ],
+                              if (location != null && location.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.place_outlined, size: 16, color: AppTheme.inkMuted),
+                                    const SizedBox(width: 4),
+                                    Flexible(child: Text(location, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted))),
+                                  ],
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                        child: Column(
-                          children: [
-                            Text(coupleNames, textAlign: TextAlign.center, style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                            const SizedBox(height: 4),
-                            Text(
-                              [
-                                if (date != null) formatWeddingDateCaps(date),
-                                if (location != null && location.isNotEmpty) location,
-                              ].join(' · '),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
-                            ),
-                          ],
-                        ),
+                      ),
+                      const SizedBox(height: 26),
+                      Text(
+                        first.isEmpty ? 'Contamos contigo?' : '$first, contamos contigo?',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: AppFontSize.xl + 2, fontWeight: FontWeight.w700, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -244,7 +292,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                         ),
                       const SizedBox(height: 20),
                       PrimaryButton(
-                        label: _submitting ? 'A enviar…' : 'Enviar resposta',
+                        label: _submitting ? 'A enviar…' : 'Confirmar resposta',
                         loading: _submitting,
                         onPressed: _rsvpStatus == null || _submitting ? null : _submit,
                       ),
