@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/guest_home/guest_home_providers.dart' show guestCompanionsProvider;
+import '../../../core/guest_home/guest_home_providers.dart' show guestCompanionsProvider, ageGroupLabel;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -315,7 +315,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    guest.group.isEmpty ? 'Convidado' : guest.group,
+                    [guest.group.isEmpty ? 'Convidado' : guest.group, if (guest.ageGroup != 'adult') ageGroupLabel(guest.ageGroup)].join(' · '),
                     style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.base),
                   ),
                   const SizedBox(height: 8),
@@ -382,7 +382,10 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
               _InfoRow(
                 icon: Icons.people_outline,
                 label: () {
-                  final names = ref.watch(guestCompanionsProvider(guest.id)).asData?.value.map((c) => c.name).toList() ?? const <String>[];
+                  final names = ref.watch(guestCompanionsProvider(guest.id)).asData?.value
+                          .map((c) => c.ageGroup == 'adult' ? c.name : '${c.name} (${ageGroupLabel(c.ageGroup).toLowerCase()})')
+                          .toList() ??
+                      const <String>[];
                   final limit = guest.maxCompanions == 0 ? 'Vem sozinho' : 'Pode trazer ${CompanionLimitRow.label(guest.maxCompanions)}';
                   return names.isEmpty ? limit : '$limit · traz ${names.join(', ')}';
                 }(),

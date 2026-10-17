@@ -82,6 +82,7 @@ Guest guestFromRow(Map<String, dynamic> row) => Guest(
   group: row['group_label'] as String? ?? '',
   side: _sideFromDb(row['side'] as String?),
   plusOneAllowed: row['plus_one_allowed'] as bool? ?? false,
+  ageGroup: (row['age_group'] as String?) ?? 'adult',
   maxCompanions: (row['max_companions'] as int?) ?? ((row['plus_one_allowed'] as bool? ?? false) ? 1 : 0),
   plusOneName: row['plus_one_name'] as String?,
   rsvpStatus: _rsvpFromDb(row['rsvp_status'] as String?),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/wedding/date_format_pt.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/mascot.dart';
@@ -20,6 +21,10 @@ class RsvpPageScreen extends StatefulWidget {
   final String token;
 
   const RsvpPageScreen({super.key, required this.token});
+
+  /// Só para as capturas de ecrã: dados de um convite sem ir ao servidor.
+  @visibleForTesting
+  static Future<Map<String, dynamic>?> Function(String token)? debugLoader;
 
   @override
   State<RsvpPageScreen> createState() => _RsvpPageScreenState();
@@ -50,6 +55,12 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
 
   Future<Map<String, dynamic>?> _loadGuest() async {
     try {
+      final loader = RsvpPageScreen.debugLoader;
+      if (loader != null) {
+        final data = await loader(widget.token);
+        _rsvpStatus = data?['rsvp_status'] as String?;
+        return data;
+      }
       final response = await supabase.functions.invoke(
         'get-rsvp-by-token',
         body: {'token': widget.token},
@@ -138,80 +149,108 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
             final guestName = data['guest_name'] as String?;
             final plusOneAllowed = data['plus_one_allowed'] as bool? ?? false;
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.screenMargin,
-                12,
-                AppTheme.screenMargin,
-                32,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Olá, $guestName',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.h3),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Casamento de $coupleNames'
-                    '${weddingDate != null ? ' — $weddingDate' : ''}'
-                    '${location != null && location.isNotEmpty ? ' · $location' : ''}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
+            // Redesign 2026-10-17: mascote, cartão do evento com a data
+            // por extenso e campos no estilo novo.
+            final date = weddingDate == null ? null : DateTime.tryParse(weddingDate);
+            final first = (guestName ?? '').trim().split(' ').first;
+            return Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 24, AppTheme.screenMargin, 32),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: _RsvpChoiceButton(
-                          label: 'Vou!',
-                          selected: _rsvpStatus == 'confirmed',
-                          onTap: () => setState(() => _rsvpStatus = 'confirmed'),
+                      const Center(child: TchinMascot(pose: MascotPose.wave, width: 150)),
+                      const SizedBox(height: 16),
+                      Text(
+                        first.isEmpty ? 'Olá!' : 'Olá, $first!',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Contas com a tua presença?',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: AppFontSize.base + 1, color: AppTheme.inkMuted),
+                      ),
+                      const SizedBox(height: 18),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(AppRadius.xl),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFDDE5D3), Color(0xFFF7EACA), Color(0xFFF3DEE0)],
+                            stops: [0, 0.6, 1],
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(coupleNames, textAlign: TextAlign.center, style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            const SizedBox(height: 4),
+                            Text(
+                              [
+                                if (date != null) formatWeddingDateCaps(date),
+                                if (location != null && location.isNotEmpty) location,
+                              ].join(' · '),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _RsvpChoiceButton(
-                          label: 'Não vou poder ir',
-                          selected: _rsvpStatus == 'declined',
-                          onTap: () => setState(() => _rsvpStatus = 'declined'),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _RsvpChoiceButton(
+                              label: 'Vou!',
+                              selected: _rsvpStatus == 'confirmed',
+                              onTap: () => setState(() => _rsvpStatus = 'confirmed'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _RsvpChoiceButton(
+                              label: 'Não vou poder ir',
+                              selected: _rsvpStatus == 'declined',
+                              onTap: () => setState(() => _rsvpStatus = 'declined'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_rsvpStatus == 'confirmed') ...[
+                        const SizedBox(height: 18),
+                        if (plusOneAllowed) ...[
+                          TextField(
+                            controller: _plusOneName,
+                            textCapitalization: TextCapitalization.words,
+                            decoration: const InputDecoration(hintText: 'Nome do acompanhante (opcional)'),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                        TextField(
+                          controller: _dietaryRestrictions,
+                          decoration: const InputDecoration(hintText: 'Alergias ou restrições (opcional)'),
                         ),
+                        const SizedBox(height: 10),
+                      ],
+                      if (_rsvpStatus != null)
+                        TextField(
+                          controller: _guestMessage,
+                          maxLines: 3,
+                          minLines: 2,
+                          decoration: const InputDecoration(hintText: 'Uma mensagem para os anfitriões (opcional)'),
+                        ),
+                      const SizedBox(height: 20),
+                      PrimaryButton(
+                        label: _submitting ? 'A enviar…' : 'Enviar resposta',
+                        loading: _submitting,
+                        onPressed: _rsvpStatus == null || _submitting ? null : _submit,
                       ),
                     ],
                   ),
-                  if (_rsvpStatus == 'confirmed') ...[
-                    const SizedBox(height: 20),
-                    if (plusOneAllowed)
-                      TextField(
-                        controller: _plusOneName,
-                        decoration: const InputDecoration(
-                          labelText: 'Nome do acompanhante (opcional)',
-                        ),
-                      ),
-                    if (plusOneAllowed) const SizedBox(height: 12),
-                    TextField(
-                      controller: _dietaryRestrictions,
-                      decoration: const InputDecoration(
-                        labelText: 'Restrições alimentares (opcional)',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _guestMessage,
-                      maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: 'Mensagem para os noivos (opcional)',
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _rsvpStatus == null || _submitting ? null : _submit,
-                    child: Text(_submitting ? 'A enviar...' : 'Confirmar resposta'),
-                  ),
-                ],
+                ),
               ),
             );
           },
@@ -234,14 +273,22 @@ class _RsvpChoiceButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        backgroundColor: selected ? AppTheme.accentOliveDark : Colors.transparent,
-        foregroundColor: selected ? Colors.white : AppTheme.ink,
-        padding: const EdgeInsets.symmetric(vertical: 14),
+    return Material(
+      color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        onTap: onTap,
+        child: Container(
+          height: 54,
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink),
+          ),
+        ),
       ),
-      child: Text(label, textAlign: TextAlign.center),
     );
   }
 }
