@@ -12,6 +12,7 @@ import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/gallery_placeholder.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -190,9 +191,8 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                           ),
                           const SizedBox(height: 20),
                           if (approved.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 20),
-                              child: Center(child: Text('Ainda sem fotos aqui.')),
+                            const GalleryEmptyState(
+                              message: 'Ainda não existem fotos. Carrega as primeiras.',
                             )
                           else
                             GridView.builder(
@@ -200,19 +200,24 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                               physics: const NeverScrollableScrollPhysics(),
                               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 3,
-                                crossAxisSpacing: 8,
-                                mainAxisSpacing: 8,
+                                crossAxisSpacing: 4,
+                                mainAxisSpacing: 4,
                               ),
                               itemCount: approved.length,
                               itemBuilder: (context, index) {
                                 final photo = approved[index];
                                 final favorited = _favorites.contains(photo.id);
                                 return ClipRRect(
-                                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                                  borderRadius: galleryTileRadius(index, approved.length),
                                   child: Stack(
                                     fit: StackFit.expand,
                                     children: [
-                                      Image.network(photo.imageUrl, fit: BoxFit.cover),
+                                      ColoredBox(color: galleryTint(index)),
+                                      Image.network(
+                                        photo.imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+                                      ),
                                       Positioned(
                                         top: 4,
                                         right: 4,
