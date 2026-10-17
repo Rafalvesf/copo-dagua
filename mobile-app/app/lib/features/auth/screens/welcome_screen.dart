@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/auth_ui.dart';
 import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/tchin_splash.dart';
 
@@ -107,7 +107,7 @@ class _WelcomeContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          height: 300 + top,
+          height: 318 + top,
           padding: EdgeInsets.only(top: top + 24),
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -160,12 +160,24 @@ class _WelcomeContent extends StatelessWidget {
                     subtitle: 'Pede orçamentos e reserva',
                   ),
                   const Spacer(),
-                  PrimaryButton(label: 'Criar conta', onPressed: () => context.push('/role')),
+                  AuthPrimaryButton(label: 'Criar conta', onPressed: () => context.push('/role')),
                   const SizedBox(height: 10),
                   SizedBox(
                     height: 54,
                     child: OutlinedButton(
                       onPressed: () => context.push('/login'),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppTheme.accentOliveDark,
+                        side: const BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        textStyle: const TextStyle(
+                          fontFamily: AppTheme.fontFamily,
+                          fontFamilyFallback: AppTheme.fontFamilyFallback,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       child: const Text('Já tenho conta'),
                     ),
                   ),
@@ -195,7 +207,7 @@ class _Feature extends StatelessWidget {
         Container(
           width: 44,
           height: 44,
-          decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(14)),
+          decoration: BoxDecoration(color: const Color(0xFFEEF2E9), borderRadius: BorderRadius.circular(14)),
           child: Icon(icon, color: AppTheme.accentOliveDark, size: 20),
         ),
         const SizedBox(width: 14),

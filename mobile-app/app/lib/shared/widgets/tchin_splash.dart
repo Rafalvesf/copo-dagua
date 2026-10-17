@@ -40,7 +40,19 @@ class TchinSplash extends StatelessWidget {
       child: Container(
         color: AppTheme.accentOliveDark,
         alignment: Alignment.center,
-        child: Opacity(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Canvas "Início 1": "A preparar o brinde…" em baixo.
+            if (greeting == null)
+              Positioned(
+                bottom: 48,
+                child: Opacity(
+                  opacity: taglineOpacity,
+                  child: const Text('A preparar o brinde…', style: TextStyle(fontSize: 13, color: Color(0xFFDDE5D3))),
+                ),
+              ),
+            Opacity(
           opacity: 1 - lift,
           child: Transform.translate(
             offset: Offset(0, -40 * lift),
@@ -85,7 +97,7 @@ class TchinSplash extends StatelessWidget {
                     opacity: taglineOpacity,
                     child: Text(
                       greeting!,
-                      style: const TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: Colors.white),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -94,7 +106,7 @@ class TchinSplash extends StatelessWidget {
                   opacity: taglineOpacity,
                   child: Text(
                     tagline,
-                    style: const TextStyle(fontSize: AppFontSize.lg - 1, color: Color(0xFFDDE5D3)),
+                    style: const TextStyle(fontSize: 15, color: Color(0xFFDDE5D3)),
                   ),
                 ),
                 if (greeting != null) ...[
@@ -118,6 +130,8 @@ class TchinSplash extends StatelessWidget {
               ],
             ),
           ),
+        ),
+          ],
         ),
       ),
     );
