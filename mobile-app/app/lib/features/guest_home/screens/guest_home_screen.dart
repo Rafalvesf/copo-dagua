@@ -86,7 +86,10 @@ class GuestHomeScreen extends ConsumerWidget {
                 ref.watch(myGuestRowProvider(wedding.weddingId)).whenData((guest) {
                   if (guest != null &&
                       guest.onboardingCompletedAt == null &&
-                      _openedOnboarding.add(wedding.weddingId)) {
+                      // Por conta e evento: antes era só o evento, e quem criava
+                      // uma conta nova no mesmo separador (depois de testar
+                      // com outra conta) nunca via o onboarding (2026-10-17).
+                      _openedOnboarding.add('${profile?.id}:${wedding.weddingId}')) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (context.mounted) {
                         context.push('/guest-onboarding/${wedding.weddingId}', extra: guest);
