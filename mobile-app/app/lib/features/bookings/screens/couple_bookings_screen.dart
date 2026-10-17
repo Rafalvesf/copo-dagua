@@ -301,16 +301,42 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                 // real reportado pelo utilizador (2026-09-12): a reserva
                 // aparecia como concluída logo após o sinal, devia mostrar o
                 // restante como pendente.
+                // Só o sinal pago não é "tudo pago" (2026-10-17): se ainda
+                // falta valor, a etiqueta diz isso em vez de "Concluído".
                 StatusPill(
                   label: needsFinalPayment
                       ? 'Falta pagar o restante'
-                      : booking.status.label,
-                  color: needsFinalPayment
+                      : (booking.paidAmount > 0 && booking.remainingAmount > 0.009)
+                          ? 'Sinal pago'
+                          : (booking.paidAmount > 0 && booking.remainingAmount <= 0.009)
+                              ? 'Tudo pago'
+                              : booking.status.label,
+                  color: needsFinalPayment || (booking.paidAmount > 0 && booking.remainingAmount > 0.009)
                       ? AppStatusColors.pending
                       : bookingStatusColor(booking.status),
                 ),
               ],
             ),
+            if (booking.paidAmount > 0) ...[
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: booking.amount <= 0 ? 1 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0),
+                  minHeight: 5,
+                  backgroundColor: AppTheme.borderMuted,
+                  color: AppTheme.accentOliveDark,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                booking.remainingAmount > 0.009
+                    ? 'Pago ${euros(amountWithCommission(booking.paidAmount, commissionPct), cents: true)} · falta ${euros(amountWithCommission(booking.remainingAmount, commissionPct), cents: true)}'
+                        '${needsFinalPayment ? '' : ' (pede-se depois do serviço)'}'
+                    : 'Pago na totalidade',
+                style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
+              ),
+            ],
             if (needsDeposit) ...[
               const SizedBox(height: 12),
               SizedBox(

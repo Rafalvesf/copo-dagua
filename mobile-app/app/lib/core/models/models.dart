@@ -1184,7 +1184,14 @@ class CoupleBooking {
     this.depositAmount,
     this.pendingFinalPaymentId,
     this.finalPaymentAmount,
+    this.paidAmount = 0,
   });
+
+  /// Total já pago na app (pagamentos `paid`, sem a comissão).
+  final double paidAmount;
+
+  /// O que ainda falta pagar ao parceiro (sem a comissão).
+  double get remainingAmount => (amount - paidAmount).clamp(0, double.infinity);
 }
 
 /// Proposta real (`proposals`, `009_quotations_bookings.sql`) enviada por
