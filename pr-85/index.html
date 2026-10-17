@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html class="tt-opening">
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/copo-dagua/pr-85/">
+
+  <meta charset="UTF-8">
+  <!-- Versões novas chegam logo (2026-10-17): o service worker antigo do
+       Flutter guardava a app em cache e o telemóvel continuava com a
+       versão anterior. Remove-o (e as caches dele) uma vez e recarrega. -->
+  <script>
+    (function () {
+      try {
+        if (!('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          if (!regs.length) return;
+          Promise.all(regs.map(function (r) { return r.unregister(); }))
+            .then(function () {
+              return window.caches ? caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+              }) : null;
+            })
+            .then(function () {
+              try {
+                if (sessionStorage.getItem('tt-sw-reset')) return;
+                sessionStorage.setItem('tt-sw-reset', '1');
+              } catch (e) {}
+              location.reload();
+            });
+        });
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Tchin Tchin — o teu evento, num só lugar.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="theme-color" content="#5F7545">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Tchin Tchin">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Tchin Tchin</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      /* Igual ao fundo da app — antes era #D1D4DA (cinzento-azulado),
+         que aparecia como uma barra azulada no topo no telemóvel. */
+      background: #FFFFFF;
+    }
+    /* Início 1 · Abertura — igual ao canvas, feita pela própria página
+       para correr logo ao abrir, mesmo enquanto a app ainda carrega.
+       As palavras brindam (1,6 s), fica a frase; quando a app está pronta
+       (e passaram pelo menos 3,2 s) o verde fecha em círculo e rebenta em
+       confetti. */
+    html.tt-opening, html.tt-opening body { background: #5F7545; }
+    @font-face { font-family: TT; src: url('assets/assets/fonts/louis_george_cafe/LouisGeorgeCafe-Bold.ttf'); font-weight: 700; }
+    #tt-splash { position: fixed; inset: 0; background: #5F7545; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px; z-index: 10; font-family: TT, Roboto, sans-serif; color: #fff;
+      clip-path: circle(75% at 50% 50%); }
+    #tt-splash .wrap { position: relative; display: inline-block; font-size: 56px; line-height: 52px; font-weight: 700; letter-spacing: -0.5px; text-align: center; }
+    #tt-splash .w { display: block; }
+    #tt-splash .a { animation: ttA 1.6s cubic-bezier(.2,.8,.2,1) both; }
+    #tt-splash .b { animation: ttB 1.6s cubic-bezier(.2,.8,.2,1) both; }
+    #tt-splash .sp { position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px; border-radius: 9px; background: #F2D98D;
+      opacity: 0; animation: ttSpark 1.05s ease-out 1.05s both; }
+    #tt-splash .star { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; margin: -13px; opacity: 0; animation: ttStar .85s ease-out 1.05s both; }
+    #tt-splash .t { font-size: 15px; color: #DDE5D3; animation: ttT .5s ease-out 1.6s both; }
+    #tt-splash .prep { position: absolute; bottom: 48px; font-size: 13px; color: #DDE5D3; animation: ttT .5s ease-out 1.6s both; }
+    @keyframes ttA { 0% { transform: translateX(-170px) rotate(-12deg); opacity: 0 } 69% { transform: translateX(8px) rotate(4deg); opacity: 1 } 84% { transform: translateX(-3px) rotate(-1deg) } 100% { transform: none; opacity: 1 } }
+    @keyframes ttB { 0% { transform: translateX(170px) rotate(12deg); opacity: 0 } 69% { transform: translateX(-8px) rotate(-4deg); opacity: 1 } 84% { transform: translateX(3px) rotate(1deg) } 100% { transform: none; opacity: 1 } }
+    @keyframes ttSpark { 0% { transform: translate(0,0) scale(0); opacity: 0 } 19% { transform: translate(0,0) scale(1); opacity: 1 } 100% { transform: translate(var(--dx),var(--dy)) scale(.3); opacity: 0 } }
+    @keyframes ttStar { 0% { transform: scale(0) rotate(0); opacity: 0 } 29% { transform: scale(1.25) rotate(45deg); opacity: 1 } 100% { transform: scale(0) rotate(90deg); opacity: 0 } }
+    @keyframes ttT { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+    #tt-splash .prep b { font-weight: inherit; opacity: 0; animation: ttDot 1.2s steps(1) infinite; }
+    #tt-splash .prep .d2 { animation-name: ttDot2; }
+    #tt-splash .prep .d3 { animation-name: ttDot3; }
+    @keyframes ttDot { 0% { opacity: 0 } 25%, 100% { opacity: 1 } }
+    @keyframes ttDot2 { 0%, 25% { opacity: 0 } 50%, 100% { opacity: 1 } }
+    @keyframes ttDot3 { 0%, 50% { opacity: 0 } 75%, 100% { opacity: 1 } }
+    /* saída */
+    #tt-splash.go { animation: ttExit .7s cubic-bezier(.7,0,.3,1) both; }
+    #tt-splash.go .wrap, #tt-splash.go .t, #tt-splash.go .prep { animation: ttLift .5s ease-in both; }
+    @keyframes ttExit { from { clip-path: circle(75% at 50% 50%) } to { clip-path: circle(0% at 50% 50%) } }
+    @keyframes ttLift { from { opacity: 1; transform: none } to { opacity: 0; transform: translateY(-40px) } }
+    #tt-cf { position: fixed; inset: 0; pointer-events: none; z-index: 11; }
+    #tt-cf i { position: absolute; left: 50%; top: 50%; width: 8px; height: 13px; border-radius: 2px; opacity: 0; }
+    #tt-cf.go i { animation: ttBurst 1.15s cubic-bezier(.15,.7,.3,1) .65s both; }
+    @keyframes ttBurst { 0% { transform: translate(-50%,-50%) scale(0); opacity: 0 } 9% { transform: translate(-50%,-50%) scale(1); opacity: 1 }
+      52% { transform: translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--r)); opacity: 1 }
+      100% { transform: translate(calc(-50% + var(--dx)*1.1),calc(-50% + var(--dy) + 90px)) rotate(calc(var(--r)*1.6)); opacity: 0 } }
+  </style>
+</head>
+<body>
+  <div id="tt-splash" role="img" aria-label="Tchin Tchin">
+    <span class="wrap"><span class="w a">Tchin</span><span class="w b">Tchin</span><i class="sp" style="--dx:-70px;--dy:-46px"></i><i class="sp" style="--dx:70px;--dy:-46px;background:#fff"></i><i class="sp" style="--dx:-90px;--dy:8px"></i><i class="sp" style="--dx:90px;--dy:8px;background:#fff"></i><i class="sp" style="--dx:-52px;--dy:54px"></i><i class="sp" style="--dx:52px;--dy:54px;background:#fff"></i><i class="sp" style="--dx:0px;--dy:-70px"></i><i class="sp" style="--dx:0px;--dy:72px;background:#fff"></i><svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z" fill="#FFFFFF"/></svg></span>
+    <span class="t">Para todas as festas</span>
+    <span class="prep">A preparar o brinde<b class="d1">.</b><b class="d2">.</b><b class="d3">.</b></span>
+  </div>
+  <div id="tt-cf" aria-hidden="true"></div>
+  <script>
+    // A app muda a cor da barra do topo conforme o fundo da página.
+    window.tchinSetThemeColor = function (c) {
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute('content', c);
+    };
+    (function () {
+      var colors = ['#5F7545', '#F2D98D', '#F3C9CF', '#A9BC8F', '#E8B44C', '#DDE5D3', '#F3B9C1'];
+      var cf = document.getElementById('tt-cf');
+      for (var i = 0; i < 30; i++) {
+        var a = i / 30 * Math.PI * 2, d = 110 + (i * 37 % 100);
+        var el = document.createElement('i');
+        el.style.setProperty('--dx', Math.round(Math.cos(a) * d) + 'px');
+        el.style.setProperty('--dy', Math.round(Math.sin(a) * d) + 'px');
+        el.style.setProperty('--r', ((i % 2 ? -1 : 1) * (180 + i * 17)) + 'deg');
+        el.style.background = colors[i % colors.length];
+        if (i % 4 === 0) { el.style.width = '8px'; el.style.height = '8px'; el.style.borderRadius = '9px'; }
+        cf.appendChild(el);
+      }
+      var t0 = Date.now(), ready = false, gone = false;
+      function exit() {
+        if (gone || !ready || Date.now() - t0 < 3200) return;
+        gone = true;
+        var sp = document.getElementById('tt-splash');
+        sp.classList.add('go');
+        cf.classList.add('go');
+        setTimeout(function () {
+          document.documentElement.classList.remove('tt-opening');
+          window.tchinSetThemeColor('#FFFFFF');
+        }, 450);
+        setTimeout(function () { sp.remove(); }, 750);
+        setTimeout(function () { cf.remove(); }, 2000);
+      }
+      window.addEventListener('flutter-first-frame', function () {
+        // um instante para o primeiro ecrã ficar desenhado por baixo
+        setTimeout(function () { ready = true; exit(); }, 250);
+      });
+      setTimeout(exit, 3200);
+      // segurança: nunca fica preso na abertura
+      setTimeout(function () { ready = true; exit(); }, 12000);
+    })();
+  </script>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
