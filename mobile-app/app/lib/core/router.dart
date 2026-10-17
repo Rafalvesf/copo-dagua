@@ -157,7 +157,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (_authRoutes.contains(location) ||
               location == '/verify-email' ||
               location == '/onboarding') {
-            return homeForRole;
+            // Pedido do utilizador (2026-10-17): quem organiza entra
+            // sempre na aba Parceiros.
+            return homeForRole == '/home' ? '/partners' : homeForRole;
           }
           // Mantém o utilizador na área certa mesmo que a role mude a
           // meio da sessão (troca rápida de conta de demonstração).
