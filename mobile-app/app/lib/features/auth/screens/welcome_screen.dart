@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/buttons.dart';
-import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -19,15 +18,19 @@ class WelcomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              const GradientMark(size: 72, icon: Icons.water_drop_outlined),
-              const SizedBox(height: 20),
               Text(
-                "Copo d'Água",
-                style: Theme.of(context).textTheme.headlineMedium,
+                'Tchin\nTchin',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontSize: 48,
+                  height: 0.95,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 14),
               Text(
-                'O teu casamento, num só lugar',
+                'O teu evento, num só lugar',
                 style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),

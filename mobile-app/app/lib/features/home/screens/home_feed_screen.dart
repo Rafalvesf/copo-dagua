@@ -53,7 +53,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
       return;
     }
     final text = 'Junta-te a mim para organizarmos o nosso casamento '
-        'na Copo d\'Água: $link';
+        'no Tchin Tchin: $link';
     var shared = false;
     try {
       final result = await SharePlus.instance.share(

@@ -70,7 +70,7 @@ class GradientScaffold extends StatelessWidget {
       if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
       SystemChrome.setApplicationSwitcherDescription(
         ApplicationSwitcherDescription(
-          label: "Copo d'Água",
+          label: 'Tchin Tchin',
           primaryColor: color.toARGB32(),
         ),
       );
