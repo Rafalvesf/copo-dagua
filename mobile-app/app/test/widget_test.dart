@@ -8,7 +8,7 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: CopoDaguaApp()));
     await tester.pumpAndSettle();
 
-    expect(find.text("Copo d'Água"), findsOneWidget);
+    expect(find.text('Tchin\nTchin'), findsOneWidget);
     expect(find.text('Entrar'), findsOneWidget);
     expect(find.text('Criar conta'), findsOneWidget);
   });

@@ -19,14 +19,16 @@ class WelcomeScreen extends StatelessWidget {
             children: [
               const Spacer(),
               Text(
-                'Tchin Tchin',
+                'Tchin\nTchin',
+                textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: 44,
+                  fontSize: 48,
+                  height: 0.95,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 14),
               Text(
                 'O teu evento, num só lugar',
                 style: Theme.of(context).textTheme.bodyLarge,
