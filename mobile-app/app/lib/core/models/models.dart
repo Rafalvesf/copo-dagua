@@ -112,6 +112,9 @@ class Profile {
   final bool travelsForEvents;
   final int? maxTravelDistanceKm;
 
+  /// `partner_profiles.key_figure` (077) — ver `category_figure.dart`.
+  final int? keyFigure;
+
   /// Valor bruto de `partner_profiles.status` ('draft' | 'pending_review' |
   /// 'changes_required' | 'published' | 'rejected' | 'suspended') — null
   /// para casais.
@@ -157,6 +160,7 @@ class Profile {
     this.acceptingRequests = true,
     this.travelsForEvents = true,
     this.maxTravelDistanceKm,
+    this.keyFigure,
     this.partnerProfileStatus,
     this.rejectionReason,
     this.logoUrl,
@@ -180,6 +184,7 @@ class Profile {
     bool? acceptingRequests,
     bool? travelsForEvents,
     int? maxTravelDistanceKm,
+    int? keyFigure,
     String? partnerProfileStatus,
     String? rejectionReason,
     String? logoUrl,
@@ -208,6 +213,7 @@ class Profile {
       acceptingRequests: acceptingRequests ?? this.acceptingRequests,
       travelsForEvents: travelsForEvents ?? this.travelsForEvents,
       maxTravelDistanceKm: maxTravelDistanceKm ?? this.maxTravelDistanceKm,
+      keyFigure: keyFigure ?? this.keyFigure,
       partnerProfileStatus: partnerProfileStatus ?? this.partnerProfileStatus,
       rejectionReason: rejectionReason ?? this.rejectionReason,
       logoUrl: logoUrl ?? this.logoUrl,

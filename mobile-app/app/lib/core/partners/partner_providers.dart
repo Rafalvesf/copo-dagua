@@ -161,6 +161,24 @@ final partnerVenueCapacityProvider =
       return total;
     });
 
+/// Número de referência do parceiro (`partner_profiles.key_figure`,
+/// `077_partner_key_figure.sql`) — o significado depende da categoria
+/// (`category_figure.dart`). `null` se não indicou ou se a migração
+/// ainda não correu (nunca parte o perfil).
+final partnerKeyFigureProvider =
+    FutureProvider.family<int?, String>((ref, partnerId) async {
+      try {
+        final row = await supabase
+            .from('partner_profiles')
+            .select('key_figure')
+            .eq('id', partnerId)
+            .maybeSingle();
+        return row?['key_figure'] as int?;
+      } catch (_) {
+        return null;
+      }
+    });
+
 /// Portefólio real de um parceiro específico — usado no separador
 /// "Galeria" do perfil público.
 final partnerPortfolioForProvider =

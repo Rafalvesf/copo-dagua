@@ -13,6 +13,8 @@ import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gallery_placeholder.dart';
+import '../../../core/gallery/gallery_social.dart';
+import '../widgets/gallery_social_ui.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -170,7 +172,6 @@ class _GalleryBody extends ConsumerStatefulWidget {
 
 class _GalleryBodyState extends ConsumerState<_GalleryBody> {
   _GalleryTab _tab = _GalleryTab.all;
-  final Set<String> _favorites = {};
   bool _showPending = false;
 
   @override
@@ -201,7 +202,9 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
         if (_tab == _GalleryTab.mine) {
           approved = approved.where((p) => p.uploadedBy == widget.currentUserId).toList();
         } else if (_tab == _GalleryTab.favorites) {
-          approved = approved.where((p) => _favorites.contains(p.id)).toList();
+          // "Favoritas" = fotos de que gostaste (gostos reais, 078).
+          final meta = ref.watch(galleryFeedMetaProvider(widget.weddingId)).asData?.value ?? const {};
+          approved = approved.where((p) => meta[p.id]?.likedByMe ?? false).toList();
         }
 
         const tabs = [
@@ -275,53 +278,9 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                 },
               )
             else
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 4,
-                  mainAxisSpacing: 4,
-                ),
-                itemCount: approved.length,
-                itemBuilder: (context, index) {
-                  final photo = approved[index];
-                  final favorited = _favorites.contains(photo.id);
-                  return ClipRRect(
-                    borderRadius: galleryTileRadius(index, approved.length),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // Quadrado de cor (design) enquanto carrega ou se
-                        // a foto falhar, em vez do ícone de imagem partida.
-                        ColoredBox(color: galleryTint(index)),
-                        Image.network(
-                          photo.imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stack) => const SizedBox.shrink(),
-                        ),
-                        Positioned(
-                          top: 4,
-                          right: 4,
-                          child: GestureDetector(
-                            onTap: () => setState(() {
-                              favorited ? _favorites.remove(photo.id) : _favorites.add(photo.id);
-                            }),
-                            child: Icon(
-                              favorited ? Icons.favorite : Icons.favorite_border,
-                              size: 18,
-                              color: favorited ? AppStatusColors.declined : Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              ),
+              // Grelha → publicações com autor, gostos e comentários
+              // (galeria social, `gallery_social_ui.dart`).
+              GallerySocialGrid(weddingId: widget.weddingId, photos: approved),
           ],
         );
         final filters = FilterChipsRow(

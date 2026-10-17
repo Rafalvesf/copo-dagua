@@ -13,6 +13,8 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gallery_placeholder.dart';
+import '../../../core/gallery/gallery_social.dart';
+import '../../gallery/widgets/gallery_social_ui.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -64,7 +66,6 @@ class _GuestGalleryBody extends ConsumerStatefulWidget {
 
 class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
   _GalleryTab _tab = _GalleryTab.all;
-  final Set<String> _favorites = {};
 
   Future<void> _upload() async {
     final source = await showModalBottomSheet<ImageSource>(
@@ -132,7 +133,8 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                       if (_tab == _GalleryTab.mine) {
                         approved = approved.where((p) => p.uploadedBy == myUserId).toList();
                       } else if (_tab == _GalleryTab.favorites) {
-                        approved = approved.where((p) => _favorites.contains(p.id)).toList();
+                        final meta = ref.watch(galleryFeedMetaProvider(widget.weddingId)).asData?.value ?? const {};
+                        approved = approved.where((p) => meta[p.id]?.likedByMe ?? false).toList();
                       }
 
                       return ListView(
@@ -195,48 +197,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                               message: 'Ainda não existem fotos. Carrega as primeiras.',
                             )
                           else
-                            GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                crossAxisSpacing: 4,
-                                mainAxisSpacing: 4,
-                              ),
-                              itemCount: approved.length,
-                              itemBuilder: (context, index) {
-                                final photo = approved[index];
-                                final favorited = _favorites.contains(photo.id);
-                                return ClipRRect(
-                                  borderRadius: galleryTileRadius(index, approved.length),
-                                  child: Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      ColoredBox(color: galleryTint(index)),
-                                      Image.network(
-                                        photo.imageUrl,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stack) => const SizedBox.shrink(),
-                                      ),
-                                      Positioned(
-                                        top: 4,
-                                        right: 4,
-                                        child: GestureDetector(
-                                          onTap: () => setState(() {
-                                            favorited ? _favorites.remove(photo.id) : _favorites.add(photo.id);
-                                          }),
-                                          child: Icon(
-                                            favorited ? Icons.favorite : Icons.favorite_border,
-                                            size: 18,
-                                            color: favorited ? AppStatusColors.declined : Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+                            GallerySocialGrid(weddingId: widget.weddingId, photos: approved),
                         ],
                       );
                     },

@@ -16,6 +16,7 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../partner_style.dart';
 import '../../../shared/money.dart';
+import '../../../core/partners/category_figure.dart';
 
 
 class PartnerDetailScreen extends ConsumerStatefulWidget {
@@ -211,9 +212,19 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     final portfolio = ref
         .watch(partnerPortfolioForProvider(partner.id))
         .maybeWhen(data: (p) => p, orElse: () => const <PortfolioItem>[]);
-    final capacity = ref
-        .watch(partnerVenueCapacityProvider(partner.id))
-        .maybeWhen(data: (c) => c, orElse: () => null);
+    // Primeiro quadrado: o número que faz sentido para a categoria
+    // (espaço: capacidade; catering: serve até; florista: arranjos; …).
+    final figure = figureForSlug(partner.primaryCategorySlug);
+    final isVenue = partner.primaryCategorySlug == 'venue';
+    final capacity = isVenue
+        ? ref
+            .watch(partnerVenueCapacityProvider(partner.id))
+            .maybeWhen(data: (c) => c, orElse: () => null)
+        : null;
+    final keyFigure = ref
+        .watch(partnerKeyFigureProvider(partner.id))
+        .maybeWhen(data: (v) => v, orElse: () => null);
+    final figureValue = capacity ?? keyFigure;
     final weddingDate = ref.watch(
       weddingControllerProvider.select((s) => s.wedding?.weddingDate),
     );
@@ -341,8 +352,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     child: Row(
                       children: [
                         _InfoTile(
-                          label: 'Capacidade',
-                          value: capacity == null ? '—' : 'até $capacity',
+                          label: figure.label,
+                          value: figureValue == null ? '—' : figure.format(figureValue),
                         ),
                         const SizedBox(width: 8),
                         _InfoTile(

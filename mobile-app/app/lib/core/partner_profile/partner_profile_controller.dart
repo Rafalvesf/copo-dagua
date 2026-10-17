@@ -39,9 +39,16 @@ class PartnerProfileController extends Notifier<bool> {
     bool? acceptingRequests,
     bool? travelsForEvents,
     int? maxTravelDistanceKm,
+    int? keyFigure,
   }) async {
     state = true;
     final profile = ref.read(authControllerProvider).profile!;
+    if (keyFigure != null) {
+      // Coluna da migração 077 — à parte, pela mesma razão da distância.
+      try {
+        await supabase.from('partner_profiles').update({'key_figure': keyFigure}).eq('id', profile.id);
+      } catch (_) {}
+    }
     if (maxTravelDistanceKm != null) {
       // Coluna da migração 075 — guardada à parte para uma base de dados
       // ainda sem ela não impedir de guardar o resto.
@@ -82,6 +89,7 @@ class PartnerProfileController extends Notifier<bool> {
       acceptingRequests: !(row['is_paused'] as bool? ?? false),
       travelsForEvents: row['nationwide'] as bool? ?? true,
       maxTravelDistanceKm: row['max_travel_distance_km'] as int?,
+      keyFigure: row['key_figure'] as int?,
     );
     ref.read(authControllerProvider.notifier).refreshProfile(updated);
     await refreshReviewStatus();
