@@ -6,9 +6,13 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/gallery/gallery_social.dart';
+import '../../../core/guest_home/guest_home_providers.dart';
+import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/gallery_placeholder.dart';
 import '../../../shared/widgets/initials_avatar.dart';
+import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
 /// Galeria como uma rede social (pedido 2026-10-17): grelha de
@@ -130,29 +134,52 @@ class _GalleryPostsScreenState extends ConsumerState<GalleryPostsScreen> {
   @override
   Widget build(BuildContext context) {
     final meta = ref.watch(galleryFeedMetaProvider(widget.weddingId)).asData?.value ?? const {};
+    final me = ref.watch(authControllerProvider).profile;
+    // Nome do evento por baixo do título (canvas "Galeria — publicação").
+    String? eventName;
+    final own = ref.watch(weddingControllerProvider).wedding;
+    if (own != null && own.id == widget.weddingId) {
+      eventName = '${own.eventType.label} · ${own.displayNames}';
+    } else {
+      for (final w in ref.watch(guestWeddingsProvider).value ?? const <GuestWedding>[]) {
+        if (w.weddingId == widget.weddingId) eventName = '${w.eventType.label} · ${w.displayNames}';
+      }
+    }
+    // Sem a parte social (078) ainda ativa, mostra na mesma o autor e as
+    // ações — a publicação fica sempre com o mesmo aspeto.
+    GalleryPostMeta metaFor(GalleryPhoto p) =>
+        meta[p.id] ??
+        GalleryPostMeta(
+          photoId: p.id,
+          uploadedBy: p.uploadedBy,
+          authorName: p.uploadedBy == me?.id ? (me?.fullName ?? 'Tu') : 'Convidado',
+          authorIsCouple: false,
+          likeCount: 0,
+          likedByMe: false,
+          commentCount: 0,
+        );
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text('Publicações', style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.xl)),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            for (var i = 0; i < widget.photos.length; i++)
-              _PostCard(
-                key: i == widget.initialIndex ? _initialKey : ValueKey(widget.photos[i].id),
-                weddingId: widget.weddingId,
-                photo: widget.photos[i],
-                meta: meta[widget.photos[i].id],
-                tint: galleryTint(i),
-                allPhotos: widget.photos,
-              ),
-            const SizedBox(height: 40),
-          ],
+      body: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PageHeader(title: 'Publicações', subtitle: eventName, centered: true),
+              const SizedBox(height: 12),
+              for (var i = 0; i < widget.photos.length; i++)
+                _PostCard(
+                  key: i == widget.initialIndex ? _initialKey : ValueKey(widget.photos[i].id),
+                  weddingId: widget.weddingId,
+                  photo: widget.photos[i],
+                  meta: metaFor(widget.photos[i]),
+                  tint: galleryTint(i),
+                  allPhotos: widget.photos,
+                ),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
@@ -215,6 +242,9 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
           _liked = !next;
           _likes = likes + (next ? -1 : 1);
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível guardar o gosto. Tenta outra vez.')),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
