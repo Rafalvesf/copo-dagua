@@ -563,17 +563,34 @@ class _QuickLinksRow extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 12),
-        // Galeria saiu da navbar do casal (2026-10-17) e entrou aqui.
-        _QuickLinkTile(
-          icon: Icons.checklist_rtl_outlined,
-          label: 'Serviços já tratados',
-          subtitle: handled == null
-              ? '—'
-              : handled == 0
-                  ? 'Nenhum ainda'
-                  : '$handled ${plural(handled, 'categoria', 'categorias')}',
-          color: const Color(0xFFF7EACA),
-          onTap: () => context.push('/service-preferences'),
+        Row(
+          children: [
+            // "Para os convidados" numa página só: programa, mensagem,
+            // local, dress code, presentes e entrada (pedido 2026-10-17).
+            Expanded(
+              child: _QuickLinkTile(
+                icon: Icons.card_giftcard_outlined,
+                label: 'Para os convidados',
+                subtitle: 'Programa e presentes',
+                color: const Color(0xFFE8E1F0),
+                onTap: () => context.push('/guest-page'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _QuickLinkTile(
+                icon: Icons.checklist_rtl_outlined,
+                label: 'Serviços tratados',
+                subtitle: handled == null
+                    ? '—'
+                    : handled == 0
+                        ? 'Nenhum ainda'
+                        : '$handled ${plural(handled, 'categoria', 'categorias')}',
+                color: const Color(0xFFF7EACA),
+                onTap: () => context.push('/service-preferences'),
+              ),
+            ),
+          ],
         ),
       ],
     );
