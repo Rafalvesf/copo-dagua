@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/auth_ui.dart';
 import '../../../shared/widgets/mascot.dart';
+import '../../../shared/theme_color/theme_color.dart';
 import '../../../shared/widgets/tchin_splash.dart';
 
 /// Início da app (canvas "Início 1 · Abertura" + "Início 2 · Boas-vindas").
@@ -25,6 +26,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
   );
   bool _showSplash = true;
   bool _burst = false;
+  bool _barGreen = false;
 
   @override
   void initState() {
@@ -35,6 +37,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
     // desaparecer (bug 2026-10-17: "boas-vindas sem animação").
     _splash.addListener(() {
       if (!_burst && _splash.value >= 0.78) setState(() => _burst = true);
+      // A barra do topo fica verde enquanto o verde cobre o topo do ecrã.
+      final green = _splash.value < 0.7;
+      if (green != _barGreen) {
+        _barGreen = green;
+        setBarColor(green ? AppTheme.accentOliveDark : const Color(0xFFFFFFFF));
+      }
     });
     _splash.addStatusListener((s) {
       if (s == AnimationStatus.completed) {
@@ -51,6 +59,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
     if (_showSplash && !_splash.isAnimating && _splash.value == 0) {
       // A página web já mostrou as palavras a brindar enquanto a app
       // carregava (`web/index.html`) — continua a partir do brinde.
+      _barGreen = true;
+      setBarColor(AppTheme.accentOliveDark);
       _splash.forward(from: 0.32);
     }
   }

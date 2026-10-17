@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../theme_color/theme_color.dart';
 import 'mascot.dart';
 import 'tchin_splash.dart';
 
@@ -23,13 +24,21 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with SingleTickerProvid
   late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 5000));
   bool _show = false;
   bool _burst = false;
+  bool _barGreen = false;
   String? _name;
 
   @override
   void initState() {
     super.initState();
+    // Fora da abertura a barra do topo é branca, como o fundo das páginas.
+    setBarColor(const Color(0xFFFFFFFF));
     _c.addListener(() {
       if (!_burst && _c.value >= 0.78) setState(() => _burst = true);
+      final green = _show && _c.value < 0.7;
+      if (green != _barGreen) {
+        _barGreen = green;
+        setBarColor(green ? const Color(0xFF5F7545) : const Color(0xFFFFFFFF));
+      }
     });
     _c.addStatusListener((s) {
       if (s == AnimationStatus.completed && mounted) {
