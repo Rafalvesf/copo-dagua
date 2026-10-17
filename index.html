@@ -21,7 +21,7 @@
   <meta name="description" content="Tchin Tchin — o teu evento, num só lugar.">
 
   <!-- iOS meta tags & icons -->
-  <meta name="theme-color" content="#FFFFFF">
+  <meta name="theme-color" content="#5F7545">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Tchin Tchin">
@@ -66,6 +66,11 @@
     <span class="t">Para todas as festas</span>
   </div>
   <script>
+    // A app muda a cor da barra do topo conforme o fundo da página.
+    window.tchinSetThemeColor = function (c) {
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute('content', c);
+    };
     window.addEventListener('flutter-first-frame', function () {
       var el = document.getElementById('tt-splash');
       if (el) el.remove();
