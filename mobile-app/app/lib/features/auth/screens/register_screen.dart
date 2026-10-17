@@ -34,6 +34,8 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _name = TextEditingController();
   final _email = TextEditingController();
+  final _phone = TextEditingController();
+  String? _phoneError;
   final _password = TextEditingController();
   final _weddingCode = TextEditingController();
   bool _acceptedTerms = false;
@@ -69,6 +71,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _codeDebounce?.cancel();
     _name.dispose();
     _email.dispose();
+    _phone.dispose();
     _password.dispose();
     _weddingCode.dispose();
     super.dispose();
@@ -120,6 +123,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _emailError = _emailRegex.hasMatch(_email.text.trim())
           ? null
           : 'Introduz um email válido';
+      // Telemóvel obrigatório (pedido 2026-10-17): com o email, é o que
+      // liga esta conta às respostas que outros já deram por ela.
+      _phoneError = _phone.text.replaceAll(RegExp(r'[^0-9]'), '').length >= 9
+          ? null
+          : 'Introduz o teu telemóvel';
       _passwordError = _passwordRegex.hasMatch(_password.text)
           ? null
           : 'A password precisa de pelo menos 8 caracteres, com letras e números';
@@ -134,6 +142,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
     return _nameError == null &&
         _emailError == null &&
+        _phoneError == null &&
         _passwordError == null &&
         _termsError == null &&
         _weddingCodeError == null;
@@ -178,6 +187,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         .register(
           fullName: _name.text.trim(),
           email: _email.text.trim(),
+          phone: _phone.text.trim(),
           password: _password.text,
           role: widget.role,
           weddingCode: widget.role == UserRole.guest
@@ -263,6 +273,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
         ],
         AuthField(label: 'Email', controller: _email, hint: 'nome@email.pt', keyboardType: TextInputType.emailAddress, errorText: _emailError),
+        AuthField(
+          label: 'Telemóvel',
+          controller: _phone,
+          hint: '912 345 678',
+          keyboardType: TextInputType.phone,
+          errorText: _phoneError,
+          autofillHints: const [AutofillHints.telephoneNumber],
+        ),
         AuthField(
           label: 'Password',
           controller: _password,

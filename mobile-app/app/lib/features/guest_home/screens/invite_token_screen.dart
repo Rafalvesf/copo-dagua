@@ -10,6 +10,7 @@ import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/install_app_sheet.dart';
 
 /// `/i/:token` — link de convite individual (`guests.rsvp_token`
 /// reaproveitado como token de conta, ver
@@ -90,21 +91,15 @@ class _InviteTokenScreenState extends ConsumerState<InviteTokenScreen> {
                 : PublicStateView(
                     pose: MascotPose.wave,
                     title: 'Foste convidado!',
-                    message: 'Este convite é só para ti. Cria conta ou entra para responderes e veres tudo sobre o evento.',
+                    message: 'Este convite é só para ti. Instala a app e cria conta com o mesmo email ou telemóvel — o convite fica logo ligado a ti.',
                     actions: [
-                      PrimaryButton(
-                        label: 'Criar conta',
+                      PrimaryButton(label: 'Instalar a app', onPressed: () => showInstallAppSheet(context)),
+                      TextButton(
                         onPressed: () {
                           ref.read(pendingInviteTokenProvider.notifier).set(widget.token);
                           context.push('/register?role=guest');
                         },
-                      ),
-                      OutlinedButton(
-                        onPressed: () {
-                          ref.read(pendingInviteTokenProvider.notifier).set(widget.token);
-                          context.push('/login');
-                        },
-                        child: const Text('Já tenho conta'),
+                        child: const Text('Não consigo instalar — continuar aqui'),
                       ),
                     ],
                   ),

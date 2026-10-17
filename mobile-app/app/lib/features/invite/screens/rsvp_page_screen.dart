@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/wedding/date_format_pt.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/mascot.dart';
@@ -8,6 +7,10 @@ import '../../../shared/widgets/public_state.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/install_app_sheet.dart';
+import '../../../core/models/models.dart';
+import '../../../core/guest_home/guest_home_providers.dart';
+import '../../guest_home/screens/guest_onboarding_wizard_screen.dart';
 
 /// Página pública de RSVP — acessível sem sessão nenhuma, para um
 /// convidado específico abrir o link partilhado pelos noivos
@@ -32,12 +35,8 @@ class RsvpPageScreen extends StatefulWidget {
 
 class _RsvpPageScreenState extends State<RsvpPageScreen> {
   late Future<Map<String, dynamic>?> _dataFuture;
-  bool _submitting = false;
   bool _submitted = false;
-  String? _rsvpStatus;
-  final _plusOneName = TextEditingController();
-  final _dietaryRestrictions = TextEditingController();
-  final _guestMessage = TextEditingController();
+  bool _declined = false;
 
   @override
   void initState() {
@@ -45,69 +44,108 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
     _dataFuture = _loadGuest();
   }
 
-  @override
-  void dispose() {
-    _plusOneName.dispose();
-    _dietaryRestrictions.dispose();
-    _guestMessage.dispose();
-    super.dispose();
-  }
-
+  /// `get_rsvp_details` (096) traz tudo o que o percurso completo precisa
+  /// (limite de acompanhantes, tipo de evento, respostas anteriores);
+  /// se ainda não existir no servidor, cai para `get-rsvp-by-token`.
   Future<Map<String, dynamic>?> _loadGuest() async {
     try {
       final loader = RsvpPageScreen.debugLoader;
-      if (loader != null) {
-        final data = await loader(widget.token);
-        _rsvpStatus = data?['rsvp_status'] as String?;
-        return data;
-      }
-      final response = await supabase.functions.invoke(
-        'get-rsvp-by-token',
-        body: {'token': widget.token},
-      );
-      final data = response.data as Map<String, dynamic>?;
-      if (data == null) return null;
-      _rsvpStatus = data['rsvp_status'] as String?;
-      _plusOneName.text = (data['plus_one_name'] as String?) ?? '';
-      _dietaryRestrictions.text = (data['dietary_restrictions'] as String?) ?? '';
-      _guestMessage.text = (data['guest_message'] as String?) ?? '';
-      return data;
+      if (loader != null) return await loader(widget.token);
+      try {
+        final res = await supabase.rpc('get_rsvp_details', params: {'p_token': widget.token});
+        if (res is Map<String, dynamic>) {
+          final e = (res['event'] as Map?)?.cast<String, dynamic>() ?? const {};
+          return {
+            ...res,
+            'wedding_partner_name_1': e['partner_name_1'],
+            'wedding_partner_name_2': e['partner_name_2'],
+            'wedding_date': e['wedding_date'],
+            'wedding_location': (e['venue'] as String?)?.isNotEmpty == true ? e['venue'] : e['location'],
+            'event_type': e['event_type'],
+            'venue': e['venue'],
+            'location': e['location'],
+            'ceremony_time': e['ceremony_time'],
+          };
+        }
+      } catch (_) {}
+      final response = await supabase.functions.invoke('get-rsvp-by-token', body: {'token': widget.token});
+      return response.data as Map<String, dynamic>?;
     } catch (_) {
       return null;
     }
   }
 
-  Future<void> _submit() async {
-    if (_rsvpStatus == null || _submitting) return;
-    setState(() => _submitting = true);
-    try {
-      await supabase.functions.invoke(
-        'submit-rsvp',
-        body: {
-          'token': widget.token,
-          'rsvp_status': _rsvpStatus,
-          'plus_one_name': _plusOneName.text.trim().isEmpty
-              ? null
-              : _plusOneName.text.trim(),
-          'dietary_restrictions': _dietaryRestrictions.text.trim().isEmpty
-              ? null
-              : _dietaryRestrictions.text.trim(),
-          'guest_message': _guestMessage.text.trim().isEmpty
-              ? null
-              : _guestMessage.text.trim(),
+  /// Abre o mesmo percurso do convidado na app (canvas Convidado 1–8):
+  /// vais?, quem vai contigo, idades, menu, alergias, de quem és
+  /// convidado e a relação — gravado pelo `rsvp_token`.
+  Future<void> _answer(Map<String, dynamic> d) async {
+    final weddingId = (d['wedding_id'] as String?) ?? '';
+    final max = (d['max_companions'] as num?)?.toInt() ?? ((d['plus_one_allowed'] as bool? ?? false) ? 1 : 0);
+    final guest = Guest(
+      id: (d['guest_id'] as String?) ?? '',
+      weddingId: weddingId,
+      name: (d['guest_name'] as String?) ?? '',
+      maxCompanions: max,
+      plusOneAllowed: max > 0,
+      ageGroup: (d['age_group'] as String?) ?? 'adult',
+      group: (d['group_label'] as String?) ?? '',
+      side: switch (d['side']) {
+        'couple_a' => WeddingSide.groom,
+        'couple_b' => WeddingSide.bride,
+        _ => WeddingSide.both,
+      },
+      plusOneName: d['plus_one_name'] as String?,
+      menuSelection: d['menu_selection'] as String?,
+      dietaryRestrictions: d['dietary_restrictions'] as String?,
+      rsvpToken: widget.token,
+    );
+    final event = GuestWedding(
+      weddingId: weddingId,
+      partnerName1: (d['wedding_partner_name_1'] as String?) ?? '',
+      partnerName2: d['wedding_partner_name_2'] as String?,
+      weddingDate: d['wedding_date'] == null ? null : DateTime.tryParse(d['wedding_date'] as String),
+      venue: d['venue'] as String?,
+      location: (d['location'] as String?) ?? d['wedding_location'] as String?,
+      ceremonyTime: d['ceremony_time'] as String?,
+      eventType: EventType.fromDb(d['event_type'] as String?),
+    );
+    final companions = [
+      for (final c in ((d['companions'] as List?) ?? const []).cast<Map>())
+        GuestCompanion(
+          name: (c['name'] as String?) ?? '',
+          ageGroup: (c['age_group'] as String?) ?? 'adult',
+          isChild: c['age_group'] == 'child',
+          childAge: (c['child_age'] as num?)?.toInt(),
+          menu: c['menu'] as String?,
+          allergies: ((c['allergies'] as List?) ?? const []).cast<String>(),
+          accompaniedBy: c['accompanied_by'] as String?,
+          willInstallApp: c['will_install_app'] as bool? ?? false,
+        ),
+    ];
+    final nav = Navigator.of(context);
+    await nav.push(MaterialPageRoute<void>(
+      builder: (route) => GuestOnboardingWizardScreen(
+        weddingId: weddingId,
+        guest: guest,
+        rsvpToken: widget.token,
+        event: event,
+        initialCompanions: companions,
+        onDone: () {
+          if (nav.canPop()) nav.pop();
         },
-      );
-      if (mounted) setState(() => _submitted = true);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Não foi possível enviar a resposta. Tenta novamente.'),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _submitting = false);
+      ),
+    ));
+    if (!mounted) return;
+    final fresh = await _loadGuest();
+    if (!mounted) return;
+    final status = fresh?['rsvp_status'] as String?;
+    if (status == 'confirmed' || status == 'declined') {
+      setState(() {
+        _submitted = true;
+        _declined = status == 'declined';
+        _dataFuture = Future.value(fresh);
+      });
+      if (status == 'confirmed') showInstallAppSheet(context);
     }
   }
 
@@ -131,11 +169,18 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                 actions: [PrimaryButton(label: 'Ir para o início', onPressed: () => context.go('/welcome'))],
               );
             }
+            final answered = data['rsvp_status'] == 'confirmed' || data['rsvp_status'] == 'declined';
             if (_submitted) {
-              return const PublicStateView(
-                pose: MascotPose.clink,
-                title: 'Resposta enviada!',
-                message: 'Obrigado. Os anfitriões já sabem a tua resposta.',
+              return PublicStateView(
+                pose: _declined ? MascotPose.wave : MascotPose.clink,
+                title: _declined ? 'Resposta enviada' : 'Até lá!',
+                message: _declined
+                    ? 'Obrigado por avisares. Os anfitriões já sabem.'
+                    : 'Os anfitriões já sabem a tua resposta. Instala a app para veres o programa, a tua mesa e as fotos.',
+                actions: [
+                  if (!_declined) PrimaryButton(label: 'Instalar a app', onPressed: () => showInstallAppSheet(context)),
+                  TextButton(onPressed: () => setState(() => _submitted = false), child: const Text('Ver o convite')),
+                ],
               );
             }
 
@@ -147,8 +192,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
             final weddingDate = data['wedding_date'] as String?;
             final location = data['wedding_location'] as String?;
             final guestName = data['guest_name'] as String?;
-            final plusOneAllowed = data['plus_one_allowed'] as bool? ?? false;
-
+            
             // Convite "de papel" (pedido 2026-10-17: "faz um mais bonito
             // para casamentos"): cartão branco com moldura fina, nomes em
             // letra de título, ornamento e a data por extenso.
@@ -248,54 +292,23 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                         style: const TextStyle(fontSize: AppFontSize.xl + 2, fontWeight: FontWeight.w700, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _RsvpChoiceButton(
-                              label: 'Vou!',
-                              selected: _rsvpStatus == 'confirmed',
-                              onTap: () => setState(() => _rsvpStatus = 'confirmed'),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _RsvpChoiceButton(
-                              label: 'Não vou poder ir',
-                              selected: _rsvpStatus == 'declined',
-                              onTap: () => setState(() => _rsvpStatus = 'declined'),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_rsvpStatus == 'confirmed') ...[
-                        const SizedBox(height: 12),
-                        if (plusOneAllowed) ...[
-                          TextField(
-                            controller: _plusOneName,
-                            textCapitalization: TextCapitalization.words,
-                            decoration: const InputDecoration(hintText: 'Nome do acompanhante (opcional)'),
-                          ),
-                          const SizedBox(height: 10),
-                        ],
-                        TextField(
-                          controller: _dietaryRestrictions,
-                          decoration: const InputDecoration(hintText: 'Alergias ou restrições (opcional)'),
+                      if (answered) ...[
+                        Text(
+                          data['rsvp_status'] == 'confirmed' ? 'Já confirmaste a tua presença.' : 'Disseste que não podes ir.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 14),
                       ],
-                      if (_rsvpStatus == 'declined') const SizedBox(height: 12),
-                      if (_rsvpStatus != null)
-                        TextField(
-                          controller: _guestMessage,
-                          maxLines: 3,
-                          minLines: 2,
-                          decoration: const InputDecoration(hintText: 'Uma mensagem para os anfitriões (opcional)'),
-                        ),
-                      const SizedBox(height: 20),
                       PrimaryButton(
-                        label: _submitting ? 'A enviar…' : 'Confirmar resposta',
-                        loading: _submitting,
-                        onPressed: _rsvpStatus == null || _submitting ? null : _submit,
+                        label: answered ? 'Mudar a resposta' : 'Responder ao convite',
+                        onPressed: () => _answer(data),
+                      ),
+                      const SizedBox(height: 10),
+                      OutlinedButton.icon(
+                        onPressed: () => showInstallAppSheet(context),
+                        icon: const Icon(Icons.download_rounded, size: 18),
+                        label: const Text('Instalar a app'),
                       ),
                     ],
                   ),
@@ -303,39 +316,6 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
               ),
             );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class _RsvpChoiceButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _RsvpChoiceButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        onTap: onTap,
-        child: Container(
-          height: 54,
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink),
-          ),
         ),
       ),
     );

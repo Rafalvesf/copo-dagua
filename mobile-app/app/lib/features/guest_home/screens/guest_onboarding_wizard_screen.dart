@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/supabase/supabase_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,7 +24,30 @@ class GuestOnboardingWizardScreen extends ConsumerStatefulWidget {
   /// Só para as capturas de ecrã (`?step=N`).
   final int initialStep;
 
-  const GuestOnboardingWizardScreen({super.key, required this.weddingId, required this.guest, this.initialStep = 0});
+  /// Modo RSVP (096): resposta pelo link do convite, sem conta — grava
+  /// com o `rsvp_token` em vez da sessão. Pedido 2026-10-17: o mesmo
+  /// percurso "tanto para o RSVP como para quem instale a app".
+  final String? rsvpToken;
+
+  /// Dados do evento quando não vêm da lista do convidado (modo RSVP).
+  final GuestWedding? event;
+
+  /// Acompanhantes já guardados (para mudar a resposta).
+  final List<GuestCompanion> initialCompanions;
+
+  /// No fim do modo RSVP (ex.: convidar a instalar a app).
+  final VoidCallback? onDone;
+
+  const GuestOnboardingWizardScreen({
+    super.key,
+    required this.weddingId,
+    required this.guest,
+    this.initialStep = 0,
+    this.rsvpToken,
+    this.event,
+    this.initialCompanions = const [],
+    this.onDone,
+  });
 
   @override
   ConsumerState<GuestOnboardingWizardScreen> createState() => _GuestOnboardingWizardScreenState();
@@ -58,6 +82,9 @@ class _Person {
 
   /// Crianças e seniores: com quem vai (nome de outra pessoa do grupo).
   String? accompaniedBy;
+
+  /// Vai instalar a app (095).
+  bool willInstall;
   String? menu;
   final Set<String> allergies;
   String otherAllergy;
@@ -69,6 +96,7 @@ class _Person {
     this.phone = '',
     this.email = '',
     this.accompaniedBy,
+    this.willInstall = false,
     this.menu,
     Set<String>? allergies,
     this.otherAllergy = '',
@@ -105,11 +133,25 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   void initState() {
     super.initState();
     _side = widget.guest.side;
+    for (final c in widget.initialCompanions) {
+      _companions.add(_Person(
+        name: c.name,
+        ageGroup: c.ageGroup,
+        age: c.childAge,
+        phone: c.phone ?? '',
+        email: c.email ?? '',
+        accompaniedBy: c.accompaniedBy,
+        willInstall: c.willInstallApp,
+        menu: c.menu,
+        allergies: c.allergies.toSet(),
+      ));
+    }
     final plusOne = widget.guest.plusOneName?.trim();
-    if (plusOne != null && plusOne.isNotEmpty) _companions.add(_Person(name: plusOne));
+    if (_companions.isEmpty && plusOne != null && plusOne.isNotEmpty) _companions.add(_Person(name: plusOne));
   }
 
   GuestWedding? get _wedding {
+    if (widget.event != null) return widget.event;
     final list = ref.watch(guestWeddingsProvider).value ?? const [];
     for (final w in list) {
       if (w.weddingId == widget.weddingId) return w;
@@ -129,14 +171,92 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         _Step.ages,
         _Step.menu,
         _Step.allergies,
-        if (_eventType == EventType.wedding) _Step.side,
+        if (_sideOptions != null) _Step.side,
         _Step.relationship,
       ];
 
   List<_Person> get _people => [_me, ..._companions];
 
+  /// Lado, conforme o evento (canvas "Convidado 6 · Lado"): casamento
+  /// noiva/noivo; batizado, comunhão e chá de bebé mãe/pai. Nos outros
+  /// eventos não se pergunta.
+  List<(WeddingSide, String)>? get _sideOptions => switch (_eventType) {
+        EventType.wedding || EventType.engagement || EventType.vowRenewal => const [
+            (WeddingSide.bride, 'Da noiva'),
+            (WeddingSide.groom, 'Do noivo'),
+            (WeddingSide.both, 'De ambos'),
+          ],
+        EventType.baptism || EventType.communion || EventType.babyShower => const [
+            (WeddingSide.bride, 'Da mãe'),
+            (WeddingSide.groom, 'Do pai'),
+            (WeddingSide.both, 'De ambos'),
+          ],
+        _ => null,
+      };
+
+  Map<String, dynamic> _companionJson(_Person c) => {
+        'name': c.name,
+        'age_group': c.ageGroup,
+        'child_age': c.age,
+        'phone': c.phone.trim(),
+        'email': c.email.trim(),
+        'menu': c.menu,
+        'allergies': c.allAllergies,
+        'accompanied_by': c.ageGroup == 'adult' ? null : (c.accompaniedBy ?? _me.name),
+        'will_install_app': c.willInstall,
+      };
+
   Future<void> _finish({required bool attending}) async {
     setState(() => _saving = true);
+    final groupLabel = _relationship == 'Outro' && _relationOther.text.trim().isNotEmpty ? _relationOther.text.trim() : _relationship;
+    if (widget.rsvpToken != null) {
+      try {
+        try {
+          await supabase.rpc('submit_rsvp_full', params: {
+          'p_token': widget.rsvpToken,
+          'p_attending': attending,
+          'p_menu': _me.menu,
+          'p_dietary': _me.allAllergies.isEmpty ? null : _me.allAllergies.join(', '),
+          'p_age_group': _me.ageGroup,
+          'p_side': switch (_side ?? widget.guest.side) {
+            WeddingSide.groom => 'couple_a',
+            WeddingSide.bride => 'couple_b',
+            WeddingSide.both => 'both',
+          },
+          'p_group_label': groupLabel,
+          'p_message': null,
+          'p_companions': [for (final c in _companions) _companionJson(c)],
+          });
+        } catch (_) {
+          // Enquanto a função nova não está no servidor: a resposta de
+          // sempre (confirma/recusa, nomes dos acompanhantes, alergias).
+          await supabase.functions.invoke('submit-rsvp', body: {
+            'token': widget.rsvpToken,
+            'rsvp_status': attending ? 'confirmed' : 'declined',
+            'plus_one_name': _companions.isEmpty ? null : _companions.map((c) => c.name).join(', '),
+            'dietary_restrictions': _people.every((p) => p.allAllergies.isEmpty)
+                ? null
+                : _people.where((p) => p.allAllergies.isNotEmpty).map((p) => '${p.name}: ${p.allAllergies.join(', ')}').join('; '),
+            'guest_message': null,
+          });
+        }
+        if (!mounted) return;
+        if (attending) {
+          setState(() => _confirmed = true);
+        } else {
+          widget.onDone?.call();
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _saving = false);
+      }
+      return;
+    }
     try {
       await completeGuestOnboarding(
         attending: attending,
@@ -163,6 +283,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                 phone: c.phone.trim().isEmpty ? null : c.phone.trim(),
                 email: c.email.trim().isEmpty ? null : c.email.trim(),
                 accompaniedBy: c.ageGroup == 'adult' ? null : (c.accompaniedBy ?? _me.name),
+                willInstallApp: c.willInstall,
                 menu: c.menu,
                 allergies: c.allAllergies,
               ),
@@ -217,7 +338,8 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
           ..age = result.age
           ..phone = result.phone
           ..email = result.email
-          ..accompaniedBy = result.accompaniedBy;
+          ..accompaniedBy = result.accompaniedBy
+          ..willInstall = result.willInstall;
         if (existing.isChild && existing.menu != null && !_childMenus.contains(existing.menu)) existing.menu = null;
       }
     });
@@ -234,9 +356,14 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
           _people.every((p) => p.allAllergies.isEmpty)
               ? 'Sem alergias indicadas'
               : 'Alergias: ${_people.where((p) => p.allAllergies.isNotEmpty).map((p) => '${p.allAllergies.join(', ')} (${p == _me ? 'tu' : p.name})').join(', ')}',
-          'Podes mudar tudo no teu perfil',
+          for (final c in _companions.where((c) => c.willInstall))
+            '${c.name} já tem a app — fica ligado à conta dele/a',
+          widget.rsvpToken != null ? 'Podes mudar a resposta pelo mesmo link' : 'Podes mudar tudo no teu perfil',
         ],
-        onContinue: () => context.go('/guest-home/${widget.weddingId}'),
+        rsvp: widget.rsvpToken != null,
+        onContinue: widget.rsvpToken != null
+            ? (widget.onDone ?? () {})
+            : () => context.go('/guest-home/${widget.weddingId}'),
       );
     }
     final steps = _steps;
@@ -369,7 +496,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   subtitle: [
                     c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}' : ageGroupLabel(c.ageGroup),
                     if (c.ageGroup != 'adult' && c.accompaniedBy != null) 'vai com ${c.accompaniedBy == _me.name ? 'contigo' : c.accompaniedBy}',
-                    if (c.email.trim().isNotEmpty) c.email.trim() else if (c.phone.trim().isNotEmpty) c.phone.trim(),
+                    if (c.willInstall) 'já tem a app',
                   ].join(' · '),
                   onEdit: () => _editCompanion(c),
                 ),
@@ -482,15 +609,11 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
           question: 'És convidado de quem?',
           child: Row(
             children: [
-              for (final (i, (side, label, icon)) in const [
-                (WeddingSide.bride, 'Da noiva', Icons.person_outline),
-                (WeddingSide.groom, 'Do noivo', Icons.person_outline),
-                (WeddingSide.both, 'De ambos', Icons.groups_2_outlined),
-              ].indexed) ...[
+              for (final (i, (side, label)) in (_sideOptions ?? const <(WeddingSide, String)>[]).indexed) ...[
                 if (i > 0) const SizedBox(width: 12),
                 Expanded(
                   child: _BigChoice(
-                    icon: icon,
+                    icon: side == WeddingSide.both ? Icons.groups_2_outlined : Icons.person_outline,
                     label: label,
                     height: 110,
                     selected: _side == side,
@@ -719,8 +842,6 @@ class _CompanionPage extends StatefulWidget {
 class _CompanionPageState extends State<_CompanionPage> {
   late final _name = TextEditingController(text: widget.existing?.name ?? '');
   late final _age = TextEditingController(text: widget.existing?.age?.toString() ?? '');
-  late final _phone = TextEditingController(text: widget.existing?.phone ?? '');
-  late final _email = TextEditingController(text: widget.existing?.email ?? '');
   late String? _with = widget.existing?.accompaniedBy ?? (widget.others.isEmpty ? null : widget.others.first);
   late String _group = widget.existing?.ageGroup ?? 'adult';
   bool get _child => _group == 'child';
@@ -729,12 +850,16 @@ class _CompanionPageState extends State<_CompanionPage> {
   void dispose() {
     _name.dispose();
     _age.dispose();
-    _phone.dispose();
-    _email.dispose();
     super.dispose();
   }
 
   bool get _adult => _group == 'adult';
+
+  /// "Já tem a app?" (pedido 2026-10-17: em vez de pedir email ou
+  /// telemóvel de cada acompanhante). Quem cria conta dá sempre email e
+  /// telemóvel; se esta pessoa já tem a app, a resposta liga-se à conta
+  /// dela pelo nome (097) e não fica repetida.
+  late bool _hasApp = widget.existing?.willInstall ?? false;
 
   void _save() {
     final name = _name.text.trim();
@@ -742,33 +867,13 @@ class _CompanionPageState extends State<_CompanionPage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Escreve o nome.')));
       return;
     }
-    final email = _email.text.trim();
-    final phone = _phone.text.trim();
-    // Adultos: email OU telemóvel (pedido 2026-10-17: "não peças os
-    // dois") — é com ele que a app liga esta pessoa à conta dela, se
-    // instalar a app, sem entradas duplicadas.
-    final emailOk = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
-    final phoneOk = phone.replaceAll(RegExp(r'[^0-9]'), '').length >= 9;
-    if (email.isNotEmpty && !emailOk) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Esse email não parece válido.')));
-      return;
-    }
-    if (phone.isNotEmpty && !phoneOk) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Esse telemóvel não parece válido.')));
-      return;
-    }
-    if (_adult && !emailOk && !phoneOk) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Indica o email ou o telemóvel desta pessoa.')));
-      return;
-    }
     Navigator.of(context).pop(
       _Person(
         name: name,
         ageGroup: _group,
         age: _child ? int.tryParse(_age.text.trim()) : null,
-        phone: phone,
-        email: email,
         accompaniedBy: _adult ? null : _with,
+        willInstall: _hasApp,
       ),
     );
   }
@@ -791,6 +896,7 @@ class _CompanionPageState extends State<_CompanionPage> {
         ),
         const SizedBox(height: 32),
         const Text('Quem é o teu acompanhante?', style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 22),
         AuthField(label: 'Nome', controller: _name, topGap: 24),
         const SizedBox(height: 24),
         _RadioRow(label: 'Adulto', selected: _group == 'adult', onTap: () => setState(() => _group = 'adult')),
@@ -801,18 +907,20 @@ class _CompanionPageState extends State<_CompanionPage> {
         const SizedBox(height: 10),
         _RadioRow(label: 'Sénior', selected: _group == 'senior', onTap: () => setState(() => _group = 'senior')),
         if (_child) AuthField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
-        AuthField(
-          label: _adult ? 'Email ou telemóvel — basta um' : 'Email (opcional)',
-          controller: _email,
-          keyboardType: TextInputType.emailAddress,
-          hint: 'Email',
+        const SizedBox(height: 22),
+        const Text('Já tem a app Tchin Tchin?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 4),
+        const Text(
+          'Se já tem conta neste evento, juntamos as respostas pelo nome — nada fica repetido.',
+          style: TextStyle(fontSize: 12, height: 17 / 12, color: AppTheme.inkMuted),
         ),
-        AuthField(
-          label: _adult ? '' : 'Telemóvel (opcional)',
-          controller: _phone,
-          keyboardType: TextInputType.phone,
-          hint: 'Telemóvel',
-          topGap: _adult ? 10 : 16,
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(child: _RadioRow(label: 'Sim', selected: _hasApp, onTap: () => setState(() => _hasApp = true))),
+            const SizedBox(width: 10),
+            Expanded(child: _RadioRow(label: 'Não', selected: !_hasApp, onTap: () => setState(() => _hasApp = false))),
+          ],
         ),
         if (!_adult && widget.others.isNotEmpty) ...[
           const SizedBox(height: 22),
@@ -824,16 +932,6 @@ class _CompanionPageState extends State<_CompanionPage> {
           ],
         ],
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(12)),
-          child: Text(
-            _adult
-                ? 'É para o caso de esta pessoa também querer instalar a app e criar conta: com o mesmo email ou telemóvel, entra já com esta resposta preenchida — só tem de confirmar, sem entradas repetidas.'
-                : 'Opcional para crianças, adolescentes e seniores. Se esta pessoa quiser instalar a app e criar conta, com o mesmo contacto fica logo ligada a esta resposta.',
-            style: const TextStyle(fontSize: 12, height: 17 / 12, color: AppTheme.inkMuted),
-          ),
-        ),
       ],
       footer: [
         AuthPrimaryButton(label: 'Guardar acompanhante', onPressed: _save),
@@ -961,8 +1059,9 @@ class _BigChoice extends StatelessWidget {
 class _ConfirmedView extends StatelessWidget {
   final List<String> rows;
   final VoidCallback onContinue;
+  final bool rsvp;
 
-  const _ConfirmedView({required this.rows, required this.onContinue});
+  const _ConfirmedView({required this.rows, required this.onContinue, this.rsvp = false});
 
   @override
   Widget build(BuildContext context) {
@@ -989,11 +1088,13 @@ class _ConfirmedView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const UpIn(
-                    delay: Duration(milliseconds: 550),
+                  UpIn(
+                    delay: const Duration(milliseconds: 550),
                     child: Text(
-                      'Os anfitriões já sabem. Podes mudar as respostas no teu perfil.',
-                      style: TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
+                      rsvp
+                          ? 'Os anfitriões já sabem. Instala a app para veres o programa, a tua mesa e as fotos.'
+                          : 'Os anfitriões já sabem. Podes mudar as respostas no teu perfil.',
+                      style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -1007,7 +1108,7 @@ class _ConfirmedView extends StatelessWidget {
                     delay: const Duration(milliseconds: 1200),
                     child: ShineSweep(
                       delay: const Duration(milliseconds: 1600),
-                      child: AuthPrimaryButton(label: 'Ver o evento →', onPressed: onContinue),
+                      child: AuthPrimaryButton(label: rsvp ? 'Instalar a app' : 'Ver o evento →', onPressed: onContinue),
                     ),
                   ),
                 ],

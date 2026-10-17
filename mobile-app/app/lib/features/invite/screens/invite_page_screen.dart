@@ -9,6 +9,7 @@ import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/install_app_sheet.dart';
 
 /// Página pública de convite — acessível sem sessão iniciada, para os
 /// convidados abrirem a partir do link partilhado pelos noivos
@@ -170,19 +171,25 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  ElevatedButton(
+                  // Pedido 2026-10-17: quem tem o link é levado a instalar
+                  // a app, em vez de criar conta no browser.
+                  PrimaryButton(
+                    label: 'Instalar a app',
+                    onPressed: () => showInstallAppSheet(context, code: wedding.guestCode),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Na app crias conta e confirmas a presença'
+                    '${wedding.guestCode != null ? ' com o código ${wedding.guestCode}' : ''}.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
+                  ),
+                  TextButton(
                     onPressed: () => context.push(
                       '/register?role=guest'
                       '${wedding.guestCode != null ? '&code=${wedding.guestCode}' : ''}',
                     ),
-                    child: const Text('Criar conta e confirmar presença'),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'É preciso criar conta para confirmar presença e '
-                    'acompanhar o casamento.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
+                    child: const Text('Não consigo instalar — continuar aqui'),
                   ),
                 ],
               ),
