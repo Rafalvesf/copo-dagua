@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -191,9 +192,13 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
     try {
       final url = await createDepositCheckoutUrl(paymentId);
       if (!mounted) return;
+      // Na web abre na mesma janela: depois do pedido ao servidor o
+      // telemóvel já não deixa abrir janelas novas (bloqueio de pop-ups)
+      // e "nada acontecia" (2026-10-17).
       final opened = await launchUrl(
         Uri.parse(url),
-        mode: LaunchMode.externalApplication,
+        mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
+        webOnlyWindowName: kIsWeb ? '_self' : null,
       );
       if (!opened && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
