@@ -17,7 +17,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_onboarding/screens/partner_welcome_screen.dart';
-import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/pronto_kit.dart';
 
 /// Onboarding do organizador — uma pergunta por ecrã, igual ao canvas
 /// aprovado (redesign 2026-10): tipo de evento, nome (+ par num
@@ -1584,237 +1584,114 @@ class _DoneView extends StatelessWidget {
       ),
     ];
 
-    final String daysValue;
-    if (days == null || days < 0) {
-      daysValue = '—';
-    } else if (dateMode == _DateMode.month) {
-      daysValue = '~${(days / 30).round()}';
-    } else {
-      daysValue = '$days';
-    }
-
-    return GradientScaffold(
-      background: AppBackground.hero,
-      body: Stack(
-        children: [
-      const Positioned.fill(child: ConfettiBurst(origin: Offset(0.5, 0.14), delay: Duration(milliseconds: 1050))),
-      SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Pedido do utilizador (2026-10-17): "anima o do organizador"
-              // — o Tchin e o Tchin brindam uma vez, com confetti.
-              const Center(child: TchinClink(width: 200)),
-              const SizedBox(height: 16),
-              Text(
-                'Tudo pronto, $name.',
-                style: const TextStyle(
-                  fontSize: AppFontSize.h1,
-                  height: 34 / 28,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.ink,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${isWedding ? 'O vosso casamento está montado' : 'O teu ${eventType.noun} está montado'}. Começamos pelo que tem prazo mais curto.',
-                style: const TextStyle(
-                  fontSize: AppFontSize.base + 1,
-                  height: 22 / 15,
-                  fontWeight: FontWeight.w300,
-                  color: AppTheme.inkMuted,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                  border: Border.all(color: AppTheme.borderMuted),
-                ),
-                child: IntrinsicHeight(
-                  child: Row(
-                    children: [
-                      _Stat(
-                        value: daysValue,
-                        label: dateMode == _DateMode.month ? 'meses' : 'dias',
-                      ),
-                      const VerticalDivider(width: 1, color: AppTheme.borderMuted),
-                      _Stat(
-                        value: wedding.estimatedGuests?.toString() ?? '—',
-                        label: 'convidados',
-                      ),
-                      const VerticalDivider(width: 1, color: AppTheme.borderMuted),
-                      _Stat(value: wedding.location ?? '—', label: 'região'),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 28),
-              const Text(
-                'PRÓXIMOS PASSOS',
-                style: TextStyle(
-                  fontSize: AppFontSize.xs,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: AppTheme.inkMuted,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    for (var i = 0; i < steps.length; i++)
-                      _NextStepRow(
-                        index: i,
-                        step: steps[i],
-                        last: i == steps.length - 1,
-                        enabled: !saving,
-                      ),
-                  ],
-                ),
-              ),
-              _BigButton(
-                label: firstOpen == 'venue'
-                    ? 'Começar pelo espaço'
-                    : 'Começar: ${steps.first.title.toLowerCase()}',
-                loading: saving,
-                onPressed: steps.first.onTap,
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: saving ? null : () => onStart('/wedding', null),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppTheme.ink,
-                  textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.base + 1),
-                ),
-                child: Text('Ir para o ${eventType.noun}'),
-              ),
-            ],
+    // Canvas "Onboarding 5 · Pronto" — mesmas linhas e mesmos tempos.
+    final rows = <(String, Widget?)>[
+      (
+        [
+          eventType.label,
+          if (date != null)
+            dateMode == _DateMode.month ? _monthYear(date) : '${date.day} ${monthNamesPt[date.month - 1].substring(0, 3).toLowerCase()} ${date.year}',
+          if (days != null && days >= 0)
+            dateMode == _DateMode.month ? 'daqui a ~${(days / 30).round()} meses' : 'daqui a $days dias',
+        ].join(' · '),
+        null,
+      ),
+      if (wedding.estimatedGuests != null || (wedding.location ?? '').isNotEmpty)
+        (
+          [
+            if (wedding.estimatedGuests != null) '${wedding.estimatedGuests} convidados',
+            if ((wedding.location ?? '').isNotEmpty) wedding.location!,
+          ].join(' · '),
+          null,
+        ),
+      (
+        partner != null && partner.isNotEmpty ? '$name e $partner a organizar' : '$name a organizar',
+        SnappyTap(
+          onTap: saving ? () {} : onInvite,
+          child: Text(
+            partner != null && partner.isNotEmpty ? 'Convidar' : 'Convidar alguém',
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
           ),
         ),
       ),
-        ],
-      ),
-    );
-  }
-}
+      ('Primeiro passo: ${steps.first.title.toLowerCase()}', null),
+    ];
 
-class _NextStepRow extends StatelessWidget {
-  final int index;
-  final _NextStep step;
-  final bool last;
-  final bool enabled;
-
-  const _NextStepRow({
-    required this.index,
-    required this.step,
-    required this.last,
-    required this.enabled,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final first = index == 0;
-    return SnappyTap(
-      onTap: enabled ? step.onTap : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          border: last
-              ? null
-              : const Border(bottom: BorderSide(color: AppTheme.borderMuted)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: first ? AppTheme.accentOliveDark : Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: first ? AppTheme.accentOliveDark : AppTheme.borderMuted,
-                ),
-              ),
-              child: Text(
-                '${index + 1}',
-                style: TextStyle(
-                  fontSize: AppFontSize.md,
-                  fontWeight: FontWeight.w700,
-                  color: first ? Colors.white : AppTheme.ink,
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          const Positioned.fill(child: FallingConfetti(delay: Duration(milliseconds: 1900))),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    step.title,
-                    style: const TextStyle(
-                      fontSize: AppFontSize.base + 1,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.ink,
+                  const SizedBox(height: 84),
+                  const Center(child: DuoClink(width: 210)),
+                  const SizedBox(height: 20),
+                  UpIn(
+                    delay: const Duration(milliseconds: 400),
+                    child: Text(
+                      'Tudo pronto, $name.',
+                      style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    step.subtitle,
-                    style: const TextStyle(
-                      fontSize: AppFontSize.md,
-                      color: AppTheme.inkMuted,
+                  const SizedBox(height: 8),
+                  UpIn(
+                    delay: const Duration(milliseconds: 550),
+                    child: Text(
+                      '${isWedding ? 'O vosso evento está montado' : 'O teu ${eventType.noun} está montado'}. Começamos pelo que tem prazo mais curto.',
+                      style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  for (final (i, (text, trailing)) in rows.indexed)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: UpIn(
+                        delay: Duration(milliseconds: 720 + 120 * i),
+                        child: ProntoRow(text: text, trailing: trailing),
+                      ),
+                    ),
+                  const Spacer(),
+                  UpIn(
+                    delay: const Duration(milliseconds: 1200),
+                    child: ShineSweep(
+                      delay: const Duration(milliseconds: 1600),
+                      child: _BigButton(
+                        label: firstOpen == 'venue' ? 'Começar pelo espaço' : 'Começar: ${steps.first.title.toLowerCase()}',
+                        loading: saving,
+                        onPressed: steps.first.onTap,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  UpIn(
+                    delay: const Duration(milliseconds: 1350),
+                    child: SizedBox(
+                      height: 48,
+                      child: TextButton(
+                        onPressed: saving ? null : () => onStart('/wedding', null),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppTheme.inkMuted,
+                          textStyle: const TextStyle(
+                            fontFamily: AppTheme.fontFamily,
+                            fontFamilyFallback: AppTheme.fontFamilyFallback,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                        child: Text('Ir para o ${eventType.noun}'),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  final String value;
-  final String label;
-
-  const _Stat({required this.value, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                value,
-                style: const TextStyle(
-                  fontSize: AppFontSize.xl,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.ink,
-                ),
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

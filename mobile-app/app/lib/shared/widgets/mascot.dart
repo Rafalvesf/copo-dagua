@@ -27,9 +27,6 @@ const _confettiColors = [
   Color(0xFFDDE5D3),
 ];
 
-bool _reduceMotion(BuildContext context) =>
-    MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-
 /// Uma pose estática da mascote, com um balançar suave (algumas vezes,
 /// depois pára — nunca uma animação infinita).
 class TchinMascot extends StatefulWidget {
@@ -59,7 +56,7 @@ class _TchinMascotState extends State<TchinMascot> with SingleTickerProviderStat
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (widget.bob && !_reduceMotion(context) && !_c.isAnimating && _c.value == 0) {
+    if (widget.bob && !_c.isAnimating && _c.value == 0) {
       _runCycles();
     }
   }
@@ -142,13 +139,9 @@ class _TchinClinkState extends State<TchinClink> with SingleTickerProviderStateM
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_c.value == 0 && !_c.isAnimating) {
-      if (_reduceMotion(context)) {
-        _c.value = 1;
-      } else {
-        Future.delayed(widget.delay, () {
-          if (mounted) _c.forward();
-        });
-      }
+      Future.delayed(widget.delay, () {
+        if (mounted) _c.forward();
+      });
     }
   }
 

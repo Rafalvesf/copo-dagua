@@ -83,23 +83,37 @@ Future<void> uploadGalleryPhoto({
   required String weddingId,
   required XFile file,
   String? caption,
+  /// Fotos de quem organiza ficam logo aprovadas (pedido 2026-10-17:
+  /// "tenho que verificar a minha própria fotografia"). A 083 faz isto
+  /// também na base de dados; isto cobre o caso de ainda não ter corrido.
+  bool autoApprove = false,
 }) async {
   final userId = supabase.auth.currentUser!.id;
   final ext = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'jpg';
   final token = '${DateTime.now().microsecondsSinceEpoch}_${userId.substring(0, 8)}';
   final path = '$weddingId/$token.$ext';
 
-  await supabase.from('wedding_gallery_photos').insert({
-    'wedding_id': weddingId,
-    'uploaded_by': userId,
-    'storage_path': path,
-    'caption': caption,
-  });
+  final row = await supabase
+      .from('wedding_gallery_photos')
+      .insert({
+        'wedding_id': weddingId,
+        'uploaded_by': userId,
+        'storage_path': path,
+        'caption': caption,
+      })
+      .select('id, status')
+      .single();
 
   final bytes = await file.readAsBytes();
   await supabase.storage
       .from('wedding-gallery')
       .uploadBinary(path, bytes, fileOptions: FileOptions(contentType: 'image/$ext'));
+
+  if (autoApprove && row['status'] == 'pending') {
+    try {
+      await moderateGalleryPhoto(row['id'] as String, true);
+    } catch (_) {}
+  }
 }
 
 /// `moderate_gallery_photo()` — só o casal (`is_wedding_member()`,
