@@ -32,12 +32,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    WelcomeScreen._splashShown = true;
+    // Só marca como vista quando a abertura chega ao fim — se o ecrã for
+    // recriado a meio do arranque (ex.: o router volta a montar a página
+    // quando a sessão é verificada), a abertura recomeça em vez de
+    // desaparecer (bug 2026-10-17: "boas-vindas sem animação").
     _splash.addListener(() {
       if (!_burst && _splash.value >= 0.86) setState(() => _burst = true);
     });
     _splash.addStatusListener((s) {
-      if (s == AnimationStatus.completed && mounted) setState(() => _showSplash = false);
+      if (s == AnimationStatus.completed) {
+        WelcomeScreen._splashShown = true;
+        if (mounted) setState(() => _showSplash = false);
+      }
     });
   }
 
@@ -46,7 +52,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
     super.didChangeDependencies();
     if (_showSplash && !_splash.isAnimating && _splash.value == 0) {
       if (MediaQuery.of(context).disableAnimations) {
-        _showSplash = false;
+        // Menos movimento: mostra a abertura parada um instante, sem
+        // animação, e passa às boas-vindas.
+        _splash.value = 0.5;
+        Future.delayed(const Duration(milliseconds: 1200), () {
+          WelcomeScreen._splashShown = true;
+          if (mounted) setState(() => _showSplash = false);
+        });
       } else {
         _splash.forward();
       }
