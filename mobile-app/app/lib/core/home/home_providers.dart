@@ -70,6 +70,10 @@ CoupleBooking _coupleBookingFromRow(Map<String, dynamic> row) {
     depositAmount: (row['deposit_amount'] as num?)?.toDouble(),
     pendingFinalPaymentId: pendingFinalPayment['id'] as String?,
     finalPaymentAmount: (pendingFinalPayment['amount'] as num?)?.toDouble(),
+    paidAmount: payments
+        .cast<Map<String, dynamic>>()
+        .where((p) => p['status'] == 'paid')
+        .fold<double>(0, (sum, p) => sum + (p['amount'] as num).toDouble()),
   );
 }
 

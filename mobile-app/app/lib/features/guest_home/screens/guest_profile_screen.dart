@@ -40,8 +40,8 @@ class GuestProfileScreen extends ConsumerWidget {
     final weddingsAsync = ref.watch(guestWeddingsProvider);
     final isCouple = profile?.role == UserRole.couple;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return GradientScaffold(
+      background: AppBackground.subtle,
       body: Stack(
         children: [
           SafeArea(
@@ -230,38 +230,29 @@ class _GuestProfileBody extends ConsumerWidget {
                   WeddingSide.both => '',
                 },
               ].where((t) => t.isNotEmpty).join(' · ');
+        // Mesmo estilo dos perfis do organizador e do parceiro
+        // (pedido 2026-10-17): título grande, foto redonda com câmara,
+        // e secções com títulos em maiúsculas e linhas com divisórias.
         return ListView(
-          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 120),
+          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 140),
           children: [
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () => _pickAndUploadAvatar(context, ref),
-                  child: profile.avatarUrl == null
-                      ? InitialsAvatar(name: profile.fullName, radius: 30, background: AppColors.yellow)
-                      : CircleAvatar(radius: 30, backgroundImage: NetworkImage(profile.avatarUrl!)),
+            const SizedBox(
+              height: 46,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Perfil',
+                  style: TextStyle(fontSize: AppFontSize.display, height: 40 / 34, fontWeight: FontWeight.w700, color: AppTheme.ink),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(profile.fullName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      if (subtitle.isNotEmpty) Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                    ],
-                  ),
-                ),
-                SnappyTap(
-                  onTap: onMore,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(color: AppTheme.surface, shape: BoxShape.circle),
-                    child: const Icon(Icons.more_horiz, color: AppTheme.ink),
-                  ),
-                ),
-              ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            _GuestHeader(
+              name: profile.fullName,
+              email: profile.email,
+              avatarUrl: profile.avatarUrl,
+              chip: profile.role == UserRole.couple ? 'Em modo convidado' : (subtitle.isEmpty || guest == null ? 'Convidado' : subtitle),
+              onChangePhoto: () => _pickAndUploadAvatar(context, ref),
             ),
             const SizedBox(height: 18),
             if (guest == null)
@@ -292,6 +283,7 @@ class _GuestProfileBody extends ConsumerWidget {
                 ),
               )
             else ...[
+              const _Caps('A tua resposta'),
               _Segmented(
                 going: guest.rsvpStatus != RsvpStatus.declined,
                 onChanged: (going) async {
@@ -312,10 +304,16 @@ class _GuestProfileBody extends ConsumerWidget {
                   }
                 },
               ),
-              const SizedBox(height: 18),
-              Row(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 20, 0, 4),
+                child: Row(
                 children: [
-                  const Expanded(child: Text('Quem vai', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+                  const Expanded(
+                    child: Text(
+                      'QUEM VAI',
+                      style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF8F8B84)),
+                    ),
+                  ),
                   if (guest.plusOneAllowed)
                     SnappyTap(
                       onTap: () => _editField(
@@ -333,6 +331,7 @@ class _GuestProfileBody extends ConsumerWidget {
                       child: const Text('+ Acompanhante', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
                     ),
                 ],
+              ),
               ),
               _PersonLine(
                 initials: _initialsOf(profile.fullName),
@@ -364,7 +363,7 @@ class _GuestProfileBody extends ConsumerWidget {
                   status: 'Sem conta — está contigo',
                   muted: true,
                 ),
-              const SizedBox(height: 6),
+              const _Caps('Detalhes'),
               _InfoLine(
                 icon: Icons.table_restaurant_outlined,
                 label: 'A tua mesa',
@@ -375,6 +374,7 @@ class _GuestProfileBody extends ConsumerWidget {
                           MaterialPageRoute(builder: (_) => GuestTableScreen(weddingId: weddingId, tableNumber: tableAsync.value)),
                         ),
               ),
+              const Divider(height: 1, thickness: 1, color: AppTheme.borderMuted),
               _InfoLine(
                 icon: Icons.phone_outlined,
                 label: 'Telemóvel',
@@ -394,7 +394,12 @@ class _GuestProfileBody extends ConsumerWidget {
               ),
             ],
             // Definições da conta dentro do Perfil (pedido 2026-10-17).
-            if (profile.role == UserRole.guest) const GuestAccountSections(),
+            if (profile.role == UserRole.guest)
+              const GuestAccountSections()
+            else ...[
+              const _Caps('Conta'),
+              _InfoLine(icon: Icons.settings_outlined, label: 'Definições do teu evento', value: '', onTap: onMore),
+            ],
           ],
         );
       },
@@ -555,13 +560,15 @@ class _InfoLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final row = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 13),
       child: Row(
         children: [
           Icon(icon, size: 20, color: AppTheme.inkMuted),
           const SizedBox(width: 12),
-          Expanded(child: Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.ink))),
-          Text(value, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: AppFontSize.base + 1, color: AppTheme.ink))),
+          Text(value, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted)),
+          const SizedBox(width: 6),
+          SizedBox(width: 18, child: onTap == null ? null : const Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6))),
         ],
       ),
     );
@@ -611,6 +618,112 @@ class _ProfileRow extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _Caps extends StatelessWidget {
+  final String text;
+  const _Caps(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 20, 0, 8),
+      child: Text(
+        text.toUpperCase(),
+        style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF8F8B84)),
+      ),
+    );
+  }
+}
+
+/// Cabeçalho igual ao do perfil do organizador: foto redonda (88) com o
+/// botão da câmara, nome, email e uma etiqueta.
+class _GuestHeader extends StatelessWidget {
+  final String name;
+  final String email;
+  final String? avatarUrl;
+  final String chip;
+  final VoidCallback onChangePhoto;
+
+  const _GuestHeader({
+    required this.name,
+    required this.email,
+    required this.avatarUrl,
+    required this.chip,
+    required this.onChangePhoto,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = Center(
+      child: Text(
+        _initialsOf(name).isEmpty ? '?' : _initialsOf(name),
+        style: const TextStyle(fontSize: AppFontSize.h1, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+      ),
+    );
+    return Row(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 88,
+              height: 88,
+              decoration: const BoxDecoration(color: AppColors.yellow, shape: BoxShape.circle),
+              child: ClipOval(
+                child: avatarUrl == null
+                    ? initials
+                    : Image.network(avatarUrl!, fit: BoxFit.cover, errorBuilder: (context, error, stack) => initials),
+              ),
+            ),
+            Positioned(
+              bottom: -2,
+              right: -2,
+              child: Semantics(
+                button: true,
+                label: 'Mudar foto',
+                child: SnappyTap(
+                  onTap: onChangePhoto,
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppTheme.background, width: 3),
+                    ),
+                    child: const Icon(Icons.camera_alt_outlined, size: 17, color: AppTheme.accentOliveDark),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: AppTypography.displaySerif(fontSize: AppFontSize.h2, color: AppTheme.ink).copyWith(fontWeight: FontWeight.w700),
+              ),
+              if (email.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(email, style: const TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w300, color: AppTheme.inkMuted)),
+              ],
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(AppRadius.pill)),
+                child: Text(chip, style: const TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
