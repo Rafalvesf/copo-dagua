@@ -38,6 +38,7 @@ jobs:
         run: |
           set -o pipefail
           flutter test --update-goldens --tags screenshots test/screenshots 2>&1 | tee screenshots.log || echo "failed" > screenshots.failed
+          flutter test --exclude-tags screenshots > tests.log 2>&1 || true
 
       - name: Upload screenshots
         if: always()
@@ -58,6 +59,7 @@ jobs:
           mkdir -p "$out/png"
           cp test/screenshots/goldens/*.png "$out/png/" 2>/dev/null || true
           cp screenshots.log "$out/" 2>/dev/null || true
+          cp tests.log "$out/" 2>/dev/null || true
           cd "$out"
           git init -q -b screenshots
           git config user.name "github-actions[bot]"
