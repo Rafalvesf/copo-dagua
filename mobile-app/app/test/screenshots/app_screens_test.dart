@@ -373,9 +373,11 @@ class _FakeSeating extends SeatingController {
       );
 }
 
+bool _maintenanceOn = false;
+
 class _FakeMaintenance extends MaintenanceController {
   @override
-  MaintenanceState build() => const MaintenanceState();
+  MaintenanceState build() => MaintenanceState(couple: _maintenanceOn);
 }
 
 class _FakeVenueTables extends PartnerVenueTablesController {
@@ -561,6 +563,14 @@ Future<void> Function(WidgetTester) _tapText(String text) => (t) async {
       await t.tap(f.first, warnIfMissed: false);
     };
 
+/// Dá um casamento ao controlador (nos testes não há nenhum carregado e
+/// os botões "+" não faziam nada) e toca no "+".
+Future<void> Function(WidgetTester) _addWith(void Function(ProviderContainer c) setup) => (t) async {
+      final c = ProviderScope.containerOf(t.element(find.byType(AddActionButton).first));
+      setup(c);
+      await t.tap(find.byType(AddActionButton).first, warnIfMissed: false);
+    };
+
 Future<void> Function(WidgetTester) _tapAdd() => (t) async {
       final f = find.byType(AddActionButton);
       if (f.evaluate().isEmpty) return;
@@ -716,11 +726,11 @@ void main() {
   // botão de cada página tem uma aba, alguns nem foram refeitos").
   for (final (name, auth, path, after) in [
     ('60_sub_editar_evento', couple, '/settings', _tapText('Detalhes do evento')),
-    ('61_sub_novo_convidado', couple, '/guests', _tapAdd()),
-    ('62_sub_nova_despesa', couple, '/budget', _tapAdd()),
+    ('61_sub_novo_convidado', couple, '/guests', _addWith((c) => c.read(guestsControllerProvider.notifier).currentWeddingId = 'w1')),
+    ('62_sub_nova_despesa', couple, '/budget', _addWith((c) => c.read(expenseControllerProvider.notifier).currentWeddingId = 'w1')),
     ('63_sub_categoria', couple, '/budget', _tapText('Catering')),
     ('64_sub_nova_tarefa', couple, '/tasks', _tapAdd()),
-    ('65_sub_checklist_nova', couple, '/checklist', _tapAdd()),
+    ('65_sub_checklist_nova', couple, '/checklist', _addWith((c) => c.read(checklistControllerProvider.notifier).currentWeddingId = 'w1')),
     ('66_sub_mesa', couple, '/seating', _tapAdd()),
     ('67_sub_reserva', couple, '/bookings', _tapText('Quinta do Lago Azul')),
     ('68_sub_suporte_novo', couple, '/support', _tapText('Novo pedido de suporte')),
@@ -749,8 +759,16 @@ void main() {
   }
   testWidgets('83_verificar_email', (t) => _shoot(t, '83_verificar_email', const AuthState(status: AuthStatus.emailUnverified, profile: _coupleProfile), '/verify-email'));
   testWidgets('84_rsvp_publico', (t) => _shoot(t, '84_rsvp_publico', signedOut, '/rsvp/token-de-teste'));
-  testWidgets('85_convite_publico', (t) => _shoot(t, '85_convite_publico', signedOut, '/invite/SOFIATIAGO24'));
+  testWidgets('85_convite_publico', (t) => _shoot(t, '85_convite_publico', signedOut, '/invite/SOFIATIAGO24', after: (t) => t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 600)))));
   testWidgets('86_convite_individual', (t) => _shoot(t, '86_convite_individual', signedOut, '/i/token-de-teste'));
   testWidgets('87_juntar_par', (t) => _shoot(t, '87_juntar_par', signedOut, '/juntar/00000000-0000-0000-0000-000000000000'));
+  testWidgets('88_manutencao', (t) async {
+    _maintenanceOn = true;
+    try {
+      await _shoot(t, '88_manutencao', couple, '/maintenance');
+    } finally {
+      _maintenanceOn = false;
+    }
+  });
   testWidgets('82_esqueci_password', (t) => _shoot(t, '82_esqueci_password', signedOut, '/forgot-password'));
 }
