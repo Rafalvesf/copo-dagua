@@ -324,7 +324,14 @@ class _FilterBarChip extends StatelessWidget {
                 child: Icon(item.icon ?? Icons.circle_outlined, size: 22, color: selected ? Colors.white : AppTheme.inkMuted),
               ),
               const SizedBox(height: 2),
-              Padding(
+              // Sem texto na categoria escolhida — só a pílula (pedido
+              // 2026-10-17); o espaço fica para a linha não saltar.
+              Visibility(
+                visible: !selected,
+                maintainSize: true,
+                maintainAnimation: true,
+                maintainState: true,
+                child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
@@ -339,6 +346,7 @@ class _FilterBarChip extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
               ),
             ],
           ),
