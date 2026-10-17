@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../shared/widgets/buttons.dart';
+import 'role_selection_screen.dart' show authTitle;
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 
@@ -57,11 +58,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text(
-                            'Esqueci-me da password',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
                           const SizedBox(height: 16),
+                          authTitle('Esqueceste-te da password?', 'Enviamos-te um link para criares uma nova.'),
+                          const SizedBox(height: 24),
                           AuthTextField(
                             label: 'Email',
                             controller: _email,
