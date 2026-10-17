@@ -158,3 +158,23 @@ final galleryMemberProvider =
     likesReceived: (r['likes_received'] as num?)?.toInt() ?? 0,
   );
 });
+
+/// Até 3 pessoas que gostaram da foto, mais recentes primeiro
+/// (`get_gallery_likers`, 086) — para o "Gostado por …" da publicação.
+/// Vazio se a migração ainda não correu.
+final galleryLikersProvider =
+    FutureProvider.family<List<({String profileId, String name, String? avatarUrl})>, String>((ref, photoId) async {
+  try {
+    final rows = await supabase.rpc('get_gallery_likers', params: {'p_photo_id': photoId}) as List;
+    return [
+      for (final r in rows.cast<Map<String, dynamic>>())
+        (
+          profileId: r['profile_id'] as String,
+          name: (r['full_name'] as String?) ?? 'Convidado',
+          avatarUrl: r['avatar_url'] as String?,
+        ),
+    ];
+  } catch (_) {
+    return const [];
+  }
+});

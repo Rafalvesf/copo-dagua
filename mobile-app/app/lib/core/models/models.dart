@@ -523,6 +523,29 @@ class Guest {
 /// mínima só com o que `guest_home_screen.dart` mostra, não o [Wedding]
 /// completo (o convidado não tem acesso ao resto dos dados do
 /// casamento).
+/// Um momento do Programa (`weddings.program`, 085): hora, título e local.
+class ProgramItem {
+  final String time;
+  final String title;
+  final String place;
+
+  const ProgramItem({this.time = '', this.title = '', this.place = ''});
+
+  factory ProgramItem.fromJson(Map<String, dynamic> j) => ProgramItem(
+        time: (j['time'] as String?) ?? '',
+        title: (j['title'] as String?) ?? '',
+        place: (j['place'] as String?) ?? '',
+      );
+
+  Map<String, dynamic> toJson() => {'time': time.trim(), 'title': title.trim(), 'place': place.trim()};
+
+  bool get isEmpty => time.trim().isEmpty && title.trim().isEmpty && place.trim().isEmpty;
+
+  static List<ProgramItem> listFrom(Object? raw) => raw is List
+      ? raw.whereType<Map>().map((m) => ProgramItem.fromJson(m.cast<String, dynamic>())).where((i) => !i.isEmpty).toList()
+      : const [];
+}
+
 class GuestWedding {
   final String weddingId;
   final String partnerName1;
@@ -567,7 +590,16 @@ class GuestWedding {
     this.giftIban,
     this.giftMessage,
     this.eventType = EventType.wedding,
+    this.program = const [],
+    this.dressCode,
+    this.venueAddress,
   });
+
+  /// Programa, dress code e morada (085) — definidos pelo casal em
+  /// "Para os convidados".
+  final List<ProgramItem> program;
+  final String? dressCode;
+  final String? venueAddress;
 
   /// `weddings.event_type` (074) — casamento por omissão.
   final EventType eventType;

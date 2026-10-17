@@ -268,6 +268,7 @@ class FloatingFilterBar extends StatelessWidget {
 
 class _FilterBarChip extends StatelessWidget {
   static const double _inset = 4;
+  static const double _pillHeight = 42;
 
   final FilterBarItem item;
   final bool selected;
@@ -296,8 +297,13 @@ class _FilterBarChip extends StatelessWidget {
           // Recuo de 4 à volta: a pílula fica concêntrica com o canto
           // arredondado da ilha (28 − 4 ≈ 22, metade da altura 44) em
           // vez de encostar à borda e chocar com o raio da navbar.
-          height: FilterChipsRow.height - 2 * _inset,
-          margin: const EdgeInsets.all(_inset),
+          // Mesma espessura da pílula da navbar principal (NavBubble, 42)
+          // — pedido 2026-10-17.
+          height: _pillHeight,
+          margin: const EdgeInsets.symmetric(
+            horizontal: _inset,
+            vertical: (FilterChipsRow.height - _pillHeight) / 2,
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 10),
           alignment: Alignment.center,
           decoration: BoxDecoration(

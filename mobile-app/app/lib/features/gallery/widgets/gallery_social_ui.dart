@@ -237,6 +237,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
     try {
       await setGalleryLike(widget.photo.id, me, next);
       ref.invalidate(galleryFeedMetaProvider(widget.weddingId));
+      ref.invalidate(galleryLikersProvider(widget.photo.id));
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -382,17 +383,22 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                 ),
               ],
             ),
+            // Como no canvas "Galeria — publicação": quem gostou, a
+            // legenda, os primeiros comentários e a hora (pedido
+            // 2026-10-17).
+            if (likes > 0) _LikedBy(photoId: widget.photo.id, likes: likes),
             if (widget.photo.caption?.isNotEmpty == true) ...[
-              const SizedBox(height: 2),
+              const SizedBox(height: 8),
               Text.rich(
                 TextSpan(children: [
                   TextSpan(text: '$name ', style: const TextStyle(fontWeight: FontWeight.w700)),
                   TextSpan(text: widget.photo.caption),
                 ]),
-                style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.ink),
+                style: const TextStyle(fontSize: 14, height: 1.43, color: AppTheme.ink),
               ),
             ],
             if (comments > 0) ...[
+              _CommentPreview(photoId: widget.photo.id),
               const SizedBox(height: 4),
               SnappyTap(
                 onTap: () => showGalleryComments(context, weddingId: widget.weddingId, photoId: widget.photo.id),
@@ -402,7 +408,110 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                 ),
               ),
             ],
+            const SizedBox(height: 6),
+            Text(
+              _stamp(widget.photo.createdAt),
+              style: const TextStyle(fontSize: 11, letterSpacing: 0.7, color: Color(0xFF8F8B84)),
+            ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+const _monthsCaps = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+
+String _stamp(DateTime t) {
+  final l = t.toLocal();
+  String two(int v) => v.toString().padLeft(2, '0');
+  return '${l.day} ${_monthsCaps[l.month - 1]} · ${two(l.hour)}:${two(l.minute)}';
+}
+
+/// "Gostado por Sofia e outras 11 pessoas", com até 3 avatares
+/// sobrepostos.
+class _LikedBy extends ConsumerWidget {
+  final String photoId;
+  final int likes;
+  const _LikedBy({required this.photoId, required this.likes});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final likers = ref.watch(galleryLikersProvider(photoId)).asData?.value ?? const [];
+    if (likers.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Text(likes == 1 ? '1 gosto' : '$likes gostos', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      );
+    }
+    final others = likes - 1;
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 24.0 + 16 * (likers.length - 1),
+            height: 24,
+            child: Stack(
+              children: [
+                for (var i = 0; i < likers.length; i++)
+                  Positioned(
+                    left: 16.0 * i,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      child: _avatar(likers[i].name, likers[i].avatarUrl, 10),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text.rich(
+              TextSpan(children: [
+                const TextSpan(text: 'Gostado por '),
+                TextSpan(text: likers.first.name, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                if (others > 0) TextSpan(text: others == 1 ? ' e outra pessoa' : ' e outras $others pessoas'),
+              ]),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Os dois primeiros comentários, por baixo da legenda.
+class _CommentPreview extends ConsumerWidget {
+  final String photoId;
+  const _CommentPreview({required this.photoId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final list = ref.watch(galleryCommentsProvider(photoId)).asData?.value ?? const <GalleryComment>[];
+    if (list.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final c in list.take(2))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text.rich(
+                TextSpan(children: [
+                  TextSpan(text: '${c.authorName} ', style: const TextStyle(fontWeight: FontWeight.w700)),
+                  TextSpan(text: c.body),
+                ]),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14, height: 1.43, color: AppTheme.ink),
+              ),
+            ),
         ],
       ),
     );
