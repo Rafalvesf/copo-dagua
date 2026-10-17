@@ -779,6 +779,32 @@ void main() {
       RsvpPageScreen.debugLoader = null;
     }
   });
+  for (final (name, tap) in [
+    ('84b_rsvp_percurso', 'Responder ao convite'),
+    ('84c_rsvp_instalar_app', 'Instalar a app'),
+  ]) {
+    testWidgets(name, (t) async {
+      RsvpPageScreen.debugLoader = (_) async => {
+            'guest_id': 'g1',
+            'wedding_id': 'w1',
+            'guest_name': 'Ana Sousa',
+            'max_companions': 2,
+            'plus_one_allowed': true,
+            'rsvp_status': 'pending',
+            'event_type': 'wedding',
+            'wedding_partner_name_1': 'Rafael',
+            'wedding_partner_name_2': 'Ines',
+            'wedding_date': '2027-07-15',
+            'wedding_location': 'Madeira',
+            'companions': const [],
+          };
+      try {
+        await _shoot(t, name, signedOut, '/rsvp/token-de-teste', after: _tapText(tap));
+      } finally {
+        RsvpPageScreen.debugLoader = null;
+      }
+    });
+  }
   testWidgets('85_convite_publico', (t) => _shoot(t, '85_convite_publico', signedOut, '/invite/SOFIATIAGO24', after: (t) => t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 600)))));
   testWidgets('86_convite_individual', (t) => _shoot(t, '86_convite_individual', signedOut, '/i/token-de-teste'));
   testWidgets('87_juntar_par', (t) => _shoot(t, '87_juntar_par', signedOut, '/juntar/00000000-0000-0000-0000-000000000000'));

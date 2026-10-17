@@ -195,6 +195,7 @@ class AuthController extends Notifier<AuthState> {
   Future<void> register({
     required String fullName,
     required String email,
+    String? phone,
     required String password,
     required UserRole role,
     // Só usado quando `role == UserRole.guest` — já validado antes de
@@ -216,6 +217,7 @@ class AuthController extends Notifier<AuthState> {
         data: {
           'role': role.name,
           'full_name': fullName,
+          if (phone != null && phone.isNotEmpty) 'phone': phone,
           // Guardado na conta para ser aplicado no primeiro login quando
           // o email ainda tem de ser confirmado (sem sessão aqui, o
           // `join_wedding_by_code` não pode correr já) — antes o código

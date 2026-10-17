@@ -288,6 +288,9 @@ class GuestCompanion {
   /// Com quem vai (crianças e seniores, 093).
   final String? accompaniedBy;
 
+  /// Vai instalar a app (095) — então o contacto é obrigatório.
+  final bool willInstallApp;
+
   /// Entrada da lista a que este acompanhante ficou ligado (093) — já
   /// estava no evento, ou criou conta depois.
   final String? linkedGuestId;
@@ -297,6 +300,7 @@ class GuestCompanion {
     this.email,
     this.accompaniedBy,
     this.linkedGuestId,
+    this.willInstallApp = false,
     this.isChild = false,
     this.ageGroup = 'adult',
     this.childAge,
@@ -328,6 +332,7 @@ Future<void> saveGuestCompanions({
           'phone': c.phone,
           'email': c.email,
           'accompanied_by': c.accompaniedBy,
+          'will_install_app': c.willInstallApp,
           'menu': c.menu,
           'allergies': c.allergies,
         },
@@ -353,6 +358,7 @@ final guestCompanionsProvider = FutureProvider.family<List<GuestCompanion>, Stri
           phone: r['phone'] as String?,
           email: r['email'] as String?,
           accompaniedBy: r['accompanied_by'] as String?,
+          willInstallApp: r['will_install_app'] as bool? ?? false,
           linkedGuestId: r['linked_guest_id'] as String?,
           menu: r['menu'] as String?,
           allergies: ((r['allergies'] as List?) ?? const []).cast<String>(),
