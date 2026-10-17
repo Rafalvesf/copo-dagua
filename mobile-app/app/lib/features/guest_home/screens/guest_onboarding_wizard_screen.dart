@@ -9,9 +9,8 @@ import '../../../core/wedding/date_format_pt.dart';
 import '../../../shared/widgets/auth_ui.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
-import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/pronto_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/staggered_fade_in.dart';
 
 /// Onboarding do convidado — uma pergunta por ecrã (canvas "Convidado
 /// 1–8"). Pedido do utilizador (2026-10-17): não só casamentos, vários
@@ -813,55 +812,50 @@ class _ConfirmedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Canvas "Convidado 8 · Pronto" — mesmos tempos.
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          const Positioned.fill(
-            child: ConfettiBurst(origin: Offset(0.5, 0.16), delay: Duration(milliseconds: 1050)),
-          ),
+          const Positioned.fill(child: FallingConfetti(delay: Duration(milliseconds: 1900))),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(28, 24, 28, 34),
+              padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 24),
-                  const Center(child: TchinClink(width: 210)),
+                  const SizedBox(height: 84),
+                  const Center(child: DuoClink(width: 210)),
                   const SizedBox(height: 20),
-                  StaggeredFadeIn(
-                    stagger: const Duration(milliseconds: 110),
-                    itemDuration: const Duration(milliseconds: 420),
-                    children: [
-                      const Text(
-                        'Presença confirmada!',
-                        style: TextStyle(
-                          fontSize: AppFontSize.h1,
-                          height: 34 / 28,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.ink,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Os anfitriões já sabem. Podes mudar as respostas no teu perfil.',
-                        style: TextStyle(
-                          fontSize: AppFontSize.base + 1,
-                          height: 22 / 15,
-                          fontWeight: FontWeight.w300,
-                          color: AppTheme.inkMuted,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      for (final r in rows)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: _CheckRow(text: r),
-                        ),
-                    ],
+                  const UpIn(
+                    delay: Duration(milliseconds: 400),
+                    child: Text(
+                      'Presença confirmada!',
+                      style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                  const UpIn(
+                    delay: Duration(milliseconds: 550),
+                    child: Text(
+                      'Os anfitriões já sabem. Podes mudar as respostas no teu perfil.',
+                      style: TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  for (final (i, r) in rows.indexed)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: UpIn(delay: Duration(milliseconds: 720 + 120 * i), child: ProntoRow(text: r)),
+                    ),
                   const Spacer(),
-                  PrimaryButton(label: 'Ver o evento →', onPressed: onContinue),
+                  UpIn(
+                    delay: const Duration(milliseconds: 1200),
+                    child: ShineSweep(
+                      delay: const Duration(milliseconds: 1600),
+                      child: AuthPrimaryButton(label: 'Ver o evento →', onPressed: onContinue),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -872,22 +866,3 @@ class _ConfirmedView extends StatelessWidget {
   }
 }
 
-class _CheckRow extends StatelessWidget {
-  final String text;
-  const _CheckRow({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.md)),
-      child: Row(
-        children: [
-          const Icon(Icons.check_rounded, size: 18, color: AppTheme.accentOliveDark),
-          const SizedBox(width: 12),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.ink))),
-        ],
-      ),
-    );
-  }
-}

@@ -153,7 +153,8 @@ class _GalleryPostsScreenState extends ConsumerState<GalleryPostsScreen> {
           photoId: p.id,
           uploadedBy: p.uploadedBy,
           authorName: p.uploadedBy == me?.id ? (me?.fullName ?? 'Tu') : 'Convidado',
-          authorIsCouple: false,
+          // Sem a 078: quem organiza este evento e publicou é anfitrião.
+          authorIsCouple: p.uploadedBy == me?.id && own != null && own.id == widget.weddingId,
           likeCount: 0,
           likedByMe: false,
           commentCount: 0,
@@ -307,7 +308,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                             ],
                           ),
                           Text(
-                            '${m.authorIsCouple ? 'Organizador' : 'Convidado'} · ${_ago(widget.photo.createdAt)}',
+                            '${m.authorIsCouple ? 'Anfitrião' : 'Convidado'} · ${_ago(widget.photo.createdAt)}',
                             style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
                           ),
                         ],

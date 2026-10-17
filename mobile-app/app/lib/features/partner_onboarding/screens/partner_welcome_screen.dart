@@ -17,8 +17,8 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/pronto_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/staggered_fade_in.dart';
 import '../../../shared/money.dart';
 
 /// Primeiro ecrã visto por uma conta de parceiro recém-registada.
@@ -1217,141 +1217,67 @@ class _SentView extends StatefulWidget {
   State<_SentView> createState() => _SentViewState();
 }
 
-class _SentViewState extends State<_SentView> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1800),
-  );
+class _SentViewState extends State<_SentView> {
   bool _busy = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_c.value == 0 && !_c.isAnimating) {
-      if (MediaQuery.of(context).disableAnimations) {
-        _c.value = 1;
-      } else {
-        _c.forward();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // Canvas "Parceiro 7 · Pronto" — mesmos tempos.
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
           const Positioned.fill(
-            child: ConfettiBurst(origin: Offset(0.2, 0.2), delay: Duration(milliseconds: 1150)),
+            child: FallingConfetti(delay: Duration(milliseconds: 1300), spread: Duration(milliseconds: 590)),
           ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(28, 56, 28, 34),
+              padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  AnimatedBuilder(
-                    animation: _c,
-                    builder: (context, _) {
-                      final t = _c.value;
-                      final fly = Curves.easeInCubic.transform(((t - 0.05) / 0.55).clamp(0.0, 1.0));
-                      final done = Curves.easeOutBack.transform(((t - 0.6) / 0.25).clamp(0.0, 1.0));
-                      return Align(
-                        alignment: Alignment.centerLeft,
-                        child: SizedBox(
-                          width: 88,
-                          height: 88,
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Transform.scale(
-                                scale: 1 + 0.12 * (done > 0 && done < 1 ? 1 - (done - 0.5).abs() * 2 : 0),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Color.lerp(AppColors.gray, AppTheme.accentOliveDark, done.clamp(0.0, 1.0)),
-                                  ),
-                                ),
-                              ),
-                              if (fly < 1)
-                                Positioned(
-                                  left: 24 + 230 * fly,
-                                  top: 24 - 150 * fly,
-                                  child: Opacity(
-                                    opacity: 1 - fly * 0.6,
-                                    child: Transform.rotate(
-                                      angle: -0.2 + 0.4 * fly,
-                                      child: Transform.scale(
-                                        scale: 1 - 0.4 * fly,
-                                        child: const Icon(Icons.send_rounded, size: 40, color: AppTheme.accentOliveDark),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              if (done > 0)
-                                Center(
-                                  child: Transform.scale(
-                                    scale: done,
-                                    child: const Icon(Icons.check_rounded, size: 42, color: Colors.white),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                  const SizedBox(height: 104),
+                  const Align(alignment: Alignment.centerLeft, child: SentBadge()),
                   const SizedBox(height: 28),
-                  StaggeredFadeIn(
-                    stagger: const Duration(milliseconds: 110),
-                    itemDuration: const Duration(milliseconds: 420),
-                    children: [
-                      const Text(
-                        'Perfil enviado!',
-                        style: TextStyle(fontSize: AppFontSize.h1, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'A equipa revê o perfil e fica visível aos clientes assim que estiver aprovado.',
-                        style: TextStyle(fontSize: AppFontSize.base + 1, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
-                      ),
-                      const SizedBox(height: 24),
-                      for (final r in widget.rows)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.md)),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.check_rounded, size: 18, color: AppTheme.accentOliveDark),
-                                const SizedBox(width: 12),
-                                Expanded(child: Text(r, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.ink))),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
+                  const UpIn(
+                    delay: Duration(milliseconds: 1300),
+                    child: Text(
+                      'Perfil enviado!',
+                      style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                  const UpIn(
+                    delay: Duration(milliseconds: 1450),
+                    child: Text(
+                      'A equipa revê o perfil e fica visível aos casais assim que estiver aprovado.',
+                      style: TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  for (final (i, r) in widget.rows.indexed)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: UpIn(delay: Duration(milliseconds: 1620 + 120 * i), child: ProntoRow(text: r)),
+                    ),
                   const Spacer(),
-                  PrimaryButton(
-                    label: 'Ir para o painel',
-                    loading: _busy,
-                    onPressed: () async {
-                      setState(() => _busy = true);
-                      try {
-                        await widget.onContinue();
-                      } finally {
-                        if (mounted) setState(() => _busy = false);
-                      }
-                    },
+                  UpIn(
+                    delay: const Duration(milliseconds: 2100),
+                    child: ShineSweep(
+                      delay: const Duration(milliseconds: 2400),
+                      child: AuthPrimaryButton(
+                        label: 'Ir para o painel',
+                        loading: _busy,
+                        onPressed: () async {
+                          setState(() => _busy = true);
+                          try {
+                            await widget.onContinue();
+                          } finally {
+                            if (mounted) setState(() => _busy = false);
+                          }
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),

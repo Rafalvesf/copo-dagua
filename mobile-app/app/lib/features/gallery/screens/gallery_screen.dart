@@ -132,7 +132,7 @@ class GalleryScreen extends ConsumerWidget {
     final file = await ImagePicker().pickImage(source: source);
     if (file == null) return;
     try {
-      await uploadGalleryPhoto(weddingId: weddingId, file: file);
+      await uploadGalleryPhoto(weddingId: weddingId, file: file, autoApprove: true);
       ref.invalidate(weddingGalleryPhotosProvider(weddingId));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
