@@ -68558,7 +68558,7 @@ else{q=J.e_(a,new A.b7h(q))
 s=A.R(q,q.$ti.i("y.E"))}if(J.f8(a))return B.a04
 q=J.b1(s)
 if(q.gY(s))return A.bK(A.o('Sem conversas para "'+B.c.a_(this.a.w.a.a)+'".',r,r,r,r,r,r,r),r,r)
-return A.xO(r,new A.b7i(s),q.gH(s),B.VH,!1)},
+return A.xO(r,new A.b7i(s),q.gH(s),B.VG,!1)},
 $S:427}
 A.b7h.prototype={
 $1(a){return B.c.m(a.b.toLowerCase(),this.a)},
@@ -71471,7 +71471,7 @@ for(k=0;k<m.length;m.length===n||(0,A.F)(m),++k){j=m[k]
 q=j.c
 q=q.length===0?"Outro":B.b.gS(q)
 J.es(l.bH(q,new A.b9T()),j)}if(r.a.e)q=40
-else q=190
+else q=200
 o=t.p
 n=A.a([],o)
 for(i=new A.em(l,l.$ti.i("em<1,2>")).ga5(0),h=t.uE,g=a6.d,f=a6.c,e=f==null;i.t();){d=i.d
@@ -72576,7 +72576,7 @@ r=A.V(999)
 q=j.length===0
 p=A.ca(q?B.ag:B.o,1)
 o=q?"--:--":j
-return new A.tX(A.a4(A.a([i,B.a3,A.a6(new A.a0(B.dz,A.O(m,A.a4(A.a([A.aR(A.O(B.z,A.o(o,m,m,m,A.aK(m,m,q?B.d7:B.d8,m,m,m,m,m,m,m,m,13,m,m,B.w,m,m,!0,m,m,m,m,m,m,m,m),m,m,m),B.h,m,m,new A.Q(B.l,m,p,r,m,m,B.m),m,m,m,B.VG,m,m,62),n.f),B.aJ,A.a6(A.K(A.a([B.aC,A.dp(m,B.a6,!1,m,!0,B.p,m,A.dx(),k.b,m,m,m,m,m,2,l.$1("Momento"),B.H,!0,m,!0,m,!1,m,B.au,m,m,m,m,m,m,m,m,1,m,m,!1,"\u2022",m,new A.b4x(n),m,m,m,!1,m,m,!1,m,!0,m,B.aB,m,m,m,m,m,m,m,m,m,m,m,B.d2,!0,B.a_,m,B.ajk,m,m,m,m),B.aC,A.dp(m,B.a6,!1,m,!0,B.p,m,A.dx(),k.c,m,m,m,m,m,2,l.$1("Local ou nota (opcional)"),B.H,!0,m,!0,m,!1,m,B.au,m,m,m,m,m,m,m,m,1,m,m,!1,"\u2022",m,new A.b4y(n),m,m,m,!1,m,m,!1,m,!0,m,B.aB,m,m,m,m,m,m,m,m,m,m,m,B.aP,!0,B.a_,m,B.aO,m,m,m,m)],h),B.N,B.d,B.e,0,B.j),1),A.Nw(m,B.a_k,new A.b4z(n),new A.b4A(n),B.dd,"Op\xe7\xf5es",t.N)],h),B.r,B.d,B.e,0,m,m),B.h,m,m,new A.Q(B.A,m,m,s,m,m,B.m),m,m,m,B.VJ,m,m,m),m),1)],h),B.N,B.d,B.e,0,m,m),m)}}
+return new A.tX(A.a4(A.a([i,B.a3,A.a6(new A.a0(B.dz,A.O(m,A.a4(A.a([A.aR(A.O(B.z,A.o(o,m,m,m,A.aK(m,m,q?B.d7:B.d8,m,m,m,m,m,m,m,m,13,m,m,B.w,m,m,!0,m,m,m,m,m,m,m,m),m,m,m),B.h,m,m,new A.Q(B.l,m,p,r,m,m,B.m),m,m,m,B.VF,m,m,62),n.f),B.aJ,A.a6(A.K(A.a([B.aC,A.dp(m,B.a6,!1,m,!0,B.p,m,A.dx(),k.b,m,m,m,m,m,2,l.$1("Momento"),B.H,!0,m,!0,m,!1,m,B.au,m,m,m,m,m,m,m,m,1,m,m,!1,"\u2022",m,new A.b4x(n),m,m,m,!1,m,m,!1,m,!0,m,B.aB,m,m,m,m,m,m,m,m,m,m,m,B.d2,!0,B.a_,m,B.ajk,m,m,m,m),B.aC,A.dp(m,B.a6,!1,m,!0,B.p,m,A.dx(),k.c,m,m,m,m,m,2,l.$1("Local ou nota (opcional)"),B.H,!0,m,!0,m,!1,m,B.au,m,m,m,m,m,m,m,m,1,m,m,!1,"\u2022",m,new A.b4y(n),m,m,m,!1,m,m,!1,m,!0,m,B.aB,m,m,m,m,m,m,m,m,m,m,m,B.aP,!0,B.a_,m,B.aO,m,m,m,m)],h),B.N,B.d,B.e,0,B.j),1),A.Nw(m,B.a_k,new A.b4z(n),new A.b4A(n),B.dd,"Op\xe7\xf5es",t.N)],h),B.r,B.d,B.e,0,m,m),B.h,m,m,new A.Q(B.A,m,m,s,m,m,B.m),m,m,m,B.VJ,m,m,m),m),1)],h),B.N,B.d,B.e,0,m,m),m)}}
 A.b4B.prototype={
 $1(a){var s=null
 return A.n0(s,B.bJ,s,B.x,s,s,s,s,!0,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,B.M_,a,s,s,s,s,s,!0,s,s,s,!0,!0,!1,s,s,s,s,s,s,s,s,s,s,s,s,s,s)},
@@ -74562,12 +74562,12 @@ a0A(a,b){var s=this.a,r=s.c[a],q=s.w
 return new A.ab3(r,a===s.d,q,new A.aYr(this,a,b),null)},
 asd(a){return this.a0A(a,null)},
 p(a){var s,r,q,p=this,o=null,n=p.a,m=n.c.length
-if(m===0)return A.bm(o,n.w?70:52,o)
+if(m===0)return A.bm(o,n.w?80:52,o)
 s=n.r
-if(m<=s){n=n.w?70:52
+if(m<=s){n=n.w?80:52
 m=A.a([],t.p)
 for(r=0;r<p.a.c.length;++r)m.push(new A.di(1,B.aQ,p.asd(r),o))
-return A.bm(A.a4(m,B.i,B.d,B.e,0,o,o),n,o)}n=n.w?70:52
+return A.bm(A.a4(m,B.i,B.d,B.e,0,o,o),n,o)}n=n.w?80:52
 m=p.d
 if(m==null)m=p.d=A.aDb(p.a48(),1/s)
 s=p.a
@@ -74609,7 +74609,7 @@ n=o.b
 if(n==null)n=B.mr
 r=A.eE(B.z,A.bn(n,s?B.l:B.v,j,j,22),j,B.bL,new A.Q(q,j,j,p,j,j,B.m),B.ev,j,42,j,j,r)
 q=s?B.w:B.I
-return A.b7(j,!0,j,A.aR(new A.a0(B.VF,A.K(A.a([r,B.aI,new A.a0(B.e1,A.L2(B.z,A.o(o.a,1,j,j,A.aK(j,j,s?B.t:B.v,j,j,j,j,j,j,j,j,12,j,j,q,j,j,!0,j,j,j,j,j,j,j,j),j,j,j),B.f6),j)],t.p),B.i,B.d,B.O,0,B.j),j),k.f),!1,j,j,j,!1,j,!1,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,s,j,j,j,j,j,j,B.C,j)}s=k.d
+return A.b7(j,!0,j,A.aR(new A.a0(B.VH,A.K(A.a([r,B.aI,new A.a0(B.e1,A.L2(B.z,A.o(o.a,1,j,j,A.aK(j,j,s?B.t:B.v,j,j,j,j,j,j,j,j,12,j,j,q,j,1.2,!0,j,j,j,j,j,j,j,j),j,j,j),B.f6),j)],t.p),B.i,B.d,B.O,0,B.j),j),k.f),!1,j,j,j,!1,j,!1,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,j,s,j,j,j,j,j,j,B.C,j)}s=k.d
 m=s?B.l:B.v
 r=s?B.o:B.E
 q=A.V(999)
@@ -143039,10 +143039,10 @@ B.xs=new A.W(0,4,0,0)
 B.VD=new A.W(0,4,0,12)
 B.VE=new A.W(0,52,0,0)
 B.fd=new A.W(0,6,0,0)
-B.VF=new A.W(0,6,0,4)
 B.xt=new A.W(0,6,0,6)
-B.VG=new A.W(0,7,0,7)
-B.VH=new A.W(0,8,0,140)
+B.VF=new A.W(0,7,0,7)
+B.VG=new A.W(0,8,0,140)
+B.VH=new A.W(0,8,0,4)
 B.VI=new A.W(0,8,0,40)
 B.fe=new A.W(0,8,0,8)
 B.m0=new A.W(10,0,10,0)
