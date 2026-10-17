@@ -541,14 +541,17 @@ class _Chip extends StatelessWidget {
     return Container(
       height: 34,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      alignment: Alignment.center,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(color: AppTheme.borderMuted),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink),
+      // Do tamanho do texto (antes ocupava a linha toda).
+      child: Center(
+        widthFactor: 1,
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink),
+        ),
       ),
     );
   }

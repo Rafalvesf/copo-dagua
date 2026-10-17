@@ -132,21 +132,34 @@ class _Row extends StatelessWidget {
           Icon(icon, size: 20, color: color ?? AppTheme.inkMuted),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(label, style: TextStyle(fontSize: AppFontSize.base + 1, color: color ?? AppTheme.ink)),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: AppFontSize.base + 1, color: color ?? AppTheme.ink),
+            ),
           ),
-          if (value != null)
-            Flexible(
+          // Valor encostado à direita, sempre no mesmo sítio, e a seta
+          // (ou o espaço dela) sempre na mesma coluna — antes o valor
+          // ficava a meio da linha e desalinhado entre linhas.
+          if (value != null) ...[
+            const SizedBox(width: 8),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.42),
               child: Text(
                 value!,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
                 style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted),
               ),
             ),
-          if (onTap != null) ...[
-            const SizedBox(width: 6),
-            const Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6)),
           ],
+          const SizedBox(width: 6),
+          SizedBox(
+            width: 18,
+            child: onTap == null ? null : const Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6)),
+          ),
         ],
       ),
     );
