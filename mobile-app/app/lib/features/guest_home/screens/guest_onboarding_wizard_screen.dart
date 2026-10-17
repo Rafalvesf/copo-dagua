@@ -736,6 +736,10 @@ class _CompanionPageState extends State<_CompanionPage> {
 
   bool get _adult => _group == 'adult';
 
+  /// "Esta pessoa vai instalar a app?" (pedido 2026-10-17) — se sim, o
+  /// email ou o telemóvel é obrigatório; se não, opcional.
+  late bool _installs = (widget.existing?.email.isNotEmpty ?? false) || (widget.existing?.phone.isNotEmpty ?? false);
+
   void _save() {
     final name = _name.text.trim();
     if (name.isEmpty) {
@@ -757,8 +761,8 @@ class _CompanionPageState extends State<_CompanionPage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Esse telemóvel não parece válido.')));
       return;
     }
-    if (_adult && !emailOk && !phoneOk) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Indica o email ou o telemóvel desta pessoa.')));
+    if (_installs && !emailOk && !phoneOk) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Indica o email ou o telemóvel com que vai criar conta.')));
       return;
     }
     Navigator.of(context).pop(
@@ -791,6 +795,21 @@ class _CompanionPageState extends State<_CompanionPage> {
         ),
         const SizedBox(height: 32),
         const Text('Quem é o teu acompanhante?', style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 22),
+        const Text('Esta pessoa vai instalar a app?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 4),
+        const Text(
+          'Se sim, pedimos o email ou o telemóvel com que vai criar conta: entra já com esta resposta preenchida e não fica repetida.',
+          style: TextStyle(fontSize: 12, height: 17 / 12, color: AppTheme.inkMuted),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(child: _RadioRow(label: 'Sim', selected: _installs, onTap: () => setState(() => _installs = true))),
+            const SizedBox(width: 10),
+            Expanded(child: _RadioRow(label: 'Não', selected: !_installs, onTap: () => setState(() => _installs = false))),
+          ],
+        ),
         AuthField(label: 'Nome', controller: _name, topGap: 24),
         const SizedBox(height: 24),
         _RadioRow(label: 'Adulto', selected: _group == 'adult', onTap: () => setState(() => _group = 'adult')),
@@ -802,17 +821,17 @@ class _CompanionPageState extends State<_CompanionPage> {
         _RadioRow(label: 'Sénior', selected: _group == 'senior', onTap: () => setState(() => _group = 'senior')),
         if (_child) AuthField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
         AuthField(
-          label: _adult ? 'Email ou telemóvel — basta um' : 'Email (opcional)',
+          label: _installs ? 'Email ou telemóvel — basta um' : 'Email ou telemóvel (opcional)',
           controller: _email,
           keyboardType: TextInputType.emailAddress,
           hint: 'Email',
         ),
         AuthField(
-          label: _adult ? '' : 'Telemóvel (opcional)',
+          label: '',
           controller: _phone,
           keyboardType: TextInputType.phone,
           hint: 'Telemóvel',
-          topGap: _adult ? 10 : 16,
+          topGap: 10,
         ),
         if (!_adult && widget.others.isNotEmpty) ...[
           const SizedBox(height: 22),
@@ -824,15 +843,6 @@ class _CompanionPageState extends State<_CompanionPage> {
           ],
         ],
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(12)),
-          child: Text(
-            _adult
-                ? 'É para o caso de esta pessoa também querer instalar a app e criar conta: com o mesmo email ou telemóvel, entra já com esta resposta preenchida — só tem de confirmar, sem entradas repetidas.'
-                : 'Opcional para crianças, adolescentes e seniores. Se esta pessoa quiser instalar a app e criar conta, com o mesmo contacto fica logo ligada a esta resposta.',
-            style: const TextStyle(fontSize: 12, height: 17 / 12, color: AppTheme.inkMuted),
-          ),
         ),
       ],
       footer: [
