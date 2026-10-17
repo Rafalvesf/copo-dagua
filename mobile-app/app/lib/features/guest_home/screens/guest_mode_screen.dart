@@ -64,7 +64,8 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
       setState(() {
         _codeError = e is PostgrestException && e.code == 'P0002'
             ? 'Código inválido — confirma com o casal.'
-            : 'Não foi possível associar o código. Tenta novamente.';
+            : 'Não foi possível associar o código. Tenta novamente.'
+                '${e is PostgrestException && e.code != null ? ' (erro ${e.code})' : ''}';
       });
     } finally {
       if (mounted) setState(() => _joining = false);

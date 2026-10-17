@@ -14,8 +14,6 @@ import '../../../shared/widgets/tchin_splash.dart';
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
-  static bool _splashShown = false;
-
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
@@ -25,7 +23,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
     vsync: this,
     duration: const Duration(milliseconds: 3200),
   );
-  late bool _showSplash = !WelcomeScreen._splashShown;
+  bool _showSplash = true;
   bool _burst = false;
 
   @override
@@ -40,7 +38,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
     });
     _splash.addStatusListener((s) {
       if (s == AnimationStatus.completed) {
-        WelcomeScreen._splashShown = true;
         if (mounted) setState(() => _showSplash = false);
       }
     });
@@ -49,20 +46,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Pedido do utilizador (2026-10-17): a abertura acontece sempre,
+    // todas as vezes — mesmo com "reduzir movimento" ligado no telemóvel.
     if (_showSplash && !_splash.isAnimating && _splash.value == 0) {
-      if (MediaQuery.of(context).disableAnimations) {
-        // Menos movimento: mostra a abertura parada um instante, sem
-        // animação, e passa às boas-vindas.
-        _splash.value = 0.5;
-        Future.delayed(const Duration(milliseconds: 1200), () {
-          WelcomeScreen._splashShown = true;
-          if (mounted) setState(() => _showSplash = false);
-        });
-      } else {
-        // A página web já mostrou as palavras a brindar enquanto a app
-        // carregava (`web/index.html`) — continua a partir do brinde.
-        _splash.forward(from: 0.26);
-      }
+      // A página web já mostrou as palavras a brindar enquanto a app
+      // carregava (`web/index.html`) — continua a partir do brinde.
+      _splash.forward(from: 0.26);
     }
   }
 

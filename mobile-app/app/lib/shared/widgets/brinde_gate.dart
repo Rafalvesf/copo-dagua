@@ -7,7 +7,7 @@ import 'tchin_splash.dart';
 
 /// "Início 7 · Brinde" — logo a seguir a entrar, o Tchin Tchin brinda,
 /// diz olá e o verde fecha em círculo com confetti, revelando a app.
-/// Só depois de um login feito agora (não ao reabrir a app com sessão).
+/// Acontece sempre a seguir a entrar ou criar conta.
 class BrindeGate extends ConsumerStatefulWidget {
   final Widget child;
   const BrindeGate({super.key, required this.child});
@@ -49,7 +49,6 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with SingleTickerProvid
 
   void _start(String? fullName) {
     BrindeGate.pending = false;
-    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) return;
     setState(() {
       _name = fullName?.trim().split(' ').first;
       _show = true;
@@ -62,7 +61,9 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with SingleTickerProvid
   Widget build(BuildContext context) {
     ref.listen(authControllerProvider, (prev, next) {
       if (!BrindeGate.pending) return;
-      if (next.status == AuthStatus.active) {
+      // Sempre que se entra ou cria conta (pedido 2026-10-17: "tem que
+      // acontecer sempre"), também quando a seguir vem o onboarding.
+      if (next.status == AuthStatus.active || next.status == AuthStatus.onboardingIncomplete) {
         _start(next.profile?.fullName);
       } else if (next.status != AuthStatus.authenticating) {
         // Erro, email por confirmar ou onboarding: sem brinde.
