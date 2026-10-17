@@ -21,7 +21,7 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProviderStateMixin {
   late final AnimationController _splash = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 3200),
+    duration: const Duration(milliseconds: 5000),
   );
   bool _showSplash = true;
   bool _burst = false;
@@ -34,7 +34,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
     // quando a sessão é verificada), a abertura recomeça em vez de
     // desaparecer (bug 2026-10-17: "boas-vindas sem animação").
     _splash.addListener(() {
-      if (!_burst && _splash.value >= 0.86) setState(() => _burst = true);
+      if (!_burst && _splash.value >= 0.78) setState(() => _burst = true);
     });
     _splash.addStatusListener((s) {
       if (s == AnimationStatus.completed) {
@@ -51,7 +51,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
     if (_showSplash && !_splash.isAnimating && _splash.value == 0) {
       // A página web já mostrou as palavras a brindar enquanto a app
       // carregava (`web/index.html`) — continua a partir do brinde.
-      _splash.forward(from: 0.26);
+      _splash.forward(from: 0.32);
     }
   }
 
@@ -73,7 +73,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
             Positioned.fill(
               child: AnimatedBuilder(
                 animation: _splash,
-                builder: (context, _) => TchinSplash(t: _splash.value),
+                builder: (context, _) => IgnorePointer(ignoring: _splash.value >= 0.78, child: TchinSplash(t: _splash.value)),
               ),
             ),
         ],

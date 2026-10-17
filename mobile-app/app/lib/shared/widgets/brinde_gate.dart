@@ -20,7 +20,7 @@ class BrindeGate extends ConsumerStatefulWidget {
 }
 
 class _BrindeGateState extends ConsumerState<BrindeGate> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 3400));
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 5000));
   bool _show = false;
   bool _burst = false;
   String? _name;
@@ -29,7 +29,7 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with SingleTickerProvid
   void initState() {
     super.initState();
     _c.addListener(() {
-      if (!_burst && _c.value >= 0.86) setState(() => _burst = true);
+      if (!_burst && _c.value >= 0.78) setState(() => _burst = true);
     });
     _c.addStatusListener((s) {
       if (s == AnimationStatus.completed && mounted) {
@@ -78,13 +78,16 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with SingleTickerProvid
           Positioned.fill(
             child: AnimatedBuilder(
               animation: _c,
-              builder: (context, _) => Material(
+              builder: (context, _) => IgnorePointer(
+                ignoring: _c.value >= 0.78,
+                child: Material(
                 type: MaterialType.transparency,
                 child: TchinSplash(
                   t: _c.value,
                   greeting: _name == null || _name!.isEmpty ? 'Olá!' : 'Olá, $_name!',
                   tagline: 'A abrir o teu evento…',
                 ),
+              ),
               ),
             ),
           ),
