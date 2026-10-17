@@ -12,6 +12,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/gallery_placeholder.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -266,9 +267,12 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
               const SizedBox(height: 8),
             ],
             if (approved.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Center(child: Text('Ainda sem fotos aqui.')),
+              GalleryEmptyState(
+                message: switch (_tab) {
+                  _GalleryTab.all => 'Ainda não existem fotos. Carreguem as primeiras no +.',
+                  _GalleryTab.mine => 'Ainda não carregaste nenhuma foto.',
+                  _GalleryTab.favorites => 'Ainda não há fotos favoritas.',
+                },
               )
             else
               ClipRRect(
@@ -286,11 +290,18 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                   final photo = approved[index];
                   final favorited = _favorites.contains(photo.id);
                   return ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                    borderRadius: galleryTileRadius(index, approved.length),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.network(photo.imageUrl, fit: BoxFit.cover),
+                        // Quadrado de cor (design) enquanto carrega ou se
+                        // a foto falhar, em vez do ícone de imagem partida.
+                        ColoredBox(color: galleryTint(index)),
+                        Image.network(
+                          photo.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+                        ),
                         Positioned(
                           top: 4,
                           right: 4,
