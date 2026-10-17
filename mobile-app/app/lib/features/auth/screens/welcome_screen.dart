@@ -50,7 +50,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       final green = _splash.value < 0.7;
       if (green != _barGreen) {
         _barGreen = green;
-        setBarColor(green ? AppTheme.accentOliveDark : const Color(0xFFFFFFFF));
+        if (green) {
+          lockBarColor(AppTheme.accentOliveDark);
+        } else {
+          unlockBarColor();
+        }
       }
     });
     _splash.addStatusListener((s) {
@@ -73,7 +77,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
         return;
       }
       _barGreen = true;
-      setBarColor(AppTheme.accentOliveDark);
+      lockBarColor(AppTheme.accentOliveDark);
       _driver.start();
     }
   }
