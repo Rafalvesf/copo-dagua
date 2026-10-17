@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import '../wedding/partner_invite.dart';
+import '../../shared/widgets/brinde_gate.dart';
 
 class _Unset {
   const _Unset();
@@ -200,6 +201,7 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> login({required String email, required String password}) async {
+    BrindeGate.pending = true;
     state = state.copyWith(
       status: AuthStatus.authenticating,
       errorMessage: null,
