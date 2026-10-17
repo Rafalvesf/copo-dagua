@@ -6,6 +6,7 @@ import 'core/router.dart';
 import 'core/supabase/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/phone_frame.dart';
+import 'shared/widgets/brinde_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +40,7 @@ class CopoDaguaApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: router,
-      builder: (context, child) => PhoneFrame(child: child),
+      builder: (context, child) => PhoneFrame(child: BrindeGate(child: child ?? const SizedBox.shrink())),
     );
   }
 }
