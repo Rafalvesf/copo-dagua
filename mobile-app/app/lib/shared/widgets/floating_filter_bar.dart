@@ -338,15 +338,18 @@ class _FilterBarChip extends StatelessWidget {
                           children: [
                             Icon(item.icon ?? Icons.circle_outlined, size: 22, color: AppTheme.inkMuted),
                             const SizedBox(height: 4),
-                            Text(
-                              splitFilterLabel(item.label),
-                              maxLines: 2,
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                height: 1.15,
-                                fontSize: AppFontSize.sm,
-                                color: AppTheme.inkMuted,
+                            // Uma palavra comprida encolhe em vez de cortar.
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                splitFilterLabel(item.label),
+                                maxLines: 2,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  height: 1.15,
+                                  fontSize: AppFontSize.sm,
+                                  color: AppTheme.inkMuted,
+                                ),
                               ),
                             ),
                           ],
@@ -455,47 +458,16 @@ class ConnectedFilterNav extends StatelessWidget {
   }
 }
 
-/// Parte um rótulo com mais de 5 letras em duas linhas: no espaço mais
-/// perto do meio, ou — numa só palavra — numa fronteira de sílaba
-/// (vogal | consoante + vogal), com hífen ("Espa-ços", "Foto-grafia").
+/// Rótulos com mais de uma palavra passam para duas linhas, partidos
+/// no espaço mais perto do meio ("Música / e DJ"); uma só palavra fica
+/// numa linha (pedido 2026-10-17).
 String splitFilterLabel(String label) {
-  final text = label.trim();
-  if (text.replaceAll(' ', '').length <= 5) return text;
+  final text = label.trim().replaceAll(RegExp(r'\s+'), ' ');
+  if (!text.contains(' ')) return text;
   final mid = text.length / 2;
-  if (text.contains(' ')) {
-    var best = -1;
-    for (var i = 0; i < text.length; i++) {
-      if (text[i] == ' ' && (best < 0 || (i - mid).abs() < (best - mid).abs())) best = i;
-    }
-    return '${text.substring(0, best)}\n${text.substring(best + 1)}';
-  }
-  bool vowel(String ch) => 'aeiouáàâãéêíóôõúAEIOUÁÀÂÃÉÊÍÓÔÕÚ'.contains(ch);
-  const keep = {'ch', 'lh', 'nh', 'qu', 'gu'};
   var best = -1;
-  for (var i = 2; i < text.length - 2; i++) {
-    final prev = text[i - 1];
-    final cur = text[i];
-    final next = text[i + 1];
-    if (!vowel(prev) || vowel(cur) || !vowel(next)) continue;
-    if (keep.contains('$prev$cur'.toLowerCase())) continue;
-    if (best < 0 || (i - mid).abs() < (best - mid).abs()) best = i;
+  for (var i = 0; i < text.length; i++) {
+    if (text[i] == ' ' && (best < 0 || (i - mid).abs() < (best - mid).abs())) best = i;
   }
-  // Grupos consonânticos ("gr", "br", "pl"…): parte antes deles
-  // ("Foto-grafia").
-  for (var i = 2; i < text.length - 2; i++) {
-    final c1 = text[i];
-    final c2 = text[i + 1].toLowerCase();
-    if (vowel(text[i - 1]) && !vowel(c1) && (c2 == 'r' || c2 == 'l') && 'bcdfgptv'.contains(c1.toLowerCase()) && vowel(text[i + 2])) {
-      if (best < 0 || (i - mid).abs() < (best - mid).abs()) best = i;
-    }
-  }
-  // Dígrafos "ch/lh/nh": parte antes deles.
-  for (var i = 2; i < text.length - 2; i++) {
-    final pair = text.substring(i, i + 2).toLowerCase();
-    if ((pair == 'ch' || pair == 'lh' || pair == 'nh') && vowel(text[i - 1]) && vowel(text[i + 2])) {
-      if (best < 0 || (i - mid).abs() < (best - mid).abs()) best = i;
-    }
-  }
-  if (best < 0) best = mid.round();
-  return '${text.substring(0, best)}-\n${text.substring(best)}';
+  return '${text.substring(0, best)}\n${text.substring(best + 1)}';
 }

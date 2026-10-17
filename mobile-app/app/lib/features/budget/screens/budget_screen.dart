@@ -33,6 +33,13 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   _BudgetFilter _filter = _BudgetFilter.all;
   bool _categoriesExpanded = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Sinais pagos entretanto entram logo no "Gasto".
+    Future.microtask(() => ref.read(budgetControllerProvider.notifier).reload());
+  }
+
   Future<void> _addExpense() async {
     final weddingId = ref
         .read(expenseControllerProvider.notifier)

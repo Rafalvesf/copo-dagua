@@ -83,14 +83,91 @@ class BudgetController extends Notifier<BudgetState> {
       }
     }
 
+    final categories = categoryRows.map(_categoryFromRow).toList();
+    // Pagamentos feitos na app (sinais e restantes) entram no "Gasto" —
+    // pedido 2026-10-17: "o orçamento não mudou, mesmo depois de eu ter
+    // pago os sinais". Antes o orçamento só somava valores escritos à mão.
+    try {
+      _mergeAppPayments(categories, await _appPaymentsByCategory(wedding.id));
+    } catch (_) {
+      // Sem acesso aos pagamentos: fica só o que foi escrito à mão.
+    }
+
     state = BudgetState(
       loading: false,
       budget: Budget(
         weddingId: wedding.id,
         total: total,
-        categories: categoryRows.map(_categoryFromRow).toList(),
+        categories: categories,
       ),
     );
+  }
+
+  /// Volta a ler (ex.: ao abrir o Orçamento depois de pagar um sinal).
+  Future<void> reload() async {
+    final wedding = ref.read(weddingControllerProvider).wedding;
+    if (wedding != null) await load(wedding);
+  }
+
+  static PartnerCategory? _enumForSlug(String slug) => switch (slug) {
+        'venue' => PartnerCategory.venue,
+        'catering' => PartnerCategory.catering,
+        'photography' => PartnerCategory.photography,
+        'music_dj' || 'bands_musicians' => PartnerCategory.music,
+        'flowers_decor' => PartnerCategory.decoration,
+        _ => null,
+      };
+
+  /// Total pago na app por categoria do parceiro: `(slug, rótulo) → €`.
+  Future<Map<(String, String), double>> _appPaymentsByCategory(String weddingId) async {
+    final bookingRows = await supabase
+        .from('bookings')
+        .select('id, partner_profiles(partner_profile_categories(partner_categories(slug, label_pt)))')
+        .eq('wedding_id', weddingId);
+    final categoryOf = <String, (String, String)>{};
+    for (final r in (bookingRows as List).cast<Map<String, dynamic>>()) {
+      final links = ((r['partner_profiles'] as Map<String, dynamic>?)?['partner_profile_categories'] as List?) ?? const [];
+      final first = links.isEmpty ? null : (links.first as Map<String, dynamic>)['partner_categories'] as Map<String, dynamic>?;
+      categoryOf[r['id'] as String] = (
+        (first?['slug'] as String?) ?? 'other',
+        (first?['label_pt'] as String?) ?? 'Outros',
+      );
+    }
+    if (categoryOf.isEmpty) return const {};
+    final paymentRows = await supabase
+        .from('payments')
+        .select('booking_id, amount, status')
+        .inFilter('booking_id', categoryOf.keys.toList())
+        .eq('status', 'paid');
+    final totals = <(String, String), double>{};
+    for (final p in (paymentRows as List).cast<Map<String, dynamic>>()) {
+      final key = categoryOf[p['booking_id'] as String];
+      if (key == null) continue;
+      totals[key] = (totals[key] ?? 0) + (p['amount'] as num).toDouble();
+    }
+    return totals;
+  }
+
+  /// Soma o pago na app à categoria correspondente (pela categoria de
+  /// parceiro ou pelo nome); sem categoria, cria uma só de leitura.
+  void _mergeAppPayments(List<BudgetCategory> categories, Map<(String, String), double> paid) {
+    for (final entry in paid.entries) {
+      final (slug, label) = entry.key;
+      final kind = _enumForSlug(slug);
+      var i = categories.indexWhere((c) => kind != null && c.partnerCategory == kind);
+      if (i < 0) i = categories.indexWhere((c) => c.name.toLowerCase() == label.toLowerCase());
+      if (i >= 0) {
+        final c = categories[i];
+        categories[i] = BudgetCategory(
+          name: c.name,
+          amount: c.amount + entry.value,
+          partnerCategory: c.partnerCategory,
+          allocated: c.allocated,
+        );
+      } else {
+        categories.add(BudgetCategory(name: kind?.label ?? label, amount: entry.value, partnerCategory: kind));
+      }
+    }
   }
 
   /// Verba de uma categoria (`budget_categories.allocated`), pela
@@ -99,11 +176,24 @@ class BudgetController extends Notifier<BudgetState> {
     final weddingId = currentWeddingId;
     final current = state.budget;
     if (weddingId == null || current == null) return;
-    await supabase
+    final updated = await supabase
         .from('budget_categories')
         .update({'allocated': allocated})
         .eq('wedding_id', weddingId)
-        .eq('name', categoryName);
+        .eq('name', categoryName)
+        .select('id');
+    if ((updated as List).isEmpty) {
+      // Categoria que só existia pelos pagamentos feitos na app.
+      final c = current.categories.where((c) => c.name == categoryName).firstOrNull;
+      await supabase.from('budget_categories').insert({
+        'wedding_id': weddingId,
+        'name': categoryName,
+        'partner_category': c?.partnerCategory?.name,
+        'amount': 0,
+        'allocated': allocated,
+        'position': current.categories.length,
+      });
+    }
     state = state.copyWith(
       budget: Budget(
         weddingId: weddingId,
