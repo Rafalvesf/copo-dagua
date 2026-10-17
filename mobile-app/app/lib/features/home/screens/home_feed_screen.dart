@@ -477,7 +477,7 @@ class _TabChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.ink : AppTheme.surface,
+          color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(

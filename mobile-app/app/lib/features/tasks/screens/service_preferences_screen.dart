@@ -244,7 +244,7 @@ class _PreferenceChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: selected ? AppTheme.ink : Colors.white,
+            color: selected ? AppTheme.accentOliveDark : Colors.white,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             border: Border.all(color: AppTheme.borderMuted),
           ),
