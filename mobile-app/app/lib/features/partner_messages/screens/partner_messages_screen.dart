@@ -6,6 +6,7 @@ import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
@@ -74,7 +75,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                               .toList();
                       if (all.isEmpty) {
                         return const IllustratedEmptyState(
-                          imageAsset: 'assets/images/chat_icon.png',
+                          mascot: MascotPose.chat,
                           circularImage: false,
                           imageSize: 180,
                           title: 'Ainda sem conversas',

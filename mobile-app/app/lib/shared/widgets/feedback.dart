@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'mascot.dart';
 
 class ErrorBanner extends StatelessWidget {
   final String message;
@@ -187,7 +188,12 @@ class LoadingOverlay extends StatelessWidget {
 /// espaço, sem conversas) — para estados vazios pequenos dentro de um
 /// cartão continua a usar-se [EmptyStateView] ou um `Text`.
 class IllustratedEmptyState extends StatelessWidget {
-  final String imageAsset;
+  final String? imageAsset;
+
+  /// Mascote "o Tchin e o Tchin" no lugar da ilustração (pedido do
+  /// utilizador, 2026-10-17: "substitui os icons em convidados,
+  /// orçamentos, lugares e mensagens").
+  final MascotPose? mascot;
   final String title;
   final String message;
   final String? primaryLabel;
@@ -199,7 +205,8 @@ class IllustratedEmptyState extends StatelessWidget {
 
   const IllustratedEmptyState({
     super.key,
-    required this.imageAsset,
+    this.imageAsset,
+    this.mascot,
     required this.title,
     required this.message,
     this.primaryLabel,
@@ -212,12 +219,14 @@ class IllustratedEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final image = Image.asset(
-      imageAsset,
-      width: imageSize,
-      height: imageSize,
-      fit: circularImage ? BoxFit.cover : BoxFit.contain,
-    );
+    final Widget image = mascot != null
+        ? TchinMascot(pose: mascot!, width: 220)
+        : Image.asset(
+            imageAsset!,
+            width: imageSize,
+            height: imageSize,
+            fit: circularImage ? BoxFit.cover : BoxFit.contain,
+          );
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
         AppTheme.screenMargin,
@@ -227,7 +236,7 @@ class IllustratedEmptyState extends StatelessWidget {
       ),
       child: Column(
         children: [
-          circularImage ? ClipOval(child: image) : image,
+          circularImage && mascot == null ? ClipOval(child: image) : image,
           const SizedBox(height: 24),
           Text(
             title,
