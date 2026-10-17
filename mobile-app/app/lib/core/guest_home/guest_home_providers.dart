@@ -33,7 +33,21 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
     baseColumns,
   ];
   List<Map<String, dynamic>> rows = const [];
-  for (var i = 0; i < tiers.length; i++) {
+  // 089: os convidados não podem ler `weddings` diretamente (a policy é
+  // só do casal) — esta função devolve só os campos pensados para eles.
+  // Antes o convidado não via nada do que o organizador preparou.
+  var viaRpc = false;
+  try {
+    final r = await supabase.rpc('get_my_guest_weddings') as List;
+    rows = [
+      for (final m in r.cast<Map<String, dynamic>>())
+        {'wedding_id': m['wedding_id'], 'weddings': m['wedding']},
+    ];
+    viaRpc = true;
+  } on PostgrestException {
+    // Função ainda não criada — usa a leitura antiga.
+  }
+  for (var i = 0; !viaRpc && i < tiers.length; i++) {
     try {
       rows = await query(tiers[i]);
       break;
