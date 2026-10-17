@@ -39,7 +39,22 @@ class WeddingController extends Notifier<WeddingState> {
 
   Future<void> load(String ownerId) async {
     state = state.copyWith(loading: true);
-    final row = await supabase.from('weddings').select().eq('owner_id', ownerId).maybeSingle();
+    var row = await supabase.from('weddings').select().eq('owner_id', ownerId).maybeSingle();
+    // O par que entrou pelo link de convite (079) não é dono — é
+    // colaborador ativo do casamento do outro.
+    if (row == null) {
+      final link = await supabase
+          .from('wedding_collaborators')
+          .select('wedding_id')
+          .eq('user_id', ownerId)
+          .eq('status', 'active')
+          .limit(1)
+          .maybeSingle();
+      final weddingId = link?['wedding_id'] as String?;
+      if (weddingId != null) {
+        row = await supabase.from('weddings').select().eq('id', weddingId).maybeSingle();
+      }
+    }
     state = WeddingState(loading: false, wedding: row == null ? null : _fromRow(row));
   }
 
@@ -199,6 +214,13 @@ class WeddingController extends Notifier<WeddingState> {
         .select()
         .single();
     state = WeddingState(loading: false, wedding: _fromRow(row));
+  }
+
+  /// Link para o par se juntar a este casamento (`create_partner_invite`,
+  /// 079) — partilhado pelo menu de partilha do telemóvel.
+  Future<String> createPartnerInviteToken(String weddingId) async {
+    final token = await supabase.rpc('create_partner_invite', params: {'p_wedding_id': weddingId});
+    return token as String;
   }
 
   /// RN: nunca bloqueia o avanço do Onboarding — falhas aqui (ex: email já

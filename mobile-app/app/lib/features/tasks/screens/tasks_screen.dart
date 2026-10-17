@@ -297,29 +297,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 }
 
 
-/// Selo discreto "SUGESTÃO"/"PARA CONCLUIR" — pedido explícito do
-/// utilizador: linguagem suave, tipografia pequena, nunca um badge
-/// forte tipo "⚠️ OBRIGATÓRIO" (pode tornar a experiência stressante).
-class _DisplayTypeLabel extends StatelessWidget {
-  final TaskDisplayType type;
-
-  const _DisplayTypeLabel(this.type);
-
-  @override
-  Widget build(BuildContext context) {
-    final isSuggestion = type == TaskDisplayType.suggestion;
-    return Text(
-      isSuggestion ? 'SUGESTÃO' : 'PARA CONCLUIR',
-      style: TextStyle(
-        color: isSuggestion ? AppTheme.inkMuted : AppTheme.accentOliveDark,
-        fontSize: AppFontSize.xxxs,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.6,
-      ),
-    );
-  }
-}
-
 class _TaskRow extends StatelessWidget {
   final WeddingTask task;
   final IconData icon;
@@ -333,65 +310,76 @@ class _TaskRow extends StatelessWidget {
     required this.onTap,
   });
 
+  // Como "Próximas tarefas" no design: ícone num quadrado verde, ponto
+  // de prioridade, título numa linha, selo NOVA, e uma só linha por
+  // baixo com "Sugestão"/"Para concluir" + o resumo (menos texto).
+  Color get _priorityColor => switch (task.priority) {
+        TaskPriority.urgent || TaskPriority.high => const Color(0xFFC8553D),
+        TaskPriority.normal => const Color(0xFFF2A01B),
+        TaskPriority.low => const Color(0xFF3F8A5A),
+      };
+
   @override
   Widget build(BuildContext context) {
+    final type = task.displayType;
+    final typeLabel = type == null
+        ? null
+        : (type == TaskDisplayType.suggestion ? 'Sugestão' : 'Para concluir');
+    final desc = task.description?.split(RegExp(r'(?<=[.!?])\s')).first.trim();
     return SnappyTap(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: AppColors.green,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 17, color: AppTheme.ink),
+              child: Icon(icon, size: 18, color: AppTheme.ink),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (task.displayType != null) ...[
-                    _DisplayTypeLabel(task.displayType!),
-                    const SizedBox(height: 2),
-                  ],
                   Row(
                     children: [
-                      Expanded(
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(color: _priorityColor, shape: BoxShape.circle),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
                         child: Text(
                           task.title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: AppFontSize.md,
-                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                         ),
                       ),
                       if (!task.seen) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: color,
+                            color: AppTheme.accentOliveDark,
                             borderRadius: BorderRadius.circular(AppRadius.pill),
                           ),
                           child: const Text(
                             'NOVA',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: AppFontSize.xxxs,
-                              fontWeight: FontWeight.w800,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
                               letterSpacing: 0.4,
                             ),
                           ),
@@ -399,19 +387,34 @@ class _TaskRow extends StatelessWidget {
                       ],
                     ],
                   ),
-                  if (task.description != null) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      task.description!,
-                      maxLines: 2,
+                  if (typeLabel != null || (desc != null && desc.isNotEmpty)) ...[
+                    const SizedBox(height: 4),
+                    Text.rich(
+                      TextSpan(children: [
+                        if (typeLabel != null)
+                          TextSpan(
+                            text: typeLabel,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: type == TaskDisplayType.suggestion
+                                  ? AppTheme.inkMuted
+                                  : AppTheme.accentOliveDark,
+                            ),
+                          ),
+                        if (typeLabel != null && desc != null && desc.isNotEmpty)
+                          const TextSpan(text: ' · '),
+                        if (desc != null && desc.isNotEmpty) TextSpan(text: desc),
+                      ]),
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
+                      style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
                     ),
                   ],
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: AppTheme.inkMuted),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF8F8B84)),
           ],
         ),
       ),

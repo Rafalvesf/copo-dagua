@@ -9,6 +9,7 @@ import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
+import '../../../shared/widgets/search_pill.dart';
 
 /// Mensagens do parceiro — igual ao canvas "Parceiro — mensagens" e à
 /// lista do casal: título, pesquisa e conversas. (Saiu o botão "Ver todas
@@ -57,26 +58,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                     AppTheme.screenMargin,
                     0,
                   ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                      boxShadow: AppTheme.searchBarShadow,
-                    ),
-                    child: TextField(
-                      controller: _search,
-                      decoration: InputDecoration(
-                        hintText: 'Pesquisar conversas',
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.pill),
-                          borderSide: const BorderSide(color: AppTheme.accentOliveDark),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
+                  child: SearchPill(controller: _search, hint: 'Pesquisar conversas'),
                 ),
                 Expanded(
                   child: conversationsAsync.when(
@@ -106,11 +88,13 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                         );
                       }
                       return ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(0, 12, 0, 140),
+                        padding: const EdgeInsets.fromLTRB(0, 8, 0, 140),
                         itemCount: conversations.length,
                         itemBuilder: (context, index) => Padding(
                           padding: EdgeInsets.zero,
                           child: ConversationListItem(
+                            partnerStyle: true,
+                            isLast: index == conversations.length - 1,
                             conversation: conversations[index],
                             onTap: () => context.push(
                               '/partner-messages/${conversations[index].id}',

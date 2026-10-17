@@ -166,11 +166,106 @@ class ConversationListItem extends StatelessWidget {
   final ChatConversation conversation;
   final VoidCallback onTap;
 
+  /// Variante das Mensagens do parceiro (design "Parceiro — mensagens"):
+  /// separador a toda a largura da linha, hora e contador empilhados à
+  /// direita, pré-visualização a 13 px.
+  final bool partnerStyle;
+  final bool isLast;
+
   const ConversationListItem({
     super.key,
     required this.conversation,
     required this.onTap,
+    this.partnerStyle = false,
+    this.isLast = false,
   });
+
+  Widget _partnerRow(Color tint) {
+    final unread = conversation.unreadCount > 0;
+    final avatarUrl = conversation.avatarUrl;
+    return SnappyTap(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            border: isLast ? null : const Border(bottom: BorderSide(color: AppTheme.borderMuted)),
+          ),
+          child: Row(
+            children: [
+              avatarUrl == null
+                  ? InitialsAvatar(
+                      name: conversation.name,
+                      radius: 24,
+                      background: tint,
+                      foreground: AppTheme.accentOliveDark,
+                    )
+                  : CircleAvatar(radius: 24, backgroundColor: tint, backgroundImage: NetworkImage(avatarUrl)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      conversation.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+                        color: AppTheme.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      conversation.lastMessage ?? 'Sem mensagens ainda.',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (_timeLabel != null)
+                    Text(
+                      _timeLabel!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: unread ? AppTheme.accentOliveDark : AppTheme.inkMuted,
+                        fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+                      ),
+                    ),
+                  if (unread) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      constraints: const BoxConstraints(minWidth: 20),
+                      height: 20,
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentOliveDark,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Text(
+                        '${conversation.unreadCount}',
+                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   String? get _timeLabel {
     final at = conversation.lastMessageAt;
@@ -201,6 +296,7 @@ class ConversationListItem extends StatelessWidget {
     final avatarUrl = conversation.avatarUrl;
     final unread = conversation.unreadCount > 0;
     final tint = _tints[conversation.name.hashCode.abs() % _tints.length];
+    if (partnerStyle) return _partnerRow(tint);
     return SnappyTap(
       onTap: onTap,
       child: Container(
