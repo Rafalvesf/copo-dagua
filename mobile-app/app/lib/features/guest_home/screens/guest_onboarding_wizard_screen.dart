@@ -496,7 +496,6 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   subtitle: [
                     c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}' : ageGroupLabel(c.ageGroup),
                     if (c.ageGroup != 'adult' && c.accompaniedBy != null) 'vai com ${c.accompaniedBy == _me.name ? 'contigo' : c.accompaniedBy}',
-                    if (c.willInstall) 'já tem a app',
                   ].join(' · '),
                   onEdit: () => _editCompanion(c),
                 ),
@@ -518,19 +517,31 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                     ),
                   ),
                 ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFD9D6CF)),
+              // Pedido 2026-10-17: na mesma página dos acompanhantes, em vez
+              // de pedir email ou telemóvel a cada um.
+              if (_companions.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Text(
+                  _companions.length == 1
+                      ? 'O teu acompanhante já tem a app Tchin Tchin?'
+                      : 'Os teus acompanhantes já têm a app Tchin Tchin?',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
                 ),
-                child: const Text(
-                  'O telemóvel é opcional: se a pessoa criar conta com esse número, fica logo ligada à tua resposta.',
+                const SizedBox(height: 4),
+                const Text(
+                  'Se já tem conta neste evento, juntamos as respostas — nada fica repetido.',
                   style: TextStyle(fontSize: 12, height: 17 / 12, color: AppTheme.inkMuted),
                 ),
-              ),
+                const SizedBox(height: 12),
+                for (final c in _companions)
+                  _PersonChoices(
+                    title: c.name,
+                    options: const ['Sim', 'Não'],
+                    equal: true,
+                    selected: {c.willInstall ? 'Sim' : 'Não'},
+                    onTap: (o) => setState(() => c.willInstall = o == 'Sim'),
+                  ),
+              ],
             ],
           ),
         );
@@ -855,11 +866,6 @@ class _CompanionPageState extends State<_CompanionPage> {
 
   bool get _adult => _group == 'adult';
 
-  /// "Já tem a app?" (pedido 2026-10-17: em vez de pedir email ou
-  /// telemóvel de cada acompanhante). Quem cria conta dá sempre email e
-  /// telemóvel; se esta pessoa já tem a app, a resposta liga-se à conta
-  /// dela pelo nome (097) e não fica repetida.
-  late bool _hasApp = widget.existing?.willInstall ?? false;
 
   void _save() {
     final name = _name.text.trim();
@@ -873,7 +879,7 @@ class _CompanionPageState extends State<_CompanionPage> {
         ageGroup: _group,
         age: _child ? int.tryParse(_age.text.trim()) : null,
         accompaniedBy: _adult ? null : _with,
-        willInstall: _hasApp,
+        willInstall: widget.existing?.willInstall ?? false,
       ),
     );
   }
@@ -907,21 +913,6 @@ class _CompanionPageState extends State<_CompanionPage> {
         const SizedBox(height: 10),
         _RadioRow(label: 'Sénior', selected: _group == 'senior', onTap: () => setState(() => _group = 'senior')),
         if (_child) AuthField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
-        const SizedBox(height: 22),
-        const Text('Já tem a app Tchin Tchin?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        const SizedBox(height: 4),
-        const Text(
-          'Se já tem conta neste evento, juntamos as respostas pelo nome — nada fica repetido.',
-          style: TextStyle(fontSize: 12, height: 17 / 12, color: AppTheme.inkMuted),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(child: _RadioRow(label: 'Sim', selected: _hasApp, onTap: () => setState(() => _hasApp = true))),
-            const SizedBox(width: 10),
-            Expanded(child: _RadioRow(label: 'Não', selected: !_hasApp, onTap: () => setState(() => _hasApp = false))),
-          ],
-        ),
         if (!_adult && widget.others.isNotEmpty) ...[
           const SizedBox(height: 22),
           const Text('Vai com quem?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
