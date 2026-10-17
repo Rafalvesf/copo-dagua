@@ -564,17 +564,27 @@ class _PersonChoices extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         height: equal ? 36 : 32,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        alignment: Alignment.center,
+        // Só centra quando os botões têm largura fixa (refeição); nas
+        // alergias ficam do tamanho do texto.
+        alignment: equal ? Alignment.center : null,
         decoration: BoxDecoration(
           color: on ? AppTheme.accentOliveDark : Colors.white,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(color: on ? AppTheme.accentOliveDark : AppTheme.borderMuted),
         ),
-        child: Text(
-          o,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 13, fontWeight: on ? FontWeight.w700 : FontWeight.w400, color: on ? Colors.white : AppTheme.ink),
+        child: Row(
+          mainAxisSize: equal ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                o,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, fontWeight: on ? FontWeight.w700 : FontWeight.w400, color: on ? Colors.white : AppTheme.ink),
+              ),
+            ),
+          ],
         ),
       ),
     );
