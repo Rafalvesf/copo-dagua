@@ -51,6 +51,7 @@ import 'package:copo_dagua_app/core/wedding/wedding_controller.dart';
 import 'package:copo_dagua_app/features/partners/screens/partner_detail_screen.dart';
 import 'package:copo_dagua_app/features/partners/screens/partners_list_screen.dart';
 import 'package:copo_dagua_app/main.dart';
+import 'package:copo_dagua_app/shared/widgets/page_header.dart' show AddActionButton;
 
 // ---------------------------------------------------------------- dados
 
@@ -560,6 +561,12 @@ Future<void> Function(WidgetTester) _tapText(String text) => (t) async {
       await t.tap(f.first, warnIfMissed: false);
     };
 
+Future<void> Function(WidgetTester) _tapAdd() => (t) async {
+      final f = find.byType(AddActionButton);
+      if (f.evaluate().isEmpty) return;
+      await t.tap(f.first, warnIfMissed: false);
+    };
+
 Future<void> Function(WidgetTester) _tapIcon(IconData icon) => (t) async {
       final f = find.byIcon(icon);
       if (f.evaluate().isEmpty) return;
@@ -709,12 +716,12 @@ void main() {
   // botão de cada página tem uma aba, alguns nem foram refeitos").
   for (final (name, auth, path, after) in [
     ('60_sub_editar_evento', couple, '/settings', _tapText('Detalhes do evento')),
-    ('61_sub_novo_convidado', couple, '/guests', _tapIcon(Icons.add)),
-    ('62_sub_nova_despesa', couple, '/budget', _tapIcon(Icons.add)),
+    ('61_sub_novo_convidadocouple, '/guests', _tapAdd()),
+    ('62_sub_nova_despesacouple, '/budget', _tapAdd()),
     ('63_sub_categoria', couple, '/budget', _tapText('Catering')),
-    ('64_sub_nova_tarefa', couple, '/tasks', _tapIcon(Icons.add)),
-    ('65_sub_checklist_nova', couple, '/checklist', _tapIcon(Icons.add)),
-    ('66_sub_mesa', couple, '/seating', _tapIcon(Icons.add)),
+    ('64_sub_nova_tarefacouple, '/tasks', _tapAdd()),
+    ('65_sub_checklist_nova', couple, '/checklist', _tapAdd()),
+    ('66_sub_mesacouple, '/seating', _tapAdd()),
     ('67_sub_reserva', couple, '/bookings', _tapText('Quinta do Lago Azul')),
     ('68_sub_suporte_novo', couple, '/support', _tapText('Novo pedido de suporte')),
     ('69_sub_partilhar', couple, '/guests', _tapIcon(Icons.ios_share)),
@@ -723,7 +730,7 @@ void main() {
     ('72_sub_pacote', partner, '/partner-pricing', _tapText('+ Adicionar pacote')),
     ('73_sub_negocio_editar', partner, '/partner-business-info', _tapText('Quinta do Lago Azul')),
     ('74_sub_bloquear_data', partner, '/partner-calendar', _tapText('20')),
-    ('75_sub_mesa_local', partner, '/partner-venue-tables', _tapIcon(Icons.add)),
+    ('75_sub_mesa_localpartner, '/partner-venue-tables', _tapAdd()),
     ('76_sub_avaliacao', partner, '/partner-reviews', _tapIcon(Icons.more_horiz)),
     ('77_sub_tua_mesa', guest, '/guest-profile', _tapText('A tua mesa')),
     ('78_sub_editar_eu', guest, '/guest-profile', _tapText('Tu')),
@@ -740,5 +747,10 @@ void main() {
   ]) {
     testWidgets(name, (t) => _shoot(t, name, auth, path, after: after));
   }
+  testWidgets('83_verificar_email', (t) => _shoot(t, '83_verificar_email', const AuthState(status: AuthStatus.emailUnverified, profile: _coupleProfile), '/verify-email'));
+  testWidgets('84_rsvp_publico', (t) => _shoot(t, '84_rsvp_publico', signedOut, '/rsvp/token-de-teste'));
+  testWidgets('85_convite_publico', (t) => _shoot(t, '85_convite_publico', signedOut, '/invite/SOFIATIAGO24'));
+  testWidgets('86_convite_individual', (t) => _shoot(t, '86_convite_individual', signedOut, '/i/token-de-teste'));
+  testWidgets('87_juntar_par', (t) => _shoot(t, '87_juntar_par', signedOut, '/juntar/00000000-0000-0000-0000-000000000000'));
   testWidgets('82_esqueci_password', (t) => _shoot(t, '82_esqueci_password', signedOut, '/forgot-password'));
 }
