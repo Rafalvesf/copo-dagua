@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../core/partner_profile/partner_location.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/guest_facing.dart';
@@ -603,6 +604,15 @@ class _PartnerSettings extends ConsumerWidget {
           children: [
             _Row(icon: Icons.storefront_outlined, label: 'Informações do negócio', onTap: () => context.push('/partner-business-info')),
             _Row(icon: Icons.euro, label: 'Preços e pacotes', onTap: () => context.push('/partner-pricing')),
+            _Row(
+              icon: Icons.place_outlined,
+              label: 'Localização',
+              value: ref.watch(partnerLocationProvider).maybeWhen(
+                    data: (l) => l == null || l.isEmpty ? null : (l.city.isNotEmpty ? l.city : l.summary),
+                    orElse: () => null,
+                  ),
+              onTap: () => context.push('/partner-location'),
+            ),
             _Row(
               icon: Icons.route_outlined,
               label: 'Área de deslocação',
