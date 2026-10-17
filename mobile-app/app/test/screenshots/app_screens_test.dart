@@ -569,6 +569,14 @@ void main() {
         const AuthState(status: AuthStatus.onboardingIncomplete, profile: _coupleProfile),
         '/onboarding',
       ));
+  for (var i = 1; i < 7; i++) {
+    testWidgets('04 onboarding passo ${i + 1}', (t) => _shoot(
+          t,
+          '04_onboarding_${i + 1}',
+          const AuthState(status: AuthStatus.onboardingIncomplete, profile: _coupleProfile),
+          '/onboarding?step=$i',
+        ));
+  }
 
   // Casal
   for (final (name, path) in const [

@@ -52,7 +52,10 @@ const _majorCategorySlugs = ['venue', 'photography', 'catering', 'music_dj'];
 enum _DateMode { exact, month, unknown }
 
 class OnboardingWizardScreen extends ConsumerStatefulWidget {
-  const OnboardingWizardScreen({super.key});
+  /// Só para as capturas de ecrã (`?step=N`).
+  final int initialStep;
+
+  const OnboardingWizardScreen({super.key, this.initialStep = 0});
 
   @override
   ConsumerState<OnboardingWizardScreen> createState() =>
@@ -61,7 +64,7 @@ class OnboardingWizardScreen extends ConsumerStatefulWidget {
 
 class _OnboardingWizardScreenState
     extends ConsumerState<OnboardingWizardScreen> {
-  int _step = 0;
+  late int _step = widget.initialStep.clamp(0, _WizardStep.values.length - 1);
   bool _saving = false;
   bool _ownNamePrefilled = false;
   Wedding? _createdWedding;
