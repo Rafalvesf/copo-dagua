@@ -816,7 +816,7 @@ void main() {
     ('11d_menu_estendal', MenuLayout.clothesline, 'blue'),
   ]) {
     testWidgets(name, (t) async {
-      debugMenuStyle = MenuStyle(layout, MenuColor.fromId(color));
+      debugMenuStyle = EventMenuStyle(layout, MenuColor.fromId(color));
       try {
         await _shoot(t, name, couple, '/wedding');
       } finally {

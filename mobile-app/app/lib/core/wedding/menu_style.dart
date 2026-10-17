@@ -86,33 +86,33 @@ class EventDecor {
       };
 }
 
-class MenuStyle {
+class EventMenuStyle {
   final MenuLayout layout;
   final MenuColor color;
-  const MenuStyle(this.layout, this.color);
-  static const fallback = MenuStyle(MenuLayout.classic, MenuColor('eucalyptus', 'Eucalipto', Color(0xFF4F6B4A), Color(0xFFDCE4D8), Color(0xFFF3EBDD)));
+  const EventMenuStyle(this.layout, this.color);
+  static const fallback = EventMenuStyle(MenuLayout.classic, MenuColor('eucalyptus', 'Eucalipto', Color(0xFF4F6B4A), Color(0xFFDCE4D8), Color(0xFFF3EBDD)));
 }
 
 /// Lê `weddings.menu_layout`/`menu_color` do evento atual.
-final menuStyleProvider = FutureProvider<MenuStyle>((ref) async {
+final menuStyleProvider = FutureProvider<EventMenuStyle>((ref) async {
   final id = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-  if (id == null) return MenuStyle.fallback;
+  if (id == null) return EventMenuStyle.fallback;
   try {
     final row = await supabase.from('weddings').select('menu_layout, menu_color').eq('id', id).maybeSingle();
-    if (row == null) return MenuStyle.fallback;
-    return MenuStyle(MenuLayout.fromDb(row['menu_layout'] as String?), MenuColor.fromId(row['menu_color'] as String?));
+    if (row == null) return EventMenuStyle.fallback;
+    return EventMenuStyle(MenuLayout.fromDb(row['menu_layout'] as String?), MenuColor.fromId(row['menu_color'] as String?));
   } catch (_) {
-    return MenuStyle.fallback;
+    return EventMenuStyle.fallback;
   }
 });
 
 /// Só para as capturas de ecrã: força um estilo sem ir ao servidor.
 @visibleForTesting
-MenuStyle? debugMenuStyle;
+EventMenuStyle? debugMenuStyle;
 
 /// O estilo atual sem esperar pelo servidor (clássico/eucalipto até chegar).
-final currentMenuStyleProvider = Provider<MenuStyle>(
-  (ref) => debugMenuStyle ?? ref.watch(menuStyleProvider).asData?.value ?? MenuStyle.fallback,
+final currentMenuStyleProvider = Provider<EventMenuStyle>(
+  (ref) => debugMenuStyle ?? ref.watch(menuStyleProvider).asData?.value ?? EventMenuStyle.fallback,
 );
 
 Future<void> saveMenuStyle(WidgetRef ref, {MenuLayout? layout, MenuColor? color}) async {
