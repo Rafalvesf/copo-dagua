@@ -596,6 +596,7 @@ void main() {
     ('24_casal_definicoes', '/settings'),
     ('25_casal_suporte', '/support'),
     ('26_casal_servicos', '/service-preferences'),
+    ('28_casal_para_convidados', '/guest-page'),
   ]) {
     testWidgets(name, (t) => _shoot(t, name, couple, path));
   }
@@ -626,6 +627,8 @@ void main() {
     ('42_parceiro_portefolio', '/partner-portfolio'),
     ('43_parceiro_negocio', '/partner-business-info'),
     ('44_parceiro_mesas', '/partner-venue-tables'),
+    ('47_parceiro_disponibilidade', '/partner-availability'),
+    ('48_parceiro_localizacao', '/partner-location'),
   ]) {
     testWidgets(name, (t) => _shoot(t, name, partner, path));
   }
@@ -639,6 +642,7 @@ void main() {
     ('51_convidado_galeria', '/guest-gallery'),
     ('52_convidado_perfil', '/guest-profile'),
     ('53_convidado_presentes', '/guest-gifts'),
+    ('56_convidado_eventos', '/guest-events'),
   ]) {
     testWidgets(name, (t) => _shoot(t, name, guest, path));
   }

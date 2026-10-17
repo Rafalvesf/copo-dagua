@@ -7,11 +7,13 @@ import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/guest_facing.dart';
 import '../../../core/wedding/pastel_colors.dart';
+import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/wedding_venue.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/navigation_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import '../../guest_home/screens/guest_wedding_details_screen.dart';
 
 /// "Para os convidados" — tudo o que os convidados veem, num só sítio:
@@ -20,6 +22,22 @@ import '../../guest_home/screens/guest_wedding_details_screen.dart';
 /// com cores pastel e presentes. Pedidos de 2026-10-17: "faz uma
 /// melhorada na aba para os convidados", "a morada do local escolhido na
 /// app entra automaticamente", "dress code com cores pastel".
+/// Rota `/guest-page` — tile "Para os convidados" na página do evento
+/// (pedido 2026-10-17: "deve ter um tile na home page dos organizadores,
+/// não faz sentido estar no perfil").
+class GuestPageRoute extends ConsumerWidget {
+  const GuestPageRoute({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final wedding = ref.watch(weddingControllerProvider).wedding;
+    if (wedding == null) {
+      return const Scaffold(backgroundColor: Colors.white, body: Center(child: CircularProgressIndicator()));
+    }
+    return GuestFacingScreen(key: ValueKey(wedding.id), wedding: wedding);
+  }
+}
+
 class GuestFacingScreen extends ConsumerStatefulWidget {
   final Wedding wedding;
 
@@ -297,6 +315,13 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                           const SizedBox(height: 10),
                           _Field(controller: _giftMessage, label: 'Mensagem', hint: 'Ex: A vossa presença é o melhor presente.', maxLines: 2),
                         ],
+                        const _Caps('Modo convidado'),
+                        _PreviewButton(
+                          onTap: () => showGuestModeSheet(context),
+                          icon: Icons.key_outlined,
+                          title: 'Entrar noutro evento',
+                          subtitle: 'Foste convidado para outro evento? Usa o código.',
+                        ),
                       ],
                     ),
             ),
@@ -603,7 +628,11 @@ class _CodeCard extends StatelessWidget {
               children: [
                 const Text('CÓDIGO DO EVENTO', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFFDDE5D3))),
                 const SizedBox(height: 2),
-                Text(code, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(code, maxLines: 1, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
+                ),
               ],
             ),
           ),
@@ -634,7 +663,15 @@ class _CodeCard extends StatelessWidget {
 
 class _PreviewButton extends StatelessWidget {
   final VoidCallback onTap;
-  const _PreviewButton({required this.onTap});
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  const _PreviewButton({
+    required this.onTap,
+    this.icon = Icons.visibility_outlined,
+    this.title = 'Ver como os convidados',
+    this.subtitle = 'Pré-visualiza o Programa antes de guardar',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -643,20 +680,20 @@ class _PreviewButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.lg)),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.visibility_outlined, size: 20, color: AppTheme.inkMuted),
-            SizedBox(width: 12),
+            Icon(icon, size: 20, color: AppTheme.inkMuted),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Ver como os convidados', style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  Text('Pré-visualiza o Programa antes de guardar', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                  Text(title, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text(subtitle, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6)),
+            const Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6)),
           ],
         ),
       ),

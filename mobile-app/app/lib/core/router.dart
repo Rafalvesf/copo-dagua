@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -55,6 +56,7 @@ import '../features/partner_stats/screens/partner_stats_screen.dart';
 import '../features/partner_venue_tables/screens/partner_venue_tables_screen.dart';
 import '../features/seating/screens/seating_screen.dart';
 import '../features/partners/screens/partners_list_screen.dart';
+import '../features/settings/screens/guest_facing_screen.dart' show GuestPageRoute;
 import '../features/settings/screens/settings_screen.dart';
 import '../features/support/screens/support_screen.dart';
 import '../features/wedding/screens/wedding_details_screen.dart';
@@ -254,6 +256,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/guest-onboarding/:weddingId',
         builder: (context, state) {
           final step = int.tryParse(state.uri.queryParameters['step'] ?? '') ?? 0;
+          if (state.extra is! Guest) return _LostRoute('/guest-home/${state.pathParameters['weddingId']}');
           return GuestOnboardingWizardScreen(
             key: ValueKey('gonb$step'),
             weddingId: state.pathParameters['weddingId']!,
@@ -268,8 +271,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/guest-wedding-details',
-        builder: (context, state) =>
-            GuestWeddingDetailsScreen(wedding: state.extra as GuestWedding),
+        builder: (context, state) => state.extra is GuestWedding
+            ? GuestWeddingDetailsScreen(wedding: state.extra as GuestWedding)
+            : const _LostRoute('/guest-home'),
       ),
       GoRoute(
         path: '/guest-gifts',
@@ -344,13 +348,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/partner-requests/:id',
-        builder: (context, state) =>
-            BookingDetailScreen(booking: state.extra as Booking),
+        builder: (context, state) => state.extra is Booking
+            ? BookingDetailScreen(booking: state.extra as Booking)
+            : const _LostRoute('/partner-requests'),
       ),
       GoRoute(
         path: '/partner-requests/:id/proposal',
-        builder: (context, state) =>
-            SendProposalScreen(booking: state.extra as Booking),
+        builder: (context, state) => state.extra is Booking
+            ? SendProposalScreen(booking: state.extra as Booking)
+            : const _LostRoute('/partner-requests'),
       ),
       GoRoute(
         path: '/partner-messages',
@@ -358,9 +364,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/partner-messages/:id',
-        builder: (context, state) => PartnerChatThreadScreen(
-          conversation: state.extra as ChatConversation,
-        ),
+        builder: (context, state) => state.extra is ChatConversation
+            ? PartnerChatThreadScreen(conversation: state.extra as ChatConversation)
+            : const _LostRoute('/partner-messages'),
       ),
       GoRoute(
         path: '/partner-payments',
@@ -417,6 +423,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ServicePreferencesScreen(),
       ),
       GoRoute(
+        path: '/guest-page',
+        builder: (context, state) => const GuestPageRoute(),
+      ),
+      GoRoute(
         path: '/budget',
         builder: (context, state) => const BudgetScreen(),
       ),
@@ -430,9 +440,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/bookings/detail',
-        builder: (context, state) => CoupleBookingDetailScreen(
-          booking: state.extra as CoupleBooking,
-        ),
+        builder: (context, state) => state.extra is CoupleBooking
+            ? CoupleBookingDetailScreen(booking: state.extra as CoupleBooking)
+            : const _LostRoute('/bookings'),
       ),
       GoRoute(
         path: '/partners',
@@ -450,8 +460,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/chat/:conversationId',
-        builder: (context, state) =>
-            ChatThreadScreen(conversation: state.extra as ChatConversation),
+        builder: (context, state) => state.extra is ChatConversation
+            ? ChatThreadScreen(conversation: state.extra as ChatConversation)
+            : const _LostRoute('/chat'),
       ),
       GoRoute(
         path: '/settings',
@@ -474,3 +485,20 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+
+/// Ecrã aberto sem os dados de que precisa (ex.: recarregar a página no
+/// telemóvel num detalhe — o `extra` do go_router perde-se). Antes ficava
+/// um ecrã de erro em branco; agora volta à lista certa.
+class _LostRoute extends StatelessWidget {
+  final String to;
+  const _LostRoute(this.to);
+
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) GoRouter.of(context).go(to);
+    });
+    return const Scaffold(backgroundColor: Colors.white, body: Center(child: CircularProgressIndicator()));
+  }
+}

@@ -18,7 +18,6 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
-import 'guest_facing_screen.dart';
 
 /// Definições — uma por tipo de conta (organizadores, parceiros,
 /// convidados). Redesign 2026-10-17 (canvas "Organizadores · Definições",
@@ -277,42 +276,16 @@ class _CoupleSettings extends ConsumerWidget {
           _Row(icon: Icons.emoji_emotions_outlined, label: 'Ícone da barra', onTap: () => _pickNavIcon(context)),
         ],
       ),
-      const _SectionTitle('Para os convidados'),
-      _Group(
-        children: [
-          if (wedding.guestCode?.isNotEmpty == true)
-            _Row(
-              icon: Icons.key_outlined,
-              label: 'Código do evento',
-              value: wedding.guestCode,
-              onTap: () async {
-                await Clipboard.setData(ClipboardData(text: wedding.guestCode!));
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
-                }
-              },
-            ),
-          _Row(
-            icon: Icons.schedule,
-            label: 'Programa do evento',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => GuestFacingScreen(wedding: wedding, focusProgram: true)),
-            ),
-          ),
-          _Row(
-            icon: Icons.tune,
-            label: 'Entrada e presentes',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => GuestFacingScreen(wedding: wedding)),
-            ),
-          ),
-          _Row(
-            icon: Icons.swap_horiz,
-            label: fromGuestMode ? 'Ver em modo organizador' : 'Ver como convidado',
-            onTap: fromGuestMode ? () => context.go('/home') : () => showGuestModeSheet(context),
-          ),
-        ],
-      ),
+      // "Para os convidados" saiu do perfil para um tile próprio na
+      // página do evento (/guest-page, pedido 2026-10-17). Fica só o
+      // atalho para voltar ao modo organizador quando se está a ver como
+      // convidado.
+      if (fromGuestMode)
+        _Group(
+          children: [
+            _Row(icon: Icons.swap_horiz, label: 'Ver em modo organizador', onTap: () => context.go('/home')),
+          ],
+        ),
       const _SectionTitle('Conta'),
       const _AccountSection(),
       if (help) ...[
@@ -698,23 +671,16 @@ class _NavIconPicker extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(weddingNavIconProvider);
     return CoverFlowPicker<WeddingNavIcon?>(
-      options: [...WeddingNavIcon.values, null],
+      // Sem o "+" de "em breve" (era um botão sem saída — revisão
+      // 2026-10-17).
+      options: const [...WeddingNavIcon.values],
       selected: selected,
       itemExtent: _maxExtent,
       itemBuilder: (context, option, isSelected) => option == null
           ? const _MoreNavIconTile()
           : _NavIconOptionTile(option: option),
       onChanged: (option) {
-        if (option == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Em breve: ganha mais bonecos ou recebe-os como oferta.',
-              ),
-            ),
-          );
-          return;
-        }
+        if (option == null) return;
         ref.read(weddingNavIconProvider.notifier).select(option);
       },
     );

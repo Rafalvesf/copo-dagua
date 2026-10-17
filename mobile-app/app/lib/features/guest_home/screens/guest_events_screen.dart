@@ -9,6 +9,7 @@ import '../../../core/wedding/date_format_pt.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import 'guest_mode_screen.dart' show showGuestModeSheet;
 
 /// "Os teus eventos" (canvas "Convidado · Os teus eventos") — todos os
 /// eventos para onde a conta foi convidada, com o estado da resposta.
@@ -47,7 +48,8 @@ class GuestEventsScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                 child: SnappyTap(
-                onTap: () => context.push('/settings'),
+                // Abre logo o campo do código (antes ia parar às Definições).
+                onTap: () => showGuestModeSheet(context),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
