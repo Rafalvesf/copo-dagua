@@ -51,6 +51,13 @@ class _Person {
   bool get isChild => ageGroup == 'child';
   int? age;
   String phone;
+
+  /// Email (093): obrigatório para adultos, opcional para crianças e
+  /// seniores. Usado para cruzar com contas e evitar duplicados.
+  String email;
+
+  /// Crianças e seniores: com quem vai (nome de outra pessoa do grupo).
+  String? accompaniedBy;
   String? menu;
   final Set<String> allergies;
   String otherAllergy;
@@ -60,6 +67,8 @@ class _Person {
     this.ageGroup = 'adult',
     this.age,
     this.phone = '',
+    this.email = '',
+    this.accompaniedBy,
     this.menu,
     Set<String>? allergies,
     this.otherAllergy = '',
@@ -77,6 +86,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   bool _confirmed = false;
   late final _Person _me = _Person(
     name: widget.guest.name.split(' ').first,
+    ageGroup: widget.guest.ageGroup,
     menu: widget.guest.menuSelection,
     otherAllergy: widget.guest.dietaryRestrictions ?? '',
   );
@@ -151,6 +161,8 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                 ageGroup: c.ageGroup,
                 childAge: c.age,
                 phone: c.phone.trim().isEmpty ? null : c.phone.trim(),
+                email: c.email.trim().isEmpty ? null : c.email.trim(),
+                accompaniedBy: c.ageGroup == 'adult' ? null : (c.accompaniedBy ?? _me.name),
                 menu: c.menu,
                 allergies: c.allAllergies,
               ),
@@ -177,7 +189,18 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
 
   Future<void> _editCompanion([_Person? existing]) async {
     final result = await Navigator.of(context).push<_Person>(
-      MaterialPageRoute(builder: (_) => _CompanionPage(existing: existing, step: _index + 1, total: _steps.length)),
+      MaterialPageRoute(builder: (_) => _CompanionPage(
+        existing: existing,
+        step: _index + 1,
+        total: _steps.length,
+        // Quem pode acompanhar uma criança ou um sénior: tu e os outros
+        // adultos já indicados.
+        others: [
+          _me.name,
+          for (final c in _companions)
+            if (c != existing && c.ageGroup == 'adult') c.name,
+        ],
+      )),
     );
     if (result == null) return;
     if (result.name.isEmpty) {
@@ -192,7 +215,9 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
           ..name = result.name
           ..ageGroup = result.ageGroup
           ..age = result.age
-          ..phone = result.phone;
+          ..phone = result.phone
+          ..email = result.email
+          ..accompaniedBy = result.accompaniedBy;
         if (existing.isChild && existing.menu != null && !_childMenus.contains(existing.menu)) existing.menu = null;
       }
     });
@@ -313,9 +338,14 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
             if (_wedding?.weddingDate != null) formatWeddingDateCaps(_wedding!.weddingDate!),
             if (_wedding?.venue?.isNotEmpty == true) _wedding!.venue!,
           ].join(' · ');
+        // Já indicado como acompanhante por outra pessoa (093): os dados
+        // vêm preenchidos, só falta confirmar.
+        final prefilled = widget.guest.rsvpStatus == RsvpStatus.confirmed && widget.guest.onboardingCompletedAt == null;
         return _StepScaffold(
           question: 'Vais ao ${_eventType.noun}${_wedding == null ? '' : ' de ${_wedding!.displayNames}'}?',
-          subtitle: sub.isEmpty ? null : sub,
+          subtitle: prefilled
+              ? 'Já tínhamos a tua resposta e preenchemos o que sabíamos. Só tens de confirmar nos próximos passos.'
+              : (sub.isEmpty ? null : sub),
           child: Row(
             children: [
               Expanded(child: _BigChoice(icon: Icons.check_circle_outline, label: 'Sim, vou!', selected: _going, onTap: () => setState(() => _going = true))),
@@ -336,7 +366,11 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                 _PersonRow(
                   initials: _initials(c.name),
                   name: c.name,
-                  subtitle: [c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}' : (c.ageGroup == 'senior' ? 'Sénior' : 'Adulto'), if (c.phone.trim().isNotEmpty) c.phone.trim()].join(' · '),
+                  subtitle: [
+                    c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}' : (c.ageGroup == 'senior' ? 'Sénior' : 'Adulto'),
+                    if (c.ageGroup != 'adult' && c.accompaniedBy != null) 'vai com ${c.accompaniedBy == _me.name ? 'contigo' : c.accompaniedBy}',
+                    if (c.email.trim().isNotEmpty) c.email.trim() else if (c.phone.trim().isNotEmpty) c.phone.trim(),
+                  ].join(' · '),
                   onEdit: () => _editCompanion(c),
                 ),
               if (_companions.length < _limit)
@@ -674,7 +708,8 @@ class _CompanionPage extends StatefulWidget {
   final _Person? existing;
   final int step;
   final int total;
-  const _CompanionPage({this.existing, required this.step, required this.total});
+  final List<String> others;
+  const _CompanionPage({this.existing, required this.step, required this.total, this.others = const []});
 
   @override
   State<_CompanionPage> createState() => _CompanionPageState();
@@ -684,6 +719,8 @@ class _CompanionPageState extends State<_CompanionPage> {
   late final _name = TextEditingController(text: widget.existing?.name ?? '');
   late final _age = TextEditingController(text: widget.existing?.age?.toString() ?? '');
   late final _phone = TextEditingController(text: widget.existing?.phone ?? '');
+  late final _email = TextEditingController(text: widget.existing?.email ?? '');
+  late String? _with = widget.existing?.accompaniedBy ?? (widget.others.isEmpty ? null : widget.others.first);
   late String _group = widget.existing?.ageGroup ?? 'adult';
   bool get _child => _group == 'child';
 
@@ -692,8 +729,11 @@ class _CompanionPageState extends State<_CompanionPage> {
     _name.dispose();
     _age.dispose();
     _phone.dispose();
+    _email.dispose();
     super.dispose();
   }
+
+  bool get _adult => _group == 'adult';
 
   void _save() {
     final name = _name.text.trim();
@@ -701,8 +741,31 @@ class _CompanionPageState extends State<_CompanionPage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Escreve o nome.')));
       return;
     }
+    final email = _email.text.trim();
+    final phone = _phone.text.trim();
+    // Adultos: email e telemóvel obrigatórios (093) — é com eles que a
+    // app liga esta pessoa à conta dela e evita entradas duplicadas.
+    if (_adult) {
+      final emailOk = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+      final phoneOk = phone.replaceAll(RegExp(r'[^0-9]'), '').length >= 9;
+      if (!emailOk || !phoneOk) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(!emailOk && !phoneOk
+              ? 'Indica o email e o telemóvel desta pessoa.'
+              : (!emailOk ? 'Indica um email válido.' : 'Indica um telemóvel válido.')),
+        ));
+        return;
+      }
+    }
     Navigator.of(context).pop(
-      _Person(name: name, ageGroup: _group, age: _child ? int.tryParse(_age.text.trim()) : null, phone: _phone.text.trim()),
+      _Person(
+        name: name,
+        ageGroup: _group,
+        age: _child ? int.tryParse(_age.text.trim()) : null,
+        phone: phone,
+        email: email,
+        accompaniedBy: _adult ? null : _with,
+      ),
     );
   }
 
@@ -732,11 +795,35 @@ class _CompanionPageState extends State<_CompanionPage> {
         const SizedBox(height: 10),
         _RadioRow(label: 'Sénior', selected: _group == 'senior', onTap: () => setState(() => _group = 'senior')),
         if (_child) AuthField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
-        AuthField(label: 'Telemóvel (opcional)', controller: _phone, keyboardType: TextInputType.phone),
+        AuthField(
+          label: _adult ? 'Email' : 'Email (opcional)',
+          controller: _email,
+          keyboardType: TextInputType.emailAddress,
+        ),
+        AuthField(
+          label: _adult ? 'Telemóvel' : 'Telemóvel (opcional)',
+          controller: _phone,
+          keyboardType: TextInputType.phone,
+        ),
+        if (!_adult && widget.others.isNotEmpty) ...[
+          const SizedBox(height: 22),
+          const Text('Vai com quem?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 10),
+          for (final o in widget.others) ...[
+            _RadioRow(label: o == widget.others.first ? '$o (tu)' : o, selected: _with == o, onTap: () => setState(() => _with = o)),
+            const SizedBox(height: 8),
+          ],
+        ],
         const SizedBox(height: 12),
-        const Text(
-          'Enviamos-lhe um convite para criar conta e ver os detalhes do evento. Fica ligado a ti pelo número.',
-          style: TextStyle(fontSize: 13, height: 18 / 13, color: AppTheme.inkMuted),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(12)),
+          child: Text(
+            _adult
+                ? 'Pedimos o email e o telemóvel de cada adulto: se esta pessoa já estiver no evento, ou criar conta depois, fica logo ligada a esta resposta — só tem de confirmar e não há entradas repetidas.'
+                : 'Para crianças e seniores o contacto é opcional. Se o indicares, a pessoa fica ligada à conta dela quando a criar.',
+            style: const TextStyle(fontSize: 12, height: 17 / 12, color: AppTheme.inkMuted),
+          ),
         ),
       ],
       footer: [
