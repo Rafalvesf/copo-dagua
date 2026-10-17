@@ -52,7 +52,10 @@ const _majorCategorySlugs = ['venue', 'photography', 'catering', 'music_dj'];
 enum _DateMode { exact, month, unknown }
 
 class OnboardingWizardScreen extends ConsumerStatefulWidget {
-  const OnboardingWizardScreen({super.key});
+  /// Só para as capturas de ecrã (`?step=N`).
+  final int initialStep;
+
+  const OnboardingWizardScreen({super.key, this.initialStep = 0});
 
   @override
   ConsumerState<OnboardingWizardScreen> createState() =>
@@ -61,7 +64,7 @@ class OnboardingWizardScreen extends ConsumerStatefulWidget {
 
 class _OnboardingWizardScreenState
     extends ConsumerState<OnboardingWizardScreen> {
-  int _step = 0;
+  late int _step = widget.initialStep.clamp(0, _WizardStep.values.length - 1);
   bool _saving = false;
   bool _ownNamePrefilled = false;
   Wedding? _createdWedding;
@@ -336,6 +339,12 @@ class _OnboardingWizardScreenState
               Expanded(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
+                  // Cada pergunta começa sempre à mesma altura (antes o
+                  // passo ficava centrado e o título mudava de sítio).
+                  layoutBuilder: (current, previous) => Stack(
+                    alignment: Alignment.topCenter,
+                    children: [...previous, ?current],
+                  ),
                   child: KeyedSubtree(
                     key: ValueKey(_current),
                     child: _buildStep(context),
@@ -667,6 +676,7 @@ class _LabeledFieldState extends State<_LabeledField> {
             style: const TextStyle(fontSize: AppFontSize.lg + 1, color: AppTheme.ink),
             decoration: InputDecoration(
               isCollapsed: true,
+              contentPadding: EdgeInsets.zero,
               filled: false,
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -1196,6 +1206,7 @@ class _RegionStep extends StatelessWidget {
                   style: const TextStyle(fontSize: AppFontSize.lg, color: AppTheme.ink),
                   decoration: const InputDecoration(
                     isCollapsed: true,
+                    contentPadding: EdgeInsets.zero,
                     filled: false,
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
