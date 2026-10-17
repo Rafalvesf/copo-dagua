@@ -286,3 +286,27 @@ Future<void> saveGuestCompanions({
     ]);
   } catch (_) {}
 }
+
+/// Acompanhantes guardados (081) — vazio se a migração ainda não correu.
+final guestCompanionsProvider = FutureProvider.family<List<GuestCompanion>, String>((ref, guestId) async {
+  try {
+    final rows = await supabase
+        .from('guest_companions')
+        .select()
+        .eq('guest_id', guestId)
+        .order('created_at');
+    return [
+      for (final r in (rows as List).cast<Map<String, dynamic>>())
+        GuestCompanion(
+          name: r['name'] as String,
+          isChild: r['is_child'] as bool? ?? false,
+          childAge: r['child_age'] as int?,
+          phone: r['phone'] as String?,
+          menu: r['menu'] as String?,
+          allergies: ((r['allergies'] as List?) ?? const []).cast<String>(),
+        ),
+    ];
+  } catch (_) {
+    return const [];
+  }
+});

@@ -69,20 +69,20 @@ class GuestBottomNav extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: _GuestNavIcon(
-                    icon: Icons.card_giftcard_outlined,
-                    activeIcon: Icons.card_giftcard_rounded,
-                    active: current == GuestTab.gifts,
-                    onTap: () => context.go(_path('/guest-gifts')),
+                    icon: Icons.photo_library_outlined,
+                    activeIcon: Icons.photo_library_rounded,
+                    active: current == GuestTab.gallery,
+                    onTap: () => context.go(_path('/guest-gallery')),
                   ),
                 ),
               ),
               Expanded(
                 child: Center(
                   child: _GuestNavIcon(
-                    icon: Icons.photo_library_outlined,
-                    activeIcon: Icons.photo_library_rounded,
-                    active: current == GuestTab.gallery,
-                    onTap: () => context.go(_path('/guest-gallery')),
+                    icon: Icons.card_giftcard_outlined,
+                    activeIcon: Icons.card_giftcard_rounded,
+                    active: current == GuestTab.gifts,
+                    onTap: () => context.go(_path('/guest-gifts')),
                   ),
                 ),
               ),

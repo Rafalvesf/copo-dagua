@@ -39,8 +39,8 @@ class GuestProfileScreen extends ConsumerWidget {
     final weddingsAsync = ref.watch(guestWeddingsProvider);
     final isCouple = profile?.role == UserRole.couple;
 
-    return GradientScaffold(
-      background: AppBackground.subtle,
+    return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           SafeArea(
@@ -53,22 +53,6 @@ class GuestProfileScreen extends ConsumerWidget {
                 // parceiro, Mensagens, Galeria). `trailing` com a roda
                 // de definições mantém a linha de ícones (senão o
                 // título subia, tal como em `gallery_screen.dart`).
-                PageHeader(
-                  title: 'Perfil',
-                  showBack: false,
-                  centered: true,
-                  trailing: SnappyTap(
-                    onTap: () => _openSettings(context, ref, isCouple),
-                    child: Container(
-                      width: 46,
-                      height: 46,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(color: AppTheme.surface, shape: BoxShape.circle),
-                      child: const Icon(Icons.more_horiz, color: AppTheme.ink),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
                 Expanded(
                   child: weddingsAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
@@ -80,7 +64,7 @@ class GuestProfileScreen extends ConsumerWidget {
                       final resolvedWeddingId = weddingId == null
                           ? weddings.first.weddingId
                           : (weddings.any((w) => w.weddingId == weddingId) ? weddingId! : weddings.first.weddingId);
-                      return _GuestProfileBody(weddingId: resolvedWeddingId, profile: profile);
+                      return _GuestProfileBody(weddingId: resolvedWeddingId, profile: profile, onMore: () => _openSettings(context, ref, isCouple));
                     },
                   ),
                 ),
@@ -181,7 +165,9 @@ class _GuestProfileBody extends ConsumerWidget {
   final String weddingId;
   final Profile profile;
 
-  const _GuestProfileBody({required this.weddingId, required this.profile});
+  final VoidCallback onMore;
+
+  const _GuestProfileBody({required this.weddingId, required this.profile, required this.onMore});
 
   Future<void> _editField(
     BuildContext context,
@@ -222,6 +208,7 @@ class _GuestProfileBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Canvas "Convidado · A tua presença".
     final guestAsync = ref.watch(myGuestRowProvider(weddingId));
     final tableAsync = ref.watch(mySeatingTableProvider(weddingId));
 
@@ -229,48 +216,53 @@ class _GuestProfileBody extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(myGuestRowProvider(weddingId))),
       data: (guest) {
+        final companions = guest == null
+            ? const <GuestCompanion>[]
+            : ref.watch(guestCompanionsProvider(guest.id)).maybeWhen(data: (c) => c, orElse: () => const <GuestCompanion>[]);
+        final subtitle = guest == null
+            ? profile.email
+            : [
+                if (guest.group.isNotEmpty) guest.group,
+                switch (guest.side) {
+                  WeddingSide.bride => 'Lado da noiva',
+                  WeddingSide.groom => 'Lado do noivo',
+                  WeddingSide.both => '',
+                },
+              ].where((t) => t.isNotEmpty).join(' · ');
         return ListView(
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 120),
           children: [
-            Center(
-              child: Stack(
-                children: [
-                  profile.avatarUrl == null
-                      ? InitialsAvatar(name: profile.fullName, radius: 44, background: AppTheme.surface)
-                      : CircleAvatar(radius: 44, backgroundImage: NetworkImage(profile.avatarUrl!)),
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: SizedBox(
-                      width: 26,
-                      height: 26,
-                      child: Material(
-                        color: AppTheme.accentOliveDark,
-                        shape: const CircleBorder(),
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: () => _pickAndUploadAvatar(context, ref),
-                          child: const Icon(Icons.edit, size: 13, color: Colors.white),
-                        ),
-                      ),
-                    ),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => _pickAndUploadAvatar(context, ref),
+                  child: profile.avatarUrl == null
+                      ? InitialsAvatar(name: profile.fullName, radius: 30, background: AppColors.yellow)
+                      : CircleAvatar(radius: 30, backgroundImage: NetworkImage(profile.avatarUrl!)),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(profile.fullName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      if (subtitle.isNotEmpty) Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                SnappyTap(
+                  onTap: onMore,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(color: AppTheme.surface, shape: BoxShape.circle),
+                    child: const Icon(Icons.more_horiz, color: AppTheme.ink),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 14),
-            Text(
-              profile.fullName,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: AppFontSize.xxl, fontWeight: FontWeight.w700, color: AppTheme.ink),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              profile.email,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 18),
             if (guest == null)
               Container(
                 width: double.infinity,
@@ -285,110 +277,111 @@ class _GuestProfileBody extends ConsumerWidget {
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'Se recebeste um link ou código deste casamento, usa-o para associares a tua conta.',
+                      'Se recebeste um link ou código deste evento, usa-o para associares a tua conta.',
                       style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                     ),
                     const SizedBox(height: 16),
-                    PrimaryButton(
-                      label: 'Introduzir código do casamento',
-                      onPressed: () => showGuestModeSheet(context),
-                    ),
+                    PrimaryButton(label: 'Introduzir código do evento', onPressed: () => showGuestModeSheet(context)),
                     const SizedBox(height: 10),
                     TextButton(
                       onPressed: () => _openInviteLinkDialog(context, ref),
-                      child: const Text(
-                        'Abrir link de convite',
-                        style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700),
-                      ),
+                      child: const Text('Abrir link de convite', style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700)),
                     ),
                   ],
                 ),
               )
             else ...[
-              _ProfileRow(
-                icon: Icons.people_alt_outlined,
-                label: 'Acompanhantes',
-                value: !guest.plusOneAllowed
-                    ? 'Sem acompanhante'
-                    : (guest.plusOneName?.isNotEmpty == true ? '1 acompanhante: ${guest.plusOneName}' : '1 acompanhante'),
-                onEdit: !guest.plusOneAllowed
-                    ? null
-                    : () => _editField(
-                          context,
-                          ref,
-                          title: 'Nome do acompanhante',
-                          guest: guest,
-                          currentValue: (g) => g.plusOneName,
-                          onSave: (value) => updateOwnGuestInfo(
-                            phone: guest.phone,
-                            dietaryRestrictions: guest.dietaryRestrictions,
-                            plusOneName: value,
-                          ),
+              _Segmented(
+                going: guest.rsvpStatus != RsvpStatus.declined,
+                onChanged: (going) async {
+                  try {
+                    await completeGuestOnboarding(
+                      attending: going,
+                      plusOneName: guest.plusOneName,
+                      menuSelection: guest.menuSelection,
+                      dietaryRestrictions: guest.dietaryRestrictions,
+                      side: guest.side,
+                      groupLabel: guest.group.isEmpty ? null : guest.group,
+                    );
+                    ref.invalidate(myGuestRowProvider(weddingId));
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível mudar a resposta.')));
+                    }
+                  }
+                },
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  const Expanded(child: Text('Quem vai', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+                  if (guest.plusOneAllowed)
+                    SnappyTap(
+                      onTap: () => _editField(
+                        context,
+                        ref,
+                        title: 'Nome do acompanhante',
+                        guest: guest,
+                        currentValue: (g) => g.plusOneName,
+                        onSave: (value) => updateOwnGuestInfo(
+                          phone: guest.phone,
+                          dietaryRestrictions: guest.dietaryRestrictions,
+                          plusOneName: value,
                         ),
+                      ),
+                      child: const Text('+ Acompanhante', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                    ),
+                ],
               ),
-              _ProfileRow(
-                icon: Icons.restaurant_outlined,
-                label: 'Menu escolhido',
-                value: guest.menuSelection?.isNotEmpty == true ? guest.menuSelection! : 'Por escolher',
-                onEdit: () => _editField(
-                  context,
-                  ref,
-                  title: 'Menu escolhido',
-                  guest: guest,
-                  currentValue: (g) => g.menuSelection,
-                  onSave: updateOwnGuestMenu,
+              _PersonLine(
+                initials: _initialsOf(profile.fullName),
+                color: AppColors.yellow,
+                name: 'Tu',
+                detail: [
+                  guest.menuSelection?.isNotEmpty == true ? guest.menuSelection! : 'Menu por escolher',
+                  guest.dietaryRestrictions?.isNotEmpty == true ? guest.dietaryRestrictions! : 'Sem alergias',
+                ].join(' · '),
+                status: '✓ Conta ligada',
+                onTap: () => _editMe(context, ref, guest),
+              ),
+              if (companions.isNotEmpty)
+                for (final c in companions)
+                  _PersonLine(
+                    initials: _initialsOf(c.name),
+                    color: AppColors.green,
+                    name: c.isChild && c.childAge != null ? '${c.name} · ${c.childAge} anos' : c.name,
+                    detail: [c.menu ?? 'Menu por escolher', c.allergies.isEmpty ? 'Sem alergias' : c.allergies.join(', ')].join(' · '),
+                    status: c.phone?.isNotEmpty == true ? 'Telemóvel ${c.phone}' : 'Sem conta — está contigo',
+                    muted: c.phone?.isNotEmpty != true,
+                  )
+              else if (guest.plusOneName?.isNotEmpty == true)
+                _PersonLine(
+                  initials: _initialsOf(guest.plusOneName!),
+                  color: AppColors.green,
+                  name: guest.plusOneName!,
+                  detail: 'Acompanhante',
+                  status: 'Sem conta — está contigo',
+                  muted: true,
                 ),
-              ),
-              _ProfileRow(
-                icon: Icons.event_seat_outlined,
+              const SizedBox(height: 6),
+              _InfoLine(
+                icon: Icons.table_restaurant_outlined,
                 label: 'A tua mesa',
-                value: tableAsync.maybeWhen(
-                  data: (table) => table == null ? 'Ainda não atribuída' : 'Mesa $table',
-                  orElse: () => '...',
-                ),
-                actionLabel: 'Ver',
-                onEdit: tableAsync.maybeWhen(data: (table) => table, orElse: () => null) == null
+                value: tableAsync.maybeWhen(data: (t) => t == null ? 'Por atribuir' : 'Mesa $t', orElse: () => '…'),
+                onTap: tableAsync.maybeWhen(data: (t) => t, orElse: () => null) == null
                     ? null
                     : () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => GuestTableScreen(
-                              weddingId: weddingId,
-                              tableNumber: tableAsync.value,
-                            ),
-                          ),
+                          MaterialPageRoute(builder: (_) => GuestTableScreen(weddingId: weddingId, tableNumber: tableAsync.value)),
                         ),
               ),
-              const SizedBox(height: 20),
-              const Text(
-                'Informações adicionais',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg, color: AppTheme.ink),
-              ),
-              const SizedBox(height: 10),
-              _ProfileRow(
-                icon: Icons.no_food_outlined,
-                label: 'Alergias ou restrições',
-                value: guest.dietaryRestrictions?.isNotEmpty == true ? guest.dietaryRestrictions! : 'Sem alergias',
-                onEdit: () => _editField(
+              _InfoLine(
+                icon: Icons.phone_outlined,
+                label: 'Telemóvel',
+                value: guest.phone?.isNotEmpty == true ? guest.phone! : 'Adicionar',
+                onTap: () => _editField(
                   context,
                   ref,
-                  title: 'Alergias ou restrições',
-                  guest: guest,
-                  currentValue: (g) => g.dietaryRestrictions,
-                  onSave: (value) => updateOwnGuestInfo(
-                    phone: guest.phone,
-                    dietaryRestrictions: value,
-                    plusOneName: guest.plusOneName,
-                  ),
-                ),
-              ),
-              _ProfileRow(
-                icon: Icons.call_outlined,
-                label: 'Telefone de contacto',
-                value: guest.phone?.isNotEmpty == true ? guest.phone! : 'Sem telefone',
-                onEdit: () => _editField(
-                  context,
-                  ref,
-                  title: 'Telefone de contacto',
+                  title: 'Telemóvel',
                   guest: guest,
                   currentValue: (g) => g.phone,
                   onSave: (value) => updateOwnGuestInfo(
@@ -403,6 +396,173 @@ class _GuestProfileBody extends ConsumerWidget {
         );
       },
     );
+  }
+
+  void _editMe(BuildContext context, WidgetRef ref, Guest guest) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.restaurant_outlined),
+              title: const Text('Menu'),
+              subtitle: Text(guest.menuSelection ?? 'Por escolher'),
+              onTap: () {
+                Navigator.of(sheet).pop();
+                _editField(context, ref, title: 'Menu', guest: guest, currentValue: (g) => g.menuSelection, onSave: updateOwnGuestMenu);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.no_food_outlined),
+              title: const Text('Alergias ou restrições'),
+              subtitle: Text(guest.dietaryRestrictions ?? 'Sem alergias'),
+              onTap: () {
+                Navigator.of(sheet).pop();
+                _editField(
+                  context,
+                  ref,
+                  title: 'Alergias ou restrições',
+                  guest: guest,
+                  currentValue: (g) => g.dietaryRestrictions,
+                  onSave: (value) => updateOwnGuestInfo(phone: guest.phone, dietaryRestrictions: value, plusOneName: guest.plusOneName),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _initialsOf(String name) => name
+    .trim()
+    .split(RegExp(r'\s+'))
+    .where((w) => w.isNotEmpty)
+    .take(2)
+    .map((w) => w[0].toUpperCase())
+    .join();
+
+class _Segmented extends StatelessWidget {
+  final bool going;
+  final ValueChanged<bool> onChanged;
+  const _Segmented({required this.going, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget seg(String label, bool selected, VoidCallback onTap) => Expanded(
+          child: SnappyTap(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 11),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: selected ? Colors.white : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: selected ? const [BoxShadow(color: Color(0x0F000000), blurRadius: 8, offset: Offset(0, 2))] : null,
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                  color: selected ? AppTheme.ink : AppTheme.inkMuted,
+                ),
+              ),
+            ),
+          ),
+        );
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16)),
+      child: Row(
+        children: [
+          seg(going ? 'Vou ✓' : 'Vou', going, () => onChanged(true)),
+          const SizedBox(width: 6),
+          seg('Não vou', !going, () => onChanged(false)),
+        ],
+      ),
+    );
+  }
+}
+
+class _PersonLine extends StatelessWidget {
+  final String initials;
+  final Color color;
+  final String name;
+  final String detail;
+  final String status;
+  final bool muted;
+  final VoidCallback? onTap;
+
+  const _PersonLine({
+    required this.initials,
+    required this.color,
+    required this.name,
+    required this.detail,
+    required this.status,
+    this.muted = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final row = Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.borderMuted))),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: color,
+            child: Text(initials, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(detail, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                Text(status, style: TextStyle(fontSize: 12, color: muted ? const Color(0xFF8F8B84) : AppTheme.accentOliveDark)),
+              ],
+            ),
+          ),
+          if (onTap != null) const Icon(Icons.chevron_right, size: 16, color: AppTheme.inkMuted),
+        ],
+      ),
+    );
+    return onTap == null ? row : SnappyTap(onTap: onTap!, child: row);
+  }
+}
+
+class _InfoLine extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final VoidCallback? onTap;
+
+  const _InfoLine({required this.icon, required this.label, required this.value, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppTheme.inkMuted),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.ink))),
+          Text(value, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+        ],
+      ),
+    );
+    return onTap == null ? row : SnappyTap(onTap: onTap!, child: row);
   }
 }
 

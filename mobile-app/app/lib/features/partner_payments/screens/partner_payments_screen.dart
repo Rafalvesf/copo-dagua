@@ -189,7 +189,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
                           ? (status.payoutsEnabled
                               ? 'O levantamento é feito no teu Dashboard Stripe — é lá que confirmas o IBAN, nunca dentro desta app.'
                               : 'Disponível assim que "Pode receber transferências" ficar ativo.')
-                          : 'A configuração é feita numa página segura da Stripe — nunca partilhas dados de cartão ou de conta bancária com a Copo d\'Água.',
+                          : 'A configuração é feita numa página segura da Stripe — nunca partilhas dados de cartão ou de conta bancária com o Tchin Tchin.',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: AppTheme.inkMuted,
