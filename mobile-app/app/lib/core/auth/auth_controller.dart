@@ -294,6 +294,7 @@ class AuthController extends Notifier<AuthState> {
       acceptingRequests: !(partnerRow?['is_paused'] as bool? ?? false),
       travelsForEvents: partnerRow?['nationwide'] as bool? ?? true,
       maxTravelDistanceKm: partnerRow?['max_travel_distance_km'] as int?,
+      keyFigure: partnerRow?['key_figure'] as int?,
       partnerProfileStatus: partnerRow?['status'] as String?,
       rejectionReason: partnerRow?['rejection_reason'] as String?,
       logoUrl: partnerRow?['cover_photo_url'] as String?,

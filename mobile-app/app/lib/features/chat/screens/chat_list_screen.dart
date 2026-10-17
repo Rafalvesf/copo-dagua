@@ -13,7 +13,6 @@ import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
-import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
@@ -102,6 +101,12 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   title: 'Mensagens',
                   topPadding: 8,
                   showBack: false,
+                  // "+" (nova conversa com um parceiro) no cabeçalho, como
+                  // nos outros ecrãs; a pesquisa ocupa a largura toda
+                  // (design "Mensagens").
+                  trailing: AddActionButton(
+                    onTap: _startingConversation ? () {} : _startNewConversation,
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -121,7 +126,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                           child: TextField(
                             controller: _search,
                             decoration: InputDecoration(
-                              hintText: 'Pesquisar conversas...',
+                              hintText: 'Pesquisar conversas',
                               prefixIcon: const Icon(Icons.search, size: 20),
                               filled: true,
                               fillColor: Colors.white,
@@ -135,23 +140,6 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                                 vertical: 12,
                               ),
                             ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      SnappyTap(
-                        onTap: _startingConversation ? null : _startNewConversation,
-                        child: Container(
-                          width: 46,
-                          height: 46,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: AppTheme.surface,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.add_rounded,
-                            color: AppTheme.ink,
                           ),
                         ),
                       ),
@@ -179,15 +167,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                           topFadeHeight: 24,
                           bottomFadeHeight: 140,
                           child: ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppTheme.screenMargin,
-                              20,
-                              AppTheme.screenMargin,
-                              140,
-                            ),
+                            padding: const EdgeInsets.fromLTRB(0, 12, 0, 140),
                             itemCount: conversations.length,
                             itemBuilder: (context, index) => Padding(
-                              padding: const EdgeInsets.only(bottom: 14),
+                              padding: EdgeInsets.zero,
                               child: ConversationListItem(
                                 conversation: conversations[index],
                                 onTap: () => context.push(

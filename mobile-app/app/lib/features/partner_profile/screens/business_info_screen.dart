@@ -8,6 +8,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../core/partners/category_figure.dart';
 
 class BusinessInfoScreen extends ConsumerStatefulWidget {
   const BusinessInfoScreen({super.key});
@@ -124,6 +125,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
           acceptingRequests: _profile.acceptingRequests,
           travelsForEvents: _profile.travelsForEvents,
           maxTravelDistanceKm: _profile.maxTravelDistanceKm,
+          keyFigure: _profile.keyFigure,
         );
     if (!mounted) return;
     setState(() => _saving = false);
@@ -292,6 +294,29 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                           ),
                         ),
                       ),
+                      // Número que aparece no 1.º quadrado do perfil
+                      // público, com o significado da categoria principal
+                      // (espaço: capacidade; catering: serve até; …).
+                      // Espaços com mesas registadas usam a soma dos lugares.
+                      Builder(builder: (context) {
+                        final figure = figureForLabel(
+                          _profile.categoryLabels.isEmpty ? null : _profile.categoryLabels.first,
+                        );
+                        return _InfoRow(
+                          icon: Icons.tag_rounded,
+                          label: figure.question,
+                          value: _profile.keyFigure == null ? '—' : figure.format(_profile.keyFigure!),
+                          editable: true,
+                          onTap: () => _editField(
+                            label: figure.question,
+                            value: _profile.keyFigure?.toString() ?? '',
+                            onSaved: (v) {
+                              final n = int.tryParse(v.replaceAll(RegExp(r'[^0-9]'), ''));
+                              if (n != null && n > 0) _profile = _profile.copyWith(keyFigure: n);
+                            },
+                          ),
+                        );
+                      }),
                       _InfoRow(
                         icon: Icons.language,
                         label: 'Website',

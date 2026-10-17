@@ -3,11 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/chat/partner_chat_thread_controller.dart';
 import '../../../core/models/models.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/chat_header.dart';
+import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/money.dart';
 
 /// Fio de conversa com um cliente específico das Mensagens — versão
 /// parametrizada de `PartnerChatScreen` (que fica hardcoded a uma única
@@ -86,161 +84,26 @@ class _PartnerChatThreadScreenState
           Expanded(
             child: chat.loading && chat.messages.isEmpty
                 ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
+                : ListView(
                     controller: _scrollController,
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      16,
-                      AppTheme.screenMargin,
-                      16,
-                    ),
-                    itemCount: chat.messages.length,
-                    itemBuilder: (context, index) {
-                      final message = chat.messages[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Align(
-                          alignment: message.fromPartner
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: message.isProposal
-                              ? _ProposalCard(message: message)
-                              : _TextBubble(
-                                  text: message.text ?? '',
-                                  fromPartner: message.fromPartner,
-                                ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.screenMargin,
-                8,
-                AppTheme.screenMargin,
-                12,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                      ),
-                      child: TextField(
-                        controller: _messageController,
-                        onSubmitted: (_) => _send(),
-                        decoration: InputDecoration(
-                          hintText: 'Escreve uma mensagem...',
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 12,
-                          ),
-                        ),
-                      ),
+                    padding: const EdgeInsets.all(16),
+                    children: chatTimeline(
+                      messages: chat.messages,
+                      // Do lado do parceiro, "minha" é a mensagem do parceiro.
+                      isMine: (m) => m.fromPartner,
+                      content: (message, isMe) => message.isProposal
+                          ? ChatProposalCard(
+                              eyebrow: 'PROPOSTA ENVIADA',
+                              title: message.proposalTitle ?? 'Proposta',
+                              price: message.proposalPrice,
+                              deposit: message.proposalDepositAmount,
+                            )
+                          : ChatBubble(text: message.text ?? '', isMe: isMe),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  CircleIconButton(
-                    icon: Icons.send_rounded,
-                    onTap: _send,
-                    background: AppColors.greenDark,
-                    foreground: Colors.white,
-                  ),
-                ],
-              ),
-            ),
           ),
+          ChatComposer(controller: _messageController, onSend: _send),
         ],
-      ),
-    );
-  }
-}
-
-class _TextBubble extends StatelessWidget {
-  final String text;
-  final bool fromPartner;
-
-  const _TextBubble({required this.text, required this.fromPartner});
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.72,
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: fromPartner ? AppColors.greenDark : AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(color: fromPartner ? Colors.white : AppTheme.ink),
-        ),
-      ),
-    );
-  }
-}
-
-/// Cartão de proposta real (`message.isProposal`,
-/// `051_proposal_chat_card.sql`) — versão do lado do parceiro, só
-/// leitura (quem aceita é o casal, ver `chat_thread_screen.dart`).
-class _ProposalCard extends StatelessWidget {
-  final ChatMessage message;
-
-  const _ProposalCard({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.78,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: AppColors.greenDark.withValues(alpha: 0.4)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Proposta enviada',
-              style: TextStyle(
-                color: AppTheme.inkMuted,
-                fontSize: AppFontSize.xs,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              message.proposalTitle ?? 'Proposta',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: AppFontSize.base,
-                color: AppTheme.ink,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              '${euros(message.proposalPrice ?? 0)} · sinal ${euros(message.proposalDepositAmount ?? 0)}',
-              style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
-            ),
-          ],
-        ),
       ),
     );
   }

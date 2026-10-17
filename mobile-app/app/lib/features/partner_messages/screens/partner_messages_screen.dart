@@ -106,15 +106,10 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                         );
                       }
                       return ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppTheme.screenMargin,
-                          20,
-                          AppTheme.screenMargin,
-                          140,
-                        ),
+                        padding: const EdgeInsets.fromLTRB(0, 12, 0, 140),
                         itemCount: conversations.length,
                         itemBuilder: (context, index) => Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
+                          padding: EdgeInsets.zero,
                           child: ConversationListItem(
                             conversation: conversations[index],
                             onTap: () => context.push(

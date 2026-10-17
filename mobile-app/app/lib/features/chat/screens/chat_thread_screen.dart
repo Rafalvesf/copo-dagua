@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/chat/chat_thread_controller.dart';
 import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/chat_header.dart';
+import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../partners/screens/partner_detail_screen.dart';
-import '../../../shared/money.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
 /// e contactos do cortejo partilham este mesmo ecrã (ver
@@ -113,121 +112,27 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
           Expanded(
             child: chat.loading && chat.messages.isEmpty
                 ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
+                : ListView(
                     controller: _scrollController,
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      16,
-                      AppTheme.screenMargin,
-                      16,
-                    ),
-                    itemCount: chat.messages.length,
-                    itemBuilder: (context, index) {
-                      final message = chat.messages[index];
+                    padding: const EdgeInsets.all(16),
+                    children: chatTimeline(
+                      messages: chat.messages,
                       // Aqui é sempre o casal a enviar — `fromPartner`
-                      // significa "veio da outra parte" (parceiro ou
-                      // contacto do cortejo), por isso a bolha própria
-                      // fica à direita quando `!fromPartner`.
-                      final isMe = !message.fromPartner;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Align(
-                          alignment: isMe
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: message.isProposal
-                              ? _ProposalCard(message: message)
-                              : message.isQuoteRequestNotice
-                              ? GestureDetector(
-                                  onTap: _openPartnerProfile,
-                                  child: _TextBubble(
-                                    text: message.text ?? '',
-                                    isMe: isMe,
-                                  ),
-                                )
-                              : _TextBubble(
-                                  text: message.text ?? '',
-                                  isMe: isMe,
-                                ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.screenMargin,
-                8,
-                AppTheme.screenMargin,
-                12,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                      ),
-                      child: TextField(
-                        controller: _messageController,
-                        onSubmitted: (_) => _send(),
-                        decoration: InputDecoration(
-                          hintText: 'Escreve uma mensagem...',
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 12,
-                          ),
-                        ),
-                      ),
+                      // significa "veio da outra parte".
+                      isMine: (m) => !m.fromPartner,
+                      content: (message, isMe) => message.isProposal
+                          ? _ProposalCard(message: message)
+                          : message.isQuoteRequestNotice
+                          ? GestureDetector(
+                              onTap: _openPartnerProfile,
+                              child: ChatBubble(text: message.text ?? '', isMe: isMe),
+                            )
+                          : ChatBubble(text: message.text ?? '', isMe: isMe),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  CircleIconButton(
-                    icon: Icons.send_rounded,
-                    onTap: _send,
-                    background: AppTheme.accentOliveDark,
-                    foreground: Colors.white,
-                  ),
-                ],
-              ),
-            ),
           ),
+          ChatComposer(controller: _messageController, onSend: _send),
         ],
-      ),
-    );
-  }
-}
-
-class _TextBubble extends StatelessWidget {
-  final String text;
-  final bool isMe;
-
-  const _TextBubble({required this.text, required this.isMe});
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.72,
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isMe ? AppTheme.accentOliveDark : AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(color: isMe ? Colors.white : AppTheme.ink),
-        ),
       ),
     );
   }
@@ -308,67 +213,18 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
   @override
   Widget build(BuildContext context) {
     final message = widget.message;
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.78,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(
-            color: AppTheme.accentOliveDark.withValues(alpha: 0.4),
-          ),
+    return ChatProposalCard(
+      title: message.proposalTitle ?? 'Proposta',
+      price: message.proposalPrice,
+      deposit: message.proposalDepositAmount,
+      actions: [
+        ChatCardAction('Ver detalhe', () => context.push('/bookings')),
+        ChatCardAction(
+          _accepted ? 'Aceite' : (_accepting ? 'A aceitar…' : 'Aceitar'),
+          (_accepting || _accepted) ? null : _accept,
+          primary: true,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Proposta',
-              style: TextStyle(
-                color: AppTheme.inkMuted,
-                fontSize: AppFontSize.xs,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              message.proposalTitle ?? 'Proposta',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: AppFontSize.base,
-                color: AppTheme.ink,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              '${euros(message.proposalPrice ?? 0)} · sinal ${euros(message.proposalDepositAmount ?? 0)}',
-              style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: (_accepting || _accepted) ? null : _accept,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.accentOliveDark,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                ),
-                child: Text(
-                  _accepted
-                      ? 'Aceite'
-                      : (_accepting ? 'A aceitar...' : 'Aceitar proposta'),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

@@ -185,91 +185,115 @@ class ConversationListItem extends StatelessWidget {
     return '${at.day.toString().padLeft(2, '0')}/${at.month.toString().padLeft(2, '0')}';
   }
 
+  // Linhas sem cartão, com separador por baixo do texto, como no design
+  // (canvas "Mensagens"): nome mais forte e hora a verde quando há
+  // mensagens por ler.
+  static const _tints = [
+    Color(0xFFDDE5D3),
+    Color(0xFFECE7DC),
+    Color(0xFFF7EACA),
+    Color(0xFFF3DEE0),
+    Color(0xFFF4E1D2),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final avatarUrl = conversation.avatarUrl;
+    final unread = conversation.unreadCount > 0;
+    final tint = _tints[conversation.name.hashCode.abs() % _tints.length];
     return SnappyTap(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
+        color: Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
         child: Row(
           children: [
             avatarUrl == null
-                ? InitialsAvatar(name: conversation.name, radius: 26)
+                ? InitialsAvatar(name: conversation.name, radius: 24, background: tint)
                 : CircleAvatar(
-                    radius: 26,
-                    backgroundColor: AppColors.gray,
+                    radius: 24,
+                    backgroundColor: tint,
                     backgroundImage: NetworkImage(avatarUrl),
                   ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          conversation.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: AppFontSize.base,
-                          ),
-                        ),
-                      ),
-                      if (_timeLabel != null)
-                        Text(
-                          _timeLabel!,
-                          style: const TextStyle(
-                            color: AppTheme.inkMuted,
-                            fontSize: AppFontSize.xs,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          conversation.lastMessage ?? 'Sem mensagens ainda.',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppTheme.inkMuted,
-                            fontSize: AppFontSize.md,
-                          ),
-                        ),
-                      ),
-                      if (conversation.unreadCount > 0) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 20,
-                          height: 20,
-                          alignment: Alignment.center,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.accentOliveDark,
-                            shape: BoxShape.circle,
-                          ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: AppTheme.borderMuted)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Expanded(
                           child: Text(
-                            '${conversation.unreadCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: AppFontSize.xs,
-                              fontWeight: FontWeight.w700,
+                            conversation.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
+                              fontSize: 15,
+                              color: AppTheme.ink,
                             ),
                           ),
                         ),
+                        if (_timeLabel != null) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            _timeLabel!,
+                            style: TextStyle(
+                              color: unread ? AppTheme.accentOliveDark : AppTheme.inkMuted,
+                              fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+                              fontSize: AppFontSize.xs,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            conversation.lastMessage ?? 'Sem mensagens ainda.',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppTheme.inkMuted,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w300,
+                            ),
+                          ),
+                        ),
+                        if (unread) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            constraints: const BoxConstraints(minWidth: 20),
+                            height: 20,
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AppTheme.accentOliveDark,
+                              borderRadius: BorderRadius.circular(AppRadius.pill),
+                            ),
+                            child: Text(
+                              '${conversation.unreadCount}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
