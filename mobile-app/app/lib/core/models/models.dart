@@ -593,7 +593,14 @@ class GuestWedding {
     this.program = const [],
     this.dressCode,
     this.venueAddress,
+    this.venueLatitude,
+    this.venueLongitude,
   });
+
+  /// Coordenadas do local (087), quando a morada veio do local escolhido
+  /// na app.
+  final double? venueLatitude;
+  final double? venueLongitude;
 
   /// Programa, dress code e morada (085) — definidos pelo casal em
   /// "Para os convidados".

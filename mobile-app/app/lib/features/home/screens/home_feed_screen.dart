@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../settings/screens/settings_screen.dart' show CoupleAccountSections;
-import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,7 +15,6 @@ import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/public_link.dart';
 
 /// Perfil — conta de quem está com sessão iniciada. Pedido explícito do
 /// utilizador (redesign 2026-10): "o perfil fica apenas de quem criou a
@@ -33,42 +30,6 @@ class HomeFeedScreen extends ConsumerStatefulWidget {
 
 class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   bool _uploadingProfilePhoto = false;
-
-  /// Convidar o par por link (pedido 2026-10-17: "por partilha de
-  /// link, não por email — abre a partilha do telemóvel"). Gera o link
-  /// (`create_partner_invite`, 079) e abre o menu de partilha do
-  /// telemóvel; onde não há menu de partilha (alguns browsers de
-  /// computador), copia o link.
-  Future<void> _invitePartner(BuildContext context, Wedding wedding) async {
-    final messenger = ScaffoldMessenger.of(context);
-    String link;
-    try {
-      final token = await ref
-          .read(weddingControllerProvider.notifier)
-          .createPartnerInviteToken(wedding.id);
-      link = publicLink('/juntar/$token');
-    } catch (_) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Não foi possível criar o link de convite.')),
-      );
-      return;
-    }
-    final text = 'Junta-te a mim para organizarmos o nosso casamento '
-        'no Tchin Tchin: $link';
-    var shared = false;
-    try {
-      final result = await SharePlus.instance.share(
-        ShareParams(text: text, subject: 'Organiza o casamento comigo'),
-      );
-      shared = result.status != ShareResultStatus.unavailable;
-    } catch (_) {}
-    if (!shared) {
-      await Clipboard.setData(ClipboardData(text: link));
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Link copiado — envia-o ao teu par.')),
-      );
-    }
-  }
 
   void _openNotifications(BuildContext context) {
     showModalBottomSheet(
@@ -140,10 +101,31 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                 ),
                               ),
                             ),
-                            // Sem sino nem "⋯" aqui (2026-10-17): repetiam
-                            // as linhas "Notificações" e "Definições" logo
-                            // abaixo, na mesma página.
-                            const SizedBox(height: 46),
+                            // Sino no canto direito em vez da linha
+                            // "Notificações" na lista (pedido 2026-10-17).
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                IconButton(
+                                  tooltip: 'Notificações',
+                                  onPressed: () => _openNotifications(context),
+                                  icon: const Icon(Icons.notifications_none_rounded, size: 26, color: AppTheme.ink),
+                                ),
+                                if (unreadNotifications > 0)
+                                  Positioned(
+                                    top: 8,
+                                    right: 9,
+                                    child: Container(
+                                      width: 9,
+                                      height: 9,
+                                      decoration: const BoxDecoration(
+                                        color: AppTheme.accentOliveDark,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ],
                         ),
                         const SizedBox(height: 18),
@@ -160,23 +142,6 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                         ),
                         const SizedBox(height: 24),
                         const _SupportSummaryCard(),
-                        const SizedBox(height: 12),
-                        _MenuGroup(
-                          children: [
-                            _MenuRow(
-                              icon: Icons.person_add_alt_outlined,
-                              label: 'Convidar o teu par',
-                              value: wedding.partnerName2,
-                              onTap: () => _invitePartner(context, wedding),
-                            ),
-                            _MenuRow(
-                              icon: Icons.notifications_none_rounded,
-                              label: 'Notificações',
-                              badge: unreadNotifications,
-                              onTap: () => _openNotifications(context),
-                            ),
-                          ],
-                        ),
                         // Definições da conta dentro do Perfil (2026-10-17).
                         const CoupleAccountSections(help: false, signOut: false),
                         const SizedBox(height: 28),
@@ -777,122 +742,6 @@ class _ProfileHeader extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _MenuGroup extends StatelessWidget {
-  final List<Widget> children;
-
-  const _MenuGroup({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    final items = <Widget>[];
-    for (var i = 0; i < children.length; i++) {
-      if (i > 0) {
-        items.add(const Divider(
-          height: 1,
-          indent: 60,
-          color: AppTheme.borderMuted,
-        ));
-      }
-      items.add(children[i]);
-    }
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Column(children: items),
-    );
-  }
-}
-
-class _MenuRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final int badge;
-  final bool destructive;
-  final String? value;
-
-  const _MenuRow({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.badge = 0,
-    this.destructive = false,
-    this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = destructive ? AppStatusColors.declined : AppTheme.ink;
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        color: Colors.transparent,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: AppTheme.background,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: Icon(icon, size: 18, color: color),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: AppFontSize.md,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
-              ),
-            ),
-            if (value != null && value!.isNotEmpty) ...[
-              Text(
-                value!,
-                style: const TextStyle(
-                  fontSize: AppFontSize.md,
-                  color: AppTheme.inkMuted,
-                ),
-              ),
-              const SizedBox(width: 4),
-            ],
-            if (badge > 0) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: const BoxDecoration(
-                  color: AppStatusColors.declined,
-                  borderRadius: BorderRadius.all(Radius.circular(AppRadius.pill)),
-                ),
-                child: Text(
-                  '$badge',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: AppFontSize.xxs,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-            ],
-            if (!destructive)
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
-                color: AppTheme.inkMuted,
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

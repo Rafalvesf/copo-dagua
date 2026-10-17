@@ -23,20 +23,23 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
           .eq('guest_id', userId)
           .order('joined_at', ascending: false))
       .cast<Map<String, dynamic>>();
-  List<Map<String, dynamic>> rows;
-  try {
-    rows = await query('$baseColumns, gift_list_url, gift_iban, gift_message, event_type, program, dress_code, venue_address');
-  } on PostgrestException {
-   try {
-    rows = await query('$baseColumns, gift_list_url, gift_iban, gift_message, event_type');
-   } on PostgrestException {
+  // Do mais novo para o mais antigo — cada nível serve enquanto a
+  // migração seguinte (074/075/085/087) não correu.
+  const tiers = [
+    '$baseColumns, gift_list_url, gift_iban, gift_message, event_type, program, dress_code, venue_address, venue_latitude, venue_longitude',
+    '$baseColumns, gift_list_url, gift_iban, gift_message, event_type, program, dress_code, venue_address',
+    '$baseColumns, gift_list_url, gift_iban, gift_message, event_type',
+    '$baseColumns, gift_list_url, gift_iban, gift_message',
+    baseColumns,
+  ];
+  List<Map<String, dynamic>> rows = const [];
+  for (var i = 0; i < tiers.length; i++) {
     try {
-      rows = await query('$baseColumns, gift_list_url, gift_iban, gift_message');
+      rows = await query(tiers[i]);
+      break;
     } on PostgrestException {
-      // Migração 075 ainda por correr — sem as colunas de presentes.
-      rows = await query(baseColumns);
+      if (i == tiers.length - 1) rethrow;
     }
-   }
   }
 
   return rows.map<GuestWedding>((row) {
@@ -63,6 +66,8 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
       program: ProgramItem.listFrom(wedding?['program']),
       dressCode: wedding?['dress_code'] as String?,
       venueAddress: wedding?['venue_address'] as String?,
+      venueLatitude: (wedding?['venue_latitude'] as num?)?.toDouble(),
+      venueLongitude: (wedding?['venue_longitude'] as num?)?.toDouble(),
     );
   }).toList();
 });
