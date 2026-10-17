@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/auth_controller.dart';
@@ -9,6 +10,7 @@ import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/partners/category_figure.dart';
+import '../../../core/partner_profile/partner_location.dart';
 
 class BusinessInfoScreen extends ConsumerStatefulWidget {
   const BusinessInfoScreen({super.key});
@@ -261,6 +263,16 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                           onSaved: (v) =>
                               _profile = _profile.copyWith(businessDescription: v),
                         ),
+                      ),
+                      _InfoRow(
+                        icon: Icons.place_outlined,
+                        label: 'Localização',
+                        value: ref.watch(partnerLocationProvider).maybeWhen(
+                              data: (l) => l == null || l.isEmpty ? 'Adicionar morada' : l.summary,
+                              orElse: () => '…',
+                            ),
+                        editable: true,
+                        onTap: () => context.push('/partner-location'),
                       ),
                       _InfoRow(
                         icon: Icons.radar_outlined,

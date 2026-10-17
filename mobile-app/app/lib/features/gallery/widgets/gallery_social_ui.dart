@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/gallery/gallery_providers.dart';
@@ -177,13 +179,23 @@ class _PostCard extends ConsumerStatefulWidget {
   ConsumerState<_PostCard> createState() => _PostCardState();
 }
 
-class _PostCardState extends ConsumerState<_PostCard> {
+class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderStateMixin {
   bool? _liked;
   int? _likes;
   bool _busy = false;
+  late final AnimationController _burst = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
 
   bool get liked => _liked ?? widget.meta?.likedByMe ?? false;
   int get likes => _likes ?? widget.meta?.likeCount ?? 0;
+
+  @override
+  void dispose() {
+    _burst.dispose();
+    super.dispose();
+  }
 
   Future<void> _toggleLike() async {
     final me = ref.read(authControllerProvider).profile?.id;
@@ -209,18 +221,32 @@ class _PostCardState extends ConsumerState<_PostCard> {
     }
   }
 
+  /// Duplo toque: coração grande por cima da foto (pedido 2026-10-17,
+  /// "melhora a parte das publicações").
+  void _doubleTap() {
+    if (!MediaQuery.of(context).disableAnimations) _burst.forward(from: 0);
+    if (!liked) _toggleLike();
+  }
+
   void _openAuthor() {
     final m = widget.meta;
     if (m == null) return;
     showGalleryMember(context, weddingId: widget.weddingId, profileId: m.uploadedBy, allPhotos: widget.allPhotos);
   }
 
+  Future<void> _share() async {
+    try {
+      await SharePlus.instance.share(ShareParams(uri: Uri.parse(widget.photo.imageUrl)));
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final m = widget.meta;
     final name = m?.authorName ?? '';
+    final comments = m?.commentCount ?? 0;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -228,7 +254,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
             SnappyTap(
               onTap: _openAuthor,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
                   children: [
                     _avatar(name, m.authorAvatarUrl, 18),
@@ -237,10 +263,22 @@ class _PostCardState extends ConsumerState<_PostCard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                          Row(
+                            children: [
+                              Flexible(child: Text(name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14))),
+                              if (m.authorIsCouple) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(999)),
+                                  child: const Text('Anfitrião', style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
+                                ),
+                              ],
+                            ],
+                          ),
                           Text(
-                            '${m.authorIsCouple ? 'Casal' : 'Convidado'} · ${_ago(widget.photo.createdAt)}',
-                            style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted),
+                            '${m.authorIsCouple ? 'Organizador' : 'Convidado'} · ${_ago(widget.photo.createdAt)}',
+                            style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
                           ),
                         ],
                       ),
@@ -250,78 +288,125 @@ class _PostCardState extends ConsumerState<_PostCard> {
               ),
             ),
           GestureDetector(
-            onDoubleTap: liked ? null : _toggleLike,
-            child: AspectRatio(
-              aspectRatio: 4 / 5,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ColoredBox(color: widget.tint),
-                  Image.network(
-                    widget.photo.imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stack) => const SizedBox.shrink(),
-                  ),
-                ],
+            onDoubleTap: _doubleTap,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              child: AspectRatio(
+                aspectRatio: 4 / 5,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ColoredBox(color: widget.tint),
+                    Image.network(
+                      widget.photo.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+                    ),
+                    AnimatedBuilder(
+                      animation: _burst,
+                      builder: (context, _) {
+                        final t = _burst.value;
+                        if (t == 0 || t == 1) return const SizedBox.shrink();
+                        final scale = t < 0.25 ? Curves.easeOutBack.transform(t / 0.25) * 1.2 : (t < 0.7 ? 1.0 : 1 + (t - 0.7));
+                        final opacity = t < 0.7 ? 1.0 : (1 - (t - 0.7) / 0.3);
+                        return Center(
+                          child: Opacity(
+                            opacity: opacity.clamp(0.0, 1.0),
+                            child: Transform.scale(
+                              scale: scale,
+                              child: const Icon(Icons.favorite, size: 96, color: Colors.white, shadows: [Shadow(color: Color(0x40000000), blurRadius: 16, offset: Offset(0, 6))]),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
           if (m != null) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 16, 0),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: _toggleLike,
-                    tooltip: liked ? 'Retirar gosto' : 'Gosto',
-                    icon: Icon(
-                      liked ? Icons.favorite : Icons.favorite_border,
-                      color: liked ? AppStatusColors.declined : AppTheme.ink,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => showGalleryComments(context, weddingId: widget.weddingId, photoId: widget.photo.id),
-                    tooltip: 'Comentar',
-                    icon: const Icon(Icons.chat_bubble_outline_rounded, color: AppTheme.ink),
-                  ),
-                ],
-              ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                _Action(
+                  icon: liked ? Icons.favorite : Icons.favorite_border,
+                  color: liked ? AppStatusColors.declined : AppTheme.ink,
+                  label: likes > 0 ? '$likes' : null,
+                  tooltip: liked ? 'Retirar gosto' : 'Gosto',
+                  onTap: _toggleLike,
+                ),
+                _Action(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  label: comments > 0 ? '$comments' : null,
+                  tooltip: 'Comentar',
+                  onTap: () => showGalleryComments(context, weddingId: widget.weddingId, photoId: widget.photo.id),
+                ),
+                _Action(icon: Icons.ios_share_rounded, tooltip: 'Partilhar', onTap: _share),
+                const Spacer(),
+                _Action(
+                  icon: Icons.download_rounded,
+                  tooltip: 'Descarregar',
+                  onTap: () => launchUrl(Uri.parse(widget.photo.imageUrl), mode: LaunchMode.externalApplication),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (likes > 0)
-                    Text(
-                      likes == 1 ? '1 gosto' : '$likes gostos',
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                    ),
-                  if (widget.photo.caption?.isNotEmpty == true) ...[
-                    const SizedBox(height: 4),
-                    Text.rich(
-                      TextSpan(children: [
-                        TextSpan(text: '$name ', style: const TextStyle(fontWeight: FontWeight.w700)),
-                        TextSpan(text: widget.photo.caption),
-                      ]),
-                      style: const TextStyle(fontSize: 14, color: AppTheme.ink),
-                    ),
-                  ],
-                  if (m.commentCount > 0) ...[
-                    const SizedBox(height: 4),
-                    SnappyTap(
-                      onTap: () => showGalleryComments(context, weddingId: widget.weddingId, photoId: widget.photo.id),
-                      child: Text(
-                        m.commentCount == 1 ? 'Ver 1 comentário' : 'Ver os ${m.commentCount} comentários',
-                        style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
-                      ),
-                    ),
-                  ],
-                ],
+            if (widget.photo.caption?.isNotEmpty == true) ...[
+              const SizedBox(height: 2),
+              Text.rich(
+                TextSpan(children: [
+                  TextSpan(text: '$name ', style: const TextStyle(fontWeight: FontWeight.w700)),
+                  TextSpan(text: widget.photo.caption),
+                ]),
+                style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.ink),
               ),
-            ),
+            ],
+            if (comments > 0) ...[
+              const SizedBox(height: 4),
+              SnappyTap(
+                onTap: () => showGalleryComments(context, weddingId: widget.weddingId, photoId: widget.photo.id),
+                child: Text(
+                  comments == 1 ? 'Ver 1 comentário' : 'Ver os $comments comentários',
+                  style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
+                ),
+              ),
+            ],
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _Action extends StatelessWidget {
+  final IconData icon;
+  final String? label;
+  final String tooltip;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _Action({required this.icon, this.label, required this.tooltip, required this.onTap, this.color = AppTheme.ink});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 25, color: color),
+              if (label != null) ...[
+                const SizedBox(width: 5),
+                Text(label!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -479,11 +564,28 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                       ),
               ),
             ),
+            Container(
+              decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.borderMuted))),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  for (final e in const ['❤️', '🥂', '😍', '👏', '😂', '🥹'])
+                    InkWell(
+                      borderRadius: BorderRadius.circular(999),
+                      onTap: () {
+                        _text.text = '${_text.text}$e';
+                        _text.selection = TextSelection.collapsed(offset: _text.text.length);
+                      },
+                      child: Padding(padding: const EdgeInsets.all(6), child: Text(e, style: const TextStyle(fontSize: 22))),
+                    ),
+                ],
+              ),
+            ),
             SafeArea(
               top: false,
               child: Container(
-                decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.borderMuted))),
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
                 child: Row(
                   children: [
                     Expanded(
@@ -492,14 +594,16 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         alignment: Alignment.centerLeft,
                         decoration: BoxDecoration(
-                          color: AppTheme.surface,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(AppRadius.pill),
+                          border: Border.all(color: AppTheme.accentOliveDark),
+                          boxShadow: AppTheme.searchBarShadow,
                         ),
                         child: TextField(
                           controller: _text,
                           onSubmitted: (_) => _send(),
                           decoration: const InputDecoration(
-                            hintText: 'Escrever comentário',
+                            hintText: 'Escreve um comentário…',
                             isDense: true,
                             filled: false,
                             border: InputBorder.none,
