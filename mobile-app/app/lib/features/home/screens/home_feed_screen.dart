@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../settings/screens/settings_screen.dart' show CoupleAccountSections;
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -163,11 +164,6 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                         _MenuGroup(
                           children: [
                             _MenuRow(
-                              icon: Icons.settings_outlined,
-                              label: 'Definições',
-                              onTap: () => context.push('/settings'),
-                            ),
-                            _MenuRow(
                               icon: Icons.person_add_alt_outlined,
                               label: 'Convidar o teu par',
                               value: wedding.partnerName2,
@@ -181,6 +177,8 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                             ),
                           ],
                         ),
+                        // Definições da conta dentro do Perfil (2026-10-17).
+                        const CoupleAccountSections(help: false, signOut: false),
                         const SizedBox(height: 28),
                         const Text(
                           'Como podemos ajudar?',

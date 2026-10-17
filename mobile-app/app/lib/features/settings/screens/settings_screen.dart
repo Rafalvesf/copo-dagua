@@ -96,11 +96,11 @@ class _Group extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      // Botões em cinzento, como no Perfil (pedido 2026-10-17).
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: _cardBorder),
       ),
       child: Column(
         children: [
@@ -307,6 +307,59 @@ class _CoupleSettings extends ConsumerWidget {
     );
   }
 
+  List<Widget> _sections(BuildContext context, WidgetRef ref, Wedding wedding, {bool help = true, bool signOut = true}) {
+    return [
+      const _SectionTitle('Organização'),
+      _Group(
+        children: [
+          _Row(icon: Icons.link, label: 'Convidar outro organizador', value: 'Link', onTap: () => _invite(context, ref, wedding)),
+          _Row(
+            icon: Icons.calendar_today_outlined,
+            label: 'Detalhes do evento',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EditEventPage(wedding: wedding))),
+          ),
+          _Row(icon: Icons.emoji_emotions_outlined, label: 'Ícone da barra', onTap: () => _pickNavIcon(context)),
+        ],
+      ),
+      const _SectionTitle('Para os convidados'),
+      _Group(
+        children: [
+          if (wedding.guestCode?.isNotEmpty == true)
+            _Row(
+              icon: Icons.key_outlined,
+              label: 'Código do evento',
+              value: wedding.guestCode,
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: wedding.guestCode!));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
+                }
+              },
+            ),
+          _Row(
+            icon: Icons.tune,
+            label: 'Entrada, programa e presentes',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => _GuestFacingPage(weddingId: wedding.id, code: wedding.guestCode)),
+            ),
+          ),
+          _Row(
+            icon: Icons.swap_horiz,
+            label: fromGuestMode ? 'Ver em modo organizador' : 'Ver como convidado',
+            onTap: fromGuestMode ? () => context.go('/home') : () => showGuestModeSheet(context),
+          ),
+        ],
+      ),
+      const _SectionTitle('Conta'),
+      const _AccountSection(),
+      if (help) ...[
+        const _SectionTitle('Ajuda'),
+        const _HelpGroup(),
+      ],
+      if (signOut) const _SignOut(),
+    ];
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wedding = ref.watch(weddingControllerProvider).wedding;
@@ -355,49 +408,95 @@ class _CoupleSettings extends ConsumerWidget {
             ),
           ),
         ),
-        const _SectionTitle('Organização'),
+        ..._sections(context, ref, wedding),
+      ],
+    );
+  }
+}
+
+/// Conteúdo das Definições do organizador, para pôr dentro do Perfil
+/// (pedido 2026-10-17: "coloca todo o conteúdo das definições de conta
+/// na página do perfil").
+class CoupleAccountSections extends ConsumerWidget {
+  final bool help;
+  final bool signOut;
+  const CoupleAccountSections({super.key, this.help = true, this.signOut = true});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final wedding = ref.watch(weddingControllerProvider).wedding;
+    if (wedding == null) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: const _CoupleSettings(fromGuestMode: false)._sections(context, ref, wedding, help: help, signOut: signOut),
+    );
+  }
+}
+
+/// Conteúdo das Definições do parceiro para o Perfil. Serviços e preços,
+/// portefólio, avaliações, resultados, pagamentos, contratos e reservas
+/// ficam no Painel.
+class PartnerAccountSections extends ConsumerWidget {
+  const PartnerAccountSections({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(authControllerProvider).profile;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionTitle('Negócio'),
         _Group(
           children: [
-            _Row(icon: Icons.link, label: 'Convidar outro organizador', value: 'Link', onTap: () => _invite(context, ref, wedding)),
+            _Row(icon: Icons.storefront_outlined, label: 'Informações do negócio', onTap: () => context.push('/partner-business-info')),
             _Row(
-              icon: Icons.calendar_today_outlined,
-              label: 'Detalhes do evento',
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EditEventPage(wedding: wedding))),
-            ),
-            _Row(icon: Icons.emoji_emotions_outlined, label: 'Ícone da barra', onTap: () => _pickNavIcon(context)),
-          ],
-        ),
-        const _SectionTitle('Para os convidados'),
-        _Group(
-          children: [
-            if (wedding.guestCode?.isNotEmpty == true)
-              _Row(
-                icon: Icons.key_outlined,
-                label: 'Código do evento',
-                value: wedding.guestCode,
-                onTap: () async {
-                  await Clipboard.setData(ClipboardData(text: wedding.guestCode!));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
-                  }
-                },
-              ),
-            _Row(
-              icon: Icons.tune,
-              label: 'Entrada, programa e presentes',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => _GuestFacingPage(weddingId: wedding.id, code: wedding.guestCode)),
-              ),
+              icon: Icons.place_outlined,
+              label: 'Localização',
+              value: ref.watch(partnerLocationProvider).maybeWhen(
+                    data: (l) => l == null || l.isEmpty ? null : (l.city.isNotEmpty ? l.city : l.summary),
+                    orElse: () => null,
+                  ),
+              onTap: () => context.push('/partner-location'),
             ),
             _Row(
-              icon: Icons.swap_horiz,
-              label: fromGuestMode ? 'Ver em modo organizador' : 'Ver como convidado',
-              onTap: fromGuestMode ? () => context.go('/home') : () => showGuestModeSheet(context),
+              icon: Icons.route_outlined,
+              label: 'Área de deslocação',
+              value: profile?.maxTravelDistanceKm == null ? null : 'até ${profile!.maxTravelDistanceKm} km',
+              onTap: () => context.push('/partner-business-info'),
             ),
+            if (profile?.categoryLabels.contains('Espaço / Quinta') ?? false)
+              _Row(icon: Icons.event_seat_outlined, label: 'Mesas do local', onTap: () => context.push('/partner-venue-tables')),
+            _Row(icon: Icons.calendar_month_outlined, label: 'Calendário e datas bloqueadas', onTap: () => context.push('/partner-calendar')),
           ],
         ),
         const _SectionTitle('Conta'),
         const _AccountSection(),
+        const _SectionTitle('Ajuda'),
+        const _HelpGroup(),
+        const _SignOut(),
+      ],
+    );
+  }
+}
+
+/// Conteúdo das Definições do convidado para o Perfil.
+class GuestAccountSections extends StatelessWidget {
+  const GuestAccountSections({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionTitle('Conta'),
+        const _AccountSection(),
+        const _SectionTitle('Eventos'),
+        _Group(
+          children: [
+            _Row(icon: Icons.celebration_outlined, label: 'Os teus eventos', onTap: () => context.push('/guest-events')),
+            _Row(icon: Icons.key_outlined, label: 'Juntar-me a outro evento', onTap: () => showGuestModeSheet(context)),
+          ],
+        ),
         const _SectionTitle('Ajuda'),
         const _HelpGroup(),
         const _SignOut(),
