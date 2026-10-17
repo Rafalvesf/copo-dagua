@@ -13,7 +13,13 @@ import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
-import '../../guests/screens/guests_list_screen.dart' show InviteShareSheet;
+import '../../guests/screens/guests_list_screen.dart' show InviteShareSheet, GuestsListScreen;
+import '../../budget/screens/budget_screen.dart';
+import '../../seating/screens/seating_screen.dart';
+import '../../gallery/screens/gallery_screen.dart';
+import '../../settings/screens/guest_facing_screen.dart' show GuestPageRoute;
+import '../../tasks/screens/service_preferences_screen.dart';
+import '../../../shared/widgets/open_tile.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -519,7 +525,7 @@ class _QuickLinksRow extends ConsumerWidget {
                     ? 'Por definir'
                     : '${euros(budget.spent)} de ${euros(budget.total)}',
                 color: const Color(0xFFF4E1D2),
-                onTap: () => context.push('/budget'),
+                page: (_) => const BudgetScreen(),
               ),
             ),
             const SizedBox(width: 12),
@@ -531,7 +537,7 @@ class _QuickLinksRow extends ConsumerWidget {
                     ? 'Ainda sem convidados'
                     : '$confirmed ${plural(confirmed, 'confirmado', 'confirmados')} de ${guests.length}',
                 color: const Color(0xFFDDE5D3),
-                onTap: () => context.push('/guests'),
+                page: (_) => const GuestsListScreen(),
               ),
             ),
           ],
@@ -545,7 +551,7 @@ class _QuickLinksRow extends ConsumerWidget {
                 label: 'Lugares',
                 subtitle: guests.isEmpty ? 'Sem convidados' : '$seated de ${guests.length} sentados',
                 color: const Color(0xFFECE7DC),
-                onTap: () => context.push('/seating'),
+                page: (_) => const SeatingScreen(),
               ),
             ),
             const SizedBox(width: 12),
@@ -557,7 +563,7 @@ class _QuickLinksRow extends ConsumerWidget {
                     ? '$pending ${plural(pending, 'foto por aprovar', 'fotos por aprovar')}'
                     : '$approved ${plural(approved, 'foto', 'fotos')}',
                 color: const Color(0xFFF3DEE0),
-                onTap: () => context.push('/gallery'),
+                page: (_) => const GalleryScreen(),
               ),
             ),
           ],
@@ -573,7 +579,7 @@ class _QuickLinksRow extends ConsumerWidget {
                 label: 'Para os convidados',
                 subtitle: 'Programa e presentes',
                 color: const Color(0xFFE8E1F0),
-                onTap: () => context.push('/guest-page'),
+                page: (_) => const GuestPageRoute(),
               ),
             ),
             const SizedBox(width: 12),
@@ -587,7 +593,7 @@ class _QuickLinksRow extends ConsumerWidget {
                         ? 'Nenhum ainda'
                         : '$handled ${plural(handled, 'categoria', 'categorias')}',
                 color: const Color(0xFFF7EACA),
-                onTap: () => context.push('/service-preferences'),
+                page: (_) => const ServicePreferencesScreen(),
               ),
             ),
           ],
@@ -615,20 +621,21 @@ class _QuickLinkTile extends StatelessWidget {
   final String label;
   final String subtitle;
   final Color color;
-  final VoidCallback onTap;
+  final WidgetBuilder page;
 
   const _QuickLinkTile({
     required this.icon,
     required this.label,
     required this.subtitle,
     required this.color,
-    required this.onTap,
+    required this.page,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
+    return OpenTile(
+      color: color,
+      page: page,
       child: Container(
         height: 108,
         padding: const EdgeInsets.all(16),
