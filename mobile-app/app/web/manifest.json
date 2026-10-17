@@ -1,11 +1,11 @@
 {
-    "name": "copo_dagua_app",
-    "short_name": "copo_dagua_app",
+    "name": "Tchin Tchin",
+    "short_name": "Tchin Tchin",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FFFFFF",
-    "theme_color": "#FFFFFF",
-    "description": "A new Flutter project.",
+    "background_color": "#5F7545",
+    "theme_color": "#5F7545",
+    "description": "O teu evento, num só lugar.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
