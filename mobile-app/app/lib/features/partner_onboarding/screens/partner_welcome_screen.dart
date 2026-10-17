@@ -11,13 +11,12 @@ import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/partner_profile/partner_profile_controller.dart';
 import '../../../core/partners/category_details.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../features/partner_profile/screens/business_info_screen.dart' show CategoryPickerDialog;
 import '../../../features/partner_profile/screens/partner_pricing_screen.dart' show showEditPackageSheet;
+import '../../../shared/widgets/auth_ui.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/mascot.dart';
-import '../../../shared/widgets/progress.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/staggered_fade_in.dart';
 import '../../../shared/money.dart';
@@ -337,22 +336,6 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
     }
   }
 
-  Future<void> _pickCategories() async {
-    final result = await showDialog<Set<String>>(
-      context: context,
-      builder: (context) => CategoryPickerDialog(
-        options: _categoryOptions,
-        initialSelectedIds: _selectedCategoryIds,
-      ),
-    );
-    if (result == null) return;
-    setState(() {
-      _selectedCategoryIds
-        ..clear()
-        ..addAll(result);
-    });
-  }
-
   Future<void> _continue() async {
     if (!_canContinue) return;
     if (_stepIndex < _steps.length - 1) {
@@ -448,33 +431,57 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
       return _IntroView(onStart: () => setState(() => _stepIndex++));
     }
 
-    return GradientScaffold(
-      background: AppBackground.hero,
-      extendBodyBehindAppBar: false,
-      appBar: AppBar(automaticallyImplyLeading: false),
-      // `SafeArea` + a mesma margem inferior (40) do botão "Começar" em
-      // `_IntroView` — pedido explícito do utilizador: "the button
-      // continuar and back should be at the same height has the
-      // comecar button". Sem isto, o rodapé ficava 16px mais perto do
-      // fundo do que o "Começar" (Padding.all(24) vs
-      // fromLTRB(_, _, _, 40) do intro).
+    // Canvas "Parceiro 1–7": branco, voltar redondo, "Passo X de N",
+    // barra fina, pergunta 28/34 e "Continuar" verde em baixo.
+    final total = _steps.length - 1;
+    return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
+          padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              StepProgressBar(totalSteps: _steps.length - 1, currentStep: _stepIndex - 1),
-              const SizedBox(height: 24),
-              Expanded(child: _buildStep(context)),
-              WizardFooter(
-                onBack: () => setState(() => _stepIndex--),
-                continueButton: Expanded(
-                  child: PrimaryButton(
-                    label: _stepIndex == _steps.length - 1 ? 'Concluir' : 'Continuar',
-                    loading: _saving,
-                    onPressed: !_canContinue || _saving ? null : _continue,
+              SizedBox(
+                height: 44,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: CircleBackButton(onTap: () => setState(() => _stepIndex--)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Passo $_stepIndex de $total', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: _stepIndex / total),
+                  duration: const Duration(milliseconds: 260),
+                  builder: (context, v, _) => LinearProgressIndicator(
+                    value: v,
+                    minHeight: 3,
+                    backgroundColor: AppTheme.borderMuted,
+                    color: AppTheme.accentOliveDark,
                   ),
+                ),
+              ),
+              Expanded(child: SingleChildScrollView(child: _buildStep(context))),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 54,
+                child: FilledButton(
+                  onPressed: !_canContinue || _saving ? null : _continue,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.accentOliveDark,
+                    disabledBackgroundColor: AppTheme.accentOliveDark.withValues(alpha: 0.45),
+                    foregroundColor: Colors.white,
+                    disabledForegroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  child: _saving
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                      : Text(_stepIndex == total ? 'Concluir' : 'Continuar'),
                 ),
               ),
             ],
@@ -484,14 +491,26 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
     );
   }
 
+  void _toggleCategory(String id) {
+    setState(() {
+      if (_selectedCategoryIds.contains(id)) {
+        _selectedCategoryIds.remove(id);
+      } else if (_selectedCategoryIds.length < 5) {
+        _selectedCategoryIds.add(id);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Até 5 categorias.')));
+      }
+    });
+  }
+
   Widget _buildStep(BuildContext context) {
     switch (_step) {
       case _Step.intro:
         return const SizedBox.shrink();
       case _Step.businessName:
         return _StepScaffold(
-          question: 'Qual é o nome do teu negócio?',
-          subtitle: 'É este nome que os casais vão ver na plataforma.',
+          question: 'Como se chama o vosso negócio?',
+          subtitle: 'É o nome que os casais vão ver.',
           child: AuthTextField(
             label: 'Nome do negócio',
             controller: _businessName,
@@ -500,23 +519,38 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
         );
       case _Step.category:
         return _StepScaffold(
-          question: 'Em que categorias trabalhas?',
-          subtitle: 'Até 5. Isto define quem te encontra na pesquisa.',
-          child: SnappyCategoryPicker(
-            selectedLabels: _categoryOptions
-                .where((o) => _selectedCategoryIds.contains(o.id))
-                .map((o) => o.label)
-                .toList(),
-            onTap: _categoryOptions.isEmpty ? null : _pickCategories,
-          ),
+          question: 'O que oferecem?',
+          subtitle: 'Até 5 categorias.',
+          child: _categoryOptions.isEmpty
+              ? const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
+              : GridView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    mainAxisExtent: 80,
+                  ),
+                  children: [
+                    for (final o in _categoryOptions)
+                      _CategoryTile(
+                        label: o.label,
+                        icon: _categoryIcon(o.slug),
+                        selected: _selectedCategoryIds.contains(o.id),
+                        onTap: () => _toggleCategory(o.id),
+                      ),
+                  ],
+                ),
         );
       case _Step.details:
         final spec = categoryDetailSpec(_primarySlug);
         final labels = _categoryOptions.where((o) => _selectedCategoryIds.contains(o.id)).map((o) => o.label);
         final label = labels.isEmpty ? '' : labels.first;
         return _StepScaffold(
+          chip: label.isEmpty ? null : label,
           question: spec.question,
-          subtitle: [if (label.isNotEmpty) label, if (spec.hint.isNotEmpty) spec.hint].join(' · '),
+          subtitle: spec.hint,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -855,9 +889,9 @@ class _IntroView extends StatelessWidget {
       background: AppBackground.hero,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+          padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
                 child: Center(
@@ -865,14 +899,11 @@ class _IntroView extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Olá, parceiro!',
-                        style: AppTypography.displaySerif(fontSize: AppFontSize.display, color: AppTheme.ink),
-                      ),
-                      const SizedBox(height: 14),
+                      const Center(child: TchinMascot(pose: MascotPose.wave, width: 200)),
+                      const SizedBox(height: 28),
                       const Text(
-                        'Estamos felizes por ter-te aqui.',
-                        style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                        'Olá, parceiro!',
+                        style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -881,25 +912,13 @@ class _IntroView extends StatelessWidget {
                         'logótipo, portefólio de fotos, descrição, área '
                         'de serviço, NIF e preços, mais dois passos '
                         'opcionais no fim.',
-                        style: TextStyle(fontSize: AppFontSize.base, height: 1.4, color: AppTheme.inkMuted),
-                      ),
-                      const SizedBox(height: 32),
-                      Center(
-                        child: ClipOval(
-                          child: Container(
-                            width: 220,
-                            height: 220,
-                            color: Colors.white,
-                            padding: const EdgeInsets.all(20),
-                            child: Image.asset('assets/images/nav_icon_bears.png', fit: BoxFit.contain),
-                          ),
-                        ),
+                        style: TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
                       ),
                     ],
                   ),
                 ),
               ),
-              PrimaryButton(label: 'Começar', onPressed: onStart),
+              AuthPrimaryButton(label: 'Começar', onPressed: onStart),
             ],
           ),
         ),
@@ -911,23 +930,92 @@ class _IntroView extends StatelessWidget {
 class _StepScaffold extends StatelessWidget {
   final String question;
   final String? subtitle;
+  final String? chip;
   final Widget child;
 
-  const _StepScaffold({required this.question, this.subtitle, required this.child});
+  const _StepScaffold({required this.question, this.subtitle, this.chip, required this.child});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(question, style: Theme.of(context).textTheme.headlineSmall),
-        if (subtitle != null) ...[
-          const SizedBox(height: 6),
-          Text(subtitle!, style: Theme.of(context).textTheme.bodyMedium),
+        if (chip != null) ...[
+          const SizedBox(height: 18),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              height: 28,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: const Color(0xFFEEF2E9), borderRadius: BorderRadius.circular(999)),
+              child: Text(chip!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ] else
+          const SizedBox(height: 32),
+        Text(question, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        if (subtitle != null && subtitle!.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(subtitle!, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted)),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: 22),
         child,
       ],
+    );
+  }
+}
+
+IconData _categoryIcon(String slug) {
+  final s = slug.toLowerCase();
+  if (s.contains('espac') || s.contains('venue') || s.contains('quinta')) return Icons.villa_outlined;
+  if (s.contains('cater')) return Icons.restaurant_outlined;
+  if (s.contains('foto') || s.contains('photo')) return Icons.photo_camera_outlined;
+  if (s.contains('video')) return Icons.videocam_outlined;
+  if (s.contains('dj') || s.contains('music') || s.contains('banda')) return Icons.music_note_outlined;
+  if (s.contains('flor') || s.contains('decor')) return Icons.local_florist_outlined;
+  if (s.contains('bolo') || s.contains('cake')) return Icons.cake_outlined;
+  if (s.contains('planner')) return Icons.event_note_outlined;
+  if (s.contains('transp')) return Icons.directions_car_outlined;
+  if (s.contains('beleza') || s.contains('beauty')) return Icons.face_retouching_natural_outlined;
+  if (s.contains('convite') || s.contains('invit')) return Icons.mail_outline;
+  return Icons.star_outline_rounded;
+}
+
+class _CategoryTile extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CategoryTile({required this.label, required this.icon, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SnappyTap(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(icon, size: 20, color: selected ? Colors.white : AppTheme.accentOliveDark),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, height: 14 / 12, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
