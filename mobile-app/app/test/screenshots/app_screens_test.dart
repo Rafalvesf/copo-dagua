@@ -51,6 +51,8 @@ import 'package:copo_dagua_app/core/wedding/wedding_controller.dart';
 import 'package:copo_dagua_app/features/partners/screens/partner_detail_screen.dart';
 import 'package:copo_dagua_app/features/partners/screens/partners_list_screen.dart';
 import 'package:copo_dagua_app/features/invite/screens/rsvp_page_screen.dart';
+import 'package:copo_dagua_app/core/wedding/menu_style.dart';
+import 'package:copo_dagua_app/features/settings/screens/menu_style_screen.dart';
 import 'package:copo_dagua_app/main.dart';
 import 'package:copo_dagua_app/shared/widgets/page_header.dart' show AddActionButton;
 
@@ -808,6 +810,24 @@ void main() {
   testWidgets('85_convite_publico', (t) => _shoot(t, '85_convite_publico', signedOut, '/invite/SOFIATIAGO24', after: (t) => t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 600)))));
   testWidgets('86_convite_individual', (t) => _shoot(t, '86_convite_individual', signedOut, '/i/token-de-teste'));
   testWidgets('87_juntar_par', (t) => _shoot(t, '87_juntar_par', signedOut, '/juntar/00000000-0000-0000-0000-000000000000'));
+  for (final (name, layout, color) in [
+    ('11b_menu_autocolantes', MenuLayout.stickers, 'eucalyptus'),
+    ('11c_menu_mural', MenuLayout.mural, 'pink'),
+    ('11d_menu_estendal', MenuLayout.clothesline, 'blue'),
+  ]) {
+    testWidgets(name, (t) async {
+      debugMenuStyle = MenuStyle(layout, MenuColor.fromId(color));
+      try {
+        await _shoot(t, name, couple, '/wedding');
+      } finally {
+        debugMenuStyle = null;
+      }
+    });
+  }
+  testWidgets('11e_aparencia_menu', (t) => _shoot(t, '11e_aparencia_menu', couple, '/wedding', after: (t) async {
+        final ctx = t.element(find.byType(Scaffold).first);
+        Navigator.of(ctx).push(MaterialPageRoute<void>(builder: (_) => const MenuStyleScreen()));
+      }));
   testWidgets('88_manutencao', (t) async {
     _maintenanceOn = true;
     try {
