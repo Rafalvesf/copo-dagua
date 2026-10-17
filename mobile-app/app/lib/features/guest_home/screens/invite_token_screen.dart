@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/public_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
@@ -69,7 +71,7 @@ class _InviteTokenScreenState extends ConsumerState<InviteTokenScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return GradientScaffold(
-      background: AppBackground.hero,
+      background: AppBackground.subtle,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -79,29 +81,17 @@ class _InviteTokenScreenState extends ConsumerState<InviteTokenScreen> {
                       ? const CircularProgressIndicator()
                       : _error == null
                       ? const CircularProgressIndicator()
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(_error!, textAlign: TextAlign.center),
-                            const SizedBox(height: 20),
-                            PrimaryButton(label: 'Voltar', onPressed: () => context.go('/guest-home')),
-                          ],
+                      : PublicStateView(
+                          pose: MascotPose.sad,
+                          title: 'Não deu para associar',
+                          message: _error,
+                          actions: [PrimaryButton(label: 'Voltar', onPressed: () => context.go('/guest-home'))],
                         )
-                : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Este é um convite individual do casamento.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.xl, color: AppTheme.ink),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Inicia sessão ou cria conta para o associares.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: AppTheme.inkMuted),
-                      ),
-                      const SizedBox(height: 24),
+                : PublicStateView(
+                    pose: MascotPose.wave,
+                    title: 'Foste convidado!',
+                    message: 'Este convite é só para ti. Cria conta ou entra para responderes e veres tudo sobre o evento.',
+                    actions: [
                       PrimaryButton(
                         label: 'Criar conta',
                         onPressed: () {
@@ -109,7 +99,6 @@ class _InviteTokenScreenState extends ConsumerState<InviteTokenScreen> {
                           context.push('/register?role=guest');
                         },
                       ),
-                      const SizedBox(height: 12),
                       OutlinedButton(
                         onPressed: () {
                           ref.read(pendingInviteTokenProvider.notifier).set(widget.token);
