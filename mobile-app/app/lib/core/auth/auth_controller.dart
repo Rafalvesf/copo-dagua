@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -148,6 +150,15 @@ class AuthController extends Notifier<AuthState> {
         await prefs.remove(_pendingCodeKey);
       }
     } catch (_) {}
+    // Sem o fornecedor ativo no Supabase, o browser abria uma página de
+    // erro em JSON ("provider is not enabled") — avisa aqui em vez disso.
+    if (!await _providerEnabled(provider)) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: 'A entrada com ${provider == OAuthProvider.apple ? 'Apple' : 'Google'} ainda não está ativa. Por agora usa o email.',
+      );
+      return;
+    }
     try {
       await supabase.auth.signInWithOAuth(
         provider,
@@ -159,6 +170,24 @@ class AuthController extends Notifier<AuthState> {
         status: AuthStatus.error,
         errorMessage: 'Não foi possível abrir o ${provider == OAuthProvider.apple ? 'Apple' : 'Google'}. Tenta novamente.',
       );
+    }
+  }
+
+  /// `GET /auth/v1/settings` (público) diz que fornecedores estão ativos.
+  Future<bool> _providerEnabled(OAuthProvider provider) async {
+    try {
+      final res = await http
+          .get(
+            Uri.parse('${SupabaseConfig.url}/auth/v1/settings'),
+            headers: {'apikey': SupabaseConfig.publishableKey},
+          )
+          .timeout(const Duration(seconds: 6));
+      if (res.statusCode != 200) return true;
+      final external = (jsonDecode(res.body) as Map<String, dynamic>)['external'] as Map<String, dynamic>?;
+      final key = provider == OAuthProvider.apple ? 'apple' : 'google';
+      return external?[key] == true;
+    } catch (_) {
+      return true; // na dúvida, tenta
     }
   }
 
