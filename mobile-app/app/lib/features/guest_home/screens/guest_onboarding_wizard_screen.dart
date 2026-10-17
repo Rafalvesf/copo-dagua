@@ -843,7 +843,6 @@ class _CompanionPageState extends State<_CompanionPage> {
           ],
         ],
         const SizedBox(height: 12),
-        ),
       ],
       footer: [
         AuthPrimaryButton(label: 'Guardar acompanhante', onPressed: _save),
