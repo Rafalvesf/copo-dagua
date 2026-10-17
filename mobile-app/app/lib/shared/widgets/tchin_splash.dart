@@ -52,7 +52,22 @@ class TchinSplash extends StatelessWidget {
                 bottom: 48,
                 child: Opacity(
                   opacity: taglineOpacity,
-                  child: const Text('A preparar o brinde…', style: TextStyle(fontSize: 13, color: Color(0xFFDDE5D3))),
+                  child: Text.rich(
+                    TextSpan(
+                      text: 'A preparar o brinde',
+                      children: [
+                        // ".", "..", "..." a aparecer um a um.
+                        for (var i = 1; i <= 3; i++)
+                          TextSpan(
+                            text: '.',
+                            style: TextStyle(
+                              color: (t * 5 / 0.3).floor() % 4 >= i ? const Color(0xFFDDE5D3) : const Color(0x00DDE5D3),
+                            ),
+                          ),
+                      ],
+                    ),
+                    style: const TextStyle(fontSize: 13, color: Color(0xFFDDE5D3)),
+                  ),
                 ),
               ),
             Opacity(
