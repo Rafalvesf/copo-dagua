@@ -60,6 +60,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
             group: result.group,
             side: result.side,
             plusOneAllowed: result.plusOneAllowed,
+            maxCompanions: result.maxCompanions,
           ),
         );
   }

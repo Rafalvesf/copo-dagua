@@ -11,8 +11,10 @@ class GuestFormResult {
   final String group;
   final WeddingSide side;
   final bool plusOneAllowed;
+  final int maxCompanions;
 
   GuestFormResult({
+    this.maxCompanions = 0,
     required this.name,
     this.email,
     this.phone,
@@ -48,7 +50,7 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
   late final _phone = TextEditingController(text: widget.existing?.phone ?? '');
   late final _group = TextEditingController(text: widget.existing?.group ?? '');
   late WeddingSide _side = widget.existing?.side ?? WeddingSide.both;
-  late bool _plusOneAllowed = widget.existing?.plusOneAllowed ?? false;
+  late int _maxCompanions = widget.existing?.maxCompanions ?? 0;
   String? _nameError;
 
   @override
@@ -112,12 +114,13 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
                     .toList(),
               ),
             ),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              value: _plusOneAllowed,
-              title: const Text('Pode trazer acompanhante'),
-              onChanged: (v) => setState(() => _plusOneAllowed = v ?? false),
+            // Limite de acompanhantes (pedido 2026-10-17: os
+            // organizadores não tinham como mudar ou limitar).
+            const SizedBox(height: 8),
+            CompanionLimitRow(
+              title: 'Pode trazer',
+              value: _maxCompanions,
+              onChanged: (v) => setState(() => _maxCompanions = v),
             ),
             const SizedBox(height: 12),
             PrimaryButton(
@@ -138,13 +141,79 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
                         : _phone.text.trim(),
                     group: _group.text.trim(),
                     side: _side,
-                    plusOneAllowed: _plusOneAllowed,
+                    plusOneAllowed: _maxCompanions > 0,
+                    maxCompanions: _maxCompanions,
                   ),
                 );
               },
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+/// "Pode trazer: − 2 pessoas +" — limite de acompanhantes de um
+/// convidado (ou o valor por omissão do evento).
+class CompanionLimitRow extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final int value;
+  final ValueChanged<int> onChanged;
+  final int max;
+
+  const CompanionLimitRow({
+    super.key,
+    required this.title,
+    this.subtitle,
+    required this.value,
+    required this.onChanged,
+    this.max = 10,
+  });
+
+  static String label(int n) => n == 0 ? 'Só ele/ela' : (n == 1 ? '+1 pessoa' : '+$n pessoas');
+
+  @override
+  Widget build(BuildContext context) {
+    Widget btn(IconData icon, VoidCallback? onTap) => Material(
+          color: onTap == null ? const Color(0xFFF2F0EB) : const Color(0xFFEEF2E9),
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: SizedBox(
+              width: 38,
+              height: 38,
+              child: Icon(icon, size: 20, color: onTap == null ? const Color(0xFFB5B0A6) : const Color(0xFF5F7545)),
+            ),
+          ),
+        );
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 10, 12),
+      decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(16)),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF171713))),
+                Text(
+                  subtitle ?? label(value),
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF57534E)),
+                ),
+              ],
+            ),
+          ),
+          btn(Icons.remove_rounded, value > 0 ? () => onChanged(value - 1) : null),
+          SizedBox(
+            width: 36,
+            child: Text('$value', textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF171713))),
+          ),
+          btn(Icons.add_rounded, value < max ? () => onChanged(value + 1) : null),
+        ],
       ),
     );
   }

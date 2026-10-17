@@ -414,6 +414,10 @@ class Guest {
   final String group;
   final WeddingSide side;
   final bool plusOneAllowed;
+
+  /// Quantas pessoas pode trazer (`guests.max_companions`, 091) — 0 =
+  /// vem sozinho. [plusOneAllowed] é `maxCompanions > 0`.
+  final int maxCompanions;
   final String? plusOneName;
   final RsvpStatus rsvpStatus;
   final String? dietaryRestrictions;
@@ -466,6 +470,7 @@ class Guest {
     this.group = '',
     this.side = WeddingSide.both,
     this.plusOneAllowed = false,
+    this.maxCompanions = 0,
     this.plusOneName,
     this.rsvpStatus = RsvpStatus.pending,
     this.dietaryRestrictions,
@@ -486,6 +491,7 @@ class Guest {
     String? group,
     WeddingSide? side,
     bool? plusOneAllowed,
+    int? maxCompanions,
     String? plusOneName,
     RsvpStatus? rsvpStatus,
     String? dietaryRestrictions,
@@ -503,6 +509,7 @@ class Guest {
       group: group ?? this.group,
       side: side ?? this.side,
       plusOneAllowed: plusOneAllowed ?? this.plusOneAllowed,
+      maxCompanions: maxCompanions ?? this.maxCompanions,
       plusOneName: plusOneName ?? this.plusOneName,
       rsvpStatus: rsvpStatus ?? this.rsvpStatus,
       dietaryRestrictions: dietaryRestrictions ?? this.dietaryRestrictions,

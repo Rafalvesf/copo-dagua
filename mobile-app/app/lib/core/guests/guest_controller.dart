@@ -82,6 +82,7 @@ Guest guestFromRow(Map<String, dynamic> row) => Guest(
   group: row['group_label'] as String? ?? '',
   side: _sideFromDb(row['side'] as String?),
   plusOneAllowed: row['plus_one_allowed'] as bool? ?? false,
+  maxCompanions: (row['max_companions'] as int?) ?? ((row['plus_one_allowed'] as bool? ?? false) ? 1 : 0),
   plusOneName: row['plus_one_name'] as String?,
   rsvpStatus: _rsvpFromDb(row['rsvp_status'] as String?),
   dietaryRestrictions: row['dietary_restrictions'] as String?,
@@ -150,7 +151,8 @@ class GuestsController extends Notifier<GuestsState> {
           'phone': guest.phone,
           'group_label': guest.group,
           'side': _sideToDb(guest.side),
-          'plus_one_allowed': guest.plusOneAllowed,
+          'plus_one_allowed': guest.maxCompanions > 0,
+          'max_companions': guest.maxCompanions,
         })
         .select()
         .single();
@@ -172,7 +174,8 @@ class GuestsController extends Notifier<GuestsState> {
       'phone': guest.phone,
       'group_label': guest.group,
       'side': _sideToDb(guest.side),
-      'plus_one_allowed': guest.plusOneAllowed,
+      'plus_one_allowed': guest.maxCompanions > 0,
+      'max_companions': guest.maxCompanions,
       'plus_one_name': guest.plusOneName,
       'dietary_restrictions': guest.dietaryRestrictions,
       'guest_message': guest.note,
