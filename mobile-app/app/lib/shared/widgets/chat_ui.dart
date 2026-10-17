@@ -170,6 +170,11 @@ class ChatProposalCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+        ),
+        // Borda por cima do conteúdo, para os botões de baixo não a
+        // taparem nos cantos.
+        foregroundDecoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: _border),
         ),
         clipBehavior: Clip.antiAlias,
