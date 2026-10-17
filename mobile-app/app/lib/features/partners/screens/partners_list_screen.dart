@@ -367,34 +367,43 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                   ),
                           ),
                           children: [
-                            if (!widget.selectionMode)
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  AppTheme.screenMargin,
-                                  0,
-                                  AppTheme.screenMargin,
-                                  12,
-                                ),
-                                child: Text(
-                                  selectedLabel ?? 'Todos os parceiros',
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                              ),
+                            // Canvas "Parceiros": cabeçalho por categoria
+                            // ("Espaços" 22 + "12 no Alentejo" à direita).
                             for (final entry in grouped.entries) ...[
-                              if (_filter == null && !widget.selectionMode) ...[
+                              if (!widget.selectionMode)
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppTheme.screenMargin,
+                                  padding: const EdgeInsets.fromLTRB(
+                                    AppTheme.screenMargin,
+                                    4,
+                                    AppTheme.screenMargin,
+                                    12,
                                   ),
-                                  child: Text(
-                                    entry.key,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleLarge,
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          _filter == null ? entry.key : (selectedLabel ?? entry.key),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Flexible(
+                                        child: Text(
+                                          effectiveLocation.isEmpty
+                                              ? '${entry.value.length}'
+                                              : '${entry.value.length} em $effectiveLocation',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 12),
-                              ],
                               for (final (index, partner)
                                   in entry.value.indexed) ...[
                                 Padding(
@@ -534,14 +543,14 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.ink,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(AppRadius.pill),
                         ),
                         child: const Text(
                           'Mais popular',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: AppFontSize.xs,
+                            color: AppTheme.ink,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -574,8 +583,8 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: AppFontSize.lg,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -584,9 +593,8 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: AppTheme.ink,
-                        fontWeight: FontWeight.w600,
-                        fontSize: AppFontSize.sm,
+                        color: AppTheme.inkMuted,
+                        fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -611,8 +619,7 @@ class _PartnerCardState extends ConsumerState<_PartnerCard> {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: AppTheme.inkMuted,
-                              fontWeight: FontWeight.w600,
-                              fontSize: AppFontSize.xs,
+                              fontSize: 11,
                             ),
                           ),
                         ),
