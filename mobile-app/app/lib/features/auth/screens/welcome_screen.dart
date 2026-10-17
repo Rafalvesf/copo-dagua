@@ -18,14 +18,13 @@ class WelcomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.asset('assets/images/logo.png', width: 88, height: 88),
-              ),
-              const SizedBox(height: 20),
               Text(
                 'Tchin Tchin',
-                style: Theme.of(context).textTheme.headlineMedium,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontSize: 44,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
