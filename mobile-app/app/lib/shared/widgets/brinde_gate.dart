@@ -37,7 +37,11 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with TickerProviderStat
       final green = _show && _c.value < 0.7;
       if (green != _barGreen) {
         _barGreen = green;
-        setBarColor(green ? const Color(0xFF5F7545) : const Color(0xFFFFFFFF));
+        if (green) {
+          lockBarColor(const Color(0xFF5F7545));
+        } else {
+          unlockBarColor();
+        }
       }
     });
     _c.addStatusListener((s) {
@@ -63,7 +67,9 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with TickerProviderStat
       _name = fullName?.trim().split(' ').first;
       _show = true;
       _burst = false;
+      _barGreen = true;
     });
+    lockBarColor(const Color(0xFF5F7545));
     _driver.start();
   }
 
