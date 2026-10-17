@@ -29,7 +29,7 @@ class GuestOnboardingWizardScreen extends ConsumerStatefulWidget {
   ConsumerState<GuestOnboardingWizardScreen> createState() => _GuestOnboardingWizardScreenState();
 }
 
-enum _Step { attending, companions, menu, allergies, side, relationship }
+enum _Step { attending, companions, ages, menu, allergies, side, relationship }
 
 const _adultMenus = ['Carne', 'Peixe', 'Vegetariano'];
 const _childMenus = ['Menu criança', 'Carne', 'Peixe'];
@@ -45,7 +45,10 @@ const _relationOptions = <(String, IconData)>[
 
 class _Person {
   String name;
-  bool isChild;
+
+  /// 'child', 'adult' ou 'senior' (092).
+  String ageGroup;
+  bool get isChild => ageGroup == 'child';
   int? age;
   String phone;
   String? menu;
@@ -54,7 +57,7 @@ class _Person {
 
   _Person({
     required this.name,
-    this.isChild = false,
+    this.ageGroup = 'adult',
     this.age,
     this.phone = '',
     this.menu,
@@ -113,6 +116,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   List<_Step> get _steps => [
         _Step.attending,
         if (_limit > 0) _Step.companions,
+        _Step.ages,
         _Step.menu,
         _Step.allergies,
         if (_eventType == EventType.wedding) _Step.side,
@@ -133,6 +137,9 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         groupLabel: _relationship == 'Outro' && _relationOther.text.trim().isNotEmpty ? _relationOther.text.trim() : _relationship,
       );
       if (attending) {
+        try {
+          await setOwnAgeGroup(widget.weddingId, _me.ageGroup);
+        } catch (_) {}
         await saveGuestCompanions(
           guestId: widget.guest.id,
           weddingId: widget.weddingId,
@@ -141,6 +148,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
               GuestCompanion(
                 name: c.name,
                 isChild: c.isChild,
+                ageGroup: c.ageGroup,
                 childAge: c.age,
                 phone: c.phone.trim().isEmpty ? null : c.phone.trim(),
                 menu: c.menu,
@@ -182,7 +190,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       } else {
         existing
           ..name = result.name
-          ..isChild = result.isChild
+          ..ageGroup = result.ageGroup
           ..age = result.age
           ..phone = result.phone;
         if (existing.isChild && existing.menu != null && !_childMenus.contains(existing.menu)) existing.menu = null;
@@ -328,7 +336,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                 _PersonRow(
                   initials: _initials(c.name),
                   name: c.name,
-                  subtitle: [c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}' : 'Adulto', if (c.phone.trim().isNotEmpty) c.phone.trim()].join(' · '),
+                  subtitle: [c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}' : (c.ageGroup == 'senior' ? 'Sénior' : 'Adulto'), if (c.phone.trim().isNotEmpty) c.phone.trim()].join(' · '),
                   onEdit: () => _editCompanion(c),
                 ),
               if (_companions.length < _limit)
@@ -362,6 +370,38 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   style: TextStyle(fontSize: 12, height: 17 / 12, color: AppTheme.inkMuted),
                 ),
               ),
+            ],
+          ),
+        );
+      case _Step.ages:
+        // Pedido 2026-10-17: criança, adulto ou sénior, para cada pessoa.
+        return _StepScaffold(
+          question: _people.length == 1 ? 'Em que faixa estás?' : 'Em que faixa está cada pessoa?',
+          subtitle: 'Ajuda os anfitriões com os menus e os lugares.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final p in _people)
+                _PersonChoices(
+                  title: p == _me ? '${p.name} (tu)' : p.name,
+                  options: const ['Adulto', 'Criança', 'Sénior'],
+                  equal: true,
+                  selected: {
+                    switch (p.ageGroup) {
+                      'child' => 'Criança',
+                      'senior' => 'Sénior',
+                      _ => 'Adulto',
+                    },
+                  },
+                  onTap: (o) => setState(() {
+                    p.ageGroup = switch (o) {
+                      'Criança' => 'child',
+                      'Sénior' => 'senior',
+                      _ => 'adult',
+                    };
+                    if (p.menu != null && !(p.isChild ? _childMenus : _adultMenus).contains(p.menu)) p.menu = null;
+                  }),
+                ),
             ],
           ),
         );
@@ -644,7 +684,8 @@ class _CompanionPageState extends State<_CompanionPage> {
   late final _name = TextEditingController(text: widget.existing?.name ?? '');
   late final _age = TextEditingController(text: widget.existing?.age?.toString() ?? '');
   late final _phone = TextEditingController(text: widget.existing?.phone ?? '');
-  late bool _child = widget.existing?.isChild ?? false;
+  late String _group = widget.existing?.ageGroup ?? 'adult';
+  bool get _child => _group == 'child';
 
   @override
   void dispose() {
@@ -661,7 +702,7 @@ class _CompanionPageState extends State<_CompanionPage> {
       return;
     }
     Navigator.of(context).pop(
-      _Person(name: name, isChild: _child, age: _child ? int.tryParse(_age.text.trim()) : null, phone: _phone.text.trim()),
+      _Person(name: name, ageGroup: _group, age: _child ? int.tryParse(_age.text.trim()) : null, phone: _phone.text.trim()),
     );
   }
 
@@ -685,9 +726,11 @@ class _CompanionPageState extends State<_CompanionPage> {
         const Text('Quem é o teu acompanhante?', style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         AuthField(label: 'Nome', controller: _name, topGap: 24),
         const SizedBox(height: 24),
-        _RadioRow(label: 'Adulto', selected: !_child, onTap: () => setState(() => _child = false)),
+        _RadioRow(label: 'Adulto', selected: _group == 'adult', onTap: () => setState(() => _group = 'adult')),
         const SizedBox(height: 10),
-        _RadioRow(label: 'Criança', selected: _child, onTap: () => setState(() => _child = true)),
+        _RadioRow(label: 'Criança', selected: _group == 'child', onTap: () => setState(() => _group = 'child')),
+        const SizedBox(height: 10),
+        _RadioRow(label: 'Sénior', selected: _group == 'senior', onTap: () => setState(() => _group = 'senior')),
         if (_child) AuthField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
         AuthField(label: 'Telemóvel (opcional)', controller: _phone, keyboardType: TextInputType.phone),
         const SizedBox(height: 12),

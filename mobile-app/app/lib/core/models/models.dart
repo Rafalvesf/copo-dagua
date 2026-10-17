@@ -418,6 +418,9 @@ class Guest {
   /// Quantas pessoas pode trazer (`guests.max_companions`, 091) — 0 =
   /// vem sozinho. [plusOneAllowed] é `maxCompanions > 0`.
   final int maxCompanions;
+
+  /// 'child', 'adult' ou 'senior' (092), escolhido pelo convidado.
+  final String ageGroup;
   final String? plusOneName;
   final RsvpStatus rsvpStatus;
   final String? dietaryRestrictions;
@@ -471,6 +474,7 @@ class Guest {
     this.side = WeddingSide.both,
     this.plusOneAllowed = false,
     this.maxCompanions = 0,
+    this.ageGroup = 'adult',
     this.plusOneName,
     this.rsvpStatus = RsvpStatus.pending,
     this.dietaryRestrictions,
@@ -510,6 +514,7 @@ class Guest {
       side: side ?? this.side,
       plusOneAllowed: plusOneAllowed ?? this.plusOneAllowed,
       maxCompanions: maxCompanions ?? this.maxCompanions,
+      ageGroup: ageGroup,
       plusOneName: plusOneName ?? this.plusOneName,
       rsvpStatus: rsvpStatus ?? this.rsvpStatus,
       dietaryRestrictions: dietaryRestrictions ?? this.dietaryRestrictions,

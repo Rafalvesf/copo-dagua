@@ -279,9 +279,13 @@ class GuestCompanion {
   final String? menu;
   final List<String> allergies;
 
+  /// 'child', 'adult' ou 'senior' (092).
+  final String ageGroup;
+
   const GuestCompanion({
     required this.name,
     this.isChild = false,
+    this.ageGroup = 'adult',
     this.childAge,
     this.phone,
     this.menu,
@@ -305,7 +309,8 @@ Future<void> saveGuestCompanions({
           'guest_id': guestId,
           'wedding_id': weddingId,
           'name': c.name,
-          'is_child': c.isChild,
+          'is_child': c.isChild || c.ageGroup == 'child',
+          'age_group': c.isChild && c.ageGroup == 'adult' ? 'child' : c.ageGroup,
           'child_age': c.childAge,
           'phone': c.phone,
           'menu': c.menu,
@@ -328,6 +333,7 @@ final guestCompanionsProvider = FutureProvider.family<List<GuestCompanion>, Stri
         GuestCompanion(
           name: r['name'] as String,
           isChild: r['is_child'] as bool? ?? false,
+          ageGroup: (r['age_group'] as String?) ?? ((r['is_child'] as bool? ?? false) ? 'child' : 'adult'),
           childAge: r['child_age'] as int?,
           phone: r['phone'] as String?,
           menu: r['menu'] as String?,
@@ -338,3 +344,16 @@ final guestCompanionsProvider = FutureProvider.family<List<GuestCompanion>, Stri
     return const [];
   }
 });
+
+
+/// Faixa etária do próprio convidado (`set_own_age_group`, 092).
+Future<void> setOwnAgeGroup(String weddingId, String ageGroup) async {
+  await supabase.rpc('set_own_age_group', params: {'p_wedding_id': weddingId, 'p_age_group': ageGroup});
+}
+
+/// Rótulo em português de 'child' / 'adult' / 'senior'.
+String ageGroupLabel(String g) => switch (g) {
+      'child' => 'Criança',
+      'senior' => 'Sénior',
+      _ => 'Adulto',
+    };
