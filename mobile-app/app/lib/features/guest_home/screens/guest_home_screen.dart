@@ -25,6 +25,9 @@ import 'guest_table_screen.dart';
 /// mais recente aqui; os outros continuam acessíveis, mas este ecrã
 /// deixou de listar todos de propósito — mostrar vários "O nosso
 /// casamento" ao mesmo tempo não fazia sentido para o mockup pedido.
+/// Eventos cujo assistente "Vais?" já foi aberto nesta sessão.
+final Set<String> _openedOnboarding = {};
+
 class GuestHomeScreen extends ConsumerWidget {
   /// Presente só quando aberto a partir de "Modo convidado"
   /// (`guest_mode_screen.dart`, `/guest-home/:weddingId`) — uma conta
@@ -76,8 +79,14 @@ class GuestHomeScreen extends ConsumerWidget {
                 // assim que a conta fica ligada a uma linha de `guests`
                 // (`onboarding_completed_at is null`) — pedido explícito
                 // do utilizador, ver `073_guest_onboarding_wizard.sql`.
+                // Só uma vez por evento: antes, cada reconstrução deste ecrã
+                // (ex.: depois de entrar com o código numa conta de
+                // organizador) empilhava mais um assistente por cima do
+                // outro e a app bloqueava (2026-10-17).
                 ref.watch(myGuestRowProvider(wedding.weddingId)).whenData((guest) {
-                  if (guest != null && guest.onboardingCompletedAt == null) {
+                  if (guest != null &&
+                      guest.onboardingCompletedAt == null &&
+                      _openedOnboarding.add(wedding.weddingId)) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (context.mounted) {
                         context.push('/guest-onboarding/${wedding.weddingId}', extra: guest);
