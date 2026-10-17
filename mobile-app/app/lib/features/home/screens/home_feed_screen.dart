@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,6 +16,7 @@ import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/public_link.dart';
 
 /// Perfil — conta de quem está com sessão iniciada. Pedido explícito do
 /// utilizador (redesign 2026-10): "o perfil fica apenas de quem criou a
@@ -30,41 +33,38 @@ class HomeFeedScreen extends ConsumerStatefulWidget {
 class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   bool _uploadingProfilePhoto = false;
 
+  /// Convidar o par por link (pedido 2026-10-17: "por partilha de
+  /// link, não por email — abre a partilha do telemóvel"). Gera o link
+  /// (`create_partner_invite`, 079) e abre o menu de partilha do
+  /// telemóvel; onde não há menu de partilha (alguns browsers de
+  /// computador), copia o link.
   Future<void> _invitePartner(BuildContext context, Wedding wedding) async {
-    final controller = TextEditingController();
-    final email = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Convidar o teu par'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(labelText: 'Email'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-            child: const Text('Enviar convite'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (email == null || email.isEmpty || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
+    String link;
     try {
-      await ref
+      final token = await ref
           .read(weddingControllerProvider.notifier)
-          .inviteCollaborator(weddingId: wedding.id, email: email);
-      messenger.showSnackBar(SnackBar(content: Text('Convite enviado para $email.')));
+          .createPartnerInviteToken(wedding.id);
+      link = publicLink('/juntar/$token');
     } catch (_) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Não foi possível enviar o convite.')),
+        const SnackBar(content: Text('Não foi possível criar o link de convite.')),
+      );
+      return;
+    }
+    final text = 'Junta-te a mim para organizarmos o nosso casamento '
+        'na Copo d\'Água: $link';
+    var shared = false;
+    try {
+      final result = await SharePlus.instance.share(
+        ShareParams(text: text, subject: 'Organiza o casamento comigo'),
+      );
+      shared = result.status != ShareResultStatus.unavailable;
+    } catch (_) {}
+    if (!shared) {
+      await Clipboard.setData(ClipboardData(text: link));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Link copiado — envia-o ao teu par.')),
       );
     }
   }

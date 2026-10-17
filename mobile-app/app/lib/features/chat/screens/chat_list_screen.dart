@@ -13,6 +13,7 @@ import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/search_pill.dart';
 import '../../../shared/widgets/feedback.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
@@ -115,36 +116,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                     AppTheme.screenMargin,
                     0,
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                            boxShadow: AppTheme.searchBarShadow,
-                          ),
-                          child: TextField(
-                            controller: _search,
-                            decoration: InputDecoration(
-                              hintText: 'Pesquisar conversas',
-                              prefixIcon: const Icon(Icons.search, size: 20),
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(AppRadius.pill),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.accentOliveDark,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  child: SearchPill(controller: _search, hint: 'Pesquisar conversas'),
                 ),
                 Expanded(
                   child: state.loading && state.conversations.isEmpty

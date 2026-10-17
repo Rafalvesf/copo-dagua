@@ -27,6 +27,7 @@ import '../features/gallery/screens/gallery_screen.dart';
 import '../features/guests/screens/guest_detail_screen.dart';
 import '../features/guests/screens/guests_list_screen.dart';
 import '../features/home/screens/home_feed_screen.dart';
+import '../features/auth/screens/join_wedding_screen.dart';
 import '../features/invite/screens/invite_page_screen.dart';
 import '../features/invite/screens/rsvp_page_screen.dart';
 import '../features/calendar/screens/calendar_screen.dart';
@@ -98,6 +99,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // público: decide por si próprio se mostra "Iniciar sessão/Criar
       // conta" (sem sessão) ou já tenta associar o token (com sessão).
       if (location.startsWith('/i/')) return null;
+
+      // Link "Convidar o teu par" (079) — também público.
+      if (location.startsWith('/juntar/')) return null;
 
       // `/register` sem uma role válida na URL (ver role_selection_screen.dart
       // e a nota na rota `/register` abaixo) volta sempre a `/role` em vez
@@ -226,6 +230,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/guest-home/:weddingId',
         builder: (context, state) =>
             GuestHomeScreen(weddingId: state.pathParameters['weddingId']),
+      ),
+      GoRoute(
+        path: '/juntar/:token',
+        builder: (context, state) => JoinWeddingScreen(token: state.pathParameters['token']!),
       ),
       GoRoute(
         path: '/i/:token',

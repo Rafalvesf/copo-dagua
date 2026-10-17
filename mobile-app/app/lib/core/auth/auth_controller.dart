@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
+import '../wedding/partner_invite.dart';
 
 class _Unset {
   const _Unset();
@@ -104,6 +105,9 @@ class AuthController extends Notifier<AuthState> {
           // perdia-se nesse caso e o convidado ficava sem casamento.
           if (role == UserRole.guest && weddingCode != null && weddingCode.isNotEmpty)
             'wedding_code': weddingCode.trim(),
+          // Convite do par por link (079), pela mesma razão.
+          if (role == UserRole.couple && ref.read(pendingPartnerInviteProvider) != null)
+            'partner_invite': ref.read(pendingPartnerInviteProvider),
         },
       );
       final user = response.user;
@@ -147,6 +151,7 @@ class AuthController extends Notifier<AuthState> {
             );
           } catch (_) {}
         }
+        await _applyPendingPartnerInvite(user);
         final profile = await _loadProfile(user);
         state = AuthState(
           status: AuthState.statusFor(profile),
@@ -338,6 +343,7 @@ class AuthController extends Notifier<AuthState> {
   /// conta) e ainda não aplicado — liga o convidado ao casamento e limpa
   /// o código para não repetir. Nunca bloqueia o login.
   Future<void> _applyPendingWeddingCode(User user) async {
+    await _applyPendingPartnerInvite(user);
     final code = user.userMetadata?['wedding_code'] as String?;
     if (code == null || code.trim().isEmpty) return;
     try {
@@ -351,6 +357,23 @@ class AuthController extends Notifier<AuthState> {
     try {
       await supabase.auth.updateUser(UserAttributes(data: {'wedding_code': null}));
     } catch (_) {}
+  }
+
+  /// Link "Convidar o teu par" aberto antes de entrar/criar conta —
+  /// junta esta conta ao casamento (colaborador ativo) e limpa o convite.
+  Future<void> _applyPendingPartnerInvite(User user) async {
+    final token = ref.read(pendingPartnerInviteProvider) ??
+        user.userMetadata?['partner_invite'] as String?;
+    if (token == null || token.isEmpty) return;
+    try {
+      await acceptPartnerInvite(token);
+    } catch (_) {}
+    ref.read(pendingPartnerInviteProvider.notifier).set(null);
+    if (user.userMetadata?['partner_invite'] != null) {
+      try {
+        await supabase.auth.updateUser(UserAttributes(data: {'partner_invite': null}));
+      } catch (_) {}
+    }
   }
 
   Future<void> requestPasswordReset(String email) async {

@@ -22,6 +22,10 @@ import '../../../shared/widgets/photo_adjust_screen.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
+import '../../../core/gallery/gallery_providers.dart';
+import '../../../core/guests/guest_controller.dart';
+import '../../../core/seating/seating_controller.dart';
+import '../../../core/supabase/supabase_config.dart';
 
 /// "Os noivos" — cartão banner "O nosso casamento" (foto de capa +
 /// contagem decrescente) e o resumo do dashboard (orçamento, atalhos,
@@ -480,11 +484,29 @@ class _CountdownBox extends StatelessWidget {
 /// grid antigo — Orçamento, Convidados, Lugares e Serviços já tratados
 /// (movido de Definições, 2026-09-14) continuam a precisar de um ponto
 /// de entrada visível, além de Definições.
-class _QuickLinksRow extends StatelessWidget {
+class _QuickLinksRow extends ConsumerWidget {
   const _QuickLinksRow();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Texto por baixo de cada atalho, como no design (Casamento): dados
+    // reais de cada módulo.
+    final budget = ref.watch(budgetControllerProvider).budget;
+    final guests = ref.watch(guestsControllerProvider).guests;
+    final tables = ref.watch(seatingControllerProvider).tables;
+    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+    final photos = weddingId == null
+        ? const <GalleryPhoto>[]
+        : ref.watch(weddingGalleryPhotosProvider(weddingId)).asData?.value ?? const <GalleryPhoto>[];
+    final handled = ref.watch(_servicesHandledProvider).asData?.value;
+
+    final confirmed = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).length;
+    final seated = tables.fold<int>(0, (n, t) => n + t.guestIds.length);
+    final pending = photos.where((p) => p.status == 'pending').length;
+    final approved = photos.where((p) => p.status == 'approved').length;
+
+    String plural(int n, String one, String many) => n == 1 ? one : many;
+
     return Column(
       children: [
         Row(
@@ -493,7 +515,10 @@ class _QuickLinksRow extends StatelessWidget {
               child: _QuickLinkTile(
                 icon: Icons.savings_outlined,
                 label: 'Orçamento',
-                color: AppColors.purple,
+                subtitle: budget == null || budget.total == 0
+                    ? 'Por definir'
+                    : '${euros(budget.spent)} de ${euros(budget.total)}',
+                color: const Color(0xFFF4E1D2),
                 onTap: () => context.push('/budget'),
               ),
             ),
@@ -502,7 +527,10 @@ class _QuickLinksRow extends StatelessWidget {
               child: _QuickLinkTile(
                 icon: Icons.people_outline,
                 label: 'Convidados',
-                color: AppColors.green,
+                subtitle: guests.isEmpty
+                    ? 'Ainda sem convidados'
+                    : '$confirmed ${plural(confirmed, 'confirmado', 'confirmados')} de ${guests.length}',
+                color: const Color(0xFFDDE5D3),
                 onTap: () => context.push('/guests'),
               ),
             ),
@@ -515,7 +543,8 @@ class _QuickLinksRow extends StatelessWidget {
               child: _QuickLinkTile(
                 icon: Icons.event_seat_outlined,
                 label: 'Lugares',
-                color: AppColors.blue,
+                subtitle: guests.isEmpty ? 'Sem convidados' : '$seated de ${guests.length} sentados',
+                color: const Color(0xFFECE7DC),
                 onTap: () => context.push('/seating'),
               ),
             ),
@@ -524,7 +553,10 @@ class _QuickLinksRow extends StatelessWidget {
               child: _QuickLinkTile(
                 icon: Icons.photo_library_outlined,
                 label: 'Galeria',
-                color: AppColors.pink,
+                subtitle: pending > 0
+                    ? '$pending ${plural(pending, 'foto por aprovar', 'fotos por aprovar')}'
+                    : '$approved ${plural(approved, 'foto', 'fotos')}',
+                color: const Color(0xFFF3DEE0),
                 onTap: () => context.push('/gallery'),
               ),
             ),
@@ -535,7 +567,12 @@ class _QuickLinksRow extends StatelessWidget {
         _QuickLinkTile(
           icon: Icons.checklist_rtl_outlined,
           label: 'Serviços já tratados',
-          color: AppColors.yellow,
+          subtitle: handled == null
+              ? '—'
+              : handled == 0
+                  ? 'Nenhum ainda'
+                  : '$handled ${plural(handled, 'categoria', 'categorias')}',
+          color: const Color(0xFFF7EACA),
           onTap: () => context.push('/service-preferences'),
         ),
       ],
@@ -543,15 +580,30 @@ class _QuickLinksRow extends StatelessWidget {
   }
 }
 
+/// Categorias marcadas como já tratadas ou sem necessidade
+/// (`wedding_service_preferences`).
+final _servicesHandledProvider = FutureProvider<int>((ref) async {
+  final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+  if (weddingId == null) return 0;
+  final rows = await supabase
+      .from('wedding_service_preferences')
+      .select('preference')
+      .eq('wedding_id', weddingId)
+      .neq('preference', 'needed');
+  return (rows as List).length;
+});
+
 class _QuickLinkTile extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String subtitle;
   final Color color;
   final VoidCallback onTap;
 
   const _QuickLinkTile({
     required this.icon,
     required this.label,
+    required this.subtitle,
     required this.color,
     required this.onTap,
   });
@@ -561,22 +613,31 @@ class _QuickLinkTile extends StatelessWidget {
     return SnappyTap(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
+        height: 108,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, size: 20, color: AppTheme.ink),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.sm),
+            Icon(icon, size: 22, color: AppTheme.ink),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
+                ),
+              ],
             ),
           ],
         ),
@@ -674,7 +735,8 @@ class _UpcomingTasksSection extends ConsumerWidget {
         for (final (index, task) in top.indexed) ...[
           _TaskRow(
             title: task.title,
-            description: task.description,
+            // Menos texto (design): só a primeira frase.
+            description: task.description?.split(RegExp(r'(?<=[.!?])\s')).first.trim(),
             icon: _iconForCategory(task.category),
             onTap: () {
               if (!task.seen) {
@@ -712,7 +774,7 @@ class _TaskRow extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           children: [
@@ -721,9 +783,9 @@ class _TaskRow extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: AppColors.green,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 17, color: AppTheme.ink),
+              child: Icon(icon, size: 18, color: AppTheme.ink),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -736,7 +798,7 @@ class _TaskRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: AppFontSize.md,
+                      fontSize: 14,
                     ),
                   ),
                   if (description != null) ...[
@@ -745,13 +807,13 @@ class _TaskRow extends StatelessWidget {
                       description!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
+                      style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
                     ),
                   ],
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: AppTheme.inkMuted),
+            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF8F8B84)),
           ],
         ),
       ),
@@ -759,40 +821,44 @@ class _TaskRow extends StatelessWidget {
   }
 }
 
-/// Orçamento gasto/total e nº de reservas confirmadas.
+/// Orçamento gasto e parceiros reservados — como no design: cartões de
+/// cor, rótulo em cima, valor, e uma linha por baixo.
 class _FinancialSummaryRow extends ConsumerWidget {
   const _FinancialSummaryRow();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final budget = ref.watch(budgetControllerProvider).budget;
-    final bookingsAsync = ref.watch(coupleBookingsProvider);
-    final confirmedCount = bookingsAsync.maybeWhen(
-      data: (list) =>
-          list.where((b) => b.status == BookingStatus.confirmado).length,
-      orElse: () => 0,
-    );
+    final confirmed = ref.watch(coupleBookingsProvider).maybeWhen(
+          data: (list) => list.where((b) => b.status == BookingStatus.confirmado).toList(),
+          orElse: () => const <CoupleBooking>[],
+        );
 
-    return Row(
-      children: [
-        Expanded(
-          child: _SummaryTile(
-            label: 'Orçamento gasto',
-            value: budget == null
-                ? '—'
-                : '${euros(budget.spent)} / ${euros(budget.total)}',
-            color: AppColors.purple,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _SummaryTile(
+              label: 'Orçamento gasto',
+              value: budget == null ? '—' : euros(budget.spent),
+              detail: budget == null || budget.total == 0 ? 'Orçamento por definir' : 'de ${euros(budget.total)}',
+              color: const Color(0xFFF4E1D2),
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _SummaryTile(
-            label: 'Parceiros reservados',
-            value: '$confirmedCount',
-            color: AppColors.green,
+          const SizedBox(width: 12),
+          Expanded(
+            child: _SummaryTile(
+              label: 'Parceiros reservados',
+              value: '${confirmed.length}',
+              detail: confirmed.isEmpty
+                  ? 'Nenhum ainda'
+                  : confirmed.map((b) => b.partnerName).join(', '),
+              color: const Color(0xFFDDE5D3),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -800,11 +866,13 @@ class _FinancialSummaryRow extends ConsumerWidget {
 class _SummaryTile extends StatelessWidget {
   final String label;
   final String value;
+  final String detail;
   final Color color;
 
   const _SummaryTile({
     required this.label,
     required this.value,
+    required this.detail,
     required this.color,
   });
 
@@ -812,31 +880,19 @@ class _SummaryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(height: 10),
+          Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12)),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: AppTheme.ink)),
+          const SizedBox(height: 4),
           Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: AppFontSize.xl,
-              color: AppTheme.ink,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
+            detail,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
           ),
         ],
       ),
