@@ -16,6 +16,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import 'guest_mode_screen.dart' show showGuestModeSheet;
 import 'guest_table_screen.dart';
+import '../../settings/screens/settings_screen.dart' show GuestAccountSections;
 import '../../../shared/widgets/feedback.dart';
 
 /// "O meu perfil" — pedido explícito do utilizador (mockup de
@@ -393,7 +394,7 @@ class _GuestProfileBody extends ConsumerWidget {
               ),
             ],
             // Definições da conta dentro do Perfil (pedido 2026-10-17).
-            if (profile.role == UserRole.guest) GuestAccountSections(),
+            if (profile.role == UserRole.guest) const GuestAccountSections(),
           ],
         );
       },
