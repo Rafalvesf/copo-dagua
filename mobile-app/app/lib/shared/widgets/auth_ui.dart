@@ -164,8 +164,10 @@ class _AuthFieldState extends State<AuthField> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(widget.label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-          const SizedBox(height: 8),
+          if (widget.label.isNotEmpty) ...[
+            Text(widget.label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            const SizedBox(height: 8),
+          ],
           AnimatedContainer(
             duration: const Duration(milliseconds: 160),
             height: 54,

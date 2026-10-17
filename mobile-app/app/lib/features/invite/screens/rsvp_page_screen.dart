@@ -268,7 +268,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                         ],
                       ),
                       if (_rsvpStatus == 'confirmed') ...[
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 12),
                         if (plusOneAllowed) ...[
                           TextField(
                             controller: _plusOneName,
@@ -283,6 +283,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                         ),
                         const SizedBox(height: 10),
                       ],
+                      if (_rsvpStatus == 'declined') const SizedBox(height: 12),
                       if (_rsvpStatus != null)
                         TextField(
                           controller: _guestMessage,
