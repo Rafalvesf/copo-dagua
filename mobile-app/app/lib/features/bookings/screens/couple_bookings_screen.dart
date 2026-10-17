@@ -205,6 +205,16 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
           const SnackBar(content: Text('Não foi possível abrir o pagamento.')),
         );
       }
+    } on CheckoutUnavailable catch (e) {
+      if (mounted) {
+        final msg = switch (e.reason) {
+          'partner_not_onboarded' =>
+            'Este parceiro ainda não ativou os pagamentos na app. O sinal fica por pagar até ele concluir a configuração.',
+          'invalid_state' => 'Este pagamento já não está pendente.',
+          _ => 'Não foi possível iniciar o pagamento. Tenta novamente.',
+        };
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
