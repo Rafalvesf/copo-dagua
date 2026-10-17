@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -75,8 +76,59 @@ class AuthState {
 /// onboarding, ...) precisar de mudar. Ver `ROADMAP.md`, 2026-08-30, para
 /// o âmbito completo desta ronda de ligação a dados reais.
 class AuthController extends Notifier<AuthState> {
+  static const _keepKey = 'keep_signed_in';
+
   @override
-  AuthState build() => const AuthState.unauthenticated();
+  AuthState build() {
+    Future.microtask(_restoreSession);
+    return const AuthState.unauthenticated();
+  }
+
+  /// "Manter sessão iniciada" (pedido 2026-10-17): se a pessoa escolheu
+  /// manter, ao abrir a app retoma a sessão que o Supabase já guarda
+  /// (só o token de sessão — nunca a password nem o que se escreve). Se
+  /// não escolheu, termina essa sessão ao abrir.
+  Future<void> _restoreSession() async {
+    try {
+      await _restoreSessionInner();
+    } catch (_) {
+      // Supabase ainda não iniciado (ex.: testes) — começa sem sessão.
+    }
+  }
+
+  Future<void> _restoreSessionInner() async {
+    final session = supabase.auth.currentSession;
+    if (session == null || state.status != AuthStatus.unauthenticated) return;
+    bool keep = false;
+    try {
+      keep = (await SharedPreferences.getInstance()).getBool(_keepKey) ?? false;
+    } catch (_) {}
+    if (!keep) {
+      try {
+        await supabase.auth.signOut();
+      } catch (_) {}
+      return;
+    }
+    if (state.status != AuthStatus.unauthenticated) return;
+    BrindeGate.pending = true;
+    state = state.copyWith(status: AuthStatus.authenticating, errorMessage: null);
+    try {
+      final profile = await _loadProfile(session.user);
+      state = AuthState(status: AuthState.statusFor(profile), profile: profile);
+    } catch (_) {
+      BrindeGate.pending = false;
+      try {
+        await supabase.auth.signOut();
+      } catch (_) {}
+      state = const AuthState.unauthenticated();
+    }
+  }
+
+  Future<void> _setKeepSignedIn(bool keep) async {
+    try {
+      await (await SharedPreferences.getInstance()).setBool(_keepKey, keep);
+    } catch (_) {}
+  }
 
   Future<void> register({
     required String fullName,
@@ -90,6 +142,7 @@ class AuthController extends Notifier<AuthState> {
     String? weddingCode,
   }) async {
     BrindeGate.pending = true;
+    await _setKeepSignedIn(true);
     state = state.copyWith(
       status: AuthStatus.authenticating,
       errorMessage: null,
@@ -201,8 +254,9 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  Future<void> login({required String email, required String password}) async {
+  Future<void> login({required String email, required String password, bool keepSignedIn = true}) async {
     BrindeGate.pending = true;
+    await _setKeepSignedIn(keepSignedIn);
     state = state.copyWith(
       status: AuthStatus.authenticating,
       errorMessage: null,

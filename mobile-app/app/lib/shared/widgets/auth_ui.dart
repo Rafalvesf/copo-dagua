@@ -118,6 +118,10 @@ class AuthField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final double topGap;
 
+  /// Para o gestor de passwords do telemóvel/browser oferecer guardar e
+  /// preencher o login (a app nunca guarda o que se escreve).
+  final Iterable<String>? autofillHints;
+
   const AuthField({
     super.key,
     required this.label,
@@ -128,6 +132,7 @@ class AuthField extends StatefulWidget {
     this.errorText,
     this.onChanged,
     this.topGap = 16,
+    this.autofillHints,
   });
 
   @override
@@ -183,6 +188,7 @@ class _AuthFieldState extends State<AuthField> {
                     obscureText: widget.password && _obscure,
                     keyboardType: widget.keyboardType,
                     onChanged: widget.onChanged,
+                    autofillHints: widget.autofillHints,
                     style: const TextStyle(fontSize: 17, color: AppTheme.ink),
                     decoration: InputDecoration(
                       hintText: widget.hint,
