@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
+import '../models/models.dart' show ProgramItem;
 import '../supabase/supabase_config.dart';
 
 /// O que os convidados veem do casamento e que até agora não tinha onde
@@ -28,13 +29,44 @@ class GuestFacingInfo {
     this.giftIban,
     this.giftMessage,
     this.giftsAvailable = true,
+    this.program = const [],
+    this.dressCode,
+    this.venueAddress,
+    this.programAvailable = false,
   });
+
+  /// Programa (085): momentos, dress code e morada do local.
+  final List<ProgramItem> program;
+  final String? dressCode;
+  final String? venueAddress;
+
+  /// `false` quando a migração 085 ainda não correu.
+  final bool programAvailable;
 }
 
 const _base = 'ceremony_time, welcome_message, guest_join_mode';
 const _gifts = 'gift_list_url, gift_iban, gift_message';
 
+const _program = 'program, dress_code, venue_address';
+
 Future<GuestFacingInfo> loadGuestFacingInfo(String weddingId) async {
+  try {
+    final r = await supabase.from('weddings').select('$_base, $_gifts, $_program').eq('id', weddingId).single();
+    return GuestFacingInfo(
+      ceremonyTime: r['ceremony_time'] as String?,
+      welcomeMessage: r['welcome_message'] as String?,
+      giftListUrl: r['gift_list_url'] as String?,
+      giftIban: r['gift_iban'] as String?,
+      giftMessage: r['gift_message'] as String?,
+      joinMode: r['guest_join_mode'] as String?,
+      program: ProgramItem.listFrom(r['program']),
+      dressCode: r['dress_code'] as String?,
+      venueAddress: r['venue_address'] as String?,
+      programAvailable: true,
+    );
+  } on PostgrestException {
+    // 085 por correr — continua abaixo.
+  }
   try {
     final r = await supabase.from('weddings').select('$_base, $_gifts').eq('id', weddingId).single();
     return GuestFacingInfo(
@@ -63,6 +95,11 @@ Future<void> saveGuestFacingInfo(String weddingId, GuestFacingInfo info) async {
     'ceremony_time': _clean(info.ceremonyTime),
     'welcome_message': _clean(info.welcomeMessage),
     if (info.joinMode != null) 'guest_join_mode': info.joinMode,
+    if (info.programAvailable) ...{
+      'program': [for (final i in info.program) if (!i.isEmpty) i.toJson()],
+      'dress_code': _clean(info.dressCode),
+      'venue_address': _clean(info.venueAddress),
+    },
     if (info.giftsAvailable) ...{
       'gift_list_url': _clean(info.giftListUrl),
       'gift_iban': _clean(info.giftIban),

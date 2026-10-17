@@ -43,7 +43,11 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-const _pageBackground = Color(0xFFF7F5F0);
+// Fundo branco e linhas soltas com divisórias, como em "Convidado ·
+// Definições" — pedido 2026-10-17: "gostei destas definições, aplica no
+// resto" (parceiro e organizador usam os mesmos componentes).
+const _pageBackground = Colors.white;
+const _rowDivider = Color(0xFFE6E0D2);
 const _cardBorder = Color(0xFFEFEBE3);
 
 class _SettingsPage extends StatelessWidget {
@@ -80,7 +84,7 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+      padding: const EdgeInsets.fromLTRB(0, 18, 0, 4),
       child: Text(
         text.toUpperCase(),
         style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF8F8B84)),
@@ -95,21 +99,13 @@ class _Group extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // Botões em cinzento, como no Perfil (pedido 2026-10-17).
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const Divider(height: 1, color: AppTheme.borderMuted),
-            children[i],
-          ],
+    return Column(
+      children: [
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0) const Divider(height: 1, thickness: 1, color: _rowDivider),
+          children[i],
         ],
-      ),
+      ],
     );
   }
 }
@@ -350,8 +346,15 @@ class _CoupleSettings extends ConsumerWidget {
               },
             ),
           _Row(
+            icon: Icons.schedule,
+            label: 'Programa do evento',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => _GuestFacingPage(weddingId: wedding.id, code: wedding.guestCode)),
+            ),
+          ),
+          _Row(
             icon: Icons.tune,
-            label: 'Entrada, programa e presentes',
+            label: 'Entrada e presentes',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => _GuestFacingPage(weddingId: wedding.id, code: wedding.guestCode)),
             ),
@@ -881,7 +884,17 @@ class _GuestFacingSectionState extends State<_GuestFacingSection> {
   bool _loading = true;
   bool _saving = false;
   bool _giftsAvailable = true;
+  bool _programAvailable = false;
   String? _joinMode;
+
+  /// Programa (085): um trio de campos por momento.
+  final List<_ProgramControllers> _items = [];
+  final _address = TextEditingController();
+  final _dressCode = TextEditingController();
+
+  void _addItem([ProgramItem item = const ProgramItem()]) {
+    _items.add(_ProgramControllers(item));
+  }
 
   @override
   void initState() {
@@ -899,6 +912,16 @@ class _GuestFacingSectionState extends State<_GuestFacingSection> {
       _giftMessage.text = info.giftMessage ?? '';
       _giftsAvailable = info.giftsAvailable;
       _joinMode = info.joinMode;
+      _programAvailable = info.programAvailable;
+      _address.text = info.venueAddress ?? '';
+      _dressCode.text = info.dressCode ?? '';
+      for (final item in info.program) {
+        _addItem(item);
+      }
+      // Sem programa ainda: começa com a cerimónia (hora já guardada).
+      if (_items.isEmpty && _programAvailable) {
+        _addItem(ProgramItem(time: info.ceremonyTime ?? '', title: 'Cerimónia'));
+      }
     } catch (_) {
       // Fica com os campos vazios; guardar continua possível.
     }
@@ -912,7 +935,14 @@ class _GuestFacingSectionState extends State<_GuestFacingSection> {
       await saveGuestFacingInfo(
         widget.weddingId,
         GuestFacingInfo(
-          ceremonyTime: _time.text,
+          // A hora da cerimónia acompanha o primeiro momento do programa.
+          ceremonyTime: _programAvailable
+              ? (_items.map((c) => c.time.text.trim()).firstWhere((t) => t.isNotEmpty, orElse: () => ''))
+              : _time.text,
+          program: [for (final c in _items) c.value],
+          dressCode: _dressCode.text,
+          venueAddress: _address.text,
+          programAvailable: _programAvailable,
           welcomeMessage: _welcome.text,
           giftListUrl: _giftUrl.text,
           giftIban: _iban.text,
@@ -936,7 +966,86 @@ class _GuestFacingSectionState extends State<_GuestFacingSection> {
     _giftUrl.dispose();
     _iban.dispose();
     _giftMessage.dispose();
+    _address.dispose();
+    _dressCode.dispose();
+    for (final c in _items) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  List<Widget> _programEditor() {
+    return [
+      for (var i = 0; i < _items.length; i++)
+        Padding(
+          key: ObjectKey(_items[i]),
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 92,
+                            child: AuthTextField(label: 'Hora', controller: _items[i].time, keyboardType: TextInputType.datetime),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(child: AuthTextField(label: 'Momento (ex: Jantar)', controller: _items[i].title)),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      AuthTextField(label: 'Local ou nota (opcional)', controller: _items[i].place),
+                    ],
+                  ),
+                ),
+                Column(
+                  children: [
+                    IconButton(
+                      tooltip: 'Subir',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: i == 0 ? null : () => setState(() => _items.insert(i - 1, _items.removeAt(i))),
+                      icon: const Icon(Icons.keyboard_arrow_up, size: 22),
+                    ),
+                    IconButton(
+                      tooltip: 'Remover',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => setState(() => _items.removeAt(i).dispose()),
+                      icon: const Icon(Icons.delete_outline, size: 20, color: AppTheme.inkMuted),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (_items.length < 30)
+        OutlinedButton.icon(
+          onPressed: () => setState(() => _addItem()),
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text('Adicionar momento'),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(46),
+            foregroundColor: AppTheme.accentOliveDark,
+            side: const BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontWeight: FontWeight.w700),
+          ),
+        ),
+      const SizedBox(height: 16),
+      AuthTextField(label: 'Morada do local (para o "Como chegar")', controller: _address),
+      const SizedBox(height: 12),
+      AuthTextField(label: 'Dress code (ex: Formal · evita branco)', controller: _dressCode),
+    ];
   }
 
   @override
@@ -963,9 +1072,12 @@ class _GuestFacingSectionState extends State<_GuestFacingSection> {
             ),
         ],
         const _SectionTitle('Programa'),
-        AuthTextField(label: 'Hora da cerimónia (ex: 16:00)', controller: _time),
-        const SizedBox(height: 12),
         AuthTextField(label: 'Mensagem de boas-vindas', controller: _welcome),
+        const SizedBox(height: 12),
+        if (_programAvailable)
+          ..._programEditor()
+        else
+          AuthTextField(label: 'Hora da cerimónia (ex: 16:00)', controller: _time),
         if (_giftsAvailable) ...[
           const _SectionTitle('Presentes'),
           AuthTextField(label: 'Link da lista de presentes', controller: _giftUrl),
@@ -981,6 +1093,25 @@ class _GuestFacingSectionState extends State<_GuestFacingSection> {
   }
 }
 
+
+class _ProgramControllers {
+  final TextEditingController time;
+  final TextEditingController title;
+  final TextEditingController place;
+
+  _ProgramControllers(ProgramItem item)
+      : time = TextEditingController(text: item.time),
+        title = TextEditingController(text: item.title),
+        place = TextEditingController(text: item.place);
+
+  ProgramItem get value => ProgramItem(time: time.text, title: title.text, place: place.text);
+
+  void dispose() {
+    time.dispose();
+    title.dispose();
+    place.dispose();
+  }
+}
 
 /// "Conta" — nome, email e alterar password. Igual para todos os tipos
 /// de conta.
