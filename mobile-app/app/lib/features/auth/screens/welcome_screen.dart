@@ -185,7 +185,11 @@ class _WelcomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.of(context).padding.top;
-    return Column(
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
@@ -254,6 +258,9 @@ class _WelcomeContent extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+        ),
+      ],
           ),
         ),
       ],
