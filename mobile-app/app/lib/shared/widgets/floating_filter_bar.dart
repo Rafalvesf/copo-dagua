@@ -64,7 +64,7 @@ class FilterChipsRow extends StatefulWidget {
   static const double height = 52;
 
   /// Altura da linha com ícone e texto por baixo.
-  static const double stackedHeight = 70;
+  static const double stackedHeight = 80;
 
   double get rowHeight => stacked ? stackedHeight : height;
 
@@ -307,7 +307,7 @@ class _FilterBarChip extends StatelessWidget {
       child: SnappyTap(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.only(top: 6, bottom: 4),
+          padding: const EdgeInsets.only(top: 8, bottom: 4),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -332,6 +332,7 @@ class _FilterBarChip extends StatelessWidget {
                     item.label,
                     maxLines: 1,
                     style: TextStyle(
+                      height: 1.2,
                       fontSize: AppFontSize.sm,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                       color: selected ? AppTheme.ink : AppTheme.inkMuted,
