@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,18 +20,26 @@ class WelcomeScreen extends StatefulWidget {
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProviderStateMixin {
+class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateMixin {
   late final AnimationController _splash = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 5000),
   );
+  late final SteadyDriver _driver;
+
+  /// Na web, a primeira abertura é feita pela própria página
+  /// (`web/index.html`, igual ao canvas "Início 1"), que corre mesmo
+  /// enquanto a app ainda carrega. As vezes seguintes faz-se aqui.
+  static bool _webOpeningDone = false;
   bool _showSplash = true;
   bool _burst = false;
+  bool _started = false;
   bool _barGreen = false;
 
   @override
   void initState() {
     super.initState();
+    _driver = SteadyDriver(this, _splash);
     // Só marca como vista quando a abertura chega ao fim — se o ecrã for
     // recriado a meio do arranque (ex.: o router volta a montar a página
     // quando a sessão é verificada), a abertura recomeça em vez de
@@ -56,17 +65,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
     super.didChangeDependencies();
     // Pedido do utilizador (2026-10-17): a abertura acontece sempre,
     // todas as vezes — mesmo com "reduzir movimento" ligado no telemóvel.
-    if (_showSplash && !_splash.isAnimating && _splash.value == 0) {
-      // A página web já mostrou as palavras a brindar enquanto a app
-      // carregava (`web/index.html`) — continua a partir do brinde.
+    if (_showSplash && _splash.value == 0 && !_started) {
+      _started = true;
+      if (kIsWeb && !_webOpeningDone) {
+        _webOpeningDone = true;
+        _showSplash = false;
+        return;
+      }
       _barGreen = true;
       setBarColor(AppTheme.accentOliveDark);
-      _splash.forward(from: 0.32);
+      _driver.start();
     }
   }
 
   @override
   void dispose() {
+    _driver.dispose();
     _splash.dispose();
     super.dispose();
   }

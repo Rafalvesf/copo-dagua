@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -154,3 +155,36 @@ class _CircleClipper extends CustomClipper<Path> {
   bool shouldReclip(_CircleClipper old) => old.factor != factor;
 }
 
+
+/// Faz avançar [controller] ao ritmo real, mas sem saltos: se o telemóvel
+/// engasgar (ex.: a carregar a app), cada imagem avança no máximo 1/30 s
+/// em vez de saltar o resto da animação (bug 2026-10-17, vídeo do
+/// utilizador: a abertura "acabava" num instante).
+class SteadyDriver {
+  final AnimationController controller;
+  final double seconds;
+  late final Ticker _ticker;
+  Duration? _last;
+
+  SteadyDriver(TickerProvider vsync, this.controller, {this.seconds = 5}) {
+    _ticker = vsync.createTicker(_tick);
+  }
+
+  void start({double from = 0}) {
+    _ticker.stop();
+    _last = null;
+    controller.value = from;
+    _ticker.start();
+  }
+
+  void _tick(Duration elapsed) {
+    final prev = _last ?? elapsed;
+    _last = elapsed;
+    final dt = ((elapsed - prev).inMicroseconds / 1e6).clamp(0.0, 1 / 30);
+    final next = (controller.value + dt / seconds).clamp(0.0, 1.0);
+    controller.value = next;
+    if (next >= 1.0) _ticker.stop();
+  }
+
+  void dispose() => _ticker.dispose();
+}
