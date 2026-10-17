@@ -221,11 +221,16 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
     final heading = date == null
         ? null
         : '${wedding!.eventType.label} · ${date.day} ${months[date.month - 1]} ${date.year}';
+    final pct = ref.watch(platformCommissionPercentageProvider).value ?? 0;
+    double withFee(double v) => amountWithCommission(v, pct);
     return ChatProposalCard(
       title: heading ?? message.proposalTitle ?? 'Proposta',
       subtitle: heading == null ? null : message.proposalTitle,
-      price: message.proposalPrice,
-      deposit: message.proposalDepositAmount,
+      // O cliente vê logo o que vai pagar: valor do parceiro + comissão
+      // (mesma conta do checkout). Pedido 2026-10-17.
+      price: message.proposalPrice == null ? null : withFee(message.proposalPrice!),
+      deposit: message.proposalDepositAmount == null ? null : withFee(message.proposalDepositAmount!),
+      note: pct > 0 ? 'Valores com a comissão Tchin Tchin incluída' : null,
       actions: [
         ChatCardAction('Ver detalhe', () => context.push('/bookings')),
         ChatCardAction(

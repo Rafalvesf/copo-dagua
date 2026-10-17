@@ -270,7 +270,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '$dateLabel · ${euros(booking.amount)}',
+                        '$dateLabel · ${euros(amountWithCommission(booking.amount, commissionPct))}',
                         style: const TextStyle(
                           color: AppTheme.inkMuted,
                           fontSize: AppFontSize.sm,
@@ -439,6 +439,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
     final dateLabel = proposal.eventDate == null
         ? null
         : '${proposal.eventDate!.day.toString().padLeft(2, '0')}/${proposal.eventDate!.month.toString().padLeft(2, '0')}/${proposal.eventDate!.year}';
+    final fee = ref.watch(platformCommissionPercentageProvider).value ?? 0;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -469,7 +470,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
           Text(
             [
               if (dateLabel != null) dateLabel,
-              '${euros(proposal.price)} · sinal ${euros(proposal.depositAmount)}',
+              '${euros(amountWithCommission(proposal.price, fee))} · sinal ${euros(amountWithCommission(proposal.depositAmount, fee))} (com comissão)',
             ].join(' · '),
             style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
           ),

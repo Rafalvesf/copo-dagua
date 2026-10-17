@@ -150,7 +150,11 @@ class ChatProposalCard extends StatelessWidget {
     required this.price,
     required this.deposit,
     this.actions = const [],
+    this.note,
   });
+
+  /// Linha pequena por baixo dos valores (ex.: "Inclui a comissão …").
+  final String? note;
 
   Widget _row(String label, String value, {bool big = false}) => Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -209,6 +213,10 @@ class ChatProposalCard extends StatelessWidget {
                   _row('Total', price == null ? '—' : euros(price!), big: true),
                   const SizedBox(height: 2),
                   _row('Sinal para reservar', deposit == null ? '—' : euros(deposit!)),
+                  if (note != null) ...[
+                    const SizedBox(height: 6),
+                    Text(note!, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
+                  ],
                 ],
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
@@ -7,6 +8,7 @@ import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../partner_bookings/booking_style.dart' show bookingStatusColor;
 import 'couple_bookings_screen.dart' show ReviewAction;
+import '../../../core/home/home_providers.dart';
 import '../../../shared/money.dart';
 
 /// Detalhes de uma reserva já confirmada/concluída — antes disto, tocar
@@ -16,13 +18,14 @@ import '../../../shared/money.dart';
 /// detalhes da reserva" — este ecrã é esse "local", com
 /// [ReviewAction] (já existia na lista, agora reutilizada aqui,
 /// pública) a permitir ver, criar e editar a avaliação.
-class CoupleBookingDetailScreen extends StatelessWidget {
+class CoupleBookingDetailScreen extends ConsumerWidget {
   final CoupleBooking booking;
 
   const CoupleBookingDetailScreen({super.key, required this.booking});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final fee = ref.watch(platformCommissionPercentageProvider).value ?? 0;
     final date = booking.serviceDate;
     final dateLabel =
         '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
@@ -73,8 +76,8 @@ class CoupleBookingDetailScreen extends StatelessWidget {
                         _InfoRow(label: 'Data', value: dateLabel),
                         const SizedBox(height: 10),
                         _InfoRow(
-                          label: 'Valor total',
-                          value: euros(booking.amount),
+                          label: 'Valor total (com comissão)',
+                          value: euros(amountWithCommission(booking.amount, fee), cents: true),
                         ),
                         const SizedBox(height: 10),
                         _InfoRow(
