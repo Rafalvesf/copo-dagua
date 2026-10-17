@@ -83,6 +83,7 @@ enum _Step {
 }
 
 const _minPortfolioImages = 3;
+const _areaOptions = ['Lisboa', 'Sintra', 'Cascais', 'Setúbal', 'Porto', 'Braga', 'Aveiro', 'Coimbra', 'Leiria', 'Évora', 'Algarve', 'Madeira', 'Açores'];
 
 const _steps = _Step.values;
 
@@ -116,6 +117,8 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
   // assim que é escolhida, não fica à espera de [_finish].
   List<PortfolioItem> _portfolioItems = const [];
   bool _portfolioBusy = false;
+  bool _nationwide = false;
+  final _otherArea = TextEditingController();
 
   // Serviços/preços: ao contrário dos outros passos, escreve
   // imediatamente na base de dados a cada ação (mesmo padrão de
@@ -175,6 +178,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
     _businessName.dispose();
     _description.dispose();
     _serviceAreasText.dispose();
+    _otherArea.dispose();
     _taxId.dispose();
     _yearsExperience.dispose();
     _instagram.dispose();
@@ -193,7 +197,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
       _portfolioItems.where((i) => i.mediaType == PortfolioMediaType.image).length >=
           _minPortfolioImages,
     _Step.description => _description.text.trim().length >= 50,
-    _Step.serviceAreas => _serviceAreasText.text.trim().isNotEmpty,
+    _Step.serviceAreas => _areas.isNotEmpty || _nationwide,
     _Step.taxId => _taxIdRegex.hasMatch(_taxId.text.trim()),
     _Step.services => _pricingMode == 'quote_only' || _packages.isNotEmpty,
     // Opcionais — pedido explícito do utilizador ("anos de experiência e
@@ -378,6 +382,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                 .toList(),
             yearsExperience: int.tryParse(_yearsExperience.text.trim()),
             instagram: _instagram.text.trim().isEmpty ? null : _instagram.text.trim(),
+            travelsForEvents: _nationwide,
           );
       await ref.read(partnerProfileControllerProvider.notifier).updateTaxId(_taxId.text.trim());
       await ref.read(partnerProfileControllerProvider.notifier).saveCategoryDetails(
@@ -473,9 +478,9 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                   onPressed: !_canContinue || _saving ? null : _continue,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.accentOliveDark,
-                    disabledBackgroundColor: AppTheme.accentOliveDark.withValues(alpha: 0.45),
+                    disabledBackgroundColor: AppTheme.borderMuted,
                     foregroundColor: Colors.white,
-                    disabledForegroundColor: Colors.white,
+                    disabledForegroundColor: AppTheme.inkMuted,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
                   ),
@@ -489,6 +494,29 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
         ),
       ),
     );
+  }
+
+  List<String> get _areas => _serviceAreasText.text
+      .split(',')
+      .map((a) => a.trim())
+      .where((a) => a.isNotEmpty)
+      .toList();
+
+  void _toggleArea(String area) {
+    final list = _areas;
+    list.contains(area) ? list.remove(area) : list.add(area);
+    setState(() => _serviceAreasText.text = list.join(', '));
+  }
+
+  void _addOtherArea() {
+    final a = _otherArea.text.trim();
+    if (a.isEmpty) return;
+    final list = _areas;
+    if (!list.contains(a)) list.add(a);
+    setState(() {
+      _serviceAreasText.text = list.join(', ');
+      _otherArea.clear();
+    });
   }
 
   void _toggleCategory(String id) {
@@ -666,94 +694,86 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
       case _Step.portfolio:
         final images = _portfolioItems.where((i) => i.mediaType == PortfolioMediaType.image).toList();
         final videos = _portfolioItems.where((i) => i.mediaType == PortfolioMediaType.video).toList();
+        final items = [...images, ...videos];
+        final empty = (6 - items.length).clamp(1, 6);
         return _StepScaffold(
-          question: 'Mostra o teu trabalho',
-          subtitle:
-              images.length >= _minPortfolioImages
-                  ? 'Já tens o mínimo de $_minPortfolioImages fotos.'
-                  : '${images.length}/$_minPortfolioImages fotos — obrigatório.',
-          child: Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 0.95,
-                    ),
-                    itemCount: images.length + videos.length,
-                    itemBuilder: (context, index) {
-                      final item = index < images.length ? images[index] : videos[index - images.length];
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            item.mediaType == PortfolioMediaType.video
-                                ? Container(
-                                    color: AppTheme.ink,
-                                    alignment: Alignment.center,
-                                    child: const Icon(Icons.play_circle_outline, color: Colors.white, size: 28),
-                                  )
-                                : Image.network(item.mediaUrl, fit: BoxFit.cover),
-                            Positioned(
-                              top: 4,
-                              right: 4,
-                              child: GestureDetector(
-                                onTap: _portfolioBusy ? null : () => _removePortfolioItem(item),
-                                child: Container(
-                                  width: 22,
-                                  height: 22,
-                                  decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                                  child: const Icon(Icons.close, size: 13, color: Colors.white),
+          question: 'Mostrem o vosso trabalho',
+          subtitle: images.length >= _minPortfolioImages
+              ? 'Já têm as $_minPortfolioImages fotos. Podem juntar mais.'
+              : 'Pelo menos $_minPortfolioImages fotos. São a primeira coisa que os casais veem.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GridView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 6,
+                  crossAxisSpacing: 6,
+                ),
+                children: [
+                  for (final item in items)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          item.mediaType == PortfolioMediaType.video
+                              ? Container(
+                                  color: AppTheme.ink,
+                                  alignment: Alignment.center,
+                                  child: const Icon(Icons.play_circle_outline, color: Colors.white, size: 28),
+                                )
+                              : Image.network(
+                                  item.mediaUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (c, e, st) => Container(color: const Color(0xFFDDE5D3)),
                                 ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: _portfolioBusy ? null : () => _removePortfolioItem(item),
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                                child: const Icon(Icons.close, size: 13, color: Colors.white),
                               ),
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  for (var i = 0; i < empty; i++)
+                    SnappyTap(
+                      onTap: _portfolioBusy ? () {} : _addPortfolioImages,
+                      child: CustomPaint(
+                        painter: const _DashedBorder(radius: 12),
+                        child: Center(
+                          child: i == 0 && _portfolioBusy
+                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.add, color: AppTheme.inkMuted),
                         ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SnappyTap(
-                  onTap: _portfolioBusy ? () {} : _addPortfolioImages,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppTheme.accentOliveDark,
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                    ),
-                    child: Text(
-                      _portfolioBusy ? 'A enviar...' : '+ Adicionar fotos',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
-                    ),
-                  ),
-                ),
-                if (videos.isEmpty) ...[
-                  const SizedBox(height: 8),
-                  SnappyTap(
-                    onTap: _portfolioBusy ? () {} : _addPortfolioVideo,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppTheme.accentOliveDark),
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                      ),
-                      child: const Text(
-                        '+ Adicionar vídeo (opcional)',
-                        style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
                       ),
                     ),
-                  ),
                 ],
+              ),
+              if (videos.isEmpty) ...[
+                const SizedBox(height: 14),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: SnappyTap(
+                    onTap: _portfolioBusy ? () {} : _addPortfolioVideo,
+                    child: const Text(
+                      '+ Adicionar vídeo (opcional)',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+                    ),
+                  ),
+                ),
               ],
-            ),
+            ],
           ),
         );
       case _Step.description:
@@ -771,13 +791,42 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
           ),
         );
       case _Step.serviceAreas:
+        final areas = _areas;
         return _StepScaffold(
-          question: 'Onde prestas serviço?',
-          subtitle: 'Localidades ou distritos, separados por vírgula.',
-          child: AuthTextField(
-            label: 'Área de serviço',
-            controller: _serviceAreasText,
-            onChanged: (_) => setState(() {}),
+          question: 'Onde trabalham?',
+          subtitle: 'Escolham as zonas onde aceitam pedidos.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final a in {..._areaOptions, ...areas})
+                    _Pill(label: a, selected: areas.contains(a), onTap: () => _toggleArea(a)),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _otherArea,
+                      onSubmitted: (_) => _addOtherArea(),
+                      decoration: const InputDecoration(hintText: 'Outra zona', isDense: true),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(onPressed: _addOtherArea, child: const Text('Juntar')),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _RadioRow(
+                label: 'Também me desloco a todo o país',
+                selected: _nationwide,
+                onTap: () => setState(() => _nationwide = !_nationwide),
+              ),
+            ],
           ),
         );
       case _Step.taxId:
@@ -793,61 +842,57 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
         );
       case _Step.services:
         return _StepScaffold(
-          question: 'Como queres mostrar os teus preços?',
-          subtitle: 'Até 3 pacotes fixos, ou só orçamento à medida.',
+          question: 'Como apresentam os preços?',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _PricingModeChip(
-                      label: 'Pacotes',
-                      selected: _pricingMode == 'packages',
-                      onTap: _pricingBusy ? null : () => _setPricingMode('packages'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _PricingModeChip(
-                      label: 'Só orçamento',
-                      selected: _pricingMode == 'quote_only',
-                      onTap: _pricingBusy ? null : () => _setPricingMode('quote_only'),
-                    ),
-                  ),
-                ],
+              _RadioRow(
+                label: 'Pacotes com preço fechado',
+                selected: _pricingMode == 'packages',
+                onTap: _pricingBusy ? () {} : () => _setPricingMode('packages'),
+              ),
+              const SizedBox(height: 10),
+              _RadioRow(
+                label: 'Só por orçamento',
+                selected: _pricingMode == 'quote_only',
+                onTap: _pricingBusy ? () {} : () => _setPricingMode('quote_only'),
               ),
               if (_pricingMode == 'packages') ...[
                 const SizedBox(height: 20),
-                for (final pkg in _packages)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '${pkg.name}  ${pkg.isStartingPrice ? "A partir de " : ""}${euros(pkg.price)}',
-                              style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink),
-                            ),
+                for (final (i, pkg) in _packages.indexed) ...[
+                  Text(i == 0 ? 'Primeiro pacote' : '${i + 1}.º pacote', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  const SizedBox(height: 6),
+                  Container(
+                    constraints: const BoxConstraints(minHeight: 60),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16)),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${pkg.name} · ${pkg.isStartingPrice ? "desde " : ""}${euros(pkg.price)}',
+                            style: const TextStyle(fontSize: 17, color: AppTheme.ink),
                           ),
-                          GestureDetector(
-                            onTap: _pricingBusy ? null : () => _removePackage(pkg),
-                            child: const Icon(Icons.close, size: 18, color: AppTheme.inkMuted),
-                          ),
-                        ],
-                      ),
+                        ),
+                        GestureDetector(
+                          onTap: _pricingBusy ? null : () => _removePackage(pkg),
+                          child: const Icon(Icons.close, size: 18, color: AppTheme.inkMuted),
+                        ),
+                      ],
                     ),
                   ),
+                ],
                 if (_packages.length < 3)
-                  OutlinedButton(
-                    onPressed: _pricingBusy ? null : _addPackage,
-                    child: const Text('Adicionar pacote'),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SnappyTap(
+                      onTap: _pricingBusy ? () {} : _addPackage,
+                      child: Text(
+                        _packages.isEmpty ? '+ Adicionar pacote' : '+ Adicionar outro pacote',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+                      ),
+                    ),
                   ),
               ],
             ],
@@ -1020,35 +1065,118 @@ class _CategoryTile extends StatelessWidget {
   }
 }
 
-class _PricingModeChip extends StatelessWidget {
+class _Pill extends StatelessWidget {
   final String label;
   final bool selected;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
-  const _PricingModeChip({required this.label, required this.selected, required this.onTap});
+  const _Pill({required this.label, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return SnappyTap(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
+          color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
+          borderRadius: BorderRadius.circular(999),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : AppTheme.ink,
-            fontWeight: FontWeight.w700,
-            fontSize: AppFontSize.md,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (selected) ...[
+              const Icon(Icons.check, size: 16, color: Colors.white),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.w700 : FontWeight.w400, color: selected ? Colors.white : AppTheme.ink),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RadioRow extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _RadioRow({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      checked: selected,
+      button: true,
+      child: SnappyTap(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: selected ? const Color(0xFFEEF2E9) : AppTheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: selected ? AppTheme.accentOliveDark : Colors.transparent, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 22,
+                height: 22,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFF8F8B84), width: 1.5),
+                ),
+                child: selected
+                    ? Container(width: 12, height: 12, decoration: const BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 15, fontWeight: selected ? FontWeight.w700 : FontWeight.w400, color: AppTheme.ink),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+}
+
+class _DashedBorder extends CustomPainter {
+  final double radius;
+  const _DashedBorder({this.radius = 16});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFD9D6CF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final path = Path()..addRRect(RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius)));
+    for (final m in path.computeMetrics()) {
+      for (double d = 0; d < m.length; d += 9) {
+        canvas.drawPath(m.extractPath(d, d + 5), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorder old) => old.radius != radius;
 }
 
 /// Campo tocável que abre [CategoryPickerDialog] — mesmo aspeto de
