@@ -21,6 +21,10 @@ class RsvpPageScreen extends StatefulWidget {
 
   const RsvpPageScreen({super.key, required this.token});
 
+  /// Só para as capturas de ecrã: dados de um convite sem ir ao servidor.
+  @visibleForTesting
+  static Future<Map<String, dynamic>?> Function(String token)? debugLoader;
+
   @override
   State<RsvpPageScreen> createState() => _RsvpPageScreenState();
 }
@@ -50,6 +54,12 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
 
   Future<Map<String, dynamic>?> _loadGuest() async {
     try {
+      final loader = RsvpPageScreen.debugLoader;
+      if (loader != null) {
+        final data = await loader(widget.token);
+        _rsvpStatus = data?['rsvp_status'] as String?;
+        return data;
+      }
       final response = await supabase.functions.invoke(
         'get-rsvp-by-token',
         body: {'token': widget.token},

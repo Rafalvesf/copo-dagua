@@ -50,6 +50,7 @@ import 'package:copo_dagua_app/core/tasks/task_models.dart';
 import 'package:copo_dagua_app/core/wedding/wedding_controller.dart';
 import 'package:copo_dagua_app/features/partners/screens/partner_detail_screen.dart';
 import 'package:copo_dagua_app/features/partners/screens/partners_list_screen.dart';
+import 'package:copo_dagua_app/features/invite/screens/rsvp_page_screen.dart';
 import 'package:copo_dagua_app/main.dart';
 import 'package:copo_dagua_app/shared/widgets/page_header.dart' show AddActionButton;
 
@@ -758,7 +759,26 @@ void main() {
     testWidgets(name, (t) => _shoot(t, name, auth, path, after: after));
   }
   testWidgets('83_verificar_email', (t) => _shoot(t, '83_verificar_email', const AuthState(status: AuthStatus.emailUnverified, profile: _coupleProfile), '/verify-email'));
-  testWidgets('84_rsvp_publico', (t) => _shoot(t, '84_rsvp_publico', signedOut, '/rsvp/token-de-teste'));
+  testWidgets('84_rsvp_publico', (t) async {
+    // Os mesmos dados que get_rsvp_by_token devolve para um convite real.
+    RsvpPageScreen.debugLoader = (_) async => {
+          'guest_name': 'Ana',
+          'plus_one_allowed': true,
+          'plus_one_name': null,
+          'dietary_restrictions': null,
+          'guest_message': null,
+          'rsvp_status': 'pending',
+          'wedding_partner_name_1': 'Rafael',
+          'wedding_partner_name_2': 'Ines',
+          'wedding_date': '2027-07-15',
+          'wedding_location': 'Madeira',
+        };
+    try {
+      await _shoot(t, '84_rsvp_publico', signedOut, '/rsvp/token-de-teste');
+    } finally {
+      RsvpPageScreen.debugLoader = null;
+    }
+  });
   testWidgets('85_convite_publico', (t) => _shoot(t, '85_convite_publico', signedOut, '/invite/SOFIATIAGO24', after: (t) => t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 600)))));
   testWidgets('86_convite_individual', (t) => _shoot(t, '86_convite_individual', signedOut, '/i/token-de-teste'));
   testWidgets('87_juntar_par', (t) => _shoot(t, '87_juntar_par', signedOut, '/juntar/00000000-0000-0000-0000-000000000000'));
