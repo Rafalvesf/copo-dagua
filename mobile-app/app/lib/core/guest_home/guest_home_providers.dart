@@ -279,7 +279,7 @@ class GuestCompanion {
   final String? menu;
   final List<String> allergies;
 
-  /// 'child', 'adult' ou 'senior' (092).
+  /// 'child', 'teen', 'adult' ou 'senior' (092/094).
   final String ageGroup;
 
   /// Email (093) — obrigatório para adultos; serve para cruzar com contas.
@@ -372,6 +372,7 @@ Future<void> setOwnAgeGroup(String weddingId, String ageGroup) async {
 /// Rótulo em português de 'child' / 'adult' / 'senior'.
 String ageGroupLabel(String g) => switch (g) {
       'child' => 'Criança',
+      'teen' => 'Adolescente',
       'senior' => 'Sénior',
       _ => 'Adulto',
     };
