@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
+import '../../../core/wedding/pastel_colors.dart';
+import '../../../core/wedding/wedding_venue.dart';
+import '../../../shared/widgets/navigation_sheet.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -14,13 +17,27 @@ import '../../../shared/widgets/page_header.dart';
 /// existiam; `ceremonyTime`/`welcomeMessage`/`themeColors` são novos
 /// (`067_guest_self_service.sql`) — todos opcionais, mostrados só
 /// quando o casal os preencher (ainda sem ecrã de edição próprio).
-class GuestWeddingDetailsScreen extends StatelessWidget {
+class GuestWeddingDetailsScreen extends ConsumerWidget {
   final GuestWedding wedding;
 
-  const GuestWeddingDetailsScreen({super.key, required this.wedding});
+  /// Aberto pelo casal em "Para os convidados" para ver como fica — sem
+  /// a navbar do convidado.
+  final bool preview;
+
+  const GuestWeddingDetailsScreen({super.key, required this.wedding, this.preview = false});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Sem morada escrita pelo casal, usa a do local escolhido na app.
+    final appVenue = (wedding.venueAddress?.isNotEmpty == true && wedding.venueLatitude != null)
+        ? null
+        : ref.watch(weddingVenueProvider(wedding.weddingId)).asData?.value;
+    final placeName = wedding.venue?.isNotEmpty == true ? wedding.venue : (appVenue?.name ?? wedding.location);
+    final placeAddress = wedding.venueAddress?.isNotEmpty == true
+        ? wedding.venueAddress
+        : (appVenue?.address ?? (wedding.venue?.isNotEmpty == true ? wedding.location : null));
+    final lat = wedding.venueLatitude ?? (wedding.venueAddress?.isNotEmpty == true ? null : appVenue?.latitude);
+    final lng = wedding.venueLongitude ?? (wedding.venueAddress?.isNotEmpty == true ? null : appVenue?.longitude);
     return GradientScaffold(
       background: AppBackground.subtle,
       body: Stack(
@@ -29,7 +46,7 @@ class GuestWeddingDetailsScreen extends StatelessWidget {
             bottom: false,
             child: Column(
               children: [
-                const PageHeader(title: 'Programa'),
+                PageHeader(title: 'Programa', subtitle: preview ? 'Pré-visualização · como os convidados veem' : null),
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 120),
@@ -81,33 +98,23 @@ class GuestWeddingDetailsScreen extends StatelessWidget {
                           last: true,
                         ),
                       const SizedBox(height: 8),
-                      if (wedding.venue?.isNotEmpty == true || wedding.location?.isNotEmpty == true || wedding.venueAddress?.isNotEmpty == true)
-                        _PlaceCard(
-                          venue: wedding.venue?.isNotEmpty == true ? wedding.venue : wedding.location,
-                          location: wedding.venueAddress?.isNotEmpty == true ? wedding.venueAddress : (wedding.venue?.isNotEmpty == true ? wedding.location : null),
-                        ),
-                      if (wedding.dressCode?.isNotEmpty == true) ...[
-                        const SizedBox(height: 12),
+                      if (placeName?.isNotEmpty == true || placeAddress?.isNotEmpty == true)
+                        _PlaceCard(name: placeName, address: placeAddress, latitude: lat, longitude: lng),
+                      if (wedding.dressCode?.isNotEmpty == true || wedding.themeColors.isNotEmpty) ...[
+                        const SizedBox(height: 14),
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text('Dress code', style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, color: AppTheme.ink)),
                             const SizedBox(width: 10),
                             Expanded(
-                              child: Text(wedding.dressCode!, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted, height: 1.45)),
+                              child: Text(
+                                wedding.dressCode?.isNotEmpty == true ? wedding.dressCode! : 'Cores do evento',
+                                style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted, height: 1.4),
+                              ),
                             ),
-                          ],
-                        ),
-                      ],
-                      if (wedding.themeColors.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            const Text('Cores do evento', style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, color: AppTheme.ink)),
-                            const Spacer(),
                             for (final hex in wedding.themeColors) ...[
-                              _ColorSwatch(hex: hex),
                               const SizedBox(width: 6),
+                              Tooltip(message: pastelName(hex) ?? hex, child: _ColorSwatch(hex: hex)),
                             ],
                           ],
                         ),
@@ -126,12 +133,13 @@ class GuestWeddingDetailsScreen extends StatelessWidget {
               ],
             ),
           ),
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: GuestBottomNav(current: GuestTab.home),
-          ),
+          if (!preview)
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: GuestBottomNav(current: GuestTab.home),
+            ),
         ],
       ),
     );
@@ -164,18 +172,14 @@ class _ColorSwatch extends StatelessWidget {
 
   const _ColorSwatch({required this.hex});
 
-  Color get _color {
-    var value = hex.replaceAll('#', '');
-    if (value.length == 6) value = 'FF$value';
-    return Color(int.tryParse(value, radix: 16) ?? 0xFFCCCCCC);
-  }
+  Color get _color => colorFromHex(hex);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 22,
       height: 22,
-      decoration: BoxDecoration(color: _color, shape: BoxShape.circle),
+      decoration: BoxDecoration(color: _color, shape: BoxShape.circle, border: Border.all(color: const Color(0x14000000))),
     );
   }
 }
@@ -235,13 +239,16 @@ class _TimelineItem extends StatelessWidget {
 }
 
 class _PlaceCard extends StatelessWidget {
-  final String? venue;
-  final String? location;
-  const _PlaceCard({this.venue, this.location});
+  final String? name;
+  final String? address;
+  final double? latitude;
+  final double? longitude;
+  const _PlaceCard({this.name, this.address, this.latitude, this.longitude});
 
   @override
   Widget build(BuildContext context) {
-    final query = [venue, location].whereType<String>().where((s) => s.isNotEmpty).join(', ');
+    final title = name?.isNotEmpty == true ? name! : (address ?? '');
+    final sub = name?.isNotEmpty == true ? address : null;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -253,7 +260,7 @@ class _PlaceCard extends StatelessWidget {
         children: [
           Container(
             height: 92,
-            color: AppColors.gray,
+            color: const Color(0xFFEEF2E9),
             alignment: Alignment.center,
             child: const Icon(Icons.place_outlined, size: 30, color: AppTheme.accentOliveDark),
           ),
@@ -265,20 +272,19 @@ class _PlaceCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(venue?.isNotEmpty == true ? venue! : (location ?? ''), style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      if (venue?.isNotEmpty == true && location?.isNotEmpty == true)
-                        Text(location!, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                      Text(title, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      if (sub?.isNotEmpty == true)
+                        Text(sub!, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
                     ],
                   ),
                 ),
+                const SizedBox(width: 10),
                 FilledButton(
-                  onPressed: () => launchUrl(
-                    Uri.https('www.google.com', '/maps/search/', {'api': '1', 'query': query}),
-                    mode: LaunchMode.externalApplication,
-                  ),
+                  onPressed: () => showNavigationSheet(context, label: title, address: sub, latitude: latitude, longitude: longitude),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(0, 38),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.md, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Como chegar'),

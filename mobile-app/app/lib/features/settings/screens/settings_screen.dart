@@ -9,7 +9,6 @@ import '../../../core/models/models.dart';
 import '../../../core/partner_profile/partner_location.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
-import '../../../core/wedding/guest_facing.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/wedding_nav_icon.dart';
 import '../../../shared/public_link.dart';
@@ -19,6 +18,7 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
+import 'guest_facing_screen.dart';
 
 /// Definições — uma por tipo de conta (organizadores, parceiros,
 /// convidados). Redesign 2026-10-17 (canvas "Organizadores · Definições",
@@ -206,66 +206,6 @@ class _HelpGroup extends StatelessWidget {
   }
 }
 
-class _RadioCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _RadioCard({required this.title, required this.subtitle, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFF6F8F2) : Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(
-            color: selected ? AppTheme.accentOliveDark : AppTheme.borderMuted,
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              margin: const EdgeInsets.only(top: 1),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFFCFC8B8), width: 2),
-              ),
-              alignment: Alignment.center,
-              child: selected
-                  ? Container(
-                      width: 10,
-                      height: 10,
-                      decoration: const BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ───────────────────────── Organizadores ─────────────────────────
 
 class _CoupleSettings extends ConsumerWidget {
@@ -321,7 +261,14 @@ class _CoupleSettings extends ConsumerWidget {
       const _SectionTitle('Organização'),
       _Group(
         children: [
-          _Row(icon: Icons.link, label: 'Convidar outro organizador', value: 'Link', onTap: () => _invite(context, ref, wedding)),
+          // "Convidar o teu par" num casamento; noutro evento, outro
+          // organizador (pedido 2026-10-17 — antes havia as duas linhas).
+          _Row(
+            icon: Icons.person_add_alt_outlined,
+            label: wedding.eventType == EventType.wedding ? 'Convidar o teu par' : 'Convidar outro organizador',
+            value: 'Link',
+            onTap: () => _invite(context, ref, wedding),
+          ),
           _Row(
             icon: Icons.calendar_today_outlined,
             label: 'Detalhes do evento',
@@ -349,14 +296,14 @@ class _CoupleSettings extends ConsumerWidget {
             icon: Icons.schedule,
             label: 'Programa do evento',
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => _GuestFacingPage(weddingId: wedding.id, code: wedding.guestCode)),
+              MaterialPageRoute(builder: (_) => GuestFacingScreen(wedding: wedding, focusProgram: true)),
             ),
           ),
           _Row(
             icon: Icons.tune,
             label: 'Entrada e presentes',
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => _GuestFacingPage(weddingId: wedding.id, code: wedding.guestCode)),
+              MaterialPageRoute(builder: (_) => GuestFacingScreen(wedding: wedding)),
             ),
           ),
           _Row(
@@ -605,55 +552,6 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
   }
 }
 
-class _GuestFacingPage extends StatelessWidget {
-  final String weddingId;
-  final String? code;
-  const _GuestFacingPage({required this.weddingId, this.code});
-
-  @override
-  Widget build(BuildContext context) {
-    return _SettingsPage(
-      title: 'Para os convidados',
-      children: [
-        if (code?.isNotEmpty == true)
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(AppRadius.lg)),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('CÓDIGO DO EVENTO', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFFDDE5D3))),
-                      Text(code!, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
-                    ],
-                  ),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    try {
-                      await SharePlus.instance.share(ShareParams(text: 'Entra no meu evento no Tchin Tchin com o código $code'));
-                    } catch (_) {
-                      await Clipboard.setData(ClipboardData(text: code!));
-                    }
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.18),
-                    foregroundColor: Colors.white,
-                    textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontWeight: FontWeight.w700),
-                  ),
-                  child: const Text('Partilhar'),
-                ),
-              ],
-            ),
-          ),
-        _GuestFacingSection(weddingId: weddingId),
-      ],
-    );
-  }
-}
-
 // ───────────────────────── Parceiros ─────────────────────────
 
 class _PartnerSettings extends ConsumerWidget {
@@ -862,256 +760,6 @@ class _MoreNavIconTile extends StatelessWidget {
   }
 }
 
-
-/// "Para os convidados" — hora da cerimónia, mensagem de boas-vindas e
-/// presentes (lista/IBAN). Até aqui os convidados tinham estes campos no
-/// ecrã deles mas o casal não tinha onde os preencher.
-class _GuestFacingSection extends StatefulWidget {
-  final String weddingId;
-
-  const _GuestFacingSection({required this.weddingId});
-
-  @override
-  State<_GuestFacingSection> createState() => _GuestFacingSectionState();
-}
-
-class _GuestFacingSectionState extends State<_GuestFacingSection> {
-  final _time = TextEditingController();
-  final _welcome = TextEditingController();
-  final _giftUrl = TextEditingController();
-  final _iban = TextEditingController();
-  final _giftMessage = TextEditingController();
-  bool _loading = true;
-  bool _saving = false;
-  bool _giftsAvailable = true;
-  bool _programAvailable = false;
-  String? _joinMode;
-
-  /// Programa (085): um trio de campos por momento.
-  final List<_ProgramControllers> _items = [];
-  final _address = TextEditingController();
-  final _dressCode = TextEditingController();
-
-  void _addItem([ProgramItem item = const ProgramItem()]) {
-    _items.add(_ProgramControllers(item));
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final info = await loadGuestFacingInfo(widget.weddingId);
-      _time.text = info.ceremonyTime ?? '';
-      _welcome.text = info.welcomeMessage ?? '';
-      _giftUrl.text = info.giftListUrl ?? '';
-      _iban.text = info.giftIban ?? '';
-      _giftMessage.text = info.giftMessage ?? '';
-      _giftsAvailable = info.giftsAvailable;
-      _joinMode = info.joinMode;
-      _programAvailable = info.programAvailable;
-      _address.text = info.venueAddress ?? '';
-      _dressCode.text = info.dressCode ?? '';
-      for (final item in info.program) {
-        _addItem(item);
-      }
-      // Sem programa ainda: começa com a cerimónia (hora já guardada).
-      if (_items.isEmpty && _programAvailable) {
-        _addItem(ProgramItem(time: info.ceremonyTime ?? '', title: 'Cerimónia'));
-      }
-    } catch (_) {
-      // Fica com os campos vazios; guardar continua possível.
-    }
-    if (mounted) setState(() => _loading = false);
-  }
-
-  Future<void> _save() async {
-    setState(() => _saving = true);
-    String message = 'Guardado. Os convidados já veem as alterações.';
-    try {
-      await saveGuestFacingInfo(
-        widget.weddingId,
-        GuestFacingInfo(
-          // A hora da cerimónia acompanha o primeiro momento do programa.
-          ceremonyTime: _programAvailable
-              ? (_items.map((c) => c.time.text.trim()).firstWhere((t) => t.isNotEmpty, orElse: () => ''))
-              : _time.text,
-          program: [for (final c in _items) c.value],
-          dressCode: _dressCode.text,
-          venueAddress: _address.text,
-          programAvailable: _programAvailable,
-          welcomeMessage: _welcome.text,
-          giftListUrl: _giftUrl.text,
-          giftIban: _iban.text,
-          giftMessage: _giftMessage.text,
-          giftsAvailable: _giftsAvailable,
-          joinMode: _joinMode,
-        ),
-      );
-    } catch (_) {
-      message = 'Não foi possível guardar. Tenta outra vez.';
-    }
-    if (!mounted) return;
-    setState(() => _saving = false);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  @override
-  void dispose() {
-    _time.dispose();
-    _welcome.dispose();
-    _giftUrl.dispose();
-    _iban.dispose();
-    _giftMessage.dispose();
-    _address.dispose();
-    _dressCode.dispose();
-    for (final c in _items) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  List<Widget> _programEditor() {
-    return [
-      for (var i = 0; i < _items.length; i++)
-        Padding(
-          key: ObjectKey(_items[i]),
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 92,
-                            child: AuthTextField(label: 'Hora', controller: _items[i].time, keyboardType: TextInputType.datetime),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(child: AuthTextField(label: 'Momento (ex: Jantar)', controller: _items[i].title)),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      AuthTextField(label: 'Local ou nota (opcional)', controller: _items[i].place),
-                    ],
-                  ),
-                ),
-                Column(
-                  children: [
-                    IconButton(
-                      tooltip: 'Subir',
-                      visualDensity: VisualDensity.compact,
-                      onPressed: i == 0 ? null : () => setState(() => _items.insert(i - 1, _items.removeAt(i))),
-                      icon: const Icon(Icons.keyboard_arrow_up, size: 22),
-                    ),
-                    IconButton(
-                      tooltip: 'Remover',
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => setState(() => _items.removeAt(i).dispose()),
-                      icon: const Icon(Icons.delete_outline, size: 20, color: AppTheme.inkMuted),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      if (_items.length < 30)
-        OutlinedButton.icon(
-          onPressed: () => setState(() => _addItem()),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Adicionar momento'),
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size.fromHeight(46),
-            foregroundColor: AppTheme.accentOliveDark,
-            side: const BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
-            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontWeight: FontWeight.w700),
-          ),
-        ),
-      const SizedBox(height: 16),
-      AuthTextField(label: 'Morada do local (para o "Como chegar")', controller: _address),
-      const SizedBox(height: 12),
-      AuthTextField(label: 'Dress code (ex: Formal · evita branco)', controller: _dressCode),
-    ];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) return const SizedBox(height: 40);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (_joinMode != null) ...[
-          const _SectionTitle('Quem pode entrar'),
-          for (final (value, title, subtitle) in const [
-            ('code_open', 'Qualquer pessoa com o código', 'Mais simples. Tu decides depois quem fica.'),
-            ('code_with_match', 'Só quem está na lista', 'O email ou telemóvel tem de estar nos convidados.'),
-            ('invite_only', 'Só com convite individual', 'Cada pessoa recebe o seu link.'),
-          ])
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _RadioCard(
-                title: title,
-                subtitle: subtitle,
-                selected: _joinMode == value,
-                onTap: () => setState(() => _joinMode = value),
-              ),
-            ),
-        ],
-        const _SectionTitle('Programa'),
-        AuthTextField(label: 'Mensagem de boas-vindas', controller: _welcome),
-        const SizedBox(height: 12),
-        if (_programAvailable)
-          ..._programEditor()
-        else
-          AuthTextField(label: 'Hora da cerimónia (ex: 16:00)', controller: _time),
-        if (_giftsAvailable) ...[
-          const _SectionTitle('Presentes'),
-          AuthTextField(label: 'Link da lista de presentes', controller: _giftUrl),
-          const SizedBox(height: 12),
-          AuthTextField(label: 'IBAN para contribuições', controller: _iban),
-          const SizedBox(height: 12),
-          AuthTextField(label: 'Mensagem nos presentes', controller: _giftMessage),
-        ],
-        const SizedBox(height: 20),
-        PrimaryButton(label: 'Guardar', loading: _saving, onPressed: _save),
-      ],
-    );
-  }
-}
-
-
-class _ProgramControllers {
-  final TextEditingController time;
-  final TextEditingController title;
-  final TextEditingController place;
-
-  _ProgramControllers(ProgramItem item)
-      : time = TextEditingController(text: item.time),
-        title = TextEditingController(text: item.title),
-        place = TextEditingController(text: item.place);
-
-  ProgramItem get value => ProgramItem(time: time.text, title: title.text, place: place.text);
-
-  void dispose() {
-    time.dispose();
-    title.dispose();
-    place.dispose();
-  }
-}
 
 /// "Conta" — nome, email e alterar password. Igual para todos os tipos
 /// de conta.
