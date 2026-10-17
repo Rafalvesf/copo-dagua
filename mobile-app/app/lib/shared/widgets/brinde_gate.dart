@@ -20,8 +20,9 @@ class BrindeGate extends ConsumerStatefulWidget {
   ConsumerState<BrindeGate> createState() => _BrindeGateState();
 }
 
-class _BrindeGateState extends ConsumerState<BrindeGate> with SingleTickerProviderStateMixin {
+class _BrindeGateState extends ConsumerState<BrindeGate> with TickerProviderStateMixin {
   late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 5000));
+  late final SteadyDriver _driver;
   bool _show = false;
   bool _burst = false;
   bool _barGreen = false;
@@ -30,8 +31,7 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    // Fora da abertura a barra do topo é branca, como o fundo das páginas.
-    setBarColor(const Color(0xFFFFFFFF));
+    _driver = SteadyDriver(this, _c);
     _c.addListener(() {
       if (!_burst && _c.value >= 0.78) setState(() => _burst = true);
       final green = _show && _c.value < 0.7;
@@ -52,6 +52,7 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with SingleTickerProvid
 
   @override
   void dispose() {
+    _driver.dispose();
     _c.dispose();
     super.dispose();
   }
@@ -63,7 +64,7 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with SingleTickerProvid
       _show = true;
       _burst = false;
     });
-    _c.forward(from: 0);
+    _driver.start();
   }
 
   @override
