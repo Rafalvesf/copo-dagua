@@ -17,6 +17,32 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
+  <!-- Versões novas chegam logo (2026-10-17): o service worker antigo do
+       Flutter guardava a app em cache e o telemóvel continuava com a
+       versão anterior. Remove-o (e as caches dele) uma vez e recarrega. -->
+  <script>
+    (function () {
+      try {
+        if (!('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          if (!regs.length) return;
+          Promise.all(regs.map(function (r) { return r.unregister(); }))
+            .then(function () {
+              return window.caches ? caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+              }) : null;
+            })
+            .then(function () {
+              try {
+                if (sessionStorage.getItem('tt-sw-reset')) return;
+                sessionStorage.setItem('tt-sw-reset', '1');
+              } catch (e) {}
+              location.reload();
+            });
+        });
+      } catch (e) {}
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Tchin Tchin — o teu evento, num só lugar.">
