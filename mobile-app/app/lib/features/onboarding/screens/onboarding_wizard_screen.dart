@@ -339,6 +339,12 @@ class _OnboardingWizardScreenState
               Expanded(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
+                  // Cada pergunta começa sempre à mesma altura (antes o
+                  // passo ficava centrado e o título mudava de sítio).
+                  layoutBuilder: (current, previous) => Stack(
+                    alignment: Alignment.topCenter,
+                    children: [...previous, ?current],
+                  ),
                   child: KeyedSubtree(
                     key: ValueKey(_current),
                     child: _buildStep(context),
@@ -670,6 +676,7 @@ class _LabeledFieldState extends State<_LabeledField> {
             style: const TextStyle(fontSize: AppFontSize.lg + 1, color: AppTheme.ink),
             decoration: InputDecoration(
               isCollapsed: true,
+              contentPadding: EdgeInsets.zero,
               filled: false,
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -1199,6 +1206,7 @@ class _RegionStep extends StatelessWidget {
                   style: const TextStyle(fontSize: AppFontSize.lg, color: AppTheme.ink),
                   decoration: const InputDecoration(
                     isCollapsed: true,
+                    contentPadding: EdgeInsets.zero,
                     filled: false,
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
