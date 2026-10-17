@@ -384,49 +384,6 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  const Text(
-                    'Disponibilidade',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: AppFontSize.base,
-                      color: AppTheme.ink,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _GroupedCard(
-                    rows: [
-                      _SwitchRow(
-                        icon: Icons.event_available_outlined,
-                        label: 'Aceitar novos pedidos',
-                        subtitle: 'Recebe pedidos de orçamentos de casais.',
-                        value: _profile.acceptingRequests,
-                        onChanged: (v) => setState(
-                          () => _profile =
-                              _profile.copyWith(acceptingRequests: v),
-                        ),
-                      ),
-                      _SwitchRow(
-                        icon: Icons.directions_car_outlined,
-                        label: 'Deslocações',
-                        subtitle: 'Disponível para deslocações.',
-                        value: _profile.travelsForEvents,
-                        onChanged: (v) => setState(
-                          () => _profile =
-                              _profile.copyWith(travelsForEvents: v),
-                        ),
-                      ),
-                      _InfoRow(
-                        icon: Icons.place_outlined,
-                        label: 'Distância máxima de deslocação',
-                        value: _profile.maxTravelDistanceKm == null
-                            ? '—'
-                            : '${_profile.maxTravelDistanceKm} km',
-                        isLast: true,
-                        onTap: _editTravelDistance,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
                   PrimaryButton(
                     label: 'Guardar alterações',
                     loading: _saving,

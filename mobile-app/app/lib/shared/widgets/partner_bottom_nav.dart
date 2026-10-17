@@ -28,54 +28,71 @@ class PartnerBottomNav extends ConsumerWidget {
     final unreadCount = ref
         .watch(partnerUnreadMessagesCountProvider)
         .maybeWhen(data: (count) => count, orElse: () => 0);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppRadius.xxl),
-          topRight: Radius.circular(AppRadius.xxl),
+    // Igual à ilha dos organizadores ([FloatingBottomNav]): margem à
+    // volta, cantos todos redondos, separadores com a mesma largura
+    // (pedido 2026-10-17: "as navbars devem ser iguais").
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
+          boxShadow: AppTheme.navBarShadow,
         ),
-        boxShadow: AppTheme.navBarShadow,
-      ),
-      child: SafeArea(
-        top: false,
-        child: ConnectedFilterNav(
-          top: top == null
-              ? null
-              : Padding(padding: const EdgeInsets.fromLTRB(8, 4, 8, 0), child: top),
-          navRow: Padding(
-          padding: EdgeInsets.fromLTRB(8, top == null ? 16 : 10, 8, 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _NavIcon(
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home_rounded,
-                active: current == PartnerTab.home,
-                onTap: () => context.go('/partner-home'),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
+          child: ConnectedFilterNav(
+            top: top,
+            navRow: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              child: Row(
+                children: [
+              Expanded(
+                child: Center(
+                  child: _NavIcon(
+                    icon: Icons.home_outlined,
+                    activeIcon: Icons.home_rounded,
+                    active: current == PartnerTab.home,
+                    onTap: () => context.go('/partner-home'),
+                  ),
+                ),
               ),
-              _NavIcon(
-                icon: Icons.inbox_outlined,
-                activeIcon: Icons.inbox_rounded,
-                active: current == PartnerTab.requests,
-                onTap: () => context.go('/partner-requests'),
+              Expanded(
+                child: Center(
+                  child: _NavIcon(
+                    icon: Icons.inbox_outlined,
+                    activeIcon: Icons.inbox_rounded,
+                    active: current == PartnerTab.requests,
+                    onTap: () => context.go('/partner-requests'),
+                  ),
+                ),
               ),
-              _NavIcon(
-                icon: Icons.chat_bubble_outline_rounded,
-                activeIcon: Icons.chat_bubble_rounded,
-                active: current == PartnerTab.chat,
-                badgeCount: unreadCount,
-                onTap: () => context.go('/partner-messages'),
+              Expanded(
+                child: Center(
+                  child: _NavIcon(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    activeIcon: Icons.chat_bubble_rounded,
+                    active: current == PartnerTab.chat,
+                    badgeCount: unreadCount,
+                    onTap: () => context.go('/partner-messages'),
+                  ),
+                ),
               ),
-              _NavIcon(
-                icon: Icons.storefront_outlined,
-                activeIcon: Icons.storefront_rounded,
-                active: current == PartnerTab.profile,
-                onTap: () => context.go('/partner-profile'),
+              Expanded(
+                child: Center(
+                  child: _NavIcon(
+                    icon: Icons.person_outline_rounded,
+                    activeIcon: Icons.person_rounded,
+                    active: current == PartnerTab.profile,
+                    onTap: () => context.go('/partner-profile'),
+                  ),
+                ),
               ),
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
         ),
       ),
     );
@@ -106,7 +123,7 @@ class _NavIcon extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -130,7 +147,7 @@ class _NavIcon extends StatelessWidget {
                   if (badgeCount > 0)
                     Positioned(
                       top: 0,
-                      right: -2,
+                      right: 2,
                       child: _UnreadBadge(count: badgeCount),
                     ),
                 ],
