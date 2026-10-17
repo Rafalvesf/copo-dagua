@@ -363,8 +363,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             widget.selectionMode
                                 ? 40
                                 : FloatingFilterBar.bottomPadding(
-                                    aboveNav: true,
-                                  ),
+                                      aboveNav: true,
+                                    ) +
+                                    (FilterChipsRow.stackedHeight - FilterChipsRow.height),
                           ),
                           children: [
                             // Canvas "Parceiros": cabeçalho por categoria
@@ -445,9 +446,11 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       // Categorias de Parceiros: carrossel normal, sem
                       // repetir (pedido do utilizador).
                       infinite: false,
+                      visible: 4,
+                      stacked: true,
                       items: [
                         for (final o in all)
-                          FilterBarItem(o?.label ?? 'Todos', iconOnlyWhenSelected: true, icon: o == null
+                          FilterBarItem(o?.label ?? 'Todos', icon: o == null
                                 ? Icons.apps_rounded
                                 : iconForCategorySlug(o.slug)),
                       ],

@@ -48,10 +48,25 @@ class FilterChipsRow extends StatefulWidget {
     required this.selected,
     required this.onSelected,
     this.infinite = true,
+    this.visible = 3,
+    this.stacked = false,
   });
+
+  /// Quantos filtros cabem à vista (3; 4 nas categorias de Parceiros,
+  /// para ficarem nas mesmas colunas da navbar — pedido 2026-10-17).
+  final int visible;
+
+  /// Ícone em cima e texto por baixo (categorias de Parceiros); o
+  /// escolhido fica com a mesma pílula da navbar principal.
+  final bool stacked;
 
   /// Altura da linha de filtros — os botões ocupam-na toda ("fill total").
   static const double height = 52;
+
+  /// Altura da linha com ícone e texto por baixo.
+  static const double stackedHeight = 70;
+
+  double get rowHeight => stacked ? stackedHeight : height;
 
   @override
   State<FilterChipsRow> createState() => _FilterChipsRowState();
@@ -65,7 +80,6 @@ class FilterChipsRow extends StatefulWidget {
 /// cortado), e desliza de filtro em filtro. Com 3 ou menos opções não há
 /// carrossel — ficam todas lado a lado, em partes iguais.
 class _FilterChipsRowState extends State<FilterChipsRow> {
-  static const int _visible = 3;
 
   /// Centro "virtual" do carrossel infinito: as páginas repetem as opções
   /// para os dois lados a partir daqui.
@@ -80,13 +94,13 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
   bool _userScrolling = false;
 
   int get _n => widget.items.length;
-  bool get _scrolls => _n > _visible;
+  bool get _scrolls => _n > widget.visible;
   bool get _loops => _scrolls && widget.infinite;
 
   int _initialPage() => _loops ? _loopBase * _n + widget.selected : widget.selected;
 
   PageController _controllerFor() => _controller ??= PageController(
-        viewportFraction: 1 / _visible,
+        viewportFraction: 1 / widget.visible,
         initialPage: _initialPage(),
       );
 
@@ -170,6 +184,7 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
   Widget _chip(int index, {int? page}) {
     return _FilterBarChip(
       item: widget.items[index],
+      stacked: widget.stacked,
       selected: index == widget.selected,
       onTap: () {
         _snapBack?.cancel();
@@ -185,10 +200,10 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
 
   @override
   Widget build(BuildContext context) {
-    if (_n == 0) return const SizedBox(height: FilterChipsRow.height);
+    if (_n == 0) return SizedBox(height: widget.rowHeight);
     if (!_scrolls) {
       return SizedBox(
-        height: FilterChipsRow.height,
+        height: widget.rowHeight,
         child: Row(
           children: [
             for (var i = 0; i < _n; i++) Expanded(child: _chip(i)),
@@ -197,7 +212,7 @@ class _FilterChipsRowState extends State<FilterChipsRow> {
       );
     }
     return SizedBox(
-      height: FilterChipsRow.height,
+      height: widget.rowHeight,
       child: NotificationListener<ScrollNotification>(
         onNotification: _onScroll,
         child: PageView.builder(
@@ -251,7 +266,7 @@ class FloatingFilterBar extends StatelessWidget {
           // da navbar principal (pedido 2026-10-17).
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 4,
+              horizontal: 8,
               vertical: (_navHeight - FilterChipsRow.height) / 2,
             ),
             child: FilterChipsRow(
@@ -272,6 +287,7 @@ class _FilterBarChip extends StatelessWidget {
 
   final FilterBarItem item;
   final bool selected;
+  final bool stacked;
   final VoidCallback onTap;
 
   const _FilterBarChip({
@@ -279,10 +295,60 @@ class _FilterBarChip extends StatelessWidget {
     required this.item,
     required this.selected,
     required this.onTap,
+    this.stacked = false,
   });
+
+  /// Ícone dentro da mesma pílula da navbar (42 × 67) e o texto por
+  /// baixo.
+  Widget _stacked() {
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: SnappyTap(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 6, bottom: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                width: selected ? _pillHeight * 1.6 : _pillHeight,
+                height: _pillHeight,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: selected ? AppTheme.accentOliveDark : Colors.transparent,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Icon(item.icon ?? Icons.circle_outlined, size: 22, color: selected ? Colors.white : AppTheme.inkMuted),
+              ),
+              const SizedBox(height: 2),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    item.label,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: AppFontSize.sm,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                      color: selected ? AppTheme.ink : AppTheme.inkMuted,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (stacked) return _stacked();
     // Selecionado = bolha verde com texto branco; restantes = texto
     // secundário sobre o branco da ilha.
     final fg = selected ? Colors.white : AppTheme.inkMuted;
@@ -359,7 +425,9 @@ class ConnectedFilterNav extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        filters,
+        // Mesmo recuo da linha de separadores (8) — as colunas e a
+        // pílula ficam alinhadas com as da navbar principal.
+        Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: filters),
         const Divider(
           height: 1,
           thickness: 1,
