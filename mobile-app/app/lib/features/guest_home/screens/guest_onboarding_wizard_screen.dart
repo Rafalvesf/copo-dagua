@@ -451,6 +451,17 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       _finish(attending: false);
       return;
     }
+    // Quem já tem a app: o telemóvel é obrigatório — é com ele que a
+    // resposta fica ligada à conta dessa pessoa (093/097).
+    if (step == _Step.companions) {
+      final missing = _companions.where((c) => c.willInstall && c.phone.replaceAll(RegExp(r'[^0-9]'), '').length < 9).toList();
+      if (missing.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Indica o telemóvel de ${missing.first.name}.')),
+        );
+        return;
+      }
+    }
     if (_index == steps.length - 1) {
       _finish(attending: true);
     } else {
@@ -541,6 +552,28 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                     selected: {c.willInstall ? 'Sim' : 'Não'},
                     onTap: (o) => setState(() => c.willInstall = o == 'Sim'),
                   ),
+                if (_companions.any((c) => c.willInstall)) ...[
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Indica o telemóvel com que criou conta, para ligarmos a resposta à conta dele/a.',
+                    style: TextStyle(fontSize: 12, height: 17 / 12, color: AppTheme.inkMuted),
+                  ),
+                  for (final c in _companions.where((c) => c.willInstall))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: TextFormField(
+                        key: ValueKey('phone-${c.hashCode}'),
+                        initialValue: c.phone,
+                        keyboardType: TextInputType.phone,
+                        autofillHints: const [AutofillHints.telephoneNumber],
+                        onChanged: (v) => c.phone = v.trim(),
+                        decoration: InputDecoration(
+                          labelText: 'Telemóvel de ${c.name.split(' ').first}',
+                          hintText: '912 345 678',
+                        ),
+                      ),
+                    ),
+                ],
               ],
             ],
           ),
@@ -880,6 +913,7 @@ class _CompanionPageState extends State<_CompanionPage> {
         age: _child ? int.tryParse(_age.text.trim()) : null,
         accompaniedBy: _adult ? null : _with,
         willInstall: widget.existing?.willInstall ?? false,
+        phone: widget.existing?.phone ?? '',
       ),
     );
   }
