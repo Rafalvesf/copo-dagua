@@ -341,7 +341,7 @@ class _GuestProfileBody extends ConsumerWidget {
                   guest.menuSelection?.isNotEmpty == true ? guest.menuSelection! : 'Menu por escolher',
                   guest.dietaryRestrictions?.isNotEmpty == true ? guest.dietaryRestrictions! : 'Sem alergias',
                 ].join(' · '),
-                status: '✓ Conta ligada',
+                status: 'Conta ligada',
                 onTap: () => _editMe(context, ref, guest),
               ),
               if (companions.isNotEmpty)
@@ -489,7 +489,7 @@ class _Segmented extends StatelessWidget {
       decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16)),
       child: Row(
         children: [
-          seg(going ? 'Vou ✓' : 'Vou', going, () => onChanged(true)),
+          seg('Vou', going, () => onChanged(true)),
           const SizedBox(width: 6),
           seg('Não vou', !going, () => onChanged(false)),
         ],
