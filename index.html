@@ -69,6 +69,12 @@
     @keyframes ttSpark { 0% { transform: translate(0,0) scale(0); opacity: 0 } 19% { transform: translate(0,0) scale(1); opacity: 1 } 100% { transform: translate(var(--dx),var(--dy)) scale(.3); opacity: 0 } }
     @keyframes ttStar { 0% { transform: scale(0) rotate(0); opacity: 0 } 29% { transform: scale(1.25) rotate(45deg); opacity: 1 } 100% { transform: scale(0) rotate(90deg); opacity: 0 } }
     @keyframes ttT { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+    #tt-splash .prep b { font-weight: inherit; opacity: 0; animation: ttDot 1.2s steps(1) infinite; }
+    #tt-splash .prep .d2 { animation-name: ttDot2; }
+    #tt-splash .prep .d3 { animation-name: ttDot3; }
+    @keyframes ttDot { 0% { opacity: 0 } 25%, 100% { opacity: 1 } }
+    @keyframes ttDot2 { 0%, 25% { opacity: 0 } 50%, 100% { opacity: 1 } }
+    @keyframes ttDot3 { 0%, 50% { opacity: 0 } 75%, 100% { opacity: 1 } }
     /* saída */
     #tt-splash.go { animation: ttExit .7s cubic-bezier(.7,0,.3,1) both; }
     #tt-splash.go .wrap, #tt-splash.go .t, #tt-splash.go .prep { animation: ttLift .5s ease-in both; }
@@ -86,7 +92,7 @@
   <div id="tt-splash" role="img" aria-label="Tchin Tchin">
     <span class="wrap"><span class="w a">Tchin</span><span class="w b">Tchin</span><i class="sp" style="--dx:-70px;--dy:-46px"></i><i class="sp" style="--dx:70px;--dy:-46px;background:#fff"></i><i class="sp" style="--dx:-90px;--dy:8px"></i><i class="sp" style="--dx:90px;--dy:8px;background:#fff"></i><i class="sp" style="--dx:-52px;--dy:54px"></i><i class="sp" style="--dx:52px;--dy:54px;background:#fff"></i><i class="sp" style="--dx:0px;--dy:-70px"></i><i class="sp" style="--dx:0px;--dy:72px;background:#fff"></i><svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z" fill="#FFFFFF"/></svg></span>
     <span class="t">Para todas as festas</span>
-    <span class="prep">A preparar o brinde…</span>
+    <span class="prep">A preparar o brinde<b class="d1">.</b><b class="d2">.</b><b class="d3">.</b></span>
   </div>
   <div id="tt-cf" aria-hidden="true"></div>
   <script>
