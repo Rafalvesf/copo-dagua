@@ -282,8 +282,21 @@ class GuestCompanion {
   /// 'child', 'adult' ou 'senior' (092).
   final String ageGroup;
 
+  /// Email (093) — obrigatório para adultos; serve para cruzar com contas.
+  final String? email;
+
+  /// Com quem vai (crianças e seniores, 093).
+  final String? accompaniedBy;
+
+  /// Entrada da lista a que este acompanhante ficou ligado (093) — já
+  /// estava no evento, ou criou conta depois.
+  final String? linkedGuestId;
+
   const GuestCompanion({
     required this.name,
+    this.email,
+    this.accompaniedBy,
+    this.linkedGuestId,
     this.isChild = false,
     this.ageGroup = 'adult',
     this.childAge,
@@ -313,6 +326,8 @@ Future<void> saveGuestCompanions({
           'age_group': c.isChild && c.ageGroup == 'adult' ? 'child' : c.ageGroup,
           'child_age': c.childAge,
           'phone': c.phone,
+          'email': c.email,
+          'accompanied_by': c.accompaniedBy,
           'menu': c.menu,
           'allergies': c.allergies,
         },
@@ -336,6 +351,9 @@ final guestCompanionsProvider = FutureProvider.family<List<GuestCompanion>, Stri
           ageGroup: (r['age_group'] as String?) ?? ((r['is_child'] as bool? ?? false) ? 'child' : 'adult'),
           childAge: r['child_age'] as int?,
           phone: r['phone'] as String?,
+          email: r['email'] as String?,
+          accompaniedBy: r['accompanied_by'] as String?,
+          linkedGuestId: r['linked_guest_id'] as String?,
           menu: r['menu'] as String?,
           allergies: ((r['allergies'] as List?) ?? const []).cast<String>(),
         ),

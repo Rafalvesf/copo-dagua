@@ -383,7 +383,11 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
                 icon: Icons.people_outline,
                 label: () {
                   final names = ref.watch(guestCompanionsProvider(guest.id)).asData?.value
-                          .map((c) => c.ageGroup == 'adult' ? c.name : '${c.name} (${ageGroupLabel(c.ageGroup).toLowerCase()})')
+                          .map((c) => [
+                                c.name,
+                                if (c.ageGroup != 'adult') '(${ageGroupLabel(c.ageGroup).toLowerCase()})',
+                                if (c.linkedGuestId != null) '✓',
+                              ].join(' '))
                           .toList() ??
                       const <String>[];
                   final limit = guest.maxCompanions == 0 ? 'Vem sozinho' : 'Pode trazer ${CompanionLimitRow.label(guest.maxCompanions)}';
