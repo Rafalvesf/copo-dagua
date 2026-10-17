@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -18,6 +19,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  bool _keep = true;
 
   @override
   void dispose() {
@@ -38,26 +40,82 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           const SizedBox(height: 16),
           ErrorBanner(message: auth.errorMessage!),
         ],
-        AuthField(label: 'Email', controller: _email, hint: 'nome@email.pt', keyboardType: TextInputType.emailAddress, topGap: 24),
-        AuthField(label: 'Password', controller: _password, hint: '••••••••', password: true),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
+        AutofillGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AuthField(
+                label: 'Email',
+                controller: _email,
+                hint: 'nome@email.pt',
+                keyboardType: TextInputType.emailAddress,
+                topGap: 24,
+                autofillHints: const [AutofillHints.email, AutofillHints.username],
+              ),
+              AuthField(
+                label: 'Password',
+                controller: _password,
+                hint: '••••••••',
+                password: true,
+                autofillHints: const [AutofillHints.password],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() => _keep = !_keep),
+                child: Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: _keep ? AppTheme.accentOliveDark : Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: _keep ? AppTheme.accentOliveDark : const Color(0xFF8F8B84), width: 1.5),
+                      ),
+                      child: _keep ? const Icon(Icons.check_rounded, size: 15, color: Colors.white) : null,
+                    ),
+                    const SizedBox(width: 10),
+                    const Flexible(
+                      child: Text(
+                        'Manter sessão iniciada',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 14, color: AppTheme.ink),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            TextButton(
             onPressed: () => context.push('/forgot-password'),
             style: TextButton.styleFrom(
               foregroundColor: AppTheme.accentOliveDark,
-              padding: const EdgeInsets.only(top: 12),
+              padding: EdgeInsets.zero,
               textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
             ),
             child: const Text('Esqueci-me da password'),
           ),
+          ],
         ),
       ],
       footer: [
         AuthPrimaryButton(
           label: 'Entrar',
           loading: loading,
-          onPressed: () => ref.read(authControllerProvider.notifier).login(email: _email.text.trim(), password: _password.text),
+          onPressed: () {
+            // Deixa o gestor de passwords oferecer guardar o login.
+            TextInput.finishAutofillContext();
+            ref.read(authControllerProvider.notifier).login(email: _email.text.trim(), password: _password.text, keepSignedIn: _keep);
+          },
         ),
         const SizedBox(height: 16),
         GestureDetector(
