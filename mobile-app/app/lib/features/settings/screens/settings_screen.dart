@@ -459,10 +459,10 @@ class PartnerAccountSections extends ConsumerWidget {
               onTap: () => context.push('/partner-location'),
             ),
             _Row(
-              icon: Icons.route_outlined,
-              label: 'Área de deslocação',
-              value: profile?.maxTravelDistanceKm == null ? null : 'até ${profile!.maxTravelDistanceKm} km',
-              onTap: () => context.push('/partner-business-info'),
+              icon: Icons.event_available_outlined,
+              label: 'Disponibilidade',
+              value: profile == null ? null : (profile.acceptingRequests ? 'A aceitar pedidos' : 'Em pausa'),
+              onTap: () => context.push('/partner-availability'),
             ),
             if (profile?.categoryLabels.contains('Espaço / Quinta') ?? false)
               _Row(icon: Icons.event_seat_outlined, label: 'Mesas do local', onTap: () => context.push('/partner-venue-tables')),

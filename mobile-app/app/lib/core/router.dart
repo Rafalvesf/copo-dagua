@@ -46,6 +46,7 @@ import '../features/partner_onboarding/screens/partner_welcome_screen.dart';
 import '../features/partner_payments/screens/partner_payments_screen.dart';
 import '../features/partner_profile/screens/business_info_screen.dart';
 import '../features/partner_profile/screens/partner_location_screen.dart';
+import '../features/partner_profile/screens/partner_availability_screen.dart';
 import '../features/partner_profile/screens/partner_pricing_screen.dart';
 import '../features/partner_profile/screens/partner_portfolio_screen.dart';
 import '../features/partner_profile/screens/partner_profile_screen.dart';
@@ -314,6 +315,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/partner-profile',
         builder: (context, state) => const PartnerProfileScreen(),
+      ),
+      GoRoute(
+        path: '/partner-availability',
+        builder: (context, state) => const PartnerAvailabilityScreen(),
       ),
       GoRoute(
         path: '/partner-location',
