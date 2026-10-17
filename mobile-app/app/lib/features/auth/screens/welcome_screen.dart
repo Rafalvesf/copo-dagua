@@ -59,7 +59,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
           if (mounted) setState(() => _showSplash = false);
         });
       } else {
-        _splash.forward();
+        // A página web já mostrou as palavras a brindar enquanto a app
+        // carregava (`web/index.html`) — continua a partir do brinde.
+        _splash.forward(from: 0.26);
       }
     }
   }
