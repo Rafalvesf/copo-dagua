@@ -232,7 +232,7 @@ class FloatingFilterBar extends StatelessWidget {
   /// Margem inferior a dar a listas que passam por baixo da ilha:
   /// [aboveNav] `true` quando os filtros estão ligados à navbar.
   static double bottomPadding({required bool aboveNav}) =>
-      26 + FilterChipsRow.height + (aboveNav ? _navHeight : 0) + 24;
+      26 + (aboveNav ? FilterChipsRow.height + _navHeight : _navHeight) + 24;
 
   @override
   Widget build(BuildContext context) {
@@ -247,10 +247,18 @@ class FloatingFilterBar extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.xxl),
-          child: FilterChipsRow(
-            items: items,
-            selected: selected,
-            onSelected: onSelected,
+          // Sozinha, a barra de filtros fica com a mesma altura e margens
+          // da navbar principal (pedido 2026-10-17).
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 4,
+              vertical: (_navHeight - FilterChipsRow.height) / 2,
+            ),
+            child: FilterChipsRow(
+              items: items,
+              selected: selected,
+              onSelected: onSelected,
+            ),
           ),
         ),
       ),

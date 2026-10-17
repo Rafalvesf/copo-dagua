@@ -241,9 +241,9 @@ class _WeddingNavTab extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(2.5),
+          padding: EdgeInsets.symmetric(horizontal: active ? 15 : 2.5, vertical: 2.5),
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(999),
             color: active ? AppTheme.accentOliveDark : Colors.transparent,
           ),
           child: Opacity(
@@ -284,12 +284,13 @@ class NavBubble extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
-      width: size,
+      // Selecionado = pílula verde em vez de círculo (pedido 2026-10-17).
+      width: active ? size * 1.6 : size,
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: active ? AppTheme.accentOliveDark : Colors.transparent,
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(999),
       ),
       child: child,
     );
