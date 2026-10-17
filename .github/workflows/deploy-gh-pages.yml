@@ -8,6 +8,11 @@ on:
       - 'mobile-app/app/**'
       - '.github/workflows/deploy-gh-pages.yml'
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Versão a publicar (commit, tag ou ramo). Vazio = master. Usar para voltar atrás.'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -27,6 +32,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.sha }}
+
+      # Versão atualmente publicada — passa a ser a cópia de segurança
+      # em /copo-dagua/backup/ (pedido 2026-10-17: "deixa sempre uma
+      # versão antiga como backup, para o caso de haver algum problema
+      # grave").
+      - name: Fetch currently published site
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: published
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -42,6 +60,35 @@ jobs:
 
       - name: Prepare GitHub Pages fallback
         run: cp build/web/index.html build/web/404.html
+
+      - name: Stamp version
+        run: |
+          echo "commit: $(git rev-parse HEAD)" > build/web/version.txt
+          echo "built: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> build/web/version.txt
+
+      - name: Keep previous version as backup
+        run: |
+          OLD="$GITHUB_WORKSPACE/published"
+          DEST=build/web/backup
+          if [ ! -d "$OLD" ] || [ ! -f "$OLD/index.html" ]; then
+            echo "Sem versão publicada anterior."; exit 0
+          fi
+          mkdir -p "$DEST"
+          if [ -n "${{ github.event.inputs.ref }}" ] && [ -d "$OLD/backup" ]; then
+            # A voltar atrás: mantém a cópia de segurança que já existia,
+            # em vez de guardar a versão com problemas.
+            cp -a "$OLD/backup/." "$DEST/"
+          else
+            ( cd "$OLD" && find . -mindepth 1 -maxdepth 1 \
+                ! -name '.git' ! -name 'backup' ! -name 'pr-*' \
+                -exec cp -a {} "$GITHUB_WORKSPACE/mobile-app/app/$DEST/" \; )
+            for f in "$DEST/index.html" "$DEST/404.html"; do
+              [ -f "$f" ] && sed -i 's#<base href="/copo-dagua/">#<base href="/copo-dagua/backup/">#' "$f"
+            done
+          fi
+          # Previews de PRs continuam publicados.
+          for d in "$OLD"/pr-*; do [ -d "$d" ] && cp -a "$d" build/web/; done
+          cat "$DEST/version.txt" 2>/dev/null || echo "backup sem version.txt (anterior a esta mudança)"
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
