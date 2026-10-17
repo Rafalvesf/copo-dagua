@@ -285,7 +285,7 @@ class _ConfettiBurstState extends State<ConfettiBurst> with SingleTickerProvider
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_c.value == 0 && !_c.isAnimating && !_reduceMotion(context)) {
+    if (_c.value == 0 && !_c.isAnimating) {
       Future.delayed(widget.delay, () {
         if (mounted) _c.forward();
       });

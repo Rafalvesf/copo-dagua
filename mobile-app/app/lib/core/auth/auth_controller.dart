@@ -89,6 +89,7 @@ class AuthController extends Notifier<AuthState> {
     // código inválido. Ver `050_wedding_guest_code.sql`.
     String? weddingCode,
   }) async {
+    BrindeGate.pending = true;
     state = state.copyWith(
       status: AuthStatus.authenticating,
       errorMessage: null,

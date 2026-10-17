@@ -33,4 +33,4 @@ where not exists (
   select 1 from public.guests g
   where g.wedding_id = m.wedding_id and g.linked_profile_id = m.guest_id
 )
-on conflict (wedding_id, linked_profile_id) do nothing;
+on conflict (wedding_id, linked_profile_id) where linked_profile_id is not null do nothing;

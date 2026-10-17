@@ -178,8 +178,10 @@ class GuestJoinResult {
 /// uma segunda conta (`050_wedding_guest_code.sql`). Lança se o código for
 /// inválido — o chamador decide a mensagem.
 Future<GuestJoinResult> joinWeddingByCode(String code) async {
-  final rows =
-      await supabase.rpc('join_wedding_by_code', params: {'p_code': code.trim()}) as List;
+  final res = await supabase.rpc('join_wedding_by_code', params: {'p_code': code.trim()});
+  // Versão antiga da função (antes da 071) devolve só o id.
+  if (res is String) return GuestJoinResult(weddingId: res, guestMatched: false);
+  final rows = res as List;
   return GuestJoinResult.fromRow(rows.first as Map<String, dynamic>);
 }
 
