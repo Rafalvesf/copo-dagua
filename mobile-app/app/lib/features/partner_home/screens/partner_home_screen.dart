@@ -144,21 +144,21 @@ class PartnerHomeScreen extends ConsumerWidget {
                 const SizedBox(height: 14),
                 // Atalhos do negócio (pedido 2026-10-17): saíram do Perfil.
                 GridView.count(
-                  crossAxisCount: 4,
+                  crossAxisCount: 3,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
-                  childAspectRatio: 0.92,
+                  childAspectRatio: 1.25,
                   children: [
                     for (final (icon, label, route) in const [
+                      (Icons.event_available_outlined, 'Reservas', '/partner-requests'),
                       (Icons.sell_outlined, 'Serviços e preços', '/partner-pricing'),
                       (Icons.photo_library_outlined, 'Portefólio', '/partner-portfolio'),
                       (Icons.star_border_rounded, 'Avaliações', '/partner-reviews'),
                       (Icons.bar_chart_rounded, 'Resultados', '/partner-stats'),
                       (Icons.payments_outlined, 'Pagamentos', '/partner-payments'),
                       (Icons.description_outlined, 'Contratos', '/partner-contracts'),
-                      (Icons.event_available_outlined, 'Reservas', '/partner-requests'),
                     ])
                       _PartnerTile(
                         color: AppTheme.surface,
