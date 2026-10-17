@@ -128,7 +128,6 @@ class _NavIcon extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: 42,
               height: 42,
               child: Stack(
                 clipBehavior: Clip.none,
