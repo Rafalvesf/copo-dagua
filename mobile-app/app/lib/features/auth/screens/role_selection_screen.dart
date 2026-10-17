@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/models/models.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/auth_ui.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/gradient_scaffold.dart';
 
+/// "Início 3 · Tipo de conta" — igual ao canvas.
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
 
@@ -15,78 +15,41 @@ class RoleSelectionScreen extends StatefulWidget {
 }
 
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
-  UserRole? _selected;
+  UserRole? _selected = UserRole.couple;
 
   @override
   Widget build(BuildContext context) {
-    return GradientScaffold(
-      background: AppBackground.hero,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const CircleBackButton(),
-              const SizedBox(height: 8),
-              const SizedBox(height: 16),
-              authTitle('Como vais usar a app?', 'Podes ter mais do que um papel mais tarde.'),
-              const SizedBox(height: 24),
-              _RoleCard(
-                icon: Icons.celebration_outlined,
-                title: 'Vou organizar um evento',
-                subtitle: 'Casamento, batizado, aniversário…',
-                selected: _selected == UserRole.couple,
-                onTap: () => setState(() => _selected = UserRole.couple),
-              ),
-              const SizedBox(height: 12),
-              _RoleCard(
-                icon: Icons.storefront_outlined,
-                title: 'Sou parceiro',
-                subtitle: 'Espaços, catering, fotografia e outros serviços',
-                selected: _selected == UserRole.partner,
-                onTap: () => setState(() => _selected = UserRole.partner),
-              ),
-              const SizedBox(height: 12),
-              _RoleCard(
-                icon: Icons.mail_outline,
-                title: 'Fui convidado',
-                subtitle: 'Tenho um código ou um link de convite',
-                selected: _selected == UserRole.guest,
-                onTap: () => setState(() => _selected = UserRole.guest),
-              ),
-              const Spacer(),
-              FilledButton(
-                onPressed: _selected == null
-                    ? null
-                    // A role vai na própria URL (`?role=...`), não em `extra`
-                    // — `extra` do go_router não sobrevive de forma fiável no
-                    // Flutter Web (é só um objeto Dart em memória, não faz
-                    // parte do URL), o que fazia o registo cair sempre para
-                    // `UserRole.couple` independentemente do que fosse
-                    // escolhido aqui. Ver router.dart, rota `/register`.
-                    : () => context.push('/register?role=${_selected!.name}'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                ),
-                child: const Text('Continuar'),
-              ),
-            ],
+    return AuthPage(
+      children: [
+        const AuthHeading(title: 'Como vais usar a app?', subtitle: 'Podes ter mais do que um papel mais tarde.'),
+        const SizedBox(height: 24),
+        for (final (role, icon, title, subtitle) in const [
+          (UserRole.couple, Icons.celebration_outlined, 'Vou organizar um evento', 'Casamento, batizado, aniversário…'),
+          (UserRole.partner, Icons.storefront_outlined, 'Sou parceiro', 'Espaços, catering, fotografia e outros serviços'),
+          (UserRole.guest, Icons.mail_outline, 'Fui convidado', 'Tenho um código ou um link de convite'),
+        ])
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _RoleCard(
+              icon: icon,
+              title: title,
+              subtitle: subtitle,
+              selected: _selected == role,
+              onTap: () => setState(() => _selected = role),
+            ),
           ),
+      ],
+      footer: [
+        AuthPrimaryButton(
+          label: 'Continuar',
+          // A role vai na própria URL (`?role=...`) — `extra` não sobrevive
+          // no Flutter Web. Ver router.dart, rota `/register`.
+          onPressed: _selected == null ? null : () => context.push('/register?role=${_selected!.name}'),
         ),
-      ),
+      ],
     );
   }
 }
-
-Widget authTitle(String title, String subtitle) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(fontSize: AppFontSize.h1, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        const SizedBox(height: 6),
-        Text(subtitle, style: const TextStyle(fontSize: AppFontSize.base + 1, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted)),
-      ],
-    );
 
 class _RoleCard extends StatelessWidget {
   final IconData icon;
@@ -108,18 +71,17 @@ class _RoleCard extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFFF6F8F2) : Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(color: selected ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: selected ? 1.5 : 1),
-            boxShadow: selected ? AppTheme.searchBarShadow : null,
+            color: selected ? AppColors.gray : const Color(0xFFF2F0EB),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: selected ? AppTheme.accentOliveDark : Colors.transparent, width: 1.5),
           ),
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: selected ? AppTheme.accentOliveDark : AppColors.gray,
+                  color: selected ? AppTheme.accentOliveDark : Colors.white,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(icon, color: selected ? Colors.white : AppTheme.accentOliveDark),
@@ -129,9 +91,9 @@ class _RoleCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
+                    Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    const SizedBox(height: 3),
+                    Text(subtitle, style: const TextStyle(fontSize: 13, height: 18 / 13, color: AppTheme.inkMuted)),
                   ],
                 ),
               ),

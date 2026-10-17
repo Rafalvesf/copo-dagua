@@ -8,11 +8,8 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/buttons.dart';
-import 'role_selection_screen.dart' show authTitle;
 import '../../../shared/widgets/feedback.dart';
-import '../../../shared/widgets/form_fields.dart';
-import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/auth_ui.dart';
 
 final _nameRegex = RegExp(r'^[a-zA-ZÀ-ÿ]+(\s[a-zA-ZÀ-ÿ]+)+$');
 final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -199,127 +196,103 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
     });
 
-    return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return AuthPage(
+      children: [
+        AuthHeading(
+          title: 'Cria a tua conta',
+          subtitle: switch (widget.role) {
+            UserRole.partner => 'Parceiro',
+            UserRole.guest => 'Convidado',
+            _ => 'Organizar um evento',
+          },
+        ),
+        if (auth.status == AuthStatus.error && auth.errorMessage != null) ...[
+          const SizedBox(height: 16),
+          ErrorBanner(message: auth.errorMessage!),
+        ],
+        AuthField(label: 'Nome', controller: _name, hint: 'Nome e apelido', errorText: _nameError, topGap: 20),
+        if (widget.role == UserRole.guest) ...[
+          AuthField(
+            label: 'Código do evento',
+            controller: _weddingCode,
+            hint: 'Ex.: INES-TOMAS-24',
+            errorText: _weddingCodeError,
+            onChanged: _onWeddingCodeChanged,
+          ),
+          if (_verifyingCode)
+            const Padding(
+              padding: EdgeInsets.only(top: 6),
+              child: Text('A verificar código...', style: TextStyle(color: AppTheme.inkMuted, fontSize: 12)),
+            )
+          else if (_foundWeddingNames != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                '✓ Vais juntar-te ao evento de $_foundWeddingNames',
+                style: const TextStyle(color: AppStatusColors.confirmed, fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+            ),
+        ],
+        AuthField(label: 'Email', controller: _email, hint: 'nome@email.pt', keyboardType: TextInputType.emailAddress, errorText: _emailError),
+        AuthField(
+          label: 'Password',
+          controller: _password,
+          hint: 'Mín. 8 caracteres, letras e números',
+          password: true,
+          errorText: _passwordError,
+        ),
+        const SizedBox(height: 16),
+        GestureDetector(
+          onTap: () => setState(() => _acceptedTerms = !_acceptedTerms),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const CircleBackButton(),
-              const SizedBox(height: 16),
-              authTitle(
-                'Cria a tua conta',
-                switch (widget.role) {
-                  UserRole.partner => 'Parceiro',
-                  UserRole.guest => 'Convidado',
-                  _ => 'Organizar um evento',
-                },
-              ),
-              const SizedBox(height: 24),
-              if (auth.status == AuthStatus.error && auth.errorMessage != null)
-                ErrorBanner(message: auth.errorMessage!),
-              AuthTextField(
-                label: 'Nome completo',
-                controller: _name,
-                errorText: _nameError,
-              ),
-              const SizedBox(height: 12),
-              if (widget.role == UserRole.guest) ...[
-                AuthTextField(
-                  label: 'Código do casal',
-                  controller: _weddingCode,
-                  errorText: _weddingCodeError,
-                  onChanged: _onWeddingCodeChanged,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: _acceptedTerms ? AppTheme.accentOliveDark : Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: _acceptedTerms ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: 1.5),
                 ),
-                if (_verifyingCode)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 6),
-                    child: Text(
-                      'A verificar código...',
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
-                    ),
-                  )
-                else if (_foundWeddingNames != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      '✓ Vais juntar-te ao casamento de $_foundWeddingNames',
-                      style: const TextStyle(
-                        color: AppStatusColors.confirmed,
-                        fontSize: AppFontSize.sm,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                child: _acceptedTerms ? const Icon(Icons.check_rounded, size: 16, color: Colors.white) : null,
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    text: 'Aceito os ',
+                    children: [
+                      TextSpan(text: 'Termos', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      TextSpan(text: ' e a '),
+                      TextSpan(text: 'Política de Privacidade', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    ],
                   ),
-                const SizedBox(height: 12),
-              ],
-              AuthTextField(
-                label: 'Email',
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                errorText: _emailError,
-              ),
-              const SizedBox(height: 12),
-              PasswordField(
-                controller: _password,
-                errorText: _passwordError,
-                helperText: 'Mín. 8 caracteres, 1 letra e 1 número',
-              ),
-              const SizedBox(height: 12),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                value: _acceptedTerms,
-                title: const Text(
-                  'Aceito os Termos e a Política de Privacidade',
+                  style: TextStyle(fontSize: 13, height: 19 / 13, color: AppTheme.inkMuted),
                 ),
-                onChanged: (v) => setState(() => _acceptedTerms = v ?? false),
-              ),
-              if (_termsError != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    _termsError!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 8),
-              PrimaryButton(
-                label: 'Criar conta',
-                loading: loading || _checkingCode,
-                onPressed: _submit,
-              ),
-              const SizedBox(height: 20),
-              const Row(
-                children: [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text('ou'),
-                  ),
-                  Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: 20),
-              SocialLoginButton(
-                label: 'Continuar com Google',
-                icon: Icons.g_mobiledata,
-                onPressed: null,
-              ),
-              const SizedBox(height: 12),
-              SocialLoginButton(
-                label: 'Continuar com Apple',
-                icon: Icons.apple,
-                onPressed: null,
               ),
             ],
           ),
         ),
-      ),
+        if (_termsError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(_termsError!, style: const TextStyle(fontSize: 12, color: AppStatusColors.declined)),
+          ),
+      ],
+      footer: [
+        AuthPrimaryButton(label: 'Criar conta', loading: loading || _checkingCode, onPressed: _submit),
+        const AuthOrDivider(),
+        const AuthSocialButton(
+          label: 'Continuar com Google',
+          badge: Text('G', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        ),
+        const AuthSocialButton(
+          label: 'Continuar com Apple',
+          badge: Icon(Icons.apple, size: 14, color: AppTheme.ink),
+        ),
+      ],
     );
   }
 }
