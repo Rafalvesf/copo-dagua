@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,7 +15,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/menu_style.dart';
-import '../../settings/screens/menu_style_screen.dart' show showMenuStylePicker;
 import '../../guests/screens/guests_list_screen.dart' show InviteShareSheet;
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
@@ -74,101 +74,328 @@ const _softShadow = [
 /// conteúdo do os noivos, sem mexer no conteúdo" — este ecrã passou a
 /// ter o conteúdo que antes vivia em `home_feed_screen.dart`
 /// (`HomeFeedScreen`), sem nenhuma alteração ao próprio conteúdo.
-class WeddingDetailsScreen extends ConsumerWidget {
+class WeddingDetailsScreen extends ConsumerStatefulWidget {
   const WeddingDetailsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final weddingState = ref.watch(weddingControllerProvider);
-    final wedding = weddingState.wedding;
-    final look = ref.watch(_lookProvider);
+  ConsumerState<WeddingDetailsScreen> createState() => _WeddingDetailsScreenState();
+}
+
+/// Toque longo na página (pedido 2026-10-18): a própria página encolhe,
+/// como trocar o mostrador do Apple Watch, e ao deslizar passa pelos
+/// estilos reais (com os dados do evento); por baixo, as cores.
+class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
+  bool _editing = false;
+  bool _saving = false;
+  int _layout = 0;
+  int _color = 0;
+  PageController? _layoutPager;
+  PageController? _colorPager;
+
+  void _startEditing() {
+    final style = ref.read(currentMenuStyleProvider);
+    HapticFeedback.mediumImpact();
+    _layout = MenuLayout.values.indexOf(style.layout);
+    _color = MenuColor.all.indexWhere((c) => c.id == style.color.id).clamp(0, MenuColor.all.length - 1);
+    _layoutPager?.dispose();
+    _colorPager?.dispose();
+    _layoutPager = PageController(viewportFraction: 0.8, initialPage: _layout);
+    _colorPager = PageController(viewportFraction: 0.2, initialPage: _color);
+    setState(() => _editing = true);
+  }
+
+  Future<void> _finish({required bool save}) async {
+    if (save) {
+      setState(() => _saving = true);
+      try {
+        await saveMenuStyle(ref, layout: MenuLayout.values[_layout], color: MenuColor.all[_color]);
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
+        }
+      }
+    }
+    if (mounted) setState(() {
+      _editing = false;
+      _saving = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _layoutPager?.dispose();
+    _colorPager?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final wedding = ref.watch(weddingControllerProvider).wedding;
     final layout = ref.watch(currentMenuStyleProvider).layout;
 
     return GradientScaffold(
       background: AppBackground.feed,
       body: wedding == null
           ? const _WeddingSkeleton()
-          : Stack(
-              children: [
-                SafeArea(
-                  bottom: false,
-                  // Toque longo na página: muda o estilo e a cor, como
-                  // trocar o mostrador do Apple Watch (pedido 2026-10-18).
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onLongPress: () => showMenuStylePicker(context),
-                    child: EdgeFade(
-                    topFadeHeight: 8,
-                    bottomFadeHeight: 140,
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppTheme.screenMargin,
-                        40,
-                        AppTheme.screenMargin,
-                        140,
-                      ),
-                      children: [
-                        // Aparência escolhida nas Definições (098): o
-                        // clássico por defeito, ou uma das três opções.
-                        ...switch (layout) {
-                          MenuLayout.classic => [
-                              _HeroCard(wedding: wedding),
-                              const SizedBox(height: 22),
-                              const _QuickLinksRow(),
-                            ],
-                          MenuLayout.stickers => [_StickersTop(wedding: wedding)],
-                          MenuLayout.mural => [_MuralTop(wedding: wedding)],
-                          MenuLayout.clothesline => [_ClotheslineTop(wedding: wedding)],
-                        },
-                        const SizedBox(height: 22),
-                        const _BookingsSection(),
-                        const SizedBox(height: 14),
-                        const _UpcomingPaymentsCard(),
-                        const SizedBox(height: 22),
-                        Row(
-                          children: [
-                            Text(
-                              'Próximas tarefas',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(width: 8),
-                            Transform.rotate(
-                              angle: -0.17,
-                              child: Icon(look.doodles[1], size: 18, color: look.accent),
-                            ),
-                            const Spacer(),
-                            SnappyTap(
-                              onTap: () => context.push('/tasks'),
-                              child: Text(
-                                'Ver todas',
-                                style: TextStyle(
-                                  color: look.accent,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: AppFontSize.md,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        const _UpcomingTasksSection(),
-                        const SizedBox(height: 26),
-                        const _FinancialSummaryRow(),
-                        const SizedBox(height: 22),
-                        _ShareWeddingButton(wedding: wedding, color: look.color, on: look.on),
-                      ],
-                    ),
-                  ),
-                  ),
+          : PopScope(
+              canPop: !_editing,
+              onPopInvokedWithResult: (didPop, _) {
+                if (!didPop && _editing) _finish(save: false);
+              },
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOutCubic,
+                transitionBuilder: (child, anim) => FadeTransition(
+                  opacity: anim,
+                  child: ScaleTransition(scale: Tween(begin: 1.04, end: 1.0).animate(anim), child: child),
                 ),
-                const Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.wedding),
+                child: _editing ? _editor(context, wedding) : _normal(context, wedding, layout),
+              ),
+            ),
+    );
+  }
+
+  Widget _normal(BuildContext context, Wedding wedding, MenuLayout layout) {
+    return Stack(
+      key: const ValueKey('normal'),
+      children: [
+        SafeArea(
+          bottom: false,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onLongPress: _startEditing,
+            child: EdgeFade(
+              topFadeHeight: 8,
+              bottomFadeHeight: 140,
+              child: _PageBody(wedding: wedding, layout: layout),
+            ),
+          ),
+        ),
+        const Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: FloatingBottomNav(current: AppTab.wedding),
+        ),
+      ],
+    );
+  }
+
+  Widget _editor(BuildContext context, Wedding wedding) {
+    final color = MenuColor.all[_color];
+    final layout = MenuLayout.values[_layout];
+    return SafeArea(
+      key: const ValueKey('editing'),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 0),
+            child: Row(
+              children: [
+                TextButton(onPressed: () => _finish(save: false), child: const Text('Cancelar')),
+                const Spacer(),
+                Column(
+                  children: [
+                    Text(layout.label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    Text(color.label, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                  ],
+                ),
+                const Spacer(),
+                FilledButton(
+                  onPressed: _saving ? null : () => _finish(save: true),
+                  style: FilledButton.styleFrom(backgroundColor: color.color, foregroundColor: color.on),
+                  child: const Text('Feito'),
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 6),
+          Expanded(
+            child: PageView.builder(
+              controller: _layoutPager,
+              itemCount: MenuLayout.values.length,
+              onPageChanged: (i) {
+                HapticFeedback.selectionClick();
+                setState(() => _layout = i);
+              },
+              itemBuilder: (context, i) => AnimatedBuilder(
+                animation: _layoutPager!,
+                builder: (context, child) {
+                  final pager = _layoutPager!;
+                  final page = pager.hasClients && pager.position.haveDimensions ? (pager.page ?? _layout.toDouble()) : _layout.toDouble();
+                  final d = (page - i).abs().clamp(0.0, 1.0);
+                  return Transform.scale(scale: 1 - d * 0.08, child: Opacity(opacity: 1 - d * 0.35, child: child));
+                },
+                // A página real, encolhida e sem toques (só se desliza).
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(34),
+                      boxShadow: const [BoxShadow(color: Color(0x2E171713), blurRadius: 30, offset: Offset(0, 12))],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(34),
+                      child: ColoredBox(
+                        color: Colors.white,
+                        child: IgnorePointer(
+                          child: FittedBox(
+                            fit: BoxFit.fitWidth,
+                            alignment: Alignment.topCenter,
+                            child: SizedBox(
+                              width: 390,
+                              height: 780,
+                              child: _StylePreview(
+                                style: EventMenuStyle(MenuLayout.values[i], color),
+                                child: _PageBody(wedding: wedding, layout: MenuLayout.values[i], scrollable: false),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = 0; i < MenuLayout.values.length; i++)
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == _layout ? 18 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(color: i == _layout ? color.accent : AppTheme.borderMuted, borderRadius: BorderRadius.circular(3)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 74,
+            child: PageView.builder(
+              controller: _colorPager,
+              itemCount: MenuColor.all.length,
+              onPageChanged: (i) {
+                HapticFeedback.selectionClick();
+                setState(() => _color = i);
+              },
+              itemBuilder: (context, i) {
+                final c = MenuColor.all[i];
+                final selected = i == _color;
+                return Semantics(
+                  button: true,
+                  selected: selected,
+                  label: c.label,
+                  child: GestureDetector(
+                    onTap: () => _colorPager!.animateToPage(i, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic),
+                    child: Center(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOutBack,
+                        width: selected ? 60 : 40,
+                        height: selected ? 60 : 40,
+                        decoration: BoxDecoration(
+                          color: c.color,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: selected ? c.accent : const Color(0x22171713),
+                              spreadRadius: selected ? 2 : 0,
+                              blurRadius: selected ? 0 : 8,
+                            ),
+                          ],
+                        ),
+                        child: selected ? Icon(Icons.check, color: c.on, size: 22) : null,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
+      ),
+    );
+  }
+}
+
+/// Estilo em pré-visualização (modo de edição): sobrepõe-se ao guardado
+/// para os widgets desta página.
+class _StylePreview extends InheritedWidget {
+  final EventMenuStyle style;
+  const _StylePreview({required this.style, required super.child});
+
+  @override
+  bool updateShouldNotify(_StylePreview old) => old.style.layout != style.layout || old.style.color.id != style.color.id;
+}
+
+_Look _look(BuildContext context, WidgetRef ref) {
+  final preview = context.dependOnInheritedWidgetOfExactType<_StylePreview>();
+  if (preview == null) return ref.watch(_lookProvider);
+  final type = ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType)) ?? EventType.wedding;
+  final c = preview.style.color;
+  final d = EventDecor.of(type);
+  return _Look(color: c.color, on: c.on, accent: c.accent, tint: c.tint, comp: c.comp, tagline: d.tagline, motif: d.motif, doodles: d.doodles);
+}
+
+/// O conteúdo da página do evento num estilo.
+class _PageBody extends ConsumerWidget {
+  final Wedding wedding;
+  final MenuLayout layout;
+  final bool scrollable;
+  const _PageBody({required this.wedding, required this.layout, this.scrollable = true});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final look = _look(context, ref);
+    return ListView(
+      physics: scrollable ? null : const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 40, AppTheme.screenMargin, 140),
+      children: [
+        // Aparência escolhida (098): o clássico por defeito, ou uma das
+        // três opções.
+        ...switch (layout) {
+          MenuLayout.classic => [
+              _HeroCard(wedding: wedding),
+              const SizedBox(height: 22),
+              const _QuickLinksRow(),
+            ],
+          MenuLayout.stickers => [_StickersTop(wedding: wedding)],
+          MenuLayout.mural => [_MuralTop(wedding: wedding)],
+          MenuLayout.clothesline => [_ClotheslineTop(wedding: wedding)],
+        },
+        const SizedBox(height: 22),
+        const _BookingsSection(),
+        const SizedBox(height: 14),
+        const _UpcomingPaymentsCard(),
+        const SizedBox(height: 22),
+        Row(
+          children: [
+            Text('Próximas tarefas', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(width: 8),
+            Transform.rotate(angle: -0.17, child: Icon(look.doodles[1], size: 18, color: look.accent)),
+            const Spacer(),
+            SnappyTap(
+              onTap: () => context.push('/tasks'),
+              child: Text(
+                'Ver todas',
+                style: TextStyle(color: look.accent, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        const _UpcomingTasksSection(),
+        const SizedBox(height: 26),
+        const _FinancialSummaryRow(),
+        const SizedBox(height: 22),
+        _ShareWeddingButton(wedding: wedding, color: look.color, on: look.on),
+      ],
     );
   }
 }
@@ -223,7 +450,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
   @override
   Widget build(BuildContext context) {
     final wedding = widget.wedding;
-    final look = ref.watch(_lookProvider);
+    final look = _look(context, ref);
     Widget doodle(IconData icon, double size, double angle) => Opacity(
           opacity: 0.22,
           child: Transform.rotate(angle: angle, child: Icon(icon, size: size, color: look.on)),
@@ -644,7 +871,7 @@ class _QuickLinksRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = _shortcuts(ref);
-    final look = ref.watch(_lookProvider);
+    final look = _look(context, ref);
     const bg = [0, 1, 1, 0, 0, 1];
     Widget tile(int i) => _QuickLinkTile(
           icon: items[i].icon,
@@ -842,7 +1069,7 @@ class _UpcomingTasksSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(taskEngineControllerProvider);
     final top = state.systemActive.take(3).toList();
-    final tint = ref.watch(_lookProvider).tint;
+    final tint = _look(context, ref).tint;
 
     if (top.isEmpty) {
       return Container(
@@ -963,7 +1190,7 @@ class _FinancialSummaryRow extends ConsumerWidget {
           data: (list) => list.where((b) => b.status == BookingStatus.confirmado).toList(),
           orElse: () => const <CoupleBooking>[],
         );
-    final look = ref.watch(_lookProvider);
+    final look = _look(context, ref);
 
     return IntrinsicHeight(
       child: Row(
@@ -1267,7 +1494,7 @@ class _CoverPhoto extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final look = ref.watch(_lookProvider);
+    final look = _look(context, ref);
     final url = wedding.coverPhotoUrlCacheBusted;
     return SnappyTap(
       onTap: () => _pickBannerFrom(context, ref),
@@ -1362,7 +1589,7 @@ class _StickersTop extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final look = ref.watch(_lookProvider);
+    final look = _look(context, ref);
     final items = _shortcuts(ref);
     final days = _daysLeft(wedding);
     final first = wedding.partnerName1.trim().split(' ').first;
@@ -1470,7 +1697,7 @@ class _MuralTop extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final look = ref.watch(_lookProvider);
+    final look = _look(context, ref);
     final items = _shortcuts(ref);
     final days = _daysLeft(wedding);
     final first = wedding.partnerName1.trim().split(' ').first;
@@ -1640,7 +1867,7 @@ class _ClotheslineTop extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final look = ref.watch(_lookProvider);
+    final look = _look(context, ref);
     final items = _shortcuts(ref);
     Widget peg() => Container(
           width: 12,
