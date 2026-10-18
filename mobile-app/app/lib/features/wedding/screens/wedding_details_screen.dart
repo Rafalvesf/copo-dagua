@@ -21,7 +21,6 @@ import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/photo_adjust_screen.dart';
-import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
 import '../../../core/gallery/gallery_providers.dart';
@@ -379,7 +378,7 @@ class _PageBody extends ConsumerWidget {
         const SizedBox(height: 22),
         Row(
           children: [
-            Text('Próximas tarefas', style: Theme.of(context).textTheme.titleMedium),
+            const Text('Próximas tarefas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(width: 8),
             Transform.rotate(angle: -0.17, child: Icon(look.doodles[1], size: 18, color: look.accent)),
             const Spacer(),
@@ -1324,31 +1323,28 @@ class _BookingsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bookingsAsync = ref.watch(coupleBookingsProvider);
+    final look = _look(context, ref);
 
+    // Canvas "Menu · Casamento": título como "Próximas tarefas", "Ver
+    // todas" na cor do evento e um cartão branco com cada parceiro
+    // (logótipo ou iniciais, nome, categoria e valor).
     return bookingsAsync.when(
       loading: () => const SizedBox.shrink(),
       error: (err, st) => const SizedBox.shrink(),
       data: (bookings) {
         if (bookings.isEmpty) return const SizedBox.shrink();
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                Text(
-                  'Reservas',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                const Text('Reservas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const Spacer(),
                 SnappyTap(
                   onTap: () => context.push('/bookings'),
-                  child: const Text(
+                  child: Text(
                     'Ver todas',
-                    style: TextStyle(
-                      color: AppTheme.accentOliveDark,
-                      fontWeight: FontWeight.w700,
-                      fontSize: AppFontSize.md,
-                    ),
+                    style: TextStyle(color: look.accent, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
                   ),
                 ),
               ],
@@ -1357,48 +1353,53 @@ class _BookingsSection extends ConsumerWidget {
             SnappyTap(
               onTap: () => context.push('/bookings'),
               child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: _softShadow,
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    for (final booking in bookings)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                    for (final (i, booking) in bookings.indexed)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: i == 0 ? null : const Border(top: BorderSide(color: Color(0xFFF0ECE4))),
+                        ),
                         child: Row(
                           children: [
-                            booking.partnerLogoUrl == null
-                                ? InitialsAvatar(
-                                    name: booking.partnerName,
-                                    radius: 16,
-                                  )
-                                : CircleAvatar(
-                                    radius: 16,
-                                    backgroundColor: AppColors.gray,
-                                    backgroundImage: NetworkImage(
-                                      booking.partnerLogoUrl!,
-                                    ),
-                                  ),
-                            const SizedBox(width: 10),
+                            Container(
+                              width: 36,
+                              height: 36,
+                              clipBehavior: Clip.antiAlias,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(color: i.isEven ? look.tint : look.comp, shape: BoxShape.circle),
+                              child: booking.partnerLogoUrl == null
+                                  ? Text(
+                                      _initials(booking.partnerName),
+                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: look.accent),
+                                    )
+                                  : Image.network(booking.partnerLogoUrl!, width: 36, height: 36, fit: BoxFit.cover,
+                                      errorBuilder: (c, e, s) => Text(_initials(booking.partnerName),
+                                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: look.accent))),
+                            ),
+                            const SizedBox(width: 12),
                             Expanded(
-                              child: Text(
-                                booking.partnerName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: AppFontSize.md,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(booking.partnerName, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                  if (booking.category?.isNotEmpty == true)
+                                    Text(booking.category!, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                                ],
                               ),
                             ),
                             Text(
                               euros(booking.amount),
-                              style: const TextStyle(
-                                color: AppTheme.inkMuted,
-                                fontSize: AppFontSize.sm,
-                              ),
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
                             ),
                           ],
                         ),
@@ -1411,6 +1412,11 @@ class _BookingsSection extends ConsumerWidget {
         );
       },
     );
+  }
+
+  static String _initials(String name) {
+    final parts = name.replaceAll('&', ' ').split(RegExp(r'\s+')).where((w) => w.isNotEmpty).take(2);
+    return parts.map((w) => w[0].toUpperCase()).join();
   }
 }
 
