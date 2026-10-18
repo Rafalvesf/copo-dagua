@@ -11,6 +11,7 @@ import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// Um contrato = uma reserva com a proposta que o casal aceitou: o que
 /// foi combinado (título, descrição, condições), o valor e o estado dos
@@ -204,7 +205,7 @@ class _ContractCard extends StatelessWidget {
             ],
           ),
         );
-    showModalBottomSheet<void>(
+    showIslandSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,

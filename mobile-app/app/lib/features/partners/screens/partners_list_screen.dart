@@ -21,6 +21,7 @@ import 'partner_detail_screen.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/money.dart';
 import '../../../core/partner_profile/partner_location.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 class PartnersListScreen extends ConsumerStatefulWidget {
   final String? categorySlug;
@@ -68,7 +69,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   }
 
   void _showFavoritesSheet() {
-    showModalBottomSheet(
+    showIslandSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -77,7 +78,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   }
 
   Future<void> _showFilters() async {
-    final result = await showModalBottomSheet<_AdvancedFilters>(
+    final result = await showIslandSheet<_AdvancedFilters>(
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
@@ -126,7 +127,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   /// já há parceiros.
   Future<void> _showLocationPicker(List<String> options) async {
     final weddingLocation = ref.read(weddingControllerProvider).wedding?.location;
-    final result = await showModalBottomSheet<String>(
+    final result = await showIslandSheet<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,

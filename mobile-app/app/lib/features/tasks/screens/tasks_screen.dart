@@ -16,6 +16,7 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 enum _TasksTab { todo, done }
 
@@ -292,7 +293,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 
   Future<void> _showNewTaskSheet(BuildContext context, WidgetRef ref) async {
-    final result = await showModalBottomSheet<_NewUserTaskResult>(
+    final result = await showIslandSheet<_NewUserTaskResult>(
       context: context,
       isScrollControlled: true,
       builder: (context) => const _NewUserTaskSheet(),

@@ -21,6 +21,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 enum _BudgetFilter { all, paid, pending }
 
@@ -49,7 +50,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
         .read(expenseControllerProvider.notifier)
         .currentWeddingId;
     if (weddingId == null) return;
-    final result = await showModalBottomSheet<_AddExpenseResult>(
+    final result = await showIslandSheet<_AddExpenseResult>(
       context: context,
       isScrollControlled: true,
       builder: (context) => const _AddExpenseSheet(),
@@ -301,7 +302,7 @@ class _CategoryRow extends StatelessWidget {
         : iconForPartnerCategory(category.base.partnerCategory!);
 
     return SnappyTap(
-      onTap: () => showModalBottomSheet<void>(
+      onTap: () => showIslandSheet<void>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.white,
@@ -627,9 +628,9 @@ class _CategorySheet extends ConsumerWidget {
     final controller = TextEditingController(
       text: current == 0 ? '' : current.toStringAsFixed(0),
     );
-    final result = await showDialog<double>(
+    final result = await showIslandDialog<double>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => IslandAlert(
         title: Text('Verba para ${category.name}'),
         content: TextField(
           controller: controller,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'island_sheet.dart';
 
 /// "Como chegar": deixa escolher a app de navegação (pedido 2026-10-17).
 /// Links universais — abrem a app se estiver instalada, senão o site.
@@ -35,7 +36,7 @@ Future<void> showNavigationSheet(
     ),
   ];
 
-  return showModalBottomSheet<void>(
+  return showIslandSheet<void>(
     context: context,
     backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),

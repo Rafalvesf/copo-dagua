@@ -300,16 +300,93 @@ class AppTheme {
           color: ink,
         ),
       ),
+      // Seletores de data e hora como "ilhas" do redesign (2026-10-18):
+      // cartão branco, verde da app, botões em pílula.
       datePickerTheme: DatePickerThemeData(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
+        elevation: 0,
         headerBackgroundColor: accentOliveDark,
         headerForegroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        dayShape: WidgetStateProperty.all(const CircleBorder()),
+        dayForegroundColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? Colors.white : (s.contains(WidgetState.disabled) ? const Color(0xFFBDB8AE) : ink),
+        ),
+        dayBackgroundColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? accentOliveDark : Colors.transparent,
+        ),
+        todayForegroundColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? Colors.white : accentOliveDark,
+        ),
+        todayBackgroundColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? accentOliveDark : Colors.transparent,
+        ),
+        todayBorder: BorderSide(color: accentOliveDark, width: 1.5),
+        yearForegroundColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? Colors.white : ink,
+        ),
+        yearBackgroundColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? accentOliveDark : Colors.transparent,
+        ),
+        confirmButtonStyle: FilledButton.styleFrom(
+          backgroundColor: accentOliveDark,
+          foregroundColor: Colors.white,
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+        ),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: ink,
+          backgroundColor: const Color(0xFFF2F0EB),
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+        ),
       ),
       timePickerTheme: TimePickerThemeData(
         backgroundColor: Colors.white,
+        elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        hourMinuteShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        hourMinuteColor: WidgetStateColor.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? accentOliveDark.withValues(alpha: 0.14) : const Color(0xFFF2F0EB),
+        ),
+        hourMinuteTextColor: WidgetStateColor.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? accentOliveDark : ink,
+        ),
+        dialBackgroundColor: const Color(0xFFF2F0EB),
+        dialHandColor: accentOliveDark,
+        dialTextColor: WidgetStateColor.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? Colors.white : ink,
+        ),
+        dayPeriodShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        dayPeriodColor: WidgetStateColor.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? accentOliveDark.withValues(alpha: 0.14) : Colors.transparent,
+        ),
+        dayPeriodTextColor: WidgetStateColor.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? accentOliveDark : inkMuted,
+        ),
+        dayPeriodBorderSide: const BorderSide(color: Color(0xFFE6E0D2)),
+        entryModeIconColor: accentOliveDark,
+        helpTextStyle: const TextStyle(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
+          fontSize: AppFontSize.sm,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1,
+          color: inkMuted,
+        ),
+        confirmButtonStyle: FilledButton.styleFrom(
+          backgroundColor: accentOliveDark,
+          foregroundColor: Colors.white,
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+        ),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: ink,
+          backgroundColor: const Color(0xFFF2F0EB),
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

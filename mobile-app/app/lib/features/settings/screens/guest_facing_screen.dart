@@ -18,6 +18,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import '../../guest_home/screens/guest_wedding_details_screen.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// "Para os convidados" — tudo o que os convidados veem, num só sítio:
 /// código, quem pode entrar, boas-vindas, programa (linha do tempo),
@@ -1031,9 +1032,9 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
 
   Future<void> _applyAll() async {
     final v = _value ?? 1;
-    final ok = await showDialog<bool>(
+    final ok = await showIslandDialog<bool>(
       context: context,
-      builder: (d) => AlertDialog(
+      builder: (d) => IslandAlert(
         title: const Text('Aplicar a todos?'),
         content: Text(v == 0
             ? 'Todos os convidados passam a poder vir só eles.'

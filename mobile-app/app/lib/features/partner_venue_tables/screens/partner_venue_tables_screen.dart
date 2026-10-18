@@ -8,6 +8,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// Inventário de mesas do local — só um parceiro de categoria "venue"
 /// consegue chegar aqui (gate em `partner_profile_screen.dart`, RLS
@@ -191,7 +192,7 @@ Future<_TableTypeResult?> _showTableTypeSheet(
   int? seats,
   int? quantity,
 }) {
-  return showModalBottomSheet<_TableTypeResult>(
+  return showIslandSheet<_TableTypeResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

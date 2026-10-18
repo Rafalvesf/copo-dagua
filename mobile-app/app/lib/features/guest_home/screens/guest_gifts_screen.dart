@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// "Presentes" — pedido explícito do utilizador (mockup de referência).
 /// Ligado em 2026-10-16 aos campos `weddings.gift_*`
@@ -44,7 +45,7 @@ class GuestGiftsScreen extends ConsumerWidget {
   void _showIban(BuildContext context, GuestWedding? w) {
     final iban = w?.giftIban?.trim();
     if (iban == null || iban.isEmpty) return _notSet(context, 'um IBAN para contribuições');
-    showModalBottomSheet<void>(
+    showIslandSheet<void>(
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(

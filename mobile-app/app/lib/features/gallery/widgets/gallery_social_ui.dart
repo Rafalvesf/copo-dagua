@@ -14,6 +14,7 @@ import '../../../shared/widgets/gallery_placeholder.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// Galeria como uma rede social (pedido 2026-10-17): grelha de
 /// quadrados (como no design) → toque abre as publicações com quem
@@ -555,7 +556,7 @@ class _Action extends StatelessWidget {
 // ------------------------------------------------------------ comentários
 
 Future<void> showGalleryComments(BuildContext context, {required String weddingId, required String photoId}) {
-  return showModalBottomSheet<void>(
+  return showIslandSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.white,
@@ -606,9 +607,9 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
   }
 
   Future<void> _delete(GalleryComment c) async {
-    final ok = await showDialog<bool>(
+    final ok = await showIslandDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => IslandAlert(
         title: const Text('Apagar comentário?'),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
@@ -784,7 +785,7 @@ Future<void> showGalleryMember(
   required String profileId,
   required List<GalleryPhoto> allPhotos,
 }) {
-  return showModalBottomSheet<void>(
+  return showIslandSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.white,

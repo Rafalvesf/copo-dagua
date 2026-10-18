@@ -14,6 +14,7 @@ import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gallery_placeholder.dart';
 import '../../../core/gallery/gallery_social.dart';
 import '../../gallery/widgets/gallery_social_ui.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -67,7 +68,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
   _GalleryTab _tab = _GalleryTab.all;
 
   Future<void> _upload() async {
-    final source = await showModalBottomSheet<ImageSource>(
+    final source = await showIslandSheet<ImageSource>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(

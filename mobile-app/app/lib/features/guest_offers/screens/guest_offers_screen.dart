@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../widgets/guest_offer_widgets.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// Lado do convidado: o alojamento e o transporte que o organizador
 /// preparou. Reserva e paga na app (Stripe), o valor vai para o parceiro.
@@ -157,7 +158,7 @@ class _OfferCard extends ConsumerWidget {
             onPressed: soldOut || !o.payable
                 ? null
                 : () async {
-                    final paid = await showModalBottomSheet<bool>(
+                    final paid = await showIslandSheet<bool>(
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.white,

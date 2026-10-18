@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/notifications/partner_notifications_providers.dart';
 import '../../core/theme/app_theme.dart';
 import 'feedback.dart';
+import 'island_sheet.dart';
 
 /// Sino de notificações do parceiro — versão simples do sino do casal
 /// (`home_feed_screen.dart`, `_NotificationsSheet`), sem os separadores
@@ -20,7 +21,7 @@ class PartnerNotificationBell extends ConsumerWidget {
       children: [
         IconButton(
           icon: const Icon(Icons.notifications_none_rounded, color: AppTheme.ink),
-          onPressed: () => showModalBottomSheet(
+          onPressed: () => showIslandSheet(
             context: context,
             isScrollControlled: true,
             builder: (context) => const _PartnerNotificationsSheet(),

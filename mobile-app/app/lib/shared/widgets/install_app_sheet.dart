@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'mascot.dart';
+import 'island_sheet.dart';
 
 /// "Instala a app" — pedido 2026-10-17: quem abre um link de convite é
 /// levado a instalar a app em vez de criar conta no browser. A app é
@@ -26,7 +27,7 @@ Future<void> showInstallAppSheet(BuildContext context, {String? code}) {
           ],
         ),
       );
-  return showModalBottomSheet<void>(
+  return showIslandSheet<void>(
     context: context,
     isScrollControlled: true,
     builder: (sheet) => SafeArea(
