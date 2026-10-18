@@ -142,15 +142,18 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
               onPopInvokedWithResult: (didPop, _) {
                 if (!didPop && _editing) _finish(save: false);
               },
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 260),
-                switchInCurve: Curves.easeOutCubic,
-                transitionBuilder: (child, anim) => FadeTransition(
-                  opacity: anim,
-                  child: ScaleTransition(scale: Tween(begin: 1.04, end: 1.0).animate(anim), child: child),
-                ),
-                child: _editing ? _editor(context, wedding) : _normal(context, wedding, layout),
-              ),
+              // Ao entrar no modo de edição a página "encolhe" para o
+              // carrossel (como no Apple Watch).
+              child: _editing
+                  ? TweenAnimationBuilder<double>(
+                      key: const ValueKey('editing'),
+                      tween: Tween(begin: 1.12, end: 1.0),
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
+                      child: _editor(context, wedding),
+                    )
+                  : _normal(context, wedding, layout),
             ),
     );
   }
