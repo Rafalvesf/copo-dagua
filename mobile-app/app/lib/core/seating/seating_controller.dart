@@ -24,21 +24,6 @@ const seatsPerTable = 8;
 
 bool _isComplete(SeatingTable table) => table.guestIds.length >= seatsPerTable;
 
-/// Tipo de mesa definido pelo espaço (`partner_venue_tables`): forma
-/// ('round' | 'rectangular' | 'square'), lugares e quantidade.
-class VenueTableType {
-  final String shape;
-  final int seats;
-  final int quantity;
-  const VenueTableType({required this.shape, required this.seats, required this.quantity});
-
-  String get label => switch (shape) {
-        'rectangular' => 'Retangular',
-        'square' => 'Quadrada',
-        _ => 'Redonda',
-      };
-}
-
 class SeatingState {
   final bool loading;
   final List<SeatingTable> tables;
@@ -178,12 +163,15 @@ class SeatingController extends Notifier<SeatingState> {
 
     final tableRows = await supabase
         .from('partner_venue_tables')
-        .select('shape, seats, quantity')
+        .select('id, partner_id, shape, seats, quantity')
         .eq('partner_id', venuePartnerId);
+    // Tipos de mesa que o espaço definiu, mostrados em "Tipos de mesa".
     _venueTypes = [
       for (final r in tableRows)
         VenueTableType(
-          shape: r['shape'] as String? ?? 'round',
+          id: r['id'] as String,
+          partnerId: r['partner_id'] as String,
+          shape: TableShape.values.firstWhere((t) => t.name == r['shape'], orElse: () => TableShape.round),
           seats: (r['seats'] as num?)?.toInt() ?? seatsPerTable,
           quantity: (r['quantity'] as num?)?.toInt() ?? 0,
         ),

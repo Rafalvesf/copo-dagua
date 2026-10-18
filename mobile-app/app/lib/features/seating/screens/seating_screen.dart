@@ -736,9 +736,9 @@ class _TableTypes extends StatelessWidget {
                     children: [
                       StickerIcon(
                         switch (t.shape) {
-                          'rectangular' => Icons.rectangle_outlined,
-                          'square' => Icons.crop_square_rounded,
-                          _ => Icons.circle_outlined,
+                          TableShape.rectangular => Icons.rectangle_outlined,
+                          TableShape.square => Icons.crop_square_rounded,
+                          TableShape.round => Icons.circle_outlined,
                         },
                         size: 36,
                         turns: StickerIcon.tilt(i),
@@ -748,7 +748,7 @@ class _TableTypes extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(t.label, style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700)),
+                          Text(t.shape.label, style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700)),
                           Text('${t.quantity} × ${t.seats} lugares',
                               style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted)),
                         ],
