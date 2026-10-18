@@ -6,6 +6,7 @@ import '../../core/chat/chat_list_controller.dart';
 import '../../core/theme/app_theme.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
 import '../../core/wedding/wedding_nav_icon.dart';
+import '../../core/wedding/menu_style.dart';
 
 enum AppTab { home, partners, chat, wedding }
 
@@ -32,6 +33,8 @@ class FloatingBottomNav extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final weddingIcon = ref.watch(weddingNavIconProvider);
+    // A navbar acompanha a cor escolhida em "Aparência do menu" (098).
+    final menuColor = ref.watch(currentMenuStyleProvider).color;
     final unreadCount = ref
         .watch(unreadMessagesCountProvider)
         .maybeWhen(data: (count) => count, orElse: () => 0);
@@ -70,6 +73,8 @@ class FloatingBottomNav extends ConsumerWidget {
                     icon: Icons.spa_outlined,
                     activeIcon: Icons.spa_rounded,
                     active: current == AppTab.partners,
+                    accent: menuColor.color,
+                    onAccent: menuColor.on,
                     onTap: () => context.go('/partners'),
                   ),
                 ),
@@ -80,6 +85,7 @@ class FloatingBottomNav extends ConsumerWidget {
                     assetPath: weddingIcon.assetPath,
                     zoom: weddingIcon.zoom,
                     active: current == AppTab.wedding,
+                    accent: menuColor.color,
                     onTap: () => context.go('/wedding'),
                   ),
                 ),
@@ -90,6 +96,8 @@ class FloatingBottomNav extends ConsumerWidget {
                     icon: Icons.chat_bubble_outline_rounded,
                     activeIcon: Icons.chat_bubble_rounded,
                     active: current == AppTab.chat,
+                    accent: menuColor.color,
+                    onAccent: menuColor.on,
                     badgeCount: unreadCount,
                     onTap: () => context.go('/chat'),
                   ),
@@ -101,6 +109,8 @@ class FloatingBottomNav extends ConsumerWidget {
                     icon: Icons.person_outline_rounded,
                     activeIcon: Icons.person_rounded,
                     active: current == AppTab.home,
+                    accent: menuColor.color,
+                    onAccent: menuColor.on,
                     onTap: () => context.go('/home'),
                   ),
                 ),
@@ -120,6 +130,8 @@ class _NavIcon extends StatelessWidget {
   final IconData activeIcon;
   final bool active;
   final VoidCallback onTap;
+  final Color accent;
+  final Color onAccent;
 
   /// Selo de não lidas (`unreadMessagesCountProvider`) — só usado pelo
   /// separador "Chat" hoje, mas genérico caso outro separador precise
@@ -131,6 +143,8 @@ class _NavIcon extends StatelessWidget {
     required this.activeIcon,
     required this.active,
     required this.onTap,
+    this.accent = AppTheme.accentOliveDark,
+    this.onAccent = Colors.white,
     this.badgeCount = 0,
   });
 
@@ -138,7 +152,7 @@ class _NavIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     // Redesign 2026-10 ("botão quando selecionado deve ser bolha
     // verde"): o ativo fica numa bolha verde com o ícone a branco.
-    final color = active ? Colors.white : AppTheme.navIconMuted;
+    final color = active ? onAccent : AppTheme.navIconMuted;
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
@@ -160,6 +174,7 @@ class _NavIcon extends StatelessWidget {
                     child: NavBubble(
                       active: active,
                       size: 42,
+                      color: accent,
                       child: Icon(
                         active ? activeIcon : icon,
                         color: color,
@@ -171,7 +186,7 @@ class _NavIcon extends StatelessWidget {
                     Positioned(
                       top: 0,
                       right: 2,
-                      child: _UnreadBadge(count: badgeCount),
+                      child: _UnreadBadge(count: badgeCount, color: accent, onColor: onAccent),
                     ),
                 ],
               ),
@@ -189,8 +204,10 @@ class _NavIcon extends StatelessWidget {
 /// deixar o número crescer sem limite.
 class _UnreadBadge extends StatelessWidget {
   final int count;
+  final Color color;
+  final Color onColor;
 
-  const _UnreadBadge({required this.count});
+  const _UnreadBadge({required this.count, this.color = AppTheme.accentOliveDark, this.onColor = Colors.white});
 
   @override
   Widget build(BuildContext context) {
@@ -199,14 +216,14 @@ class _UnreadBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 3),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppTheme.accentOliveDark,
+        color: color,
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 1.5),
       ),
       child: Text(
         count > 99 ? '99+' : '$count',
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: onColor,
           fontSize: AppFontSize.xxxs,
           fontWeight: FontWeight.w700,
           height: 1,
@@ -224,12 +241,14 @@ class _WeddingNavTab extends StatelessWidget {
   final double zoom;
   final bool active;
   final VoidCallback onTap;
+  final Color accent;
 
   const _WeddingNavTab({
     required this.assetPath,
     required this.zoom,
     required this.active,
     required this.onTap,
+    this.accent = AppTheme.accentOliveDark,
   });
 
   @override
@@ -244,7 +263,7 @@ class _WeddingNavTab extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: active ? 15 : 2.5, vertical: 2.5),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
-            color: active ? AppTheme.accentOliveDark : Colors.transparent,
+            color: active ? accent : Colors.transparent,
           ),
           child: Opacity(
           opacity: active ? 1 : 0.55,
@@ -271,12 +290,14 @@ class NavBubble extends StatelessWidget {
   final bool active;
   final double size;
   final Widget child;
+  final Color color;
 
   const NavBubble({
     super.key,
     required this.active,
     required this.size,
     required this.child,
+    this.color = AppTheme.accentOliveDark,
   });
 
   @override
@@ -289,7 +310,7 @@ class NavBubble extends StatelessWidget {
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: active ? AppTheme.accentOliveDark : Colors.transparent,
+        color: active ? color : Colors.transparent,
         borderRadius: BorderRadius.circular(999),
       ),
       child: child,
