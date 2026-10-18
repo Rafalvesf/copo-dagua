@@ -63,8 +63,7 @@ final _lookProvider = Provider<_Look>((ref) {
 
 /// Sombra suave dos cartões (canvas, 2026-10-17).
 const _softShadow = [
-  BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6)),
-  BoxShadow(color: Color(0x0D171713), blurRadius: 3, offset: Offset(0, 1)),
+  BoxShadow(color: Color(0x14171713), blurRadius: 10, offset: Offset(0, 4)),
 ];
 
 /// "Os noivos" — cartão banner "O nosso casamento" (foto de capa +
@@ -463,10 +462,10 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
   Widget build(BuildContext context) {
     final wedding = widget.wedding;
     final look = _look(context, ref);
-    Widget doodle(IconData icon, double size, double angle) => Opacity(
-          opacity: 0.22,
-          child: Transform.rotate(angle: angle, child: Icon(icon, size: size, color: look.on)),
-        );
+    // Cor com transparência em vez de Opacity (evita camadas extra ao
+    // desenhar — a app estava a ficar lenta).
+    Widget doodle(IconData icon, double size, double angle) =>
+        Transform.rotate(angle: angle, child: Icon(icon, size: size, color: look.on.withValues(alpha: 0.22)));
     Widget dot(double d, double o) => Container(
           width: d,
           height: d,
@@ -703,7 +702,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                 ),
               ],
               const SizedBox(height: 18),
-              _CountdownRow(weddingDate: wedding.weddingDate, color: look.accent, on: look.on),
+              RepaintBoundary(child: _CountdownRow(weddingDate: wedding.weddingDate, color: look.accent, on: look.on)),
             ],
           ),
         ],
@@ -1968,7 +1967,7 @@ class _ClotheslineTop extends ConsumerWidget {
             ],
           ),
         ),
-        _FilmStrip(date: wedding.weddingDate),
+        RepaintBoundary(child: _FilmStrip(date: wedding.weddingDate)),
         const SizedBox(height: 30),
         GridView.count(
           crossAxisCount: 2,

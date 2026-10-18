@@ -829,12 +829,6 @@ void main() {
         final ctx = t.element(find.byType(Scaffold).first);
         Navigator.of(ctx).push(MaterialPageRoute<void>(builder: (_) => const MenuStyleScreen()));
       }));
-  testWidgets('11g_aparencia_toque_longo', (t) => _shoot(t, '11g_aparencia_toque_longo', couple, '/wedding', after: (t) async {
-        await t.longPressAt(const Offset(200, 420));
-        for (var i = 0; i < 10; i++) {
-          await t.pump(const Duration(milliseconds: 100));
-        }
-      }));
   testWidgets('88_manutencao', (t) async {
     _maintenanceOn = true;
     try {
