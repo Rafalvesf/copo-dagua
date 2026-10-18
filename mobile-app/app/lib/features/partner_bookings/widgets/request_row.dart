@@ -102,7 +102,7 @@ class RequestRow extends StatelessWidget {
           ),
           child: Text(
             _initials,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: AppFontSize.base,
               fontWeight: FontWeight.w700,
               color: AppTheme.accentOliveDark,

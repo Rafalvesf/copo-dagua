@@ -277,7 +277,7 @@ class _GuestProfileBody extends ConsumerWidget {
                     const SizedBox(height: 10),
                     TextButton(
                       onPressed: () => _openInviteLinkDialog(context, ref),
-                      child: const Text('Abrir link de convite', style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700)),
+                      child: Text('Abrir link de convite', style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700)),
                     ),
                   ],
                 ),
@@ -339,7 +339,7 @@ class _GuestProfileBody extends ConsumerWidget {
                         );
                         ref.invalidate(guestCompanionsProvider(guest.id));
                       },
-                      child: const Text('+ Acompanhante', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                      child: Text('+ Acompanhante', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
                     ),
                 ],
               ),
@@ -634,7 +634,7 @@ class _ProfileRow extends StatelessWidget {
           if (onEdit != null)
             TextButton(
               onPressed: onEdit,
-              child: Text(actionLabel, style: const TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700)),
+              child: Text(actionLabel, style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700)),
             ),
         ],
       ),
@@ -680,7 +680,7 @@ class _GuestHeader extends StatelessWidget {
     final initials = Center(
       child: Text(
         _initialsOf(name).isEmpty ? '?' : _initialsOf(name),
-        style: const TextStyle(fontSize: AppFontSize.h1, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+        style: TextStyle(fontSize: AppFontSize.h1, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
       ),
     );
     return Row(
@@ -714,7 +714,7 @@ class _GuestHeader extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: AppTheme.background, width: 3),
                     ),
-                    child: const Icon(Icons.camera_alt_outlined, size: 17, color: AppTheme.accentOliveDark),
+                    child: Icon(Icons.camera_alt_outlined, size: 17, color: AppTheme.accentOliveDark),
                   ),
                 ),
               ),
@@ -738,7 +738,7 @@ class _GuestHeader extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(AppRadius.pill)),
-                child: Text(chip, style: const TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                child: Text(chip, style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
               ),
             ],
           ),

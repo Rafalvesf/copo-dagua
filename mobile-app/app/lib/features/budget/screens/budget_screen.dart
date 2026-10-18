@@ -214,7 +214,7 @@ class _SummaryCard extends StatelessWidget {
                   value: _fmt(budget.remaining),
                 ),
               ),
-              const Opacity(
+              Opacity(
                 opacity: 0.3,
                 child: Icon(
                   Icons.eco_outlined,
@@ -231,7 +231,7 @@ class _SummaryCard extends StatelessWidget {
               value: budget.progress,
               minHeight: 7,
               backgroundColor: Colors.white,
-              valueColor: const AlwaysStoppedAnimation(
+              valueColor: AlwaysStoppedAnimation(
                 AppTheme.accentOliveDark,
               ),
             ),
@@ -321,7 +321,7 @@ class _CategoriesSection extends StatelessWidget {
                   expanded
                       ? 'Ver menos'
                       : 'Ver todas as categorias (${categories.length})',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppTheme.accentOliveDark,
                     fontWeight: FontWeight.w700,
                     fontSize: AppFontSize.md,

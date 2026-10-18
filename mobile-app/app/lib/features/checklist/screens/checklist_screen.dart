@@ -223,7 +223,7 @@ class _DateShortcut extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.calendar_today_outlined,
               size: 15,
               color: AppTheme.accentOliveDark,
@@ -279,7 +279,7 @@ class _OverallProgressCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '$pct%',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: AppFontSize.h2,
                     color: AppTheme.accentOliveDark,
@@ -292,7 +292,7 @@ class _OverallProgressCard extends StatelessWidget {
                     value: progress,
                     minHeight: 7,
                     backgroundColor: Colors.white,
-                    valueColor: const AlwaysStoppedAnimation(
+                    valueColor: AlwaysStoppedAnimation(
                       AppTheme.accentOliveDark,
                     ),
                   ),
@@ -309,7 +309,7 @@ class _OverallProgressCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const Opacity(
+          Opacity(
             opacity: 0.3,
             child: Icon(
               Icons.eco_outlined,
@@ -401,7 +401,7 @@ class _StatusGroup extends StatelessWidget {
               children: [
                 Text(
                   expanded ? 'Ver menos' : 'Ver todas (${sorted.length})',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppTheme.accentOliveDark,
                     fontWeight: FontWeight.w700,
                     fontSize: AppFontSize.md,
@@ -536,13 +536,13 @@ class _StatusIndicator extends StatelessWidget {
               value: progress / 100,
               strokeWidth: 3,
               backgroundColor: Colors.white,
-              valueColor: const AlwaysStoppedAnimation(
+              valueColor: AlwaysStoppedAnimation(
                 AppTheme.accentOliveDark,
               ),
             ),
             Text(
               '$progress',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 7.5,
                 fontWeight: FontWeight.w800,
                 color: AppTheme.accentOliveDark,

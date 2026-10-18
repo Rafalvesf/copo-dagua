@@ -118,7 +118,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                     child: Container(
                                       width: 9,
                                       height: 9,
-                                      decoration: const BoxDecoration(
+                                      decoration: BoxDecoration(
                                         color: AppTheme.accentOliveDark,
                                         shape: BoxShape.circle,
                                       ),
@@ -163,7 +163,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                               borderRadius:
                                   BorderRadius.circular(AppRadius.lg),
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
                                 CircleAvatar(
                                   radius: 22,
@@ -624,7 +624,7 @@ class _ProfileHeader extends StatelessWidget {
     final initials = Center(
       child: Text(
         _initials,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: AppFontSize.h1,
           fontWeight: FontWeight.w700,
           color: AppTheme.accentOliveDark,
@@ -684,7 +684,7 @@ class _ProfileHeader extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: AppTheme.background, width: 3),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.camera_alt_outlined,
                       size: 17,
                       color: AppTheme.accentOliveDark,
@@ -728,7 +728,7 @@ class _ProfileHeader extends StatelessWidget {
               color: AppColors.green,
               borderRadius: BorderRadius.circular(AppRadius.pill),
             ),
-            child: const Text(
+            child: Text(
               'Criou o casamento',
               style: TextStyle(
                 fontSize: AppFontSize.xs,

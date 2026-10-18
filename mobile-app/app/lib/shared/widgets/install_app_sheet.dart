@@ -19,7 +19,7 @@ Future<void> showInstallAppSheet(BuildContext context, {String? code}) {
               height: 26,
               alignment: Alignment.center,
               decoration: const BoxDecoration(color: AppColors.gray, shape: BoxShape.circle),
-              child: Text('$n', style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+              child: Text('$n', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
             ),
             const SizedBox(width: 12),
             Expanded(child: Text(text, style: const TextStyle(fontSize: AppFontSize.base, height: 1.45, color: AppTheme.ink))),

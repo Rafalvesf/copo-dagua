@@ -130,7 +130,7 @@ class _BusinessHeader extends StatelessWidget {
           ),
           child: Text(
             initials,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: AppFontSize.h1,
               fontWeight: FontWeight.w700,
               color: AppTheme.accentOliveDark,

@@ -33,7 +33,7 @@ class PartnerNotificationBell extends ConsumerWidget {
             child: Container(
               width: 9,
               height: 9,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppTheme.accentOliveDark,
                 shape: BoxShape.circle,
               ),

@@ -148,7 +148,7 @@ class _NavIcon extends StatelessWidget {
     required this.activeIcon,
     required this.active,
     required this.onTap,
-    this.accent = AppTheme.accentOliveDark,
+    this.accent = AppTheme.brandGreen,
     this.onAccent = Colors.white,
     this.badgeCount = 0,
   });
@@ -212,7 +212,7 @@ class _UnreadBadge extends StatelessWidget {
   final Color color;
   final Color onColor;
 
-  const _UnreadBadge({required this.count, this.color = AppTheme.accentOliveDark, this.onColor = Colors.white});
+  const _UnreadBadge({required this.count, this.color = AppTheme.brandGreen, this.onColor = Colors.white});
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +251,7 @@ class NavBubble extends StatelessWidget {
     required this.active,
     required this.size,
     required this.child,
-    this.color = AppTheme.accentOliveDark,
+    this.color = AppTheme.brandGreen,
   });
 
   @override

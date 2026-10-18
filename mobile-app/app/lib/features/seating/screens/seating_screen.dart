@@ -531,7 +531,7 @@ class _PlanGrid extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          const Positioned(
+          Positioned(
             top: -6,
             left: -6,
             child: Opacity(
@@ -543,7 +543,7 @@ class _PlanGrid extends StatelessWidget {
               ),
             ),
           ),
-          const Positioned(
+          Positioned(
             top: -6,
             right: -6,
             child: Opacity(

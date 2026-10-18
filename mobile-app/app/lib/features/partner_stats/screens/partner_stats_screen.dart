@@ -229,7 +229,7 @@ class _Dashboard extends StatelessWidget {
                 color: AppColors.gray,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
-              child: const Text(
+              child: Text(
                 'Ainda sem pedidos nem reservas neste período. Assim que chegarem, os gráficos enchem-se sozinhos.',
                 style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.accentOliveDark),
               ),
@@ -361,7 +361,7 @@ class _Dashboard extends StatelessWidget {
                         a.reviewCount == 0
                             ? 'Ainda sem avaliações'
                             : 'Avaliação média · ${a.reviewCount} ${a.reviewCount == 1 ? 'avaliação' : 'avaliações'}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: AppFontSize.sm,
                           color: AppTheme.accentOliveDark,
                         ),

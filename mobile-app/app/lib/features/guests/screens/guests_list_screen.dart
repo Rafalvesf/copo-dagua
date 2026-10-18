@@ -134,7 +134,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                                     fillColor: Colors.white,
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(AppRadius.pill),
-                                      borderSide: const BorderSide(
+                                      borderSide: BorderSide(
                                         color: AppTheme.accentOliveDark,
                                       ),
                                     ),

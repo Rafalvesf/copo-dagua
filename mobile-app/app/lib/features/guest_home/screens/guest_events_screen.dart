@@ -62,7 +62,7 @@ class GuestEventsScreen extends ConsumerWidget {
                         width: 40,
                         height: 40,
                         decoration: const BoxDecoration(color: AppColors.gray, shape: BoxShape.circle),
-                        child: const Icon(Icons.key_outlined, size: 20, color: AppTheme.accentOliveDark),
+                        child: Icon(Icons.key_outlined, size: 20, color: AppTheme.accentOliveDark),
                       ),
                       const SizedBox(width: 12),
                       const Column(
@@ -134,7 +134,7 @@ class _EventCard extends ConsumerWidget {
                 children: [
                   Text(
                     wedding.eventType.label.toUpperCase(),
-                    style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 0.5, color: AppTheme.accentOliveDark),
+                    style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 0.5, color: AppTheme.accentOliveDark),
                   ),
                   const SizedBox(height: 4),
                   Text(wedding.displayNames, style: const TextStyle(fontSize: AppFontSize.lg + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),

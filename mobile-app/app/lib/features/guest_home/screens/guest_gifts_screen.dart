@@ -144,7 +144,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(12)),
-                                child: const Icon(Icons.link, size: 20, color: AppTheme.accentOliveDark),
+                                child: Icon(Icons.link, size: 20, color: AppTheme.accentOliveDark),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -211,7 +211,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                                           ],
                                         ),
                                       ),
-                                      const Icon(Icons.copy_rounded, size: 18, color: AppTheme.accentOliveDark),
+                                      Icon(Icons.copy_rounded, size: 18, color: AppTheme.accentOliveDark),
                                     ],
                                   ),
                                 ),

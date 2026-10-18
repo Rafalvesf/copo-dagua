@@ -515,7 +515,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   onTap: () => _editCompanion(),
                   child: CustomPaint(
                     painter: const _DashedBorder(),
-                    child: const SizedBox(
+                    child: SizedBox(
                       height: 52,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -750,7 +750,7 @@ class _PersonRow extends StatelessWidget {
             ),
           ),
           if (onEdit != null)
-            const Text('Editar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+            Text('Editar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
         ],
       ),
     );
@@ -1009,7 +1009,7 @@ class _RadioRow extends StatelessWidget {
                   border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFF8F8B84), width: 1.5),
                 ),
                 child: selected
-                    ? Container(width: 12, height: 12, decoration: const BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))
+                    ? Container(width: 12, height: 12, decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))
                     : null,
               ),
               const SizedBox(width: 12),

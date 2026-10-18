@@ -69,14 +69,14 @@ class PartnerHomeScreen extends ConsumerWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.storefront_outlined,
+                                Icon(Icons.storefront_outlined,
                                     size: 14, color: AppTheme.accentOliveDark),
                                 const SizedBox(width: 6),
                                 Flexible(
                                   child: Text(
                                     business,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: AppFontSize.sm,
                                       fontWeight: FontWeight.w700,
                                       color: AppTheme.accentOliveDark,
