@@ -16,6 +16,7 @@ import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/menu_style.dart';
 import '../../guests/screens/guests_list_screen.dart' show InviteShareSheet;
+import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -1110,7 +1111,7 @@ class _UpcomingTasksSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(taskEngineControllerProvider);
     final top = state.systemActive.take(3).toList();
-    final tint = _look(context, ref).tint;
+    final accent = _look(context, ref).accent;
 
     if (top.isEmpty) {
       return Container(
@@ -1132,7 +1133,8 @@ class _UpcomingTasksSection extends ConsumerWidget {
             // Menos texto (design): só a primeira frase.
             description: task.description?.split(RegExp(r'(?<=[.!?])\s')).first.trim(),
             icon: _iconForCategory(task.category),
-            tint: tint,
+            accent: accent,
+            index: index,
             onTap: () {
               if (!task.seen) {
                 ref.read(taskEngineControllerProvider.notifier).markTaskSeen(task.id);
@@ -1152,14 +1154,16 @@ class _TaskRow extends StatelessWidget {
   final String title;
   final String? description;
   final IconData icon;
-  final Color tint;
+  final Color accent;
+  final int index;
   final VoidCallback onTap;
 
   const _TaskRow({
     required this.title,
     this.description,
     required this.icon,
-    required this.tint,
+    required this.accent,
+    required this.index,
     required this.onTap,
   });
 
@@ -1176,15 +1180,8 @@ class _TaskRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: tint,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, size: 18, color: AppTheme.ink),
-            ),
+            // Ícone "autocolante" dos menus novos (canvas 2026-10-18).
+            StickerIcon(icon, color: accent, turns: StickerIcon.tilt(index)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -1299,7 +1296,9 @@ class _SummaryTile extends StatelessWidget {
   }
 }
 
-/// Despesas não pagas com prazo próximo.
+/// Despesas não pagas com prazo próximo — "Pagamentos próximos" no
+/// estilo do Orçamento (canvas 2026-10-18): um cartão rosa por
+/// pagamento, com a data num quadrado branco inclinado.
 class _UpcomingPaymentsCard extends ConsumerWidget {
   const _UpcomingPaymentsCard();
 
@@ -1309,44 +1308,64 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
     final withDueDate = pending.where((e) => e.dueDate != null).toList()
       ..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
     final soon = withDueDate.take(3).toList();
+    final look = _look(context, ref);
 
     if (soon.isEmpty) return const SizedBox.shrink();
 
-    // Canvas "Menu · Casamento": cartão rosado, título a negrito e uma
-    // linha por pagamento; toca para abrir o orçamento.
-    return SnappyTap(
-      onTap: () => context.push('/budget'),
-      child: Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF6E3DF),
-        borderRadius: BorderRadius.circular(20),
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Assuntos urgentes — pagamentos (${withDueDate.length})',
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: AppTheme.ink,
-            ),
+          Row(
+            children: [
+              const Text('Pagamentos próximos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Spacer(),
+              SnappyTap(
+                onTap: () => context.push('/budget'),
+                child: Text(
+                  'Ver todos',
+                  style: TextStyle(color: look.accent, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          for (final expense in soon)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                '${expense.title} — ${euros(expense.amount)} até '
-                '${expense.dueDate!.day.toString().padLeft(2, '0')} '
-                '${monthNamesPt[expense.dueDate!.month - 1].substring(0, 3)}',
-                style: const TextStyle(fontSize: 13, color: AppTheme.ink),
+          const SizedBox(height: 12),
+          for (final (i, expense) in soon.indexed) ...[
+            if (i > 0) const SizedBox(height: 10),
+            SnappyTap(
+              onTap: () => context.push('/budget'),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF6E3DF),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: _softShadow,
+                ),
+                child: Row(
+                  children: [
+                    DateSticker(date: expense.dueDate!, turns: StickerIcon.tilt(i)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(expense.title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          const SizedBox(height: 2),
+                          const Text('Pendente · toca para pagar', style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(euros(expense.amount),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  ],
+                ),
               ),
             ),
+          ],
         ],
-      ),
       ),
     );
   }
@@ -1399,27 +1418,13 @@ class _BookingsSection extends ConsumerWidget {
                   children: [
                     for (final (i, booking) in bookings.indexed)
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           border: i == 0 ? null : const Border(top: BorderSide(color: Color(0xFFF0ECE4))),
                         ),
                         child: Row(
                           children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              clipBehavior: Clip.antiAlias,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(color: i.isEven ? look.tint : look.comp, shape: BoxShape.circle),
-                              child: booking.partnerLogoUrl == null
-                                  ? Text(
-                                      _initials(booking.partnerName),
-                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: look.accent),
-                                    )
-                                  : Image.network(booking.partnerLogoUrl!, width: 36, height: 36, fit: BoxFit.cover,
-                                      errorBuilder: (c, e, s) => Text(_initials(booking.partnerName),
-                                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: look.accent))),
-                            ),
+                            StickerIcon(_categoryIcon(booking.category), color: look.accent, turns: StickerIcon.tilt(i)),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -1450,9 +1455,19 @@ class _BookingsSection extends ConsumerWidget {
     );
   }
 
-  static String _initials(String name) {
-    final parts = name.replaceAll('&', ' ').split(RegExp(r'\s+')).where((w) => w.isNotEmpty).take(2);
-    return parts.map((w) => w[0].toUpperCase()).join();
+  /// Ícone por categoria do parceiro (canvas: casa, máquina, nota…).
+  static IconData _categoryIcon(String? category) {
+    final c = category?.toLowerCase() ?? '';
+    if (c.contains('foto') || c.contains('víde')) return Icons.photo_camera_outlined;
+    if (c.contains('músic') || c.contains('dj')) return Icons.music_note_outlined;
+    if (c.contains('som') || c.contains('luz')) return Icons.mic_none_outlined;
+    if (c.contains('flor') || c.contains('decor')) return Icons.local_florist_outlined;
+    if (c.contains('bolo') || c.contains('doce') || c.contains('pastel')) return Icons.cake_outlined;
+    if (c.contains('cater') || c.contains('jantar') || c.contains('bebida') || c.contains('bar')) return Icons.wine_bar_outlined;
+    if (c.contains('espaç') || c.contains('quinta') || c.contains('venue')) return Icons.home_outlined;
+    if (c.contains('aloj') || c.contains('hotel')) return Icons.hotel_outlined;
+    if (c.contains('transp')) return Icons.directions_bus_outlined;
+    return Icons.auto_awesome_outlined;
   }
 }
 

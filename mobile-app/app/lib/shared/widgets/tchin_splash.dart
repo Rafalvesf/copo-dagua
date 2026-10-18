@@ -16,6 +16,9 @@ class TchinSplash extends StatelessWidget {
 
   const TchinSplash({super.key, required this.t, this.greeting, this.tagline = 'Para todas as festas'});
 
+  /// Verde-eucalipto da abertura (igual a `MenuColor` eucalipto).
+  static const eucalyptus = Color(0xFF4F6B4A);
+
   static double _seg(double t, double a, double b) => ((t - a) / (b - a)).clamp(0.0, 1.0);
 
   @override
@@ -41,7 +44,9 @@ class TchinSplash extends StatelessWidget {
     return ClipPath(
       clipper: _CircleClipper(1 - close),
       child: Container(
-        color: AppTheme.accentOliveDark,
+        // Abertura ("Início 1"): verde-eucalipto, o mesmo do menu (pedido
+        // 2026-10-18). O brinde depois de entrar segue a cor da app.
+        color: greeting == null ? eucalyptus : AppTheme.accentOliveDark,
         alignment: Alignment.center,
         child: Stack(
           alignment: Alignment.center,
@@ -139,7 +144,8 @@ class TchinSplash extends StatelessWidget {
                           value: _seg(t, 0.32, 0.62),
                           minHeight: 4,
                           backgroundColor: Colors.white.withValues(alpha: 0.22),
-                          color: const Color(0xFFF2D98D),
+                          // Barra branca no brinde (canvas "Início 7", 2026-10-18).
+                          color: Colors.white,
                         ),
                       ),
                     ),

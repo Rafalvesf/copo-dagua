@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../core/guest_offers/guest_offers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/sticker_icon.dart';
+
+export '../../../shared/widgets/sticker_icon.dart' show StickerIcon;
 
 /// Peças visuais partilhadas pelos ecrãs do organizador e do convidado:
 /// cartões brancos com a linha fina e a sombra suave, e o ícone
@@ -15,33 +18,6 @@ BoxDecoration offerCardDecoration({Color? border}) => BoxDecoration(
         BoxShadow(color: Color(0x0D171713), blurRadius: 3, offset: Offset(0, 1)),
       ],
     );
-
-class StickerIcon extends StatelessWidget {
-  final IconData icon;
-  final double turns;
-  final double size;
-  const StickerIcon(this.icon, {super.key, this.turns = -0.016, this.size = 40});
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: turns * 6.283,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: const [
-            BoxShadow(color: Color(0x14171713), offset: Offset(0, 3)),
-            BoxShadow(color: Color(0x1A171713), blurRadius: 12, offset: Offset(0, 4)),
-          ],
-        ),
-        child: Icon(icon, size: size * 0.55, color: AppTheme.accentOliveDark),
-      ),
-    );
-  }
-}
 
 IconData offerIcon(GuestOfferKind kind) =>
     kind == GuestOfferKind.lodging ? Icons.hotel_outlined : Icons.directions_bus_outlined;

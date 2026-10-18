@@ -186,7 +186,7 @@ class CompanionLimitRow extends StatelessWidget {
             child: SizedBox(
               width: 38,
               height: 38,
-              child: Icon(icon, size: 20, color: onTap == null ? const Color(0xFFB5B0A6) : const Color(0xFF5F7545)),
+              child: Icon(icon, size: 20, color: onTap == null ? const Color(0xFFB5B0A6) : const Color(0xFF4F6B4A)),
             ),
           ),
         );

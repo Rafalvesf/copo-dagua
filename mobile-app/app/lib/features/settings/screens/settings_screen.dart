@@ -335,10 +335,10 @@ class _CoupleSettings extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                       decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(999)),
-                      child: Text(wedding.eventType.label, style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
+                      child: Text(wedding.eventType.label, style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
                     ),
                     const Spacer(),
-                    const Text('Editar', style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
+                    const Text('Editar', style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -556,7 +556,7 @@ class _PartnerSettings extends ConsumerWidget {
                 height: 56,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(16)),
-                child: Text(initials, style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
+                child: Text(initials, style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -574,7 +574,7 @@ class _PartnerSettings extends ConsumerWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                               decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(999)),
-                              child: Text(c, style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
+                              child: Text(c, style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
                             ),
                         ],
                       ),

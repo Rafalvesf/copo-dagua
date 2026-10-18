@@ -56,12 +56,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(12)),
             child: const Row(
               children: [
-                Icon(Icons.check_circle_outline, size: 18, color: Color(0xFF4A5D35)),
+                Icon(Icons.check_circle_outline, size: 18, color: Color(0xFF3E5539)),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Link enviado — vê o teu email.',
-                    style: TextStyle(fontSize: 13, color: Color(0xFF4A5D35)),
+                    style: TextStyle(fontSize: 13, color: Color(0xFF3E5539)),
                   ),
                 ),
               ],

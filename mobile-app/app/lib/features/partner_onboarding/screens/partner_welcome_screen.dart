@@ -997,7 +997,7 @@ class _StepScaffold extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               alignment: Alignment.center,
               decoration: BoxDecoration(color: const Color(0xFFEEF2E9), borderRadius: BorderRadius.circular(999)),
-              child: Text(chip!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
+              child: Text(chip!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
             ),
           ),
           const SizedBox(height: 12),

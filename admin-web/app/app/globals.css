@@ -6,7 +6,7 @@
  *
  * 2026-08-30: corrigido para bater certo com essa fonte de verdade —
  * o lavender/roxo anterior nunca tinha correspondido ao verde-oliva
- * real do app (`AppTheme.accentOlive` = #5F7545, `background` =
+ * real do app (`AppTheme.accentOlive` = #4F6B4A, `background` =
  * #FAF7F0), apesar do comentário acima já dizer que devia. Foi um
  * mockup novo do utilizador ("WEDVIBES ADMIN", paleta verde/creme) que
  * expôs a divergência — ver ROADMAP.md.
@@ -16,7 +16,7 @@
   --ink-muted: #6f6a5e;
   --background: #faf7f0;
   --surface: #ffffff;
-  --accent: #5f7545;
+  --accent: #4f6b4a;
   --accent-dark: #4a5c37;
   --border-muted: #e6e0d2;
 

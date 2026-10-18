@@ -19,7 +19,7 @@ enum MascotPose {
 }
 
 const _confettiColors = [
-  Color(0xFF5F7545),
+  Color(0xFF4F6B4A),
   Color(0xFFF2D98D),
   Color(0xFFF3C9CF),
   Color(0xFFA9BC8F),

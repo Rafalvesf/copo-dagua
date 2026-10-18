@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../core/theme/app_theme.dart';
 import '../theme_color/theme_color.dart';
 import 'mascot.dart';
 import 'tchin_splash.dart';
@@ -38,7 +39,7 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with TickerProviderStat
       if (green != _barGreen) {
         _barGreen = green;
         if (green) {
-          lockBarColor(const Color(0xFF5F7545));
+          lockBarColor(AppTheme.accentOliveDark);
         } else {
           unlockBarColor();
         }
@@ -69,7 +70,7 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with TickerProviderStat
       _burst = false;
       _barGreen = true;
     });
-    lockBarColor(const Color(0xFF5F7545));
+    lockBarColor(AppTheme.accentOliveDark);
     _driver.start();
   }
 
