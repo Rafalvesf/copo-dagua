@@ -44,9 +44,10 @@ class TchinSplash extends StatelessWidget {
     return ClipPath(
       clipper: _CircleClipper(1 - close),
       child: Container(
-        // Abertura ("Início 1"): verde-eucalipto, o mesmo do menu (pedido
-        // 2026-10-18). O brinde depois de entrar segue a cor da app.
-        color: greeting == null ? eucalyptus : AppTheme.accentOliveDark,
+        // Abertura e brinde sempre em eucalipto (canvas Início 1 e 7): a
+        // cor da app muda a meio do brinde para os organizadores e a
+        // barra do topo ficava diferente.
+        color: eucalyptus,
         alignment: Alignment.center,
         child: Stack(
           alignment: Alignment.center,

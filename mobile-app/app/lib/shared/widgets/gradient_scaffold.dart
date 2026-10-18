@@ -70,6 +70,10 @@ class GradientScaffold extends StatelessWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!context.mounted) return;
       if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+      // Durante a abertura/brinde a barra está presa ao verde; na web
+      // `setApplicationSwitcherDescription` também muda o theme-color e
+      // deixava a barra branca por cima do brinde (2026-10-18).
+      if (barColorLocked) return;
       SystemChrome.setApplicationSwitcherDescription(
         ApplicationSwitcherDescription(
           label: 'Tchin Tchin',
