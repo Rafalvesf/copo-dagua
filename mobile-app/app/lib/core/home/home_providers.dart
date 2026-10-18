@@ -25,6 +25,7 @@ final coupleBookingsProvider = FutureProvider<List<CoupleBooking>>((ref) async {
   final userId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
   if (userId == null) return const [];
 
+  await syncPendingStripePayments(coupleId: userId);
   final rows = await supabase
       .from('bookings')
       .select(
@@ -160,7 +161,27 @@ Future<void> cancelBookingByCouple(String bookingId, {String? reason}) async {
 /// Estado da reserva criada por uma proposta aceite, para o cartão do
 /// chat: 'deposit_due' (sinal por pagar), 'deposit_paid', 'final_due',
 /// 'paid' (tudo pago), 'completed' ou 'cancelled'. `null` se não houver.
+/// Plano B do webhook: pergunta à Stripe (via `sync-checkout-payment`)
+/// se os pagamentos pendentes com checkout aberto já foram pagos e
+/// confirma-os. Nunca falha — sem rede fica tudo como estava.
+Future<void> syncPendingStripePayments({String? coupleId, String? proposalId}) async {
+  try {
+    var q = supabase
+        .from('payments')
+        .select('id, bookings!inner(couple_id, proposal_id)')
+        .eq('status', 'pending')
+        .like('provider_payment_id', 'cs_%');
+    if (coupleId != null) q = q.eq('bookings.couple_id', coupleId);
+    if (proposalId != null) q = q.eq('bookings.proposal_id', proposalId);
+    final rows = await q.limit(20);
+    final ids = [for (final r in rows as List) r['id'] as String];
+    if (ids.isEmpty) return;
+    await supabase.functions.invoke('sync-checkout-payment', body: {'payment_ids': ids});
+  } catch (_) {}
+}
+
 Future<String?> fetchProposalBookingState(String proposalId) async {
+  await syncPendingStripePayments(proposalId: proposalId);
   final row = await supabase
       .from('bookings')
       .select('status, payments(type, status)')
