@@ -78,7 +78,104 @@ class AuthState {
 /// observam este provider (login, registo, verificação de email,
 /// onboarding, ...) precisar de mudar. Ver `ROADMAP.md`, 2026-08-30, para
 /// o âmbito completo desta ronda de ligação a dados reais.
+/// Conta por criar: os dados do registo ficam só em memória até ao fim
+/// do onboarding (pedido 2026-10-18: "os dados de conta criada só devem
+/// ficar em base de dados no momento em que a mensagem Pronto aparece").
+class PendingSignup {
+  final String fullName;
+  final String email;
+  final String? phone;
+  final String password;
+  final UserRole role;
+  const PendingSignup({required this.fullName, required this.email, this.phone, required this.password, required this.role});
+}
+
+/// Erro legível ao criar a conta no fim do onboarding.
+class SignupFailed implements Exception {
+  final String message;
+  const SignupFailed(this.message);
+  @override
+  String toString() => message;
+}
+
 class AuthController extends Notifier<AuthState> {
+  PendingSignup? _pendingSignup;
+
+  /// Há um registo à espera do fim do onboarding (ainda sem conta).
+  bool get hasPendingSignup => _pendingSignup != null;
+
+  /// Começa o onboarding sem criar nada na base de dados.
+  void startSignup({
+    required String fullName,
+    required String email,
+    String? phone,
+    required String password,
+    required UserRole role,
+  }) {
+    _pendingSignup = PendingSignup(fullName: fullName, email: email, phone: phone, password: password, role: role);
+    state = AuthState(
+      status: AuthStatus.onboardingIncomplete,
+      profile: Profile(id: '', fullName: fullName, email: email, password: '', role: role),
+    );
+  }
+
+  /// Sair do onboarding antes do "Pronto": nada fica gravado.
+  Future<void> cancelOnboarding() async {
+    if (_pendingSignup != null) {
+      _pendingSignup = null;
+      state = const AuthState.unauthenticated();
+      return;
+    }
+    // Conta antiga a meio do onboarding (ex.: Google/Apple): só sai.
+    await logout();
+  }
+
+  /// Cria a conta de verdade — chamado no último passo do onboarding,
+  /// mesmo antes de gravar o evento/perfil e mostrar o "Pronto".
+  Future<void> commitSignup() async {
+    final p = _pendingSignup;
+    if (p == null) return;
+    await _setKeepSignedIn(true);
+    final AuthResponse response;
+    try {
+      response = await supabase.auth.signUp(
+        email: p.email,
+        password: p.password,
+        data: {
+          'role': p.role.name,
+          'full_name': p.fullName,
+          if (p.phone != null && p.phone!.isNotEmpty) 'phone': p.phone,
+          if (p.role == UserRole.couple && ref.read(pendingPartnerInviteProvider) != null)
+            'partner_invite': ref.read(pendingPartnerInviteProvider),
+        },
+      );
+    } on AuthException catch (e) {
+      final m = e.message.toLowerCase();
+      if (m.contains('already registered') || m.contains('already exists')) {
+        throw const SignupFailed('Este email já está registado. Sai e entra com a tua conta.');
+      }
+      throw const SignupFailed('Não foi possível criar a conta. Tenta novamente.');
+    }
+    final user = response.user;
+    if (user == null) throw const SignupFailed('Não foi possível criar a conta. Tenta novamente.');
+    if (user.identities != null && user.identities!.isEmpty) {
+      throw const SignupFailed('Este email já está registado. Sai e entra com a tua conta.');
+    }
+    if (response.session == null) {
+      _pendingSignup = null;
+      state = AuthState(
+        status: AuthStatus.emailUnverified,
+        profile: Profile(id: user.id, fullName: p.fullName, email: p.email, password: '', role: p.role),
+      );
+      throw const SignupFailed('Confirma o teu email para terminar.');
+    }
+    await _applyPendingPartnerInvite(user);
+    final profile = await _loadProfile(user);
+    _pendingSignup = null;
+    // Continua no onboarding (o router não sai de /onboarding).
+    state = AuthState(status: AuthStatus.onboardingIncomplete, profile: profile);
+  }
+
   static const _keepKey = 'keep_signed_in';
 
   @override
@@ -539,6 +636,8 @@ class AuthController extends Notifier<AuthState> {
   Future<void> completeOnboarding() async {
     final profile = state.profile;
     if (profile == null) return;
+    // O brinde ("Olá, …!") acontece ao entrar na app depois do "Pronto".
+    BrindeGate.pending = true;
     state = state.copyWith(status: AuthStatus.authenticating);
     await supabase
         .from('profiles')

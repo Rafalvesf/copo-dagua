@@ -31,7 +31,8 @@ class WeddingController extends Notifier<WeddingState> {
   @override
   WeddingState build() {
     final ownerId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
-    if (ownerId != null) {
+    // Id vazio = registo ainda por criar (onboarding sem conta).
+    if (ownerId != null && ownerId.isNotEmpty) {
       Future.microtask(() => load(ownerId));
     }
     return const WeddingState();

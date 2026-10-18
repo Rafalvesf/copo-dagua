@@ -182,6 +182,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
     }
     if (!mounted) return;
+    // Organizadores e parceiros: a conta só é criada no fim do
+    // onboarding (no "Pronto") — até lá os dados ficam em memória.
+    if (widget.role != UserRole.guest) {
+      ref.read(authControllerProvider.notifier).startSignup(
+            fullName: _name.text.trim(),
+            email: _email.text.trim(),
+            phone: _phone.text.trim(),
+            password: _password.text,
+            role: widget.role,
+          );
+      return;
+    }
     ref
         .read(authControllerProvider.notifier)
         .register(
