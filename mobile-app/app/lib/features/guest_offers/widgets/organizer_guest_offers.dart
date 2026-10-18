@@ -17,6 +17,17 @@ class OrganizerGuestOffers extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(guestOffersEnabledProvider).asData?.value ?? false;
+    if (!enabled) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 140),
+        children: const [
+          LockedFeatureCard(
+            text: 'Alojamento e transporte para os convidados: combinas quartos ou lugares com um parceiro e cada convidado reserva e paga na app.',
+          ),
+        ],
+      );
+    }
     final offersAsync = ref.watch(guestOffersProvider(weddingId));
     final resAsync = ref.watch(weddingGuestReservationsProvider(weddingId));
     final offers = offersAsync.asData?.value ?? const <GuestOffer>[];

@@ -607,6 +607,8 @@ class _StayCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(guestOffersEnabledProvider).asData?.value ?? false;
+    if (!enabled) return const _StayLockedCard();
     final offers = ref.watch(guestOffersProvider(weddingId)).asData?.value ?? const <GuestOffer>[];
     if (offers.isEmpty) return const SizedBox.shrink();
     final hasLodging = offers.any((o) => o.kind == GuestOfferKind.lodging);
@@ -645,6 +647,44 @@ class _StayCard extends ConsumerWidget {
               const Icon(Icons.chevron_right, color: AppTheme.inkMuted),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Enquanto a funcionalidade está bloqueada: o mesmo cartão com cadeado.
+class _StayLockedCard extends StatelessWidget {
+  const _StayLockedCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(20)),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.lock_outline, size: 20, color: AppTheme.inkMuted),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Alojamento e transporte',
+                      style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  SizedBox(height: 2),
+                  Text('Em breve: reserva e paga aqui', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

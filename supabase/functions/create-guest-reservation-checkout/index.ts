@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
   });
   if (reserveError || typeof reservationId !== "string") {
     const msg = reserveError?.message ?? "";
-    for (const code of ["sold_out", "offer_unavailable", "forbidden", "invalid_quantity", "invalid_nights"]) {
+    for (const code of ["feature_locked", "sold_out", "offer_unavailable", "forbidden", "invalid_quantity", "invalid_nights"]) {
       if (msg.includes(code)) return jsonError(code, code === "forbidden" ? 403 : 409);
     }
     return jsonError("unknown_error", 500);
