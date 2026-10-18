@@ -73,7 +73,8 @@ const _softShadow = [
 /// ter o conteúdo que antes vivia em `home_feed_screen.dart`
 /// (`HomeFeedScreen`), sem nenhuma alteração ao próprio conteúdo.
 class WeddingDetailsScreen extends ConsumerStatefulWidget {
-  const WeddingDetailsScreen({super.key});
+  final bool startEditing;
+  const WeddingDetailsScreen({super.key, this.startEditing = false});
 
   @override
   ConsumerState<WeddingDetailsScreen> createState() => _WeddingDetailsScreenState();
@@ -89,6 +90,16 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
   int _color = 0;
   PageController? _layoutPager;
   PageController? _colorPager;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.startEditing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && ref.read(weddingControllerProvider).wedding != null) _startEditing();
+      });
+    }
+  }
 
   void _startEditing() {
     final style = ref.read(currentMenuStyleProvider);
@@ -1669,13 +1680,11 @@ class _StickersTop extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 14),
-        GridView.count(
-          crossAxisCount: 3,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 18,
-          crossAxisSpacing: 10,
-          childAspectRatio: 0.82,
+        _Grid(
+          columns: 3,
+          rowGap: 18,
+          columnGap: 10,
+          aspectRatio: 0.82,
           children: [
             for (final (i, it) in items.indexed)
               SnappyTap(
@@ -1816,20 +1825,16 @@ class _MuralTop extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 10),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 22,
-          crossAxisSpacing: 18,
-          childAspectRatio: 0.98,
-          clipBehavior: Clip.none,
+        _Grid(
+          columns: 2,
+          rowGap: 22,
+          columnGap: 18,
+          aspectRatio: 0.98,
           children: [
             for (final (i, it) in items.indexed)
               SnappyTap(
                 onTap: () => context.push(it.route),
                 child: Stack(
-                  clipBehavior: Clip.none,
                   alignment: Alignment.topCenter,
                   children: [
                     Transform.rotate(
@@ -1980,20 +1985,16 @@ class _ClotheslineTop extends ConsumerWidget {
         ),
         RepaintBoundary(child: _FilmStrip(date: wedding.weddingDate)),
         const SizedBox(height: 30),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 28,
-          crossAxisSpacing: 14,
-          childAspectRatio: 1.0,
-          clipBehavior: Clip.none,
+        _Grid(
+          columns: 2,
+          rowGap: 28,
+          columnGap: 14,
+          aspectRatio: 1.0,
           children: [
             for (final (i, it) in items.indexed)
               SnappyTap(
                 onTap: () => context.push(it.route),
                 child: Stack(
-                  clipBehavior: Clip.none,
                   alignment: Alignment.topCenter,
                   children: [
                     Container(
@@ -2127,5 +2128,46 @@ class _FilmStripState extends State<_FilmStrip> {
         ],
       ),
     );
+  }
+}
+
+
+/// Grelha simples sem lista que desliza (pedido 2026-10-18: mais leve e
+/// sem slivers, para a pré-visualização do modo de edição).
+class _Grid extends StatelessWidget {
+  final int columns;
+  final double rowGap;
+  final double columnGap;
+  final double aspectRatio;
+  final List<Widget> children;
+
+  const _Grid({
+    required this.columns,
+    required this.rowGap,
+    required this.columnGap,
+    required this.aspectRatio,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var r = 0; r * columns < children.length; r++) {
+      if (r > 0) rows.add(SizedBox(height: rowGap));
+      rows.add(Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var c = 0; c < columns; c++) ...[
+            if (c > 0) SizedBox(width: columnGap),
+            Expanded(
+              child: r * columns + c < children.length
+                  ? AspectRatio(aspectRatio: aspectRatio, child: children[r * columns + c])
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ],
+      ));
+    }
+    return Column(mainAxisSize: MainAxisSize.min, children: rows);
   }
 }

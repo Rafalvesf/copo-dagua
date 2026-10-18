@@ -52,7 +52,6 @@ import 'package:copo_dagua_app/features/partners/screens/partner_detail_screen.d
 import 'package:copo_dagua_app/features/partners/screens/partners_list_screen.dart';
 import 'package:copo_dagua_app/features/invite/screens/rsvp_page_screen.dart';
 import 'package:copo_dagua_app/core/wedding/menu_style.dart';
-import 'package:copo_dagua_app/features/settings/screens/menu_style_screen.dart';
 import 'package:copo_dagua_app/main.dart';
 import 'package:copo_dagua_app/shared/widgets/page_header.dart' show AddActionButton;
 
@@ -825,9 +824,10 @@ void main() {
       }
     });
   }
-  testWidgets('11e_aparencia_menu', (t) => _shoot(t, '11e_aparencia_menu', couple, '/wedding', after: (t) async {
-        final ctx = t.element(find.byType(Scaffold).first);
-        Navigator.of(ctx).push(MaterialPageRoute<void>(builder: (_) => const MenuStyleScreen()));
+  testWidgets('11e_aparencia_menu', (t) => _shoot(t, '11e_aparencia_menu', couple, '/wedding?aparencia=1', after: (t) async {
+        for (var i = 0; i < 10; i++) {
+          await t.pump(const Duration(milliseconds: 100));
+        }
       }));
   testWidgets('88_manutencao', (t) async {
     _maintenanceOn = true;

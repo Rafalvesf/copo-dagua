@@ -394,7 +394,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/wedding',
-        builder: (context, state) => const WeddingDetailsScreen(),
+        // `?aparencia=1`: abre logo no modo de mudar estilo e cor
+        // (Definições → Aparência do menu).
+        builder: (context, state) => WeddingDetailsScreen(
+          key: ValueKey(state.uri.toString()),
+          startEditing: state.uri.queryParameters['aparencia'] == '1',
+        ),
       ),
       GoRoute(
         path: '/gallery',
