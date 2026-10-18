@@ -24,6 +24,21 @@ const seatsPerTable = 8;
 
 bool _isComplete(SeatingTable table) => table.guestIds.length >= seatsPerTable;
 
+/// Tipo de mesa definido pelo espaço (`partner_venue_tables`): forma
+/// ('round' | 'rectangular' | 'square'), lugares e quantidade.
+class VenueTableType {
+  final String shape;
+  final int seats;
+  final int quantity;
+  const VenueTableType({required this.shape, required this.seats, required this.quantity});
+
+  String get label => switch (shape) {
+        'rectangular' => 'Retangular',
+        'square' => 'Quadrada',
+        _ => 'Redonda',
+      };
+}
+
 class SeatingState {
   final bool loading;
   final List<SeatingTable> tables;
@@ -45,7 +60,11 @@ class SeatingState {
     this.tables = const [],
     this.totalTables = 0,
     this.hasVenue = false,
+    this.venueTypes = const [],
   });
+
+  /// Tipos de mesa que o espaço reservado definiu (vazio sem espaço).
+  final List<VenueTableType> venueTypes;
 
   /// Índice (0-based) da primeira mesa que ainda não está cheia — a
   /// única mesa selecionável. Todas as mesas antes desta têm de estar
@@ -70,17 +89,21 @@ class SeatingState {
     List<SeatingTable>? tables,
     int? totalTables,
     bool? hasVenue,
+    List<VenueTableType>? venueTypes,
   }) {
     return SeatingState(
       loading: loading ?? this.loading,
       tables: tables ?? this.tables,
       totalTables: totalTables ?? this.totalTables,
       hasVenue: hasVenue ?? this.hasVenue,
+      venueTypes: venueTypes ?? this.venueTypes,
     );
   }
 }
 
 class SeatingController extends Notifier<SeatingState> {
+  List<VenueTableType> _venueTypes = const [];
+
   String? currentWeddingId;
 
   @override
@@ -102,12 +125,14 @@ class SeatingController extends Notifier<SeatingState> {
         .select()
         .eq('wedding_id', wedding.id)
         .order('position', ascending: true);
+    _venueTypes = const [];
     final venueTableCount = await _venueTableCountFor(wedding.id);
     state = SeatingState(
       loading: false,
       tables: rows.map(_tableFromRow).toList(),
       totalTables: venueTableCount ?? 0,
       hasVenue: venueTableCount != null,
+      venueTypes: _venueTypes,
     );
   }
 
@@ -153,8 +178,16 @@ class SeatingController extends Notifier<SeatingState> {
 
     final tableRows = await supabase
         .from('partner_venue_tables')
-        .select('quantity')
+        .select('shape, seats, quantity')
         .eq('partner_id', venuePartnerId);
+    _venueTypes = [
+      for (final r in tableRows)
+        VenueTableType(
+          shape: r['shape'] as String? ?? 'round',
+          seats: (r['seats'] as num?)?.toInt() ?? seatsPerTable,
+          quantity: (r['quantity'] as num?)?.toInt() ?? 0,
+        ),
+    ];
     return tableRows.fold<int>(0, (sum, r) => sum + (r['quantity'] as int));
   }
 

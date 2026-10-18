@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +15,8 @@ import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/green_hero.dart';
+import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
 enum _PlanView { plan, list }
@@ -84,6 +88,35 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
 
   void _select(int index) => setState(() => _selectedIndex = index);
 
+  /// Senta [guest] na mesa [index] (arrastar e largar, ou tocar com uma
+  /// mesa selecionada). As mesas enchem-se por ordem: só a mesa "próxima"
+  /// recebe convidados; as completas estão cheias e as seguintes ainda
+  /// bloqueadas.
+  Future<void> _seat(Guest guest, int index) async {
+    final state = ref.read(seatingControllerProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    void say(String m) => messenger.showSnackBar(SnackBar(content: Text(m)));
+    if (state.isFull) {
+      say('Já não há mesas livres.');
+      return;
+    }
+    final next = state.nextIndex;
+    if (index < next) {
+      say('A Mesa ${index + 1} está cheia.');
+      return;
+    }
+    if (index > next) {
+      say('Preenche primeiro a Mesa ${next + 1}.');
+      return;
+    }
+    final draft = state.nextTable;
+    final ids = [...?draft?.guestIds, guest.id];
+    setState(() => _selectedIndex = next);
+    await ref.read(seatingControllerProvider.notifier).saveNextTable(ids);
+    if (!mounted) return;
+    say('${guest.name.split(' ').first} já tem lugar na Mesa ${next + 1}.');
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(seatingControllerProvider);
@@ -93,6 +126,9 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
     final filled = state.nextIndex;
     final total = state.totalTables;
     final loading = state.loading || wedding == null;
+    final seatedIds = {for (final t in state.tables) ...t.guestIds};
+    final invited = guestsState.guests.where((g) => g.rsvpStatus != RsvpStatus.declined).toList();
+    final unseated = invited.where((g) => !seatedIds.contains(g.id)).toList();
     final noTables = !loading && total == 0;
 
     return GradientScaffold(
@@ -143,12 +179,11 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _StatsRow(
-                                totalGuests: guestsState.guests.length,
-                                estimatedGuests: wedding.estimatedGuests,
+                              _StatsHero(
+                                totalGuests: invited.length,
+                                seated: seatedIds.length,
                                 totalTables: total,
                                 hasVenue: state.hasVenue,
-                                tables: state.tables,
                               ),
                               const SizedBox(height: 20),
                               if (noTables)
@@ -169,10 +204,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                         width: 46,
                                         height: 46,
                                         alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.surface,
-                                          shape: BoxShape.circle,
-                                        ),
+                                        decoration: whiteLineCard(radius: 999),
                                         child: const Icon(
                                           Icons.more_horiz,
                                           color: AppTheme.ink,
@@ -187,15 +219,24 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                     state: state,
                                     selectedIndex: _selectedIndex,
                                     onSelect: _select,
+                                    onDrop: (i, g) => _seat(g, i),
                                   )
                                 else
                                   _TableListView(
                                     state: state,
                                     selectedIndex: _selectedIndex,
                                     onSelect: _select,
+                                    onDrop: (i, g) => _seat(g, i),
                                   ),
-                                const SizedBox(height: 18),
-                                const _Legend(),
+                                if (_view == _PlanView.plan) ...[
+                                  const SizedBox(height: 14),
+                                  const _Legend(),
+                                ],
+                                if (state.venueTypes.isNotEmpty) _TableTypes(types: state.venueTypes),
+                                _UnseatedStrip(
+                                  guests: unseated,
+                                  onTap: (g) => _seat(g, _selectedIndex ?? state.nextIndex),
+                                ),
                                 if (_selectedIndex != null) ...[
                                   const SizedBox(height: 22),
                                   _SelectedTableCard(
@@ -231,73 +272,681 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
   }
 }
 
-class _StatsRow extends StatelessWidget {
+/// Canvas "Mesas — redesign": cartão verde "LUGARES SENTADOS".
+class _StatsHero extends StatelessWidget {
   final int totalGuests;
-  final int? estimatedGuests;
+  final int seated;
   final int totalTables;
   final bool hasVenue;
-  final List<SeatingTable> tables;
 
-  const _StatsRow({
+  const _StatsHero({
     required this.totalGuests,
-    required this.estimatedGuests,
+    required this.seated,
     required this.totalTables,
     required this.hasVenue,
-    required this.tables,
   });
 
   @override
   Widget build(BuildContext context) {
-    final rectCount = tables.where((t) => t.rectangular).length;
-    final roundCount = totalTables - rectCount;
-    final seated = tables.fold<int>(0, (sum, t) => sum + t.guestIds.length);
-    final capacity = totalTables * seatsPerTable;
-    final available = (capacity - seated).clamp(0, capacity);
-    final seatedPct = capacity == 0 ? 0.0 : (seated / capacity) * 100;
-    final availablePct = capacity == 0 ? 0.0 : (available / capacity) * 100;
+    final left = (totalGuests - seated) < 0 ? 0 : totalGuests - seated;
+    return GreenHero(
+      label: 'LUGARES SENTADOS',
+      value: '$seated',
+      suffix: 'de $totalGuests ${totalGuests == 1 ? 'convidado' : 'convidados'}',
+      progress: totalGuests == 0 ? 0 : seated / totalGuests,
+      doodles: const [Icons.table_restaurant_outlined, Icons.favorite_border, Icons.wine_bar_outlined],
+      footer: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          HeroPill(hasVenue ? '$totalTables ${totalTables == 1 ? 'mesa' : 'mesas'}' : 'Sem espaço reservado', solid: true),
+          HeroPill('$left por sentar'),
+        ],
+      ),
+    );
+  }
+}
 
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1.8,
+class _ViewToggle extends StatelessWidget {
+  final _PlanView selected;
+  final ValueChanged<_PlanView> onChanged;
+
+  const _ViewToggle({required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget tab(String label, _PlanView v) {
+      final on = selected == v;
+      return Expanded(
+        child: SnappyTap(
+          onTap: () => onChanged(v),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: on ? AppTheme.accentOliveDark : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(label,
+                style: TextStyle(
+                  fontSize: AppFontSize.md,
+                  fontWeight: FontWeight.w700,
+                  color: on ? Colors.white : AppTheme.inkMuted,
+                )),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: whiteLineCard(radius: 999),
+      child: Row(children: [tab('Planta', _PlanView.plan), const SizedBox(width: 4), tab('Lista', _PlanView.list)]),
+    );
+  }
+}
+
+/// Estado de uma mesa na planta/lista.
+enum _CellState { filled, next, locked }
+
+/// Planta da sala: Mesa de Honra em cima, mesas desenhadas com os
+/// lugares à volta (cheio = ocupado) e a pista de dança em baixo. Cada
+/// mesa aceita convidados largados de "Por sentar".
+class _PlanGrid extends StatelessWidget {
+  final SeatingState state;
+  final int? selectedIndex;
+  final ValueChanged<int> onSelect;
+  final void Function(int index, Guest guest) onDrop;
+
+  const _PlanGrid({
+    required this.state,
+    required this.selectedIndex,
+    required this.onSelect,
+    required this.onDrop,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final filled = state.nextIndex;
+    final total = state.totalTables;
+    final c = AppTheme.accentOliveDark;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+      decoration: whiteLineCard(radius: 26),
+      child: Column(
+        children: [
+          Container(
+            width: 190,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(10)),
+            child: const Text('Mesa de Honra',
+                style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: Colors.white)),
+          ),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: total,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 1,
+            ),
+            itemBuilder: (context, index) {
+              final isFilled = index < filled;
+              final isNext = index == filled;
+              final table = index < state.tables.length ? state.tables[index] : null;
+              final cellState = isFilled
+                  ? _CellState.filled
+                  : isNext
+                      ? _CellState.next
+                      : _CellState.locked;
+              return DragTarget<Guest>(
+                onWillAcceptWithDetails: (_) => cellState != _CellState.locked,
+                onAcceptWithDetails: (d) => onDrop(index, d.data),
+                builder: (context, candidates, _) => _TableCell(
+                  number: index + 1,
+                  state: cellState,
+                  count: table?.guestIds.length ?? 0,
+                  selected: selectedIndex == index,
+                  hovering: candidates.isNotEmpty,
+                  rectangular: table?.rectangular ?? false,
+                  onTap: cellState == _CellState.locked ? null : () => onSelect(index),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: 120,
+            height: 24,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF9DB098), width: 1.4),
+            ),
+            child: const Text('Pista de dança',
+                style: TextStyle(fontSize: AppFontSize.xxs, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Mesa desenhada: redonda ou retangular, com os [seatsPerTable] lugares
+/// à volta (cheios os ocupados), número e "n/8" ao centro.
+class _TableCell extends StatelessWidget {
+  final int number;
+  final _CellState state;
+  final int count;
+  final bool selected;
+  final bool hovering;
+  final bool rectangular;
+  final VoidCallback? onTap;
+
+  const _TableCell({
+    required this.number,
+    required this.state,
+    required this.count,
+    this.selected = false,
+    this.hovering = false,
+    this.rectangular = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final locked = state == _CellState.locked;
+    final full = state == _CellState.filled;
+    final c = AppTheme.accentOliveDark;
+    final fg = locked || count == 0 ? const Color(0xFF9DB098) : c;
+    final fill = full ? c.withValues(alpha: 0.16) : Colors.white;
+
+    final cell = AnimatedScale(
+      scale: hovering ? 1.08 : 1,
+      duration: const Duration(milliseconds: 160),
+      child: Container(
+        decoration: BoxDecoration(
+          color: hovering ? c.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(rectangular ? 16 : 999),
+          border: selected || hovering ? Border.all(color: c, width: 2) : null,
+        ),
+        child: Opacity(
+          opacity: locked ? 0.55 : 1,
+          child: CustomPaint(
+            painter: _TablePainter(
+              seats: seatsPerTable,
+              taken: count,
+              color: fg,
+              fill: fill,
+              rectangular: rectangular,
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (locked)
+                    const Icon(Icons.lock_outline_rounded, size: 14, color: AppTheme.inkMuted)
+                  else
+                    Text('$number', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: fg)),
+                  Text(locked ? 'M$number' : '$count/$seatsPerTable',
+                      style: const TextStyle(fontSize: 9.5, color: AppTheme.inkMuted)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    if (onTap == null) return cell;
+    return SnappyTap(onTap: onTap, child: cell);
+  }
+}
+
+class _TablePainter extends CustomPainter {
+  final int seats;
+  final int taken;
+  final Color color;
+  final Color fill;
+  final bool rectangular;
+
+  _TablePainter({required this.seats, required this.taken, required this.color, required this.fill, required this.rectangular});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final r = size.shortestSide * 0.30;
+    final stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final body = Paint()..color = fill;
+    final dot = Paint()..color = color;
+    final empty = Paint()..color = Colors.white;
+    final points = <Offset>[];
+    if (rectangular) {
+      final rect = Rect.fromCenter(center: c, width: r * 2.6, height: r * 1.3);
+      canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), body);
+      canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), stroke);
+      final per = (seats / 2).ceil();
+      for (var k = 0; k < per; k++) {
+        final x = rect.left + rect.width * (k + 0.5) / per;
+        points.add(Offset(x, rect.top - 7));
+      }
+      for (var k = 0; k < seats - per; k++) {
+        final x = rect.left + rect.width * (k + 0.5) / per;
+        points.add(Offset(x, rect.bottom + 7));
+      }
+    } else {
+      canvas.drawCircle(c, r, body);
+      canvas.drawCircle(c, r, stroke);
+      for (var k = 0; k < seats; k++) {
+        final a = 2 * math.pi * k / seats - math.pi / 2;
+        points.add(Offset(c.dx + (r + 8) * math.cos(a), c.dy + (r + 8) * math.sin(a)));
+      }
+    }
+    for (var k = 0; k < points.length; k++) {
+      canvas.drawCircle(points[k], 4.2, k < taken ? dot : empty);
+      canvas.drawCircle(points[k], 4.2, stroke..strokeWidth = 1.2);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _TablePainter old) =>
+      old.taken != taken || old.color != color || old.fill != fill || old.rectangular != rectangular || old.seats != seats;
+}
+
+class _TableListView extends StatelessWidget {
+  final SeatingState state;
+  final int? selectedIndex;
+  final ValueChanged<int> onSelect;
+  final void Function(int index, Guest guest) onDrop;
+
+  const _TableListView({
+    required this.state,
+    required this.selectedIndex,
+    required this.onSelect,
+    required this.onDrop,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final filled = state.nextIndex;
+    final c = AppTheme.accentOliveDark;
+    return Column(
       children: [
-        _StatCard(
-          icon: Icons.groups_outlined,
-          label: 'Convidados',
-          value: '$totalGuests',
-          caption: estimatedGuests == null ? null : 'de $estimatedGuests',
+        Container(
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(18)),
+          child: const Row(
+            children: [
+              Expanded(
+                child: Text('Mesa de Honra',
+                    style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
+            ],
+          ),
         ),
-        _StatCard(
-          icon: Icons.event_seat_outlined,
-          label: 'Mesas',
-          // Só mostra um número real depois de haver local reservado —
-          // pedido explícito do utilizador, nunca voltar a estimar a
-          // partir do número de convidados. Ver [SeatingState.hasVenue].
-          value: hasVenue ? '$totalTables' : '-',
-          caption: !hasVenue
-              ? 'Escolhe o local do casamento'
-              : '$roundCount redondas · $rectCount retangulares',
-        ),
-        _StatCard(
-          icon: Icons.check_circle_outline,
-          label: 'Atribuídos',
-          value: '$seated',
-          caption: '${seatedPct.toStringAsFixed(1)}%',
-        ),
-        _StatCard(
-          icon: Icons.favorite_border,
-          label: 'Disponíveis',
-          value: '$available',
-          caption: '${availablePct.toStringAsFixed(1)}%',
+        const SizedBox(height: 10),
+        for (var index = 0; index < state.totalTables; index++) ...[
+          Builder(builder: (context) {
+            final table = index < state.tables.length ? state.tables[index] : null;
+            final count = table?.guestIds.length ?? 0;
+            final locked = index > filled;
+            return DragTarget<Guest>(
+              onWillAcceptWithDetails: (_) => !locked,
+              onAcceptWithDetails: (d) => onDrop(index, d.data),
+              builder: (context, candidates, _) {
+                final row = Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: whiteLineCard(
+                    radius: 20,
+                    line: selectedIndex == index || candidates.isNotEmpty ? c : null,
+                    width: selectedIndex == index || candidates.isNotEmpty ? 2 : 1,
+                  ),
+                  child: Row(
+                    children: [
+                      Transform.rotate(
+                        angle: StickerIcon.tilt(index) * 6.283,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: StickerIcon.shadow,
+                          ),
+                          child: locked
+                              ? const Icon(Icons.lock_outline_rounded, size: 18, color: AppTheme.inkMuted)
+                              : Text('${index + 1}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Mesa ${index + 1} · ${(table?.rectangular ?? false) ? 'Retangular' : 'Redonda'}',
+                                    style: const TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                Text(locked ? 'Bloqueada' : '$count de $seatsPerTable',
+                                    style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: LinearProgressIndicator(
+                                value: count / seatsPerTable,
+                                minHeight: 6,
+                                backgroundColor: const Color(0xFFEEF2EC),
+                                color: c,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+                if (locked) return Opacity(opacity: 0.6, child: row);
+                return SnappyTap(onTap: () => onSelect(index), child: row);
+              },
+            );
+          }),
+          if (index != state.totalTables - 1) const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+}
+
+class _Legend extends StatelessWidget {
+  const _Legend();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppTheme.accentOliveDark;
+    Widget item(String label, Color fill, Color border, {bool dashed = false}) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: fill,
+                shape: BoxShape.circle,
+                border: Border.all(color: border, width: dashed ? 2 : 1.5),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted)),
+          ],
+        );
+    return Wrap(
+      spacing: 14,
+      runSpacing: 8,
+      children: [
+        item('Completa', c.withValues(alpha: 0.16), c),
+        item('Com lugares', Colors.white, c),
+        item('Bloqueada', Colors.white, const Color(0xFF9DB098)),
+        item('Selecionada', Colors.white, c, dashed: true),
+      ],
+    );
+  }
+}
+
+/// Tipos de mesa que o espaço reservado definiu (no futuro, cada
+/// empresa define os seus e aparecem aqui).
+class _TableTypes extends StatelessWidget {
+  final List<VenueTableType> types;
+  const _TableTypes({required this.types});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionTitle('Tipos de mesa',
+            trailing: Text('Definidos pelo espaço', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted))),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          child: Row(
+            children: [
+              for (final (i, t) in types.indexed) ...[
+                if (i > 0) const SizedBox(width: 10),
+                Container(
+                  height: 56,
+                  padding: const EdgeInsets.fromLTRB(8, 0, 14, 0),
+                  decoration: whiteLineCard(radius: 16),
+                  child: Row(
+                    children: [
+                      StickerIcon(
+                        switch (t.shape) {
+                          'rectangular' => Icons.rectangle_outlined,
+                          'square' => Icons.crop_square_rounded,
+                          _ => Icons.circle_outlined,
+                        },
+                        size: 36,
+                        turns: StickerIcon.tilt(i),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(t.label, style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700)),
+                          Text('${t.quantity} × ${t.seats} lugares',
+                              style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ],
     );
   }
 }
 
+String _initialsOf(String name) {
+  final parts = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+  if (parts.isEmpty) return '?';
+  if (parts.length == 1) return parts.first[0].toUpperCase();
+  return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+}
+
+class _GuestAvatar extends StatelessWidget {
+  final String name;
+  final double size;
+  const _GuestAvatar({required this.name, this.size = 48});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: StickerIcon.shadow),
+      child: Text(_initialsOf(name),
+          style: TextStyle(fontSize: size * 0.3, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+    );
+  }
+}
+
+/// "Por sentar": convidados sem mesa. Arrastar para uma mesa senta-os;
+/// tocar senta na mesa selecionada.
+class _UnseatedStrip extends StatelessWidget {
+  final List<Guest> guests;
+  final ValueChanged<Guest> onTap;
+  const _UnseatedStrip({required this.guests, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionTitle('Por sentar',
+            trailing: Text(guests.isEmpty ? 'Todos sentados' : 'Arrasta para uma mesa',
+                style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted))),
+        if (guests.isNotEmpty)
+          SizedBox(
+            height: 82,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              itemCount: guests.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              itemBuilder: (context, i) {
+                final g = guests[i];
+                final item = SizedBox(
+                  width: 64,
+                  child: Column(
+                    children: [
+                      _GuestAvatar(name: g.name),
+                      const SizedBox(height: 6),
+                      Text(g.name.split(' ').first,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.ink)),
+                    ],
+                  ),
+                );
+                return LongPressDraggable<Guest>(
+                  data: g,
+                  delay: const Duration(milliseconds: 150),
+                  hapticFeedbackOnStart: true,
+                  feedback: Material(
+                    color: Colors.transparent,
+                    child: Transform.rotate(angle: -0.1, child: Transform.scale(scale: 1.12, child: _GuestAvatar(name: g.name, size: 52))),
+                  ),
+                  childWhenDragging: Opacity(opacity: 0.3, child: item),
+                  child: Semantics(
+                    button: true,
+                    label: 'Sentar ${g.name}',
+                    child: GestureDetector(onTap: () => onTap(g), child: item),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _SelectedTableCard extends StatelessWidget {
+  final int index;
+  final SeatingState state;
+  final List<Guest> guests;
+  final VoidCallback onEdit;
+
+  const _SelectedTableCard({
+    required this.index,
+    required this.state,
+    required this.guests,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final table = index < state.tables.length ? state.tables[index] : null;
+    final guestIds = table?.guestIds ?? const <String>[];
+    final seated = [
+      for (final id in guestIds) guests.where((g) => g.id == id).firstOrNull,
+    ].whereType<Guest>().toList();
+    final c = AppTheme.accentOliveDark;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: whiteLineCard(line: c, width: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Mesa ${index + 1}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                    Text('${seated.length} de $seatsPerTable lugares',
+                        style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                  ],
+                ),
+              ),
+              SnappyTap(
+                onTap: onEdit,
+                child: Container(
+                  height: 36,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: c.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(999)),
+                  child: Text('Editar mesa', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: c)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 3.6,
+            children: [
+              for (final g in seated)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: whiteLineCard(radius: 14),
+                  child: Row(
+                    children: [
+                      _GuestAvatar(name: g.name, size: 28),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(g.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700)),
+                      ),
+                    ],
+                  ),
+                ),
+              if (seated.length < seatsPerTable)
+                Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: c, width: 1.5),
+                  ),
+                  child: Text('Larga aqui um convidado',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: c)),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 /// Mostrado em vez da planta/lista quando ainda não há nenhuma mesa real
 /// disponível — ou porque o casal ainda não reservou o local
 /// ([SeatingState.hasVenue] `false`), ou porque o reservou mas esse
@@ -356,716 +1005,6 @@ class _NoTablesCard extends StatelessWidget {
           ],
         ],
       ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final String? caption;
-
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.caption,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 14, color: AppTheme.accentOliveDark),
-              const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: AppFontSize.xs,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.inkMuted,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.xl),
-          ),
-          if (caption != null)
-            Text(
-              caption!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: AppFontSize.xxs, color: AppTheme.inkMuted),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ViewToggle extends StatelessWidget {
-  final _PlanView selected;
-  final ValueChanged<_PlanView> onChanged;
-
-  const _ViewToggle({required this.selected, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _ViewToggleTab(
-              icon: Icons.grid_view_rounded,
-              label: 'Planta',
-              selected: selected == _PlanView.plan,
-              onTap: () => onChanged(_PlanView.plan),
-            ),
-          ),
-          Expanded(
-            child: _ViewToggleTab(
-              icon: Icons.list_rounded,
-              label: 'Lista',
-              selected: selected == _PlanView.list,
-              onTap: () => onChanged(_PlanView.list),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ViewToggleTab extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _ViewToggleTab({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.green : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: selected ? AppTheme.accentOliveDark : AppTheme.inkMuted,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: AppFontSize.md,
-                color: selected ? AppTheme.accentOliveDark : AppTheme.inkMuted,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PlanGrid extends StatelessWidget {
-  final SeatingState state;
-  final int? selectedIndex;
-  final ValueChanged<int> onSelect;
-
-  const _PlanGrid({
-    required this.state,
-    required this.selectedIndex,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final filled = state.nextIndex;
-    final total = state.totalTables;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            top: -6,
-            left: -6,
-            child: Opacity(
-              opacity: 0.15,
-              child: Icon(
-                Icons.local_florist_outlined,
-                size: 34,
-                color: AppTheme.accentOliveDark,
-              ),
-            ),
-          ),
-          Positioned(
-            top: -6,
-            right: -6,
-            child: Opacity(
-              opacity: 0.15,
-              child: Icon(
-                Icons.local_florist_outlined,
-                size: 34,
-                color: AppTheme.accentOliveDark,
-              ),
-            ),
-          ),
-          Column(
-            children: [
-              const _HonorTableStrip(),
-              const SizedBox(height: 18),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: total,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1,
-                ),
-                itemBuilder: (context, index) {
-                  final isFilled = index < filled;
-                  final isNext = index == filled;
-                  final draft = isNext ? state.nextTable : null;
-                  final table = isFilled ? state.tables[index] : draft;
-                  return _TableCell(
-                    number: index + 1,
-                    state: isFilled
-                        ? _CellState.filled
-                        : isNext
-                        ? _CellState.next
-                        : _CellState.locked,
-                    draftCount: draft?.guestIds.length,
-                    selected: selectedIndex == index,
-                    rectangular: table?.rectangular ?? false,
-                    onTap: isFilled || isNext ? () => onSelect(index) : null,
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Faixa decorativa da mesa dos noivos/padrinhos — só visual, não faz
-/// parte da sequência de mesas numeradas nem do modelo de dados.
-class _HonorTableStrip extends StatelessWidget {
-  const _HonorTableStrip();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      'Mesa de Honra',
-      style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.sm),
-    );
-  }
-}
-
-class _TableListView extends StatelessWidget {
-  final SeatingState state;
-  final int? selectedIndex;
-  final ValueChanged<int> onSelect;
-
-  const _TableListView({
-    required this.state,
-    required this.selectedIndex,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final filled = state.nextIndex;
-    return Column(
-      children: [
-        for (var index = 0; index < state.totalTables; index++) ...[
-          _TableListRow(
-            index: index,
-            isFilled: index < filled,
-            isNext: index == filled,
-            table: index < state.tables.length ? state.tables[index] : null,
-            selected: selectedIndex == index,
-            onTap: index < filled || index == filled
-                ? () => onSelect(index)
-                : null,
-          ),
-          if (index != state.totalTables - 1) const SizedBox(height: 8),
-        ],
-      ],
-    );
-  }
-}
-
-class _TableListRow extends StatelessWidget {
-  final int index;
-  final bool isFilled;
-  final bool isNext;
-  final SeatingTable? table;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  const _TableListRow({
-    required this.index,
-    required this.isFilled,
-    required this.isNext,
-    required this.table,
-    required this.selected,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final count = table?.guestIds.length ?? 0;
-    final content = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: selected
-            ? Border.all(color: AppTheme.accentOliveDark, width: 1.5)
-            : null,
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isFilled
-                ? Icons.check_circle
-                : isNext
-                ? Icons.add_circle_outline
-                : Icons.lock_outline_rounded,
-            size: 18,
-            color: isFilled
-                ? AppStatusColors.confirmed
-                : isNext
-                ? AppStatusColors.confirmed
-                : AppTheme.inkMuted,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Mesa ${index + 1}',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: AppFontSize.md,
-              ),
-            ),
-          ),
-          Text(
-            isFilled || isNext ? '$count/$seatsPerTable lugares' : 'Bloqueada',
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
-          ),
-        ],
-      ),
-    );
-    if (onTap == null) return Opacity(opacity: 0.6, child: content);
-    return SnappyTap(onTap: onTap, child: content);
-  }
-}
-
-class _Legend extends StatelessWidget {
-  const _Legend();
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 8,
-      children: const [
-        _LegendItem(color: AppStatusColors.confirmed, label: 'Atribuída'),
-        _LegendItem(color: AppColors.green, label: 'Disponível'),
-        _LegendItem(color: AppStatusColors.pending, label: 'Em edição'),
-        _LegendItem(color: AppTheme.inkMuted, label: 'Bloqueada'),
-      ],
-    );
-  }
-}
-
-class _LegendItem extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendItem({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 9,
-          height: 9,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted),
-        ),
-      ],
-    );
-  }
-}
-
-class _SelectedTableCard extends StatelessWidget {
-  final int index;
-  final SeatingState state;
-  final List<Guest> guests;
-  final VoidCallback onEdit;
-
-  const _SelectedTableCard({
-    required this.index,
-    required this.state,
-    required this.guests,
-    required this.onEdit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final table = index < state.tables.length ? state.tables[index] : null;
-    final guestIds = table?.guestIds ?? const <String>[];
-    final seated = [
-      for (final id in guestIds) guests.where((g) => g.id == id).firstOrNull,
-    ].whereType<Guest>().toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Text(
-                    'Mesa ${index + 1}',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.muted,
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                    ),
-                    child: Text(
-                      '${seated.length} lugares',
-                      style: const TextStyle(
-                        fontSize: AppFontSize.xs,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.inkMuted,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SnappyTap(
-              onTap: onEdit,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.edit_outlined, size: 14, color: AppTheme.ink),
-                    SizedBox(width: 5),
-                    Text(
-                      'Editar mesa',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: AppFontSize.sm,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (seated.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-            ),
-            child: const Text('Ainda sem convidados nesta mesa.'),
-          )
-        else
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: seated.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio: 3.4,
-            ),
-            itemBuilder: (context, i) => _SeatedGuestTile(guest: seated[i]),
-          ),
-      ],
-    );
-  }
-}
-
-class _SeatedGuestTile extends StatelessWidget {
-  final Guest guest;
-
-  const _SeatedGuestTile({required this.guest});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 15,
-            backgroundColor: AppColors.gray,
-            backgroundImage: NetworkImage(
-              'https://api.dicebear.com/7.x/notionists/png?seed=${guest.id}',
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  guest.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: AppFontSize.sm,
-                  ),
-                ),
-                if (guest.group.isNotEmpty)
-                  Text(
-                    guest.group,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: AppFontSize.xxs,
-                      color: AppTheme.inkMuted,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.drag_indicator,
-            size: 16,
-            color: AppTheme.borderMuted,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum _CellState { filled, next, locked }
-
-const _seatingTableAsset = 'assets/images/seating_table_1.png';
-
-/// Dessatura a ilustração para as mesas bloqueadas — mesma imagem que
-/// as outras células, só a preto e branco, para ficar claramente
-/// "por preencher" sem precisar de outra ilustração.
-const _grayscaleMatrix = <double>[
-  0.2126,
-  0.7152,
-  0.0722,
-  0,
-  0,
-  0.2126,
-  0.7152,
-  0.0722,
-  0,
-  0,
-  0.2126,
-  0.7152,
-  0.0722,
-  0,
-  0,
-  0,
-  0,
-  0,
-  1,
-  0,
-];
-
-/// Célula da matriz — representa uma mesa, nunca um lugar ou
-/// convidado. Todas as células mostram a mesma ilustração da mesa
-/// posta; o que muda é o selo no canto (✓ / + / cadeado) e, para as
-/// bloqueadas, a imagem a preto e branco — `filled` é a única com
-/// check; `next` é a única selecionável (a seguir à última mesa
-/// preenchida); `locked` fica sem interação até lá chegar.
-class _TableCell extends StatelessWidget {
-  final int number;
-  final _CellState state;
-  final VoidCallback? onTap;
-  // Nº de convidados já guardados no rascunho da mesa "próxima", se
-  // já foi começada — mostra o progresso até [seatsPerTable] em vez do
-  // número da mesa, para ficar claro que ainda falta completá-la.
-  final int? draftCount;
-  final bool selected;
-  final bool rectangular;
-
-  const _TableCell({
-    required this.number,
-    required this.state,
-    this.onTap,
-    this.draftCount,
-    this.selected = false,
-    this.rectangular = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isLocked = state == _CellState.locked;
-    final isNext = state == _CellState.next;
-
-    // A ilustração já vem com a base/ilha e sombra embutidas — sem
-    // cartão nem sombra artificial à volta, só a imagem tal como está.
-    final image = isLocked
-        ? ColorFiltered(
-            colorFilter: const ColorFilter.matrix(_grayscaleMatrix),
-            child: Image.asset(_seatingTableAsset, fit: BoxFit.contain),
-          )
-        : Image.asset(_seatingTableAsset, fit: BoxFit.contain);
-
-    final island = Opacity(
-      opacity: isLocked ? 0.55 : 1,
-      child: Container(
-        decoration: selected
-            ? BoxDecoration(
-                color: AppColors.green,
-                borderRadius: BorderRadius.circular(rectangular ? 14 : 999),
-              )
-            : null,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Padding(padding: const EdgeInsets.all(2), child: image),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              isNext && draftCount != null
-                  ? '$draftCount/$seatsPerTable'
-                  : 'M$number',
-              style: TextStyle(
-                fontSize: AppFontSize.xxxs,
-                fontWeight: FontWeight.w700,
-                color: isLocked ? AppTheme.inkMuted : AppTheme.ink,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    final content = Stack(
-      clipBehavior: Clip.none,
-      children: [
-        island,
-        Positioned(top: -4, right: -2, child: _StatusBadge(state: state)),
-      ],
-    );
-
-    if (onTap == null) return content;
-    return SnappyTap(onTap: onTap, child: content);
-  }
-}
-
-/// Selo sobreposto no canto do cartão — comunica o estado da mesa sem
-/// depender só da cor de fundo, para ficar legível mesmo em cima da
-/// ilustração.
-class _StatusBadge extends StatelessWidget {
-  final _CellState state;
-
-  const _StatusBadge({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    final (background, icon) = switch (state) {
-      _CellState.filled => (AppStatusColors.confirmed, Icons.check_rounded),
-      _CellState.next => (AppStatusColors.confirmed, Icons.add_rounded),
-      _CellState.locked => (AppTheme.inkMuted, Icons.lock_outline_rounded),
-    };
-    return Container(
-      width: 22,
-      height: 22,
-      decoration: BoxDecoration(
-        color: background,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-      ),
-      child: Icon(icon, size: 13, color: Colors.white),
     );
   }
 }
