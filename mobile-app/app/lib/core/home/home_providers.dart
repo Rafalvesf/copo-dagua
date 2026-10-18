@@ -157,6 +157,29 @@ Future<void> cancelBookingByCouple(String bookingId, {String? reason}) async {
 /// reportado pelo utilizador (2026-09-05): aceitar pelo chat depois de
 /// já ter aceite pelas Reservas dava "não está disponível" em vez de
 /// simplesmente refletir que já estava aceite.
+/// Estado da reserva criada por uma proposta aceite, para o cartão do
+/// chat: 'deposit_due' (sinal por pagar), 'deposit_paid', 'final_due',
+/// 'paid' (tudo pago), 'completed' ou 'cancelled'. `null` se não houver.
+Future<String?> fetchProposalBookingState(String proposalId) async {
+  final row = await supabase
+      .from('bookings')
+      .select('status, payments(type, status)')
+      .eq('proposal_id', proposalId)
+      .order('created_at', ascending: false)
+      .limit(1)
+      .maybeSingle();
+  if (row == null) return null;
+  final status = row['status'] as String? ?? '';
+  if (status.startsWith('cancelled') || status == 'expired') return 'cancelled';
+  final payments = (row['payments'] as List?) ?? const [];
+  bool has(String type, String st) => payments.any((p) => p['type'] == type && p['status'] == st);
+  if (has('final_payment', 'pending')) return 'final_due';
+  if (has('final_payment', 'paid')) return 'paid';
+  if (status == 'completed') return 'completed';
+  if (has('deposit', 'paid') || status == 'confirmed') return 'deposit_paid';
+  return 'deposit_due';
+}
+
 Future<String?> fetchProposalStatus(String proposalId) async {
   final row = await supabase
       .from('proposals')

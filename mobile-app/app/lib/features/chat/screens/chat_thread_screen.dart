@@ -171,17 +171,34 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
     // (reportado 2026-10-18).
     final id = widget.message.proposalId;
     if (id != null) {
-      fetchProposalStatus(id).then((status) {
+      fetchProposalStatus(id).then((status) async {
         if (!mounted || status == null) return;
         setState(() {
           _accepted = status == 'accepted';
           _unavailable = status != 'sent' && status != 'accepted';
         });
+        if (status == 'accepted') {
+          // O sinal pode já estar pago — não pedir para pagar outra vez
+          // (reportado 2026-10-18).
+          final booking = await fetchProposalBookingState(id);
+          if (mounted) setState(() => _bookingState = booking);
+        }
       }).catchError((_) {});
     }
   }
 
   bool _unavailable = false;
+  String? _bookingState;
+
+  /// Texto do botão depois de aceite, conforme o pagamento da reserva.
+  String get _acceptedLabel => switch (_bookingState) {
+        'deposit_paid' => 'Sinal pago ✓',
+        'final_due' => 'Pagar restante',
+        'paid' => 'Tudo pago ✓',
+        'completed' => 'Concluído ✓',
+        'cancelled' => 'Reserva cancelada',
+        _ => 'Aceite · pagar sinal',
+      };
 
   void _acceptedFeedback() {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -273,7 +290,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
         ChatCardAction('Ver detalhe', () => context.push('/bookings')),
         if (_accepted)
           // Já aceite: o passo seguinte é pagar o sinal nas Reservas.
-          ChatCardAction('Aceite · pagar sinal', () => context.push('/bookings'), primary: true)
+          ChatCardAction(_acceptedLabel, () => context.push('/bookings'), primary: true)
         else if (_unavailable)
           const ChatCardAction('Indisponível', null, primary: true)
         else
