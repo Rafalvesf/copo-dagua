@@ -14,6 +14,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/menu_style.dart';
+import '../../settings/screens/menu_style_screen.dart' show showMenuStylePicker;
 import '../../guests/screens/guests_list_screen.dart' show InviteShareSheet;
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
@@ -91,7 +92,12 @@ class WeddingDetailsScreen extends ConsumerWidget {
               children: [
                 SafeArea(
                   bottom: false,
-                  child: EdgeFade(
+                  // Toque longo na página: muda o estilo e a cor, como
+                  // trocar o mostrador do Apple Watch (pedido 2026-10-18).
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onLongPress: () => showMenuStylePicker(context),
+                    child: EdgeFade(
                     topFadeHeight: 8,
                     bottomFadeHeight: 140,
                     child: ListView(
@@ -152,6 +158,7 @@ class WeddingDetailsScreen extends ConsumerWidget {
                         _ShareWeddingButton(wedding: wedding, color: look.color, on: look.on),
                       ],
                     ),
+                  ),
                   ),
                 ),
                 const Positioned(
