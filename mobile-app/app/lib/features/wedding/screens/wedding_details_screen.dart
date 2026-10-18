@@ -1281,12 +1281,16 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
 
     if (soon.isEmpty) return const SizedBox.shrink();
 
-    return Container(
+    // Canvas "Menu · Casamento": cartão rosado, título a negrito e uma
+    // linha por pagamento; toca para abrir o orçamento.
+    return SnappyTap(
+      onTap: () => context.push('/budget'),
+      child: Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppStatusColors.declined.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        color: const Color(0xFFF6E3DF),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1295,22 +1299,23 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
             'Assuntos urgentes — pagamentos (${withDueDate.length})',
             style: const TextStyle(
               fontWeight: FontWeight.w700,
-              fontSize: AppFontSize.md,
+              fontSize: 14,
               color: AppTheme.ink,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           for (final expense in soon)
             Padding(
-              padding: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(top: 6),
               child: Text(
                 '${expense.title} — ${euros(expense.amount)} até '
                 '${expense.dueDate!.day.toString().padLeft(2, '0')} '
                 '${monthNamesPt[expense.dueDate!.month - 1].substring(0, 3)}',
-                style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.ink),
+                style: const TextStyle(fontSize: 13, color: AppTheme.ink),
               ),
             ),
         ],
+      ),
       ),
     );
   }
