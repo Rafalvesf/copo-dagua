@@ -200,23 +200,40 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
       key: const ValueKey('editing'),
       child: Column(
         children: [
+          // X à esquerda, título ao centro e ✓ à direita (pedido
+          // 2026-10-18).
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 0),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
             child: Row(
               children: [
-                TextButton(onPressed: () => _finish(save: false), child: const Text('Cancelar')),
-                const Spacer(),
-                Column(
-                  children: [
-                    Text(layout.label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    Text(color.label, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                  ],
+                IconButton(
+                  tooltip: 'Cancelar',
+                  onPressed: () => _finish(save: false),
+                  style: IconButton.styleFrom(backgroundColor: AppTheme.surface, fixedSize: const Size(44, 44)),
+                  icon: const Icon(Icons.close_rounded, color: AppTheme.ink),
                 ),
-                const Spacer(),
-                FilledButton(
+                Expanded(
+                  child: Column(
+                    children: [
+                      const Text('Aparência do menu',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      Text('${layout.label} · ${color.label}',
+                          textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Guardar',
                   onPressed: _saving ? null : () => _finish(save: true),
-                  style: FilledButton.styleFrom(backgroundColor: color.color, foregroundColor: color.on),
-                  child: const Text('Feito'),
+                  style: IconButton.styleFrom(
+                    backgroundColor: color.color,
+                    disabledBackgroundColor: color.color.withValues(alpha: 0.5),
+                    fixedSize: const Size(44, 44),
+                  ),
+                  icon: _saving
+                      ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: color.on))
+                      : Icon(Icons.check_rounded, color: color.on),
                 ),
               ],
             ),
@@ -306,7 +323,10 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                   selected: selected,
                   label: c.label,
                   child: GestureDetector(
-                    onTap: () => _colorPager!.animateToPage(i, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic),
+                    // Tocar na cor já escolhida (com o ✓) guarda.
+                    onTap: () => selected
+                        ? _finish(save: true)
+                        : _colorPager!.animateToPage(i, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic),
                     child: Center(
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),

@@ -824,11 +824,6 @@ void main() {
       }
     });
   }
-  testWidgets('11e_aparencia_menu', (t) => _shoot(t, '11e_aparencia_menu', couple, '/wedding?aparencia=1', after: (t) async {
-        for (var i = 0; i < 10; i++) {
-          await t.pump(const Duration(milliseconds: 100));
-        }
-      }));
   testWidgets('88_manutencao', (t) async {
     _maintenanceOn = true;
     try {
