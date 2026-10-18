@@ -15,6 +15,9 @@ void setBarColor(Color c) {
 
 bool _locked = false;
 
+/// A barra está presa por uma abertura/brinde.
+bool get barColorLocked => _locked;
+
 void lockBarColor(Color c) {
   _locked = true;
   _apply(c);

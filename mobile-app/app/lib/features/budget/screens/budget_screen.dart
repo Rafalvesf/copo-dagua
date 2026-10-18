@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/budget/budget_controller.dart';
 import '../../../core/budget/effective_budget.dart';
 import '../../../core/budget/expense_controller.dart';
 import '../../../core/checklist/checklist_controller.dart';
+import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../features/partners/partner_style.dart';
@@ -75,8 +77,26 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
         ? null
         : computeEffectiveBudget(budgetState.budget!, checklistState.items);
 
-    final paid = expenseState.paid;
-    final pending = expenseState.pending;
+    // Pagas/Pendentes também mostram os pagamentos das reservas (sinal
+    // pago, sinal ou restante por pagar), não só as despesas manuais —
+    // antes ficavam vazios para quem só tinha reservas (2026-10-18).
+    final bookings = ref.watch(coupleBookingsProvider).asData?.value ?? const <CoupleBooking>[];
+    final active = bookings.where((b) => b.status != BookingStatus.recusado);
+    final paid = [
+      ...expenseState.paid,
+      for (final b in active)
+        if (b.paidAmount > 0)
+          Expense(id: 'booking:${b.id}:paid', weddingId: b.weddingId, title: 'Pago · ${b.partnerName}', amount: b.paidAmount, paid: true),
+    ];
+    final pending = [
+      ...expenseState.pending,
+      for (final b in active) ...[
+        if (b.pendingDepositPaymentId != null)
+          Expense(id: 'booking:${b.id}:deposit', weddingId: b.weddingId, title: 'Sinal · ${b.partnerName}', amount: b.depositAmount ?? 0),
+        if (b.pendingFinalPaymentId != null)
+          Expense(id: 'booking:${b.id}:final', weddingId: b.weddingId, title: 'Restante · ${b.partnerName}', amount: b.finalPaymentAmount ?? 0),
+      ],
+    ];
     final total = expenseState.expenses.length;
 
     return GradientScaffold(
@@ -386,6 +406,11 @@ class _ExpenseList extends ConsumerWidget {
             expense: expense,
             index: i,
             onTap: () {
+              // Pagamentos de reservas pagam-se nas Reservas.
+              if (expense.id.startsWith('booking:')) {
+                context.push('/bookings');
+                return;
+              }
               ref
                   .read(expenseControllerProvider.notifier)
                   .togglePaid(expense.id);
@@ -457,7 +482,11 @@ class _ExpenseRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    expense.paid ? 'Paga · toca para desfazer' : 'Pendente · toca para marcar como paga',
+                    expense.id.startsWith('booking:')
+                        ? (expense.paid ? 'Reserva · pago na app' : 'Reserva · toca para pagar')
+                        : expense.paid
+                            ? 'Paga · toca para desfazer'
+                            : 'Pendente · toca para marcar como paga',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
