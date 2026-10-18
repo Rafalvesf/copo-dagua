@@ -245,9 +245,13 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                             child: SizedBox(
                               width: 390,
                               height: 780,
-                              child: _StylePreview(
+                              child: OverflowBox(
+                                alignment: Alignment.topCenter,
+                                maxHeight: double.infinity,
+                                child: _StylePreview(
                                 style: EventMenuStyle(MenuLayout.values[i], color),
                                 child: _PageBody(wedding: wedding, layout: MenuLayout.values[i], scrollable: false),
+                              ),
                               ),
                             ),
                           ),
@@ -353,10 +357,7 @@ class _PageBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final look = _look(context, ref);
-    return ListView(
-      physics: scrollable ? null : const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 40, AppTheme.screenMargin, 140),
-      children: [
+    final children = <Widget>[
         // Aparência escolhida (098): o clássico por defeito, ou uma das
         // três opções.
         ...switch (layout) {
@@ -395,8 +396,16 @@ class _PageBody extends ConsumerWidget {
         const _FinancialSummaryRow(),
         const SizedBox(height: 22),
         _ShareWeddingButton(wedding: wedding, color: look.color, on: look.on),
-      ],
-    );
+    ];
+    const padding = EdgeInsets.fromLTRB(AppTheme.screenMargin, 40, AppTheme.screenMargin, 140);
+    if (!scrollable) {
+      // Pré-visualização (modo de edição): sem lista que desliza.
+      return Padding(
+        padding: padding,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: children),
+      );
+    }
+    return ListView(padding: padding, children: children);
   }
 }
 
