@@ -682,7 +682,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                       _pickedLogo != null || (_existingLogoUrl?.isNotEmpty ?? false)
                           ? 'Trocar logótipo'
                           : 'Escolher logótipo',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppTheme.accentOliveDark,
                         fontWeight: FontWeight.w700,
                         fontSize: AppFontSize.base,
@@ -769,7 +769,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                   alignment: Alignment.centerLeft,
                   child: SnappyTap(
                     onTap: _portfolioBusy ? () {} : _addPortfolioVideo,
-                    child: const Text(
+                    child: Text(
                       '+ Adicionar vídeo (opcional)',
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
                     ),
@@ -893,7 +893,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                       onTap: _pricingBusy ? () {} : _addPackage,
                       child: Text(
                         _packages.isEmpty ? '+ Adicionar pacote' : '+ Adicionar outro pacote',
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
                       ),
                     ),
                   ),
@@ -1141,7 +1141,7 @@ class _RadioRow extends StatelessWidget {
                   border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFF8F8B84), width: 1.5),
                 ),
                 child: selected
-                    ? Container(width: 12, height: 12, decoration: const BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))
+                    ? Container(width: 12, height: 12, decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))
                     : null,
               ),
               const SizedBox(width: 12),

@@ -881,7 +881,7 @@ class _DateStepState extends State<_DateStep> {
                 if (days != null)
                   Text(
                     days,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: AppFontSize.md,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.accentOliveDark,
@@ -1272,7 +1272,7 @@ class _RegionStep extends StatelessWidget {
                             Container(
                               width: 20,
                               height: 20,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: AppTheme.accentOliveDark,
                                 shape: BoxShape.circle,
                               ),
@@ -1425,7 +1425,7 @@ class _GuestEstimate extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline_rounded, size: 20, color: AppTheme.accentOliveDark),
+                Icon(Icons.info_outline_rounded, size: 20, color: AppTheme.accentOliveDark),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -1610,7 +1610,7 @@ class _DoneView extends StatelessWidget {
           onTap: saving ? () {} : onInvite,
           child: Text(
             partner != null && partner.isNotEmpty ? 'Convidar' : 'Convidar alguém',
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
           ),
         ),
       ),

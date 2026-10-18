@@ -262,7 +262,7 @@ class _Empty extends StatelessWidget {
               width: 120,
               height: 120,
               decoration: const BoxDecoration(color: AppColors.gray, shape: BoxShape.circle),
-              child: const Icon(Icons.description_outlined, size: 48, color: AppTheme.accentOliveDark),
+              child: Icon(Icons.description_outlined, size: 48, color: AppTheme.accentOliveDark),
             ),
             const SizedBox(height: 24),
             const Text(

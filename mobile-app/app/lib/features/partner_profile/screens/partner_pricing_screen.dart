@@ -179,7 +179,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                                 border: Border.all(color: AppTheme.accentOliveDark),
                                 borderRadius: BorderRadius.circular(AppRadius.pill),
                               ),
-                              child: const Text(
+                              child: Text(
                                 '+ Adicionar pacote',
                                 style: TextStyle(
                                   color: AppTheme.accentOliveDark,
@@ -331,7 +331,7 @@ class _PackageCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       priceLabel,
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, color: AppTheme.accentOliveDark),
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, color: AppTheme.accentOliveDark),
                     ),
                   ],
                 ),

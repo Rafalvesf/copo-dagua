@@ -582,7 +582,7 @@ class ReviewAction extends ConsumerWidget {
             onPressed: () => _showReviewSheet(context, ref, booking, null),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.accentOliveDark,
-              side: const BorderSide(color: AppTheme.accentOliveDark),
+              side: BorderSide(color: AppTheme.accentOliveDark),
               padding: const EdgeInsets.symmetric(vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.sm),

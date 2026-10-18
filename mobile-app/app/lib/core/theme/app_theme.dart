@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 /// Black para títulos e Roboto Regular para o resto. Escala definida
 /// para um ecrã de referência de 375px.
 class AppTheme {
-  static const seedColor = accentOliveDark;
+  static Color get seedColor => accentOliveDark;
 
   /// Família da app — Louis George Café embutida em
   /// `assets/fonts/louis_george_cafe/` (Light 300, Regular 400, Bold 700,
@@ -37,8 +37,13 @@ class AppTheme {
   /// Verde principal da marca — cor única de acento (botões primários,
   /// estados ativos, barras de progresso). [accentOlive] e
   /// [accentOliveDark] eram dois tons; unificados num só verde.
-  static const accentOlive = Color(0xFF5F7545);
-  static const accentOliveDark = Color(0xFF5F7545);
+  static const brandGreen = Color(0xFF5F7545);
+
+  /// Cor de acento atual: o verde da marca, ou a cor escolhida pelo
+  /// organizador em "Aparência do menu" (pedido 2026-10-18: "quando mudas
+  /// a cor muda a cor da app toda"). Mudada por `CopoDaguaApp`.
+  static Color accentOliveDark = brandGreen;
+  static Color get accentOlive => accentOliveDark;
 
   /// Cor de contorno neutra e quente, partilhada por bordas subtis
   /// (chips, botões outline, separadores).
@@ -174,7 +179,7 @@ class AppTheme {
         fillColor: surface,
         hintStyle: const TextStyle(color: Color(0xFF8F8B84)),
         labelStyle: const TextStyle(color: inkMuted),
-        floatingLabelStyle: const TextStyle(color: accentOliveDark, fontWeight: FontWeight.w700),
+        floatingLabelStyle: TextStyle(color: accentOliveDark, fontWeight: FontWeight.w700),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
           borderSide: BorderSide.none,
@@ -185,7 +190,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          borderSide: const BorderSide(color: accentOliveDark, width: 1.5),
+          borderSide: BorderSide(color: accentOliveDark, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -332,7 +337,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(54),
           foregroundColor: accentOliveDark,
-          side: const BorderSide(color: accentOliveDark),
+          side: BorderSide(color: accentOliveDark),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
@@ -347,7 +352,7 @@ class AppTheme {
       ),
       // Spinners (52 `CircularProgressIndicator` na app) no verde da
       // marca em vez do tom derivado do seed pelo ColorScheme.
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
+      progressIndicatorTheme: ProgressIndicatorThemeData(
         color: accentOliveDark,
         linearTrackColor: borderMuted,
       ),
@@ -469,7 +474,7 @@ class AppColors {
   /// da navbar), nunca como cor de base. Hierarquia: [green] (normal) →
   /// [AppStatusColors.confirmed] (ativo/confirmado) → [greenDark]
   /// (destaque forte). Alias de [AppTheme.accentOliveDark].
-  static const greenDark = AppTheme.accentOliveDark;
+  static Color get greenDark => AppTheme.accentOliveDark;
 }
 
 /// Gradientes de fundo — a linguagem visual principal do redesign.

@@ -330,7 +330,7 @@ class _ReviewCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'A tua resposta',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,

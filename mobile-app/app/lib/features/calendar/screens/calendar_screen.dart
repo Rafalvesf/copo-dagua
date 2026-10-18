@@ -142,7 +142,7 @@ class _TaskAgendaCard extends StatelessWidget {
             width: 48,
             child: Text(
               formatTimePt(item.dueDate!),
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: AppFontSize.md,
                 color: AppTheme.accentOliveDark,

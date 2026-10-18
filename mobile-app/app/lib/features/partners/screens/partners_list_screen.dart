@@ -235,7 +235,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(AppRadius.pill),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: AppTheme.accentOliveDark,
                                 ),
                               ),

@@ -262,7 +262,7 @@ class _PlaceCard extends StatelessWidget {
             height: 92,
             color: const Color(0xFFEEF2E9),
             alignment: Alignment.center,
-            child: const Icon(Icons.place_outlined, size: 30, color: AppTheme.accentOliveDark),
+            child: Icon(Icons.place_outlined, size: 30, color: AppTheme.accentOliveDark),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),

@@ -605,7 +605,7 @@ class _Field extends StatelessWidget {
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.lg), borderSide: BorderSide.none),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              borderSide: const BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
+              borderSide: BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
             ),
           ),
         ),
@@ -742,7 +742,7 @@ class _RadioLine extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: selected
-                  ? Container(width: 11, height: 11, decoration: const BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))
+                  ? Container(width: 11, height: 11, decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))
                   : null,
             ),
           ],

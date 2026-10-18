@@ -141,7 +141,7 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.lg), borderSide: BorderSide.none),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.lg),
-                    borderSide: const BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
+                    borderSide: BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
                   ),
                 ),
               ),
@@ -166,7 +166,7 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
                             width: 40,
                             height: 40,
                             decoration: const BoxDecoration(color: AppColors.gray, shape: BoxShape.circle),
-                            child: const Icon(Icons.celebration_outlined, size: 20, color: AppTheme.accentOliveDark),
+                            child: Icon(Icons.celebration_outlined, size: 20, color: AppTheme.accentOliveDark),
                           ),
                           const SizedBox(width: 12),
                           Expanded(

@@ -186,7 +186,7 @@ class _WelcomeContent extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: AppTheme.accentOliveDark,
-                        side: const BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
+                        side: BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         textStyle: const TextStyle(
                           fontFamily: AppTheme.fontFamily,

@@ -365,7 +365,7 @@ class ProntoRow extends StatelessWidget {
       decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16)),
       child: Row(
         children: [
-          const Icon(Icons.check_rounded, size: 18, color: AppTheme.accentOliveDark),
+          Icon(Icons.check_rounded, size: 18, color: AppTheme.accentOliveDark),
           const SizedBox(width: 12),
           Expanded(child: Text(text, style: const TextStyle(fontSize: 14, color: AppTheme.ink))),
           ?trailing,
@@ -465,7 +465,7 @@ class _SentBadgeState extends State<SentBadge> with SingleTickerProviderStateMix
                     angle: prot,
                     child: Transform.scale(
                       scale: pscale,
-                      child: const Icon(Icons.send_outlined, size: 40, color: AppTheme.accentOliveDark),
+                      child: Icon(Icons.send_outlined, size: 40, color: AppTheme.accentOliveDark),
                     ),
                   ),
                 ),

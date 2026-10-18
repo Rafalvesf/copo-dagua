@@ -51,7 +51,7 @@ class PageHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6),
-        const Icon(Icons.favorite, size: 15, color: AppTheme.accentOliveDark),
+        Icon(Icons.favorite, size: 15, color: AppTheme.accentOliveDark),
       ],
     );
   }

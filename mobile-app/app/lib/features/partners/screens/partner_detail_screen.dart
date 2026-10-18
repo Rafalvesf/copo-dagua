@@ -295,7 +295,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                             partner.primaryCategoryLabel,
                             if (partner.location.isNotEmpty) partner.location,
                           ].join(' · ').toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: AppFontSize.sm,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.6,

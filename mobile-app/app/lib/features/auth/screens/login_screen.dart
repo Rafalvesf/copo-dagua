@@ -132,7 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         const SizedBox(height: 16),
         GestureDetector(
           onTap: () => context.push('/role'),
-          child: const Text.rich(
+          child: Text.rich(
             TextSpan(
               text: 'Ainda não tens conta? ',
               children: [TextSpan(text: 'Criar conta', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark))],

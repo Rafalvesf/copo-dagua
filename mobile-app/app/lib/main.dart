@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/router.dart';
+import 'core/auth/auth_controller.dart';
+import 'core/models/models.dart';
+import 'core/wedding/menu_style.dart';
 import 'core/supabase/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/phone_frame.dart';
@@ -35,6 +38,23 @@ class CopoDaguaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    // A cor escolhida em "Aparência do menu" passa a ser a cor de acento
+    // da app toda, para o organizador (pedido 2026-10-18). Parceiros e
+    // convidados ficam no verde da marca.
+    final isCouple = ref.watch(authControllerProvider.select((s) => s.profile?.role)) == UserRole.couple;
+    final accent = isCouple ? ref.watch(currentMenuStyleProvider).color.accent : AppTheme.brandGreen;
+    if (AppTheme.accentOliveDark != accent) {
+      AppTheme.accentOliveDark = accent;
+      // Redesenha tudo o que já está no ecrã com a cor nova (sem perder
+      // o estado nem a navegação).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        void rebuild(Element e) {
+          e.markNeedsBuild();
+          e.visitChildren(rebuild);
+        }
+        WidgetsBinding.instance.rootElement?.visitChildren(rebuild);
+      });
+    }
     return MaterialApp.router(
       title: 'Tchin Tchin',
       debugShowCheckedModeBanner: false,

@@ -9,7 +9,7 @@ import '../../core/theme/app_theme.dart';
 /// anterior, quando existe, é uma linha tracejada cinzenta. Tocar ou
 /// arrastar mostra o valor do ponto mais próximo (linha) ou da barra.
 
-const _seriesColor = AppTheme.accentOliveDark;
+Color get _seriesColor => AppTheme.accentOliveDark;
 const _previousColor = Color(0xFFB8B2A6);
 const _gridColor = AppTheme.borderMuted;
 

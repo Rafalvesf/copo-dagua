@@ -249,7 +249,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                                 style: const TextStyle(fontSize: AppFontSize.base, fontStyle: FontStyle.italic, color: AppTheme.inkMuted),
                               ),
                               const SizedBox(height: 18),
-                              const Row(
+                              Row(
                                 children: [
                                   Expanded(child: Divider(color: Color(0xFFCBD5BE), thickness: 1)),
                                   Padding(

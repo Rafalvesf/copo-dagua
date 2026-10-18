@@ -39,7 +39,7 @@ class ChatHeader extends StatelessWidget {
       foregroundImage: url == null ? null : NetworkImage(url),
       child: Text(
         _initials,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: AppFontSize.md,
           fontWeight: FontWeight.w700,
           color: AppTheme.accentOliveDark,

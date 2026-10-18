@@ -202,7 +202,7 @@ class _GuestHomeBody extends ConsumerWidget {
           Text(
             '${wedding.eventType.label.toUpperCase()} · ${wedding.displayNames.toUpperCase()}',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark),
+            style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -304,7 +304,7 @@ class _HeroCard extends StatelessWidget {
             decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(999)),
             child: Text(
               wedding.eventType.label,
-              style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+              style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
             ),
           ),
           const SizedBox(height: 10),
@@ -378,7 +378,7 @@ class _RsvpCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Text('Alterar', style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+            Text('Alterar', style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
           ],
         ),
       ),

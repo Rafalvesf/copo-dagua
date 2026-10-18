@@ -159,7 +159,7 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                         children: [
                           _locating
                               ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
-                              : const Icon(Icons.my_location, color: AppTheme.accentOliveDark),
+                              : Icon(Icons.my_location, color: AppTheme.accentOliveDark),
                           const SizedBox(width: 12),
                           const Expanded(
                             child: Column(
@@ -230,7 +230,7 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        const Icon(Icons.check_circle, size: 16, color: AppTheme.accentOliveDark),
+                        Icon(Icons.check_circle, size: 16, color: AppTheme.accentOliveDark),
                         const SizedBox(width: 6),
                         Text(
                           'Localização no mapa definida (${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)})',

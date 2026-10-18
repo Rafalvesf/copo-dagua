@@ -196,7 +196,7 @@ class ChatProposalCard extends StatelessWidget {
                 children: [
                   Text(
                     eyebrow,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.6,
@@ -315,7 +315,7 @@ class ChatComposer extends StatelessWidget {
                   width: 44,
                   height: 44,
                   alignment: Alignment.center,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: AppTheme.accentOliveDark,
                     shape: BoxShape.circle,
                   ),

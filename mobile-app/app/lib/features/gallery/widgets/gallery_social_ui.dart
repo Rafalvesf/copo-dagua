@@ -761,7 +761,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                         width: 44,
                         height: 44,
                         alignment: Alignment.center,
-                        decoration: const BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle),
                         child: const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 20),
                       ),
                     ),
@@ -843,7 +843,7 @@ class _MemberSheet extends ConsumerWidget {
                                 m.isCouple
                                     ? 'Casal'
                                     : (m.groupLabel?.isNotEmpty == true ? 'Convidado · ${m.groupLabel}' : 'Convidado'),
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
                               ),
                             ),
                           ],
