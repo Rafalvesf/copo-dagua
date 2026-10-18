@@ -99,3 +99,29 @@ String? offerWhen(GuestOffer o) {
   if (d == null) return null;
   return '${shortDate(d)} · ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 }
+
+/// Cartão "Em breve" com cadeado, igual para convidados e organizadores.
+class LockedFeatureCard extends StatelessWidget {
+  final String text;
+  const LockedFeatureCard({super.key, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: offerCardDecoration(),
+      child: Column(
+        children: [
+          const StickerIcon(Icons.lock_outline, size: 48),
+          const SizedBox(height: 12),
+          const Text('Em breve',
+              style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 6),
+          Text(text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted, height: 1.4)),
+        ],
+      ),
+    );
+  }
+}

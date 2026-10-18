@@ -149,6 +149,18 @@ class GuestReservation {
   }
 }
 
+/// Interruptor geral (`platform_settings.guest_offers_enabled`, 100):
+/// enquanto estiver desligado, convidados e organizadores veem a secção
+/// com um cadeado ("Em breve") e o servidor recusa ofertas e reservas.
+final guestOffersEnabledProvider = FutureProvider<bool>((ref) async {
+  try {
+    final row = await supabase.from('platform_settings').select('guest_offers_enabled').eq('id', 1).maybeSingle();
+    return row?['guest_offers_enabled'] as bool? ?? false;
+  } catch (_) {
+    return false;
+  }
+});
+
 /// Ofertas de um evento (o organizador vê também as escondidas).
 final guestOffersProvider = FutureProvider.autoDispose.family<List<GuestOffer>, String>((ref, weddingId) async {
   final rows = await supabase.rpc('get_guest_offers', params: {'p_wedding_id': weddingId}) as List;
@@ -272,5 +284,6 @@ String guestCheckoutErrorMessage(String code) => switch (code) {
       'partner_not_onboarded' => 'O parceiro ainda não ativou os pagamentos na app. Tenta mais tarde.',
       'offer_unavailable' || 'not_found' => 'Esta opção já não está disponível.',
       'forbidden' => 'Só os convidados deste evento podem reservar.',
+      'feature_locked' => 'As reservas de alojamento e transporte chegam em breve.',
       _ => 'Não foi possível abrir o pagamento. Tenta novamente.',
     };

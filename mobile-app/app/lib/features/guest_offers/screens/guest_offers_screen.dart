@@ -19,6 +19,7 @@ class GuestOffersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(guestOffersEnabledProvider).asData?.value ?? false;
     final offersAsync = ref.watch(guestOffersProvider(weddingId));
     final mineAsync = ref.watch(myGuestReservationsProvider(weddingId));
     final mine = mineAsync.asData?.value ?? const <GuestReservation>[];
@@ -35,6 +36,14 @@ class GuestOffersScreen extends ConsumerWidget {
         child: Column(
           children: [
             const PageHeader(title: 'Alojamento e transporte', centered: true),
+            if (!enabled)
+              const Padding(
+                padding: EdgeInsets.all(AppTheme.screenMargin),
+                child: LockedFeatureCard(
+                  text: 'Em breve vais poder reservar e pagar aqui o alojamento e o transporte que os anfitriões combinarem.',
+                ),
+              )
+            else
             Expanded(
               child: RefreshIndicator(
                 onRefresh: refresh,
