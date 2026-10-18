@@ -17,6 +17,7 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 enum _StatusFilter { all, todo, inProgress, done }
 
@@ -572,7 +573,7 @@ class _AddTaskResult {
 }
 
 Future<_AddTaskResult?> _showAddTaskSheet(BuildContext context) {
-  return showModalBottomSheet<_AddTaskResult>(
+  return showIslandSheet<_AddTaskResult>(
     context: context,
     isScrollControlled: true,
     builder: (context) => const _AddTaskSheet(),

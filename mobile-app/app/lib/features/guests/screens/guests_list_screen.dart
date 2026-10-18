@@ -19,6 +19,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 class GuestsListScreen extends ConsumerStatefulWidget {
   const GuestsListScreen({super.key});
@@ -68,7 +69,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
   }
 
   Future<void> _shareInvite(Wedding wedding) {
-    return showModalBottomSheet(
+    return showIslandSheet(
       context: context,
       isScrollControlled: true,
       builder: (context) => InviteShareSheet(wedding: wedding),

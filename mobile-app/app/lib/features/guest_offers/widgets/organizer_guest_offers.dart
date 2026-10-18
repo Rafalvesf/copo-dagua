@@ -7,6 +7,7 @@ import '../../../core/home/home_providers.dart' show amountWithCommission, platf
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import 'guest_offer_widgets.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// Separador "Convidados" das Reservas do organizador: alojamento e
 /// transporte combinados com parceiros, que os convidados reservam e
@@ -79,7 +80,7 @@ class OrganizerGuestOffers extends ConsumerWidget {
             ],
             const SizedBox(height: 4),
             _AddButton(onTap: () async {
-              final created = await showModalBottomSheet<bool>(
+              final created = await showIslandSheet<bool>(
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.white,

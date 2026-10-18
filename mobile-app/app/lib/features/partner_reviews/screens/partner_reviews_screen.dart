@@ -9,6 +9,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// "Há quanto tempo tem conta" — só a antiguidade, nunca a data exata
 /// (evita ler como um dado pessoal/sensível). Pedido explícito do
@@ -30,9 +31,9 @@ class PartnerReviewsScreen extends ConsumerWidget {
     Review review,
   ) async {
     final controller = TextEditingController(text: review.response ?? '');
-    final text = await showDialog<String>(
+    final text = await showIslandDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => IslandAlert(
         title: Text(
           review.response == null ? 'Responder' : 'Editar resposta',
         ),
@@ -61,9 +62,9 @@ class PartnerReviewsScreen extends ConsumerWidget {
   }
 
   Future<void> _report(BuildContext context, WidgetRef ref, Review review) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showIslandDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => IslandAlert(
         title: const Text('Denunciar avaliação'),
         content: const Text(
           'Denunciar esta avaliação para revisão da equipa Tchin Tchin? Deixa de aparecer no teu perfil público até a equipa decidir.',

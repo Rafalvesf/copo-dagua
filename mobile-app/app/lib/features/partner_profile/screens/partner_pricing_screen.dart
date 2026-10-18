@@ -12,6 +12,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/money.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 const _maxPackages = 3;
 
@@ -387,7 +388,7 @@ Future<EditPackageResult?> showEditPackageSheet(
   double price = 0,
   bool isStartingPrice = false,
 }) {
-  return showModalBottomSheet<EditPackageResult>(
+  return showIslandSheet<EditPackageResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

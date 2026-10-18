@@ -18,6 +18,7 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
+import '../../../shared/widgets/island_sheet.dart';
 
 /// Definições — uma por tipo de conta (organizadores, parceiros,
 /// convidados). Redesign 2026-10-17 (canvas "Organizadores · Definições",
@@ -235,7 +236,7 @@ class _CoupleSettings extends ConsumerWidget {
   }
 
   void _pickNavIcon(BuildContext context) {
-    showModalBottomSheet(
+    showIslandSheet(
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
@@ -738,9 +739,9 @@ class _AccountSection extends ConsumerWidget {
 
   Future<void> _editName(BuildContext context, WidgetRef ref, String current) async {
     final controller = TextEditingController(text: current);
-    final result = await showDialog<String>(
+    final result = await showIslandDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => IslandAlert(
         title: const Text('O teu nome'),
         content: TextField(controller: controller, autofocus: true),
         actions: [

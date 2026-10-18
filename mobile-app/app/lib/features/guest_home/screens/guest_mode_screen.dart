@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../core/models/models.dart';
 import '../../../core/wedding/date_format_pt.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// Acedido a partir de "Definições" pelo lado do casal — deixa uma conta
 /// de casal também acompanhar outro casamento como convidado, usando o
@@ -18,7 +19,7 @@ import '../../../core/wedding/date_format_pt.dart';
 /// (`GuestModeScreen`/`/guest-mode`) a uma folha modal sobre as
 /// próprias Definições.
 Future<void> showGuestModeSheet(BuildContext context) {
-  return showModalBottomSheet(
+  return showIslandSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.white,

@@ -15,6 +15,7 @@ import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/rsvp_status_badge.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/public_link.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 String _formatHistoryDate(DateTime dt) {
   final local = dt.toLocal();
@@ -152,7 +153,7 @@ class _GuestDetailBody extends ConsumerStatefulWidget {
 class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
   Future<void> _editCompanionLimit(BuildContext context, Guest guest) async {
     var value = guest.maxCompanions;
-    final result = await showModalBottomSheet<int>(
+    final result = await showIslandSheet<int>(
       context: context,
       builder: (sheet) => StatefulBuilder(
         builder: (sheet, setSheet) => SafeArea(
@@ -207,7 +208,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
   }
 
   Future<void> _pickRsvpStatus() async {
-    final result = await showModalBottomSheet<RsvpStatus>(
+    final result = await showIslandSheet<RsvpStatus>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(
@@ -229,9 +230,9 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
 
   Future<void> _editNotes() async {
     final controller = TextEditingController(text: guest.notes ?? '');
-    final result = await showDialog<String>(
+    final result = await showIslandDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => IslandAlert(
         title: const Text('Notas'),
         content: TextField(
           controller: controller,
@@ -260,9 +261,9 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
   }
 
   Future<void> _confirmRemove() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showIslandDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => IslandAlert(
         title: const Text('Remover convidado'),
         content: Text('Remover ${guest.name} da lista de convidados? Esta ação não pode ser desfeita.'),
         actions: [

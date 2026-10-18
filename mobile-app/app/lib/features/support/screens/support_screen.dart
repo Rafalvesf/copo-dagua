@@ -11,6 +11,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// "Falar com a equipa" — pedidos de suporte reais
 /// (`support_tickets`, 047_support_tickets.sql). Inclui a categoria
@@ -20,7 +21,7 @@ class SupportScreen extends ConsumerWidget {
   const SupportScreen({super.key});
 
   Future<void> _showNewTicketSheet(BuildContext context, WidgetRef ref) {
-    return showModalBottomSheet(
+    return showIslandSheet(
       context: context,
       isScrollControlled: true,
       builder: (context) => const _NewTicketSheet(),

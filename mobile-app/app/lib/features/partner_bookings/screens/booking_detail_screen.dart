@@ -11,6 +11,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../widgets/request_row.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 class BookingDetailScreen extends ConsumerStatefulWidget {
   final Booking booking;
@@ -287,9 +288,9 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                               : (booking.status == BookingStatus.aceite ||
                                     booking.status == BookingStatus.confirmado)
                               ? () async {
-                                  final confirmed = await showDialog<bool>(
+                                  final confirmed = await showIslandDialog<bool>(
                                     context: context,
-                                    builder: (context) => AlertDialog(
+                                    builder: (context) => IslandAlert(
                                       title: const Text('Cancelar reserva'),
                                       content: Text(
                                         'Cancelar a reserva com ${booking.clientName}? Esta ação não pode ser desfeita.',

@@ -17,6 +17,7 @@ import '../../../shared/widgets/initials_avatar.dart';
 import '../partner_style.dart';
 import '../../../shared/money.dart';
 import '../../../core/partners/category_figure.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 
 class PartnerDetailScreen extends ConsumerStatefulWidget {
@@ -127,7 +128,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     final wedding = ref.read(weddingControllerProvider).wedding;
     if (wedding == null || _requestingQuote) return;
 
-    final result = await showModalBottomSheet<_RequestQuoteResult>(
+    final result = await showIslandSheet<_RequestQuoteResult>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _RequestQuoteSheet(

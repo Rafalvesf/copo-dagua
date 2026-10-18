@@ -12,6 +12,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/partners/category_figure.dart';
 import '../../../core/partner_profile/partner_location.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 class BusinessInfoScreen extends ConsumerStatefulWidget {
   const BusinessInfoScreen({super.key});
@@ -31,9 +32,9 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
     required ValueChanged<String> onSaved,
   }) async {
     final controller = TextEditingController(text: value);
-    final result = await showDialog<String>(
+    final result = await showIslandDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => IslandAlert(
         title: Text(label),
         content: TextField(controller: controller, autofocus: true),
         actions: [
@@ -58,9 +59,9 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
     required ValueChanged<String> onSaved,
   }) async {
     final controller = TextEditingController(text: value);
-    final result = await showDialog<String>(
+    final result = await showIslandDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => IslandAlert(
         title: Text(label),
         content: TextField(
           controller: controller,
@@ -90,7 +91,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
         .read(partnerProfileControllerProvider.notifier)
         .loadSelectedCategoryIds(_profile.id);
     if (!mounted) return;
-    final result = await showDialog<Set<String>>(
+    final result = await showIslandDialog<Set<String>>(
       context: context,
       builder: (context) => CategoryPickerDialog(options: options, initialSelectedIds: selectedIds),
     );
@@ -371,7 +372,7 @@ class CategoryPickerDialogState extends State<CategoryPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return IslandAlert(
       title: const Text('Categorias'),
       content: SizedBox(
         width: double.maxFinite,

@@ -28,6 +28,7 @@ import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/seating/seating_controller.dart';
 import '../../../core/supabase/supabase_config.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 
 /// Cor escolhida pelo organizador (verde-eucalipto por defeito, 098) e
@@ -1050,7 +1051,7 @@ class _ShareWeddingButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SnappyTap(
-      onTap: () => showModalBottomSheet(
+      onTap: () => showIslandSheet(
         context: context,
         isScrollControlled: true,
         builder: (context) => InviteShareSheet(wedding: wedding),

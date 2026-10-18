@@ -18,6 +18,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 enum _PlanView { plan, list }
 
@@ -56,7 +57,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
         if (t.id != existing?.id) ...t.guestIds,
     };
 
-    final result = await showModalBottomSheet<_TableConfigResult>(
+    final result = await showIslandSheet<_TableConfigResult>(
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) => _TableConfigSheet(
@@ -1234,7 +1235,7 @@ Future<void> _showMoreOptions(BuildContext context) async {
   final tables = container.read(seatingControllerProvider).tables;
   final guests = {for (final g in container.read(guestsControllerProvider).guests) g.id: g};
 
-  final action = await showModalBottomSheet<String>(
+  final action = await showIslandSheet<String>(
     context: context,
     backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(
@@ -1288,9 +1289,9 @@ Future<void> _showMoreOptions(BuildContext context) async {
     return;
   }
 
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showIslandDialog<bool>(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (context) => IslandAlert(
       title: const Text('Recomeçar distribuição?'),
       content: const Text('Todas as mesas ficam vazias. Os convidados não são apagados.'),
       actions: [

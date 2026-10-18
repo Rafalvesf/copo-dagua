@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/models.dart';
 import 'buttons.dart';
 import 'form_fields.dart';
+import 'island_sheet.dart';
 
 class GuestFormResult {
   final String name;
@@ -28,7 +29,7 @@ Future<GuestFormResult?> showGuestFormSheet(
   BuildContext context, {
   Guest? existing,
 }) {
-  return showModalBottomSheet<GuestFormResult>(
+  return showIslandSheet<GuestFormResult>(
     context: context,
     isScrollControlled: true,
     builder: (context) => _GuestFormSheet(existing: existing),

@@ -18,6 +18,7 @@ import 'guest_mode_screen.dart' show showGuestModeSheet;
 import 'guest_table_screen.dart';
 import '../../settings/screens/settings_screen.dart' show GuestAccountSections;
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// "O meu perfil" — pedido explícito do utilizador (mockup de
 /// referência): o próprio convidado a ver/editar a sua presença
@@ -126,9 +127,9 @@ Future<void> _pickAndUploadAvatar(BuildContext context, WidgetRef ref) async {
 /// linha nova (um token só existe para uma que o casal já criou).
 Future<void> _openInviteLinkDialog(BuildContext context, WidgetRef ref) async {
   final controller = TextEditingController();
-  final input = await showDialog<String>(
+  final input = await showIslandDialog<String>(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (context) => IslandAlert(
       title: const Text('Link de convite'),
       content: TextField(
         controller: controller,
@@ -179,9 +180,9 @@ class _GuestProfileBody extends ConsumerWidget {
     required Future<void> Function(String? value) onSave,
   }) async {
     final controller = TextEditingController(text: currentValue(guest) ?? '');
-    final result = await showDialog<String>(
+    final result = await showIslandDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => IslandAlert(
         title: Text(title),
         content: TextField(controller: controller, autofocus: true),
         actions: [
@@ -320,9 +321,9 @@ class _GuestProfileBody extends ConsumerWidget {
                     SnappyTap(
                       onTap: () async {
                         final controller = TextEditingController();
-                        final name = await showDialog<String>(
+                        final name = await showIslandDialog<String>(
                           context: context,
-                          builder: (d) => AlertDialog(
+                          builder: (d) => IslandAlert(
                             title: const Text('Nome do acompanhante'),
                             content: TextField(controller: controller, autofocus: true, textCapitalization: TextCapitalization.words),
                             actions: [
@@ -427,7 +428,7 @@ class _GuestProfileBody extends ConsumerWidget {
   }
 
   void _editMe(BuildContext context, WidgetRef ref, Guest guest) {
-    showModalBottomSheet<void>(
+    showIslandSheet<void>(
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
