@@ -43,8 +43,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
+      // Lista invertida: a mensagem mais recente está no offset 0.
       _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
+        0,
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
       );
@@ -113,8 +114,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
           Expanded(
             child: chat.loading && chat.messages.isEmpty
                 ? const Center(child: CircularProgressIndicator())
+                // Invertida para abrir SEMPRE nas mensagens mais recentes
+                // (antes saltava para o fim com animação e, com cartões
+                // a crescer depois de desenhados, ficava a meio —
+                // reportado 2026-10-18).
                 : ListView(
                     controller: _scrollController,
+                    reverse: true,
                     padding: const EdgeInsets.all(16),
                     children: chatTimeline(
                       messages: chat.messages,
@@ -129,7 +135,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               child: ChatBubble(text: message.text ?? '', isMe: isMe),
                             )
                           : ChatBubble(text: message.text ?? '', isMe: isMe),
-                    ),
+                    ).reversed.toList(),
                   ),
           ),
           ChatComposer(controller: _messageController, onSend: _send),
@@ -157,6 +163,35 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
   bool _accepting = false;
   bool _accepted = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Estado real da proposta logo ao abrir: uma proposta já aceite (ou
+    // recusada) mostrava "Aceitar" e tocar não fazia nada visível
+    // (reportado 2026-10-18).
+    final id = widget.message.proposalId;
+    if (id != null) {
+      fetchProposalStatus(id).then((status) {
+        if (!mounted || status == null) return;
+        setState(() {
+          _accepted = status == 'accepted';
+          _unavailable = status != 'sent' && status != 'accepted';
+        });
+      }).catchError((_) {});
+    }
+  }
+
+  bool _unavailable = false;
+
+  void _acceptedFeedback() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Proposta aceite! Paga o sinal nas Reservas para confirmar.'),
+        action: SnackBarAction(label: 'Reservas', onPressed: () => context.push('/bookings')),
+      ),
+    );
+  }
+
   Future<void> _accept() async {
     setState(() => _accepting = true);
     try {
@@ -165,6 +200,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       ref.invalidate(pendingProposalsProvider);
       ref.invalidate(coupleBookingsProvider);
       setState(() => _accepted = true);
+      _acceptedFeedback();
     } on PostgrestException catch (e) {
       // `P0001` = já não está `sent`. Verifica o estado real em vez de
       // assumir logo um erro — se já foi aceite (ex: pelas Reservas,
@@ -177,8 +213,10 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
           ref.invalidate(pendingProposalsProvider);
           ref.invalidate(coupleBookingsProvider);
           setState(() => _accepted = true);
+          _acceptedFeedback();
           return;
         }
+        if (mounted) setState(() => _unavailable = true);
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -233,11 +271,17 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       note: pct > 0 ? 'Valores com a comissão Tchin Tchin incluída' : null,
       actions: [
         ChatCardAction('Ver detalhe', () => context.push('/bookings')),
-        ChatCardAction(
-          _accepted ? 'Aceite' : (_accepting ? 'A aceitar…' : 'Aceitar'),
-          (_accepting || _accepted) ? null : _accept,
-          primary: true,
-        ),
+        if (_accepted)
+          // Já aceite: o passo seguinte é pagar o sinal nas Reservas.
+          ChatCardAction('Aceite · pagar sinal', () => context.push('/bookings'), primary: true)
+        else if (_unavailable)
+          const ChatCardAction('Indisponível', null, primary: true)
+        else
+          ChatCardAction(
+            _accepting ? 'A aceitar…' : 'Aceitar',
+            _accepting ? null : _accept,
+            primary: true,
+          ),
       ],
     );
   }

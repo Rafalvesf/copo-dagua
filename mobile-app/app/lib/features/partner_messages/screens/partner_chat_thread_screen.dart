@@ -38,8 +38,9 @@ class _PartnerChatThreadScreenState
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
+      // Lista invertida: a mais recente está no offset 0.
       _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
+        0,
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
       );
@@ -86,6 +87,8 @@ class _PartnerChatThreadScreenState
                 ? const Center(child: CircularProgressIndicator())
                 : ListView(
                     controller: _scrollController,
+                    // Abre sempre nas mensagens mais recentes (2026-10-18).
+                    reverse: true,
                     padding: const EdgeInsets.all(16),
                     children: chatTimeline(
                       messages: chat.messages,
@@ -99,7 +102,7 @@ class _PartnerChatThreadScreenState
                               deposit: message.proposalDepositAmount,
                             )
                           : ChatBubble(text: message.text ?? '', isMe: isMe),
-                    ),
+                    ).reversed.toList(),
                   ),
           ),
           ChatComposer(controller: _messageController, onSend: _send),

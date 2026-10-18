@@ -456,6 +456,11 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
       await acceptProposal(widget.proposal.id);
       ref.invalidate(pendingProposalsProvider);
       ref.invalidate(coupleBookingsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Proposta aceite! Paga o sinal abaixo para confirmar a reserva.')),
+        );
+      }
     } on PostgrestException catch (e) {
       // `P0001` = `accept_proposal()` já não aceita esta proposta
       // (`invalid_state`). Verifica o estado real antes de mostrar
