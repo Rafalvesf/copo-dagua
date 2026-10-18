@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/guest_offers/guest_offers.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
@@ -258,6 +259,7 @@ class _GuestHomeBody extends ConsumerWidget {
             ),
           ],
         ),
+        _StayCard(weddingId: wedding.weddingId),
       ],
     );
   }
@@ -593,6 +595,58 @@ class _CountdownBox extends StatelessWidget {
         const SizedBox(height: 2),
         Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs)),
       ],
+    );
+  }
+}
+
+/// Alojamento e transporte que o organizador preparou (só aparece quando
+/// há alguma opção). O convidado reserva e paga na app.
+class _StayCard extends ConsumerWidget {
+  final String weddingId;
+  const _StayCard({required this.weddingId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final offers = ref.watch(guestOffersProvider(weddingId)).asData?.value ?? const <GuestOffer>[];
+    if (offers.isEmpty) return const SizedBox.shrink();
+    final hasLodging = offers.any((o) => o.kind == GuestOfferKind.lodging);
+    final hasTransport = offers.any((o) => o.kind == GuestOfferKind.transport);
+    final subtitle = [if (hasLodging) 'Quartos com desconto', if (hasTransport) 'lugar no transporte'].join(' e ');
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: SnappyTap(
+        onTap: () => context.push('/guest-stay/$weddingId'),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(20)),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                child: Icon(hasLodging ? Icons.hotel_outlined : Icons.directions_bus_outlined, size: 20, color: AppTheme.accentOliveDark),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Alojamento e transporte',
+                        style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    const SizedBox(height: 2),
+                    Text('$subtitle · reserva e paga aqui',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppTheme.inkMuted),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

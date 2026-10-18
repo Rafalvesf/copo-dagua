@@ -8,6 +8,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/reviews/review_providers.dart';
+import '../../../core/wedding/wedding_controller.dart';
+import '../../guest_offers/widgets/organizer_guest_offers.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../features/partner_bookings/booking_style.dart';
@@ -22,11 +24,21 @@ import '../../../shared/money.dart';
 /// `_BookingsSection` no dashboard (`home_feed_screen.dart`); este ecrã é
 /// a versão completa, com todas as reservas em vez de só um resumo.
 /// Ver `mobile-app/bookings/README.md` — sem motor real ligado ainda.
-class CoupleBookingsScreen extends ConsumerWidget {
-  const CoupleBookingsScreen({super.key});
+class CoupleBookingsScreen extends ConsumerStatefulWidget {
+  /// Abre diretamente no separador "Convidados" (alojamento e transporte).
+  final bool guestsTab;
+  const CoupleBookingsScreen({super.key, this.guestsTab = false});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CoupleBookingsScreen> createState() => _CoupleBookingsScreenState();
+}
+
+class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
+  late bool _guests = widget.guestsTab;
+
+  @override
+  Widget build(BuildContext context) {
+    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
     final bookingsAsync = ref.watch(coupleBookingsProvider);
     final proposalsAsync = ref.watch(pendingProposalsProvider);
 
@@ -39,9 +51,21 @@ class CoupleBookingsScreen extends ConsumerWidget {
             const PageHeader(
               title: 'Reservas',
               centered: true,
-              subtitle: 'Parceiros contratados para o teu casamento.',
+              subtitle: 'Parceiros contratados e reservas dos convidados.',
             ),
             const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+              child: _TabSwitch(guests: _guests, onChanged: (g) => setState(() => _guests = g)),
+            ),
+            const SizedBox(height: 16),
+            if (_guests)
+              Expanded(
+                child: weddingId == null
+                    ? const SizedBox.shrink()
+                    : OrganizerGuestOffers(weddingId: weddingId),
+              )
+            else
             Expanded(
               child: bookingsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
@@ -788,6 +812,45 @@ class ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Serviços | Convidados" — pílula branca com a linha fina verde.
+class _TabSwitch extends StatelessWidget {
+  final bool guests;
+  final ValueChanged<bool> onChanged;
+  const _TabSwitch({required this.guests, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppTheme.accentOliveDark;
+    Widget tab(String label, bool selected, bool value) => Expanded(
+          child: Semantics(
+            selected: selected,
+            button: true,
+            child: GestureDetector(
+              onTap: () => onChanged(value),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: selected ? c : Colors.transparent, borderRadius: BorderRadius.circular(999)),
+                child: Text(label,
+                    style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.inkMuted)),
+              ),
+            ),
+          ),
+        );
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: c.withValues(alpha: 0.45)),
+        boxShadow: const [BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6))],
+      ),
+      child: Row(children: [tab('Serviços', !guests, false), const SizedBox(width: 4), tab('Convidados', guests, true)]),
     );
   }
 }

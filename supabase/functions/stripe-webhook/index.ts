@@ -41,11 +41,27 @@ Deno.serve(async (req) => {
   try {
     switch (event.type) {
       case "checkout.session.completed": {
-        const session = event.data.object as { id: string; payment_intent: string | { id: string } | null };
+        const session = event.data.object as {
+          id: string;
+          payment_intent: string | { id: string } | null;
+          metadata?: Record<string, string> | null;
+        };
         const paymentIntentId =
           typeof session.payment_intent === "string"
             ? session.payment_intent
             : session.payment_intent?.id ?? session.id;
+        // Reservas dos convidados (alojamento/transporte, 099_guest_offers.sql).
+        if (session.metadata?.kind === "guest_reservation") {
+          const { error } = await supabase.rpc("confirm_guest_reservation_payment", {
+            p_session_id: session.id,
+            p_payment_intent_id: paymentIntentId,
+          });
+          if (error) {
+            console.error("confirm_guest_reservation_payment failed", error);
+            return new Response("db error", { status: 500 });
+          }
+          break;
+        }
         const { error } = await supabase.rpc("confirm_stripe_deposit_payment", {
           p_session_id: session.id,
           p_payment_intent_id: paymentIntentId,

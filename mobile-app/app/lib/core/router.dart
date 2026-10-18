@@ -11,6 +11,7 @@ import '../features/auth/screens/verify_email_screen.dart';
 import '../features/auth/screens/welcome_screen.dart';
 import '../features/bookings/screens/couple_booking_detail_screen.dart';
 import '../features/bookings/screens/couple_bookings_screen.dart';
+import '../features/guest_offers/screens/guest_offers_screen.dart';
 import '../features/budget/screens/budget_screen.dart';
 import '../features/chat/screens/chat_list_screen.dart';
 import '../features/chat/screens/chat_thread_screen.dart';
@@ -294,6 +295,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             GuestProfileScreen(weddingId: state.pathParameters['weddingId']),
       ),
       GoRoute(
+        // Alojamento e transporte para os convidados (099_guest_offers.sql).
+        path: '/guest-stay/:weddingId',
+        builder: (context, state) => GuestOffersScreen(weddingId: state.pathParameters['weddingId']!),
+      ),
+      GoRoute(
         path: '/guest-gallery',
         builder: (context, state) => const GuestGalleryScreen(),
       ),
@@ -441,7 +447,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/bookings',
-        builder: (context, state) => const CoupleBookingsScreen(),
+        builder: (context, state) => CoupleBookingsScreen(guestsTab: state.uri.queryParameters['convidados'] == '1'),
       ),
       GoRoute(
         path: '/bookings/detail',
