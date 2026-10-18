@@ -126,6 +126,11 @@
     window.tchinSetThemeColor = function (c) {
       var m = document.querySelector('meta[name="theme-color"]');
       if (m) m.setAttribute('content', c);
+      // Safari 26 (iOS) já não usa o theme-color: pinta a barra do topo
+      // com o fundo da página. Por isso o fundo do html/body acompanha a
+      // cor (verde no brinde, branco no resto) — 2026-10-18.
+      document.documentElement.style.background = c;
+      document.body.style.background = c;
     };
     (function () {
       var colors = ['#4F6B4A', '#F2D98D', '#F3C9CF', '#A9BC8F', '#E8B44C', '#DDE5D3', '#F3B9C1'];
