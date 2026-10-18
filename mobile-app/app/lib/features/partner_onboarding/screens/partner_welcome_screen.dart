@@ -20,6 +20,7 @@ import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/pronto_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
+import '../../../shared/widgets/onboarding_exit.dart';
 
 /// Primeiro ecrã visto por uma conta de parceiro recém-registada.
 ///
@@ -120,6 +121,12 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
   // assim que é escolhida, não fica à espera de [_finish].
   List<PortfolioItem> _portfolioItems = const [];
   bool _portfolioBusy = false;
+
+  // Registo ainda sem conta: fotos e pacotes ficam em memória e só são
+  // enviados no fim, depois de criar a conta (2026-10-18).
+  final Map<String, ({XFile file, Uint8List bytes})> _localMedia = {};
+  int _localSeq = 0;
+  bool get _deferred => ref.read(authControllerProvider.notifier).hasPendingSignup;
   bool _nationwide = false;
   final _otherArea = TextEditingController();
 
@@ -222,10 +229,24 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
     });
   }
 
+  PortfolioItem _localItem(XFile file, Uint8List bytes, PortfolioMediaType type) {
+    final id = 'local-${_localSeq++}';
+    _localMedia[id] = (file: file, bytes: bytes);
+    return PortfolioItem(id: id, partnerId: '', mediaUrl: '', mediaType: type, position: _portfolioItems.length);
+  }
+
   Future<void> _addPortfolioImages() async {
     final picker = ImagePicker();
     final files = await picker.pickMultiImage(imageQuality: 85);
     if (files.isEmpty) return;
+    if (_deferred) {
+      final added = <PortfolioItem>[];
+      for (final f in files) {
+        added.add(_localItem(f, await f.readAsBytes(), PortfolioMediaType.image));
+      }
+      if (mounted) setState(() => _portfolioItems = [..._portfolioItems, ...added]);
+      return;
+    }
     setState(() => _portfolioBusy = true);
     var position = _portfolioItems.length;
     try {
@@ -250,6 +271,11 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
     final picker = ImagePicker();
     final file = await picker.pickVideo(source: ImageSource.gallery);
     if (file == null) return;
+    if (_deferred) {
+      final item = _localItem(file, Uint8List(0), PortfolioMediaType.video);
+      if (mounted) setState(() => _portfolioItems = [..._portfolioItems, item]);
+      return;
+    }
     setState(() => _portfolioBusy = true);
     try {
       await uploadPortfolioMedia(file: file, mediaType: PortfolioMediaType.video, position: _portfolioItems.length);
@@ -267,6 +293,11 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
   }
 
   Future<void> _removePortfolioItem(PortfolioItem item) async {
+    if (item.id.startsWith('local-')) {
+      _localMedia.remove(item.id);
+      setState(() => _portfolioItems = _portfolioItems.where((i) => i.id != item.id).toList());
+      return;
+    }
     setState(() => _portfolioBusy = true);
     try {
       await removePortfolioItem(item);
@@ -285,6 +316,10 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
 
   Future<void> _setPricingMode(String mode) async {
     if (_pricingMode == mode) return;
+    if (_deferred) {
+      setState(() => _pricingMode = mode);
+      return;
+    }
     setState(() => _pricingBusy = true);
     try {
       await setPartnerPricingMode(mode);
@@ -304,6 +339,21 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
   Future<void> _addPackage() async {
     final result = await showEditPackageSheet(context);
     if (result == null) return;
+    if (_deferred) {
+      setState(() => _packages = [
+            ..._packages,
+            ServicePackage(
+              id: 'local-${_localSeq++}',
+              partnerId: '',
+              name: result.name,
+              description: result.description,
+              price: result.price,
+              isStartingPrice: result.isStartingPrice,
+              position: _packages.length,
+            ),
+          ]);
+      return;
+    }
     setState(() => _pricingBusy = true);
     try {
       await addServicePackage(
@@ -327,6 +377,10 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
   }
 
   Future<void> _removePackage(ServicePackage pkg) async {
+    if (pkg.id.startsWith('local-')) {
+      setState(() => _packages = _packages.where((p) => p.id != pkg.id).toList());
+      return;
+    }
     setState(() => _pricingBusy = true);
     try {
       await removeServicePackage(pkg.id);
@@ -368,6 +422,30 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
   Future<void> _finish() async {
     setState(() => _saving = true);
     try {
+      // A conta é criada agora, mesmo antes do "Perfil enviado!".
+      final auth = ref.read(authControllerProvider.notifier);
+      if (auth.hasPendingSignup) {
+        await auth.commitSignup();
+        if (_pricingMode != 'quote_only') await setPartnerPricingMode(_pricingMode);
+        for (final (i, pkg) in _packages.where((p) => p.id.startsWith('local-')).indexed) {
+          await addServicePackage(
+            name: pkg.name,
+            description: pkg.description,
+            price: pkg.price,
+            isStartingPrice: pkg.isStartingPrice,
+            position: i,
+          );
+        }
+        var pos = 0;
+        for (final item in _portfolioItems) {
+          final local = _localMedia[item.id];
+          if (local == null) continue;
+          await uploadPortfolioMedia(file: local.file, mediaType: item.mediaType, position: pos++);
+        }
+        _localMedia.clear();
+        ref.invalidate(partnerPortfolioProvider);
+        ref.invalidate(partnerPricingProvider);
+      }
       final selectedCategories = _categoryOptions
           .where((o) => _selectedCategoryIds.contains(o.id))
           .toList();
@@ -397,6 +475,10 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
       // Pedido do utilizador (2026-10-17): "anima o perfil enviado" — ecrã
       // "Perfil enviado!" (avião de papel → visto) antes do painel.
       setState(() => _sent = true);
+    } on SignupFailed catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -436,7 +518,10 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
       );
     }
     if (_step == _Step.intro) {
-      return _IntroView(onStart: () => setState(() => _stepIndex++));
+      return _IntroView(
+        onStart: () => setState(() => _stepIndex++),
+        onExit: () => exitOnboarding(context, ref),
+      );
     }
 
     // Canvas "Parceiro 1–7": branco, voltar redondo, "Passo X de N",
@@ -728,11 +813,13 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                                   alignment: Alignment.center,
                                   child: const Icon(Icons.play_circle_outline, color: Colors.white, size: 28),
                                 )
-                              : Image.network(
-                                  item.mediaUrl,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (c, e, st) => Container(color: const Color(0xFFDDE5D3)),
-                                ),
+                              : _localMedia[item.id] != null
+                                  ? Image.memory(_localMedia[item.id]!.bytes, fit: BoxFit.cover)
+                                  : Image.network(
+                                      item.mediaUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (c, e, st) => Container(color: const Color(0xFFDDE5D3)),
+                                    ),
                           Positioned(
                             top: 4,
                             right: 4,
@@ -928,8 +1015,9 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
 
 class _IntroView extends StatelessWidget {
   final VoidCallback onStart;
+  final VoidCallback onExit;
 
-  const _IntroView({required this.onStart});
+  const _IntroView({required this.onStart, required this.onExit});
 
   @override
   Widget build(BuildContext context) {
@@ -941,6 +1029,8 @@ class _IntroView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Seta para sair do registo (nada fica gravado).
+              SizedBox(height: 44, child: Align(alignment: Alignment.centerLeft, child: CircleBackButton(onTap: onExit))),
               Expanded(
                 child: Center(
                   child: Column(

@@ -18,6 +18,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_onboarding/screens/partner_welcome_screen.dart';
 import '../../../shared/widgets/pronto_kit.dart';
+import '../../../shared/widgets/onboarding_exit.dart';
 
 /// Onboarding do organizador — uma pergunta por ecrã, igual ao canvas
 /// aprovado (redesign 2026-10): tipo de evento, nome (+ par num
@@ -154,6 +155,16 @@ class _OnboardingWizardScreenState
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
+      // A conta só é criada agora, mesmo antes do "Pronto".
+      final auth = ref.read(authControllerProvider.notifier);
+      if (auth.hasPendingSignup) {
+        await auth.commitSignup();
+        final id = ref.read(authControllerProvider).profile?.id;
+        if (id != null && id.isNotEmpty) {
+          await ref.read(weddingControllerProvider.notifier).load(id);
+        }
+        if (!mounted) return;
+      }
       final existing = ref.read(weddingControllerProvider).wedding;
       final wedding = existing ??
           await ref.read(weddingControllerProvider.notifier).create(
@@ -196,6 +207,10 @@ class _OnboardingWizardScreenState
         _createdWedding = wedding;
         _saving = false;
       });
+    } on SignupFailed catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -293,10 +308,9 @@ class _OnboardingWizardScreenState
                 height: 44,
                 child: Row(
                   children: [
-                    if (_step > 0)
-                      CircleBackButton(onTap: _back)
-                    else
-                      const SizedBox(width: 44),
+                    // Seta sempre visível: volta um passo, ou sai do
+                    // registo no primeiro (sem gravar nada).
+                    CircleBackButton(onTap: _step > 0 ? _back : () => exitOnboarding(context, ref)),
                     const Spacer(),
                     if (_skippable.contains(_current))
                       TextButton(

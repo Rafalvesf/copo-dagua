@@ -384,7 +384,13 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                 height: 44,
                 child: Row(
                   children: [
-                    if (_index > 0) CircleBackButton(onTap: () => setState(() => _index--)),
+                    // Seta sempre visível (2026-10-18): volta um passo ou,
+                    // no primeiro, sai para o início do evento.
+                    CircleBackButton(
+                      onTap: _index > 0
+                          ? () => setState(() => _index--)
+                          : () => context.go('/guest-home/${widget.weddingId}'),
+                    ),
                     const Spacer(),
                     if (step == _Step.allergies)
                       TextButton(
