@@ -133,22 +133,28 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                         child: Row(
                           children: [
                             Expanded(
+                              // A linha fina é só a do cartão: o campo não tem
+                              // fundo nem contorno próprios (antes o fundo do
+                              // campo tapava metade da linha — 2026-10-18).
                               child: Container(
+                                height: 46,
+                                alignment: Alignment.center,
                                 decoration: whiteLineCard(radius: AppRadius.pill),
                                 child: TextField(
                                   controller: _search,
-                                  decoration: InputDecoration(
+                                  textAlignVertical: TextAlignVertical.center,
+                                  decoration: const InputDecoration(
                                     hintText: 'Pesquisar convidados...',
-                                    prefixIcon: const Icon(Icons.search, size: 20),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
+                                    prefixIcon: Icon(Icons.search, size: 20),
+                                    filled: false,
+                                    isCollapsed: true,
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    errorBorder: InputBorder.none,
+                                    disabledBorder: InputBorder.none,
+                                    focusedErrorBorder: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 13),
                                   ),
                                 ),
                               ),
