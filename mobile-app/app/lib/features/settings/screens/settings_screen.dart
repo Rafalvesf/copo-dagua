@@ -274,7 +274,6 @@ class _CoupleSettings extends ConsumerWidget {
             label: 'Detalhes do evento',
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EditEventPage(wedding: wedding))),
           ),
-          _Row(icon: Icons.emoji_emotions_outlined, label: 'Ícone da barra', onTap: () => _pickNavIcon(context)),
           _Row(
             icon: Icons.palette_outlined,
             label: 'Aparência do menu',

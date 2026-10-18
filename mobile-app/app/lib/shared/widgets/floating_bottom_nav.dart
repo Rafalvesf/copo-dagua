@@ -5,8 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/chat/chat_list_controller.dart';
 import '../../core/theme/app_theme.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
-import '../../core/wedding/wedding_nav_icon.dart';
 import '../../core/wedding/menu_style.dart';
+import '../../core/wedding/wedding_controller.dart';
+import '../../core/models/models.dart';
 
 enum AppTab { home, partners, chat, wedding }
 
@@ -32,9 +33,12 @@ class FloatingBottomNav extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final weddingIcon = ref.watch(weddingNavIconProvider);
     // A navbar acompanha a cor escolhida em "Aparência do menu" (098).
     final menuColor = ref.watch(currentMenuStyleProvider).color;
+    // Ícone do separador do evento = o símbolo do tipo de evento (pedido
+    // 2026-10-18), em vez da ilustração do casal.
+    final eventType = ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType)) ?? EventType.wedding;
+    final motif = EventDecor.of(eventType).motif;
     final unreadCount = ref
         .watch(unreadMessagesCountProvider)
         .maybeWhen(data: (count) => count, orElse: () => 0);
@@ -81,11 +85,12 @@ class FloatingBottomNav extends ConsumerWidget {
               ),
               Expanded(
                 child: Center(
-                  child: _WeddingNavTab(
-                    assetPath: weddingIcon.assetPath,
-                    zoom: weddingIcon.zoom,
+                  child: _NavIcon(
+                    icon: motif,
+                    activeIcon: motif,
                     active: current == AppTab.wedding,
                     accent: menuColor.color,
+                    onAccent: menuColor.on,
                     onTap: () => context.go('/wedding'),
                   ),
                 ),
@@ -227,57 +232,6 @@ class _UnreadBadge extends StatelessWidget {
           fontSize: AppFontSize.xxxs,
           fontWeight: FontWeight.w700,
           height: 1,
-        ),
-      ),
-    );
-  }
-}
-
-/// Separador "Os noivos" — mesma composição que [_NavIcon] (ícone +
-/// rótulo, ativo a verde-oliva), mas o ícone é a ilustração do casal
-/// escolhida pelo utilizador em vez de um IconData fixo.
-class _WeddingNavTab extends StatelessWidget {
-  final String assetPath;
-  final double zoom;
-  final bool active;
-  final VoidCallback onTap;
-  final Color accent;
-
-  const _WeddingNavTab({
-    required this.assetPath,
-    required this.zoom,
-    required this.active,
-    required this.onTap,
-    this.accent = AppTheme.accentOliveDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: EdgeInsets.symmetric(horizontal: active ? 15 : 2.5, vertical: 2.5),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            color: active ? accent : Colors.transparent,
-          ),
-          child: Opacity(
-          opacity: active ? 1 : 0.55,
-          child: ClipOval(
-            child: SizedBox(
-              width: 37,
-              height: 37,
-              child: Transform.scale(
-                scale: zoom,
-                child: Image.asset(assetPath, fit: BoxFit.cover),
-              ),
-            ),
-          ),
-          ),
         ),
       ),
     );
