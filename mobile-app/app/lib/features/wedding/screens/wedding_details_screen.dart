@@ -73,7 +73,8 @@ const _softShadow = [
 /// ter o conteúdo que antes vivia em `home_feed_screen.dart`
 /// (`HomeFeedScreen`), sem nenhuma alteração ao próprio conteúdo.
 class WeddingDetailsScreen extends ConsumerStatefulWidget {
-  const WeddingDetailsScreen({super.key});
+  final bool startEditing;
+  const WeddingDetailsScreen({super.key, this.startEditing = false});
 
   @override
   ConsumerState<WeddingDetailsScreen> createState() => _WeddingDetailsScreenState();
@@ -89,6 +90,16 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
   int _color = 0;
   PageController? _layoutPager;
   PageController? _colorPager;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.startEditing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && ref.read(weddingControllerProvider).wedding != null) _startEditing();
+      });
+    }
+  }
 
   void _startEditing() {
     final style = ref.read(currentMenuStyleProvider);
@@ -189,23 +200,40 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
       key: const ValueKey('editing'),
       child: Column(
         children: [
+          // X à esquerda, título ao centro e ✓ à direita (pedido
+          // 2026-10-18).
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 0),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
             child: Row(
               children: [
-                TextButton(onPressed: () => _finish(save: false), child: const Text('Cancelar')),
-                const Spacer(),
-                Column(
-                  children: [
-                    Text(layout.label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    Text(color.label, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                  ],
+                IconButton(
+                  tooltip: 'Cancelar',
+                  onPressed: () => _finish(save: false),
+                  style: IconButton.styleFrom(backgroundColor: AppTheme.surface, fixedSize: const Size(44, 44)),
+                  icon: const Icon(Icons.close_rounded, color: AppTheme.ink),
                 ),
-                const Spacer(),
-                FilledButton(
+                Expanded(
+                  child: Column(
+                    children: [
+                      const Text('Aparência do menu',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      Text('${layout.label} · ${color.label}',
+                          textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Guardar',
                   onPressed: _saving ? null : () => _finish(save: true),
-                  style: FilledButton.styleFrom(backgroundColor: color.color, foregroundColor: color.on),
-                  child: const Text('Feito'),
+                  style: IconButton.styleFrom(
+                    backgroundColor: color.color,
+                    disabledBackgroundColor: color.color.withValues(alpha: 0.5),
+                    fixedSize: const Size(44, 44),
+                  ),
+                  icon: _saving
+                      ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: color.on))
+                      : Icon(Icons.check_rounded, color: color.on),
                 ),
               ],
             ),
@@ -295,7 +323,10 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                   selected: selected,
                   label: c.label,
                   child: GestureDetector(
-                    onTap: () => _colorPager!.animateToPage(i, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic),
+                    // Tocar na cor já escolhida (com o ✓) guarda.
+                    onTap: () => selected
+                        ? _finish(save: true)
+                        : _colorPager!.animateToPage(i, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic),
                     child: Center(
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
@@ -1669,13 +1700,11 @@ class _StickersTop extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 14),
-        GridView.count(
-          crossAxisCount: 3,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 18,
-          crossAxisSpacing: 10,
-          childAspectRatio: 0.82,
+        _Grid(
+          columns: 3,
+          rowGap: 18,
+          columnGap: 10,
+          aspectRatio: 0.82,
           children: [
             for (final (i, it) in items.indexed)
               SnappyTap(
@@ -1816,20 +1845,16 @@ class _MuralTop extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 10),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 22,
-          crossAxisSpacing: 18,
-          childAspectRatio: 0.98,
-          clipBehavior: Clip.none,
+        _Grid(
+          columns: 2,
+          rowGap: 22,
+          columnGap: 18,
+          aspectRatio: 0.98,
           children: [
             for (final (i, it) in items.indexed)
               SnappyTap(
                 onTap: () => context.push(it.route),
                 child: Stack(
-                  clipBehavior: Clip.none,
                   alignment: Alignment.topCenter,
                   children: [
                     Transform.rotate(
@@ -1980,20 +2005,16 @@ class _ClotheslineTop extends ConsumerWidget {
         ),
         RepaintBoundary(child: _FilmStrip(date: wedding.weddingDate)),
         const SizedBox(height: 30),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 28,
-          crossAxisSpacing: 14,
-          childAspectRatio: 1.0,
-          clipBehavior: Clip.none,
+        _Grid(
+          columns: 2,
+          rowGap: 28,
+          columnGap: 14,
+          aspectRatio: 1.0,
           children: [
             for (final (i, it) in items.indexed)
               SnappyTap(
                 onTap: () => context.push(it.route),
                 child: Stack(
-                  clipBehavior: Clip.none,
                   alignment: Alignment.topCenter,
                   children: [
                     Container(
@@ -2127,5 +2148,46 @@ class _FilmStripState extends State<_FilmStrip> {
         ],
       ),
     );
+  }
+}
+
+
+/// Grelha simples sem lista que desliza (pedido 2026-10-18: mais leve e
+/// sem slivers, para a pré-visualização do modo de edição).
+class _Grid extends StatelessWidget {
+  final int columns;
+  final double rowGap;
+  final double columnGap;
+  final double aspectRatio;
+  final List<Widget> children;
+
+  const _Grid({
+    required this.columns,
+    required this.rowGap,
+    required this.columnGap,
+    required this.aspectRatio,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var r = 0; r * columns < children.length; r++) {
+      if (r > 0) rows.add(SizedBox(height: rowGap));
+      rows.add(Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var c = 0; c < columns; c++) ...[
+            if (c > 0) SizedBox(width: columnGap),
+            Expanded(
+              child: r * columns + c < children.length
+                  ? AspectRatio(aspectRatio: aspectRatio, child: children[r * columns + c])
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ],
+      ));
+    }
+    return Column(mainAxisSize: MainAxisSize.min, children: rows);
   }
 }
