@@ -181,7 +181,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                             children: [
                               _StatsHero(
                                 totalGuests: invited.length,
-                                seated: seatedIds.length,
+                                seated: invited.length - unseated.length,
                                 totalTables: total,
                                 hasVenue: state.hasVenue,
                               ),
