@@ -13,6 +13,8 @@ import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_widgets.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/green_hero.dart';
+import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/mascot.dart';
@@ -111,6 +113,16 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                         trailing: AddActionButton(onTap: _addGuest),
                       ),
                       Padding(
+                        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),
+                        child: _ListHero(
+                          total: total,
+                          confirmed: state.confirmedCount,
+                          pending: state.pendingCount,
+                          declined: state.declinedCount,
+                          onFilter: (f) => ref.read(guestsControllerProvider.notifier).setFilter(f),
+                        ),
+                      ),
+                      Padding(
                         padding: const EdgeInsets.fromLTRB(
                           AppTheme.screenMargin,
                           16,
@@ -121,10 +133,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                           children: [
                             Expanded(
                               child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                                  boxShadow: AppTheme.searchBarShadow,
-                                ),
+                                decoration: whiteLineCard(radius: AppRadius.pill),
                                 child: TextField(
                                   controller: _search,
                                   decoration: InputDecoration(
@@ -134,9 +143,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                                     fillColor: Colors.white,
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(AppRadius.pill),
-                                      borderSide: BorderSide(
-                                        color: AppTheme.accentOliveDark,
-                                      ),
+                                      borderSide: BorderSide.none,
                                     ),
                                     contentPadding: const EdgeInsets.symmetric(
                                       vertical: 12,
@@ -154,63 +161,6 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                                 onTap: () => _shareInvite(wedding),
                               ),
                             ],
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppTheme.screenMargin,
-                          14,
-                          AppTheme.screenMargin,
-                          0,
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              flex: 20,
-                              child: _StatTile(
-                                icon: Icons.check_circle_outline,
-                                iconColor: AppStatusColors.confirmed,
-                                value: '${state.confirmedCount}',
-                                label: 'Confirmados',
-                                percentOf: total,
-                                onTap: () => ref
-                                    .read(guestsControllerProvider.notifier)
-                                    .setFilter(GuestFilter.confirmed),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              // 105% da largura das outras duas (flex 21
-                              // contra flex 20).
-                              flex: 21,
-                              child: _StatTile(
-                                icon: Icons.groups_outlined,
-                                iconColor: Colors.white,
-                                value: '$total',
-                                label: 'Todos',
-                                big: true,
-                                background: AppColors.greenDark,
-                                onTap: () => ref
-                                    .read(guestsControllerProvider.notifier)
-                                    .setFilter(GuestFilter.all),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              flex: 20,
-                              child: _StatTile(
-                                icon: Icons.cancel_outlined,
-                                iconColor: AppStatusColors.declined,
-                                value: '${state.declinedCount}',
-                                label: 'Recusaram',
-                                percentOf: total,
-                                onTap: () => ref
-                                    .read(guestsControllerProvider.notifier)
-                                    .setFilter(GuestFilter.declined),
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -281,76 +231,88 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
   }
 }
 
-class _StatTile extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String value;
-  final String label;
-  final int? percentOf;
-  final VoidCallback? onTap;
-  final bool big;
-  final Color? background;
+/// Canvas "Convidados — redesign": cartão verde "A VOSSA LISTA" com a
+/// barra dividida e três chips brancos (tocar filtra a lista).
+int _flex(int v) => v < 1 ? 1 : v;
 
-  const _StatTile({
-    required this.icon,
-    required this.iconColor,
-    required this.value,
-    required this.label,
-    this.percentOf,
-    this.onTap,
-    this.big = false,
-    this.background,
+class _ListHero extends StatelessWidget {
+  final int total;
+  final int confirmed;
+  final int pending;
+  final int declined;
+  final ValueChanged<GuestFilter> onFilter;
+
+  const _ListHero({
+    required this.total,
+    required this.confirmed,
+    required this.pending,
+    required this.declined,
+    required this.onFilter,
   });
 
   @override
   Widget build(BuildContext context) {
-    final total = percentOf;
-    final pct = total == null || total == 0
-        ? null
-        : ((int.parse(value) / total) * 100).round();
-    // Fundo de destaque forte (verde escuro) pede texto branco para
-    // continuar legível — os restantes tiles mantêm o texto normal.
-    final isDark = background == AppColors.greenDark;
+    Widget chip(String label, int n, Color dot, GuestFilter f) => Expanded(
+          child: SnappyTap(
+            onTap: () => onFilter(f),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(width: 8, height: 8, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text('$n', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ],
+              ),
+            ),
+          ),
+        );
+    final t = total == 0 ? 1 : total;
     return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: big ? 13 : 12, horizontal: 8),
-        decoration: BoxDecoration(
-          color: background ?? AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        child: Column(
+      onTap: () => onFilter(GuestFilter.all),
+      child: GreenHero(
+        label: 'A VOSSA LISTA',
+        value: '$total',
+        suffix: total == 1 ? 'convidado' : 'convidados',
+        doodles: const [Icons.people_outline, Icons.favorite_border, Icons.wine_bar_outlined],
+        footer: Column(
           children: [
-            Icon(icon, size: big ? 19 : 18, color: iconColor),
-            SizedBox(height: big ? 7 : 6),
-            Text(
-              value,
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: big ? 21 : 17,
-                color: isDark ? Colors.white : null,
-              ),
-            ),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: big ? 10 : 9.5,
-                color: isDark ? Colors.white70 : AppTheme.inkMuted,
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (pct != null)
-              Text(
-                '$pct%',
-                style: TextStyle(
-                  fontSize: AppFontSize.xxxs,
-                  color: iconColor,
-                  fontWeight: FontWeight.w700,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: SizedBox(
+                height: 10,
+                child: Row(
+                  children: [
+                    if (confirmed > 0) Expanded(flex: _flex(confirmed * 1000 ~/ t), child: Container(color: Colors.white)),
+                    if (pending > 0) Expanded(flex: _flex(pending * 1000 ~/ t), child: Container(color: Colors.white.withValues(alpha: 0.55))),
+                    Expanded(flex: _flex(1000 - (confirmed + pending) * 1000 ~/ t), child: Container(color: Colors.white.withValues(alpha: 0.28))),
+                  ],
                 ),
               ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                chip('Sim', confirmed, AppStatusColors.confirmed, GuestFilter.confirmed),
+                const SizedBox(width: 8),
+                chip('Por responder', pending, AppStatusColors.pending, GuestFilter.pending),
+                const SizedBox(width: 8),
+                chip('Não', declined, AppStatusColors.declined, GuestFilter.declined),
+              ],
+            ),
           ],
         ),
       ),

@@ -179,7 +179,7 @@ class _AuthFieldState extends State<AuthField> {
                 color: error ? AppStatusColors.declined : (focused ? AppTheme.accentOliveDark : Colors.transparent),
                 width: 1.5,
               ),
-              boxShadow: focused ? const [BoxShadow(color: Color(0x1F5F7545), spreadRadius: 4)] : null,
+              boxShadow: focused ? const [BoxShadow(color: Color(0x1F4F6B4A), spreadRadius: 4)] : null,
             ),
             child: Row(
               children: [

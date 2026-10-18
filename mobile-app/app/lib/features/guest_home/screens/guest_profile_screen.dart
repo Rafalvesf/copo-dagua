@@ -548,7 +548,7 @@ class _PersonLine extends StatelessWidget {
           CircleAvatar(
             radius: 20,
             backgroundColor: color,
-            child: Text(initials, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
+            child: Text(initials, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
           ),
           const SizedBox(width: 12),
           Expanded(

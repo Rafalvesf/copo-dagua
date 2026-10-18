@@ -15,6 +15,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../features/partner_bookings/booking_style.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/green_hero.dart';
+import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/money.dart';
@@ -89,23 +91,33 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                       140,
                     ),
                     children: [
+                      // Canvas "Reservas — redesign": cartão verde com os
+                      // serviços tratados (sinal pago ou mais).
+                      Builder(builder: (context) {
+                        final active = bookings.where((b) => b.status != BookingStatus.recusado).toList();
+                        final handled = active.where((b) => b.paidAmount > 0 || b.status == BookingStatus.concluido).length;
+                        final urgent = active.where((b) => b.pendingDepositPaymentId != null || b.pendingFinalPaymentId != null).length;
+                        return GreenHero(
+                          label: 'SERVIÇOS TRATADOS',
+                          value: '$handled',
+                          suffix: 'de ${active.length} ${active.length == 1 ? 'serviço' : 'serviços'}',
+                          progress: active.isEmpty ? 0 : handled / active.length,
+                          doodles: const [Icons.work_outline, Icons.photo_camera_outlined, Icons.music_note_outlined],
+                          footer: Wrap(spacing: 8, runSpacing: 8, children: [
+                            HeroPill('$urgent ${urgent == 1 ? 'pagamento urgente' : 'pagamentos urgentes'}', solid: true),
+                            HeroPill('${proposals.length} ${proposals.length == 1 ? 'proposta' : 'propostas'}'),
+                          ]),
+                        );
+                      }),
                       if (proposals.isNotEmpty) ...[
-                        Text(
-                          'Propostas recebidas',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: AppFontSize.lg,
-                            color: AppTheme.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
+                        const SectionTitle('Propostas recebidas'),
                         for (final proposal in proposals)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: _ProposalRow(proposal: proposal),
                           ),
-                        const SizedBox(height: 8),
                       ],
+                      if (bookings.isNotEmpty) const SectionTitle('Os vossos serviços'),
                       for (final booking in bookings)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -276,24 +288,13 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
       ),
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
+        decoration: whiteLineCard(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.green,
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                  child: Icon(_icon, size: 18, color: AppTheme.ink),
-                ),
+                StickerIcon(_icon, turns: StickerIcon.tilt(booking.id.hashCode)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -508,13 +509,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
 
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: AppTheme.accentOliveDark.withValues(alpha: 0.4),
-        ),
-      ),
+      decoration: whiteLineCard(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

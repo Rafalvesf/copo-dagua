@@ -37,7 +37,7 @@ class AppTheme {
   /// Verde principal da marca — cor única de acento (botões primários,
   /// estados ativos, barras de progresso). [accentOlive] e
   /// [accentOliveDark] eram dois tons; unificados num só verde.
-  static const brandGreen = Color(0xFF5F7545);
+  static const brandGreen = Color(0xFF4F6B4A);
 
   /// Cor de acento atual: o verde da marca, ou a cor escolhida pelo
   /// organizador em "Aparência do menu" (pedido 2026-10-18: "quando mudas

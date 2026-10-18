@@ -303,7 +303,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                   decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(999)),
-                                  child: const Text('Anfitrião', style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: Color(0xFF4A5D35))),
+                                  child: const Text('Anfitrião', style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
                                 ),
                               ],
                             ],

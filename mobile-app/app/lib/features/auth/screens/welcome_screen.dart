@@ -51,7 +51,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       if (green != _barGreen) {
         _barGreen = green;
         if (green) {
-          lockBarColor(AppTheme.accentOliveDark);
+          lockBarColor(TchinSplash.eucalyptus);
         } else {
           unlockBarColor();
         }
@@ -77,7 +77,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
         return;
       }
       _barGreen = true;
-      lockBarColor(AppTheme.accentOliveDark);
+      lockBarColor(TchinSplash.eucalyptus);
       _driver.start();
     }
   }

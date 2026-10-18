@@ -9,6 +9,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
+import '../../../shared/widgets/green_hero.dart';
+import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -134,7 +136,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                 children: [
                   PageHeader(
                     title: 'Tarefas',
-                    subtitle: 'O plano guia-vos, vocês executam.',
                     // Redesign 2026-10: mesmo topo que Orçamento/Lugares —
                     // voltar · título ao centro · "+".
                     centered: true,
@@ -143,9 +144,29 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                     ),
                   ),
                   Padding(
+                    padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),
+                    child: Builder(builder: (context) {
+                      final total = state.systemActive.length +
+                          state.userTasks.where((t) => t.status == TaskStatus.active).length +
+                          doneItems.length;
+                      return GreenHero(
+                        label: 'O VOSSO PLANO',
+                        value: '${doneItems.length}',
+                        suffix: 'de $total feitas',
+                        progress: total == 0 ? 0 : doneItems.length / total,
+                        doodles: const [Icons.checklist_rounded, Icons.favorite_border, Icons.auto_awesome_outlined],
+                        footer: Transform.rotate(
+                          angle: -0.035,
+                          alignment: Alignment.centerLeft,
+                          child: const HeroPill('O plano guia-vos, vocês executam', solid: true),
+                        ),
+                      );
+                    }),
+                  ),
+                  Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppTheme.screenMargin,
-                      16,
+                      8,
                       AppTheme.screenMargin,
                       0,
                     ),
@@ -153,11 +174,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Próximas tarefas',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: 12),
+                              const SectionTitle('Próximas tarefas'),
                               if (state.loading && state.systemActive.isEmpty)
                                 const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 20),
@@ -169,29 +186,25 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(18),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.surface,
-                                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                                  ),
+                                  decoration: whiteLineCard(radius: 20),
                                   child: const Text(
                                     'Sem tarefas recomendadas por agora — bom trabalho! 🎉',
                                   ),
                                 )
                               else
-                                for (final task in state.systemActive) ...[
+                                for (final (i, task) in state.systemActive.indexed) ...[
                                   _TaskRow(
                                     task: task,
+                                    index: i,
                                     icon: _iconForCategory(task.category),
                                     color: _priorityColor(task.priority),
                                     onTap: () => _openTask(task),
                                   ),
                                   const SizedBox(height: 10),
                                 ],
-                              const SizedBox(height: 28),
-                              Text(
-                                'As tuas tarefas',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
+                              const SizedBox(height: 4),
+                              const Text('As tuas tarefas',
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                               const SizedBox(height: 4),
                               Text(
                                 'Criadas por vocês — sem limite, sem pressa.',
@@ -207,10 +220,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(18),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.surface,
-                                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                                  ),
+                                  decoration: whiteLineCard(radius: 20),
                                   child: const Text(
                                     'Ainda não criaram nenhuma tarefa vossa.',
                                   ),
@@ -234,14 +244,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              SectionTitle('Feito',
+                                  trailing: Text('${doneItems.length} ${doneItems.length == 1 ? 'tarefa' : 'tarefas'}',
+                                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
                               if (doneItems.isEmpty)
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(18),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.surface,
-                                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                                  ),
+                                  decoration: whiteLineCard(radius: 20),
                                   child: const Text(
                                     'Ainda não concluíram nenhuma tarefa.',
                                   ),
@@ -304,12 +314,14 @@ class _TaskRow extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final int index;
 
   const _TaskRow({
     required this.task,
     required this.icon,
     required this.color,
     required this.onTap,
+    this.index = 0,
   });
 
   // Como "Próximas tarefas" no design: ícone num quadrado verde, ponto
@@ -332,21 +344,10 @@ class _TaskRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(20),
-        ),
+        decoration: whiteLineCard(),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.green,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, size: 18, color: AppTheme.ink),
-            ),
+            StickerIcon(icon, turns: StickerIcon.tilt(index)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -449,21 +450,17 @@ class _DoneTaskRow extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
+      decoration: whiteLineCard(radius: 20),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 26,
+            height: 26,
             decoration: BoxDecoration(
-              color: AppColors.green.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(AppRadius.sm),
+              color: AppTheme.accentOliveDark,
+              borderRadius: BorderRadius.circular(9),
             ),
-            child: Icon(Icons.check_rounded, size: 18, color: AppTheme.ink),
+            child: const Icon(Icons.check_rounded, size: 16, color: Colors.white),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -474,7 +471,9 @@ class _DoneTaskRow extends StatelessWidget {
                   task.title,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: AppFontSize.md,
+                    fontSize: AppFontSize.base,
+                    color: Color(0xFF8F8B84),
+                    decoration: TextDecoration.lineThrough,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -501,10 +500,7 @@ class _UserTaskRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
+      decoration: whiteLineCard(radius: 20),
       child: Row(
         children: [
           SnappyTap(
@@ -513,8 +509,9 @@ class _UserTaskRow extends StatelessWidget {
               width: 26,
               height: 26,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.borderMuted, width: 1.5),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: AppTheme.accentOliveDark, width: 2),
               ),
             ),
           ),

@@ -55,7 +55,7 @@ class GuestFacingScreen extends ConsumerStatefulWidget {
 
 const _line = Color(0xFFE6E0D2);
 const _caps = Color(0xFF8F8B84);
-const _olive = Color(0xFF4A5D35);
+const _olive = Color(0xFF3E5539);
 
 class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
   final _welcome = TextEditingController();

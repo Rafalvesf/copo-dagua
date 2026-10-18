@@ -16,7 +16,7 @@ Limpo e calmo: fundo branco liso, um único verde-oliva como acento, caixas em c
 | `AppTheme.ink` | `#171713` | Texto, ícones |
 | `AppTheme.inkMuted` | = `ink` | Texto secundário — mesmo preto sólido de propósito; a hierarquia faz-se por tamanho/peso, não por cinza |
 | `AppTheme.navIconMuted` | `#57534E` | Só ícones inativos da navbar e ícones de estados vazio/erro |
-| `AppTheme.accentOliveDark` | `#5F7545` | Única cor de acento: botões primários, estado ativo, progresso, spinners |
+| `AppTheme.accentOliveDark` | `#4F6B4A` | Única cor de acento: botões primários, estado ativo, progresso, spinners |
 | `AppTheme.surface` | `#F0F0F0` | Cards e caixas (substitui a sombra) |
 | `AppTheme.borderMuted` | `#E6E0D2` | Contornos subtis (chips, outline, separadores, trilho de progresso) |
 | `AppTheme.outerBackdrop` | `#EAE3D1` | Fundo atrás da moldura de telemóvel em janelas largas |

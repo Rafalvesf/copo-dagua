@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import 'initials_avatar.dart';
 import 'rsvp_status_badge.dart';
 import 'snappy_tap.dart';
+import 'sticker_icon.dart';
 
 /// Fundo fotográfico para cartões de destaque (hero, parceiros): a
 /// foto preenche o cartão todo e um gradiente escuro no fundo garante
@@ -108,6 +109,13 @@ class GuestListItem extends StatelessWidget {
 
   const GuestListItem({super.key, required this.guest, required this.onTap});
 
+  String get _initials {
+    final parts = guest.name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
+
   String get _adultsLabel => guest.maxCompanions == 0 ? '1 pessoa' : '${guest.maxCompanions + 1} pessoas';
 
   @override
@@ -116,18 +124,20 @@ class GuestListItem extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        // Canvas "Convidados — redesign": cartão branco com a linha fina e
+        // avatar redondo branco com a sombra dos autocolantes.
+        decoration: whiteLineCard(radius: 20),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: AppColors.green,
-              backgroundImage: NetworkImage(
-                'https://api.dicebear.com/7.x/notionists/png?seed=${guest.id}',
+            Container(
+              width: 46,
+              height: 46,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: StickerIcon.shadow),
+              child: Text(
+                _initials,
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
               ),
             ),
             const SizedBox(width: 12),
@@ -139,7 +149,7 @@ class GuestListItem extends StatelessWidget {
                     guest.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: AppFontSize.lg,
+                      fontSize: AppFontSize.base + 1,
                       color: AppTheme.ink,
                     ),
                   ),
