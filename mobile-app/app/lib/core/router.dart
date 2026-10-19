@@ -12,6 +12,7 @@ import '../features/auth/screens/welcome_screen.dart';
 import '../features/bookings/screens/couple_booking_detail_screen.dart';
 import '../features/bookings/screens/couple_bookings_screen.dart';
 import '../features/payments/screens/pay_screen.dart';
+import '../features/partner_payments/screens/partner_payout_setup_screen.dart';
 import '../features/payments/screens/pay_done_screen.dart';
 import 'payments/payments.dart' show PayArgs;
 import '../features/guest_offers/screens/guest_offers_screen.dart';
@@ -380,6 +381,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/partner-payments',
         builder: (context, state) => const PartnerPaymentsScreen(),
+      ),
+      GoRoute(
+        path: '/partner-payments/setup',
+        builder: (context, state) => const PartnerPayoutSetupScreen(),
       ),
       GoRoute(
         path: '/partner-venue-tables',

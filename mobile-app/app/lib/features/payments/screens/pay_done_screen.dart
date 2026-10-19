@@ -12,7 +12,29 @@ class PayDoneArgs {
   /// "Sinal" ou "Restante".
   final String title;
   final String amountLabel;
-  const PayDoneArgs({required this.partnerName, required this.title, required this.amountLabel});
+
+  /// Textos próprios (ex.: levantamento do parceiro); por omissão os do
+  /// pagamento do casal.
+  final String? headline;
+  final String? subtitle;
+  final List<(IconData, String)>? lines;
+  final String primaryLabel;
+  final String primaryRoute;
+  final String secondaryLabel;
+  final String secondaryRoute;
+
+  const PayDoneArgs({
+    required this.partnerName,
+    required this.title,
+    required this.amountLabel,
+    this.headline,
+    this.subtitle,
+    this.lines,
+    this.primaryLabel = 'Ver reservas',
+    this.primaryRoute = '/bookings',
+    this.secondaryLabel = 'Voltar ao início',
+    this.secondaryRoute = '/',
+  });
 }
 
 /// Página depois do pagamento feito (pedido 2026-10-19): fundo eucalipto,
@@ -55,7 +77,7 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SingleTickerProvider
                 Align(
                   alignment: Alignment.centerRight,
                   child: IconButton(
-                    onPressed: () => context.go('/bookings'),
+                    onPressed: () => context.go(a.primaryRoute),
                     icon: const Icon(Icons.close_rounded, color: Colors.white),
                   ),
                 ),
@@ -95,7 +117,7 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SingleTickerProvider
                   opacity: fade,
                   child: Column(children: [
                     Text(
-                      deposit ? 'Sinal pago!' : 'Tudo pago!',
+                      a.headline ?? (deposit ? 'Sinal pago!' : 'Tudo pago!'),
                       style: const TextStyle(
                         fontSize: AppFontSize.displayLg,
                         fontWeight: FontWeight.w700,
@@ -105,7 +127,7 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SingleTickerProvider
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${a.amountLabel} para ${a.partnerName}',
+                      a.subtitle ?? '${a.amountLabel} para ${a.partnerName}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: AppFontSize.lg, color: Colors.white),
                     ),
@@ -117,14 +139,18 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SingleTickerProvider
                         borderRadius: BorderRadius.circular(22),
                       ),
                       child: Column(children: [
-                        _Line(
-                          icon: deposit ? Icons.event_available_outlined : Icons.verified_outlined,
-                          text: deposit
-                              ? 'A reserva está confirmada. O restante paga-se depois do serviço.'
-                              : 'A reserva está paga na totalidade.',
-                        ),
-                        const SizedBox(height: 10),
-                        const _Line(icon: Icons.receipt_long_outlined, text: 'Vês este pagamento no Orçamento, em Pagas.'),
+                        for (final (i, (icon, text)) in (a.lines ?? [
+                          (
+                            deposit ? Icons.event_available_outlined : Icons.verified_outlined,
+                            deposit
+                                ? 'A reserva está confirmada. O restante paga-se depois do serviço.'
+                                : 'A reserva está paga na totalidade.',
+                          ),
+                          (Icons.receipt_long_outlined, 'Vês este pagamento no Orçamento, em Pagas.'),
+                        ]).indexed) ...[
+                          if (i > 0) const SizedBox(height: 10),
+                          _Line(icon: icon, text: text),
+                        ],
                       ]),
                     ),
                   ]),
@@ -134,21 +160,21 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SingleTickerProvider
                   width: double.infinity,
                   height: 54,
                   child: FilledButton(
-                    onPressed: () => context.go('/bookings'),
+                    onPressed: () => context.go(a.primaryRoute),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: _green,
                       shape: const StadiumBorder(),
                       textStyle: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
                     ),
-                    child: const Text('Ver reservas'),
+                    child: Text(a.primaryLabel),
                   ),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
-                  onPressed: () => context.go('/'),
-                  child: const Text('Voltar ao início',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  onPressed: () => context.go(a.secondaryRoute),
+                  child: Text(a.secondaryLabel,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                 ),
               ],
             ),
