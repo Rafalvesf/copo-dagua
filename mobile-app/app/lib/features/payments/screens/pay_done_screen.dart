@@ -166,7 +166,7 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProvider
                       backgroundColor: Colors.white,
                       foregroundColor: _green,
                       shape: const StadiumBorder(),
-                      textStyle: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
+                      textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
                     ),
                     child: Text(a.primaryLabel),
                   ),
