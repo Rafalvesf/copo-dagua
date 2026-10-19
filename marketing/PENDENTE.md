@@ -2,8 +2,8 @@
 
 ## Decisões do Rafael
 
-- **Mascote nova**: aprovada. Falta trocar os copos na app (`mobile-app/app/assets/mascot/`), no site e no vídeo.
-- **Domínio**: verificar no Namecheap se `anossa.app`, `a-nossa.app`, `anossa.pt` ou `anossaapp.com` estão livres. A verificação ficou por fazer porque a extensão do Chrome não estava ligada.
+- **Mascote nova**: aplicada na app, no site e no vídeo.
+- **Domínio**: `anossa.app` está livre (confirmado pelo Rafael). Falta registá-lo e apontá-lo para o GitHub Pages. O vídeo já mostra `anossa.app`.
 
 ## Base de dados
 

@@ -452,7 +452,7 @@ SCREENS = {
     'chat': lambda: real('conversa'), 'guest_home': lambda: real('convidado_inicio'), 'guest_program': lambda: real('convidado_programa'),
     'partner_home': lambda: real('painel'), 'partner_requests': lambda: real('pedidos'), 'pay_done': pay_done,
     # desenhados (aprovados): parceiros, perfil do parceiro, galeria
-    'partners': partners, 'partner_profile': partner_profile, 'gallery': gallery,
+    'partners': lambda: real('parceiros'), 'partner_profile': lambda: real('perfil_parceiro'), 'gallery': lambda: real('publicacoes'),
 }
 
 def gallery_grid():

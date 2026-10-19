@@ -119,7 +119,7 @@ html, body {{ margin: 0; background: #111; }}
     <div class="abs" id="tag" style="left:0;top:521px;width:1280px;text-align:center;color:#DDE5D3;font-size:24px;line-height:1.25">Para todas as festas</div>
     <img class="abs" id="duo" src="{img('duo_clink.png')}" style="left:515px;top:140px;width:250px">
     <div class="abs" id="url" style="left:0;top:541px;width:1280px;text-align:center">
-      <span style="display:inline-block;padding:12px 26px;border-radius:99px;background:#fff;color:#4F6B4A;font-weight:700;font-size:19px">rafalvesf.github.io/copo-dagua</span></div>
+      <span style="display:inline-block;padding:12px 26px;border-radius:99px;background:#fff;color:#4F6B4A;font-weight:700;font-size:19px">anossa.app</span></div>
   </div>
 </div>
 <script>
