@@ -111,7 +111,7 @@ footer { background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pad
   /* A barra de topo tem ~64px: tudo o que é fixo começa abaixo dela, e a
      altura usa o ecrã visível (svh) para o cartão de texto não ficar escondido. */
   .pin { height: 100vh; height: 100lvh; --pw: min(calc(56svh / 2.2), 62vw); }
-  .phone { top: 40svh; }
+  .phone { top: calc(40svh + 28px); }
   .txt .ta, .txt .tb { position: static; transform: none !important; width: auto !important; text-align: left !important; }
   .txt { inset: auto 20px calc(24px + 100lvh - var(--vis, 100svh)) 20px; }
   .txt h2 { font-size: 26px; }
