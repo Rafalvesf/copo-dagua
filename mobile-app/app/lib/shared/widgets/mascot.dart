@@ -5,8 +5,9 @@ import 'steady_ticker.dart';
 
 /// Mascote "o Tchin e o Tchin" — duas taças (espumante e rosé).
 /// Pedido do utilizador (2026-10-17): "criar um avatar para a app, como o
-/// duolingo" → escolhida a variante "o Tchin e o Tchin". As poses vêm do
-/// canvas de design, exportadas para `assets/mascot/` (PNG a 3x).
+/// duolingo" → escolhida a variante "o Tchin e o Tchin". Copos novos com
+/// líquido verde aprovados em 2026-10-19: as poses são geradas por
+/// `marketing/mascote/export_png.py` para `assets/mascot/` (PNG a 3x).
 enum MascotPose {
   wave('assets/mascot/duo_wave.png'),
   budget('assets/mascot/duo_budget.png'),
