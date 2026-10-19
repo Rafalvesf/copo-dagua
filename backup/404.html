@@ -112,6 +112,19 @@
     @keyframes ttBurst { 0% { transform: translate(-50%,-50%) scale(0); opacity: 0 } 9% { transform: translate(-50%,-50%) scale(1); opacity: 1 }
       52% { transform: translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--r)); opacity: 1 }
       100% { transform: translate(calc(-50% + var(--dx)*1.1),calc(-50% + var(--dy) + 90px)) rotate(calc(var(--r)*1.6)); opacity: 0 } }
+    /* Ecrã sempre na vertical (2026-10-19): o iPhone não deixa a web
+       travar a rotação, por isso num telemóvel deitado aparece este aviso
+       por cima da app até voltar à vertical. */
+    #tt-rotate { display: none; }
+    @media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+      #tt-rotate { display: flex; position: fixed; inset: 0; z-index: 20; background: #4F6B4A; color: #fff;
+        flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center;
+        font-family: TT, Roboto, sans-serif; padding: 24px; }
+      #tt-rotate svg { animation: ttRot 1.8s ease-in-out infinite; }
+      #tt-rotate b { font-size: 22px; }
+      #tt-rotate span { font-size: 14px; color: #DDE5D3; }
+    }
+    @keyframes ttRot { 0%, 20% { transform: rotate(-90deg) } 60%, 100% { transform: rotate(0deg) } }
   </style>
 </head>
 <body>
@@ -120,8 +133,26 @@
     <span class="t">Para todas as festas</span>
     <span class="prep">A preparar o brinde<b class="d1">.</b><b class="d2">.</b><b class="d3">.</b></span>
   </div>
+  <div id="tt-rotate" role="alert">
+    <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18.5h2"/></svg>
+    <b>Roda o telemóvel</b>
+    <span>O Tchin Tchin funciona na vertical.</span>
+  </div>
   <div id="tt-cf" aria-hidden="true"></div>
   <script>
+    // Android/PWA instalada: tenta travar mesmo a rotação (o iPhone não
+    // deixa — aí fica o aviso acima).
+    (function () {
+      function lock() {
+        try {
+          if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('portrait').catch(function () {});
+          }
+        } catch (e) {}
+      }
+      lock();
+      window.addEventListener('pointerdown', lock, { once: true });
+    })();
     // A app muda a cor da barra do topo conforme o fundo da página.
     // Enquanto a abertura verde cobre o ecrã, a app pode pedir outra cor
     // (o primeiro ecrã desenha-se por baixo): guarda-a e só a aplica
