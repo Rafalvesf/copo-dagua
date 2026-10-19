@@ -44,9 +44,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
-    // Topo das boas-vindas (gradiente verde-claro): a barra fica desta cor
-    // quando a abertura a soltar, em vez de branca.
-    setBarColor(const Color(0xFFDDE5D3));
     if (TchinSplash.farewellPending) {
       TchinSplash.farewellPending = false;
       _farewell = true;
@@ -81,6 +78,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Topo das boas-vindas (gradiente claro): a barra fica desta cor
+    // quando a abertura a soltar, em vez de branca.
+    setRouteBarColor(ModalRoute.of(context), const Color(0xFFE3E6D0));
     // Pedido do utilizador (2026-10-17): a abertura acontece sempre,
     // todas as vezes — mesmo com "reduzir movimento" ligado no telemóvel.
     if (_showSplash && _splash.value == 0 && !_started) {
@@ -98,6 +98,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
 
   @override
   void dispose() {
+    // Se a página sair a meio da abertura (ex.: a sessão é reposta e o
+    // router muda de página), a barra não pode ficar presa ao verde.
+    if (_barGreen) unlockBarColor();
     _driver.dispose();
     _splash.dispose();
     super.dispose();

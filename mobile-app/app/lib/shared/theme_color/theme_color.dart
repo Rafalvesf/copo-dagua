@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+
 import 'theme_color_stub.dart' if (dart.library.js_interop) 'theme_color_web.dart' as impl;
 
 /// Cor da barra do topo do telemóvel (`<meta name="theme-color">` na
@@ -35,6 +36,49 @@ void unlockBarColor([Color? c]) {
   _apply(c ?? _desired);
 }
 
+/// Cor pedida por cada página (rota). Ao mudar de página — entrar, voltar
+/// atrás, substituir — a barra passa logo para a cor da página que fica
+/// visível; páginas que não pedem nada ficam brancas. Antes a barra só
+/// mudava quando uma página com fundo próprio se redesenhava, por isso às
+/// vezes ficava verde (ou outra cor) por cima de páginas brancas
+/// (2026-10-19).
+final Expando<Color> _routeColors = Expando<Color>('barColor');
+
+void setRouteBarColor(Route<dynamic>? route, Color c) {
+  if (route == null) {
+    setBarColor(c);
+    return;
+  }
+  _routeColors[route] = c;
+  if (route.isCurrent) setBarColor(c);
+}
+
+class BarColorObserver extends NavigatorObserver {
+  static const _white = Color(0xFFFFFFFF);
+
+  void _show(Route<dynamic>? route) {
+    // Folhas e diálogos ficam por cima da página: a barra mantém-se.
+    if (route == null || route is! PageRoute) return;
+    setBarColor(_routeColors[route] ?? _white);
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) => _show(route);
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PageRoute) _show(previousRoute);
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PageRoute && !(previousRoute?.isCurrent == false)) _show(previousRoute);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) => _show(newRoute);
+}
+
 void _apply(Color c) {
   final hex = '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
   impl.setThemeColor(hex);
@@ -52,22 +96,18 @@ class BarColorScope extends StatefulWidget {
 }
 
 class _BarColorScopeState extends State<BarColorScope> {
+  // A cor fica presa à página: ao sair dela a barra passa para a cor da
+  // página seguinte ([BarColorObserver]), sem forçar branco.
   @override
-  void initState() {
-    super.initState();
-    setBarColor(widget.color);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setRouteBarColor(ModalRoute.of(context), widget.color);
   }
 
   @override
   void didUpdateWidget(BarColorScope old) {
     super.didUpdateWidget(old);
-    if (old.color != widget.color) setBarColor(widget.color);
-  }
-
-  @override
-  void dispose() {
-    setBarColor(const Color(0xFFFFFFFF));
-    super.dispose();
+    if (old.color != widget.color) setRouteBarColor(ModalRoute.of(context), widget.color);
   }
 
   @override

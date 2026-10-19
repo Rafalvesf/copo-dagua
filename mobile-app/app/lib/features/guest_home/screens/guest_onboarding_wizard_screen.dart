@@ -892,6 +892,7 @@ class _CompanionPage extends StatefulWidget {
 class _CompanionPageState extends State<_CompanionPage> {
   late final _name = TextEditingController(text: widget.existing?.name ?? '');
   late final _age = TextEditingController(text: widget.existing?.age?.toString() ?? '');
+  late final _phone = TextEditingController(text: widget.existing?.phone ?? '');
   late String? _with = widget.existing?.accompaniedBy ?? (widget.others.isEmpty ? null : widget.others.first);
   late String _group = widget.existing?.ageGroup ?? 'adult';
   bool get _child => _group == 'child';
@@ -900,6 +901,7 @@ class _CompanionPageState extends State<_CompanionPage> {
   void dispose() {
     _name.dispose();
     _age.dispose();
+    _phone.dispose();
     super.dispose();
   }
 
@@ -918,8 +920,8 @@ class _CompanionPageState extends State<_CompanionPage> {
         ageGroup: _group,
         age: _child ? int.tryParse(_age.text.trim()) : null,
         accompaniedBy: _adult ? null : _with,
-        willInstall: widget.existing?.willInstall ?? false,
-        phone: widget.existing?.phone ?? '',
+        willInstall: (widget.existing?.willInstall ?? false) || _phone.text.trim().isNotEmpty,
+        phone: _phone.text.trim(),
       ),
     );
   }
@@ -953,6 +955,9 @@ class _CompanionPageState extends State<_CompanionPage> {
         const SizedBox(height: 10),
         _RadioRow(label: 'Sénior', selected: _group == 'senior', onTap: () => setState(() => _group = 'senior')),
         if (_child) AuthField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
+        // Telemóvel do acompanhante (opcional, 2026-10-19): permite-lhe
+        // entrar na app depois e ficar ligado a esta resposta.
+        if (!_child) AuthField(label: 'Telemóvel (opcional)', controller: _phone, keyboardType: TextInputType.phone),
         if (!_adult && widget.others.isNotEmpty) ...[
           const SizedBox(height: 22),
           const Text('Vai com quem?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),

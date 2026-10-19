@@ -321,23 +321,15 @@ class _GuestProfileBody extends ConsumerWidget {
                   if (companions.length < guest.maxCompanions)
                     SnappyTap(
                       onTap: () async {
-                        final controller = TextEditingController();
-                        final name = await showIslandDialog<String>(
-                          context: context,
-                          builder: (d) => IslandAlert(
-                            title: const Text('Nome do acompanhante'),
-                            content: TextField(controller: controller, autofocus: true, textCapitalization: TextCapitalization.words),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.of(d).pop(), child: const Text('Cancelar')),
-                              FilledButton(onPressed: () => Navigator.of(d).pop(controller.text.trim()), child: const Text('Adicionar')),
-                            ],
-                          ),
-                        );
-                        if (name == null || name.isEmpty) return;
+                        // Nome, idade e telemóvel/email (2026-10-19): com o
+                        // contacto o acompanhante pode depois entrar na app
+                        // e ficar ligado a esta resposta.
+                        final added = await _companionSheet(context);
+                        if (added == null) return;
                         await saveGuestCompanions(
                           guestId: guest.id,
                           weddingId: weddingId,
-                          companions: [...companions, GuestCompanion(name: name)],
+                          companions: [...companions, added],
                         );
                         ref.invalidate(guestCompanionsProvider(guest.id));
                       },
@@ -373,8 +365,21 @@ class _GuestProfileBody extends ConsumerWidget {
                     color: AppColors.green,
                     name: c.isChild && c.childAge != null ? '${c.name} · ${c.childAge} anos' : c.name,
                     detail: [c.menu ?? 'Menu por escolher', c.allergies.isEmpty ? 'Sem alergias' : c.allergies.join(', ')].join(' · '),
-                    status: c.phone?.isNotEmpty == true ? 'Telemóvel ${c.phone}' : 'Sem conta — está contigo',
+                    status: c.phone?.isNotEmpty == true ? 'Telemóvel ${c.phone}' : 'Sem contacto',
                     muted: c.phone?.isNotEmpty != true,
+                    onTap: () async {
+                      final edited = await _companionSheet(context, existing: c);
+                      if (edited == null) return;
+                      await saveGuestCompanions(
+                        guestId: guest.id,
+                        weddingId: weddingId,
+                        companions: [
+                          for (final o in companions)
+                            if (!identical(o, c)) o else if (edited.name.isNotEmpty) edited,
+                        ],
+                      );
+                      ref.invalidate(guestCompanionsProvider(guest.id));
+                    },
                   )
               else if (guest.plusOneName?.isNotEmpty == true)
                 _PersonLine(
@@ -715,6 +720,157 @@ class _GuestHeader extends StatelessWidget {
         const SizedBox(height: 8),
         V2Chip(chip),
       ],
+    );
+  }
+}
+
+/// Folha para adicionar/editar um acompanhante depois de criar a conta:
+/// nome, idade e contacto (telemóvel e email). Devolve um acompanhante
+/// com nome vazio quando é para o remover.
+Future<GuestCompanion?> _companionSheet(BuildContext context, {GuestCompanion? existing}) {
+  return showIslandSheet<GuestCompanion>(
+    context: context,
+    isScrollControlled: true,
+    builder: (sheet) => _CompanionForm(existing: existing),
+  );
+}
+
+class _CompanionForm extends StatefulWidget {
+  final GuestCompanion? existing;
+  const _CompanionForm({this.existing});
+
+  @override
+  State<_CompanionForm> createState() => _CompanionFormState();
+}
+
+class _CompanionFormState extends State<_CompanionForm> {
+  late final _name = TextEditingController(text: widget.existing?.name ?? '');
+  late final _phone = TextEditingController(text: widget.existing?.phone ?? '');
+  late final _email = TextEditingController(text: widget.existing?.email ?? '');
+  late final _age = TextEditingController(text: widget.existing?.childAge?.toString() ?? '');
+  late String _group = widget.existing?.ageGroup ?? 'adult';
+  String? _error;
+
+  static const _groups = [('adult', 'Adulto'), ('teen', 'Adolescente'), ('child', 'Criança'), ('senior', 'Sénior')];
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _phone.dispose();
+    _email.dispose();
+    _age.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final name = _name.text.trim();
+    final phone = _phone.text.trim();
+    final email = _email.text.trim();
+    if (name.isEmpty) return setState(() => _error = 'Escreve o nome.');
+    if (phone.isNotEmpty && phone.replaceAll(RegExp(r'[^0-9]'), '').length < 9) {
+      return setState(() => _error = 'O telemóvel parece incompleto.');
+    }
+    if (email.isNotEmpty && !email.contains('@')) return setState(() => _error = 'O email não parece válido.');
+    final e = widget.existing;
+    Navigator.of(context).pop(GuestCompanion(
+      name: name,
+      ageGroup: _group,
+      isChild: _group == 'child',
+      childAge: _group == 'child' ? int.tryParse(_age.text.trim()) : null,
+      phone: phone.isEmpty ? null : phone,
+      email: email.isEmpty ? null : email,
+      menu: e?.menu,
+      allergies: e?.allergies ?? const [],
+      accompaniedBy: e?.accompaniedBy,
+      linkedGuestId: e?.linkedGuestId,
+      willInstallApp: phone.isNotEmpty || email.isNotEmpty || (e?.willInstallApp ?? false),
+    ));
+  }
+
+  InputDecoration _dec(String label, {String? hint}) => InputDecoration(
+        labelText: label,
+        hintText: hint,
+        filled: true,
+        fillColor: const Color(0xFFF6F4EF),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(22, 14, 22, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(color: AppTheme.borderMuted, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(widget.existing == null ? 'Novo acompanhante' : 'Acompanhante',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _name,
+            autofocus: widget.existing == null,
+            textCapitalization: TextCapitalization.words,
+            decoration: _dec('Nome'),
+          ),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final (code, label) in _groups)
+              ChoiceChip(
+                label: Text(label),
+                selected: _group == code,
+                onSelected: (_) => setState(() => _group = code),
+                selectedColor: AppTheme.brandGreen,
+                labelStyle: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: _group == code ? Colors.white : AppTheme.ink,
+                ),
+                showCheckmark: false,
+              ),
+          ]),
+          if (_group == 'child') ...[
+            const SizedBox(height: 12),
+            TextField(controller: _age, keyboardType: TextInputType.number, decoration: _dec('Idade')),
+          ],
+          const SizedBox(height: 12),
+          TextField(
+            controller: _phone,
+            keyboardType: TextInputType.phone,
+            autofillHints: const [AutofillHints.telephoneNumber],
+            decoration: _dec('Telemóvel', hint: '912 345 678'),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _email,
+            keyboardType: TextInputType.emailAddress,
+            decoration: _dec('Email (opcional)'),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Com o telemóvel ou o email, o acompanhante pode entrar na app e fica ligado a esta resposta.',
+            style: TextStyle(fontSize: 12, color: AppTheme.inkMuted, height: 1.4),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(fontSize: 13, color: Color(0xFFB3261E))),
+          ],
+          const SizedBox(height: 18),
+          V2BigButton(label: widget.existing == null ? 'Adicionar acompanhante' : 'Guardar', onTap: _save),
+          if (widget.existing != null)
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(const GuestCompanion(name: '')),
+              style: TextButton.styleFrom(foregroundColor: const Color(0xFFA3412E)),
+              child: const Text('Remover acompanhante', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+        ],
+      ),
     );
   }
 }
