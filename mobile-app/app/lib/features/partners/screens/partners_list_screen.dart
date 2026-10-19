@@ -301,6 +301,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         height: 52,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
+                          clipBehavior: Clip.none,
                           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 6),
                           itemCount: all.length,
                           separatorBuilder: (context, i) => const SizedBox(width: 8),
@@ -313,9 +314,12 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 duration: const Duration(milliseconds: 180),
                                 padding: const EdgeInsets.symmetric(horizontal: 14),
                                 alignment: Alignment.center,
-                                decoration: on
-                                    ? BoxDecoration(color: AppTheme.brandGreen, borderRadius: BorderRadius.circular(999))
-                                    : softCard(radius: 999),
+                                // Sem sombra: a lista horizontal cortava-a e
+                                // ficava uma linha por baixo das pílulas.
+                                decoration: BoxDecoration(
+                                  color: on ? AppTheme.brandGreen : const Color(0xFFF2F0EB),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
                                 child: Text(o?.label ?? 'Todos',
                                     style: TextStyle(
                                         fontSize: 13,
