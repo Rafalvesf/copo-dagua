@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -69,18 +70,19 @@ class GradientScaffold extends StatelessWidget {
     final color = _topColor;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!context.mounted) return;
-      if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
       // Durante a abertura/brinde a barra está presa ao verde; na web
       // `setApplicationSwitcherDescription` também muda o theme-color e
       // deixava a barra branca por cima do brinde (2026-10-18).
-      if (barColorLocked) return;
+      // A cor fica associada a esta página: ao voltar a ela (ou quando a
+      // abertura/brinde soltar a barra) é esta que aparece.
+      setRouteBarColor(ModalRoute.of(context), color);
+      if (barColorLocked || kIsWeb) return;
       SystemChrome.setApplicationSwitcherDescription(
         ApplicationSwitcherDescription(
           label: 'Tchin Tchin',
           primaryColor: color.toARGB32(),
         ),
       );
-      setBarColor(color);
     });
   }
 
