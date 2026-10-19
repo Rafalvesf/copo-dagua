@@ -1,0 +1,25 @@
+name: Fetch marketing photos
+# Descarrega fotos do Unsplash (licença Unsplash) para o site/vídeo de
+# apresentação. Ramo isolado, não toca no master.
+on:
+  push:
+    branches: [marketing-assets]
+    paths: [ids.txt]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p photos
+          while read name id; do
+            [ -z "$name" ] && continue
+            curl -sSfL "https://images.unsplash.com/photo-$id?w=1100&q=78&fm=jpg&fit=max" -o "photos/$name.jpg" || echo "fail $name"
+          done < ids.txt
+          ls -la photos
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git add photos
+          git commit -qm "Fotos" && git push -q || true
