@@ -7,10 +7,12 @@ import { stripeClient } from "../_shared/stripe.ts";
 // configurar), por isso o pagamento ficava "pending" para sempre e o
 // cartão da proposta continuava a dizer "pagar sinal".
 //
-// A app chama isto para os pagamentos pendentes que já têm uma Checkout
-// Session. Lê a sessão DIRETAMENTE na Stripe (fonte de verdade — nada
-// vindo do cliente é aceite como prova de pagamento) e, se estiver paga,
-// confirma com a mesma RPC que o webhook usa. Idempotente.
+// A app chama isto para os pagamentos pendentes que já têm uma tentativa
+// na Stripe — Checkout Session (`cs_…`) ou PaymentIntent do pagamento
+// dentro da app (`pi_…`, 2026-10-19). Lê o estado DIRETAMENTE na Stripe
+// (fonte de verdade — nada vindo do cliente é aceite como prova de
+// pagamento) e, se estiver pago, confirma com a mesma RPC que o webhook
+// usa. Idempotente.
 //
 // Leitura do pagamento com o JWT do casal (RLS): só sincroniza os seus.
 Deno.serve(async (req) => {
@@ -37,7 +39,7 @@ Deno.serve(async (req) => {
   const ids = Array.isArray(body.payment_ids)
     ? (body.payment_ids as unknown[]).filter((x): x is string => typeof x === "string").slice(0, 20)
     : [];
-  if (ids.length === 0) return json({ synced: [] });
+  if (ids.length === 0) return json({ synced: [], states: {} });
 
   const { data: rows } = await supabase
     .from("payments")
@@ -50,18 +52,45 @@ Deno.serve(async (req) => {
   );
   const stripe = stripeClient();
   const synced: string[] = [];
+  // Estado de cada tentativa: paid | processing | awaiting_multibanco | open
+  const states: Record<string, unknown> = {};
 
   for (const p of rows ?? []) {
     const sid = p.provider_payment_id as string | null;
-    if (p.payer_id !== user.id || p.status !== "pending" || !sid?.startsWith("cs_")) continue;
+    if (p.payer_id !== user.id || p.status !== "pending" || !sid) continue;
     try {
-      const session = await stripe.checkout.sessions.retrieve(sid);
-      if (session.payment_status !== "paid") continue;
-      const pi = typeof session.payment_intent === "string"
-        ? session.payment_intent
-        : session.payment_intent?.id ?? session.id;
+      let paid = false;
+      let pi = sid;
+      if (sid.startsWith("cs_")) {
+        const session = await stripe.checkout.sessions.retrieve(sid);
+        paid = session.payment_status === "paid";
+        pi = typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : session.payment_intent?.id ?? session.id;
+        states[p.id as string] = { state: paid ? "paid" : "open" };
+      } else if (sid.startsWith("pi_")) {
+        const intent = await stripe.paymentIntents.retrieve(sid);
+        paid = intent.status === "succeeded";
+        const mb = (intent.next_action as any)?.multibanco_display_details;
+        states[p.id as string] = paid
+          ? { state: "paid" }
+          : intent.status === "processing"
+          ? { state: "processing" }
+          : mb && intent.status === "requires_action"
+          ? {
+            state: "awaiting_multibanco",
+            entity: mb.entity,
+            reference: mb.reference,
+            expires_at: mb.expires_at,
+            amount_cents: intent.amount,
+          }
+          : { state: "open" };
+      } else {
+        continue;
+      }
+      if (!paid) continue;
       const { error } = await admin.rpc("confirm_stripe_deposit_payment", {
-        p_session_id: session.id,
+        p_session_id: sid,
         p_payment_intent_id: pi,
       });
       if (error) {
@@ -73,7 +102,7 @@ Deno.serve(async (req) => {
       console.error("sync-checkout-payment retrieve failed", e);
     }
   }
-  return json({ synced });
+  return json({ synced, states });
 });
 
 function json(body: unknown, status = 200): Response {

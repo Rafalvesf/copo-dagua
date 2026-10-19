@@ -72,6 +72,22 @@ Deno.serve(async (req) => {
         }
         break;
       }
+      // Pagamento dentro da app (PaymentIntent direto, sem Checkout —
+      // `create-payment-intent`, 2026-10-19). Multibanco paga-se horas
+      // depois no multibanco, por isso só este evento o confirma.
+      case "payment_intent.succeeded": {
+        const intent = event.data.object as { id: string; metadata?: Record<string, string> | null };
+        if (intent.metadata?.kind !== "booking_payment") break;
+        const { error } = await supabase.rpc("confirm_stripe_deposit_payment", {
+          p_session_id: intent.id,
+          p_payment_intent_id: intent.id,
+        });
+        if (error) {
+          console.error("confirm_stripe_deposit_payment (pi) failed", error);
+          return new Response("db error", { status: 500 });
+        }
+        break;
+      }
       case "account.updated": {
         const account = event.data.object as {
           id: string;

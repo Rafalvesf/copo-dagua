@@ -11,6 +11,9 @@ import '../features/auth/screens/verify_email_screen.dart';
 import '../features/auth/screens/welcome_screen.dart';
 import '../features/bookings/screens/couple_booking_detail_screen.dart';
 import '../features/bookings/screens/couple_bookings_screen.dart';
+import '../features/payments/screens/pay_screen.dart';
+import '../features/payments/screens/pay_done_screen.dart';
+import 'payments/payments.dart' show PayArgs;
 import '../features/guest_offers/screens/guest_offers_screen.dart';
 import '../features/budget/screens/budget_screen.dart';
 import '../features/chat/screens/chat_list_screen.dart';
@@ -448,6 +451,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/bookings',
         builder: (context, state) => CoupleBookingsScreen(guestsTab: state.uri.queryParameters['convidados'] == '1'),
+      ),
+      GoRoute(
+        path: '/pay',
+        builder: (context, state) => state.extra is PayArgs
+            ? PayScreen(args: state.extra as PayArgs)
+            : const _LostRoute('/bookings'),
+      ),
+      GoRoute(
+        path: '/pay/done',
+        builder: (context, state) => state.extra is PayDoneArgs
+            ? PayDoneScreen(args: state.extra as PayDoneArgs)
+            : const _LostRoute('/bookings'),
       ),
       GoRoute(
         path: '/bookings/detail',

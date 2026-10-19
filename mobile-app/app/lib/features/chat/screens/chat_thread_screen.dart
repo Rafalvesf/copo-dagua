@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/chat/chat_thread_controller.dart';
 import '../../../core/home/home_providers.dart';
+import '../../../core/payments/payments.dart' show PayArgs;
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/wedding/wedding_controller.dart';
@@ -203,10 +204,35 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
   void _acceptedFeedback() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Proposta aceite! Paga o sinal nas Reservas para confirmar.'),
-        action: SnackBarAction(label: 'Reservas', onPressed: () => context.push('/bookings')),
+        content: const Text('Proposta aceite! Paga o sinal para confirmar.'),
+        action: SnackBarAction(
+          label: 'Pagar',
+          onPressed: () => _openPay(ref.read(platformCommissionPercentageProvider).value ?? 0),
+        ),
       ),
     );
+  }
+
+  /// Abre o pagamento dentro da app para o que estiver pendente.
+  Future<void> _openPay(double pct) async {
+    final id = widget.message.proposalId;
+    if (id == null) return;
+    final p = await fetchProposalPendingPayment(id);
+    if (!mounted) return;
+    if (p == null) {
+      context.push('/bookings');
+      return;
+    }
+    final (paymentId, type, amount, partner) = p;
+    await context.push('/pay', extra: PayArgs(
+      paymentId: paymentId,
+      partnerName: partner,
+      kind: type,
+      amount: amountWithCommission(amount, pct),
+    ));
+    if (!mounted) return;
+    final booking = await fetchProposalBookingState(id);
+    if (mounted) setState(() => _bookingState = booking);
   }
 
   Future<void> _accept() async {
@@ -290,7 +316,13 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
         ChatCardAction('Ver detalhe', () => context.push('/bookings')),
         if (_accepted)
           // Já aceite: o passo seguinte é pagar o sinal nas Reservas.
-          ChatCardAction(_acceptedLabel, () => context.push('/bookings'), primary: true)
+          ChatCardAction(
+            _acceptedLabel,
+            () => (_bookingState == null || _bookingState == 'deposit_due' || _bookingState == 'final_due')
+                ? _openPay(pct)
+                : context.push('/bookings'),
+            primary: true,
+          )
         else if (_unavailable)
           const ChatCardAction('Indisponível', null, primary: true)
         else
