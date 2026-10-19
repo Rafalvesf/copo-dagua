@@ -6,7 +6,7 @@ Site de apresentação, vídeo motion graphic e a proposta da mascote nova.
 
 | Ficheiro | O que é |
 |---|---|
-| `site/a-nossa-site.html` | Site de apresentação (uma página, tudo embutido) |
+| `site/a-nossa-site.html` | Site de apresentação com scroll animado (uma página, tudo embutido) |
 | `site/a-nossa.mp4` | Vídeo de apresentação (1280×720, 48 s) |
 | `site/poster.jpg` | Imagem de capa do vídeo |
 | `mascote/copos.html` | Proposta dos copos novos: poses e ecrãs da app |
@@ -24,7 +24,7 @@ Depois, dentro de `site/`:
 python3 compose.py      # põe fotos nas capturas reais (cria site/real/)
 python3 build_film.py   # cria film.html (o vídeo, com renderAt(t))
 python3 render.py       # captura imagem a imagem e cria a-nossa.mp4 e poster.jpg (precisa de Playwright e ffmpeg)
-python3 build_site.py   # cria a-nossa-site.html
+python3 build_scroll.py # cria a-nossa-scroll.html (o site com scroll animado; copiar para a-nossa-site.html)
 python3 snap.py 5 12 20 # opcional: imagens de alguns instantes do vídeo, para rever
 ```
 

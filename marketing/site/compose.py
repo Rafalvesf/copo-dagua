@@ -103,3 +103,20 @@ multi_fill('18_casal_parceiros.png', 'parceiros', [
 fill_photo('91_publicacoes.png', 'publicacoes', (60,474,1110,1785), 'toast', (0.5,0.5), [], radius=66, fill=(221,229,211))
 avatar('real/publicacoes.png', 'real/publicacoes.png', 114, 384, 50, 'couple_road')
 avatar('real/publicacoes.png', 'real/publicacoes.png', 114, 2469, 50, 'couple_sky')
+
+# Perfil do parceiro (página inteira, design novo): foto no topo, por baixo do painel branco.
+def profile_photo(src, out, photo, panel_top=738, panel_r=72, buttons=((114,100,68),(1055,100,68))):
+    im=Image.open(SH+src).convert('RGB')
+    W=im.width
+    m=Image.new('L',im.size,0); d=ImageDraw.Draw(m)
+    d.rectangle([0,0,W,panel_top+panel_r],fill=255)
+    d.rounded_rectangle([0,panel_top,W,panel_top+4*panel_r],radius=panel_r,fill=0)
+    for cx,cy,r in buttons: d.ellipse([cx-r,cy-r,cx+r,cy+r],fill=0)
+    m=m.filter(ImageFilter.GaussianBlur(1.2))
+    ph=ImageOps.fit(Image.open('photos/'+photo+'.jpg').convert('RGB'),(W,panel_top+panel_r),Image.LANCZOS,centering=(0.5,0.5))
+    # escurece levemente o topo, como na app (legibilidade dos botões)
+    g=Image.linear_gradient('L').resize((W,panel_top+panel_r)).point(lambda v: max(0,90-v))
+    ph=Image.composite(Image.new('RGB',ph.size,(0,0,0)),ph,g)
+    big=im.copy(); big.paste(ph,(0,0))
+    Image.composite(big,im,m).save('real/'+out+'.png')
+profile_photo('27_casal_parceiro_folha.png','perfil_parceiro','mansion_flowers')
