@@ -563,7 +563,8 @@ class _SectionHeader extends StatelessWidget {
             ),
             if (trailing != null) ...[
               const SizedBox(width: 8),
-              Flexible(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 120),
                 child: Text(trailing!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
