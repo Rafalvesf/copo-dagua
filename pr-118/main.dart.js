@@ -67693,7 +67693,7 @@ A.ye.prototype={
 O(){return new A.adC(new A.bu(null,t.C))}}
 A.adC.prototype={
 ak(){this.aw()
-$.an.p4$.push(new A.b3N(this))},
+if(this.a.f>0)$.an.p4$.push(new A.b3N(this))},
 n(a){var s,r,q,p,o,n,m,l,k=this,j=null,i=k.gac(),h=A.fm(i.W($.CI().$1(k.a.d),t.PT),t._w),g=h==null?j:h.b.a
 if(g==null)g=B.l_
 h=i.W($.bs(),t.D)
