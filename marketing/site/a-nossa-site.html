@@ -108,8 +108,7 @@ footer { background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pad
   .pin { height: 100vh; height: 100lvh; --pw: min(calc(56svh / 2.2), 62vw); }
   .phone { top: 40svh; }
   .txt .ta, .txt .tb { position: static; transform: none !important; width: auto !important; text-align: left !important; }
-  .txt { inset: auto 16px calc(18px + 100lvh - var(--vis, 100svh)) 16px; padding: 18px 20px; border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: 0 18px 40px -20px rgba(23,23,19,.3);
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .txt { inset: auto 20px calc(24px + 100lvh - var(--vis, 100svh)) 20px; }
   .txt h2 { font-size: 26px; }
   .txt h2 br { display: none; }
   .eye { margin-bottom: 6px; font-size: 11px; }
@@ -203,11 +202,19 @@ function frame() {
   // Abertura: a app direita, centrada e maior, a sair pelo fundo do ecrã.
   const rise = 1 - ss(0.05, 1, p);
   const pw = $('ph').offsetWidth, natTop = $('ph').offsetTop;
-  const heroY = vh * (wide ? .62 : .5) - natTop + pw * .12;
+  // Telemóvel: a app fica inteira entre o subtítulo e o fundo visível.
+  let heroS = 1.12, heroY = vh * .62 - natTop + pw * .12;
+  if (!wide) {
+    const sub = document.querySelector('.hero p').getBoundingClientRect().bottom + 22;
+    const room = vh - 18 - sub, h0 = pw * 2.2;
+    heroS = Math.min(1.1, room / h0);
+    const H = h0 * heroS;
+    heroY = (vh - 18 - H / 2) - (natTop + h0 / 2);
+  }
   const shift = x * (wide ? Math.min(vw * .22, 330) : vw * .11) * (1 - rise);
   const fin = ss(15.6, 16.4, p);
   const tilt = -x * 6 * (1 - fin);
-  $('ph').style.transform = `translate(${shift}px, ${rise * heroY + fin * vh * (wide ? .13 : .14)}px) rotate(${tilt * .35 * (1 - rise)}deg) scale(${1 + .12 * rise - .14 * fin})`;
+  $('ph').style.transform = `translate(${shift}px, ${rise * heroY + fin * vh * (wide ? .13 : .14)}px) rotate(${tilt * .35 * (1 - rise)}deg) scale(${1 + (heroS - 1) * rise - .14 * fin})`;
   // ecrãs: empurrados da direita, como na app
   const LY = D.layers;
   LY.forEach((s, i) => {
