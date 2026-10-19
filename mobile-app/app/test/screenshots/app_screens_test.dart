@@ -478,7 +478,7 @@ List<Override> _overrides(AuthState auth) => [
             (profileId: 'u-mc', name: 'Miguel Costa', avatarUrl: null),
           ]),
       galleryCommentsProvider.overrideWith((ref, id) async => [
-            GalleryComment(id: 'cm1', profileId: 'u-ar', authorName: 'Avó Rosa', body: 'Que bonito! 🥂', createdAt: _days(0)),
+            GalleryComment(id: 'cm1', profileId: 'u-ar', authorName: 'Avó Rosa', body: 'Que bonito!', createdAt: _days(0)),
           ]),
       guestWeddingsProvider.overrideWith((ref) async => const [_guestWedding]),
       myGuestRowProvider.overrideWith((ref, id) async => _guests.first),
