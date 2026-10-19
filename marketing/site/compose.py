@@ -120,3 +120,25 @@ def profile_photo(src, out, photo, panel_top=738, panel_r=72, buttons=((114,100,
     big=im.copy(); big.paste(ph,(0,0))
     Image.composite(big,im,m).save('real/'+out+'.png')
 profile_photo('27_casal_parceiro_folha.png','perfil_parceiro','mansion_flowers')
+
+# Galerias (grelha 3 colunas): fotos em cada quadrado, mantendo o coração e o ícone de comentário.
+def grid_gallery(src, out, top, n, photos, x0=84, step=338, size=326, radius=24):
+    im = Image.open(SH + src).convert('RGB'); a = np.asarray(im).astype(int)
+    for k in range(n):
+        x = x0 + (k % 3) * step; y = top + (k // 3) * step
+        bg = a[y + size - 30, x + 30]
+        ph = ImageOps.fit(Image.open('photos/' + photos[k % len(photos)] + '.jpg').convert('RGB'), (size, size), Image.LANCZOS)
+        m = Image.new('L', (size * 4, size * 4), 0); ImageDraw.Draw(m).rounded_rectangle([0, 0, size * 4 - 1, size * 4 - 1], radius=radius * 4, fill=255)
+        m = m.resize((size, size), Image.LANCZOS)
+        icon = a[y:y + 80, x + size - 80:x + size]
+        keep = (np.abs(icon - bg).sum(2) > 60)
+        im.paste(ph, (x, y), m)
+        b = np.asarray(im).copy()
+        reg = b[y:y + 80, x + size - 80:x + size]
+        reg[keep] = icon[keep]
+        b[y:y + 80, x + size - 80:x + size] = reg
+        im = Image.fromarray(b.astype('uint8'))
+    im.save('real/' + out + '.png')
+grid_gallery('21_casal_galeria.png', 'casal_galeria', 516, 7, ['toast', 'couple_kiss', 'glasses2', 'dance2', 'aisle_flowers', 'rings', 'long_table'])
+grid_gallery('51_convidado_galeria.png', 'convidado_galeria', 462, 7, ['dance', 'bouquet_plank', 'couple_hands2', 'fine_dining_out', 'couple_trees', 'arch', 'glasses'])
+shutil.copy(SH + '31_parceiro_pedidos.png', 'real/pedidos.png')

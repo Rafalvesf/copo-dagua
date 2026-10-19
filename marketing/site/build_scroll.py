@@ -109,8 +109,8 @@ h1, h2 {{ margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance;
 
 /* barra de topo */
 .top {{ position: fixed; z-index: 30; top: env(safe-area-inset-top, 0px); left: 0; right: 0; display: flex; align-items: center; gap: 12px;
-  padding: 16px max(20px, env(safe-area-inset-right, 0px)) 0 max(20px, env(safe-area-inset-left, 0px)); color: #fff; transition: color .3s; pointer-events: none; }}
-.top > * {{ pointer-events: auto; }}
+  padding: 12px max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px)); color: #fff; transition: color .3s;
+  background: var(--bgc, #4F6B4A); }}
 .top .brand {{ display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 21px; text-decoration: none; }}
 .top .brand img {{ width: 38px; }}
 .top .btn {{ margin-left: auto; height: 40px; padding: 0 18px; font-size: 14px; background: #fff; color: var(--euc); box-shadow: 0 8px 20px rgba(0,0,0,.12); }}
@@ -200,7 +200,10 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
   .txt p {{ font-size: 15px; margin-top: 6px; }}
   .chap {{ display: none; }}
   .hero {{ padding-top: 13vh; }}
-  .fin {{ top: 7vh; }}
+  .fin {{ top: calc(72px + 2vh); }}
+  .fin h2 {{ font-size: 32px; }}
+  .fin p {{ font-size: 15px; }}
+  .txt {{ z-index: 3; }}
 }}
 </style>
 
@@ -268,10 +271,12 @@ const POS = {{ L: -1, C: 0, R: 1 }};
 function frame() {{
   const vh = innerHeight, vw = innerWidth, wide = vw > 820;
   const p = Math.max(0, (scrollY - story.offsetTop) / vh);
-  document.body.style.background = bgAt(p);
+  const bgc = bgAt(p);
+  document.body.style.background = bgc;
+  document.documentElement.style.setProperty('--bgc', bgc);
   top_.classList.toggle('ink', p > .55);
   // abertura
-  const h = ss(.05, .55, p);
+  const h = ss(.02, .4, p);
   $('hero').style.opacity = 1 - h; $('hero').style.transform = `translateY(${{-60 * h}}px) scale(${{1 - .08 * h}})`;
   $('cue').style.opacity = .8 * (1 - ss(0, .2, p));
   // telemóvel: entra por baixo e muda de lugar (esquerda, centro, direita)
@@ -281,7 +286,7 @@ function frame() {{
   const rise = 1 - ss(0, 1, p);
   const fin = ss(15.6, 16.4, p);
   const tilt = -x * 6 * (1 - fin);
-  $('ph').style.transform = `translate(${{shift}}px, ${{rise * vh * (wide ? .62 : .5) + fin * vh * (wide ? .13 : .1)}}px) rotate(${{rise * -8 + tilt * .35}}deg) scale(${{1 - .14 * fin}})`;
+  $('ph').style.transform = `translate(${{shift}}px, ${{rise * vh * (wide ? .62 : .5) + fin * vh * (wide ? .13 : .14)}}px) rotate(${{rise * -8 + tilt * .35}}deg) scale(${{1 - .14 * fin}})`;
   // ecrãs: empurrados da direita, como na app
   const LY = D.layers;
   LY.forEach((s, i) => {{
@@ -297,13 +302,13 @@ function frame() {{
   [['sideA', -1], ['sideB', 1]].forEach(([id, d]) => {{
     const e = $(id);
     e.style.opacity = fin;
-    e.style.transform = `translate(${{d * spread * fin}}px, ${{vh * (wide ? .16 : .12) * fin}}px) rotate(${{d * 7 * fin}}deg) scale(.8)`;
+    e.style.transform = `translate(${{d * spread * fin}}px, ${{vh * (wide ? .16 : .16) * fin}}px) rotate(${{d * 7 * fin}}deg) scale(.8)`;
   }});
   $('fin').style.opacity = ss(15.9, 16.4, p);
   $('fin').style.transform = `translateY(${{20 * (1 - ss(15.9, 16.4, p))}}px)`;
   // textos
   D.texts.forEach(([a, b], i) => {{
-    const inn = ss(a - .5, a - .2, p), out = ss(b + .25, b + .55, p), el = $('T' + i);
+    const inn = ss(a - (a < 1.5 ? .25 : .5), a - (a < 1.5 ? .02 : .2), p), out = ss(b + .25, b + .55, p), el = $('T' + i);
     el.style.opacity = inn * (1 - out);
     el.querySelectorAll('.ta, .tb').forEach((q, j) => q.style.translate = `0 ${{(1 - inn) * (30 + j * 14) - out * 30}}px`);
   }});
