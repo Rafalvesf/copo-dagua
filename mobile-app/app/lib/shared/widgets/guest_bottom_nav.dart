@@ -138,7 +138,7 @@ class _GuestNavIcon extends StatelessWidget {
               child: Icon(
                 active ? activeIcon : icon,
                 color: color,
-                size: active ? 24 : 32,
+                size: active ? 22 : 28,
               ),
             ),
           ),
