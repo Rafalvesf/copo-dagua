@@ -85,7 +85,7 @@ snaps = ''.join(f'<i class="snap" style="top:calc({st} * 100vh)"></i>' for st in
 chapters = ''.join(f'<li id="C{i}">{n}</li>' for i, (n, _, _) in enumerate(CHAPTERS))
 dots = ''.join(f'<i style="background:{c}" title="{cn}"></i>' for _, cn, c in STYLES)
 
-DATA = json.dumps(dict(shots=[[s, p] for s, _, p in SHOTS], layers=[s for s, _ in LAYERS], texts=[[a, b] for a, b, *_ in TEXTS],
+DATA = json.dumps(dict(snaps=SNAPS, shots=[[s, p] for s, _, p in SHOTS], layers=[s for s, _ in LAYERS], texts=[[a, b] for a, b, *_ in TEXTS],
                        chapters=[[a, b] for _, a, b in CHAPTERS], bg=BG, end=END,
                        styles=[[n, cn] for n, cn, _ in STYLES]))
 
@@ -178,10 +178,8 @@ h1, h2 {{ margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance;
 .band {{ padding-block: 96px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }}
 .inner {{ max-width: 1040px; margin: 0 auto; }}
 /* Scroll com paragem em cada ecrã e texto. */
-html {{ scroll-snap-type: y mandatory; }}
-.snap {{ position: absolute; left: 0; width: 1px; height: 1px; scroll-snap-align: start; scroll-snap-stop: always; pointer-events: none; }}
-.vid, .cta {{ scroll-snap-align: start; scroll-margin-top: 64px; }}
-footer {{ scroll-snap-align: end; }}
+/* Paragem em cada ecrã: feita em JavaScript, com deslize suave. */
+.snap {{ position: absolute; left: 0; width: 1px; height: 1px; pointer-events: none; }}
 .vid {{ background: #fff; }}
 .vid h2 {{ font-size: clamp(30px, 4vw, 48px); }}
 .vid p {{ color: var(--muted); font-size: 18px; margin: 10px 0 30px; }}
@@ -277,11 +275,16 @@ function bgAt(p) {{
   return k[k.length - 1][1];
 }}
 const POS = {{ L: -1, C: 0, R: 1 }};
+let cur = null;  // posição mostrada (segue o scroll com amortecimento)
 function frame() {{
   const vh = innerHeight, vw = innerWidth, wide = vw > 820;
   // Unidade = 100vh real da secção (igual à dos pontos de paragem).
   const unit = story.offsetHeight / (D.end + 1);
-  const p = Math.max(0, (scrollY - story.offsetTop) / unit);
+  const target = Math.max(0, (scrollY - story.offsetTop) / unit);
+  if (cur === null || Math.abs(target - cur) > 3) cur = target;
+  cur += (target - cur) * .16;
+  if (Math.abs(target - cur) < .0005) cur = target;
+  const p = cur;
   // Altura visível real (a barra do Safari aparece e desaparece).
   document.documentElement.style.setProperty('--vis', vh + 'px');
   const bgc = bgAt(p);
@@ -344,11 +347,54 @@ function frame() {{
   $('chap').style.opacity = ss(.6, 1, p) * (1 - ss(15.3, 15.7, p));
   D.chapters.forEach(([a, b], i) => $('C' + i).classList.toggle('on', p >= a && p < b));
 }}
+// Desenha enquanto a posição mostrada ainda não chegou ao scroll.
 let req = 0;
-const tick = () => {{ if (!req) req = requestAnimationFrame(() => {{ req = 0; frame(); }}); }};
-addEventListener('scroll', tick, {{ passive: true }});
+const loop = () => {{
+  req = 0; frame();
+  const t = Math.max(0, (scrollY - story.offsetTop) / (story.offsetHeight / (D.end + 1)));
+  if (Math.abs(t - cur) > .0005) req = requestAnimationFrame(loop);
+}};
+const tick = () => {{ if (!req) req = requestAnimationFrame(loop); }};
+
+// Paragem suave em cada ecrã: quando o scroll pára, desliza até ao
+// ecrã seguinte (ou volta ao atual se mal se mexeu).
+const unitPx = () => story.offsetHeight / (D.end + 1);
+let lastY = scrollY, dir = 1, idle = 0, touching = false, anim = null;
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function glideTo(y) {{
+  const y0 = scrollY, dy = y - y0;
+  if (Math.abs(dy) < 2) return;
+  const dur = Math.min(900, 520 + Math.abs(dy) * .35), t0 = performance.now();
+  anim = {{ y }};
+  const step = now => {{
+    if (!anim) return;
+    const k = Math.min(1, (now - t0) / dur);
+    scrollTo(0, y0 + dy * ease(k));
+    if (k < 1) requestAnimationFrame(step); else anim = null;
+  }};
+  requestAnimationFrame(step);
+}}
+function settle() {{
+  if (touching || anim) return;
+  const u = unitPx(), p = (scrollY - story.offsetTop) / u, S = D.snaps;
+  if (p < -.2 || p > S[S.length - 1] + .5 || (p > S[S.length - 1] && dir > 0)) return;
+  let i = 0; while (i < S.length - 1 && S[i + 1] <= p) i++;
+  const a = S[i], b = S[Math.min(i + 1, S.length - 1)];
+  const f = b > a ? (p - a) / (b - a) : 0;
+  const goal = dir > 0 ? (f > .1 ? b : a) : (f < .9 ? a : b);
+  glideTo(story.offsetTop + goal * u);
+}}
+addEventListener('scroll', () => {{
+  if (!anim) {{ dir = scrollY >= lastY ? 1 : -1; }}
+  lastY = scrollY;
+  tick();
+  clearTimeout(idle); idle = setTimeout(settle, 140);
+}}, {{ passive: true }});
+addEventListener('touchstart', () => {{ touching = true; anim = null; }}, {{ passive: true }});
+addEventListener('touchend', () => {{ touching = false; clearTimeout(idle); idle = setTimeout(settle, 160); }}, {{ passive: true }});
+addEventListener('wheel', () => {{ anim = null; }}, {{ passive: true }});
 addEventListener('resize', tick);
-frame();
+tick();
 </script>
 """
 

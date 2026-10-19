@@ -90,10 +90,8 @@ h1, h2 { margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance; 
 .band { padding-block: 96px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
 .inner { max-width: 1040px; margin: 0 auto; }
 /* Scroll com paragem em cada ecrã e texto. */
-html { scroll-snap-type: y mandatory; }
-.snap { position: absolute; left: 0; width: 1px; height: 1px; scroll-snap-align: start; scroll-snap-stop: always; pointer-events: none; }
-.vid, .cta { scroll-snap-align: start; scroll-margin-top: 64px; }
-footer { scroll-snap-align: end; }
+/* Paragem em cada ecrã: feita em JavaScript, com deslize suave. */
+.snap { position: absolute; left: 0; width: 1px; height: 1px; pointer-events: none; }
 .vid { background: #fff; }
 .vid h2 { font-size: clamp(30px, 4vw, 48px); }
 .vid p { color: var(--muted); font-size: 18px; margin: 10px 0 30px; }
@@ -172,7 +170,7 @@ footer { background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pad
 <footer><span>© 2026 À Nossa!</span><span>Feito em Portugal · Funciona no telemóvel e no computador</span></footer>
 
 <script>
-const D = {"shots": [[0, "C"], [1, "L"], [2, "C"], [2.7, "C"], [3.4, "C"], [4.1, "C"], [5, "R"], [6, "C"], [7, "L"], [8, "C"], [9, "R"], [10, "C"], [11, "L"], [12, "C"], [13, "R"], [14, "C"], [15, "L"], [16.2, "C"]], "layers": [0, 2, 2.7, 3.4, 4.1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16.2], "texts": [[1, 1], [2, 4.1], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9], [10, 10], [11, 11], [12, 12], [13, 13], [14, 14], [15, 15]], "chapters": [[0.6, 7.5], [7.5, 10.5], [10.5, 11.5], [11.5, 13.5], [13.5, 15.6]], "bg": [[0, "#4F6B4A"], [0.9, "#F2F5EE"], [2, "#E9F0E5"], [2.7, "#F8E6EC"], [3.4, "#E4EEF5"], [4.1, "#F6EEDA"], [5, "#F2F5EE"], [7, "#F2F5EE"], [8, "#FBF3E2"], [10, "#FBF3E2"], [11, "#F4F1EC"], [12, "#FBEFF0"], [13, "#FBEFF0"], [14, "#EEF2F6"], [15, "#EEF2F6"], [16.2, "#FFFFFF"]], "end": 16.2, "styles": [["Cl\u00e1ssico", "Eucalipto"], ["Autocolantes", "Rosa"], ["Mural", "Azul"], ["Estendal", "Dourado"]]};
+const D = {"snaps": [0, 1, 2, 2.7, 3.4, 4.1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16.2], "shots": [[0, "C"], [1, "L"], [2, "C"], [2.7, "C"], [3.4, "C"], [4.1, "C"], [5, "R"], [6, "C"], [7, "L"], [8, "C"], [9, "R"], [10, "C"], [11, "L"], [12, "C"], [13, "R"], [14, "C"], [15, "L"], [16.2, "C"]], "layers": [0, 2, 2.7, 3.4, 4.1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16.2], "texts": [[1, 1], [2, 4.1], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9], [10, 10], [11, 11], [12, 12], [13, 13], [14, 14], [15, 15]], "chapters": [[0.6, 7.5], [7.5, 10.5], [10.5, 11.5], [11.5, 13.5], [13.5, 15.6]], "bg": [[0, "#4F6B4A"], [0.9, "#F2F5EE"], [2, "#E9F0E5"], [2.7, "#F8E6EC"], [3.4, "#E4EEF5"], [4.1, "#F6EEDA"], [5, "#F2F5EE"], [7, "#F2F5EE"], [8, "#FBF3E2"], [10, "#FBF3E2"], [11, "#F4F1EC"], [12, "#FBEFF0"], [13, "#FBEFF0"], [14, "#EEF2F6"], [15, "#EEF2F6"], [16.2, "#FFFFFF"]], "end": 16.2, "styles": [["Cl\u00e1ssico", "Eucalipto"], ["Autocolantes", "Rosa"], ["Mural", "Azul"], ["Estendal", "Dourado"]]};
 const $ = id => document.getElementById(id);
 const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const story = $('story'), top_ = $('top');
@@ -189,11 +187,16 @@ function bgAt(p) {
   return k[k.length - 1][1];
 }
 const POS = { L: -1, C: 0, R: 1 };
+let cur = null;  // posição mostrada (segue o scroll com amortecimento)
 function frame() {
   const vh = innerHeight, vw = innerWidth, wide = vw > 820;
   // Unidade = 100vh real da secção (igual à dos pontos de paragem).
   const unit = story.offsetHeight / (D.end + 1);
-  const p = Math.max(0, (scrollY - story.offsetTop) / unit);
+  const target = Math.max(0, (scrollY - story.offsetTop) / unit);
+  if (cur === null || Math.abs(target - cur) > 3) cur = target;
+  cur += (target - cur) * .16;
+  if (Math.abs(target - cur) < .0005) cur = target;
+  const p = cur;
   // Altura visível real (a barra do Safari aparece e desaparece).
   document.documentElement.style.setProperty('--vis', vh + 'px');
   const bgc = bgAt(p);
@@ -256,9 +259,52 @@ function frame() {
   $('chap').style.opacity = ss(.6, 1, p) * (1 - ss(15.3, 15.7, p));
   D.chapters.forEach(([a, b], i) => $('C' + i).classList.toggle('on', p >= a && p < b));
 }
+// Desenha enquanto a posição mostrada ainda não chegou ao scroll.
 let req = 0;
-const tick = () => { if (!req) req = requestAnimationFrame(() => { req = 0; frame(); }); };
-addEventListener('scroll', tick, { passive: true });
+const loop = () => {
+  req = 0; frame();
+  const t = Math.max(0, (scrollY - story.offsetTop) / (story.offsetHeight / (D.end + 1)));
+  if (Math.abs(t - cur) > .0005) req = requestAnimationFrame(loop);
+};
+const tick = () => { if (!req) req = requestAnimationFrame(loop); };
+
+// Paragem suave em cada ecrã: quando o scroll pára, desliza até ao
+// ecrã seguinte (ou volta ao atual se mal se mexeu).
+const unitPx = () => story.offsetHeight / (D.end + 1);
+let lastY = scrollY, dir = 1, idle = 0, touching = false, anim = null;
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function glideTo(y) {
+  const y0 = scrollY, dy = y - y0;
+  if (Math.abs(dy) < 2) return;
+  const dur = Math.min(900, 520 + Math.abs(dy) * .35), t0 = performance.now();
+  anim = { y };
+  const step = now => {
+    if (!anim) return;
+    const k = Math.min(1, (now - t0) / dur);
+    scrollTo(0, y0 + dy * ease(k));
+    if (k < 1) requestAnimationFrame(step); else anim = null;
+  };
+  requestAnimationFrame(step);
+}
+function settle() {
+  if (touching || anim) return;
+  const u = unitPx(), p = (scrollY - story.offsetTop) / u, S = D.snaps;
+  if (p < -.2 || p > S[S.length - 1] + .5 || (p > S[S.length - 1] && dir > 0)) return;
+  let i = 0; while (i < S.length - 1 && S[i + 1] <= p) i++;
+  const a = S[i], b = S[Math.min(i + 1, S.length - 1)];
+  const f = b > a ? (p - a) / (b - a) : 0;
+  const goal = dir > 0 ? (f > .1 ? b : a) : (f < .9 ? a : b);
+  glideTo(story.offsetTop + goal * u);
+}
+addEventListener('scroll', () => {
+  if (!anim) { dir = scrollY >= lastY ? 1 : -1; }
+  lastY = scrollY;
+  tick();
+  clearTimeout(idle); idle = setTimeout(settle, 140);
+}, { passive: true });
+addEventListener('touchstart', () => { touching = true; anim = null; }, { passive: true });
+addEventListener('touchend', () => { touching = false; clearTimeout(idle); idle = setTimeout(settle, 160); }, { passive: true });
+addEventListener('wheel', () => { anim = null; }, { passive: true });
 addEventListener('resize', tick);
-frame();
+tick();
 </script>
