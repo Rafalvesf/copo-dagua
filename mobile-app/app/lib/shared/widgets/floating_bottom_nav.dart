@@ -11,6 +11,11 @@ import '../../core/models/models.dart';
 
 enum AppTab { home, partners, chat, wedding }
 
+/// Raio dos cantos das navbars = raio do círculo do separador ativo mais
+/// a margem à volta (10 + 4 + 21), para os cantos ficarem concêntricos
+/// com o círculo (pedido do utilizador, 2026-10-19).
+const double kNavRadius = 35;
+
 /// Ilha flutuante com margem de todos os lados (pedido explícito do
 /// utilizador: "a navbar deve ser uma ilha em vez de se estender até à
 /// base do ecrã") — 5 separadores (Galeria / Parceiros / Os noivos /
@@ -52,11 +57,11 @@ class FloatingBottomNav extends ConsumerWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.xxl),
+          borderRadius: BorderRadius.circular(kNavRadius),
           boxShadow: AppTheme.navBarShadow,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.xxl),
+          borderRadius: BorderRadius.circular(kNavRadius),
           child: ConnectedFilterNav(
           top: top,
           navRow: Padding(
