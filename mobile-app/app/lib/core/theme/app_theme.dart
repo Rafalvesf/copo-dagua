@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../page_transitions.dart';
 
 /// Implementação executável do design system documentado em
 /// mobile-app/shared/design-system.md — fundo branco (creme quente
@@ -101,6 +102,9 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      // Páginas abertas por botões descem de cima, com sombra
+      // (`page_transitions.dart`).
+      pageTransitionsTheme: topDownPageTransitions,
       fontFamily: fontFamily,
       fontFamilyFallback: fontFamilyFallback,
       colorScheme: colorScheme,

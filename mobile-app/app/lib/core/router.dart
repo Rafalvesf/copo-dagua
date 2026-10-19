@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'page_transitions.dart';
 
 import '../shared/theme_color/theme_color.dart' show BarColorObserver;
 
@@ -226,19 +227,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/maintenance',
         builder: (context, state) => const MaintenanceScreen(),
       ),
-      GoRoute(
+      tabRoute(
         path: '/home',
         builder: (context, state) => const HomeFeedScreen(),
       ),
-      GoRoute(
+      tabRoute(
         path: '/partner-home',
         builder: (context, state) => const PartnerHomeScreen(),
       ),
-      GoRoute(
+      tabRoute(
         path: '/guest-home',
         builder: (context, state) => const GuestHomeScreen(),
       ),
-      GoRoute(
+      tabRoute(
         // Variante com `weddingId` explícito — usada só por uma conta
         // de casal em "Modo convidado" (`guest_mode_screen.dart`),
         // nunca por uma conta 100% convidado. Caminho distinto de
@@ -284,20 +285,20 @@ final routerProvider = Provider<GoRouter>((ref) {
             ? GuestWeddingDetailsScreen(wedding: state.extra as GuestWedding)
             : const _LostRoute('/guest-home'),
       ),
-      GoRoute(
+      tabRoute(
         path: '/guest-gifts',
         builder: (context, state) => const GuestGiftsScreen(),
       ),
-      GoRoute(
+      tabRoute(
         path: '/guest-gifts/:weddingId',
         builder: (context, state) =>
             GuestGiftsScreen(weddingId: state.pathParameters['weddingId']),
       ),
-      GoRoute(
+      tabRoute(
         path: '/guest-profile',
         builder: (context, state) => const GuestProfileScreen(),
       ),
-      GoRoute(
+      tabRoute(
         path: '/guest-profile/:weddingId',
         builder: (context, state) =>
             GuestProfileScreen(weddingId: state.pathParameters['weddingId']),
@@ -307,11 +308,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/guest-stay/:weddingId',
         builder: (context, state) => GuestOffersScreen(weddingId: state.pathParameters['weddingId']!),
       ),
-      GoRoute(
+      tabRoute(
         path: '/guest-gallery',
         builder: (context, state) => const GuestGalleryScreen(),
       ),
-      GoRoute(
+      tabRoute(
         path: '/guest-gallery/:weddingId',
         builder: (context, state) =>
             GuestGalleryScreen(weddingId: state.pathParameters['weddingId']),
@@ -330,7 +331,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/partner-welcome',
         builder: (context, state) => const PartnerWelcomeScreen(),
       ),
-      GoRoute(
+      tabRoute(
         path: '/partner-profile',
         builder: (context, state) => const PartnerProfileScreen(),
       ),
@@ -354,7 +355,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/partner-pricing',
         builder: (context, state) => const PartnerPricingScreen(),
       ),
-      GoRoute(
+      tabRoute(
         path: '/partner-requests',
         builder: (context, state) => PartnerBookingsScreen(
           initialSegment: state.uri.queryParameters['segment'],
@@ -372,7 +373,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ? SendProposalScreen(booking: state.extra as Booking)
             : const _LostRoute('/partner-requests'),
       ),
-      GoRoute(
+      tabRoute(
         path: '/partner-messages',
         builder: (context, state) => const PartnerMessagesScreen(),
       ),
@@ -410,7 +411,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/calendar',
         builder: (context, state) => const CalendarScreen(),
       ),
-      GoRoute(
+      tabRoute(
         path: '/wedding',
         // `?aparencia=1`: abre logo no modo de mudar estilo e cor
         // (Definições → Aparência do menu).
@@ -479,8 +480,9 @@ final routerProvider = Provider<GoRouter>((ref) {
             ? CoupleBookingDetailScreen(booking: state.extra as CoupleBooking)
             : const _LostRoute('/bookings'),
       ),
-      GoRoute(
+      tabRoute(
         path: '/partners',
+        asButton: (state) => (state.extra as PartnerPickerArgs?)?.selectionMode ?? false,
         builder: (context, state) {
           final args = state.extra as PartnerPickerArgs?;
           return PartnersListScreen(
@@ -489,7 +491,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      GoRoute(
+      tabRoute(
         path: '/chat',
         builder: (context, state) => const ChatListScreen(),
       ),
