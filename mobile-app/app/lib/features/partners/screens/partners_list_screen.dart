@@ -419,7 +419,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             if (!widget.selectionMode && query.isEmpty && _filter == null && partners.isNotEmpty) ...[
                               _SectionHeader(
                                 title: effectiveLocation.isEmpty || noneNear ? 'Em destaque' : 'Em destaque perto de ti',
-                                trailing: effectiveLocation.isEmpty || noneNear ? null : effectiveLocation,
+                                strong: true,
                               ),
                               SizedBox(
                                 height: 176,
@@ -546,7 +546,8 @@ String? _ratingLabel(Partner p) {
 class _SectionHeader extends StatelessWidget {
   final String title;
   final String? trailing;
-  const _SectionHeader({required this.title, this.trailing});
+  final bool strong;
+  const _SectionHeader({required this.title, this.trailing, this.strong = false});
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -559,7 +560,9 @@ class _SectionHeader extends StatelessWidget {
               child: Text(title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: strong
+                      ? AppTypography.displaySerif(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)
+                      : const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
             if (trailing != null) ...[
               const SizedBox(width: 8),
@@ -649,7 +652,7 @@ class _FeaturedCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(height: 2),
-                Text('${partner.primaryCategoryLabel} · ${partner.location}',
+                Text(partner.primaryCategoryLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 12, color: v2Muted)),
