@@ -40,41 +40,21 @@ class PartnerDetailScreen extends ConsumerStatefulWidget {
     Partner partner, {
     bool selectionMode = false,
   }) {
+    // Página inteira, como no mockup "Perfil do parceiro" (2026-10-19):
+    // foto no topo com voltar e favorito, cartão branco por cima.
     return Navigator.of(context).push<Partner>(
       PageRouteBuilder<Partner>(
-        opaque: false,
-        barrierDismissible: true,
-        barrierColor: Colors.black45,
-        transitionDuration: const Duration(milliseconds: 280),
-        reverseTransitionDuration: const Duration(milliseconds: 220),
-        pageBuilder: (context, animation, secondaryAnimation) => Padding(
-          // Folha com ~720 de altura, como no canvas (num ecrã pequeno,
-          // fica sempre a 24 do topo seguro).
-          padding: EdgeInsets.only(
-            top: (MediaQuery.of(context).size.height - 720).clamp(
-              MediaQuery.of(context).padding.top + 24,
-              double.infinity,
-            ),
-          ),
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppRadius.xxl),
-            ),
-            child: PartnerDetailScreen(
-              partner: partner,
-              selectionMode: selectionMode,
-            ),
-          ),
+        transitionDuration: const Duration(milliseconds: 300),
+        reverseTransitionDuration: const Duration(milliseconds: 240),
+        pageBuilder: (context, animation, secondaryAnimation) => PartnerDetailScreen(
+          partner: partner,
+          selectionMode: selectionMode,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
           return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 1),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-            ),
-            child: child,
+            position: Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(curved),
+            child: FadeTransition(opacity: curved, child: child),
           );
         },
       ),
@@ -300,7 +280,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                     [
                                       partner.primaryCategoryLabel,
                                       if (partner.location.isNotEmpty) partner.location,
-                                      if (figureText != null) '${figure.label.toLowerCase()} $figureText',
                                     ].join(' · '),
                                     style: const TextStyle(fontSize: 13, color: v2Muted),
                                   ),
@@ -329,13 +308,20 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                           style: const TextStyle(fontSize: AppFontSize.base, height: 1.5, color: Color(0xFF3F3B37)),
                         ),
                         const SizedBox(height: 16),
+                        // Capacidade ao lado do estado da data e do preço
+                        // "Desde" (pedido do utilizador, 2026-10-19).
                         Row(
                           children: [
                             _InfoTile(
-                              label: weddingDate == null ? 'A vossa data' : _shortDate(weddingDate),
+                              label: figure.label,
+                              value: figureText ?? '—',
+                            ),
+                            const SizedBox(width: 8),
+                            _InfoTile(
+                              label: weddingDate == null ? 'Data' : _shortDate(weddingDate),
                               value: switch (relationshipStatus) {
                                 PartnerRelationshipStatus.booked => 'Reservado',
-                                PartnerRelationshipStatus.requestPending => 'Pedido enviado',
+                                PartnerRelationshipStatus.requestPending => 'Pedido',
                                 _ => weddingDate == null ? 'Por definir' : 'Perguntar',
                               },
                               highlight: true,
@@ -423,8 +409,12 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 14),
               decoration: const BoxDecoration(
-                color: Colors.white,
-                boxShadow: [BoxShadow(color: Color(0x14171713), blurRadius: 18, offset: Offset(0, -6))],
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x00FFFFFF), Colors.white],
+                  stops: [0, 0.35],
+                ),
               ),
               child: Row(
                 children: [
@@ -432,10 +422,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     flex: 2,
                     child: SizedBox(
                       height: 52,
-                      child: FilledButton.icon(
+                      child: FilledButton(
                         onPressed: _openingChat ? null : _openChat,
-                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                        label: const Text('Mensagem'),
+                        child: const Text('Mensagem'),
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFFF2F0EB),
                           foregroundColor: AppTheme.ink,
@@ -543,7 +532,7 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
   Widget build(BuildContext context) {
     final photos = widget.photos;
     return SizedBox(
-      height: 280,
+      height: 270 + MediaQuery.of(context).padding.top,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -573,33 +562,13 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
               ),
             ),
           ),
-          // Pega da folha — arrastar para baixo fecha.
           Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 30,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onVerticalDragEnd: (d) {
-                if ((d.primaryVelocity ?? 0) > 250) Navigator.of(context).maybePop();
-              },
-              child: Semantics(
-                button: true,
-                label: 'Fechar',
-                onTap: () => Navigator.of(context).maybePop(),
-                child: Center(
-                  child: Container(
-                    width: 40,
-                    height: 5,
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(4)),
-                  ),
-                ),
-              ),
-            ),
+            top: MediaQuery.of(context).padding.top + 12,
+            left: 16,
+            child: const CircleBackButton(),
           ),
           Positioned(
-            top: 22,
+            top: MediaQuery.of(context).padding.top + 12,
             right: 16,
             child: Semantics(
               label: widget.favorited ? 'Remover dos favoritos' : 'Guardar nos favoritos',
@@ -607,7 +576,7 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
                 icon: widget.favorited ? Icons.favorite : Icons.favorite_border,
                 background: Colors.white,
                 foreground: widget.favorited ? AppStatusColors.declined : AppTheme.ink,
-                size: 42,
+                size: 44,
                 onTap: widget.onFavorite,
               ),
             ),

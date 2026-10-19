@@ -71,7 +71,7 @@ class GalleryScreen extends ConsumerWidget {
               children: [
                 PageHeader(
                   title: 'Galeria',
-                  centered: true,
+                  topPadding: 8,
                   // Sem seta de voltar sempre que há navbar (casal ou
                   // convidado) — mesma convenção dos outros ecrãs raiz.
                   showBack: !showGuestNav,

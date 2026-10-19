@@ -92,7 +92,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               .toList();
 
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.feed,
       body: Stack(
         children: [
           SafeArea(
@@ -101,8 +101,8 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               children: [
                 PageHeader(
                   title: 'Mensagens',
+                  topPadding: 8,
                   showBack: false,
-                  centered: true,
                   // "+" (nova conversa com um parceiro) no cabeçalho, como
                   // nos outros ecrãs; a pesquisa ocupa a largura toda
                   // (design "Mensagens").
@@ -140,7 +140,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                           topFadeHeight: 24,
                           bottomFadeHeight: 140,
                           child: ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(0, 16, 0, 140),
+                            padding: const EdgeInsets.fromLTRB(0, 12, 0, 140),
                             itemCount: conversations.length,
                             itemBuilder: (context, index) => Padding(
                               padding: EdgeInsets.zero,
