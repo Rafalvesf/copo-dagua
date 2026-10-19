@@ -123,7 +123,14 @@
   <div id="tt-cf" aria-hidden="true"></div>
   <script>
     // A app muda a cor da barra do topo conforme o fundo da página.
+    // Enquanto a abertura verde cobre o ecrã, a app pode pedir outra cor
+    // (o primeiro ecrã desenha-se por baixo): guarda-a e só a aplica
+    // quando o círculo verde deixa de cobrir o topo (2026-10-19 — antes o
+    // topo ficava branco por cima do verde).
+    window.tchinOpening = true;
+    window.tchinPendingBar = null;
     window.tchinSetThemeColor = function (c) {
+      if (window.tchinOpening) { window.tchinPendingBar = c; return; }
       var m = document.querySelector('meta[name="theme-color"]');
       if (m) m.setAttribute('content', c);
       // Safari 26 (iOS) já não usa o theme-color: pinta a barra do topo
@@ -152,10 +159,19 @@
         var sp = document.getElementById('tt-splash');
         sp.classList.add('go');
         cf.classList.add('go');
+        // Instante exato em que o círculo (75% → 0, cubic-bezier(.7,0,.3,1),
+        // 0,7 s) deixa de cobrir o topo do ecrã.
+        var w = innerWidth, h = innerHeight, R = Math.sqrt(w * w + h * h) / Math.SQRT2;
+        var target = Math.min(1, Math.max(0, 1 - h / (1.5 * R)));
+        function bz(t, a, b) { var u = 1 - t; return 3 * u * u * t * a + 3 * u * t * t * b + t * t * t; }
+        var lo = 0, hi = 1;
+        for (var k = 0; k < 30; k++) { var mid = (lo + hi) / 2; if (bz(mid, 0, 1) < target) lo = mid; else hi = mid; }
+        var px = bz(lo, 0.7, 0.3);
         setTimeout(function () {
+          window.tchinOpening = false;
           document.documentElement.classList.remove('tt-opening');
-          window.tchinSetThemeColor('#FFFFFF');
-        }, 450);
+          window.tchinSetThemeColor(window.tchinPendingBar || '#FFFFFF');
+        }, Math.round(700 * px));
         setTimeout(function () { sp.remove(); }, 750);
         setTimeout(function () { cf.remove(); }, 2000);
       }
