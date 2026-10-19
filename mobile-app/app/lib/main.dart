@@ -28,6 +28,10 @@ Future<void> main() async {
       statusBarBrightness: Brightness.light,
     ),
   );
+  // Ecrã sempre na vertical (pedido 2026-10-19). Nas apps nativas e no
+  // Android trava a rotação; no iPhone (onde a web não pode travar) o
+  // `web/index.html` mostra um aviso para rodar de volta.
+  SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]).catchError((_) {});
   await SupabaseConfig.initialize();
   runApp(const ProviderScope(child: CopoDaguaApp()));
 }
