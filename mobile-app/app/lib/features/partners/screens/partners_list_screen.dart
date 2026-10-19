@@ -12,7 +12,6 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
-import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -173,17 +172,45 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
             bottom: false,
             child: Column(
               children: [
-                // Redesign 2026-10-19 (pedido do utilizador): título ao
-                // centro como nos outros separadores (convidados e
-                // parceiros); a localização passa para a pílula ao lado
-                // da pesquisa.
+                // Redesign 2026-10: título "Parceiros" com a localização
+                // ao lado direito, na mesma linha.
                 PageHeader(
-                  title: widget.selectionMode ? 'Escolher parceiro' : 'Parceiros',
+                  title: widget.selectionMode ? null : 'Parceiros',
+                  topPadding: 8,
                   showBack: widget.selectionMode,
-                  centered: true,
-                  trailing: widget.selectionMode
-                      ? null
-                      : V2RoundButton(icon: Icons.favorite_border, tooltip: 'Favoritos', onTap: _showFavoritesSheet),
+                  trailing: SnappyTap(
+                    onTap: () => _showLocationPicker(locationOptions),
+                    child: Container(
+                      height: 44,
+                      constraints: const BoxConstraints(maxWidth: 170),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.location_on_outlined, size: 16, color: AppTheme.inkMuted),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              effectiveLocation.isEmpty ? 'Todas' : effectiveLocation,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppTheme.inkMuted,
+                                fontWeight: FontWeight.w700,
+                                fontSize: AppFontSize.md,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(Icons.expand_more, size: 16, color: AppTheme.inkMuted),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -223,31 +250,26 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      SnappyTap(
-                        onTap: () => _showLocationPicker(locationOptions),
-                        child: Container(
-                          height: 46,
-                          constraints: const BoxConstraints(maxWidth: 120),
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: softCard(radius: AppRadius.pill),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.location_on_outlined, size: 16, color: AppTheme.brandGreen),
-                              const SizedBox(width: 3),
-                              Flexible(
-                                child: Text(
-                                  effectiveLocation.isEmpty ? 'Todas' : effectiveLocation,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w700, fontSize: AppFontSize.sm),
-                                ),
-                              ),
-                            ],
+                      if (!widget.selectionMode) ...[
+                        const SizedBox(width: 10),
+                        SnappyTap(
+                          onTap: _showFavoritesSheet,
+                          child: Container(
+                            width: 46,
+                            height: 46,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AppTheme.surface,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.favorite_border,
+                              size: 18,
+                              color: AppTheme.ink,
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                       const SizedBox(width: 10),
                       SnappyTap(
                         onTap: _showFilters,
@@ -256,20 +278,62 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                           height: 46,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: _hasAdvancedFilters ? AppTheme.brandGreen : Colors.white,
+                            color: AppTheme.surface,
                             shape: BoxShape.circle,
-                            boxShadow: softShadow,
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.tune,
                             size: 18,
-                            color: _hasAdvancedFilters ? Colors.white : AppTheme.ink,
+                            color: AppTheme.ink,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
+                // Categorias em pílulas por baixo da pesquisa (mockup,
+                // 2026-10-19) — antes estavam na barra de baixo.
+                if (!widget.selectionMode)
+                  categoryOptionsAsync.maybeWhen(
+                    data: (options) {
+                      final all = <PartnerCategoryOption?>[null, ...options];
+                      return SizedBox(
+                        height: 52,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 6),
+                          itemCount: all.length,
+                          separatorBuilder: (context, i) => const SizedBox(width: 8),
+                          itemBuilder: (context, i) {
+                            final o = all[i];
+                            final on = o?.slug == _filter;
+                            return SnappyTap(
+                              onTap: () => setState(() => _filter = o?.slug),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                alignment: Alignment.center,
+                                decoration: on
+                                    ? BoxDecoration(color: AppTheme.brandGreen, borderRadius: BorderRadius.circular(999))
+                                    : softCard(radius: 999),
+                                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                  Icon(o == null ? Icons.apps_rounded : iconForCategorySlug(o.slug),
+                                      size: 15, color: on ? Colors.white : AppTheme.brandGreen),
+                                  const SizedBox(width: 6),
+                                  Text(o?.label ?? 'Todos',
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: on ? Colors.white : v2Muted)),
+                                ]),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                    orElse: () => const SizedBox(height: 52),
+                  ),
                 if (widget.selectionMode)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
@@ -287,9 +351,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
-                  )
-                else
-                  const SizedBox(height: 8),
+                  ),
                 Expanded(
                   child: partnersAsync.when(
                     loading: () =>
@@ -307,9 +369,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 .where(
                                   (s) =>
                                       s.location == 'Âmbito nacional' ||
-                                      s.location.toLowerCase().contains(
-                                        effectiveLocation.toLowerCase(),
-                                      ),
+                                      _near(s.location, effectiveLocation),
                                 )
                                 .toList();
                       final query = _search.text.trim().toLowerCase();
@@ -343,12 +403,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             0,
                             12,
                             0,
-                            widget.selectionMode
-                                ? 40
-                                : FloatingFilterBar.bottomPadding(
-                                      aboveNav: true,
-                                    ) +
-                                    (FilterChipsRow.stackedHeight - FilterChipsRow.height),
+                            widget.selectionMode ? 40 : 140,
                           ),
                           children: [
                             // Redesign 2026-10-19: destaques (melhor
@@ -407,33 +462,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: FloatingBottomNav(
-                current: AppTab.partners,
-                // Categorias ligadas à navbar (redesign 2026-10).
-                top: categoryOptionsAsync.maybeWhen(
-                  data: (options) {
-                    final all = <PartnerCategoryOption?>[null, ...options];
-                    final index = all.indexWhere((o) => o?.slug == _filter);
-                    return FilterChipsRow(
-                      // Categorias de Parceiros: carrossel normal, sem
-                      // repetir (pedido do utilizador).
-                      infinite: false,
-                      visible: 4,
-                      stacked: true,
-                      items: [
-                        for (final o in all)
-                          FilterBarItem(o?.label ?? 'Todos', icon: o == null
-                                ? Icons.apps_rounded
-                                : iconForCategorySlug(o.slug)),
-                      ],
-                      selected: index < 0 ? 0 : index,
-                      onSelected: (i) =>
-                          setState(() => _filter = all[i]?.slug),
-                    );
-                  },
-                  orElse: () => null,
-                ),
-              ),
+              child: FloatingBottomNav(current: AppTab.partners),
             ),
         ],
       ),
@@ -450,6 +479,21 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
       Navigator.of(context).pop(chosen);
     }
   }
+}
+
+/// "Perto de ti": a zona do parceiro bate com a localização escolhida
+/// nos dois sentidos — "Grande Lisboa" encontra quem serve "Lisboa" e
+/// vice-versa (antes só um sentido, e o evento em "Grande Lisboa" não
+/// via os parceiros de Lisboa).
+bool _near(String partnerAreas, String wanted) {
+  final w = wanted.toLowerCase().trim();
+  if (w.isEmpty) return true;
+  for (final area in partnerAreas.toLowerCase().split(', ')) {
+    final a = area.trim();
+    if (a.isEmpty) continue;
+    if (a.contains(w) || w.contains(a)) return true;
+  }
+  return false;
 }
 
 extension _FirstOrNull<T> on Iterable<T> {
