@@ -135,8 +135,10 @@ class TopDownPageTransitionsBuilder extends PageTransitionsBuilder {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    // A primeira página não anima.
-    if (route.isFirst) return child;
+    // Sem condição de "primeira página": com `context.go` a página nova
+    // passa logo a ser a primeira da pilha, e a animação nunca aparecia.
+    // A página inicial da app já não anima por si (o Navigator começa-a
+    // completa).
     return TopDownTransition(animation: animation, child: child);
   }
 }
