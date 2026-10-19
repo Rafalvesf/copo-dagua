@@ -139,7 +139,7 @@ class _NavIcon extends StatelessWidget {
                       child: Icon(
                         active ? activeIcon : icon,
                         color: color,
-                        size: active ? 24 : 32,
+                        size: active ? 22 : 28,
                       ),
                     ),
                   ),

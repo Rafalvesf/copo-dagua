@@ -183,7 +183,7 @@ class _NavIcon extends StatelessWidget {
                       child: Icon(
                         active ? activeIcon : icon,
                         color: color,
-                        size: active ? 24 : 32,
+                        size: active ? 22 : 28,
                       ),
                     ),
                   ),
@@ -256,16 +256,23 @@ class NavBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Selecionado = círculo cheio com um aro (branco + cor), como no
+    // mockup do site (pedido do utilizador, 2026-10-19).
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
-      // Selecionado = pílula verde em vez de círculo (pedido 2026-10-17).
-      width: active ? size * 1.6 : size,
+      width: size,
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: active ? color : Colors.transparent,
-        borderRadius: BorderRadius.circular(999),
+        shape: BoxShape.circle,
+        boxShadow: active
+            ? [
+                BoxShadow(color: color, spreadRadius: 4),
+                const BoxShadow(color: Colors.white, spreadRadius: 2),
+              ]
+            : const [],
       ),
       child: child,
     );
