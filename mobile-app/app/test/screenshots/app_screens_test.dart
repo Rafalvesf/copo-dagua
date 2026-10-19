@@ -135,6 +135,7 @@ final _guests = [
       plusOneAllowed: i.isEven,
       createdAt: _days(-30 + i),
       onboardingCompletedAt: _days(-3),
+      nickname: i == 5 ? 'Tio Filipe' : null,
     ),
 ];
 
@@ -371,9 +372,13 @@ class _FakeSeating extends SeatingController {
         hasVenue: true,
         totalTables: 12,
         tables: [
-          SeatingTable(id: 's1', weddingId: 'w1', guestIds: [for (var i = 0; i < 8; i++) 'g$i']),
-          const SeatingTable(id: 's2', weddingId: 'w1', guestIds: ['g0', 'g1', 'g4']),
-          const SeatingTable(id: 's3', weddingId: 'w1', rectangular: true),
+          SeatingTable(id: 's1', weddingId: 'w1', name: 'Família da noiva', guestIds: [for (var i = 0; i < 8; i++) 'g$i']),
+          const SeatingTable(id: 's2', weddingId: 'w1', name: 'Amigos da faculdade', guestIds: ['g0', 'g1', 'g4']),
+        ],
+        venueTypes: const [
+          VenueTableType(id: 'vt1', partnerId: 'p0', shape: TableShape.round, seats: 8, quantity: 6),
+          VenueTableType(id: 'vt2', partnerId: 'p0', shape: TableShape.square, seats: 8, quantity: 4),
+          VenueTableType(id: 'vt3', partnerId: 'p0', shape: TableShape.rectangular, seats: 8, quantity: 2),
         ],
       );
 }

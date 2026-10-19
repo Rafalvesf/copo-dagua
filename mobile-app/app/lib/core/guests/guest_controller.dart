@@ -105,6 +105,7 @@ Guest guestFromRow(Map<String, dynamic> row) => Guest(
   onboardingCompletedAt: row['onboarding_completed_at'] == null
       ? null
       : DateTime.parse(row['onboarding_completed_at'] as String),
+  nickname: row['nickname'] as String?,
 );
 
 /// Liga-se à tabela `guests` real (`database/migrations/004_guests.sql`)
@@ -196,6 +197,22 @@ class GuestsController extends Notifier<GuestsState> {
         .from('guests')
         .update(data)
         .eq('id', guest.id)
+        .select()
+        .single();
+    final updated = guestFromRow(row);
+    state = state.copyWith(
+      guests: [for (final g in state.guests) if (g.id == updated.id) updated else g],
+    );
+  }
+
+  /// Nome carinhoso do convidado nos Lugares (ex: "Avó Lurdes"). Vazio
+  /// volta a mostrar o nome normal.
+  Future<void> setNickname(String guestId, String? nickname) async {
+    final value = (nickname?.trim().isEmpty ?? true) ? null : nickname!.trim();
+    final row = await supabase
+        .from('guests')
+        .update({'nickname': value, 'updated_at': DateTime.now().toIso8601String()})
+        .eq('id', guestId)
         .select()
         .single();
     final updated = guestFromRow(row);

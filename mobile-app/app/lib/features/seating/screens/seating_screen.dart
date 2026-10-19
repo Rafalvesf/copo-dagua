@@ -57,11 +57,14 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
         if (t.id != existing?.id) ...t.guestIds,
     };
 
+    final seating = ref.read(seatingControllerProvider);
     final result = await showIslandSheet<_TableConfigResult>(
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) => _TableConfigSheet(
         tableNumber: index + 1,
+        initialName: existing?.name ?? '',
+        initialShape: seating.shapeFor(index),
         guests: guests,
         initiallySelected: existing?.guestIds.toSet() ?? const {},
         assignedElsewhere: assignedElsewhere,
@@ -81,9 +84,9 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
       if (!mounted) return;
       setState(() => _selectedIndex = null);
     } else if (isNextCell) {
-      await notifier.saveNextTable(result.guestIds);
+      await notifier.saveNextTable(result.guestIds, name: result.name, shape: result.shape);
     } else if (existing != null) {
-      await notifier.updateTableGuests(existing.id, result.guestIds);
+      await notifier.updateTableGuests(existing.id, result.guestIds, name: result.name, shape: result.shape);
     }
   }
 
@@ -103,11 +106,11 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
     }
     final next = state.nextIndex;
     if (index < next) {
-      say('A Mesa ${index + 1} está cheia.');
+      say('A ${state.nameFor(index)} está cheia.');
       return;
     }
     if (index > next) {
-      say('Preenche primeiro a Mesa ${next + 1}.');
+      say('Preenche primeiro a ${state.nameFor(next)}.');
       return;
     }
     final draft = state.nextTable;
@@ -115,7 +118,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
     setState(() => _selectedIndex = next);
     await ref.read(seatingControllerProvider.notifier).saveNextTable(ids);
     if (!mounted) return;
-    say('${guest.name.split(' ').first} já tem lugar na Mesa ${next + 1}.');
+    say('${guest.displayName} já tem lugar na ${state.nameFor(next)}.');
   }
 
   @override
@@ -215,6 +218,8 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 18),
+                                _ShapeCategories(state: state),
+                                const SizedBox(height: 14),
                                 if (_view == _PlanView.plan)
                                   _PlanGrid(
                                     state: state,
@@ -233,7 +238,6 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                   const SizedBox(height: 14),
                                   const _Legend(),
                                 ],
-                                if (state.venueTypes.isNotEmpty) _TableTypes(types: state.venueTypes),
                                 _UnseatedStrip(
                                   guests: unseated,
                                   onTap: (g) => _seat(g, _selectedIndex ?? state.nextIndex),
@@ -244,6 +248,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                     index: _selectedIndex!,
                                     state: state,
                                     guests: guestsState.guests,
+                                    onRenameGuest: (g) => renameGuest(context, ref, g),
                                     onEdit: () {
                                       final index = _selectedIndex!;
                                       final isNext = index == state.nextIndex;
@@ -372,6 +377,11 @@ class _PlanGrid extends StatelessWidget {
     final filled = state.nextIndex;
     final total = state.totalTables;
     final c = AppTheme.accentOliveDark;
+    // Mosaico 2×2 (pedido do utilizador, 2026-10-19): mostra as mesas já
+    // usadas, a próxima e as bloqueadas só até fechar o bloco de 4; o
+    // bloco seguinte desbloqueia quando é preciso.
+    final visible = math.min(total, ((filled ~/ 4) + 1) * 4);
+    final hidden = total - visible;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
@@ -390,12 +400,12 @@ class _PlanGrid extends StatelessWidget {
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: total,
+            itemCount: visible,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio: 1,
+              crossAxisCount: 2,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 0.92,
             ),
             itemBuilder: (context, index) {
               final isFilled = index < filled;
@@ -410,17 +420,25 @@ class _PlanGrid extends StatelessWidget {
                 onWillAcceptWithDetails: (_) => cellState != _CellState.locked,
                 onAcceptWithDetails: (d) => onDrop(index, d.data),
                 builder: (context, candidates, _) => _TableCell(
-                  number: index + 1,
+                  name: state.nameFor(index),
                   state: cellState,
                   count: table?.guestIds.length ?? 0,
                   selected: selectedIndex == index,
                   hovering: candidates.isNotEmpty,
-                  rectangular: table?.rectangular ?? false,
+                  shape: state.shapeFor(index),
                   onTap: cellState == _CellState.locked ? null : () => onSelect(index),
                 ),
               );
             },
           ),
+          if (hidden > 0) ...[
+            const SizedBox(height: 10),
+            Text(
+              '+ $hidden ${hidden == 1 ? 'mesa desbloqueia' : 'mesas desbloqueiam'} quando estas estiverem completas',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted),
+            ),
+          ],
           const SizedBox(height: 12),
           Container(
             width: 120,
@@ -439,24 +457,103 @@ class _PlanGrid extends StatelessWidget {
   }
 }
 
-/// Mesa desenhada: redonda ou retangular, com os [seatsPerTable] lugares
-/// à volta (cheios os ocupados), número e "n/8" ao centro.
+/// Categorias de mesa: redonda, quadrada e retangular, com quantas há.
+class _ShapeCategories extends StatelessWidget {
+  final SeatingState state;
+  const _ShapeCategories({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final counts = {for (final s in TableShape.values) s: 0};
+    for (var i = 0; i < state.totalTables; i++) {
+      counts[state.shapeFor(i)] = counts[state.shapeFor(i)]! + 1;
+    }
+    return Row(
+      children: [
+        for (final (i, shape) in const [TableShape.round, TableShape.square, TableShape.rectangular].indexed) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              height: 56,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: whiteLineCard(radius: 16),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 26,
+                    height: 26,
+                    child: CustomPaint(painter: _ShapeIconPainter(shape, AppTheme.accentOliveDark)),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(shape.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700)),
+                        Text('${counts[shape]} ${counts[shape] == 1 ? 'mesa' : 'mesas'}',
+                            style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ShapeIconPainter extends CustomPainter {
+  final TableShape shape;
+  final Color color;
+  _ShapeIconPainter(this.shape, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8;
+    final c = size.center(Offset.zero);
+    switch (shape) {
+      case TableShape.round:
+        canvas.drawCircle(c, size.width * 0.38, p);
+      case TableShape.square:
+        canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: c, width: size.width * 0.72, height: size.width * 0.72), const Radius.circular(4)), p);
+      case TableShape.rectangular:
+        canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: c, width: size.width * 0.9, height: size.width * 0.5), const Radius.circular(4)), p);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ShapeIconPainter old) => old.shape != shape || old.color != color;
+}
+
+/// Mesa desenhada (redonda, quadrada ou retangular) com os
+/// [seatsPerTable] lugares à volta (cheios os ocupados), "n/8" ao centro
+/// e o nome da mesa por baixo.
 class _TableCell extends StatelessWidget {
-  final int number;
+  final String name;
   final _CellState state;
   final int count;
   final bool selected;
   final bool hovering;
-  final bool rectangular;
+  final TableShape shape;
   final VoidCallback? onTap;
 
   const _TableCell({
-    required this.number,
+    required this.name,
     required this.state,
     required this.count,
     this.selected = false,
     this.hovering = false,
-    this.rectangular = false,
+    this.shape = TableShape.round,
     this.onTap,
   });
 
@@ -469,37 +566,36 @@ class _TableCell extends StatelessWidget {
     final fill = full ? c.withValues(alpha: 0.16) : Colors.white;
 
     final cell = AnimatedScale(
-      scale: hovering ? 1.08 : 1,
+      scale: hovering ? 1.05 : 1,
       duration: const Duration(milliseconds: 160),
       child: Container(
+        padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
         decoration: BoxDecoration(
-          color: hovering ? c.withValues(alpha: 0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(rectangular ? 16 : 999),
-          border: selected || hovering ? Border.all(color: c, width: 2) : null,
+          color: hovering ? c.withValues(alpha: 0.10) : const Color(0xFFF7F8F5),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: selected || hovering ? c : Colors.transparent, width: 2),
         ),
         child: Opacity(
           opacity: locked ? 0.55 : 1,
-          child: CustomPaint(
-            painter: _TablePainter(
-              seats: seatsPerTable,
-              taken: count,
-              color: fg,
-              fill: fill,
-              rectangular: rectangular,
-            ),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (locked)
-                    const Icon(Icons.lock_outline_rounded, size: 14, color: AppTheme.inkMuted)
-                  else
-                    Text('$number', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: fg)),
-                  Text(locked ? 'M$number' : '$count/$seatsPerTable',
-                      style: const TextStyle(fontSize: 9.5, color: AppTheme.inkMuted)),
-                ],
+          child: Column(
+            children: [
+              Expanded(
+                child: CustomPaint(
+                  painter: _TablePainter(seats: seatsPerTable, taken: count, color: fg, fill: fill, shape: shape),
+                  child: Center(
+                    child: locked
+                        ? const Icon(Icons.lock_outline_rounded, size: 16, color: AppTheme.inkMuted)
+                        : Text('$count/$seatsPerTable', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 4),
+              Text(name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: locked ? AppTheme.inkMuted : AppTheme.ink)),
+            ],
           ),
         ),
       ),
@@ -514,14 +610,14 @@ class _TablePainter extends CustomPainter {
   final int taken;
   final Color color;
   final Color fill;
-  final bool rectangular;
+  final TableShape shape;
 
-  _TablePainter({required this.seats, required this.taken, required this.color, required this.fill, required this.rectangular});
+  _TablePainter({required this.seats, required this.taken, required this.color, required this.fill, required this.shape});
 
   @override
   void paint(Canvas canvas, Size size) {
     final c = size.center(Offset.zero);
-    final r = size.shortestSide * 0.30;
+    final r = size.shortestSide * 0.28;
     final stroke = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
@@ -530,36 +626,47 @@ class _TablePainter extends CustomPainter {
     final dot = Paint()..color = color;
     final empty = Paint()..color = Colors.white;
     final points = <Offset>[];
-    if (rectangular) {
-      final rect = Rect.fromCenter(center: c, width: r * 2.6, height: r * 1.3);
-      canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), body);
-      canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), stroke);
-      final per = (seats / 2).ceil();
-      for (var k = 0; k < per; k++) {
-        final x = rect.left + rect.width * (k + 0.5) / per;
-        points.add(Offset(x, rect.top - 7));
-      }
-      for (var k = 0; k < seats - per; k++) {
-        final x = rect.left + rect.width * (k + 0.5) / per;
-        points.add(Offset(x, rect.bottom + 7));
-      }
-    } else {
-      canvas.drawCircle(c, r, body);
-      canvas.drawCircle(c, r, stroke);
-      for (var k = 0; k < seats; k++) {
-        final a = 2 * math.pi * k / seats - math.pi / 2;
-        points.add(Offset(c.dx + (r + 8) * math.cos(a), c.dy + (r + 8) * math.sin(a)));
-      }
+    switch (shape) {
+      case TableShape.rectangular:
+        final rect = Rect.fromCenter(center: c, width: r * 2.8, height: r * 1.3);
+        canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), body);
+        canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), stroke);
+        final per = (seats / 2).ceil();
+        for (var k = 0; k < per; k++) {
+          points.add(Offset(rect.left + rect.width * (k + 0.5) / per, rect.top - 9));
+        }
+        for (var k = 0; k < seats - per; k++) {
+          points.add(Offset(rect.left + rect.width * (k + 0.5) / per, rect.bottom + 9));
+        }
+      case TableShape.square:
+        final rect = Rect.fromCenter(center: c, width: r * 1.8, height: r * 1.8);
+        canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), body);
+        canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), stroke);
+        final per = (seats / 4).ceil();
+        for (var k = 0; k < per; k++) {
+          final f = (k + 0.5) / per;
+          points.add(Offset(rect.left + rect.width * f, rect.top - 9));
+          points.add(Offset(rect.right + 9, rect.top + rect.height * f));
+          points.add(Offset(rect.right - rect.width * f, rect.bottom + 9));
+          points.add(Offset(rect.left - 9, rect.bottom - rect.height * f));
+        }
+      case TableShape.round:
+        canvas.drawCircle(c, r, body);
+        canvas.drawCircle(c, r, stroke);
+        for (var k = 0; k < seats; k++) {
+          final a = 2 * math.pi * k / seats - math.pi / 2;
+          points.add(Offset(c.dx + (r + 10) * math.cos(a), c.dy + (r + 10) * math.sin(a)));
+        }
     }
-    for (var k = 0; k < points.length; k++) {
-      canvas.drawCircle(points[k], 4.2, k < taken ? dot : empty);
-      canvas.drawCircle(points[k], 4.2, stroke..strokeWidth = 1.2);
+    for (var k = 0; k < points.length && k < seats; k++) {
+      canvas.drawCircle(points[k], 5, k < taken ? dot : empty);
+      canvas.drawCircle(points[k], 5, stroke..strokeWidth = 1.2);
     }
   }
 
   @override
   bool shouldRepaint(covariant _TablePainter old) =>
-      old.taken != taken || old.color != color || old.fill != fill || old.rectangular != rectangular || old.seats != seats;
+      old.taken != taken || old.color != color || old.fill != fill || old.shape != shape || old.seats != seats;
 }
 
 class _TableListView extends StatelessWidget {
@@ -638,7 +745,7 @@ class _TableListView extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    'Mesa ${index + 1} · ${(table?.rectangular ?? false) ? 'Retangular' : 'Redonda'}',
+                                    '${state.nameFor(index)} · ${state.shapeFor(index).label}',
                                     style: const TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700),
                                   ),
                                 ),
@@ -709,63 +816,6 @@ class _Legend extends StatelessWidget {
   }
 }
 
-/// Tipos de mesa que o espaço reservado definiu (no futuro, cada
-/// empresa define os seus e aparecem aqui).
-class _TableTypes extends StatelessWidget {
-  final List<VenueTableType> types;
-  const _TableTypes({required this.types});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionTitle('Tipos de mesa',
-            trailing: Text('Definidos pelo espaço', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted))),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          clipBehavior: Clip.none,
-          child: Row(
-            children: [
-              for (final (i, t) in types.indexed) ...[
-                if (i > 0) const SizedBox(width: 10),
-                Container(
-                  height: 56,
-                  padding: const EdgeInsets.fromLTRB(8, 0, 14, 0),
-                  decoration: whiteLineCard(radius: 16),
-                  child: Row(
-                    children: [
-                      StickerIcon(
-                        switch (t.shape) {
-                          TableShape.rectangular => Icons.rectangle_outlined,
-                          TableShape.square => Icons.crop_square_rounded,
-                          TableShape.round => Icons.circle_outlined,
-                        },
-                        size: 36,
-                        turns: StickerIcon.tilt(i),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(t.shape.label, style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700)),
-                          Text('${t.quantity} × ${t.seats} lugares',
-                              style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 String _initialsOf(String name) {
   final parts = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
   if (parts.isEmpty) return '?';
@@ -820,9 +870,9 @@ class _UnseatedStrip extends StatelessWidget {
                   width: 64,
                   child: Column(
                     children: [
-                      _GuestAvatar(name: g.name),
+                      _GuestAvatar(name: g.displayName),
                       const SizedBox(height: 6),
-                      Text(g.name.split(' ').first,
+                      Text(g.nickname?.trim().isNotEmpty == true ? g.displayName : g.name.split(' ').first,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.ink)),
@@ -857,12 +907,14 @@ class _SelectedTableCard extends StatelessWidget {
   final SeatingState state;
   final List<Guest> guests;
   final VoidCallback onEdit;
+  final ValueChanged<Guest> onRenameGuest;
 
   const _SelectedTableCard({
     required this.index,
     required this.state,
     required this.guests,
     required this.onEdit,
+    required this.onRenameGuest,
   });
 
   @override
@@ -886,8 +938,8 @@ class _SelectedTableCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Mesa ${index + 1}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                    Text('${seated.length} de $seatsPerTable lugares',
+                    Text(state.nameFor(index), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                    Text('${state.shapeFor(index).label} · ${seated.length} de $seatsPerTable lugares',
                         style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
                   ],
                 ),
@@ -914,21 +966,25 @@ class _SelectedTableCard extends StatelessWidget {
             childAspectRatio: 3.6,
             children: [
               for (final g in seated)
-                Container(
+                SnappyTap(
+                  onTap: () => onRenameGuest(g),
+                  child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: whiteLineCard(radius: 14),
                   child: Row(
                     children: [
-                      _GuestAvatar(name: g.name, size: 28),
+                      _GuestAvatar(name: g.displayName, size: 28),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(g.name,
+                        child: Text(g.displayName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700)),
                       ),
+                      const Icon(Icons.edit_outlined, size: 14, color: AppTheme.inkMuted),
                     ],
                   ),
+                ),
                 ),
               if (seated.length < seatsPerTable)
                 Container(
@@ -1013,13 +1069,17 @@ class _NoTablesCard extends StatelessWidget {
 class _TableConfigResult {
   final List<String> guestIds;
   final bool remove;
+  final String? name;
+  final TableShape? shape;
 
-  const _TableConfigResult.save(this.guestIds) : remove = false;
-  const _TableConfigResult.remove() : guestIds = const [], remove = true;
+  const _TableConfigResult.save(this.guestIds, {this.name, this.shape}) : remove = false;
+  const _TableConfigResult.remove() : guestIds = const [], remove = true, name = null, shape = null;
 }
 
-class _TableConfigSheet extends StatefulWidget {
+class _TableConfigSheet extends ConsumerStatefulWidget {
   final int tableNumber;
+  final String initialName;
+  final TableShape initialShape;
   final List<Guest> guests;
   final Set<String> initiallySelected;
   final Set<String> assignedElsewhere;
@@ -1032,6 +1092,8 @@ class _TableConfigSheet extends StatefulWidget {
 
   const _TableConfigSheet({
     required this.tableNumber,
+    required this.initialName,
+    required this.initialShape,
     required this.guests,
     required this.initiallySelected,
     required this.assignedElsewhere,
@@ -1040,11 +1102,19 @@ class _TableConfigSheet extends StatefulWidget {
   });
 
   @override
-  State<_TableConfigSheet> createState() => _TableConfigSheetState();
+  ConsumerState<_TableConfigSheet> createState() => _TableConfigSheetState();
 }
 
-class _TableConfigSheetState extends State<_TableConfigSheet> {
+class _TableConfigSheetState extends ConsumerState<_TableConfigSheet> {
   late final Set<String> _selected = {...widget.initiallySelected};
+  late final TextEditingController _name = TextEditingController(text: widget.initialName);
+  late TableShape _shape = widget.initialShape;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
 
   bool get _canSave => widget.requireFull
       ? _selected.length == seatsPerTable
@@ -1062,6 +1132,7 @@ class _TableConfigSheetState extends State<_TableConfigSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final live = ref.watch(guestsControllerProvider).guests;
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
@@ -1077,7 +1148,7 @@ class _TableConfigSheetState extends State<_TableConfigSheet> {
             children: [
               Expanded(
                 child: Text(
-                  'Mesa ${widget.tableNumber}',
+                  _name.text.trim().isEmpty ? 'Mesa ${widget.tableNumber}' : _name.text.trim(),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
@@ -1093,7 +1164,30 @@ class _TableConfigSheetState extends State<_TableConfigSheet> {
                 ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 10),
+          // Nome e forma da mesa (pedido do utilizador, 2026-10-19).
+          TextField(
+            controller: _name,
+            onChanged: (_) => setState(() {}),
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              labelText: 'Nome da mesa',
+              hintText: 'Mesa ${widget.tableNumber} — ex: Amigos da faculdade',
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final shape in const [TableShape.round, TableShape.square, TableShape.rectangular])
+                ChoiceChip(
+                  label: Text(shape.label),
+                  selected: _shape == shape,
+                  onSelected: (_) => setState(() => _shape = shape),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
           Text(
             '${_selected.length}/$seatsPerTable convidados',
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
@@ -1119,7 +1213,9 @@ class _TableConfigSheetState extends State<_TableConfigSheet> {
                     shrinkWrap: true,
                     itemCount: widget.guests.length,
                     itemBuilder: (context, index) {
-                      final guest = widget.guests[index];
+                      // Convidado atualizado (o nome carinhoso pode ter
+                      // mudado com a folha aberta).
+                      final guest = live.firstWhere((g) => g.id == widget.guests[index].id, orElse: () => widget.guests[index]);
                       final isSelected = _selected.contains(guest.id);
                       final isTaken = widget.assignedElsewhere.contains(
                         guest.id,
@@ -1129,6 +1225,7 @@ class _TableConfigSheetState extends State<_TableConfigSheet> {
                         selected: isSelected,
                         disabled: isTaken,
                         onTap: isTaken ? null : () => _toggle(guest.id),
+                        onRename: () => renameGuest(context, ref, guest),
                       );
                     },
                   ),
@@ -1139,7 +1236,7 @@ class _TableConfigSheetState extends State<_TableConfigSheet> {
             onPressed: _canSave
                 ? () => Navigator.of(
                     context,
-                  ).pop(_TableConfigResult.save(_selected.toList()))
+                  ).pop(_TableConfigResult.save(_selected.toList(), name: _name.text, shape: _shape))
                 : null,
           ),
         ],
@@ -1153,12 +1250,14 @@ class _GuestPickRow extends StatelessWidget {
   final bool selected;
   final bool disabled;
   final VoidCallback? onTap;
+  final VoidCallback? onRename;
 
   const _GuestPickRow({
     required this.guest,
     required this.selected,
     required this.disabled,
     this.onTap,
+    this.onRename,
   });
 
   @override
@@ -1175,25 +1274,21 @@ class _GuestPickRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: AppColors.gray,
-            backgroundImage: NetworkImage(
-              'https://api.dicebear.com/7.x/notionists/png?seed=${guest.id}',
-            ),
-          ),
+          _GuestAvatar(name: guest.displayName, size: 36),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  guest.name,
+                  guest.displayName,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: AppFontSize.base,
                   ),
                 ),
+                if (guest.displayName != guest.name)
+                  Text(guest.name, style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs)),
                 if (disabled)
                   Text(
                     'Já sentado noutra mesa',
@@ -1207,6 +1302,13 @@ class _GuestPickRow extends StatelessWidget {
               ],
             ),
           ),
+          if (onRename != null)
+            IconButton(
+              tooltip: 'Nome nos Lugares',
+              visualDensity: VisualDensity.compact,
+              onPressed: onRename,
+              icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.inkMuted),
+            ),
           Icon(
             selected ? Icons.check_circle : Icons.circle_outlined,
             color: selected ? AppStatusColors.confirmed : AppTheme.inkMuted,
@@ -1272,9 +1374,9 @@ Future<void> _showMoreOptions(BuildContext context) async {
     for (var i = 0; i < tables.length; i++) {
       final names = [
         for (final id in tables[i].guestIds)
-          if (guests[id] != null) guests[id]!.name,
+          if (guests[id] != null) guests[id]!.displayName,
       ];
-      buf.writeln('Mesa ${i + 1} (${names.length})');
+      buf.writeln('${tables[i].name ?? 'Mesa ${i + 1}'} (${names.length})');
       for (final n in names) {
         buf.writeln('  • $n');
       }
@@ -1310,6 +1412,47 @@ Future<void> _showMoreOptions(BuildContext context) async {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Não foi possível recomeçar. Tenta outra vez.')),
+      );
+    }
+  }
+}
+
+/// Nome carinhoso de um convidado nos Lugares (ex: "Avó Lurdes").
+Future<void> renameGuest(BuildContext context, WidgetRef ref, Guest guest) async {
+  final controller = TextEditingController(text: guest.nickname ?? '');
+  final value = await showIslandDialog<String>(
+    context: context,
+    builder: (context) => IslandAlert(
+      title: const Text('Como lhe chamam?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Aparece nos Lugares em vez de "${guest.name}".',
+              style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+          const SizedBox(height: 12),
+          TextField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(hintText: 'Ex: Avó Lurdes'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+        FilledButton(onPressed: () => Navigator.of(context).pop(controller.text), child: const Text('Guardar')),
+      ],
+    ),
+  );
+  controller.dispose();
+  if (value == null) return;
+  try {
+    await ref.read(guestsControllerProvider.notifier).setNickname(guest.id, value);
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível guardar o nome. Tenta outra vez.')),
       );
     }
   }

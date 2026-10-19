@@ -9,7 +9,20 @@ SeatingTable _tableFromRow(Map<String, dynamic> row) => SeatingTable(
   weddingId: row['wedding_id'] as String,
   guestIds: (row['guest_ids'] as List?)?.cast<String>() ?? const [],
   rectangular: row['rectangular'] as bool? ?? false,
+  name: (row['name'] as String?)?.trim().isEmpty ?? true ? null : (row['name'] as String).trim(),
+  shape: switch (row['shape']) {
+    'round' => TableShape.round,
+    'square' => TableShape.square,
+    'rectangular' => TableShape.rectangular,
+    _ => (row['rectangular'] as bool? ?? false) ? TableShape.rectangular : null,
+  },
 );
+
+String _shapeToDb(TableShape s) => switch (s) {
+  TableShape.round => 'round',
+  TableShape.square => 'square',
+  TableShape.rectangular => 'rectangular',
+};
 
 /// Lugares por mesa — uma simplificação deliberada: o inventário real do
 /// local (`partner_venue_tables`, `database/migrations/022_venue_tables.sql`)
@@ -68,6 +81,25 @@ class SeatingState {
       tables.length > nextIndex ? tables[nextIndex] : null;
 
   bool get isFull => nextIndex >= totalTables;
+
+  /// Forma da mesa [index]: a escolhida pelo organizador ou, por omissão,
+  /// a do tipo de mesa do espaço (os tipos são distribuídos por ordem).
+  TableShape shapeFor(int index) {
+    final t = index < tables.length ? tables[index] : null;
+    if (t?.shape != null) return t!.shape!;
+    var i = index;
+    for (final type in venueTypes) {
+      if (i < type.quantity) return type.shape;
+      i -= type.quantity;
+    }
+    return TableShape.round;
+  }
+
+  /// Nome a mostrar da mesa [index] ("Mesa N" sem nome dado).
+  String nameFor(int index) {
+    final t = index < tables.length ? tables[index] : null;
+    return t?.name ?? 'Mesa ${index + 1}';
+  }
 
   SeatingState copyWith({
     bool? loading,
@@ -184,7 +216,7 @@ class SeatingController extends Notifier<SeatingState> {
   /// já criado. Só passa a ✓ e desbloqueia a mesa seguinte quando
   /// atinge [seatsPerTable] convidados; abaixo disso continua como
   /// rascunho na mesma célula.
-  Future<void> saveNextTable(List<String> guestIds) async {
+  Future<void> saveNextTable(List<String> guestIds, {String? name, TableShape? shape}) async {
     final weddingId = currentWeddingId;
     if (weddingId == null || guestIds.isEmpty || state.isFull) return;
     final draft = state.nextTable;
@@ -195,12 +227,15 @@ class SeatingController extends Notifier<SeatingState> {
             'wedding_id': weddingId,
             'guest_ids': guestIds,
             'position': state.tables.length,
+            if (name != null) 'name': name.trim().isEmpty ? null : name.trim(),
+            if (shape != null) 'shape': _shapeToDb(shape),
+            if (shape != null) 'rectangular': shape == TableShape.rectangular,
           })
           .select()
           .single();
       state = state.copyWith(tables: [...state.tables, _tableFromRow(row)]);
     } else {
-      await _updateGuestIds(draft.id, guestIds);
+      await _updateGuestIds(draft.id, guestIds, name: name, shape: shape);
     }
   }
 
@@ -208,16 +243,22 @@ class SeatingController extends Notifier<SeatingState> {
   /// sempre mantendo [seatsPerTable] (garantido pelo ecrã antes de
   /// chamar isto), para nunca abrir um "buraco" antes de mesas já
   /// preenchidas.
-  Future<void> updateTableGuests(String tableId, List<String> guestIds) async {
+  Future<void> updateTableGuests(String tableId, List<String> guestIds, {String? name, TableShape? shape}) async {
     final table = state.tables.where((t) => t.id == tableId).firstOrNull;
     if (table == null || guestIds.isEmpty) return;
-    await _updateGuestIds(tableId, guestIds);
+    await _updateGuestIds(tableId, guestIds, name: name, shape: shape);
   }
 
-  Future<void> _updateGuestIds(String tableId, List<String> guestIds) async {
+  Future<void> _updateGuestIds(String tableId, List<String> guestIds, {String? name, TableShape? shape}) async {
     final row = await supabase
         .from('seating_tables')
-        .update({'guest_ids': guestIds, 'updated_at': DateTime.now().toIso8601String()})
+        .update({
+          'guest_ids': guestIds,
+          'updated_at': DateTime.now().toIso8601String(),
+          if (name != null) 'name': name.trim().isEmpty ? null : name.trim(),
+          if (shape != null) 'shape': _shapeToDb(shape),
+          if (shape != null) 'rectangular': shape == TableShape.rectangular,
+        })
         .eq('id', tableId)
         .select()
         .single();
