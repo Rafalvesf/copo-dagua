@@ -66,6 +66,16 @@ jobs:
           echo "commit: $(git rev-parse HEAD)" > build/web/version.txt
           echo "built: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> build/web/version.txt
 
+      # Obriga o telemóvel a ir buscar a versão nova (a app ficava presa
+      # numa versão antiga em cache, com o nome e a abertura antigos).
+      - name: Cache busting
+        run: |
+          V=$(git rev-parse --short HEAD)
+          sed -i "s#\"mainJsPath\":\"main.dart.js\"#\"mainJsPath\":\"main.dart.js?v=$V\"#" build/web/flutter_bootstrap.js
+          sed -i "s#src=\"flutter_bootstrap.js\"#src=\"flutter_bootstrap.js?v=$V\"#" build/web/index.html build/web/404.html
+          grep -o 'main.dart.js?v=[a-z0-9]*' build/web/flutter_bootstrap.js
+          grep -o 'flutter_bootstrap.js?v=[a-z0-9]*' build/web/index.html
+
       - name: Keep previous version as backup
         run: |
           OLD="$GITHUB_WORKSPACE/published"
