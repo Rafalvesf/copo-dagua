@@ -18,6 +18,7 @@ import '../partner_style.dart';
 import '../../../shared/money.dart';
 import '../../../core/partners/category_figure.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/v2_kit.dart';
 
 
 class PartnerDetailScreen extends ConsumerStatefulWidget {
@@ -240,6 +241,15 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         : packages.map((p) => p.price).reduce((a, b) => a < b ? a : b);
     final fromPrice = minPackage ?? partner.startingPrice ?? partner.averageQuotePrice;
 
+    final figureText = figureValue == null ? null : figure.format(figureValue);
+    final ratingText = summary.count > 0
+        ? '${summary.average.toStringAsFixed(1).replaceAll('.', ',')} · ${summary.count}'
+        : 'Novo';
+    final gallery = photos.length > 1 ? photos.skip(1).take(6).toList() : const <String>[];
+
+    // Redesign 2026-10-19 (pedido do utilizador): foto a toda a largura
+    // no topo da folha, conteúdo num cartão branco que sobe por cima,
+    // galeria em grelha, pacotes com preço e dois botões em baixo.
     return Material(
       color: Colors.white,
       child: Column(
@@ -250,196 +260,156 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Pega da folha — arrastar para baixo fecha.
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onVerticalDragEnd: (d) {
-                      if ((d.primaryVelocity ?? 0) > 250) {
-                        Navigator.of(context).maybePop();
-                      }
-                    },
-                    child: Semantics(
-                      button: true,
-                      label: 'Fechar',
-                      onTap: () => Navigator.of(context).maybePop(),
-                      child: Center(
-                        child: Container(
-                          margin: const EdgeInsets.only(top: 10, bottom: 14),
-                          width: 40,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: AppTheme.borderMuted,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ),
-                    ),
+                  _PhotoCarousel(
+                    photos: photos,
+                    fallbackColor: colorForCategorySlug(partner.primaryCategorySlug),
+                    fallbackIcon: iconForCategorySlug(partner.primaryCategorySlug),
+                    favorited: favorited,
+                    onFavorite: () => ref
+                        .read(favoritePartnersControllerProvider.notifier)
+                        .toggle(partner.id),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _PhotoCarousel(
-                      photos: photos,
-                      fallbackColor: colorForCategorySlug(partner.primaryCategorySlug),
-                      favorited: favorited,
-                      onFavorite: () => ref
-                          .read(favoritePartnersControllerProvider.notifier)
-                          .toggle(partner.id),
+                  Container(
+                    transform: Matrix4.translationValues(0, -24, 0),
+                    padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 0),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(28, 18, 28, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          [
-                            partner.primaryCategoryLabel,
-                            if (partner.location.isNotEmpty) partner.location,
-                          ].join(' · ').toUpperCase(),
-                          style: TextStyle(
-                            fontSize: AppFontSize.sm,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
-                            color: AppTheme.accentOliveDark,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          partner.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: AppFontSize.h2,
-                            height: 30 / 24,
-                            color: AppTheme.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.star_rounded, size: 16, color: AppTheme.ink),
-                            const SizedBox(width: 6),
-                            Text(
-                              summary.count > 0
-                                  ? summary.average.toStringAsFixed(1).replaceAll('.', ',')
-                                  : 'Novo',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: AppFontSize.base,
-                                color: AppTheme.ink,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    partner.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: AppFontSize.h2,
+                                      height: 1.2,
+                                      color: AppTheme.ink,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    [
+                                      partner.primaryCategoryLabel,
+                                      if (partner.location.isNotEmpty) partner.location,
+                                      if (figureText != null) '${figure.label.toLowerCase()} $figureText',
+                                    ].join(' · '),
+                                    style: const TextStyle(fontSize: 13, color: v2Muted),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                summary.count == 0
-                                    ? '· ainda sem avaliações'
-                                    : '· ${summary.count} ${summary.count == 1 ? 'avaliação' : 'avaliações'}',
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppTheme.inkMuted,
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: AppFontSize.base,
-                                ),
+                            const SizedBox(width: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: AppTheme.brandGreen,
+                                borderRadius: BorderRadius.circular(999),
                               ),
+                              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                const Icon(Icons.star_rounded, size: 14, color: Colors.white),
+                                const SizedBox(width: 3),
+                                Text(ratingText,
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+                              ]),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Row(
-                      children: [
-                        _InfoTile(
-                          label: figure.label,
-                          value: figureValue == null ? '—' : figure.format(figureValue),
-                        ),
-                        const SizedBox(width: 8),
-                        _InfoTile(
-                          label: weddingDate == null
-                              ? 'Data'
-                              : _shortDate(weddingDate),
-                          value: switch (relationshipStatus) {
-                            PartnerRelationshipStatus.booked => 'Reservado',
-                            PartnerRelationshipStatus.requestPending => 'Pedido',
-                            _ => weddingDate == null ? 'Por definir' : 'Perguntar',
-                          },
-                          highlight: true,
-                        ),
-                        const SizedBox(width: 8),
-                        _InfoTile(
-                          label: 'Desde',
-                          value: fromPrice == null
-                              ? 'Orçamento'
-                              : euros(fromPrice),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (packages.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 28),
-                      child: Text(
-                        'Incluído',
-                        style: TextStyle(
-                          fontSize: AppFontSize.base + 1,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.ink,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 28),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final p in packages.take(3)) _Chip(label: p.name),
-                          if (packages.length > 3) _Chip(label: '+${packages.length - 3}'),
-                        ],
-                      ),
-                    ),
-                  ],
-                  // Abaixo da primeira vista (igual ao canvas): o resto do
-                  // perfil para quem quiser descer — descrição e avaliações.
-                  const SizedBox(height: 28),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Sobre',
-                          style: TextStyle(
-                            fontSize: AppFontSize.base + 1,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         Text(
                           partner.description.isEmpty ? 'Sem descrição.' : partner.description,
-                          style: const TextStyle(
-                            fontSize: AppFontSize.base,
-                            height: 1.5,
-                            fontWeight: FontWeight.w300,
-                            color: AppTheme.inkMuted,
-                          ),
+                          style: const TextStyle(fontSize: AppFontSize.base, height: 1.5, color: Color(0xFF3F3B37)),
                         ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Avaliações',
-                          style: TextStyle(
-                            fontSize: AppFontSize.base + 1,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.ink,
-                          ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            _InfoTile(
+                              label: weddingDate == null ? 'A vossa data' : _shortDate(weddingDate),
+                              value: switch (relationshipStatus) {
+                                PartnerRelationshipStatus.booked => 'Reservado',
+                                PartnerRelationshipStatus.requestPending => 'Pedido enviado',
+                                _ => weddingDate == null ? 'Por definir' : 'Perguntar',
+                              },
+                              highlight: true,
+                            ),
+                            const SizedBox(width: 8),
+                            _InfoTile(
+                              label: 'Desde',
+                              value: fromPrice == null ? 'Orçamento' : euros(fromPrice),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 12),
+                        if (gallery.isNotEmpty) ...[
+                          const SizedBox(height: 22),
+                          const _Heading('Galeria'),
+                          const SizedBox(height: 10),
+                          GridView.count(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 6,
+                            crossAxisSpacing: 6,
+                            shrinkWrap: true,
+                            padding: EdgeInsets.zero,
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: [
+                              for (final url in gallery)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: Container(
+                                    color: colorForCategorySlug(partner.primaryCategorySlug),
+                                    child: Image.network(url,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => const SizedBox.shrink()),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                        if (packages.isNotEmpty) ...[
+                          const SizedBox(height: 22),
+                          _Heading('Pacotes', trailing: '${packages.length}'),
+                          const SizedBox(height: 10),
+                          for (final pk in packages) ...[
+                            Container(
+                              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                              decoration: softCard(radius: 18),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(pk.name,
+                                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                        if (pk.description.trim().isNotEmpty)
+                                          Text(pk.description.trim(),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(fontSize: 12, color: v2Muted)),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    pk.isStartingPrice ? 'desde ${euros(pk.price)}' : euros(pk.price),
+                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.brandGreen),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                        ],
+                        const SizedBox(height: 22),
+                        const _Heading('Avaliações'),
+                        const SizedBox(height: 10),
                         _ReviewsSection(partnerId: partner.id),
                       ],
                     ),
@@ -451,47 +421,42 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           SafeArea(
             top: false,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(28, 12, 28, 18),
+              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 14),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                border: Border(top: BorderSide(color: AppTheme.borderMuted)),
+                boxShadow: [BoxShadow(color: Color(0x14171713), blurRadius: 18, offset: Offset(0, -6))],
               ),
               child: Row(
                 children: [
-                  Semantics(
-                    button: true,
-                    label: 'Enviar mensagem',
+                  Expanded(
+                    flex: 2,
                     child: SizedBox(
-                      width: 54,
-                      height: 54,
-                      child: OutlinedButton(
+                      height: 52,
+                      child: FilledButton.icon(
                         onPressed: _openingChat ? null : _openChat,
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                        label: const Text('Mensagem'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFF2F0EB),
                           foregroundColor: AppTheme.ink,
-                          side: const BorderSide(color: AppTheme.borderMuted),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                          ),
+                          shape: const StadiumBorder(),
+                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback,
+                              fontSize: AppFontSize.md, fontWeight: FontWeight.w700),
                         ),
-                        child: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
+                    flex: 3,
                     child: SizedBox(
-                      height: 54,
+                      height: 52,
                       child: FilledButton(
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.accentOliveDark,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                          ),
-                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
-                            fontSize: AppFontSize.lg,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          backgroundColor: AppTheme.brandGreen,
+                          shape: const StadiumBorder(),
+                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback,
+                              fontSize: AppFontSize.md, fontWeight: FontWeight.w700),
                         ),
                         onPressed: _requestingQuote || alreadyRelated
                             ? null
@@ -507,10 +472,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                               ? 'Escolher parceiro'
                               : switch (relationshipStatus) {
                                   PartnerRelationshipStatus.booked => 'Já reservado',
-                                  PartnerRelationshipStatus.requestPending =>
-                                    'Pedido já enviado',
+                                  PartnerRelationshipStatus.requestPending => 'Pedido já enviado',
                                   _ => 'Pedir orçamento',
                                 },
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
@@ -525,6 +491,23 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   }
 }
 
+class _Heading extends StatelessWidget {
+  final String text;
+  final String? trailing;
+  const _Heading(this.text, {this.trailing});
+
+  @override
+  Widget build(BuildContext context) => Row(
+        children: [
+          Expanded(
+            child: Text(text, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+          if (trailing != null)
+            Text(trailing!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+        ],
+      );
+}
+
 const _monthAbbrPt = [
   'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
   'jul', 'ago', 'set', 'out', 'nov', 'dez',
@@ -532,43 +515,19 @@ const _monthAbbrPt = [
 
 String _shortDate(DateTime d) => '${d.day} ${_monthAbbrPt[d.month - 1]} ${d.year}';
 
-class _Chip extends StatelessWidget {
-  final String label;
-
-  const _Chip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 34,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: AppTheme.borderMuted),
-      ),
-      // Do tamanho do texto (antes ocupava a linha toda).
-      child: Center(
-        widthFactor: 1,
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink),
-        ),
-      ),
-    );
-  }
-}
-
-/// Fotos do parceiro (capa + portefólio) a deslizar, com pontos por
-/// baixo e o coração para guardar — igual ao canvas.
+/// Fotos do parceiro (capa + portefólio) a toda a largura da folha, com
+/// a pega por cima, o coração para guardar e o contador "1 / N".
 class _PhotoCarousel extends StatefulWidget {
   final List<String> photos;
   final Color fallbackColor;
+  final IconData fallbackIcon;
   final bool favorited;
   final VoidCallback onFavorite;
 
   const _PhotoCarousel({
     required this.photos,
     required this.fallbackColor,
+    required this.fallbackIcon,
     required this.favorited,
     required this.onFavorite,
   });
@@ -583,64 +542,88 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
   @override
   Widget build(BuildContext context) {
     final photos = widget.photos;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: SizedBox(
-        height: 200,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(color: widget.fallbackColor),
-            if (photos.isNotEmpty)
-              PageView.builder(
-                itemCount: photos.length,
-                onPageChanged: (i) => setState(() => _page = i),
-                itemBuilder: (context, i) => Image.network(
-                  photos[i],
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-                ),
+    return SizedBox(
+      height: 280,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Container(
+            color: widget.fallbackColor,
+            child: photos.isEmpty ? Icon(widget.fallbackIcon, color: Colors.white, size: 48) : null,
+          ),
+          if (photos.isNotEmpty)
+            PageView.builder(
+              itemCount: photos.length,
+              onPageChanged: (i) => setState(() => _page = i),
+              itemBuilder: (context, i) => Image.network(
+                photos[i],
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
               ),
-            if (photos.length > 1)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 12,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var i = 0; i < photos.length && i < 6; i++)
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        width: i == _page ? 18 : 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: i == _page
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            Positioned(
-              top: 12,
-              right: 12,
-              child: Semantics(
-                label: widget.favorited ? 'Remover dos favoritos' : 'Guardar nos favoritos',
-                child: CircleIconButton(
-                  icon: widget.favorited ? Icons.favorite : Icons.favorite_border,
-                  background: Colors.white,
-                  foreground: widget.favorited ? AppStatusColors.declined : AppTheme.ink,
-                  size: 44,
-                  onTap: widget.onFavorite,
+            ),
+          // Sombra suave no topo para a pega e o botão se lerem sobre a foto.
+          const IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment(0, -0.3),
+                  colors: [Color(0x40171713), Color(0x00171713)],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+          // Pega da folha — arrastar para baixo fecha.
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 30,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onVerticalDragEnd: (d) {
+                if ((d.primaryVelocity ?? 0) > 250) Navigator.of(context).maybePop();
+              },
+              child: Semantics(
+                button: true,
+                label: 'Fechar',
+                onTap: () => Navigator.of(context).maybePop(),
+                child: Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(4)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 22,
+            right: 16,
+            child: Semantics(
+              label: widget.favorited ? 'Remover dos favoritos' : 'Guardar nos favoritos',
+              child: CircleIconButton(
+                icon: widget.favorited ? Icons.favorite : Icons.favorite_border,
+                background: Colors.white,
+                foreground: widget.favorited ? AppStatusColors.declined : AppTheme.ink,
+                size: 42,
+                onTap: widget.onFavorite,
+              ),
+            ),
+          ),
+          if (photos.length > 1)
+            Positioned(
+              right: 16,
+              bottom: 36,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: const Color(0x66171713), borderRadius: BorderRadius.circular(999)),
+                child: Text('${_page + 1} / ${photos.length}',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -665,10 +648,9 @@ class _InfoTile extends StatelessWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: highlight ? AppColors.green : AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-        ),
+        decoration: highlight
+            ? BoxDecoration(color: const Color(0xFFDCE4D8), borderRadius: BorderRadius.circular(18))
+            : softCard(radius: 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

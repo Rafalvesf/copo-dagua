@@ -13,6 +13,8 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/gallery_placeholder.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 
@@ -30,9 +32,8 @@ String _ago(DateTime t) {
   return '${t.day.toString().padLeft(2, '0')}/${t.month.toString().padLeft(2, '0')}/${t.year}';
 }
 
-Widget _avatar(String name, String? url, double radius) => url == null
-    ? InitialsAvatar(name: name, radius: radius)
-    : CircleAvatar(radius: radius, backgroundColor: AppColors.green, backgroundImage: NetworkImage(url));
+// Mesmo avatar das listas (aro branco e sombra), redesign 2026-10-19.
+Widget _avatar(String name, String? url, double radius) => V2Avatar(name, size: radius * 2, imageUrl: url);
 
 /// Grelha 3 colunas. Coração vermelho no canto das fotos de que gostaste.
 class GallerySocialGrid extends ConsumerWidget {
@@ -160,8 +161,8 @@ class _GalleryPostsScreenState extends ConsumerState<GalleryPostsScreen> {
           likedByMe: false,
           commentCount: 0,
         );
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return GradientScaffold(
+      background: AppBackground.subtle,
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
@@ -301,11 +302,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                               Flexible(child: Text(name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14))),
                               if (m.authorIsCouple) ...[
                                 const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                  decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(999)),
-                                  child: const Text('Anfitrião', style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
-                                ),
+                                const V2Chip('Anfitrião'),
                               ],
                             ],
                           ),

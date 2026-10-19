@@ -4,6 +4,7 @@ import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import '../money.dart';
 import 'snappy_tap.dart';
+import 'v2_kit.dart';
 
 /// Peças da conversa exatamente como no design (canvas "Conversa"):
 /// bolhas com o canto do lado de quem fala mais fechado, separador de
@@ -13,7 +14,6 @@ import 'snappy_tap.dart';
 /// Partilhado pelo casal (`chat_thread_screen.dart`) e pelo parceiro
 /// (`partner_chat_thread_screen.dart`).
 
-const _border = Color(0xFFE6E0D2);
 
 String _hhmm(DateTime t) =>
     '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
@@ -102,12 +102,12 @@ class ChatBubble extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isMe ? AppTheme.accentOliveDark : AppTheme.surface,
+          color: isMe ? AppTheme.brandGreen : const Color(0xFFF2F0EB),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
-            bottomLeft: Radius.circular(isMe ? 18 : 4),
-            bottomRight: Radius.circular(isMe ? 4 : 18),
+            bottomLeft: Radius.circular(isMe ? 18 : 6),
+            bottomRight: Radius.circular(isMe ? 6 : 18),
           ),
         ),
         child: Text(
@@ -172,90 +172,97 @@ class ChatProposalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Redesign 2026-10-19: cartão branco com sombra suave (sem linha),
+    // autocolante, valores e botões em pílula — igual para casal e
+    // parceiro.
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.78,
+      width: MediaQuery.of(context).size.width * 0.8,
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        // Borda por cima do conteúdo, para os botões de baixo não a
-        // taparem nos cantos.
-        foregroundDecoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _border),
-        ),
-        clipBehavior: Clip.antiAlias,
+        padding: const EdgeInsets.all(14),
+        decoration: softCard(radius: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    eyebrow,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.6,
-                      color: AppTheme.accentOliveDark,
-                    ),
+            Row(
+              children: [
+                StickerIcon(Icons.request_quote_outlined, size: 38, turns: StickerIcon.tilt(1)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        eyebrow,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                          color: AppTheme.brandGreen,
+                        ),
+                      ),
+                      Text(title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      if (subtitle != null && subtitle!.isNotEmpty)
+                        Text(subtitle!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  if (subtitle != null && subtitle!.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                  ],
-                  const SizedBox(height: 10),
-                  _row('Total', price == null ? '—' : euros(price!), big: true),
-                  const SizedBox(height: 2),
-                  _row('Sinal para reservar', deposit == null ? '—' : euros(deposit!)),
-                  if (note != null) ...[
-                    const SizedBox(height: 6),
-                    Text(note!, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
-                  ],
-                ],
-              ),
+                ),
+              ],
             ),
-            if (actions.isNotEmpty)
-              DecoratedBox(
-                decoration: const BoxDecoration(border: Border(top: BorderSide(color: _border))),
-                child: Row(
-                  children: [
-                    for (var i = 0; i < actions.length; i++)
-                      Expanded(
-                        child: DecoratedBox(
+            const SizedBox(height: 12),
+            _row('Total', price == null ? '—' : euros(price!), big: true),
+            const SizedBox(height: 2),
+            _row('Sinal para reservar', deposit == null ? '—' : euros(deposit!)),
+            if (note != null) ...[
+              const SizedBox(height: 6),
+              Text(note!, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
+            ],
+            if (actions.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  for (var i = 0; i < actions.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    Expanded(
+                      flex: actions[i].primary ? 3 : 2,
+                      child: SnappyTap(
+                        onTap: actions[i].onTap,
+                        child: Container(
+                          height: 40,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
-                            border: i == 0 ? null : const Border(left: BorderSide(color: _border)),
+                            color: actions[i].primary && actions[i].onTap != null
+                                ? AppTheme.brandGreen
+                                : const Color(0xFFF2F0EB),
+                            borderRadius: BorderRadius.circular(999),
                           ),
-                          child: SnappyTap(
-                            onTap: actions[i].onTap,
-                            child: Container(
-                              height: 44,
-                              alignment: Alignment.center,
-                              color: Colors.white,
-                              child: Text(
-                                actions[i].label,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: actions[i].primary ? FontWeight.w700 : FontWeight.w300,
-                                  color: actions[i].onTap == null
-                                      ? AppTheme.inkMuted
-                                      : actions[i].primary
-                                          ? AppTheme.accentOliveDark
-                                          : AppTheme.inkMuted,
-                                ),
-                              ),
+                          child: Text(
+                            actions[i].label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: actions[i].onTap == null
+                                  ? AppTheme.inkMuted
+                                  : actions[i].primary
+                                      ? Colors.white
+                                      : AppTheme.ink,
                             ),
                           ),
                         ),
                       ),
+                    ),
                   ],
-                ),
+                ],
               ),
+            ],
           ],
         ),
       ),

@@ -165,7 +165,9 @@ class V2Avatar extends StatelessWidget {
         .toList();
     if (parts.isEmpty) return '?';
     if (parts.length == 1) return parts.first.substring(0, parts.first.length >= 2 ? 2 : 1).toUpperCase();
-    return (parts.first[0] + parts[1][0]).toUpperCase();
+    // Primeira e última palavra, como o InitialsAvatar ("Quinta do Lago
+    // Azul" → QA em todo o lado, não QD numa lista e QA noutra).
+    return (parts.first[0] + parts.last[0]).toUpperCase();
   }
 
   @override

@@ -80,7 +80,7 @@ class _PartnerChatThreadScreenState
         children: [
           SafeArea(
             bottom: false,
-            child: ChatHeader(name: widget.conversation.name),
+            child: ChatHeader(name: widget.conversation.name, avatarUrl: widget.conversation.avatarUrl),
           ),
           Expanded(
             child: chat.loading && chat.messages.isEmpty
