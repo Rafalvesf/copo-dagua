@@ -30,6 +30,8 @@ import 'package:copo_dagua_app/core/chat/chat_thread_controller.dart';
 import 'package:copo_dagua_app/core/chat/partner_chat_thread_controller.dart';
 import 'package:copo_dagua_app/core/checklist/checklist_controller.dart';
 import 'package:copo_dagua_app/core/gallery/gallery_providers.dart';
+import 'package:copo_dagua_app/core/gallery/gallery_social.dart';
+import 'package:copo_dagua_app/features/gallery/widgets/gallery_social_ui.dart';
 import 'package:copo_dagua_app/core/guest_home/guest_home_providers.dart';
 import 'package:copo_dagua_app/core/guests/guest_controller.dart';
 import 'package:copo_dagua_app/core/home/home_providers.dart';
@@ -458,6 +460,26 @@ List<Override> _overrides(AuthState auth) => [
             for (var i = 0; i < 9; i++)
               GalleryPhoto(id: 'ph$i', weddingId: 'w1', uploadedBy: 'u-guest', storagePath: 'x/$i.jpg', imageUrl: 'https://example.invalid/$i.jpg', status: i < 2 ? 'pending' : 'approved', createdAt: _days(-i)),
           ]),
+      // Publicações (galeria social): autor, gostos e comentários.
+      galleryFeedMetaProvider.overrideWith((ref, id) async => {
+            for (var i = 0; i < 9; i++)
+              'ph$i': GalleryPostMeta(
+                photoId: 'ph$i',
+                uploadedBy: 'u-guest',
+                authorName: i.isEven ? 'Carolina Faria' : 'Sofia Silva',
+                authorIsCouple: i.isOdd,
+                likeCount: 31 - i,
+                likedByMe: i == 2,
+                commentCount: 6,
+              ),
+          }),
+      galleryLikersProvider.overrideWith((ref, id) async => const [
+            (profileId: 'u-ar', name: 'Avó Rosa', avatarUrl: null),
+            (profileId: 'u-mc', name: 'Miguel Costa', avatarUrl: null),
+          ]),
+      galleryCommentsProvider.overrideWith((ref, id) async => [
+            GalleryComment(id: 'cm1', profileId: 'u-ar', authorName: 'Avó Rosa', body: 'Que bonito! 🥂', createdAt: _days(0)),
+          ]),
       guestWeddingsProvider.overrideWith((ref) async => const [_guestWedding]),
       myGuestRowProvider.overrideWith((ref, id) async => _guests.first),
       mySeatingTableProvider.overrideWith((ref, id) async => 3),
@@ -851,6 +873,16 @@ void main() {
       });
     }
   }
+  // Publicações (como o feed do Instagram), a abrir na 3.ª foto.
+  testWidgets('91_publicacoes', (t) => _shoot(t, '91_publicacoes', couple, '/gallery', after: (t) async {
+        final photos = [
+          for (var i = 2; i < 9; i++)
+            GalleryPhoto(id: 'ph$i', weddingId: 'w1', uploadedBy: 'u-guest', storagePath: 'x/$i.jpg', imageUrl: 'https://example.invalid/$i.jpg', caption: i == 2 ? 'O brinde mais bonito do ano' : null, status: 'approved', createdAt: _days(-i)),
+        ];
+        Navigator.of(t.element(find.byType(Navigator).first)).push(
+          MaterialPageRoute<void>(builder: (_) => GalleryPostsScreen(weddingId: 'w1', photos: photos, initialIndex: 0)),
+        );
+      }));
   testWidgets('88_manutencao', (t) async {
     _maintenanceOn = true;
     try {
