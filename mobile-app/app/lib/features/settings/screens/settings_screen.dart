@@ -208,7 +208,7 @@ class _HelpGroup extends StatelessWidget {
       children: [
         _Row(
           icon: Icons.support_agent_outlined,
-          label: 'Falar com a equipa Tchin Tchin',
+          label: 'Falar com a equipa À Nossa!',
           onTap: () => context.push('/support'),
         ),
       ],
@@ -235,7 +235,7 @@ class _CoupleSettings extends ConsumerWidget {
     var shared = false;
     try {
       final result = await SharePlus.instance.share(
-        ShareParams(text: 'Junta-te a mim para organizarmos o evento no Tchin Tchin: $link', subject: 'Organiza comigo'),
+        ShareParams(text: 'Junta-te a mim para organizarmos o evento na app À Nossa!: $link', subject: 'Organiza comigo'),
       );
       shared = result.status != ShareResultStatus.unavailable;
     } catch (_) {}

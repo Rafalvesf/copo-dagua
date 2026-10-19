@@ -158,7 +158,7 @@ class _ReviewStatusCard extends StatelessWidget {
           AppTheme.inkMuted,
         ),
       'pending_review' => (
-          'Em revisão pela equipa Tchin Tchin',
+          'Em revisão pela equipa À Nossa!',
           'Recebemos todas as informações necessárias. Avisamos assim que houver novidades.',
           AppTheme.accentOliveDark,
         ),

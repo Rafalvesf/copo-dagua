@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
         {
           amount: requested,
           currency: "eur",
-          description: "Levantamento Tchin Tchin",
+          description: "Levantamento À Nossa!",
           metadata: { partner_id: user.id },
         },
         { stripeAccount: accountId, idempotencyKey: `payout-${accountId}-${requested}-${new Date().toISOString().slice(0, 16)}` },

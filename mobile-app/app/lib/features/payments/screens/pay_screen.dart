@@ -562,7 +562,7 @@ class _SecureNote extends StatelessWidget {
       SizedBox(width: 8),
       Expanded(
         child: Text(
-          'Pagamento processado pela Stripe. A Tchin Tchin nunca vê os dados do teu cartão.',
+          'Pagamento processado pela Stripe. Nunca vemos os dados do teu cartão.',
           style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4),
         ),
       ),
