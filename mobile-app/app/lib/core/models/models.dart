@@ -464,6 +464,13 @@ class Guest {
   /// aparecer, nunca mostrado na UI.
   final DateTime? onboardingCompletedAt;
 
+  /// `guests.nickname` (101) — nome carinhoso que o organizador dá ao
+  /// convidado (ex: "Avó Lurdes"); aparece nos Lugares em vez do nome.
+  final String? nickname;
+
+  /// O nome a mostrar nos Lugares: o carinhoso, se existir.
+  String get displayName => (nickname?.trim().isNotEmpty ?? false) ? nickname!.trim() : name;
+
   const Guest({
     required this.id,
     required this.weddingId,
@@ -486,6 +493,7 @@ class Guest {
     this.rsvpToken,
     this.menuSelection,
     this.onboardingCompletedAt,
+    this.nickname,
   });
 
   Guest copyWith({
@@ -526,6 +534,7 @@ class Guest {
       rsvpToken: rsvpToken,
       menuSelection: menuSelection ?? this.menuSelection,
       onboardingCompletedAt: onboardingCompletedAt ?? this.onboardingCompletedAt,
+      nickname: nickname,
     );
   }
 }
@@ -1341,11 +1350,20 @@ class SeatingTable {
   /// (default). Só visual, não afeta a lógica de preenchimento.
   final bool rectangular;
 
+  /// Nome dado pelo organizador (101), ex: "Amigos da faculdade".
+  /// `null` = "Mesa N".
+  final String? name;
+
+  /// Forma escolhida (101); `null` = a do tipo de mesa do espaço.
+  final TableShape? shape;
+
   const SeatingTable({
     required this.id,
     required this.weddingId,
     this.guestIds = const [],
     this.rectangular = false,
+    this.name,
+    this.shape,
   });
 
   SeatingTable copyWith({List<String>? guestIds}) {
@@ -1354,6 +1372,8 @@ class SeatingTable {
       weddingId: weddingId,
       guestIds: guestIds ?? this.guestIds,
       rectangular: rectangular,
+      name: name,
+      shape: shape,
     );
   }
 }
