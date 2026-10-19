@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/partner_app/partner_app_providers.dart';
 import '../../core/theme/app_theme.dart';
-import 'floating_bottom_nav.dart' show NavBubble;
+import 'floating_bottom_nav.dart' show NavBubble, kNavRadius;
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
 
 enum PartnerTab { home, requests, chat, profile }
@@ -37,11 +37,11 @@ class PartnerBottomNav extends ConsumerWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.xxl),
+          borderRadius: BorderRadius.circular(kNavRadius),
           boxShadow: AppTheme.navBarShadow,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.xxl),
+          borderRadius: BorderRadius.circular(kNavRadius),
           child: ConnectedFilterNav(
             top: top,
             navRow: Padding(
