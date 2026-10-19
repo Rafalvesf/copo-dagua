@@ -105,10 +105,10 @@ footer { background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pad
 @media (max-width: 820px) {
   /* A barra de topo tem ~64px: tudo o que é fixo começa abaixo dela, e a
      altura usa o ecrã visível (svh) para o cartão de texto não ficar escondido. */
-  .pin { height: 100vh; height: 100svh; --pw: min(calc(56vh / 2.2), 62vw); }
-  .phone { top: 40%; }
+  .pin { height: 100vh; height: 100lvh; --pw: min(calc(56svh / 2.2), 62vw); }
+  .phone { top: 40svh; }
   .txt .ta, .txt .tb { position: static; transform: none !important; width: auto !important; text-align: left !important; }
-  .txt { inset: auto 16px 22px 16px; padding: 18px 20px; border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: 0 18px 40px -20px rgba(23,23,19,.3);
+  .txt { inset: auto 16px calc(22px + 100lvh - 100svh) 16px; padding: 18px 20px; border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: 0 18px 40px -20px rgba(23,23,19,.3);
     -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
   .txt h2 { font-size: 26px; }
   .txt h2 br { display: none; }
@@ -190,7 +190,7 @@ function frame() {
   const bgc = bgAt(p);
   document.body.style.background = bgc;
   document.documentElement.style.setProperty('--bgc', bgc);
-  top_.classList.toggle('ink', p > .55);
+  top_.classList.toggle('ink', p > .3);
   // abertura
   const h = ss(.02, .4, p);
   $('hero').style.opacity = 1 - h; $('hero').style.transform = `translateY(${-60 * h}px) scale(${1 - .08 * h})`;
@@ -198,11 +198,14 @@ function frame() {
   // telemóvel: entra por baixo e muda de lugar (esquerda, centro, direita)
   const S = D.shots; let x = POS[S[0][1]];
   for (let i = 1; i < S.length; i++) x += (POS[S[i][1]] - POS[S[i - 1][1]]) * ss(S[i][0] - .65, S[i][0] - .35, p);
-  const shift = x * (wide ? Math.min(vw * .22, 330) : vw * .11);
-  const rise = 1 - ss(0, 1, p);
+  // Abertura: a app direita, centrada e maior, a sair pelo fundo do ecrã.
+  const rise = 1 - ss(0.05, 1, p);
+  const pw = $('ph').offsetWidth, natTop = $('ph').offsetTop;
+  const heroY = vh * (wide ? .62 : .5) - natTop + pw * .12;
+  const shift = x * (wide ? Math.min(vw * .22, 330) : vw * .11) * (1 - rise);
   const fin = ss(15.6, 16.4, p);
   const tilt = -x * 6 * (1 - fin);
-  $('ph').style.transform = `translate(${shift}px, ${rise * vh * (wide ? .62 : .5) + fin * vh * (wide ? .13 : .14)}px) rotate(${rise * -8 + tilt * .35}deg) scale(${1 - .14 * fin})`;
+  $('ph').style.transform = `translate(${shift}px, ${rise * heroY + fin * vh * (wide ? .13 : .14)}px) rotate(${tilt * .35 * (1 - rise)}deg) scale(${1 + .12 * rise - .14 * fin})`;
   // ecrãs: empurrados da direita, como na app
   const LY = D.layers;
   LY.forEach((s, i) => {
