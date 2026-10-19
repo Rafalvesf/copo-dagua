@@ -12,6 +12,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/v2_kit.dart';
 
 /// Um contrato = uma reserva com a proposta que o casal aceitou: o que
 /// foi combinado (título, descrição, condições), o valor e o estado dos
@@ -104,7 +105,7 @@ class PartnerContractsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(partnerContractsProvider);
     return GradientScaffold(
-      background: AppBackground.feed,
+      background: AppBackground.subtle,
       body: SafeArea(
         child: Column(
           children: [
@@ -120,11 +121,23 @@ class PartnerContractsScreen extends ConsumerWidget {
                         child: ListView(
                           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 40),
                           children: [
-                            const Text(
-                              'O que combinaste com cada casal: proposta aceite, valor e pagamentos.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
-                            ),
+                            // Cartão verde com o total contratado (redesign
+                            // 2026-10-19, estilo do "Menu · Casamento").
+                            Builder(builder: (_) {
+                              final total = list.fold<double>(0, (a, c) => a + c.total);
+                              final paid = list.fold<double>(0, (a, c) => a + c.paid);
+                              return GreenHero(
+                                label: 'CONTRATADO',
+                                value: euros(total),
+                                suffix: '${list.length} ${list.length == 1 ? 'contrato' : 'contratos'}',
+                                progress: total <= 0 ? 0 : paid / total,
+                                doodles: const [Icons.description_outlined, Icons.favorite_border, Icons.auto_awesome_outlined],
+                                footer: Wrap(spacing: 8, runSpacing: 8, children: [
+                                  HeroPill('Recebido ${euros(paid)}', solid: true),
+                                  HeroPill('Falta ${euros((total - paid).clamp(0, double.infinity))}'),
+                                ]),
+                              );
+                            }),
                             const SizedBox(height: 16),
                             for (final c in list)
                               Padding(padding: const EdgeInsets.only(bottom: 12), child: _ContractCard(contract: c)),
@@ -153,16 +166,14 @@ class _ContractCard extends StatelessWidget {
       onTap: () => _showDetails(context, c),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(color: const Color(0xFFEFEBE3)),
-        ),
+        decoration: softCard(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
+                V2Avatar(c.couple),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(c.couple, style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
@@ -259,12 +270,7 @@ class _Empty extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: const BoxDecoration(color: AppColors.gray, shape: BoxShape.circle),
-              child: Icon(Icons.description_outlined, size: 48, color: AppTheme.accentOliveDark),
-            ),
+            const StickerIcon(Icons.description_outlined, size: 96, turns: -0.016),
             const SizedBox(height: 24),
             const Text(
               'Ainda sem contratos',
@@ -278,10 +284,7 @@ class _Empty extends StatelessWidget {
               style: TextStyle(fontSize: AppFontSize.base, height: 1.5, color: AppTheme.inkMuted),
             ),
             const SizedBox(height: 20),
-            FilledButton(
-              onPressed: () => context.go('/partner-requests'),
-              child: const Text('Ver pedidos'),
-            ),
+            V2BigButton(label: 'Ver pedidos', onTap: () => context.go('/partner-requests')),
           ],
         ),
       ),

@@ -12,6 +12,7 @@ import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_bookings/widgets/request_row.dart';
 import '../../../shared/money.dart';
+import '../../../shared/widgets/v2_kit.dart';
 
 /// Área do parceiro (fornecedor) — versão mínima. Os módulos reais
 /// (Quotations, Bookings, Calendar, Profile, Contracts, Payouts) estão
@@ -37,10 +38,27 @@ class PartnerHomeScreen extends ConsumerWidget {
       orElse: () => const <Booking>[],
     );
 
-    // Redesign 2026-10, igual ao canvas "Parceiro — painel": nome do
-    // negócio, saudação, seis quadrados, dois números e os pedidos novos.
+    // Redesign 2026-10-19, canvas "Parceiro — painel (redesign)": pílula
+    // do negócio, saudação, cartão verde com as vendas do mês, mosaicos de
+    // cor com autocolantes e os pedidos novos em cartões brancos.
+    final stats = ref.watch(partnerAnalyticsProvider(AnalyticsPeriod.month)).value;
+    final pending = bookingsAsync.maybeWhen(
+      data: (list) => list.where((b) => b.status == BookingStatus.aceite || b.status == BookingStatus.emAnalise).length,
+      orElse: () => 0,
+    );
+    final upcoming = bookingsAsync.maybeWhen(
+      data: (list) {
+        final now = DateTime.now();
+        final next = list
+            .where((b) => b.status == BookingStatus.confirmado && !b.eventDate.isBefore(DateTime(now.year, now.month, now.day)))
+            .toList()
+          ..sort((a, b) => a.eventDate.compareTo(b.eventDate));
+        return next.isEmpty ? null : next.first;
+      },
+      orElse: () => null,
+    );
     return GradientScaffold(
-      background: AppBackground.feed,
+      background: AppBackground.subtle,
       body: Stack(
         children: [
           SafeArea(
@@ -48,177 +66,142 @@ class PartnerHomeScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(28, 20, 28, 140),
               children: [
-                SizedBox(
-                  height: 46,
-                  child: Row(
-                    children: [
-                      // `Expanded` + `Align` em vez de `Flexible` + `Spacer`: os
-                      // dois dividiam a largura a meias e cortavam o nome do
-                      // negócio a ~14 letras com espaço livre ao lado.
-                      if (business != null && business.isNotEmpty)
-                        Expanded(
-                          child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            height: 32,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: AppColors.gray,
-                              borderRadius: BorderRadius.circular(AppRadius.pill),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.storefront_outlined,
-                                    size: 14, color: AppTheme.accentOliveDark),
-                                const SizedBox(width: 6),
-                                Flexible(
-                                  child: Text(
-                                    business,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: AppFontSize.sm,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppTheme.accentOliveDark,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          ),
-                        ),
-                      if (business != null && business.isNotEmpty)
-                        const SizedBox(width: 12)
-                      else
-                        const Spacer(),
-                      PopupMenuButton<String>(
-                        tooltip: 'Mais opções',
-                        onSelected: (value) {
-                          if (value == 'logout') {
-                            ref.read(authControllerProvider.notifier).logout();
-                          }
-                        },
-                        itemBuilder: (context) => const [
-                          PopupMenuItem(value: 'logout', child: Text('Terminar sessão')),
-                        ],
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.surface,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.more_horiz, color: AppTheme.ink),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 18),
-                const Text(
-                  'PAINEL',
-                  style: TextStyle(
-                    fontSize: AppFontSize.xs,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                    color: AppTheme.inkMuted,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  firstName.isEmpty
-                      ? 'Olá, o que precisas hoje?'
-                      : 'Olá, $firstName, o que precisas hoje?',
-                  style: const TextStyle(
-                    fontSize: AppFontSize.h1,
-                    height: 34 / 28,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.ink,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Canvas "Parceiro — painel": só os números e os novos pedidos
-                // (calendário, contratos e pagamentos estão no Perfil).
-                const _PartnerDashboardSummary(),
-                const SizedBox(height: 14),
-                // Atalhos do negócio (pedido 2026-10-17): saíram do Perfil.
-                // 3 linhas cheias (Reservas e Contratos ocupam duas colunas)
-                // em vez de "Contratos" sozinho na última linha (revisão
-                // 2026-10-17).
-                LayoutBuilder(
-                  builder: (context, c) {
-                    const gap = 8.0;
-                    final unit = (c.maxWidth - 2 * gap) / 3;
-                    final height = unit / 1.25;
-                    return Wrap(
-                      spacing: gap,
-                      runSpacing: gap,
-                      children: [
-                        for (final (icon, label, route, span) in const [
-                          (Icons.event_available_outlined, 'Reservas', '/partner-requests', 2),
-                          (Icons.sell_outlined, 'Serviços e preços', '/partner-pricing', 1),
-                          (Icons.photo_library_outlined, 'Portefólio', '/partner-portfolio', 1),
-                          (Icons.star_border_rounded, 'Avaliações', '/partner-reviews', 1),
-                          (Icons.bar_chart_rounded, 'Resultados', '/partner-stats', 1),
-                          (Icons.payments_outlined, 'Pagamentos', '/partner-payments', 1),
-                          (Icons.description_outlined, 'Contratos', '/partner-contracts', 2),
-                        ])
-                          SizedBox(
-                            width: unit * span + gap * (span - 1),
-                            height: height,
-                            child: _PartnerTile(
-                              color: route == '/partner-requests' ? AppColors.gray : AppTheme.surface,
-                              icon: icon,
-                              label: label,
-                              count: route == '/partner-requests' ? newRequests.length : 0,
-                              onTap: () => context.push(route),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 22),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Expanded(
-                      child: Text(
-                        'Novos pedidos',
-                        style: TextStyle(
-                          fontSize: AppFontSize.xl,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.ink,
+                    if (business != null && business.isNotEmpty)
+                      Flexible(
+                        child: Container(
+                          height: 34,
+                          padding: const EdgeInsets.fromLTRB(4, 0, 12, 0),
+                          decoration: softCard(radius: 999),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              V2Avatar(business, size: 26, imageUrl: profile?.avatarUrl),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  business,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () => context.push('/partner-requests'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppTheme.accentOliveDark,
-                        padding: EdgeInsets.zero,
-                        textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
-                          fontSize: AppFontSize.md,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    const Spacer(),
+                    PopupMenuButton<String>(
+                      tooltip: 'Mais opções',
+                      onSelected: (value) {
+                        if (value == 'logout') {
+                          ref.read(authControllerProvider.notifier).logout();
+                        } else {
+                          context.push(value);
+                        }
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(value: '/settings', child: Text('Definições')),
+                        PopupMenuItem(value: 'logout', child: Text('Terminar sessão')),
+                      ],
+                      child: const IgnorePointer(
+                        child: V2RoundButton(icon: Icons.more_horiz, tooltip: 'Mais opções'),
                       ),
-                      child: const Text('Ver todos'),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
+                Text(
+                  firstName.isEmpty ? 'Olá! O que precisas hoje?' : 'Olá, $firstName! O que precisas hoje?',
+                  style: const TextStyle(fontSize: 26, height: 32 / 26, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                ),
+                const SizedBox(height: 18),
+                SnappyTap(
+                  onTap: () => context.push('/partner-stats'),
+                  child: GreenHero(
+                    label: 'VENDAS ESTE MÊS',
+                    value: stats == null ? '—' : euros(stats.revenue),
+                    suffix: stats == null ? null : '${stats.bookings} ${stats.bookings == 1 ? 'reserva confirmada' : 'reservas confirmadas'}',
+                    doodles: const [Icons.storefront_outlined, Icons.auto_awesome_outlined, Icons.favorite_border],
+                    footer: Wrap(spacing: 8, runSpacing: 8, children: [
+                      HeroPill('${newRequests.length} ${newRequests.length == 1 ? 'pedido novo' : 'pedidos novos'}', solid: true),
+                      HeroPill('$pending ${pending == 1 ? 'reserva pendente' : 'reservas pendentes'}'),
+                    ]),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                V2Grid([
+                  V2Tile(
+                    icon: Icons.event_available_outlined,
+                    label: 'Reservas',
+                    sub: pending == 0 ? 'Tudo em dia' : '$pending pendentes',
+                    index: 0,
+                    badge: newRequests.length,
+                    onTap: () => context.push('/partner-requests'),
+                  ),
+                  V2Tile(
+                    icon: Icons.calendar_month_outlined,
+                    label: 'Calendário',
+                    sub: upcoming == null ? 'Sem eventos marcados' : 'Próximo: ${requestDateLabel(upcoming.eventDate)}',
+                    index: 1,
+                    onTap: () => context.push('/partner-calendar'),
+                  ),
+                  V2Tile(
+                    icon: Icons.payments_outlined,
+                    label: 'Pagamentos',
+                    sub: 'Saldo e levantamentos',
+                    index: 2,
+                    onTap: () => context.push('/partner-payments'),
+                  ),
+                  V2Tile(
+                    icon: Icons.description_outlined,
+                    label: 'Contratos',
+                    sub: 'Reservas assinadas',
+                    index: 3,
+                    onTap: () => context.push('/partner-contracts'),
+                  ),
+                  V2Tile(
+                    icon: Icons.sell_outlined,
+                    label: 'Serviços e preços',
+                    sub: 'Pacotes e orçamentos',
+                    index: 4,
+                    onTap: () => context.push('/partner-pricing'),
+                  ),
+                  V2Tile(
+                    icon: Icons.photo_library_outlined,
+                    label: 'Portefólio',
+                    sub: 'Fotos e vídeos',
+                    index: 5,
+                    onTap: () => context.push('/partner-portfolio'),
+                  ),
+                  V2Tile(
+                    icon: Icons.star_border_rounded,
+                    label: 'Avaliações',
+                    sub: stats?.averageRating == null ? 'Ainda sem avaliações' : '${stats!.averageRating!.toStringAsFixed(1).replaceAll('.', ',')} de 5',
+                    index: 6,
+                    onTap: () => context.push('/partner-reviews'),
+                  ),
+                  V2Tile(
+                    icon: Icons.bar_chart_rounded,
+                    label: 'Resultados',
+                    sub: 'Pedidos e conversão',
+                    index: 7,
+                    onTap: () => context.push('/partner-stats'),
+                  ),
+                ]),
+                SectionTitle(
+                  'Novos pedidos',
+                  trailing: GestureDetector(
+                    onTap: () => context.push('/partner-requests'),
+                    child: const Text('Ver todos',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+                  ),
+                ),
                 if (newRequests.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                    ),
-                    child: const Text(
-                      'Sem pedidos novos por agora.',
-                      style: TextStyle(color: AppTheme.inkMuted),
-                    ),
+                  const V2RowCard(
+                    lead: StickerIcon(Icons.inbox_outlined),
+                    title: 'Sem pedidos novos por agora',
+                    sub: 'Avisamos-te assim que um casal te contactar.',
                   )
                 else
                   for (final booking in newRequests.take(3)) ...[
@@ -247,180 +230,3 @@ class PartnerHomeScreen extends ConsumerWidget {
   }
 }
 
-/// Resumo de painel — reservas pendentes e vendas dos últimos 30 dias,
-/// ambos de dados reais (`partnerBookingsProvider`,
-/// `partnerAnalyticsProvider`).
-class _PartnerDashboardSummary extends ConsumerWidget {
-  const _PartnerDashboardSummary();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bookingsAsync = ref.watch(partnerBookingsProvider(null));
-    // Mesmos números do ecrã Resultados (`partnerAnalyticsProvider`,
-    // reservas confirmadas reais) — antes vinha de `partnerStatsProvider`,
-    // que misturava valores de exemplo do MockBackend.
-    final statsAsync = ref.watch(partnerAnalyticsProvider(AnalyticsPeriod.month));
-
-    final pendingBookings = bookingsAsync.maybeWhen(
-      data: (list) => list
-          .where(
-            (b) =>
-                b.status == BookingStatus.novo ||
-                b.status == BookingStatus.emAnalise,
-          )
-          .toList(),
-      orElse: () => const <Booking>[],
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: SnappyTap(
-                onTap: () => context.push('/partner-requests'),
-                child: _MetricCard(
-                label: 'Reservas pendentes',
-                value: '${pendingBookings.length}',
-                color: AppColors.blue,
-              ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: SnappyTap(
-                onTap: () => context.push('/partner-stats'),
-                child: _MetricCard(
-                label: 'Vendas · 30 dias',
-                value: statsAsync.maybeWhen(
-                  data: (s) => euros(s.revenue),
-                  orElse: () => '—',
-                ),
-                color: AppColors.green,
-              ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _MetricCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-
-  const _MetricCard({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: AppFontSize.h3,
-              color: AppTheme.ink,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
-
-class _PartnerTile extends StatelessWidget {
-  final Color color;
-  final IconData icon;
-  final String label;
-  final int count;
-  final VoidCallback? onTap;
-
-  const _PartnerTile({
-    required this.color,
-    required this.icon,
-    required this.label,
-    this.count = 0,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(icon, color: AppTheme.ink, size: 22),
-                const Spacer(),
-                Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: AppFontSize.sm,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.ink,
-                    height: 15 / 12,
-                  ),
-                ),
-              ],
-            ),
-            if (count > 0)
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  constraints: const BoxConstraints(minWidth: 20),
-                  height: 20,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentOliveDark,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: const TextStyle(
-                      fontSize: AppFontSize.xs,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}

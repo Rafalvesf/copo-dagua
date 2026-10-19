@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'steady_ticker.dart';
 
 /// Peças dos ecrãs "Pronto" do canvas (Onboarding 5 · Pronto, Convidado 8 ·
 /// Pronto, Parceiro 7 · Pronto), com os mesmos tempos do desenho.
@@ -11,7 +12,7 @@ import '../../core/theme/app_theme.dart';
 /// correm sempre, mesmo com "reduzir movimento" ligado no telemóvel.
 
 /// Controlador que arranca sozinho depois de [delay] e corre uma vez.
-mixin _DelayedStart<T extends StatefulWidget> on State<T>, TickerProviderStateMixin<T> {
+mixin _DelayedStart<T extends StatefulWidget> on State<T>, SteadyTickerProviderStateMixin<T> {
   late final AnimationController ctrl;
   Timer? _timer;
 
@@ -47,7 +48,7 @@ class UpIn extends StatefulWidget {
   State<UpIn> createState() => _UpInState();
 }
 
-class _UpInState extends State<UpIn> with TickerProviderStateMixin, _DelayedStart {
+class _UpInState extends State<UpIn> with SteadyTickerProviderStateMixin, _DelayedStart {
   @override
   Duration get delay => widget.delay;
   @override
@@ -86,7 +87,7 @@ class ShineSweep extends StatefulWidget {
   State<ShineSweep> createState() => _ShineSweepState();
 }
 
-class _ShineSweepState extends State<ShineSweep> with TickerProviderStateMixin, _DelayedStart {
+class _ShineSweepState extends State<ShineSweep> with SteadyTickerProviderStateMixin, _DelayedStart {
   @override
   Duration get delay => widget.delay;
   @override
@@ -159,7 +160,7 @@ class FallingConfetti extends StatefulWidget {
   State<FallingConfetti> createState() => _FallingConfettiState();
 }
 
-class _FallingConfettiState extends State<FallingConfetti> with TickerProviderStateMixin, _DelayedStart {
+class _FallingConfettiState extends State<FallingConfetti> with SteadyTickerProviderStateMixin, _DelayedStart {
   static const _colors = [
     Color(0xFF4F6B4A),
     Color(0xFFF2D98D),
@@ -238,7 +239,7 @@ class DuoClink extends StatefulWidget {
   State<DuoClink> createState() => _DuoClinkState();
 }
 
-class _DuoClinkState extends State<DuoClink> with SingleTickerProviderStateMixin {
+class _DuoClinkState extends State<DuoClink> with SteadyTickerProviderStateMixin {
   // 0 → 3,4 s: entrada em 0–0,6 s; brinde em 0,4 + 3 s.
   late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 3400))
     ..forward();
@@ -385,7 +386,7 @@ class SentBadge extends StatefulWidget {
   State<SentBadge> createState() => _SentBadgeState();
 }
 
-class _SentBadgeState extends State<SentBadge> with SingleTickerProviderStateMixin {
+class _SentBadgeState extends State<SentBadge> with SteadyTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 2200))
     ..forward();
 

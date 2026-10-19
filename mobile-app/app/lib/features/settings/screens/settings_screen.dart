@@ -19,6 +19,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/v2_kit.dart';
 
 /// Definições — uma por tipo de conta (organizadores, parceiros,
 /// convidados). Redesign 2026-10-17 (canvas "Organizadores · Definições",
@@ -47,7 +48,6 @@ class SettingsScreen extends ConsumerWidget {
 // Definições" — pedido 2026-10-17: "gostei destas definições, aplica no
 // resto" (parceiro e organizador usam os mesmos componentes).
 const _pageBackground = Colors.white;
-const _rowDivider = Color(0xFFE6E0D2);
 const _cardBorder = Color(0xFFEFEBE3);
 
 class _SettingsPage extends StatelessWidget {
@@ -84,10 +84,10 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 18, 0, 4),
+      padding: const EdgeInsets.fromLTRB(0, 24, 0, 12),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF8F8B84)),
+        style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted),
       ),
     );
   }
@@ -97,15 +97,21 @@ class _Group extends StatelessWidget {
   final List<Widget> children;
   const _Group({required this.children});
 
+  // Redesign 2026-10-19 (canvas "definições (redesign)"): cada grupo é
+  // um cartão branco com sombra suave e linhas com autocolantes.
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var i = 0; i < children.length; i++) ...[
-          if (i > 0) const Divider(height: 1, thickness: 1, color: _rowDivider),
-          children[i],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+      decoration: softCard(),
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const Divider(height: 1, thickness: 1, color: Color(0xFFEEF2EC)),
+            children[i],
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -122,10 +128,10 @@ class _Row extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final row = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 13),
+      padding: const EdgeInsets.symmetric(vertical: 11),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: color ?? AppTheme.inkMuted),
+          StickerIcon(icon, size: 36, color: color, turns: StickerIcon.tilt(label.length)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -174,7 +180,7 @@ class _SignOut extends ConsumerWidget {
         child: TextButton(
           onPressed: () => ref.read(authControllerProvider.notifier).logout(),
           style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFFB4232C),
+            foregroundColor: const Color(0xFFA3412E),
             textStyle: const TextStyle(
               fontFamily: AppTheme.fontFamily,
               fontFamilyFallback: AppTheme.fontFamilyFallback,
@@ -182,7 +188,11 @@ class _SignOut extends ConsumerWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          child: const Text('Terminar sessão'),
+          child: const Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.logout_rounded, size: 18),
+            SizedBox(width: 8),
+            Text('Terminar sessão'),
+          ]),
         ),
       ),
     );

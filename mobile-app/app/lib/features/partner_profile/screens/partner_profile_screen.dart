@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/partner_notification_bell.dart';
+import '../../../shared/widgets/v2_kit.dart';
 
 class PartnerProfileScreen extends ConsumerStatefulWidget {
   const PartnerProfileScreen({super.key});
@@ -40,7 +41,7 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
     final profile = ref.watch(authControllerProvider).profile;
 
     return GradientScaffold(
-      background: AppBackground.feed,
+      background: AppBackground.subtle,
       body: Stack(
         children: [
           SafeArea(
@@ -49,19 +50,17 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
               padding: const EdgeInsets.fromLTRB(28, 20, 28, 140),
               children: [
                 // Redesign 2026-10, igual ao canvas "Parceiro — perfil".
+                // Canvas "Parceiro — perfil (redesign)": título ao centro.
                 const SizedBox(
                   height: 46,
                   child: Row(
                     children: [
+                      SizedBox(width: 44),
                       Expanded(
                         child: Text(
                           'Perfil',
-                          style: TextStyle(
-                            fontSize: AppFontSize.display,
-                            height: 40 / 34,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.ink,
-                          ),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
                         ),
                       ),
                       PartnerNotificationBell(),
@@ -109,76 +108,28 @@ class _BusinessHeader extends StatelessWidget {
     final name = (p?.businessName?.isEmpty ?? true)
         ? (p?.fullName ?? '')
         : p!.businessName!;
-    final parts = name.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-    final initials = parts.isEmpty
-        ? '?'
-        : (parts.first[0] + (parts.length > 1 ? parts[1][0] : '')).toUpperCase();
     final meta = [
       if (p?.category != null) p!.category!.label,
       if (p?.location != null && p!.location!.isNotEmpty) p.location!,
     ].join(' · ');
     final published = p?.partnerProfileStatus == 'published';
-    return Row(
+    return Column(
       children: [
-        Container(
-          width: 88,
-          height: 88,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: AppColors.green,
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-          ),
-          child: Text(
-            initials,
-            style: TextStyle(
-              fontSize: AppFontSize.h1,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.accentOliveDark,
-            ),
-          ),
+        V2Avatar(name, size: 84, imageUrl: p?.avatarUrl),
+        const SizedBox(height: 10),
+        Text(
+          name,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: const TextStyle(
-                  fontSize: AppFontSize.h2,
-                  height: 30 / 24,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.ink,
-                ),
-              ),
-              if (meta.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  meta,
-                  style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
-                ),
-              ],
-              if (published) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE4EFE5),
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: const Text(
-                    'Publicado — visível aos casais',
-                    style: TextStyle(
-                      fontSize: AppFontSize.xs,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF2F6B45),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
+        if (meta.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(meta, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        ],
+        if (published) ...[
+          const SizedBox(height: 8),
+          const V2Chip('Publicado — visível aos casais'),
+        ],
       ],
     );
   }
@@ -224,11 +175,7 @@ class _ReviewStatusCard extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.gray),
-      ),
+      decoration: softCard(radius: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

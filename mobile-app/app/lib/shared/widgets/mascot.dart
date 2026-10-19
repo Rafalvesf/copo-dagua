@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'steady_ticker.dart';
 
 /// Mascote "o Tchin e o Tchin" — duas taças (espumante e rosé).
 /// Pedido do utilizador (2026-10-17): "criar um avatar para a app, como o
@@ -47,7 +48,7 @@ class TchinMascot extends StatefulWidget {
   State<TchinMascot> createState() => _TchinMascotState();
 }
 
-class _TchinMascotState extends State<TchinMascot> with SingleTickerProviderStateMixin {
+class _TchinMascotState extends State<TchinMascot> with SteadyTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2400),
@@ -117,7 +118,7 @@ class TchinClink extends StatefulWidget {
   State<TchinClink> createState() => _TchinClinkState();
 }
 
-class _TchinClinkState extends State<TchinClink> with SingleTickerProviderStateMixin {
+class _TchinClinkState extends State<TchinClink> with SteadyTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1500),
@@ -257,7 +258,7 @@ class ConfettiBurst extends StatefulWidget {
   State<ConfettiBurst> createState() => _ConfettiBurstState();
 }
 
-class _ConfettiBurstState extends State<ConfettiBurst> with SingleTickerProviderStateMixin {
+class _ConfettiBurstState extends State<ConfettiBurst> with SteadyTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2600),

@@ -12,6 +12,7 @@ import '../../../shared/widgets/month_calendar_grid.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/staggered_fade_in.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/v2_kit.dart';
 
 class PartnerCalendarScreen extends ConsumerStatefulWidget {
   const PartnerCalendarScreen({super.key});
@@ -31,13 +32,13 @@ class _PartnerCalendarScreenState
     final bookingsAsync = ref.watch(partnerBookingsProvider(null));
 
     return GradientScaffold(
-      background: AppBackground.feed,
+      background: AppBackground.subtle,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            const PageHeader(title: 'Calendário'),
-            const SizedBox(height: 20),
+            const PageHeader(title: 'Calendário', centered: true),
+            const SizedBox(height: 18),
             Expanded(
               child: bookingsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
@@ -59,32 +60,27 @@ class _PartnerCalendarScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        MonthCalendarGrid(
-                          visibleMonth: _visibleMonth,
-                          selected: _selected,
-                          markedDays: markedDays,
-                          onSelectDay: (day) =>
-                              setState(() => _selected = day),
-                          onMonthChanged: (month) =>
-                              setState(() => _visibleMonth = month),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          _dayTitle(_selected),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: AppFontSize.xl,
-                            color: AppTheme.ink,
+                        // Canvas "Parceiro — calendário (redesign)": mês num
+                        // cartão branco com sombra suave.
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: softCard(),
+                          child: MonthCalendarGrid(
+                            visibleMonth: _visibleMonth,
+                            selected: _selected,
+                            markedDays: markedDays,
+                            onSelectDay: (day) =>
+                                setState(() => _selected = day),
+                            onMonthChanged: (month) =>
+                                setState(() => _visibleMonth = month),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        SectionTitle(_dayTitle(_selected)),
                         if (dayBookings.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                            child: Text(
-                              'Sem compromissos neste dia.',
-                              style: TextStyle(color: AppTheme.inkMuted),
-                            ),
+                          const V2RowCard(
+                            lead: StickerIcon(Icons.event_busy_outlined),
+                            title: 'Sem compromissos neste dia',
+                            sub: 'Os dias com reservas aparecem marcados no mês.',
                           )
                         else
                           StaggeredFadeIn(

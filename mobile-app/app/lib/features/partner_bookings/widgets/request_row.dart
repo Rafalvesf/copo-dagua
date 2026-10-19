@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/v2_kit.dart';
 
 const _monthsPt = [
   'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
@@ -27,16 +28,6 @@ class RequestRow extends StatelessWidget {
     this.compact = false,
   });
 
-  String get _initials {
-    final parts = booking.clientName
-        .split(RegExp(r'[\s&]+'))
-        .where((p) => p.isNotEmpty)
-        .toList();
-    if (parts.isEmpty) return '?';
-    final first = parts.first[0];
-    final last = parts.length > 1 ? parts.last[0] : '';
-    return (first + last).toUpperCase();
-  }
 
   ({String label, Color fg, Color bg}) get _status => switch (booking.status) {
         BookingStatus.novo => (
@@ -92,23 +83,7 @@ class RequestRow extends StatelessWidget {
     ].join(' · ');
     final header = Row(
       children: [
-        Container(
-          width: 44,
-          height: 44,
-          alignment: Alignment.center,
-          decoration: const BoxDecoration(
-            color: AppColors.green,
-            shape: BoxShape.circle,
-          ),
-          child: Text(
-            _initials,
-            style: TextStyle(
-              fontSize: AppFontSize.base,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.accentOliveDark,
-            ),
-          ),
-        ),
+        V2Avatar(booking.clientName),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -159,10 +134,8 @@ class RequestRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.all(compact ? 14 : 16),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
+        // Cartão branco com sombra suave (canvas "Parceiro — redesign").
+        decoration: softCard(),
         child: compact
             ? header
             : Column(
@@ -172,7 +145,7 @@ class RequestRow extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.only(top: 12),
                     decoration: const BoxDecoration(
-                      border: Border(top: BorderSide(color: AppTheme.borderMuted)),
+                      border: Border(top: BorderSide(color: Color(0xFFEEF2EC))),
                     ),
                     child: Row(
                       children: [
