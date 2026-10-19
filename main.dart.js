@@ -81611,7 +81611,7 @@ l(){this.gmp().l()
 this.aqO()},
 p(a){var s,r=this.a,q=r.c
 r=r.d
-s=A.bHs(q.c,B.x7,null,"O Tchin e o Tchin",r)
+s=A.bHs(q.c,B.x7,null,"Duas ta\xe7as",r)
 return A.eH(this.gmp(),new A.bpe(this),s)}}
 A.bpd.prototype={
 $1(a){},
@@ -82057,7 +82057,7 @@ l(){this.gu2().l()
 this.aqa()},
 p(a){var s=null
 this.a.toString
-return A.bh(s,s,s,A.ba(A.eH(this.gu2(),new A.b1Y(this,1.05),s),168,210),!1,s,s,s,!1,s,!1,s,s,s,s,s,s,!0,s,s,s,"O Tchin e o Tchin a brindar",s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,B.E,s)}}
+return A.bh(s,s,s,A.ba(A.eH(this.gu2(),new A.b1Y(this,1.05),s),168,210),!1,s,s,s,!1,s,!1,s,s,s,s,s,s,!0,s,s,s,"Duas ta\xe7as a brindar",s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,B.E,s)}}
 A.b1Y.prototype={
 $2(a,b){var s,r,q,p,o,n,m,l,k,j=null,i={},h=this.a.gu2().x
 h===$&&A.b()
