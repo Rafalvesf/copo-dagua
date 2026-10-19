@@ -79,7 +79,7 @@ class GradientScaffold extends StatelessWidget {
       if (barColorLocked || kIsWeb) return;
       SystemChrome.setApplicationSwitcherDescription(
         ApplicationSwitcherDescription(
-          label: 'Tchin Tchin',
+          label: 'À Nossa!',
           primaryColor: color.toARGB32(),
         ),
       );

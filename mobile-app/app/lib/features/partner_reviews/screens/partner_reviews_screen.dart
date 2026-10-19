@@ -67,7 +67,7 @@ class PartnerReviewsScreen extends ConsumerWidget {
       builder: (context) => IslandAlert(
         title: const Text('Denunciar avaliação'),
         content: const Text(
-          'Denunciar esta avaliação para revisão da equipa Tchin Tchin? Deixa de aparecer no teu perfil público até a equipa decidir.',
+          'Denunciar esta avaliação para revisão da equipa À Nossa!? Deixa de aparecer no teu perfil público até a equipa decidir.',
         ),
         actions: [
           TextButton(

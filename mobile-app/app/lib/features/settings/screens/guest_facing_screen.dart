@@ -225,7 +225,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
 
   Future<void> _shareCode(String code) async {
     try {
-      await SharePlus.instance.share(ShareParams(text: 'Entra no meu evento no Tchin Tchin com o código $code'));
+      await SharePlus.instance.share(ShareParams(text: 'Entra no meu evento na app À Nossa! com o código $code'));
     } catch (_) {
       await Clipboard.setData(ClipboardData(text: code));
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));

@@ -276,7 +276,7 @@ class _DepositPreview extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           line('O teu valor', money(price), muted: true),
-          line('Comissão Tchin Tchin ($pct%)', fee == null ? '—' : '+ ${money(fee)}', muted: true),
+          line('Comissão À Nossa! ($pct%)', fee == null ? '—' : '+ ${money(fee)}', muted: true),
           line('Total para o cliente', money(total), strong: true),
           const Divider(height: 16, color: AppTheme.borderMuted),
           line('Sinal (${depositPct.toStringAsFixed(0)}%) para o cliente', money(depositTotal), strong: true),

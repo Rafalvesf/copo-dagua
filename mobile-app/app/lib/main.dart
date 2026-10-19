@@ -60,7 +60,7 @@ class CopoDaguaApp extends ConsumerWidget {
       });
     }
     return MaterialApp.router(
-      title: 'Tchin Tchin',
+      title: 'À Nossa!',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: router,

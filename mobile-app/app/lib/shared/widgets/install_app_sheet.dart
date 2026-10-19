@@ -38,7 +38,7 @@ Future<void> showInstallAppSheet(BuildContext context, {String? code}) {
           children: [
             const Center(child: TchinMascot(pose: MascotPose.wave, width: 120)),
             const SizedBox(height: 14),
-            const Text('Instala a app Tchin Tchin',
+            const Text('Instala a app À Nossa!',
                 textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 6),
             const Text(

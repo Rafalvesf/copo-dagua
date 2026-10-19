@@ -170,7 +170,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
           ]),
         ),
         const SizedBox(height: 12),
-        const _Note('Formulário seguro da Stripe. A Tchin Tchin não guarda o teu documento nem o IBAN completo.'),
+        const _Note('Formulário seguro da Stripe. Não guardamos o teu documento nem o IBAN completo.'),
         const SizedBox(height: 8),
         Center(
           child: TextButton(
@@ -212,7 +212,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
           ],
         if (s.disabledReason != null && s.disabledReason!.contains('rejected')) ...[
           const SizedBox(height: 6),
-          const _Warn('A Stripe recusou esta conta. Contacta o suporte Tchin Tchin.'),
+          const _Warn('A Stripe recusou esta conta. Contacta o suporte da À Nossa!'),
         ],
         if (_error != null) ...[const SizedBox(height: 6), _Warn(_error!)],
         const SizedBox(height: 10),

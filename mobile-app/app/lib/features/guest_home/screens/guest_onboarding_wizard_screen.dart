@@ -540,8 +540,8 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                 const SizedBox(height: 24),
                 Text(
                   _companions.length == 1
-                      ? 'O teu acompanhante já tem a app Tchin Tchin?'
-                      : 'Os teus acompanhantes já têm a app Tchin Tchin?',
+                      ? 'O teu acompanhante já tem a app?'
+                      : 'Os teus acompanhantes já têm a app?',
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
                 ),
                 const SizedBox(height: 4),

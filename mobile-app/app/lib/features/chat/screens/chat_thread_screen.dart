@@ -311,7 +311,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       // (mesma conta do checkout). Pedido 2026-10-17.
       price: message.proposalPrice == null ? null : withFee(message.proposalPrice!),
       deposit: message.proposalDepositAmount == null ? null : withFee(message.proposalDepositAmount!),
-      note: pct > 0 ? 'Valores com a comissão Tchin Tchin incluída' : null,
+      note: pct > 0 ? 'Valores já com a comissão da À Nossa!' : null,
       actions: [
         ChatCardAction('Ver detalhe', () => context.push('/bookings')),
         if (_accepted)

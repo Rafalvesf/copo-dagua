@@ -256,7 +256,7 @@ class _OnboardingWizardScreenState
     var shared = false;
     try {
       final result = await SharePlus.instance.share(
-        ShareParams(text: 'Junta-te a mim para organizarmos o ${_eventType.noun} no Tchin Tchin: $link'),
+        ShareParams(text: 'Junta-te a mim para organizarmos o ${_eventType.noun} na app À Nossa!: $link'),
       );
       shared = result.status != ShareResultStatus.unavailable;
     } catch (_) {}

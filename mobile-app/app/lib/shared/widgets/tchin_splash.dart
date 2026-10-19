@@ -118,14 +118,14 @@ class TchinSplash extends StatelessWidget {
                           offset: Offset(-170 * (1 - enter) + 4 * knock, 0),
                           child: Transform.rotate(
                             angle: -0.2 * (1 - enter),
-                            child: Opacity(opacity: enter.clamp(0.0, 1.0), child: Text('Tchin', style: word)),
+                            child: Opacity(opacity: enter.clamp(0.0, 1.0), child: Text('À', style: word)),
                           ),
                         ),
                         Transform.translate(
                           offset: Offset(170 * (1 - enter) - 4 * knock, 0),
                           child: Transform.rotate(
                             angle: 0.2 * (1 - enter),
-                            child: Opacity(opacity: enter.clamp(0.0, 1.0), child: Text('Tchin', style: word)),
+                            child: Opacity(opacity: enter.clamp(0.0, 1.0), child: Text('Nossa!', style: word)),
                           ),
                         ),
                       ],
