@@ -20,9 +20,11 @@ class SearchPill extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: AppTheme.accentOliveDark),
+        // Sem contorno, com a sombra suave dos cartões (redesign
+        // 2026-10-19) — igual à pesquisa de Parceiros.
         boxShadow: const [
-          BoxShadow(color: Color(0x1F3F4A30), blurRadius: 24, offset: Offset(0, 10)),
+          BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6)),
+          BoxShadow(color: Color(0x0D171713), blurRadius: 3, offset: Offset(0, 1)),
         ],
       ),
       child: Row(

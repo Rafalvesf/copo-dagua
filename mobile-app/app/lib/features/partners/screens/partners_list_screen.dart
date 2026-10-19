@@ -618,11 +618,7 @@ class _PartnerCard extends ConsumerWidget {
       favoritePartnersControllerProvider.select((s) => s.partnerIds.contains(partner.id)),
     );
     final rating = _ratingLabel(partner);
-    final meta = [
-      partner.primaryCategoryLabel,
-      partner.location,
-      if (rating != null) '★ $rating (${partner.reviewCount})',
-    ].join(' · ');
+    final meta = [partner.primaryCategoryLabel, partner.location].join(' · ');
     return SnappyTap(
       onTap: onTap,
       child: Container(
@@ -644,10 +640,22 @@ class _PartnerCard extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink)),
                   const SizedBox(height: 2),
-                  Text(meta,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: v2Muted, fontSize: 12)),
+                  Text.rich(
+                    TextSpan(children: [
+                      TextSpan(text: meta),
+                      if (rating != null) ...[
+                        const TextSpan(text: ' · '),
+                        const WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Icon(Icons.star_rounded, size: 13, color: AppTheme.brandGreen),
+                        ),
+                        TextSpan(text: ' $rating (${partner.reviewCount})'),
+                      ],
+                    ]),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: v2Muted, fontSize: 12),
+                  ),
                   const SizedBox(height: 6),
                   Text(_priceLabel(partner),
                       maxLines: 1,
