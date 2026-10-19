@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/home/home_providers.dart';
 import '../../../core/payments/payments.dart';
@@ -138,6 +139,9 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     } on CheckoutUnavailable catch (e) {
       if (!mounted) return;
       if (e.reason == 'invalid_state') return _done();
+      // Sem chave pública da Stripe configurada ainda: usa o checkout da
+      // Stripe (abre na mesma janela) — só até a chave existir (2026-10-19).
+      if (e.reason == 'not_configured') return _hostedFallback();
       setState(() {
         _step = _Step.select;
         _error = payErrorMessage(e.reason);
@@ -148,6 +152,27 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         _step = _Step.select;
         _error = 'Não foi possível iniciar o pagamento. Verifica a ligação.';
       });
+    }
+  }
+
+  Future<void> _hostedFallback() async {
+    try {
+      final url = await createDepositCheckoutUrl(a.paymentId);
+      await launchUrl(Uri.parse(url), mode: LaunchMode.platformDefault, webOnlyWindowName: '_self');
+    } on CheckoutUnavailable catch (e) {
+      if (mounted) {
+        setState(() {
+          _step = _Step.select;
+          _error = payErrorMessage(e.reason);
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _step = _Step.select;
+          _error = 'Não foi possível iniciar o pagamento. Tenta novamente.';
+        });
+      }
     }
   }
 
