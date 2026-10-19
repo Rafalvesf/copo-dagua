@@ -25,7 +25,7 @@ SHOTS = [
     (15, 'pedidos', 'L'),
     (16.2, 'home', 'C'),
 ]
-END = 17.6
+END = 16.2
 
 # (início, fim, posição, eyebrow, título, texto)
 TEXTS = [
@@ -80,6 +80,8 @@ layers = ''.join(layer(n, i) for i, (_, n) in enumerate(LAYERS))
 texts = ''.join(
     f'<div class="txt pos-{p}" id="T{i}"><div class="ta"><div class="eye">{e}</div><h2>{h}</h2></div>'
     f'<div class="tb"><p>{b}</p></div></div>' for i, (_, _, p, e, h, b) in enumerate((a, b_, p, e, h.replace('<br>', ' <br>'), b) for a, b_, p, e, h, b in TEXTS))
+SNAPS = [0, 1, 2, 2.7, 3.4, 4.1] + list(range(5, 16)) + [16.2]
+snaps = ''.join(f'<i class="snap" style="top:calc({st} * 100vh)"></i>' for st in SNAPS)
 chapters = ''.join(f'<li id="C{i}">{n}</li>' for i, (n, _, _) in enumerate(CHAPTERS))
 dots = ''.join(f'<i style="background:{c}" title="{cn}"></i>' for _, cn, c in STYLES)
 
@@ -175,6 +177,11 @@ h1, h2 {{ margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance;
 /* secções normais */
 .band {{ padding-block: 96px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }}
 .inner {{ max-width: 1040px; margin: 0 auto; }}
+/* Scroll com paragem em cada ecrã e texto. */
+html {{ scroll-snap-type: y mandatory; }}
+.snap {{ position: absolute; left: 0; width: 1px; height: 1px; scroll-snap-align: start; scroll-snap-stop: always; pointer-events: none; }}
+.vid, .cta {{ scroll-snap-align: start; scroll-margin-top: 64px; }}
+footer {{ scroll-snap-align: end; }}
 .vid {{ background: #fff; }}
 .vid h2 {{ font-size: clamp(30px, 4vw, 48px); }}
 .vid p {{ color: var(--muted); font-size: 18px; margin: 10px 0 30px; }}
@@ -191,7 +198,7 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
 @media (max-width: 820px) {{
   /* A barra de topo tem ~64px: tudo o que é fixo começa abaixo dela, e a
      altura usa o ecrã visível (svh) para o cartão de texto não ficar escondido. */
-  .pin {{ height: 100vh; height: 100lvh; --pw: min(calc(56svh / 2.2), 62vw); }}
+  .pin {{ height: 100vh; height: 100lvh; --pw: min(calc(60svh / 2.2), 66vw); }}
   .phone {{ top: calc(40svh + 28px); }}
   .txt .ta, .txt .tb {{ position: static; transform: none !important; width: auto !important; text-align: left !important; }}
   .txt {{ inset: auto 20px calc(24px + 100lvh - var(--vis, 100svh)) 20px; }}
@@ -215,6 +222,7 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
 
 <main>
 <section class="story" id="story" aria-label="A app À Nossa!, ecrã a ecrã">
+  {snaps}
   <div class="pin" id="pin">
     <div class="hero" id="hero">
       <img src="{img('duo_clink.png')}" alt="Duas taças a brindar">
@@ -271,7 +279,9 @@ function bgAt(p) {{
 const POS = {{ L: -1, C: 0, R: 1 }};
 function frame() {{
   const vh = innerHeight, vw = innerWidth, wide = vw > 820;
-  const p = Math.max(0, (scrollY - story.offsetTop) / vh);
+  // Unidade = 100vh real da secção (igual à dos pontos de paragem).
+  const unit = story.offsetHeight / (D.end + 1);
+  const p = Math.max(0, (scrollY - story.offsetTop) / unit);
   // Altura visível real (a barra do Safari aparece e desaparece).
   document.documentElement.style.setProperty('--vis', vh + 'px');
   const bgc = bgAt(p);
@@ -298,7 +308,7 @@ function frame() {{
     heroY = (vh - 18 - H / 2) - (natTop + h0 / 2);
   }}
   const shift = x * (wide ? Math.min(vw * .22, 330) : vw * .11) * (1 - rise);
-  const fin = ss(15.6, 16.4, p);
+  const fin = ss(15.4, 16.1, p);
   const tilt = -x * 6 * (1 - fin);
   $('ph').style.transform = `translate(${{shift}}px, ${{rise * heroY + fin * vh * (wide ? .13 : .14)}}px) rotate(${{tilt * .35 * (1 - rise)}}deg) scale(${{1 + (heroS - 1) * rise - .14 * fin}})`;
   // ecrãs: empurrados da direita, como na app
@@ -318,8 +328,8 @@ function frame() {{
     e.style.opacity = fin;
     e.style.transform = `translate(${{d * spread * fin}}px, ${{vh * (wide ? .16 : .16) * fin}}px) rotate(${{d * (wide ? 7 : 5) * fin}}deg) scale(${{wide ? .8 : .7}})`;
   }});
-  $('fin').style.opacity = ss(15.9, 16.4, p);
-  $('fin').style.transform = `translateY(${{20 * (1 - ss(15.9, 16.4, p))}}px)`;
+  $('fin').style.opacity = ss(15.7, 16.1, p);
+  $('fin').style.transform = `translateY(${{20 * (1 - ss(15.7, 16.1, p))}}px)`;
   // textos
   D.texts.forEach(([a, b], i) => {{
     const inn = ss(a - (a < 1.5 ? .25 : .38), a - (a < 1.5 ? .02 : .12), p), out = ss(b + .12, b + .36, p), el = $('T' + i);
@@ -331,7 +341,7 @@ function frame() {{
   $('styName').textContent = D.styles[si][0] + ' · ' + D.styles[si][1];
   dotEls.forEach((d, j) => {{ d.classList.toggle('on', j === si); d.style.color = d.style.background; }});
   // capítulos
-  $('chap').style.opacity = ss(.6, 1, p) * (1 - ss(15.5, 15.9, p));
+  $('chap').style.opacity = ss(.6, 1, p) * (1 - ss(15.3, 15.7, p));
   D.chapters.forEach(([a, b], i) => $('C' + i).classList.toggle('on', p >= a && p < b));
 }}
 let req = 0;
