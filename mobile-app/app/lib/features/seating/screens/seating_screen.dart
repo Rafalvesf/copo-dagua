@@ -43,6 +43,8 @@ class SeatingScreen extends ConsumerStatefulWidget {
 class _SeatingScreenState extends ConsumerState<SeatingScreen> {
   _PlanView _view = _PlanView.plan;
   int? _selectedIndex;
+  // Filtro por forma de mesa (tocar numa categoria). null = todas.
+  TableShape? _shape;
 
   Future<void> _openTable(
     WidgetRef ref, {
@@ -218,11 +220,16 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 18),
-                                _ShapeCategories(state: state),
+                                _ShapeCategories(
+                                  state: state,
+                                  selected: _shape,
+                                  onTap: (s) => setState(() => _shape = _shape == s ? null : s),
+                                ),
                                 const SizedBox(height: 14),
                                 if (_view == _PlanView.plan)
                                   _PlanGrid(
                                     state: state,
+                                    shape: _shape,
                                     selectedIndex: _selectedIndex,
                                     onSelect: _select,
                                     onDrop: (i, g) => _seat(g, i),
@@ -230,6 +237,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                 else
                                   _TableListView(
                                     state: state,
+                                    shape: _shape,
                                     selectedIndex: _selectedIndex,
                                     onSelect: _select,
                                     onDrop: (i, g) => _seat(g, i),
@@ -356,17 +364,51 @@ class _ViewToggle extends StatelessWidget {
 /// Estado de uma mesa na planta/lista.
 enum _CellState { filled, next, locked }
 
+/// Mesas a mostrar (planta e lista): as já usadas, a próxima e as
+/// bloqueadas só até fechar o bloco de 4; o bloco seguinte desbloqueia
+/// quando é preciso (pedido do utilizador, 2026-10-19). Com [shape],
+/// só as mesas dessa forma.
+({List<int> shown, int hidden}) _shownTables(SeatingState state, TableShape? shape) {
+  final total = state.totalTables;
+  final visible = math.min(total, ((state.nextIndex ~/ 4) + 1) * 4);
+  bool match(int i) => shape == null || state.shapeFor(i) == shape;
+  return (
+    shown: [for (var i = 0; i < visible; i++) if (match(i)) i],
+    hidden: [for (var i = visible; i < total; i++) if (match(i)) i].length,
+  );
+}
+
+Widget _hiddenNote(int hidden) => Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Text(
+        '+ $hidden ${hidden == 1 ? 'mesa desbloqueia' : 'mesas desbloqueiam'} quando estas estiverem completas',
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted),
+      ),
+    );
+
+Widget _noneOfShape(TableShape shape) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      child: Text(
+        'Ainda não há mesas ${shape.label.toLowerCase()}s desbloqueadas.',
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
+      ),
+    );
+
 /// Planta da sala: Mesa de Honra em cima, mesas desenhadas com os
 /// lugares à volta (cheio = ocupado) e a pista de dança em baixo. Cada
 /// mesa aceita convidados largados de "Por sentar".
 class _PlanGrid extends StatelessWidget {
   final SeatingState state;
+  final TableShape? shape;
   final int? selectedIndex;
   final ValueChanged<int> onSelect;
   final void Function(int index, Guest guest) onDrop;
 
   const _PlanGrid({
     required this.state,
+    this.shape,
     required this.selectedIndex,
     required this.onSelect,
     required this.onDrop,
@@ -375,13 +417,9 @@ class _PlanGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final filled = state.nextIndex;
-    final total = state.totalTables;
     final c = AppTheme.accentOliveDark;
-    // Mosaico 2×2 (pedido do utilizador, 2026-10-19): mostra as mesas já
-    // usadas, a próxima e as bloqueadas só até fechar o bloco de 4; o
-    // bloco seguinte desbloqueia quando é preciso.
-    final visible = math.min(total, ((filled ~/ 4) + 1) * 4);
-    final hidden = total - visible;
+    // Mosaico 2×2 (pedido do utilizador, 2026-10-19).
+    final (:shown, :hidden) = _shownTables(state, shape);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
@@ -397,17 +435,19 @@ class _PlanGrid extends StatelessWidget {
                 style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: Colors.white)),
           ),
           const SizedBox(height: 16),
+          if (shown.isEmpty && shape != null) _noneOfShape(shape!),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: visible,
+            itemCount: shown.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
               childAspectRatio: 0.92,
             ),
-            itemBuilder: (context, index) {
+            itemBuilder: (context, k) {
+              final index = shown[k];
               final isFilled = index < filled;
               final isNext = index == filled;
               final table = index < state.tables.length ? state.tables[index] : null;
@@ -431,14 +471,7 @@ class _PlanGrid extends StatelessWidget {
               );
             },
           ),
-          if (hidden > 0) ...[
-            const SizedBox(height: 10),
-            Text(
-              '+ $hidden ${hidden == 1 ? 'mesa desbloqueia' : 'mesas desbloqueiam'} quando estas estiverem completas',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted),
-            ),
-          ],
+          if (hidden > 0) _hiddenNote(hidden),
           const SizedBox(height: 12),
           Container(
             width: 120,
@@ -460,7 +493,9 @@ class _PlanGrid extends StatelessWidget {
 /// Categorias de mesa: redonda, quadrada e retangular, com quantas há.
 class _ShapeCategories extends StatelessWidget {
   final SeatingState state;
-  const _ShapeCategories({required this.state});
+  final TableShape? selected;
+  final ValueChanged<TableShape> onTap;
+  const _ShapeCategories({required this.state, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -473,24 +508,44 @@ class _ShapeCategories extends StatelessWidget {
         for (final (i, shape) in const [TableShape.round, TableShape.square, TableShape.rectangular].indexed) ...[
           if (i > 0) const SizedBox(width: 8),
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-              decoration: whiteLineCard(radius: 16),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: 26,
-                    height: 22,
-                    child: CustomPaint(painter: _ShapeIconPainter(shape, AppTheme.accentOliveDark)),
+            child: Semantics(
+              button: true,
+              selected: selected == shape,
+              label: 'Mostrar mesas ${shape.label.toLowerCase()}s',
+              child: SnappyTap(
+                onTap: () => onTap(shape),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+                  decoration: selected == shape
+                      ? BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(16))
+                      : whiteLineCard(radius: 16),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: 26,
+                        height: 22,
+                        child: CustomPaint(
+                          painter: _ShapeIconPainter(shape, selected == shape ? Colors.white : AppTheme.accentOliveDark),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(shape.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: AppFontSize.sm,
+                            fontWeight: FontWeight.w700,
+                            color: selected == shape ? Colors.white : AppTheme.ink,
+                          )),
+                      Text('${counts[shape]} ${counts[shape] == 1 ? 'mesa' : 'mesas'}',
+                          style: TextStyle(
+                            fontSize: AppFontSize.xs,
+                            color: selected == shape ? Colors.white.withValues(alpha: 0.8) : AppTheme.inkMuted,
+                          )),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(shape.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700)),
-                  Text('${counts[shape]} ${counts[shape] == 1 ? 'mesa' : 'mesas'}',
-                      style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted)),
-                ],
+                ),
               ),
             ),
           ),
@@ -662,12 +717,14 @@ class _TablePainter extends CustomPainter {
 
 class _TableListView extends StatelessWidget {
   final SeatingState state;
+  final TableShape? shape;
   final int? selectedIndex;
   final ValueChanged<int> onSelect;
   final void Function(int index, Guest guest) onDrop;
 
   const _TableListView({
     required this.state,
+    this.shape,
     required this.selectedIndex,
     required this.onSelect,
     required this.onDrop,
@@ -677,6 +734,7 @@ class _TableListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final filled = state.nextIndex;
     final c = AppTheme.accentOliveDark;
+    final (:shown, :hidden) = _shownTables(state, shape);
     return Column(
       children: [
         Container(
@@ -693,7 +751,8 @@ class _TableListView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        for (var index = 0; index < state.totalTables; index++) ...[
+        if (shown.isEmpty && shape != null) _noneOfShape(shape!),
+        for (final index in shown) ...[
           Builder(builder: (context) {
             final table = index < state.tables.length ? state.tables[index] : null;
             final count = table?.guestIds.length ?? 0;
@@ -765,8 +824,9 @@ class _TableListView extends StatelessWidget {
               },
             );
           }),
-          if (index != state.totalTables - 1) const SizedBox(height: 10),
+          if (index != shown.last) const SizedBox(height: 10),
         ],
+        if (hidden > 0) _hiddenNote(hidden),
       ],
     );
   }
