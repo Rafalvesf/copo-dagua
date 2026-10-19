@@ -144,7 +144,10 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
         _submitting = false;
         _formError = e.code == 'P0001'
             ? 'Este pedido já teve uma proposta enviada ou já não está disponível.'
-            : 'Não foi possível enviar a proposta.';
+            // `P0008` = `already_booked_with_partner` (migração 102).
+            : e.code == 'P0008'
+                ? 'Este casal já tem uma reserva contigo. Só podes enviar outra proposta se essa for cancelada sem o sinal pago.'
+                : 'Não foi possível enviar a proposta.';
       });
     } catch (_) {
       if (!mounted) return;

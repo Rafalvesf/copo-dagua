@@ -450,7 +450,10 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
                   ? 'Esta proposta já não está disponível — foi recusada ou expirou.'
                   : e.code == 'P0007'
                       ? 'Este parceiro já tem outra reserva confirmada nessa data. Não é possível aceitar esta proposta.'
-                      : 'Não foi possível aceitar a proposta. Tenta novamente.',
+                      // `P0008` = `already_booked_with_partner` (migração 102).
+                      : e.code == 'P0008'
+                          ? 'Já tens uma reserva com este parceiro. Só podes aceitar outra se essa for cancelada sem o sinal pago.'
+                          : 'Não foi possível aceitar a proposta. Tenta novamente.',
             ),
           ),
         );

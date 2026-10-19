@@ -2,11 +2,24 @@
 
 ## Decisões do Rafael
 
-- **Mascote nova**: aprovar a proposta em `mascote/copos.html`. Depois de aprovada, trocar os copos na app (`mobile-app/app/assets/mascot/`), no site e no vídeo.
+- **Mascote nova**: aprovada. Falta trocar os copos na app (`mobile-app/app/assets/mascot/`), no site e no vídeo.
 - **Domínio**: verificar no Namecheap se `anossa.app`, `a-nossa.app`, `anossa.pt` ou `anossaapp.com` estão livres. A verificação ficou por fazer porque a extensão do Chrome não estava ligada.
-- **Propostas repetidas**: há 2 propostas "Flores e Decoração" concluídas e pagas da Cravos & Canela no chat do casal de teste. Falta decidir se se apagam.
 
 ## Base de dados
+
+- **Reservas repetidas da Cravos & Canela**: o Rafael aprovou apagá-las, mas o pedido de aprovação ficou cancelado. Fica a WED-1016 e saem a WED-1017 e a WED-1018 (com pagamentos, avaliações e mensagens). Correr no SQL Editor:
+
+  ```sql
+  begin;
+  delete from payments where booking_id in ('d4ae94a6-916f-4df5-973b-c0bbf1a589b4','1df10a25-9f92-4443-8ad0-ec0fa03db4f2');
+  delete from bookings where id in ('d4ae94a6-916f-4df5-973b-c0bbf1a589b4','1df10a25-9f92-4443-8ad0-ec0fa03db4f2');
+  delete from messages where proposal_id in ('f1d90d71-15cc-4b84-bddc-7321a710dc89','15c51aba-8fb9-492a-b6c7-46f99f63d113');
+  delete from proposals where id in ('f1d90d71-15cc-4b84-bddc-7321a710dc89','15c51aba-8fb9-492a-b6c7-46f99f63d113');
+  delete from quote_requests where id in ('dda75365-436c-46fe-8518-4b344f15462d','c06d1d12-8ef3-4241-95f5-8ebd98da5cad');
+  commit;
+  ```
+
+- **Uma reserva por parceiro** (migração 102, aplicada): o casal só pode ter outra reserva com o mesmo parceiro se a anterior foi cancelada ou expirou sem o sinal pago.
 
 - **Parceiros em destaque**: a alteração não foi aplicada (o pedido de aprovação ficou cancelado). Para pôr a Casa Tília em destaque, correr no SQL Editor do Supabase:
 
