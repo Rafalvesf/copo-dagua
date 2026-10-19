@@ -37,6 +37,7 @@ import 'package:copo_dagua_app/core/models/models.dart';
 import 'package:copo_dagua_app/core/notifications/partner_notifications_providers.dart';
 import 'package:copo_dagua_app/core/partner_app/partner_analytics.dart';
 import 'package:copo_dagua_app/core/partner_app/partner_app_providers.dart';
+import 'package:copo_dagua_app/core/payments/partner_connect.dart';
 import 'package:copo_dagua_app/core/partner_profile/partner_profile_controller.dart';
 import 'package:copo_dagua_app/core/partner_venue_tables/partner_venue_tables_controller.dart';
 import 'package:copo_dagua_app/core/partners/favorite_partners_controller.dart';
@@ -473,6 +474,17 @@ List<Override> _overrides(AuthState auth) => [
       partnerPortfolioProvider.overrideWith((ref) async => const []),
       partnerReviewsProvider.overrideWith((ref) async => _reviews),
       partnerStripeStatusProvider.overrideWith((ref) async => const PartnerStripeStatus(hasAccount: true, chargesEnabled: true, payoutsEnabled: false)),
+      partnerConnectStatusProvider.overrideWith((ref) async => const ConnectStatus(
+            hasAccount: true,
+            detailsSubmitted: true,
+            chargesEnabled: true,
+            payoutsEnabled: true,
+            bankLast4: '4821',
+            availableCents: 124000,
+            pendingCents: 25500,
+            eventuallyDue: ['individual.verification.document'],
+            payouts: [ConnectPayout(id: 'po1', amountCents: 80000, status: 'paid')],
+          )),
       partnerBalanceProvider.overrideWith((ref) async => const PartnerBalanceData(received: 12400, pendingDeposits: 2550, uncollectedBalance: 5950)),
       partnerPricingProvider.overrideWith((ref) async => const PartnerPricingData(
             pricingMode: 'packages',
@@ -672,6 +684,7 @@ void main() {
     ('35_parceiro_calendario', '/partner-calendar'),
     ('36_parceiro_perfil', '/partner-profile'),
     ('37_parceiro_pagamentos', '/partner-payments'),
+    ('37b_parceiro_dados_stripe', '/partner-payments/setup'),
     ('38_parceiro_contratos', '/partner-contracts'),
     ('39_parceiro_resultados', '/partner-stats'),
     ('40_parceiro_avaliacoes', '/partner-reviews'),
