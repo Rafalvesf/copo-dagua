@@ -127,10 +127,14 @@ class _GalleryPostsScreenState extends ConsumerState<GalleryPostsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = _initialKey.currentContext;
-      if (ctx != null) Scrollable.ensureVisible(ctx);
-    });
+    // Só salta quando a foto tocada não é a primeira — senão o
+    // cabeçalho "Publicações" ficava escondido logo ao abrir.
+    if (widget.initialIndex > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = _initialKey.currentContext;
+        if (ctx != null) Scrollable.ensureVisible(ctx);
+      });
+    }
   }
 
   @override
