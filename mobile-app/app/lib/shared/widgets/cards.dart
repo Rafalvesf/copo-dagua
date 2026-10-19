@@ -6,6 +6,7 @@ import 'initials_avatar.dart';
 import 'rsvp_status_badge.dart';
 import 'snappy_tap.dart';
 import 'sticker_icon.dart';
+import 'v2_kit.dart';
 
 /// Fundo fotográfico para cartões de destaque (hero, parceiros): a
 /// foto preenche o cartão todo e um gradiente escuro no fundo garante
@@ -195,24 +196,16 @@ class ConversationListItem extends StatelessWidget {
     final avatarUrl = conversation.avatarUrl;
     return SnappyTap(
       onTap: onTap,
+      // Cartões brancos com sombra suave (canvas "Parceiro — mensagens
+      // (redesign)", 2026-10-19).
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 10),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            border: isLast ? null : const Border(bottom: BorderSide(color: AppTheme.borderMuted)),
-          ),
+          padding: const EdgeInsets.all(14),
+          decoration: softCard(),
           child: Row(
             children: [
-              avatarUrl == null
-                  ? InitialsAvatar(
-                      name: conversation.name,
-                      radius: 24,
-                      background: tint,
-                      foreground: AppTheme.accentOliveDark,
-                    )
-                  : CircleAvatar(radius: 24, backgroundColor: tint, backgroundImage: NetworkImage(avatarUrl)),
+              V2Avatar(conversation.name, size: 48, imageUrl: avatarUrl),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

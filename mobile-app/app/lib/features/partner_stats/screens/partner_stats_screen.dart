@@ -9,6 +9,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
+import '../../../shared/widgets/v2_kit.dart';
 
 const _monthsShort = [
   'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
@@ -49,13 +50,13 @@ class _PartnerStatsScreenState extends ConsumerState<PartnerStatsScreen> {
   Widget build(BuildContext context) {
     final async = ref.watch(partnerAnalyticsProvider(_period));
     return GradientScaffold(
-      background: AppBackground.feed,
+      background: AppBackground.subtle,
       body: SafeArea(
         bottom: false,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
           children: [
-            const PageHeader(title: 'Resultados'),
+            const PageHeader(title: 'Resultados', centered: true),
             Padding(
               padding: const EdgeInsets.fromLTRB(28, 18, 28, 0),
               child: _PeriodSwitch(
@@ -90,54 +91,14 @@ class _PeriodSwitch extends StatelessWidget {
 
   const _PeriodSwitch({required this.value, required this.onChanged});
 
+  // Pílula branca com o período ativo a verde (redesign 2026-10-19).
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-      ),
-      child: Row(
-        children: [
-          for (final p in AnalyticsPeriod.values)
-            Expanded(
-              child: Semantics(
-                button: true,
-                selected: p == value,
-                child: SnappyTap(
-                  onTap: () => onChanged(p),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
-                    height: 36,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: p == value ? Colors.white : Colors.transparent,
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                      boxShadow: p == value
-                          ? const [
-                              BoxShadow(
-                                color: Color(0x1F171713),
-                                blurRadius: 3,
-                                offset: Offset(0, 1),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Text(
-                      p.label,
-                      style: TextStyle(
-                        fontSize: AppFontSize.md,
-                        fontWeight: p == value ? FontWeight.w700 : FontWeight.w400,
-                        color: p == value ? AppTheme.ink : AppTheme.inkMuted,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+    const values = AnalyticsPeriod.values;
+    return V2Segment(
+      options: [for (final p in values) p.label],
+      selected: values.indexOf(value),
+      onChanged: (i) => onChanged(values[i]),
     );
   }
 }
@@ -173,53 +134,36 @@ class _Dashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Receita · reservas confirmadas',
-            style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
+          GreenHero(
+            label: 'RECEITA · RESERVAS CONFIRMADAS',
+            value: _eur(a.revenue),
+            doodles: const [Icons.trending_up_rounded, Icons.euro_rounded, Icons.auto_awesome_outlined],
+            footer: Wrap(spacing: 8, runSpacing: 8, children: [
+              if (revenueDelta != null) HeroPill(_pctText(revenueDelta) ?? '', solid: true),
+              HeroPill('vs. ${_eur(a.previousRevenue)} antes'),
+            ]),
           ),
-          const SizedBox(height: 2),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    _eur(a.revenue),
-                    style: const TextStyle(
-                      fontSize: 40,
-                      height: 46 / 40,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.ink,
-                    ),
-                  ),
-                ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
+            decoration: softCard(),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              LineAreaChart(
+                values: [for (final p in a.revenueSeries) p.value],
+                previous: [for (final p in a.previousRevenueSeries) p.value],
+                xLabels: _xLabels(),
+                formatValue: _compactEur,
+                describePoint: (i) => _bucketLabel(a.revenueSeries[i].start),
               ),
-              const SizedBox(width: 8),
-              _Delta(pct: revenueDelta),
-            ],
-          ),
-          Text(
-            'vs. ${a.period.label} anteriores (${_eur(a.previousRevenue)})',
-            style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-          ),
-          const SizedBox(height: 12),
-          LineAreaChart(
-            values: [for (final p in a.revenueSeries) p.value],
-            previous: [for (final p in a.previousRevenueSeries) p.value],
-            xLabels: _xLabels(),
-            formatValue: _compactEur,
-            describePoint: (i) => _bucketLabel(a.revenueSeries[i].start),
-          ),
-          const SizedBox(height: 6),
-          const Row(
-            children: [
-              _LegendKey(dashed: false, label: 'Este período'),
-              SizedBox(width: 16),
-              _LegendKey(dashed: true, label: 'Período anterior'),
-            ],
+              const SizedBox(height: 6),
+              const Row(
+                children: [
+                  _LegendKey(dashed: false, label: 'Este período'),
+                  SizedBox(width: 16),
+                  _LegendKey(dashed: true, label: 'Período anterior'),
+                ],
+              ),
+            ]),
           ),
           if (noData) ...[
             const SizedBox(height: 16),
@@ -297,13 +241,17 @@ class _Dashboard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          SimpleBarChart(
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),
+            decoration: softCard(),
+            child: SimpleBarChart(
             values: [for (final p in a.requestsByWeek) p.value],
             labels: [
               for (final p in a.requestsByWeek) '${p.start.day}/${p.start.month}',
             ],
             describe: (i) =>
                 'Semana de ${_bucketLabel(a.requestsByWeek[i].start)}: ${a.requestsByWeek[i].value.round()} pedidos',
+          ),
           ),
           const SizedBox(height: 24),
           const Text(
@@ -314,21 +262,26 @@ class _Dashboard extends StatelessWidget {
               color: AppTheme.ink,
             ),
           ),
-          const SizedBox(height: 14),
-          _FunnelRow(label: 'Pedidos recebidos', value: a.requests, total: a.requests),
-          const SizedBox(height: 14),
-          _FunnelRow(label: 'Propostas enviadas', value: a.proposals, total: a.requests),
-          const SizedBox(height: 14),
-          _FunnelRow(label: 'Reservas', value: a.accepted, total: a.requests),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: softCard(),
+            child: Column(children: [
+              _FunnelRow(label: 'Pedidos recebidos', value: a.requests, total: a.requests),
+              const SizedBox(height: 14),
+              _FunnelRow(label: 'Propostas enviadas', value: a.proposals, total: a.requests),
+              const SizedBox(height: 14),
+              _FunnelRow(label: 'Reservas', value: a.accepted, total: a.requests),
+            ]),
+          ),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.gray,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-            ),
+            decoration: softCard(),
             child: Row(
               children: [
+                const StickerIcon(Icons.star_border_rounded),
+                const SizedBox(width: 12),
                 Text(
                   a.averageRating == null
                       ? '—'
@@ -491,10 +444,7 @@ class _KpiTile extends StatelessWidget {
     final s = spark;
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
+      decoration: softCard(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

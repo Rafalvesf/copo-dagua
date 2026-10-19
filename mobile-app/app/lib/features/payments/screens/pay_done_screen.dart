@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/theme_color/theme_color.dart';
+import '../../../shared/widgets/steady_ticker.dart';
 
 class PayDoneArgs {
   final String partnerName;
@@ -47,7 +48,7 @@ class PayDoneScreen extends StatefulWidget {
   State<PayDoneScreen> createState() => _PayDoneScreenState();
 }
 
-class _PayDoneScreenState extends State<PayDoneScreen> with SingleTickerProviderStateMixin {
+class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProviderStateMixin {
   late final AnimationController _c =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..forward();
 

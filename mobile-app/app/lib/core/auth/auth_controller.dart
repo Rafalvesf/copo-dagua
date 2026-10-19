@@ -10,6 +10,7 @@ import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import '../wedding/partner_invite.dart';
 import '../../shared/widgets/brinde_gate.dart';
+import '../../shared/widgets/tchin_splash.dart';
 
 class _Unset {
   const _Unset();
@@ -683,6 +684,9 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
+    // As boas-vindas a seguir despedem-se pelo nome (2026-10-19).
+    TchinSplash.farewellName = state.profile?.fullName.trim().split(' ').first;
+    TchinSplash.farewellPending = true;
     await supabase.auth.signOut();
     state = const AuthState.unauthenticated();
   }

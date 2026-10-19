@@ -35,10 +35,23 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   bool _burst = false;
   bool _started = false;
   bool _barGreen = false;
+  Size _size = Size.zero;
+
+  /// Ao terminar sessão: despedida em vez de "A preparar o brinde…".
+  bool _farewell = false;
+  String? _farewellName;
 
   @override
   void initState() {
     super.initState();
+    // Topo das boas-vindas (gradiente verde-claro): a barra fica desta cor
+    // quando a abertura a soltar, em vez de branca.
+    setBarColor(const Color(0xFFDDE5D3));
+    if (TchinSplash.farewellPending) {
+      TchinSplash.farewellPending = false;
+      _farewell = true;
+      _farewellName = TchinSplash.farewellName;
+    }
     _driver = SteadyDriver(this, _splash);
     // Só marca como vista quando a abertura chega ao fim — se o ecrã for
     // recriado a meio do arranque (ex.: o router volta a montar a página
@@ -46,8 +59,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
     // desaparecer (bug 2026-10-17: "boas-vindas sem animação").
     _splash.addListener(() {
       if (!_burst && _splash.value >= 0.78) setState(() => _burst = true);
-      // A barra do topo fica verde enquanto o verde cobre o topo do ecrã.
-      final green = _splash.value < 0.7;
+      // A barra do topo fica verde enquanto o círculo verde cobre o topo
+      // do ecrã e muda no instante em que o deixa de cobrir.
+      final green = TchinSplash.coversTop(_splash.value, _size);
       if (green != _barGreen) {
         _barGreen = green;
         if (green) {
@@ -71,7 +85,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
     // todas as vezes — mesmo com "reduzir movimento" ligado no telemóvel.
     if (_showSplash && _splash.value == 0 && !_started) {
       _started = true;
-      if (kIsWeb && !_webOpeningDone) {
+      if (kIsWeb && !_webOpeningDone && !_farewell) {
         _webOpeningDone = true;
         _showSplash = false;
         return;
@@ -91,6 +105,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    _size = MediaQuery.sizeOf(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -101,7 +116,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
             Positioned.fill(
               child: AnimatedBuilder(
                 animation: _splash,
-                builder: (context, _) => IgnorePointer(ignoring: _splash.value >= 0.78, child: TchinSplash(t: _splash.value)),
+                builder: (context, _) => IgnorePointer(ignoring: _splash.value >= 0.78, child: _farewell
+                    ? TchinSplash(
+                        t: _splash.value,
+                        farewell: true,
+                        greeting: _farewellName == null || _farewellName!.isEmpty ? 'Até já!' : 'Até já, $_farewellName!',
+                        tagline: 'Sessão terminada. Até à próxima festa.',
+                      )
+                    : TchinSplash(t: _splash.value)),
               ),
             ),
         ],

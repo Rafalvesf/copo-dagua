@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'steady_ticker.dart';
 
 /// Lista de cartões que entram em cascata (fade + deslize de baixo para
 /// cima), um pouco depois um do outro — não há nenhuma biblioteca de
@@ -27,7 +28,7 @@ class StaggeredFadeIn extends StatefulWidget {
 }
 
 class _StaggeredFadeInState extends State<StaggeredFadeIn>
-    with SingleTickerProviderStateMixin {
+    with SteadyTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override

@@ -27,6 +27,7 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with TickerProviderStat
   bool _burst = false;
   bool _barGreen = false;
   String? _name;
+  Size _size = Size.zero;
 
   @override
   void initState() {
@@ -34,7 +35,9 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with TickerProviderStat
     _driver = SteadyDriver(this, _c);
     _c.addListener(() {
       if (!_burst && _c.value >= 0.78) setState(() => _burst = true);
-      final green = _show && _c.value < 0.7;
+      // Verde só enquanto o círculo cobre o topo; muda no mesmo instante
+      // para a cor do ecrã por baixo (sem faixa branca) — 2026-10-19.
+      final green = _show && TchinSplash.coversTop(_c.value, _size);
       if (green != _barGreen) {
         _barGreen = green;
         if (green) {
@@ -75,6 +78,7 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with TickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    _size = MediaQuery.sizeOf(context);
     ref.listen(authControllerProvider, (prev, next) {
       if (!BrindeGate.pending) return;
       // Sempre que se entra ou cria conta (pedido 2026-10-17: "tem que

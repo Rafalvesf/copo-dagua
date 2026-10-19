@@ -9,11 +9,17 @@ import 'theme_color_stub.dart' if (dart.library.js_interop) 'theme_color_web.dar
 /// Enquanto uma abertura/brinde está no ecrã a cor fica presa
 /// ([lockBarColor]) — os ecrãs por baixo não a podem mudar para branco.
 void setBarColor(Color c) {
+  // Guarda sempre a cor que o ecrã visível quer: quando a abertura/brinde
+  // solta a barra, volta logo a essa cor (antes voltava a branco e o
+  // topo ficava branco por cima de ecrãs com outra cor até ao próximo
+  // redesenho — 2026-10-19).
+  _desired = c;
   if (_locked) return;
   _apply(c);
 }
 
 bool _locked = false;
+Color _desired = const Color(0xFFFFFFFF);
 
 /// A barra está presa por uma abertura/brinde.
 bool get barColorLocked => _locked;
@@ -23,9 +29,10 @@ void lockBarColor(Color c) {
   _apply(c);
 }
 
-void unlockBarColor([Color c = const Color(0xFFFFFFFF)]) {
+/// Solta a barra e põe a cor do ecrã por baixo ([c] se indicada).
+void unlockBarColor([Color? c]) {
   _locked = false;
-  _apply(c);
+  _apply(c ?? _desired);
 }
 
 void _apply(Color c) {

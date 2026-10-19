@@ -50,13 +50,18 @@ class GreenHero extends StatelessWidget {
               children: [
                 Text(label,
                     style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: Colors.white)),
+                // Valores compridos (nomes) em 28 px, como no canvas; sem
+                // valor, só a etiqueta e o conteúdo (ex.: mensagem).
+                if (value.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Wrap(
                   crossAxisAlignment: WrapCrossAlignment.end,
                   spacing: 8,
                   children: [
                     Text(value,
-                        style: const TextStyle(fontSize: 40, height: 44 / 40, fontWeight: FontWeight.w700, color: Colors.white)),
+                        style: value.length > 12
+                            ? const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: Colors.white)
+                            : const TextStyle(fontSize: 40, height: 44 / 40, fontWeight: FontWeight.w700, color: Colors.white)),
                     if (suffix != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 6),
@@ -64,6 +69,7 @@ class GreenHero extends StatelessWidget {
                       ),
                   ],
                 ),
+                ],
                 if (progress != null) ...[
                   const SizedBox(height: 14),
                   ClipRRect(

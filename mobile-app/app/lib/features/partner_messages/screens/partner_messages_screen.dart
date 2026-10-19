@@ -44,14 +44,14 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
     final query = _search.text.trim().toLowerCase();
 
     return GradientScaffold(
-      background: AppBackground.feed,
+      background: AppBackground.subtle,
       body: Stack(
         children: [
           SafeArea(
             bottom: false,
             child: Column(
               children: [
-                const PageHeader(title: 'Mensagens', showBack: false),
+                const PageHeader(title: 'Mensagens', showBack: false, centered: true),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppTheme.screenMargin,
@@ -89,7 +89,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                         );
                       }
                       return ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(0, 8, 0, 140),
+                        padding: const EdgeInsets.fromLTRB(0, 16, 0, 140),
                         itemCount: conversations.length,
                         itemBuilder: (context, index) => Padding(
                           padding: EdgeInsets.zero,

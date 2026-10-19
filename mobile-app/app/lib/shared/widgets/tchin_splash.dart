@@ -14,12 +14,37 @@ class TchinSplash extends StatelessWidget {
   final String? greeting;
   final String tagline;
 
-  const TchinSplash({super.key, required this.t, this.greeting, this.tagline = 'Para todas as festas'});
+  /// Despedida ao terminar sessão: sem "A preparar o brinde…" nem barra.
+  final bool farewell;
+
+  const TchinSplash({
+    super.key,
+    required this.t,
+    this.greeting,
+    this.tagline = 'Para todas as festas',
+    this.farewell = false,
+  });
 
   /// Verde-eucalipto da abertura (igual a `MenuColor` eucalipto).
   static const eucalyptus = Color(0xFF4F6B4A);
 
   static double _seg(double t, double a, double b) => ((t - a) / (b - a)).clamp(0.0, 1.0);
+
+  /// Quanto falta ao círculo verde para deixar de cobrir o topo do ecrã
+  /// ([size] em píxeis lógicos). A barra do telemóvel muda de cor
+  /// exatamente nesse instante — sem faixa branca antes do verde sair
+  /// (2026-10-19).
+  static bool coversTop(double t, Size size) {
+    final close = Curves.easeInOutCubic.transform(_seg(t, 0.64, 0.78));
+    final diag = math.sqrt(size.width * size.width + size.height * size.height);
+    if (diag == 0) return t < 0.7;
+    return (1 - close) * diag / 2 >= size.height / 2;
+  }
+
+  /// Ao terminar sessão (2026-10-19): a abertura despede-se em vez de
+  /// "A preparar o brinde…". Ligado em [AuthController.logout].
+  static String? farewellName;
+  static bool farewellPending = false;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +78,7 @@ class TchinSplash extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             // Canvas "Início 1": "A preparar o brinde…" em baixo.
-            if (greeting == null)
+            if (greeting == null && !farewell)
               Positioned(
                 bottom: 48,
                 child: Opacity(
@@ -133,7 +158,7 @@ class TchinSplash extends StatelessWidget {
                     style: const TextStyle(fontSize: 15, color: Color(0xFFDDE5D3)),
                   ),
                 ),
-                if (greeting != null) ...[
+                if (greeting != null && !farewell) ...[
                   const SizedBox(height: 18),
                   Opacity(
                     opacity: taglineOpacity,

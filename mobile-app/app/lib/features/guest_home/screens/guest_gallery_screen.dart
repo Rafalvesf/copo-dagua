@@ -15,6 +15,8 @@ import '../../../shared/widgets/gallery_placeholder.dart';
 import '../../../core/gallery/gallery_social.dart';
 import '../../gallery/widgets/gallery_social_ui.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/v2_kit.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -114,8 +116,8 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
     final photosAsync = ref.watch(weddingGalleryPhotosProvider(widget.weddingId));
     final myUserId = ref.watch(authControllerProvider).profile?.id;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return GradientScaffold(
+      background: AppBackground.subtle,
       body: Stack(
         children: [
           SafeArea(
@@ -123,7 +125,13 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
             child: Column(
               children: [
                 // Canvas "Convidado · Galeria": título ao centro e "+" verde.
-                PageHeader(title: 'Galeria', showBack: false, centered: true, trailing: AddActionButton(onTap: _upload)),
+                // Redesign 2026-10-19: "+" verde redondo como no canvas.
+                PageHeader(
+                  title: 'Galeria',
+                  showBack: false,
+                  centered: true,
+                  trailing: V2RoundButton(icon: Icons.add_rounded, tooltip: 'Partilhar fotos', solid: true, onTap: _upload),
+                ),
                 const SizedBox(height: 16),
                 Expanded(
                   child: photosAsync.when(
@@ -146,28 +154,12 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                           FloatingFilterBar.bottomPadding(aboveNav: true),
                         ),
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(12)),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.schedule, size: 18, color: AppTheme.inkMuted),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'As tuas fotos aparecem depois de os anfitriões aprovarem.',
-                                    style: TextStyle(fontSize: 13, height: 18 / 13, color: AppTheme.inkMuted),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
                           const Text(
-                            'ESTA SEMANA',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppTheme.inkMuted),
+                            'As tuas fotos aparecem depois de os anfitriões aprovarem.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                           ),
-                          const SizedBox(height: 10),
+                          const V2Caps('Esta semana'),
                           if (approved.isEmpty)
                             const GalleryEmptyState(
                               message: 'Ainda não existem fotos. Carrega as primeiras.',
