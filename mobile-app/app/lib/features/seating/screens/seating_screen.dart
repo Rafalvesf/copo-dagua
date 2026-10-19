@@ -474,31 +474,22 @@ class _ShapeCategories extends StatelessWidget {
           if (i > 0) const SizedBox(width: 8),
           Expanded(
             child: Container(
-              height: 56,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
               decoration: whiteLineCard(radius: 16),
-              child: Row(
+              child: Column(
                 children: [
                   SizedBox(
                     width: 26,
-                    height: 26,
+                    height: 22,
                     child: CustomPaint(painter: _ShapeIconPainter(shape, AppTheme.accentOliveDark)),
                   ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(shape.label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700)),
-                        Text('${counts[shape]} ${counts[shape] == 1 ? 'mesa' : 'mesas'}',
-                            style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted)),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 4),
+                  Text(shape.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700)),
+                  Text('${counts[shape]} ${counts[shape] == 1 ? 'mesa' : 'mesas'}',
+                      style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted)),
                 ],
               ),
             ),
@@ -1202,7 +1193,7 @@ class _TableConfigSheetState extends ConsumerState<_TableConfigSheet> {
           const SizedBox(height: 12),
           ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.5,
+              maxHeight: MediaQuery.of(context).size.height * 0.38,
             ),
             child: widget.guests.isEmpty
                 ? const Padding(
