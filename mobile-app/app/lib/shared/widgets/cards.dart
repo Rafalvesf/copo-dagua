@@ -299,7 +299,9 @@ class ConversationListItem extends StatelessWidget {
     final avatarUrl = conversation.avatarUrl;
     final unread = conversation.unreadCount > 0;
     final tint = _tints[conversation.name.hashCode.abs() % _tints.length];
-    if (partnerStyle) return _partnerRow(tint);
+    // Redesign 2026-10-19: casal e parceiro usam a mesma linha em cartão
+    // (antes o casal tinha linhas soltas com separador).
+    return _partnerRow(tint);
     return SnappyTap(
       onTap: onTap,
       child: Container(

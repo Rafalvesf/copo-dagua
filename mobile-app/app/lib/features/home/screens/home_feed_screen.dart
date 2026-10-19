@@ -89,14 +89,17 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                         140,
                       ),
                       children: [
+                        // Título ao centro, igual ao Perfil do parceiro e do
+                        // convidado (coerência entre perfis, 2026-10-19).
                         Row(
                           children: [
+                            const SizedBox(width: 48),
                             const Expanded(
                               child: Text(
                                 'Perfil',
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: AppFontSize.display,
-                                  height: 40 / 34,
+                                  fontSize: 22,
                                   fontWeight: FontWeight.w700,
                                   color: AppTheme.ink,
                                 ),
@@ -632,7 +635,8 @@ class _ProfileHeader extends StatelessWidget {
         ),
       ),
     );
-    return Row(
+    // Centrado, como nos perfis do parceiro e do convidado.
+    return Column(
       children: [
         Stack(
           clipBehavior: Clip.none,
@@ -696,14 +700,12 @@ class _ProfileHeader extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        const SizedBox(height: 10),
+        Column(
             children: [
         Text(
           name ?? '—',
-          textAlign: TextAlign.start,
+          textAlign: TextAlign.center,
           style: AppTypography.displaySerif(
             fontSize: AppFontSize.h2,
             color: AppTheme.ink,
@@ -713,7 +715,7 @@ class _ProfileHeader extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             email!,
-            textAlign: TextAlign.start,
+            textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: AppFontSize.base,
               fontWeight: FontWeight.w300,
@@ -740,7 +742,6 @@ class _ProfileHeader extends StatelessWidget {
           ),
         ],
             ],
-          ),
         ),
       ],
     );

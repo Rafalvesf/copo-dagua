@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import 'buttons.dart';
 import 'snappy_tap.dart';
+import 'v2_kit.dart';
 
 /// Cabeçalho de uma conversa (redesign 2026-10, igual ao canvas): voltar,
 /// avatar com foto ou iniciais, nome em Bold e uma linha secundária.
@@ -21,31 +22,10 @@ class ChatHeader extends StatelessWidget {
     this.onOpenProfile,
   });
 
-  String get _initials {
-    final parts = name.trim().split(RegExp(r'\s+'))
-      ..removeWhere((p) => p.isEmpty || p == '&');
-    if (parts.isEmpty) return '?';
-    final first = parts.first[0];
-    final last = parts.length > 1 ? parts.last[0] : '';
-    return (first + last).toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final url = avatarUrl;
-    final avatar = CircleAvatar(
-      radius: 20,
-      backgroundColor: AppColors.green,
-      foregroundImage: url == null ? null : NetworkImage(url),
-      child: Text(
-        _initials,
-        style: TextStyle(
-          fontSize: AppFontSize.md,
-          fontWeight: FontWeight.w700,
-          color: AppTheme.accentOliveDark,
-        ),
-      ),
-    );
+    // Avatar com aro branco e sombra, como nas listas (redesign 2026-10-19).
+    final avatar = V2Avatar(name, size: 44, imageUrl: avatarUrl);
     final info = Row(
       children: [
         avatar,
@@ -72,7 +52,8 @@ class ChatHeader extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: AppFontSize.sm,
-                    color: AppTheme.inkMuted,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.brandGreen,
                   ),
                 ),
             ],
@@ -86,9 +67,6 @@ class ChatHeader extends StatelessWidget {
         8,
         AppTheme.screenMargin,
         12,
-      ),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppTheme.borderMuted)),
       ),
       child: Row(
         children: [
