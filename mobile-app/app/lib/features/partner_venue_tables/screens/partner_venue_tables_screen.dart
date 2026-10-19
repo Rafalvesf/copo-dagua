@@ -251,11 +251,14 @@ class _TableTypeSheetState extends State<_TableTypeSheet> {
               style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
             ),
             const SizedBox(height: 8),
-            Row(
+            // Wrap: as três formas não cabiam numa linha (transbordava).
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 for (final shape in TableShape.values)
                   Padding(
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: EdgeInsets.zero,
                     child: ChoiceChip(
                       label: Text(shape.label),
                       selected: _shape == shape,
