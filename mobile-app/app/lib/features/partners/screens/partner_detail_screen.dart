@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
@@ -44,19 +45,15 @@ class PartnerDetailScreen extends ConsumerStatefulWidget {
     // foto no topo com voltar e favorito, cartão branco por cima.
     return Navigator.of(context).push<Partner>(
       PageRouteBuilder<Partner>(
-        transitionDuration: const Duration(milliseconds: 300),
-        reverseTransitionDuration: const Duration(milliseconds: 240),
+        transitionDuration: const Duration(milliseconds: 380),
+        reverseTransitionDuration: const Duration(milliseconds: 380),
         pageBuilder: (context, animation, secondaryAnimation) => PartnerDetailScreen(
           partner: partner,
           selectionMode: selectionMode,
         ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-          return SlideTransition(
-            position: Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(curved),
-            child: FadeTransition(opacity: curved, child: child),
-          );
-        },
+        // Mesma animação dos botões da app (`page_transitions.dart`).
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            TopDownTransition(animation: animation, child: child),
       ),
     );
   }
