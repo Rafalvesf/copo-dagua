@@ -1174,6 +1174,10 @@ class CoupleBooking {
   final String? pendingDepositPaymentId;
   final double? depositAmount;
 
+  /// Prazo do sinal pendente (`payments.due_at`) — para os "Pagamentos
+  /// próximos" do menu.
+  final DateTime? pendingDepositDueAt;
+
   /// Id do pedido de pagamento final (`payments.id`, tipo
   /// `final_payment`, estado `pending`) — criado automaticamente por
   /// `admin_complete_booking()` (`053_final_payment.sql`) assim que o
@@ -1194,6 +1198,7 @@ class CoupleBooking {
     required this.status,
     this.pendingDepositPaymentId,
     this.depositAmount,
+    this.pendingDepositDueAt,
     this.pendingFinalPaymentId,
     this.finalPaymentAmount,
     this.paidAmount = 0,

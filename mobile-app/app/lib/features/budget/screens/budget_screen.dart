@@ -9,6 +9,7 @@ import '../../../core/checklist/checklist_controller.dart';
 import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../payments/open_payment.dart';
 import '../../../features/partners/partner_style.dart';
 import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/sticker_icon.dart';
@@ -83,19 +84,34 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     // antes ficavam vazios para quem só tinha reservas (2026-10-18).
     final bookings = ref.watch(coupleBookingsProvider).asData?.value ?? const <CoupleBooking>[];
     final active = bookings.where((b) => b.status != BookingStatus.recusado);
+    // Valores com a comissão: é o que o casal paga de facto (igual às
+    // Reservas e ao ecrã de pagamento) — 2026-10-19.
+    final pct = ref.watch(platformCommissionPercentageProvider).value ?? 0;
+    double fee(double v) => amountWithCommission(v, pct);
     final paid = [
       ...expenseState.paid,
       for (final b in active)
         if (b.paidAmount > 0)
-          Expense(id: 'booking:${b.id}:paid', weddingId: b.weddingId, title: 'Pago · ${b.partnerName}', amount: b.paidAmount, paid: true),
+          Expense(id: 'booking:${b.id}:paid', weddingId: b.weddingId, title: 'Pago · ${b.partnerName}', amount: fee(b.paidAmount), paid: true),
     ];
     final pending = [
       ...expenseState.pending,
       for (final b in active) ...[
         if (b.pendingDepositPaymentId != null)
-          Expense(id: 'booking:${b.id}:deposit', weddingId: b.weddingId, title: 'Sinal · ${b.partnerName}', amount: b.depositAmount ?? 0),
+          Expense(
+            id: 'booking:${b.id}:pay:${b.pendingDepositPaymentId}',
+            weddingId: b.weddingId,
+            title: 'Sinal · ${b.partnerName}',
+            amount: fee(b.depositAmount ?? 0),
+            dueDate: b.pendingDepositDueAt,
+          ),
         if (b.pendingFinalPaymentId != null)
-          Expense(id: 'booking:${b.id}:final', weddingId: b.weddingId, title: 'Restante · ${b.partnerName}', amount: b.finalPaymentAmount ?? 0),
+          Expense(
+            id: 'booking:${b.id}:pay:${b.pendingFinalPaymentId}',
+            weddingId: b.weddingId,
+            title: 'Restante · ${b.partnerName}',
+            amount: fee(b.finalPaymentAmount ?? 0),
+          ),
       ],
     ];
     final total = expenseState.expenses.length;
@@ -409,7 +425,13 @@ class _ExpenseList extends ConsumerWidget {
             onTap: () {
               // Pagamentos de reservas pagam-se nas Reservas.
               if (expense.id.startsWith('booking:')) {
-                context.push('/bookings');
+                // Pendente: abre logo o pagamento desse sinal/restante.
+                final i = expense.id.indexOf(':pay:');
+                if (!expense.paid && i > 0) {
+                  openPaymentFlow(context, ref, expense.id.substring(i + 5));
+                } else {
+                  context.push('/bookings');
+                }
                 return;
               }
               ref

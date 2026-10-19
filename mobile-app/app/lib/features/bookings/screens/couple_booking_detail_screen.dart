@@ -10,6 +10,7 @@ import '../../partner_bookings/booking_style.dart' show bookingStatusColor;
 import 'couple_bookings_screen.dart' show ReviewAction;
 import '../../../core/home/home_providers.dart';
 import '../../../shared/money.dart';
+import '../../payments/open_payment.dart';
 
 /// Detalhes de uma reserva já confirmada/concluída — antes disto, tocar
 /// numa reserva em `couple_bookings_screen.dart` só mostrava "em
@@ -89,9 +90,41 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                               ? AppStatusColors.pending
                               : bookingStatusColor(booking.status),
                         ),
+                        const SizedBox(height: 10),
+                        _InfoRow(
+                          label: 'Pago',
+                          value: euros(amountWithCommission(booking.paidAmount, fee), cents: true),
+                        ),
+                        const SizedBox(height: 10),
+                        _InfoRow(
+                          label: 'Falta pagar',
+                          value: euros(amountWithCommission(booking.remainingAmount, fee), cents: true),
+                        ),
                       ],
                     ),
                   ),
+                  // Pagar daqui mesmo (2026-10-19), sem voltar à lista.
+                  for (final (id, label, amount) in [
+                    if (booking.pendingDepositPaymentId != null)
+                      (booking.pendingDepositPaymentId!, 'Pagar sinal', booking.depositAmount ?? 0),
+                    if (booking.pendingFinalPaymentId != null)
+                      (booking.pendingFinalPaymentId!, 'Pagar restante', booking.finalPaymentAmount ?? 0),
+                  ]) ...[
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      height: 54,
+                      child: FilledButton(
+                        onPressed: () => openPaymentFlow(context, ref, id),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppTheme.brandGreen,
+                          foregroundColor: Colors.white,
+                          shape: const StadiumBorder(),
+                          textStyle: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
+                        ),
+                        child: Text('$label — ${euros(amountWithCommission(amount, fee), cents: true)}'),
+                      ),
+                    ),
+                  ],
                   if (booking.status == BookingStatus.concluido) ...[
                     const SizedBox(height: 20),
                     Container(

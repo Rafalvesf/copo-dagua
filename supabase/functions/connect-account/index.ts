@@ -104,10 +104,24 @@ Deno.serve(async (req) => {
     const acc = await stripe.accounts.retrieve(accountId);
     await syncFlags(acc);
 
+    // Manual ou automático — o parceiro escolhe (2026-10-19).
+    if (action === "schedule") {
+      const interval = body.interval;
+      if (interval !== "manual" && interval !== "daily" && interval !== "weekly" && interval !== "monthly") {
+        return json({ error: "validation_error" }, 400);
+      }
+      const schedule: Record<string, unknown> = { interval };
+      if (interval === "weekly") schedule.weekly_anchor = "friday";
+      if (interval === "monthly") schedule.monthly_anchor = 1;
+      const updated = await stripe.accounts.update(accountId, { settings: { payouts: { schedule } } });
+      return json({ payout_schedule: updated.settings?.payouts?.schedule?.interval ?? interval });
+    }
+
     if (action === "payout") {
       if (!acc.payouts_enabled) return json({ error: "payouts_disabled" }, 409);
+      // Em automático é a Stripe que levanta sozinha (escolha do parceiro).
       if (acc.settings?.payouts?.schedule?.interval !== "manual") {
-        await stripe.accounts.update(accountId, { settings: { payouts: { schedule: { interval: "manual" } } } });
+        return json({ error: "automatic_payouts" }, 409);
       }
       const bal = await stripe.balance.retrieve({ stripeAccount: accountId });
       const available = bal.available.find((b) => b.currency === "eur")?.amount ?? 0;
@@ -160,6 +174,8 @@ Deno.serve(async (req) => {
       charges_enabled: acc.charges_enabled,
       payouts_enabled: acc.payouts_enabled,
       business_type: acc.business_type ?? null,
+      payout_schedule: acc.settings?.payouts?.schedule?.interval ?? "daily",
+      payout_delay_days: acc.settings?.payouts?.schedule?.delay_days ?? null,
       email: acc.email ?? null,
       requirements: {
         currently_due: reqs?.currently_due ?? [],
