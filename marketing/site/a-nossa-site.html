@@ -108,7 +108,7 @@ footer { background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pad
   .pin { height: 100vh; height: 100lvh; --pw: min(calc(56svh / 2.2), 62vw); }
   .phone { top: 40svh; }
   .txt .ta, .txt .tb { position: static; transform: none !important; width: auto !important; text-align: left !important; }
-  .txt { inset: auto 16px calc(22px + 100lvh - 100svh) 16px; padding: 18px 20px; border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: 0 18px 40px -20px rgba(23,23,19,.3);
+  .txt { inset: auto 16px calc(18px + 100lvh - var(--vis, 100svh)) 16px; padding: 18px 20px; border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: 0 18px 40px -20px rgba(23,23,19,.3);
     -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
   .txt h2 { font-size: 26px; }
   .txt h2 br { display: none; }
@@ -187,6 +187,8 @@ const POS = { L: -1, C: 0, R: 1 };
 function frame() {
   const vh = innerHeight, vw = innerWidth, wide = vw > 820;
   const p = Math.max(0, (scrollY - story.offsetTop) / vh);
+  // Altura visível real (a barra do Safari aparece e desaparece).
+  document.documentElement.style.setProperty('--vis', vh + 'px');
   const bgc = bgAt(p);
   document.body.style.background = bgc;
   document.documentElement.style.setProperty('--bgc', bgc);
@@ -227,7 +229,7 @@ function frame() {
   $('fin').style.transform = `translateY(${20 * (1 - ss(15.9, 16.4, p))}px)`;
   // textos
   D.texts.forEach(([a, b], i) => {
-    const inn = ss(a - (a < 1.5 ? .25 : .5), a - (a < 1.5 ? .02 : .2), p), out = ss(b + .25, b + .55, p), el = $('T' + i);
+    const inn = ss(a - (a < 1.5 ? .25 : .38), a - (a < 1.5 ? .02 : .12), p), out = ss(b + .12, b + .36, p), el = $('T' + i);
     el.style.opacity = inn * (1 - out);
     el.querySelectorAll('.ta, .tb').forEach((q, j) => q.style.translate = `0 ${(1 - inn) * (30 + j * 14) - out * 30}px`);
   });
