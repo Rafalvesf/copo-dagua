@@ -9,6 +9,8 @@ import '../../../core/wedding/date_format_pt.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/v2_kit.dart';
 import 'guest_mode_screen.dart' show showGuestModeSheet;
 
 /// "Os teus eventos" (canvas "Convidado · Os teus eventos") — todos os
@@ -19,8 +21,8 @@ class GuestEventsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final weddingsAsync = ref.watch(guestWeddingsProvider);
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return GradientScaffold(
+      background: AppBackground.subtle,
       body: SafeArea(
         child: weddingsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -36,13 +38,13 @@ class GuestEventsScreen extends ConsumerWidget {
                 child: Text(
                   'Tudo para onde foste convidado, num só lugar.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: AppFontSize.base + 1, color: AppTheme.inkMuted),
+                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                 ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 18),
               for (final w in weddings)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 12),
+                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 10),
                   child: _EventCard(wedding: w),
                 ),
               Padding(
@@ -50,32 +52,29 @@ class GuestEventsScreen extends ConsumerWidget {
                 child: SnappyTap(
                 // Abre logo o campo do código (antes ia parar às Definições).
                 onTap: () => showGuestModeSheet(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFCFC8B8), width: 1.5),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: const BoxDecoration(color: AppColors.gray, shape: BoxShape.circle),
-                        child: Icon(Icons.key_outlined, size: 20, color: AppTheme.accentOliveDark),
-                      ),
-                      const SizedBox(width: 12),
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Tenho um código', style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                          Text('Junta-te a outro evento', style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
-                        ],
-                      ),
-                    ],
+                // Canvas "Convidado — eventos (redesign)": botão tracejado.
+                child: CustomPaint(
+                  painter: _DashedBorder(),
+                  child: const SizedBox(
+                    height: 56,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.qr_code_2_rounded, size: 20, color: AppTheme.brandGreen),
+                        SizedBox(width: 10),
+                        Text('Tenho um código',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+                      ],
+                    ),
                   ),
                 ),
               ),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 0),
+                child: Text('Junta-te a outro evento com o código dos anfitriões.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
               ),
             ],
           ),
@@ -83,6 +82,28 @@ class GuestEventsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _DashedBorder extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppTheme.brandGreen
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(18)).deflate(0.75));
+    for (final m in path.computeMetrics()) {
+      var d = 0.0;
+      while (d < m.length) {
+        canvas.drawPath(m.extractPath(d, d + 6), paint);
+        d += 10;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorder old) => false;
 }
 
 class _EventCard extends ConsumerWidget {
@@ -93,7 +114,7 @@ class _EventCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final guest = ref.watch(myGuestRowProvider(wedding.weddingId)).value;
     final (label, bg, fg) = switch (guest?.rsvpStatus) {
-      RsvpStatus.confirmed => ('Vais', AppColors.gray, AppTheme.accentOliveDark),
+      RsvpStatus.confirmed => ('Vais', AppTheme.brandGreen, Colors.white),
       RsvpStatus.declined => ('Não vais', AppTheme.surface, AppTheme.inkMuted),
       _ => ('Por responder', const Color(0xFFFBEFD3), const Color(0xFF8A5A00)),
     };
@@ -105,28 +126,20 @@ class _EventCard extends ConsumerWidget {
       onTap: () => context.go('/guest-home/${wedding.weddingId}'),
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFEFEBE3)),
-          boxShadow: const [BoxShadow(color: Color(0x143F4A30), blurRadius: 22, offset: Offset(0, 8))],
-        ),
+        decoration: softCard(),
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: SizedBox(
-                width: 78,
-                height: 92,
-                child: wedding.coverPhotoUrl == null
-                    ? const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [Color(0xFFDDE5D3), Color(0xFFF7EACA)]),
-                        ),
-                      )
-                    : Image.network(wedding.coverPhotoUrlCacheBusted!, fit: BoxFit.cover),
-              ),
-            ),
+            wedding.coverPhotoUrl == null
+                ? StickerIcon(switch (wedding.eventType) {
+                    EventType.wedding => Icons.favorite_border,
+                    EventType.birthday => Icons.cake_outlined,
+                    EventType.baptism => Icons.water_drop_outlined,
+                    _ => Icons.celebration_outlined,
+                  }, turns: StickerIcon.tilt(wedding.weddingId.hashCode))
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(wedding.coverPhotoUrlCacheBusted!, width: 44, height: 44, fit: BoxFit.cover),
+                  ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -134,19 +147,19 @@ class _EventCard extends ConsumerWidget {
                 children: [
                   Text(
                     wedding.eventType.label.toUpperCase(),
-                    style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 0.5, color: AppTheme.accentOliveDark),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppTheme.brandGreen),
                   ),
-                  const SizedBox(height: 4),
-                  Text(wedding.displayNames, style: const TextStyle(fontSize: AppFontSize.lg + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-                    child: Text(label, style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: fg)),
-                  ),
+                  const SizedBox(height: 2),
+                  Text(wedding.displayNames, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                 ],
               ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+              child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
             ),
           ],
         ),

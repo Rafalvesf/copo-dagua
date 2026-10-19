@@ -1,13 +1,14 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/page_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/v2_kit.dart';
 
 /// "A tua mesa" — pedido explícito do utilizador (mockup de
 /// referência), aberto a partir da linha "A tua mesa" em
@@ -47,62 +48,93 @@ class GuestTableScreen extends ConsumerWidget {
                   final groups = roster.map((m) => m.group).where((g) => g.isNotEmpty).toSet().toList();
                   final myGuestId = myGuestAsync.maybeWhen(data: (g) => g?.id, orElse: () => null);
 
+                  // Redesign 2026-10-19 (canvas "Convidado — a tua mesa
+                  // (redesign)"): cartão verde, a mesa desenhada com os
+                  // lugares à volta e a lista de quem está contigo.
                   return ListView(
-                    padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 40),
+                    padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 18, AppTheme.screenMargin, 40),
                     children: [
+                      GreenHero(
+                        label: tableNumber == null ? 'A TUA MESA' : 'MESA $tableNumber',
+                        value: groups.isEmpty ? 'Os teus lugares' : groups.join(' e '),
+                        suffix: '${roster.length} ${roster.length == 1 ? 'lugar' : 'lugares'}',
+                        doodles: const [Icons.table_restaurant_outlined, Icons.favorite_border, Icons.eco_outlined],
+                      ),
+                      const SizedBox(height: 14),
                       Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        decoration: BoxDecoration(
-                          color: AppColors.pink,
-                          borderRadius: BorderRadius.circular(AppRadius.xl),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              tableNumber == null ? 'A tua mesa' : 'Mesa $tableNumber',
-                              style: const TextStyle(fontSize: AppFontSize.xxl, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                            ),
-                            if (groups.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                groups.join(' e '),
-                                style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Center(
-                        child: Icon(Icons.table_restaurant_outlined, size: 90, color: AppTheme.accentOliveDark.withValues(alpha: 0.5)),
-                      ),
-                      const SizedBox(height: 28),
-                      const Text(
-                        'Com quem vais estar?',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg, color: AppTheme.ink),
-                      ),
-                      const SizedBox(height: 12),
-                      for (final mate in roster)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Row(
-                            children: [
-                              InitialsAvatar(name: mate.fullName, radius: 20, background: AppTheme.surface),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  mate.fullName,
-                                  style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.ink),
+                        height: 270,
+                        decoration: softCard(),
+                        child: LayoutBuilder(builder: (context, c) {
+                          final cx = c.maxWidth / 2, cy = 135.0, r = 96.0;
+                          final n = roster.length;
+                          return Stack(clipBehavior: Clip.none, children: [
+                            Positioned(
+                              left: cx - 54,
+                              top: cy - 54,
+                              child: Container(
+                                width: 108,
+                                height: 108,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFDDE5D3),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: AppTheme.brandGreen, width: 1.6),
                                 ),
+                                alignment: Alignment.center,
+                                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                                  Text(tableNumber == null ? '—' : '$tableNumber',
+                                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+                                  if (groups.isNotEmpty)
+                                    SizedBox(
+                                      width: 90,
+                                      child: Text(groups.first,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontSize: 11, color: AppTheme.brandGreen)),
+                                    ),
+                                ]),
                               ),
-                              if (mate.guestId == myGuestId)
-                                const _Badge(label: 'Tu')
-                              else if (mate.plusOneAllowed)
-                                const _Badge(label: '+1'),
-                            ],
+                            ),
+                            for (var k = 0; k < n; k++)
+                              () {
+                                final ang = 2 * math.pi * k / n - math.pi / 2;
+                                final me = roster[k].guestId == myGuestId;
+                                return Positioned(
+                                  left: cx + r * math.cos(ang) - 28,
+                                  top: cy + r * math.sin(ang) - 22,
+                                  child: SizedBox(
+                                    width: 56,
+                                    child: Column(children: [
+                                      V2Avatar(roster[k].fullName, size: 30, filled: me),
+                                      const SizedBox(height: 2),
+                                      Text(me ? 'Tu' : roster[k].fullName.split(' ').first,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(fontSize: 10, fontWeight: me ? FontWeight.w700 : FontWeight.w400, color: AppTheme.ink)),
+                                    ]),
+                                  ),
+                                );
+                              }(),
+                          ]);
+                        }),
+                      ),
+                      const SectionTitle('Contigo na mesa'),
+                      for (final mate in roster.where((m) => m.guestId != myGuestId))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: V2RowCard(
+                            lead: V2Avatar(mate.fullName),
+                            title: mate.fullName,
+                            sub: [
+                              if (mate.group.isNotEmpty) mate.group,
+                              if (mate.plusOneName?.isNotEmpty == true) 'com ${mate.plusOneName}',
+                            ].join(' · '),
+                            trailing: mate.plusOneAllowed ? const V2Chip('+1') : null,
                           ),
                         ),
+                      const SizedBox(height: 2),
+                      const Text('Os anfitriões ainda podem mudar a disposição até ao dia.',
+                          style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                     ],
                   );
                 },
@@ -110,27 +142,6 @@ class GuestTableScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  final String label;
-
-  const _Badge({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.ink),
       ),
     );
   }

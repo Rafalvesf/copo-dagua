@@ -15,6 +15,7 @@ import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/v2_kit.dart';
 import 'guest_table_screen.dart';
 
 /// Home de quem se regista com `UserRole.guest` (`role_selection_screen.dart`,
@@ -175,43 +176,40 @@ class _GuestHomeBody extends ConsumerWidget {
       if (wedding.location?.isNotEmpty == true) wedding.location!,
     ].join(', ');
 
+    // Redesign 2026-10-19 (canvas "Convidado — início (redesign)"):
+    // título ao centro, cartão verde com a contagem, resposta, mosaicos.
     return ListView(
-      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 120),
+      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 120),
       children: [
-        if (eventCount > 1)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: SnappyTap(
-              onTap: () => context.push('/guest-events'),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.chevron_left, size: 18, color: AppTheme.inkMuted),
-                    Text('Os teus eventos', style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
-                  ],
-                ),
-              ),
-            ),
-          )
-        else
-          const SizedBox(height: 18),
+        Row(children: [
+          const SizedBox(width: 44),
+          const Expanded(
+            child: Text('O teu evento',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+          V2RoundButton(
+            icon: Icons.format_list_bulleted_rounded,
+            tooltip: eventCount > 1 ? 'Os teus eventos ($eventCount)' : 'Os teus eventos',
+            onTap: () => context.push('/guest-events'),
+          ),
+        ]),
+        const SizedBox(height: 18),
         if (isToday) ...[
-          const Center(child: TchinMascot(pose: MascotPose.clink, width: 180)),
-          const SizedBox(height: 10),
+          const Center(child: TchinMascot(pose: MascotPose.clink, width: 160)),
+          const SizedBox(height: 6),
           Text(
             '${wedding.eventType.label.toUpperCase()} · ${wedding.displayNames.toUpperCase()}',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.brandGreen),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           const Text(
             'É hoje!',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 36, height: 42 / 36, fontWeight: FontWeight.w700, color: AppTheme.ink),
+            style: TextStyle(fontSize: 40, height: 46 / 40, fontWeight: FontWeight.w700, color: AppTheme.ink),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 6),
         ] else
           _HeroCard(wedding: wedding, place: place),
         const SizedBox(height: 14),
@@ -220,45 +218,40 @@ class _GuestHomeBody extends ConsumerWidget {
           orElse: () => const SizedBox.shrink(),
         ),
         const SizedBox(height: 14),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 1.35,
-          children: [
-            _Tile(
-              icon: Icons.schedule_outlined,
-              title: 'Programa',
-              subtitle: wedding.ceremonyTime?.isNotEmpty == true ? 'Começa às ${wedding.ceremonyTime}' : 'Horários e local',
-              onTap: () => context.push('/guest-wedding-details', extra: wedding),
-            ),
-            _Tile(
-              icon: Icons.table_restaurant_outlined,
-              title: 'A tua mesa',
-              subtitle: table == null ? 'Ainda não atribuída' : 'Mesa $table',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => GuestTableScreen(weddingId: wedding.weddingId, tableNumber: table),
-                ),
+        V2Grid([
+          V2Tile(
+            icon: Icons.schedule_outlined,
+            label: 'Programa',
+            sub: wedding.ceremonyTime?.isNotEmpty == true ? 'Começa às ${wedding.ceremonyTime}' : 'Horários e local',
+            index: 0,
+            onTap: () => context.push('/guest-wedding-details', extra: wedding),
+          ),
+          V2Tile(
+            icon: Icons.table_restaurant_outlined,
+            label: 'A tua mesa',
+            sub: table == null ? 'Ainda não atribuída' : 'Mesa $table',
+            index: 1,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => GuestTableScreen(weddingId: wedding.weddingId, tableNumber: table),
               ),
             ),
-            _Tile(
-              icon: Icons.card_giftcard_outlined,
-              title: 'Presentes',
-              subtitle: 'Lista e contribuições',
-              onTap: () => context.go('/guest-gifts/${wedding.weddingId}'),
-            ),
-            _Tile(
-              icon: isToday ? Icons.photo_camera_outlined : Icons.photo_library_outlined,
-              title: isToday ? 'Partilhar fotos' : 'Galeria',
-              subtitle: isToday ? 'Vão para a galeria' : 'Fotos do evento',
-              tint: isToday ? const Color(0xFFFBF6E9) : null,
-              onTap: () => context.go('/guest-gallery/${wedding.weddingId}'),
-            ),
-          ],
-        ),
+          ),
+          V2Tile(
+            icon: Icons.card_giftcard_outlined,
+            label: 'Presentes',
+            sub: 'Lista e contribuições',
+            index: 2,
+            onTap: () => context.go('/guest-gifts/${wedding.weddingId}'),
+          ),
+          V2Tile(
+            icon: isToday ? Icons.photo_camera_outlined : Icons.photo_library_outlined,
+            label: isToday ? 'Partilhar fotos' : 'Galeria',
+            sub: isToday ? 'Vão para a galeria' : 'Fotos do evento',
+            index: 3,
+            onTap: () => context.go('/guest-gallery/${wedding.weddingId}'),
+          ),
+        ]),
         _StayCard(weddingId: wedding.weddingId),
       ],
     );
@@ -278,52 +271,18 @@ class _HeroCard extends StatelessWidget {
       if (wedding.ceremonyTime?.isNotEmpty == true) wedding.ceremonyTime!,
       if (place.isNotEmpty) place,
     ].join(' · ');
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        image: wedding.coverPhotoUrl == null
-            ? null
-            : DecorationImage(
-                image: NetworkImage(wedding.coverPhotoUrlCacheBusted!),
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.55), BlendMode.lighten),
-              ),
-        gradient: wedding.coverPhotoUrl != null
-            ? null
-            : const LinearGradient(
-                begin: Alignment(-0.6, -1),
-                end: Alignment(0.6, 1),
-                colors: [Color(0xFFDDE5D3), Color(0xFFF7EACA), Color(0xFFF3DEE0)],
-                stops: [0, 0.6, 1],
-              ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(999)),
-            child: Text(
-              wedding.eventType.label,
-              style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            wedding.displayNames,
-            style: const TextStyle(fontSize: 32, height: 36 / 32, fontWeight: FontWeight.w700, color: AppTheme.ink),
-          ),
-          if (meta.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(meta, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted)),
-          ],
-          if (date != null) ...[
-            const SizedBox(height: 12),
-            _CountdownCard(weddingDate: date),
-          ],
+    return GreenHero(
+      label: wedding.eventType.label.toUpperCase(),
+      value: wedding.displayNames,
+      doodles: const [Icons.favorite_border, Icons.auto_awesome_outlined, Icons.celebration_outlined],
+      footer: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (meta.isNotEmpty)
+          Text(meta, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+        if (date != null) ...[
+          const SizedBox(height: 14),
+          _CountdownCard(weddingDate: date),
         ],
-      ),
+      ]),
     );
   }
 }
@@ -352,24 +311,11 @@ class _RsvpCard extends StatelessWidget {
     return SnappyTap(
       onTap: () => context.go('/guest-profile/$weddingId'),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppTheme.accentOliveDark),
-          boxShadow: AppTheme.searchBarShadow,
-        ),
+        padding: const EdgeInsets.all(14),
+        decoration: softCard(),
         child: Row(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: filled ? AppTheme.accentOliveDark : AppColors.gray,
-              ),
-              child: Icon(icon, size: 18, color: filled ? Colors.white : AppTheme.accentOliveDark),
-            ),
+            StickerIcon(icon, color: filled ? AppTheme.brandGreen : AppTheme.inkMuted),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -384,66 +330,6 @@ class _RsvpCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _Tile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  final Color? tint;
-  const _Tile({required this.icon, required this.title, required this.subtitle, required this.onTap, this.tint});
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: tint ?? AppTheme.surface, borderRadius: BorderRadius.circular(20)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-              child: Icon(icon, size: 20, color: AppTheme.accentOliveDark),
-            ),
-            const Spacer(),
-            Text(title, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(height: 2),
-            Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FactColumn extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _FactColumn({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, size: 18, color: AppTheme.ink),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w600, color: AppTheme.ink),
-        ),
-      ],
     );
   }
 }
@@ -463,7 +349,7 @@ class _CountdownCardState extends State<_CountdownCard> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) setState(() {});
     });
   }
@@ -480,47 +366,18 @@ class _CountdownCardState extends State<_CountdownCard> {
     if (date == null) return const SizedBox.shrink();
 
     final remaining = date.difference(DateTime.now());
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: remaining.isNegative
-          ? const Text(
-              'É hoje! 🎉',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg, color: AppTheme.ink),
-            )
-          : Column(
-              children: [
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.hourglass_empty, size: 15, color: AppTheme.inkMuted),
-                    SizedBox(width: 6),
-                    Text(
-                      'Faltam apenas',
-                      style: TextStyle(color: AppTheme.inkMuted, fontWeight: FontWeight.w600, fontSize: AppFontSize.sm),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(child: _CountdownBox(value: remaining.inDays, label: 'Dias')),
-                    const SizedBox(width: 8),
-                    Expanded(child: _CountdownBox(value: remaining.inHours % 24, label: 'Horas')),
-                    const SizedBox(width: 8),
-                    Expanded(child: _CountdownBox(value: remaining.inMinutes % 60, label: 'Minutos')),
-                    const SizedBox(width: 8),
-                    Expanded(child: _CountdownBox(value: remaining.inSeconds % 60, label: 'Segundos')),
-                  ],
-                ),
-              ],
-            ),
+    if (remaining.isNegative) {
+      return const Text('É hoje!',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg, color: Colors.white));
+    }
+    return Row(
+      children: [
+        Expanded(child: _CountdownBox(value: remaining.inDays, label: 'DIAS')),
+        const SizedBox(width: 8),
+        Expanded(child: _CountdownBox(value: remaining.inHours % 24, label: 'HORAS')),
+        const SizedBox(width: 8),
+        Expanded(child: _CountdownBox(value: remaining.inMinutes % 60, label: 'MIN')),
+      ],
     );
   }
 }
@@ -546,10 +403,7 @@ class GuestWeddingCard extends StatelessWidget {
       onTap: onTap ?? () => context.push('/guest-home/${wedding.weddingId}'),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
+        decoration: softCard(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -588,12 +442,18 @@ class _CountdownBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          value.toString().padLeft(2, '0'),
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.h3, color: AppTheme.ink),
+        Container(
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+          child: Text(
+            '$value',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: AppTheme.brandGreen),
+          ),
         ),
-        const SizedBox(height: 2),
-        Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs)),
+        const SizedBox(height: 5),
+        Text(label,
+            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
       ],
     );
   }
@@ -615,20 +475,15 @@ class _StayCard extends ConsumerWidget {
     final hasTransport = offers.any((o) => o.kind == GuestOfferKind.transport);
     final subtitle = [if (hasLodging) 'Quartos com desconto', if (hasTransport) 'lugar no transporte'].join(' e ');
     return Padding(
-      padding: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.only(top: 12),
       child: SnappyTap(
         onTap: () => context.push('/guest-stay/$weddingId'),
         child: Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(20)),
+          decoration: softCard(),
           child: Row(
             children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-                child: Icon(hasLodging ? Icons.hotel_outlined : Icons.directions_bus_outlined, size: 20, color: AppTheme.accentOliveDark),
-              ),
+              StickerIcon(hasLodging ? Icons.hotel_outlined : Icons.directions_bus_outlined, turns: StickerIcon.tilt(4)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -660,18 +515,13 @@ class _StayLockedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.only(top: 12),
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(20)),
+        decoration: softCard(),
         child: Row(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.lock_outline, size: 20, color: AppTheme.inkMuted),
-            ),
+            const StickerIcon(Icons.lock_outline, color: AppTheme.inkMuted),
             const SizedBox(width: 12),
             const Expanded(
               child: Column(
@@ -684,6 +534,7 @@ class _StayLockedCard extends StatelessWidget {
                 ],
               ),
             ),
+            V2Chip('Em breve', tone: V2Tone.grey),
           ],
         ),
       ),

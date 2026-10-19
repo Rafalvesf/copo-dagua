@@ -10,6 +10,8 @@ import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/v2_kit.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
 
 /// "Presentes" — pedido explícito do utilizador (mockup de referência).
 /// Ligado em 2026-10-16 aos campos `weddings.gift_*`
@@ -104,8 +106,8 @@ class GuestGiftsScreen extends ConsumerWidget {
     final iban = wedding?.giftIban?.trim();
     final hasList = wedding?.giftListUrl?.trim().isNotEmpty == true;
     // Canvas "Convidado · Presentes".
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return GradientScaffold(
+      background: AppBackground.subtle,
       body: Stack(
         children: [
           SafeArea(
@@ -119,34 +121,27 @@ class GuestGiftsScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: const Color(0xFFFBF6E9), borderRadius: BorderRadius.circular(20)),
-                        child: Text(
+                      // Redesign 2026-10-19 (canvas "Convidado — presentes").
+                      GreenHero(
+                        label: 'DOS ANFITRIÕES',
+                        value: '',
+                        doodles: const [Icons.card_giftcard_outlined, Icons.favorite_border, Icons.wb_sunny_outlined],
+                        footer: Text(
                           message?.isNotEmpty == true
                               ? message!
                               : 'A vossa presença é o melhor presente. Se quiserem mesmo oferecer algo, deixamos aqui as opções.',
-                          style: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF3F3A2E)),
+                          style: const TextStyle(fontSize: 16, height: 1.5, color: Colors.white),
                         ),
                       ),
                       const SizedBox(height: 14),
                       SnappyTap(
                         onTap: () => _openList(context, wedding),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: const Color(0xFFEFEBE3)),
-                          ),
+                          padding: const EdgeInsets.all(14),
+                          decoration: softCard(),
                           child: Row(
                             children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(12)),
-                                child: Icon(Icons.link, size: 20, color: AppTheme.accentOliveDark),
-                              ),
+                              const StickerIcon(Icons.card_giftcard_outlined),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -166,30 +161,29 @@ class GuestGiftsScreen extends ConsumerWidget {
                         ),
                       ),
                       const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 14),
-                        child: Row(
-                          children: [
-                            Expanded(child: Divider(color: AppTheme.borderMuted)),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 10),
-                              child: Text('ou', style: TextStyle(fontSize: 12, color: Color(0xFF8F8B84))),
-                            ),
-                            Expanded(child: Divider(color: AppTheme.borderMuted)),
-                          ],
-                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Text('ou', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                       ),
                       Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFFEFEBE3)),
-                        ),
+                        padding: const EdgeInsets.all(14),
+                        decoration: softCard(),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Text('Contribuir com um valor', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                            const SizedBox(height: 10),
+                            Row(children: [
+                              StickerIcon(Icons.credit_card_outlined, turns: StickerIcon.tilt(1)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  const Text('Contribuir com um valor',
+                                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                  if (iban?.isNotEmpty == true)
+                                    Text('IBAN · ${wedding?.partnerName1 ?? ''}',
+                                        style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                                ]),
+                              ),
+                            ]),
+                            const SizedBox(height: 12),
                             if (iban?.isNotEmpty == true)
                               SnappyTap(
                                 onTap: () async {
@@ -200,14 +194,13 @@ class GuestGiftsScreen extends ConsumerWidget {
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(14)),
+                                  decoration: BoxDecoration(color: const Color(0xFFEEF2E9), borderRadius: BorderRadius.circular(14)),
                                   child: Row(
                                     children: [
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text('IBAN · ${wedding?.partnerName1 ?? ''}', style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
                                             Text(iban!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.3, color: AppTheme.ink)),
                                           ],
                                         ),

@@ -19,6 +19,7 @@ import 'guest_table_screen.dart';
 import '../../settings/screens/settings_screen.dart' show GuestAccountSections;
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/v2_kit.dart';
 
 /// "O meu perfil" — pedido explícito do utilizador (mockup de
 /// referência): o próprio convidado a ver/editar a sua presença
@@ -237,13 +238,13 @@ class _GuestProfileBody extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 140),
           children: [
+            // Redesign 2026-10-19 (canvas "Convidado — perfil (redesign)").
             const SizedBox(
               height: 46,
-              child: Align(
-                alignment: Alignment.centerLeft,
+              child: Center(
                 child: Text(
                   'Perfil',
-                  style: TextStyle(fontSize: AppFontSize.display, height: 40 / 34, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
                 ),
               ),
             ),
@@ -260,7 +261,7 @@ class _GuestProfileBody extends ConsumerWidget {
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.lg)),
+                decoration: softCard(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -306,13 +307,13 @@ class _GuestProfileBody extends ConsumerWidget {
                 },
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(0, 20, 0, 4),
+                padding: const EdgeInsets.fromLTRB(0, 24, 0, 6),
                 child: Row(
                 children: [
                   const Expanded(
                     child: Text(
-                      'QUEM VAI',
-                      style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF8F8B84)),
+                      'Quem vai',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink),
                     ),
                   ),
                   // Só enquanto houver lugar, segundo o limite dado pelo
@@ -346,7 +347,7 @@ class _GuestProfileBody extends ConsumerWidget {
               ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   guest.maxCompanions == 0
                       ? 'Este convite é só para ti.'
@@ -385,6 +386,10 @@ class _GuestProfileBody extends ConsumerWidget {
                   muted: true,
                 ),
               const _Caps('Detalhes'),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                decoration: softCard(),
+                child: Column(children: [
               _InfoLine(
                 icon: Icons.table_restaurant_outlined,
                 label: 'A tua mesa',
@@ -395,7 +400,7 @@ class _GuestProfileBody extends ConsumerWidget {
                           MaterialPageRoute(builder: (_) => GuestTableScreen(weddingId: weddingId, tableNumber: tableAsync.value)),
                         ),
               ),
-              const Divider(height: 1, thickness: 1, color: AppTheme.borderMuted),
+              const Divider(height: 1, thickness: 1, color: Color(0xFFEEF2EC)),
               _InfoLine(
                 icon: Icons.phone_outlined,
                 label: 'Telemóvel',
@@ -412,6 +417,8 @@ class _GuestProfileBody extends ConsumerWidget {
                     plusOneName: guest.plusOneName,
                   ),
                 ),
+              ),
+                ]),
               ),
             ],
             // Definições da conta dentro do Perfil (pedido 2026-10-17).
@@ -483,38 +490,10 @@ class _Segmented extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget seg(String label, bool selected, VoidCallback onTap) => Expanded(
-          child: SnappyTap(
-            onTap: onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 11),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected ? Colors.white : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: selected ? const [BoxShadow(color: Color(0x0F000000), blurRadius: 8, offset: Offset(0, 2))] : null,
-              ),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                  color: selected ? AppTheme.ink : AppTheme.inkMuted,
-                ),
-              ),
-            ),
-          ),
-        );
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        children: [
-          seg('Vou', going, () => onChanged(true)),
-          const SizedBox(width: 6),
-          seg('Não vou', !going, () => onChanged(false)),
-        ],
-      ),
+    return V2Segment(
+      options: [going ? 'Vou ✓' : 'Vou', going ? 'Não vou' : 'Não vou ✓'],
+      selected: going ? 0 : 1,
+      onChanged: (i) => onChanged(i == 0),
     );
   }
 }
@@ -541,28 +520,24 @@ class _PersonLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final row = Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.borderMuted))),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: softCard(),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: color,
-            child: Text(initials, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
-          ),
+          V2Avatar(initials.isEmpty ? name : initials),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 Text(detail, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                Text(status, style: TextStyle(fontSize: 12, color: muted ? const Color(0xFF8F8B84) : AppTheme.accentOliveDark)),
               ],
             ),
           ),
-          if (onTap != null) const Icon(Icons.chevron_right, size: 16, color: AppTheme.inkMuted),
+          const SizedBox(width: 8),
+          V2Chip(status, strong: !muted, tone: muted ? V2Tone.grey : V2Tone.green),
         ],
       ),
     );
@@ -581,12 +556,12 @@ class _InfoLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final row = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 13),
+      padding: const EdgeInsets.symmetric(vertical: 11),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppTheme.inkMuted),
+          StickerIcon(icon, size: 36, turns: StickerIcon.tilt(label.length)),
           const SizedBox(width: 12),
-          Expanded(child: Text(label, style: const TextStyle(fontSize: AppFontSize.base + 1, color: AppTheme.ink))),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.ink))),
           Text(value, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted)),
           const SizedBox(width: 6),
           SizedBox(width: 18, child: onTap == null ? null : const Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6))),
@@ -650,10 +625,10 @@ class _Caps extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 20, 0, 8),
+      padding: const EdgeInsets.fromLTRB(0, 24, 0, 12),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF8F8B84)),
+        style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted),
       ),
     );
   }
@@ -684,15 +659,20 @@ class _GuestHeader extends StatelessWidget {
         style: TextStyle(fontSize: AppFontSize.h1, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
       ),
     );
-    return Row(
+    return Column(
       children: [
         Stack(
           clipBehavior: Clip.none,
           children: [
             Container(
-              width: 88,
-              height: 88,
-              decoration: const BoxDecoration(color: AppColors.yellow, shape: BoxShape.circle),
+              width: 84,
+              height: 84,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: StickerIcon.shadow,
+              ),
               child: ClipOval(
                 child: avatarUrl == null
                     ? initials
@@ -701,49 +681,39 @@ class _GuestHeader extends StatelessWidget {
             ),
             Positioned(
               bottom: -2,
-              right: -2,
+              right: -4,
               child: Semantics(
                 button: true,
                 label: 'Mudar foto',
                 child: SnappyTap(
                   onTap: onChangePhoto,
                   child: Container(
-                    width: 38,
-                    height: 38,
+                    width: 34,
+                    height: 34,
                     decoration: BoxDecoration(
-                      color: AppTheme.surface,
+                      color: AppTheme.brandGreen,
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.background, width: 3),
+                      border: Border.all(color: Colors.white, width: 2),
                     ),
-                    child: Icon(Icons.camera_alt_outlined, size: 17, color: AppTheme.accentOliveDark),
+                    child: const Icon(Icons.camera_alt_outlined, size: 16, color: Colors.white),
                   ),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: AppTypography.displaySerif(fontSize: AppFontSize.h2, color: AppTheme.ink).copyWith(fontWeight: FontWeight.w700),
-              ),
-              if (email.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(email, style: const TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w300, color: AppTheme.inkMuted)),
-              ],
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(AppRadius.pill)),
-                child: Text(chip, style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-              ),
-            ],
-          ),
+        const SizedBox(height: 10),
+        Text(
+          name,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
         ),
+        if (email.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(email, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        ],
+        const SizedBox(height: 8),
+        V2Chip(chip),
       ],
     );
   }
