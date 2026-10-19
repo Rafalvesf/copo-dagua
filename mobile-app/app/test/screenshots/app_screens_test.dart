@@ -594,6 +594,46 @@ Future<void> _shoot(
   await tester.pump(const Duration(seconds: 2));
 }
 
+/// Fotografa a meio de uma animação de navegação (pedido do utilizador,
+/// 2026-10-20: confirmar que as animações aparecem com sessão iniciada).
+Future<void> _shootTransition(
+  WidgetTester tester,
+  String name,
+  AuthState auth,
+  String from,
+  void Function(GoRouter router) navigate,
+) async {
+  tester.view.physicalSize = const Size(1170, 2532);
+  tester.view.devicePixelRatio = 3;
+  addTearDown(tester.view.reset);
+  final previousOnError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    final text = details.exceptionAsString();
+    if (text.contains('HTTP') || text.contains('NetworkImage') || text.contains('ImageCodec')) return;
+    previousOnError?.call(details);
+  };
+  debugDisableShadows = false;
+  try {
+    await tester.pumpWidget(ProviderScope(overrides: _overrides(auth), child: const CopoDaguaApp()));
+    await tester.pump(const Duration(milliseconds: 50));
+    final router = GoRouter.of(tester.element(find.byType(Navigator).first));
+    router.go(from);
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 400)));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 120));
+    }
+    navigate(router);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 140));
+    await expectLater(find.byType(CopoDaguaApp), matchesGoldenFile('goldens/$name.png'));
+  } finally {
+    debugDisableShadows = true;
+    FlutterError.onError = previousOnError;
+  }
+  await tester.pumpWidget(const SizedBox());
+  await tester.pump(const Duration(seconds: 2));
+}
+
 /// Toca no primeiro widget com este texto (ou ícone) — para fotografar as
 /// páginas e folhas que só abrem a partir de um botão.
 Future<void> Function(WidgetTester) _tapText(String text) => (t) async {
@@ -912,5 +952,7 @@ void main() {
         ),
         after: _tapText('Adicionar acompanhante'),
       ));
+  testWidgets('93_transicao_navbar', (t) => _shootTransition(t, '93_transicao_navbar', couple, '/wedding', (r) => r.go('/chat')));
+  testWidgets('94_transicao_botao', (t) => _shootTransition(t, '94_transicao_botao', couple, '/wedding', (r) => r.push('/budget')));
   testWidgets('82_esqueci_password', (t) => _shoot(t, '82_esqueci_password', signedOut, '/forgot-password'));
 }
