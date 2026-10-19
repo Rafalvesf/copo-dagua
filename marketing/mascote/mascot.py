@@ -113,6 +113,18 @@ def duo(pose='clink', w=320):
         b = glass('rose', 'sad', 'frown', ('down', 'down'), fill=.25)
         ra, rb, dx = -3, 3, 20
         top = ''
+    elif pose == 'budget':
+        a = glass('gold', 'open', 'o', ('down', 'hip'))
+        b = glass('rose', 'open', 'smile', ('down', 'down'))
+        ra, rb, dx = 4, -3, 22
+        top = (f'<circle cx="334" cy="34" r="27" fill="#F2D98D" stroke="{INK}" stroke-width="5"/>'
+               f'<text x="334" y="45" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="30" fill="{INK}">€</text>')
+    elif pose == 'chat':
+        a = glass('gold', 'open', 'smile', ('down', 'down'))
+        b = glass('rose', 'open', 'o', ('down', 'down'))
+        ra, rb, dx = 4, -3, 22
+        top = (f'<path d="M286 6 H362 Q382 6 382 26 V40 Q382 60 362 60 H318 L302 74 L304 60 H286 Q266 60 266 40 V26 Q266 6 286 6 Z" fill="#fff" stroke="{INK}" stroke-width="5" stroke-linejoin="round"/>'
+               + ''.join(f'<circle cx="{x}" cy="33" r="5.5" fill="{INK}"/>' for x in (306, 324, 342)))
     else:  # celebrate
         a = glass('gold', 'happy', 'open', ('up', 'up'), fill=.8)
         b = glass('rose', 'happy', 'open', ('up', 'up'), fill=.8)

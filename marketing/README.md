@@ -28,4 +28,6 @@ python3 build_site.py   # cria a-nossa-site.html
 python3 snap.py 5 12 20 # opcional: imagens de alguns instantes do vídeo, para rever
 ```
 
-A mascote: dentro de `mascote/`, `python3 build.py` cria `copos.html`. Os copos são SVG gerados por `mascot.py` (função `duo(pose)`: `clink`, `wave`, `celebrate`, `sleep`, `sad`).
+A mascote: dentro de `mascote/`, `python3 build.py` cria `copos.html`. Os copos são SVG gerados por `mascot.py` (função `duo(pose)`: `clink`, `wave`, `celebrate`, `sleep`, `sad`, `budget`, `chat`).
+
+Para atualizar os PNG da app: `python3 export_png.py ../../mobile-app/app/assets/mascot` (precisa de Playwright).
