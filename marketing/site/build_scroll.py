@@ -189,8 +189,11 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
 
 /* telemóvel: o mockup fica ao centro e o texto em baixo */
 @media (max-width: 820px) {{
-  .pin {{ --pw: min(calc(56vh / 2.2), 62vw); }}
-  .phone {{ top: 40%; }}
+  /* A barra de topo tem ~64px: tudo o que é fixo começa abaixo dela, e a
+     altura usa o ecrã visível (svh) para o cartão de texto não ficar escondido. */
+  .pin {{ height: 100vh; height: 100svh; --pw: min(calc((100svh - 64px - 290px) / 2.2), 50vw); }}
+  .stage {{ top: calc(64px + env(safe-area-inset-top, 0px)); }}
+  .phone {{ top: calc(50% - 92px); }}
   .txt .ta, .txt .tb {{ position: static; transform: none !important; width: auto !important; text-align: left !important; }}
   .txt {{ inset: auto 16px 22px 16px; padding: 18px 20px; border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: 0 18px 40px -20px rgba(23,23,19,.3);
     -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }}
@@ -199,8 +202,8 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
   .eye {{ margin-bottom: 6px; font-size: 11px; }}
   .txt p {{ font-size: 15px; margin-top: 6px; }}
   .chap {{ display: none; }}
-  .hero {{ padding-top: 13vh; }}
-  .fin {{ top: calc(72px + 2vh); }}
+  .hero {{ padding-top: calc(80px + 4svh); }}
+  .fin {{ top: calc(76px + env(safe-area-inset-top, 0px)); }}
   .fin h2 {{ font-size: 32px; }}
   .fin p {{ font-size: 15px; }}
   .txt {{ z-index: 3; }}
@@ -298,11 +301,11 @@ function frame() {{
     el.style.filter = leave > 0 ? `brightness(${{1 - .25 * leave}})` : '';
   }});
   // fecho: dois telemóveis abrem-se dos lados
-  const spread = (wide ? 1.02 : .58) * $('ph').offsetWidth;
+  const spread = (wide ? 1.02 : .5) * $('ph').offsetWidth;
   [['sideA', -1], ['sideB', 1]].forEach(([id, d]) => {{
     const e = $(id);
     e.style.opacity = fin;
-    e.style.transform = `translate(${{d * spread * fin}}px, ${{vh * (wide ? .16 : .16) * fin}}px) rotate(${{d * 7 * fin}}deg) scale(.8)`;
+    e.style.transform = `translate(${{d * spread * fin}}px, ${{vh * (wide ? .16 : .16) * fin}}px) rotate(${{d * (wide ? 7 : 5) * fin}}deg) scale(${{wide ? .8 : .74}})`;
   }});
   $('fin').style.opacity = ss(15.9, 16.4, p);
   $('fin').style.transform = `translateY(${{20 * (1 - ss(15.9, 16.4, p))}}px)`;
