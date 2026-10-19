@@ -119,7 +119,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                           backgroundColor: AppTheme.brandGreen,
                           foregroundColor: Colors.white,
                           shape: const StadiumBorder(),
-                          textStyle: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
+                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
                         ),
                         child: Text('$label — ${euros(amountWithCommission(amount, fee), cents: true)}'),
                       ),

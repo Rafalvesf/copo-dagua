@@ -241,9 +241,11 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                   ],
                   if (async.hasValue && async.value == null) ...[
                     const SizedBox(height: 10),
+                    // Antes mostrava uma mensagem técnica ("migração 080") ao
+                    // parceiro; agora só uma indicação neutra.
                     const Text(
-                      'A base de dados ainda não tem os campos de localização (migração 080).',
-                      style: TextStyle(fontSize: AppFontSize.sm, color: Color(0xFFB4232C)),
+                      'Ainda não definiste a morada do teu espaço.',
+                      style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
                     ),
                   ],
                   const SizedBox(height: 24),

@@ -837,6 +837,20 @@ void main() {
       }
     });
   }
+  // Os 4 estilos do menu em 4 cores (para o vídeo de apresentação).
+  for (final layout in [MenuLayout.classic, MenuLayout.stickers, MenuLayout.mural, MenuLayout.clothesline]) {
+    for (final color in ['eucalyptus', 'pink', 'blue', 'gold']) {
+      final name = '90_menu_${layout.name}_$color';
+      testWidgets(name, (t) async {
+        debugMenuStyle = EventMenuStyle(layout, MenuColor.fromId(color));
+        try {
+          await _shoot(t, name, couple, '/wedding');
+        } finally {
+          debugMenuStyle = null;
+        }
+      });
+    }
+  }
   testWidgets('88_manutencao', (t) async {
     _maintenanceOn = true;
     try {

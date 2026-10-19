@@ -423,7 +423,7 @@ class _PillButton extends StatelessWidget {
             foregroundColor: Colors.white,
             disabledForegroundColor: Colors.white,
             shape: const StadiumBorder(),
-            textStyle: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
+            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: 8)],

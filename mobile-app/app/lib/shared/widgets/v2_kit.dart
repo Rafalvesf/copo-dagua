@@ -405,7 +405,7 @@ class V2BigButton extends StatelessWidget {
                 backgroundColor: AppTheme.brandGreen,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               child: _label(),
             )
@@ -415,7 +415,7 @@ class V2BigButton extends StatelessWidget {
                 foregroundColor: AppTheme.brandGreen,
                 side: const BorderSide(color: AppTheme.brandGreen, width: 1.5),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               child: _label(),
             ),

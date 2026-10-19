@@ -98,7 +98,7 @@ class IslandAlert extends StatelessWidget {
           backgroundColor: const Color(0xFFF2F0EB),
           foregroundColor: AppTheme.ink,
           shape: pill,
-          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
+          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -107,7 +107,7 @@ class IslandAlert extends StatelessWidget {
           backgroundColor: c,
           foregroundColor: Colors.white,
           shape: pill,
-          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
+          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
         ),
       ),
     );

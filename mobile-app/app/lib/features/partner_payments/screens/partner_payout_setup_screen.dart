@@ -270,7 +270,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
             foregroundColor: Colors.white,
             disabledForegroundColor: Colors.white,
             shape: const StadiumBorder(),
-            textStyle: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
+            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
           ),
           child: _loading
               ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
