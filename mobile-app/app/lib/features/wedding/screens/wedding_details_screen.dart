@@ -1230,7 +1230,12 @@ class _FinancialSummaryRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final budget = ref.watch(budgetControllerProvider).budget;
     final confirmed = ref.watch(coupleBookingsProvider).maybeWhen(
-          data: (list) => list.where((b) => b.status == BookingStatus.confirmado).toList(),
+          // Reservado = sinal pago (confirmado) ou serviço já feito
+          // (concluído); antes só contava "confirmado" e as reservas
+          // concluídas davam 0 (2026-10-19).
+          data: (list) => list
+              .where((b) => b.status == BookingStatus.confirmado || b.status == BookingStatus.concluido)
+              .toList(),
           orElse: () => const <CoupleBooking>[],
         );
     final look = _look(context, ref);
@@ -1251,10 +1256,11 @@ class _FinancialSummaryRow extends ConsumerWidget {
           Expanded(
             child: _SummaryTile(
               label: 'Parceiros reservados',
-              value: '${confirmed.length}',
+              // Um parceiro com várias reservas conta uma vez.
+              value: '${confirmed.map((b) => b.partnerName).toSet().length}',
               detail: confirmed.isEmpty
                   ? 'Nenhum ainda'
-                  : confirmed.map((b) => b.partnerName).join(', '),
+                  : confirmed.map((b) => b.partnerName).toSet().join(', '),
               color: look.comp,
             ),
           ),
