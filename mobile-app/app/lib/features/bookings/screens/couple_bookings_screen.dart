@@ -1,11 +1,10 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/home/home_providers.dart';
+import '../../../core/payments/payments.dart' show PayArgs;
 import '../../../core/models/models.dart';
 import '../../../core/reviews/review_providers.dart';
 import '../../../core/wedding/wedding_controller.dart';
@@ -147,7 +146,6 @@ class _CoupleBookingRow extends ConsumerStatefulWidget {
 
 class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
   CoupleBooking get booking => widget.booking;
-  bool _launchingCheckout = false;
   bool _cancelling = false;
 
   /// `cancel_booking_by_couple()` (`059_cancel_booking.sql`) — só
@@ -223,48 +221,17 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
     return Icons.celebration_outlined;
   }
 
-  Future<void> _payPending(String? paymentId) async {
-    if (paymentId == null || _launchingCheckout) return;
-    setState(() => _launchingCheckout = true);
-    try {
-      final url = await createDepositCheckoutUrl(paymentId);
-      if (!mounted) return;
-      // Na web abre na mesma janela: depois do pedido ao servidor o
-      // telemóvel já não deixa abrir janelas novas (bloqueio de pop-ups)
-      // e "nada acontecia" (2026-10-17).
-      final opened = await launchUrl(
-        Uri.parse(url),
-        mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
-        webOnlyWindowName: kIsWeb ? '_self' : null,
-      );
-      if (!opened && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Não foi possível abrir o pagamento.')),
-        );
-      }
-    } on CheckoutUnavailable catch (e) {
-      if (mounted) {
-        final msg = switch (e.reason) {
-          'partner_not_onboarded' =>
-            'Este parceiro ainda não ativou os pagamentos na app. O sinal fica por pagar até ele concluir a configuração.',
-          'invalid_state' => 'Este pagamento já não está pendente.',
-          _ => 'Não foi possível iniciar o pagamento. Tenta novamente.',
-        };
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Não foi possível iniciar o pagamento. Tenta novamente.',
-            ),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _launchingCheckout = false);
-    }
+  /// Abre o pagamento dentro da app (escolher método → Stripe embutida →
+  /// página de pago), sem abrir o browser — 2026-10-19.
+  Future<void> _payPending(String? paymentId, {required bool deposit, required double amount}) async {
+    if (paymentId == null) return;
+    await context.push('/pay', extra: PayArgs(
+      paymentId: paymentId,
+      partnerName: booking.partnerName,
+      kind: deposit ? 'deposit' : 'final_payment',
+      amount: amount,
+    ));
+    if (mounted) ref.invalidate(coupleBookingsProvider);
   }
 
   @override
@@ -368,9 +335,11 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: _launchingCheckout
-                      ? null
-                      : () => _payPending(booking.pendingDepositPaymentId),
+                  onPressed: () => _payPending(
+                    booking.pendingDepositPaymentId,
+                    deposit: true,
+                    amount: amountWithCommission(booking.depositAmount ?? 0, commissionPct),
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.accentOliveDark,
                     foregroundColor: Colors.white,
@@ -380,9 +349,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     ),
                   ),
                   child: Text(
-                    _launchingCheckout
-                        ? 'A abrir pagamento...'
-                        : 'Pagar sinal — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}',
+                    'Pagar sinal — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}',
                   ),
                 ),
               ),
@@ -392,9 +359,11 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: _launchingCheckout
-                      ? null
-                      : () => _payPending(booking.pendingFinalPaymentId),
+                  onPressed: () => _payPending(
+                    booking.pendingFinalPaymentId,
+                    deposit: false,
+                    amount: amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct),
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.accentOliveDark,
                     foregroundColor: Colors.white,
@@ -404,9 +373,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     ),
                   ),
                   child: Text(
-                    _launchingCheckout
-                        ? 'A abrir pagamento...'
-                        : 'Pagar restante — ${euros(amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct), cents: true)}',
+                    'Pagar restante — ${euros(amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct), cents: true)}',
                   ),
                 ),
               ),

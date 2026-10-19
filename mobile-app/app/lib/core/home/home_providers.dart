@@ -180,6 +180,27 @@ Future<void> syncPendingStripePayments({String? coupleId, String? proposalId}) a
   } catch (_) {}
 }
 
+/// Pagamento pendente (sinal ou restante) da reserva de uma proposta —
+/// para o cartão do chat abrir logo o ecrã de pagamento.
+/// `(paymentId, type, partnerAmount, partnerName)` ou `null`.
+Future<(String, String, double, String)?> fetchProposalPendingPayment(String proposalId) async {
+  final row = await supabase
+      .from('bookings')
+      .select('partner_profiles(business_name), payments(id, type, status, amount)')
+      .eq('proposal_id', proposalId)
+      .order('created_at', ascending: false)
+      .limit(1)
+      .maybeSingle();
+  if (row == null) return null;
+  final pending = ((row['payments'] as List?) ?? const [])
+      .where((p) => p['status'] == 'pending' && (p['type'] == 'deposit' || p['type'] == 'final_payment'))
+      .toList();
+  if (pending.isEmpty) return null;
+  final p = pending.first;
+  final name = (row['partner_profiles'] as Map?)?['business_name'] as String? ?? 'Parceiro';
+  return (p['id'] as String, p['type'] as String, (p['amount'] as num).toDouble(), name);
+}
+
 Future<String?> fetchProposalBookingState(String proposalId) async {
   await syncPendingStripePayments(proposalId: proposalId);
   final row = await supabase
