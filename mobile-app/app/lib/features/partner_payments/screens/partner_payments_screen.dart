@@ -94,6 +94,39 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
     }
   }
 
+  static String _nextAuto(String interval) => switch (interval) {
+        'weekly' => 'às sextas-feiras',
+        'monthly' => 'no dia 1 de cada mês',
+        _ => 'todos os dias',
+      };
+
+  /// Manual ou automático — escolha do parceiro (2026-10-19).
+  Future<void> _pickMode(ConnectStatus s) async {
+    final current = PayoutMode.of(s.payoutSchedule);
+    final picked = await showIslandSheet<PayoutMode>(
+      context: context,
+      builder: (ctx) => _ModeSheet(current: current),
+    );
+    if (picked == null || picked == current || !mounted) return;
+    try {
+      await setPayoutMode(picked);
+      ref.invalidate(partnerConnectStatusProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Levantamentos: ${picked.label.toLowerCase()}')),
+        );
+      }
+    } on ConnectError catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(connectErrorMessage(e.code))));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível mudar. Tenta novamente.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(partnerConnectStatusProvider);
@@ -172,17 +205,33 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
         ]),
       ),
       const SizedBox(height: 14),
-      _PillButton(
-        label: _paying
-            ? 'A pedir…'
-            : !s.payoutsEnabled
-                ? 'Levantamentos por ativar'
-                : s.availableCents > 0
-                    ? 'Levantar ${_eur(s.availableCents)}'
-                    : 'Sem saldo para levantar',
-        icon: Icons.south_rounded,
-        onPressed: canWithdraw ? () => _withdraw(s) : null,
-      ),
+      if (s.manualPayouts)
+        _PillButton(
+          label: _paying
+              ? 'A pedir…'
+              : !s.payoutsEnabled
+                  ? 'Levantamentos por ativar'
+                  : s.availableCents > 0
+                      ? 'Levantar ${_eur(s.availableCents)}'
+                      : 'Sem saldo para levantar',
+          icon: Icons.south_rounded,
+          onPressed: canWithdraw ? () => _withdraw(s) : null,
+        )
+      else
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(22)),
+          child: Row(children: [
+            const Icon(Icons.autorenew_rounded, color: AppTheme.brandGreen),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Levantamento automático ${_nextAuto(s.payoutSchedule)} — o saldo disponível vai sozinho para o IBAN.',
+                style: const TextStyle(color: AppTheme.ink, height: 1.35, fontSize: AppFontSize.md),
+              ),
+            ),
+          ]),
+        ),
       if (s.pendingCents > 0) ...[
         const SizedBox(height: 8),
         const Text(
@@ -218,6 +267,14 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
           const SizedBox(height: 8),
         ],
       const SectionTitle('Conta'),
+      _ActionCard(
+        icon: Icons.tune_rounded,
+        title: 'Modo de levantamento',
+        text: PayoutMode.of(s.payoutSchedule).label,
+        color: Colors.white,
+        onTap: () => _pickMode(s),
+      ),
+      const SizedBox(height: 10),
       _ActionCard(
         icon: Icons.verified_user_outlined,
         title: 'Os meus dados na Stripe',
@@ -403,4 +460,57 @@ class _ErrorCard extends StatelessWidget {
           TextButton(onPressed: onRetry, child: const Text('Tentar outra vez')),
         ]),
       );
+}
+
+class _ModeSheet extends StatefulWidget {
+  final PayoutMode current;
+  const _ModeSheet({required this.current});
+
+  @override
+  State<_ModeSheet> createState() => _ModeSheetState();
+}
+
+class _ModeSheetState extends State<_ModeSheet> {
+  late PayoutMode _sel = widget.current;
+
+  @override
+  Widget build(BuildContext context) {
+    return IslandAlert(
+      title: const Text('Modo de levantamento'),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        for (final m in PayoutMode.values) ...[
+          GestureDetector(
+            onTap: () => setState(() => _sel = m),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.all(12),
+              decoration: whiteLineCard(
+                radius: 18,
+                line: _sel == m ? AppTheme.brandGreen : null,
+                width: _sel == m ? 2 : 1,
+              ),
+              child: Row(children: [
+                Icon(m == PayoutMode.manual ? Icons.touch_app_outlined : Icons.autorenew_rounded,
+                    color: AppTheme.brandGreen),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(m.label, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    Text(m.hint, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                  ]),
+                ),
+                Icon(_sel == m ? Icons.radio_button_checked : Icons.radio_button_off,
+                    color: _sel == m ? AppTheme.brandGreen : AppTheme.borderMuted),
+              ]),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ]),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+        FilledButton(onPressed: () => Navigator.of(context).pop(_sel), child: const Text('Guardar')),
+      ],
+    );
+  }
 }

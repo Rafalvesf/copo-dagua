@@ -491,34 +491,32 @@ class PartnerBalanceData {
 final partnerBalanceProvider = FutureProvider<PartnerBalanceData>((ref) async {
   final partnerId = _partnerId(ref);
 
-  final paymentRows = await supabase
-      .from('payments')
-      .select('amount, status')
+  // Revisto 2026-10-19: contava só sinais e o "restante por cobrar" era
+  // total − sinal mesmo depois de o restante estar pago. Agora, por
+  // reserva ativa: recebido = pagamentos pagos (sinal + restante),
+  // sinais a aguardar = sinais pendentes, por cobrar = o que sobra.
+  final rows = await supabase
+      .from('bookings')
+      .select('total_amount, status, payments(type, status, amount)')
       .eq('partner_id', partnerId)
-      .eq('type', 'deposit');
+      .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
 
   double received = 0;
   double pendingDeposits = 0;
-  for (final row in paymentRows) {
-    final amount = (row['amount'] as num).toDouble();
-    if (row['status'] == 'paid') {
-      received += amount;
-    } else if (row['status'] == 'pending') {
-      pendingDeposits += amount;
-    }
-  }
-
-  final bookingRows = await supabase
-      .from('bookings')
-      .select('total_amount, deposit_amount, status')
-      .eq('partner_id', partnerId)
-      .inFilter('status', ['confirmed', 'completed']);
-
   double uncollectedBalance = 0;
-  for (final row in bookingRows) {
+  for (final row in rows) {
     final total = (row['total_amount'] as num).toDouble();
-    final deposit = (row['deposit_amount'] as num).toDouble();
-    uncollectedBalance += (total - deposit);
+    double paid = 0;
+    double pendingDeposit = 0;
+    for (final p in ((row['payments'] as List?) ?? const []).cast<Map<String, dynamic>>()) {
+      final amount = (p['amount'] as num).toDouble();
+      if (p['status'] == 'paid') paid += amount;
+      if (p['status'] == 'pending' && p['type'] == 'deposit') pendingDeposit += amount;
+    }
+    received += paid;
+    pendingDeposits += pendingDeposit;
+    final rest = total - paid - pendingDeposit;
+    if (rest > 0.009) uncollectedBalance += rest;
   }
 
   return PartnerBalanceData(

@@ -31,7 +31,7 @@ final coupleBookingsProvider = FutureProvider<List<CoupleBooking>>((ref) async {
       .select(
         'id, wedding_id, event_date, total_amount, deposit_amount, status, '
         'partner_profiles(business_name, cover_photo_url, partner_profile_categories(partner_categories(label_pt))), '
-        'payments(id, type, status, amount)',
+        'payments(id, type, status, amount, due_at)',
       )
       .eq('couple_id', userId)
       .order('event_date', ascending: true);
@@ -69,6 +69,7 @@ CoupleBooking _coupleBookingFromRow(Map<String, dynamic> row) {
     status: mapRealBookingStatus(row['status'] as String),
     pendingDepositPaymentId: pendingDeposit['id'] as String?,
     depositAmount: (row['deposit_amount'] as num?)?.toDouble(),
+    pendingDepositDueAt: pendingDeposit['due_at'] == null ? null : DateTime.tryParse(pendingDeposit['due_at'] as String),
     pendingFinalPaymentId: pendingFinalPayment['id'] as String?,
     finalPaymentAmount: (pendingFinalPayment['amount'] as num?)?.toDouble(),
     paidAmount: payments

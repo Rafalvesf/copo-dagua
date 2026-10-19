@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../payments/open_payment.dart';
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/tasks/task_models.dart';
@@ -55,7 +56,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     'convidados' => '/guests',
     'lugares' => '/seating',
     'parceiros' => '/partners',
-    // "Pagar sinal — …": leva às Reservas, onde está o botão de pagar.
     'pagamentos' => '/bookings',
     _ => null,
   };
@@ -102,6 +102,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           // a conversa (ex: proposta entretanto apagada).
         }
       }
+    }
+
+    // "Pagar sinal — …" abre logo o pagamento desse sinal (2026-10-19).
+    if (isPaymentTask(task.category, task.sourceEntityId)) {
+      if (mounted) await openPaymentFlow(context, ref, task.sourceEntityId!);
+      return;
     }
 
     final route = _routeForCategory(task.category);

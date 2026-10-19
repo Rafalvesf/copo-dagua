@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../payments/open_payment.dart';
 import '../../../core/budget/budget_controller.dart';
 import '../../../core/budget/expense_controller.dart';
 import '../../../core/home/home_providers.dart';
@@ -1103,7 +1104,6 @@ class _UpcomingTasksSection extends ConsumerWidget {
     'convidados' => '/guests',
     'lugares' => '/seating',
     'parceiros' => '/partners',
-    // "Pagar sinal — …": leva às Reservas, onde está o botão de pagar.
     'pagamentos' => '/bookings',
     _ => null,
   };
@@ -1139,6 +1139,10 @@ class _UpcomingTasksSection extends ConsumerWidget {
             onTap: () {
               if (!task.seen) {
                 ref.read(taskEngineControllerProvider.notifier).markTaskSeen(task.id);
+              }
+              if (isPaymentTask(task.category, task.sourceEntityId)) {
+                openPaymentFlow(context, ref, task.sourceEntityId!);
+                return;
               }
               final route = _routeForCategory(task.category);
               context.push(route ?? '/tasks');
@@ -1312,8 +1316,41 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pending = ref.watch(expenseControllerProvider).pending;
-    final withDueDate = pending.where((e) => e.dueDate != null).toList()
-      ..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
+    // Também os sinais/restantes das reservas, com o valor que o casal paga
+    // (com comissão), e um toque abre logo o pagamento — 2026-10-19.
+    final pct = ref.watch(platformCommissionPercentageProvider).value ?? 0;
+    final bookings = ref.watch(coupleBookingsProvider).asData?.value ?? const <CoupleBooking>[];
+    final bookingDue = <(Expense, String)>[
+      for (final b in bookings.where((b) => b.status != BookingStatus.recusado)) ...[
+        if (b.pendingDepositPaymentId != null)
+          (
+            Expense(
+              id: 'booking:${b.id}:deposit',
+              weddingId: b.weddingId,
+              title: 'Sinal · ${b.partnerName}',
+              amount: amountWithCommission(b.depositAmount ?? 0, pct),
+              dueDate: b.pendingDepositDueAt ?? DateTime.now(),
+            ),
+            b.pendingDepositPaymentId!,
+          ),
+        if (b.pendingFinalPaymentId != null)
+          (
+            Expense(
+              id: 'booking:${b.id}:final',
+              weddingId: b.weddingId,
+              title: 'Restante · ${b.partnerName}',
+              amount: amountWithCommission(b.finalPaymentAmount ?? 0, pct),
+              dueDate: b.serviceDate,
+            ),
+            b.pendingFinalPaymentId!,
+          ),
+      ],
+    ];
+    final payIds = {for (final (e, id) in bookingDue) e.id: id};
+    final withDueDate = [
+      ...pending.where((e) => e.dueDate != null),
+      for (final (e, _) in bookingDue) e,
+    ]..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
     final soon = withDueDate.take(3).toList();
     final look = _look(context, ref);
 
@@ -1341,7 +1378,9 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
           for (final (i, expense) in soon.indexed) ...[
             if (i > 0) const SizedBox(height: 10),
             SnappyTap(
-              onTap: () => context.push('/budget'),
+              onTap: () => payIds[expense.id] != null
+                  ? openPaymentFlow(context, ref, payIds[expense.id]!)
+                  : context.push('/budget'),
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -1365,7 +1404,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(euros(expense.amount),
+                    Text(euros(expense.amount, cents: payIds.containsKey(expense.id)),
                         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ],
                 ),

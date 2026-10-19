@@ -48,7 +48,11 @@ class ConnectStatus {
   final int pendingCents;
   final List<ConnectPayout> payouts;
 
+  /// `manual` | `daily` | `weekly` | `monthly` (Stripe).
+  final String payoutSchedule;
+
   const ConnectStatus({
+    this.payoutSchedule = 'manual',
     this.hasAccount = false,
     this.detailsSubmitted = false,
     this.chargesEnabled = false,
@@ -86,12 +90,14 @@ class ConnectStatus {
       bankName: bank?['bank_name'] as String?,
       availableCents: (bal['available_cents'] as num?)?.toInt() ?? 0,
       pendingCents: (bal['pending_cents'] as num?)?.toInt() ?? 0,
+      payoutSchedule: j['payout_schedule'] as String? ?? 'daily',
       payouts: ((j['payouts'] as List?) ?? const []).map((p) => ConnectPayout.fromJson(p as Map)).toList(),
     );
   }
 
   bool get needsData => currentlyDue.isNotEmpty || pastDue.isNotEmpty || !detailsSubmitted;
   bool get active => chargesEnabled && payoutsEnabled;
+  bool get manualPayouts => payoutSchedule == 'manual';
 }
 
 /// Os grupos de dados que a Stripe pede, em português, para a página de
@@ -172,10 +178,31 @@ Future<ConnectPayout> requestPayout({int? amountCents}) async {
   return ConnectPayout.fromJson(j['payout'] as Map);
 }
 
+/// Modos de levantamento que o parceiro pode escolher.
+enum PayoutMode {
+  manual('manual', 'Manual', 'Levantas quando quiseres, com o botão Levantar'),
+  daily('daily', 'Automático · diário', 'A Stripe envia o saldo disponível todos os dias'),
+  weekly('weekly', 'Automático · semanal', 'Todas as sextas-feiras'),
+  monthly('monthly', 'Automático · mensal', 'No dia 1 de cada mês');
+
+  final String code;
+  final String label;
+  final String hint;
+  const PayoutMode(this.code, this.label, this.hint);
+
+  static PayoutMode of(String code) =>
+      PayoutMode.values.firstWhere((m) => m.code == code, orElse: () => PayoutMode.daily);
+}
+
+Future<void> setPayoutMode(PayoutMode mode) async {
+  await _call({'action': 'schedule', 'interval': mode.code});
+}
+
 String connectErrorMessage(String code) => switch (code) {
       'not_configured' => 'Os pagamentos na app ainda estão a ser configurados.',
       'payouts_disabled' => 'A Stripe ainda não ativou os levantamentos. Confirma os teus dados.',
       'no_balance' => 'Ainda não tens saldo disponível para levantar.',
+      'automatic_payouts' => 'Os levantamentos estão em automático. Muda para manual para levantar agora.',
       'insufficient_balance' => 'O valor é maior do que o saldo disponível.',
       _ => 'Algo correu mal com a Stripe. Tenta novamente.',
     };
