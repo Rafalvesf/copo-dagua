@@ -280,7 +280,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                     [
                                       partner.primaryCategoryLabel,
                                       if (partner.location.isNotEmpty) partner.location,
-                                      if (figureText != null) '${figure.label.toLowerCase()} $figureText',
                                     ].join(' · '),
                                     style: const TextStyle(fontSize: 13, color: v2Muted),
                                   ),
@@ -307,6 +306,32 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         Text(
                           partner.description.isEmpty ? 'Sem descrição.' : partner.description,
                           style: const TextStyle(fontSize: AppFontSize.base, height: 1.5, color: Color(0xFF3F3B37)),
+                        ),
+                        const SizedBox(height: 16),
+                        // Capacidade ao lado do estado da data e do preço
+                        // "Desde" (pedido do utilizador, 2026-10-19).
+                        Row(
+                          children: [
+                            _InfoTile(
+                              label: figure.label,
+                              value: figureText ?? '—',
+                            ),
+                            const SizedBox(width: 8),
+                            _InfoTile(
+                              label: weddingDate == null ? 'Data' : _shortDate(weddingDate),
+                              value: switch (relationshipStatus) {
+                                PartnerRelationshipStatus.booked => 'Reservado',
+                                PartnerRelationshipStatus.requestPending => 'Pedido',
+                                _ => weddingDate == null ? 'Por definir' : 'Perguntar',
+                              },
+                              highlight: true,
+                            ),
+                            const SizedBox(width: 8),
+                            _InfoTile(
+                              label: 'Desde',
+                              value: fromPrice == null ? 'Orçamento' : euros(fromPrice),
+                            ),
+                          ],
                         ),
                         if (gallery.isNotEmpty) ...[
                           const SizedBox(height: 22),
