@@ -227,7 +227,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                           child: TextField(
                             controller: _search,
                             decoration: InputDecoration(
-                              hintText: 'Pesquisar parceiros...',
+                              hintText: 'Espaços, fotografia, flores…',
                               prefixIcon: const Icon(Icons.search, size: 20),
                               filled: true,
                               fillColor: Colors.white,
@@ -316,16 +316,11 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 decoration: on
                                     ? BoxDecoration(color: AppTheme.brandGreen, borderRadius: BorderRadius.circular(999))
                                     : softCard(radius: 999),
-                                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                  Icon(o == null ? Icons.apps_rounded : iconForCategorySlug(o.slug),
-                                      size: 15, color: on ? Colors.white : AppTheme.brandGreen),
-                                  const SizedBox(width: 6),
-                                  Text(o?.label ?? 'Todos',
-                                      style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w700,
-                                          color: on ? Colors.white : v2Muted)),
-                                ]),
+                                child: Text(o?.label ?? 'Todos',
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: on ? Colors.white : v2Muted)),
                               ),
                             );
                           },
@@ -373,9 +368,13 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 )
                                 .toList();
                       final query = _search.text.trim().toLowerCase();
+                      // Sem ninguém na zona escolhida: mostra todos, com
+                      // um aviso, em vez de uma página vazia.
+                      final noneNear = effectiveLocation.isNotEmpty && byLocation.isEmpty && allPartners.isNotEmpty;
+                      final pool = noneNear ? allPartners : byLocation;
                       final partners = _applyAdvanced(query.isEmpty
-                          ? byLocation
-                          : byLocation
+                          ? pool
+                          : pool
                                 .where(
                                   (s) => s.name.toLowerCase().contains(query),
                                 )
@@ -391,10 +390,6 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                           ),
                         );
                       }
-                      final grouped = <String, List<Partner>>{};
-                      for (final s in partners) {
-                        grouped.putIfAbsent(s.primaryCategoryLabel, () => []).add(s);
-                      }
                       return EdgeFade(
                         topFadeHeight: 32,
                         bottomFadeHeight: 140,
@@ -406,48 +401,71 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             widget.selectionMode ? 40 : 140,
                           ),
                           children: [
-                            // Redesign 2026-10-19: destaques (melhor
-                            // avaliados) num carrossel e, por baixo, cada
-                            // categoria em linhas com foto.
-                            if (!widget.selectionMode && query.isEmpty && _filter == null && partners.length > 2) ...[
+                            // Como no mockup (2026-10-19): destaques num
+                            // carrossel e, por baixo, todos os parceiros
+                            // numa lista com foto, preço e favorito.
+                            if (noneNear && !widget.selectionMode)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 14),
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(color: const Color(0xFFF3EBDD), borderRadius: BorderRadius.circular(18)),
+                                  child: Text(
+                                    'Ainda não há parceiros em $effectiveLocation. Mostramos todos os parceiros.',
+                                    style: const TextStyle(fontSize: 13, color: AppTheme.ink, height: 1.4),
+                                  ),
+                                ),
+                              ),
+                            if (!widget.selectionMode && query.isEmpty && _filter == null && partners.isNotEmpty) ...[
                               _SectionHeader(
-                                title: effectiveLocation.isEmpty ? 'Em destaque' : 'Em destaque perto de ti',
-                                trailing: effectiveLocation.isEmpty ? null : effectiveLocation,
+                                title: effectiveLocation.isEmpty || noneNear ? 'Em destaque' : 'Em destaque perto de ti',
+                                trailing: effectiveLocation.isEmpty || noneNear ? null : effectiveLocation,
                               ),
                               SizedBox(
-                                height: 196,
+                                height: 176,
                                 child: ListView.separated(
                                   scrollDirection: Axis.horizontal,
                                   clipBehavior: Clip.none,
                                   padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                                   itemCount: featured(partners).length,
-                                  separatorBuilder: (context, i) => const SizedBox(width: 12),
+                                  separatorBuilder: (context, i) => const SizedBox(width: 10),
                                   itemBuilder: (context, i) {
                                     final p = featured(partners)[i];
                                     return _FeaturedCard(partner: p, onTap: () => _openDetails(context, p));
                                   },
                                 ),
                               ),
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 14),
                             ],
-                            for (final entry in grouped.entries) ...[
-                              if (!widget.selectionMode)
-                                _SectionHeader(
-                                  title: _filter == null ? entry.key : (selectedLabel ?? entry.key),
-                                  trailing: effectiveLocation.isEmpty
-                                      ? '${entry.value.length}'
-                                      : '${entry.value.length} em $effectiveLocation',
+                            if (!widget.selectionMode)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, 12),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${partners.length} ${partners.length == 1 ? 'parceiro' : 'parceiros'}',
+                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                                      ),
+                                    ),
+                                    SnappyTap(
+                                      onTap: _showFilters,
+                                      child: Text(
+                                        _hasAdvancedFilters ? 'Filtros ativos' : 'Filtrar',
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.brandGreen),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              for (final partner in entry.value)
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 10),
-                                  child: _PartnerCard(
-                                    partner: partner,
-                                    onTap: () => _openDetails(context, partner),
-                                  ),
+                              ),
+                            for (final partner in partners)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 10),
+                                child: _PartnerCard(
+                                  partner: partner,
+                                  onTap: () => _openDetails(context, partner),
                                 ),
-                              const SizedBox(height: 10),
-                            ],
+                              ),
                           ],
                         ),
                       );
@@ -608,14 +626,14 @@ class _FeaturedCard extends StatelessWidget {
     return SnappyTap(
       onTap: onTap,
       child: Container(
-        width: 164,
+        width: 150,
         clipBehavior: Clip.antiAlias,
         decoration: softCard(radius: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              height: 112,
+              height: 96,
               width: double.infinity,
               child: Stack(fit: StackFit.expand, children: [
                 _PartnerPhoto(partner),
