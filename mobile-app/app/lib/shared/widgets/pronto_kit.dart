@@ -278,7 +278,7 @@ class _DuoClinkState extends State<DuoClink> with SteadyTickerProviderStateMixin
     final w = widget.width;
     final s = w / 200; // escala do desenho (viewBox 200×160)
     return Semantics(
-      label: 'O Tchin e o Tchin a brindar',
+      label: 'Duas taças a brindar',
       image: true,
       child: SizedBox(
         width: w,

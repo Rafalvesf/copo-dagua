@@ -81,7 +81,7 @@ class _TchinMascotState extends State<TchinMascot> with SteadyTickerProviderStat
       widget.pose.asset,
       width: widget.width,
       fit: BoxFit.contain,
-      semanticLabel: widget.semanticLabel ?? 'O Tchin e o Tchin',
+      semanticLabel: widget.semanticLabel ?? 'Duas taças',
     );
     return AnimatedBuilder(
       animation: _c,
@@ -177,7 +177,7 @@ class _TchinClinkState extends State<TchinClink> with SteadyTickerProviderStateM
     final glassW = w * 0.6;
     final h = w * 0.8;
     return Semantics(
-      label: 'O Tchin e o Tchin a brindar',
+      label: 'Duas taças a brindar',
       image: true,
       child: SizedBox(
         width: w,
