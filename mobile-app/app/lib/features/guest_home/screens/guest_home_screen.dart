@@ -252,6 +252,15 @@ class _GuestHomeBody extends ConsumerWidget {
             onTap: () => context.go('/guest-gallery/${wedding.weddingId}'),
           ),
         ]),
+        const SizedBox(height: 12),
+        // Grupos com as pessoas do evento (2026-10-20).
+        V2Tile(
+          icon: Icons.groups_outlined,
+          label: 'Grupos',
+          sub: 'Conversa com os outros convidados',
+          index: 4,
+          onTap: () => context.push('/groups/${wedding.weddingId}'),
+        ),
         _StayCard(weddingId: wedding.weddingId),
       ],
     );

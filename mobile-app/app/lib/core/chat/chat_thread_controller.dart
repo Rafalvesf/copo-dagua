@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
+import 'chat_attachments.dart';
 import 'chat_list_controller.dart' show unreadMessagesCountProvider;
 
 class ChatThreadState {
@@ -82,12 +83,33 @@ class ChatThreadController extends Notifier<ChatThreadState> {
     state = state.copyWith(messages: [...state.messages, _fromRow(row)]);
   }
 
+  /// Foto, ficheiro, sticker ou GIF (`core/chat/chat_attachments.dart`).
+  Future<void> sendAttachment(ChatAttachment a) async {
+    final row = await supabase
+        .from('messages')
+        .insert({
+          'conversation_id': conversationId,
+          'sender_role': 'couple',
+          'sender_id': supabase.auth.currentUser!.id,
+          'body': null,
+          'attachment_url': a.url,
+          'attachment_type': a.type,
+          'attachment_name': a.name,
+        })
+        .select()
+        .single();
+    state = state.copyWith(messages: [...state.messages, _fromRow(row)]);
+  }
+
   ChatMessage _fromRow(Map<String, dynamic> row) {
     return ChatMessage(
       id: row['id'] as String,
       conversationId: row['conversation_id'] as String,
       fromPartner: row['sender_role'] == 'partner',
-      text: row['body'] as String,
+      text: row['body'] as String?,
+      attachmentUrl: row['attachment_url'] as String?,
+      attachmentType: row['attachment_type'] as String?,
+      attachmentName: row['attachment_name'] as String?,
       sentAt: DateTime.parse(row['created_at'] as String),
       proposalId: row['proposal_id'] as String?,
       proposalTitle: row['proposal_title'] as String?,

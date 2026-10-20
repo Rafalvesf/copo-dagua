@@ -1307,7 +1307,16 @@ class ChatMessage {
     this.proposalPrice,
     this.proposalDepositAmount,
     this.isQuoteRequestNotice = false,
+    this.attachmentUrl,
+    this.attachmentType,
+    this.attachmentName,
   });
+
+  /// Anexo (foto, ficheiro, sticker ou GIF) — `105_chat_groups_attachments.sql`.
+  final String? attachmentUrl;
+  final String? attachmentType;
+  final String? attachmentName;
+  bool get hasAttachment => attachmentUrl != null;
 
   bool get isContract => contractTitle != null;
   bool get isProposal => proposalId != null;

@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'page_transitions.dart';
+import 'chat/group_chat.dart' show ChatGroup;
+import '../features/chat/screens/groups_screen.dart';
 
 import '../shared/theme_color/theme_color.dart' show BarColorObserver;
 
@@ -490,6 +492,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             selectionMode: args?.selectionMode ?? false,
           );
         },
+      ),
+      // Grupos do evento (2026-10-20).
+      GoRoute(
+        path: '/groups/:weddingId',
+        builder: (context, state) => GroupsScreen(weddingId: state.pathParameters['weddingId']!),
+      ),
+      GoRoute(
+        path: '/group/:id',
+        builder: (context, state) => state.extra is ChatGroup
+            ? GroupThreadScreen(group: state.extra as ChatGroup)
+            : const _LostRoute('/chat'),
       ),
       tabRoute(
         path: '/chat',

@@ -119,6 +119,12 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   ),
                   child: SearchPill(controller: _search, hint: 'Pesquisar conversas'),
                 ),
+                // Grupos com as pessoas do evento (2026-10-20).
+                if (ref.watch(weddingControllerProvider).wedding?.id case final weddingId?)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
+                    child: _GroupsEntry(onTap: () => context.push('/groups/$weddingId')),
+                  ),
                 Expanded(
                   child: state.loading && state.conversations.isEmpty
                       ? const Center(child: CircularProgressIndicator())
@@ -168,4 +174,30 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       ),
     );
   }
+}
+
+/// Entrada para os grupos do evento (organizadores e convidados).
+class _GroupsEntry extends StatelessWidget {
+  final VoidCallback onTap;
+  const _GroupsEntry({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: const [
+            BoxShadow(color: Color(0x14171713), blurRadius: 18, offset: Offset(0, 6)),
+          ]),
+          child: const Row(children: [
+            Icon(Icons.groups_rounded, color: AppTheme.brandGreen),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text('Grupos do evento', style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ),
+            Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
+          ]),
+        ),
+      );
 }

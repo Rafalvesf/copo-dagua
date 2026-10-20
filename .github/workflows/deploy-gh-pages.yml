@@ -56,7 +56,7 @@ jobs:
         run: flutter pub get
 
       - name: Build web
-        run: flutter build web --release --pwa-strategy=none --base-href /copo-dagua/ --dart-define=APP_VERSION=$(git rev-parse --short HEAD)
+        run: flutter build web --release --pwa-strategy=none --base-href /copo-dagua/ --dart-define=APP_VERSION=$(git rev-parse --short HEAD) --dart-define=GIPHY_KEY=${{ secrets.GIPHY_KEY }}
 
       - name: Prepare GitHub Pages fallback
         run: cp build/web/index.html build/web/404.html

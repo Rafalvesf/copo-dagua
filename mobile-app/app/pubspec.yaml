@@ -46,6 +46,8 @@ dependencies:
   # Relatórios em PDF e Excel (lib/core/exports/exports.dart).
   pdf: ^3.11.1
   excel: ^4.0.6
+  # Anexos no chat (core/chat/chat_attachments.dart).
+  file_picker: '>=8.0.0 <12.0.0'
 
 dev_dependencies:
   flutter_test:
