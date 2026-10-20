@@ -6,6 +6,7 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
+import '../../../core/payments/refunds.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
@@ -250,7 +251,8 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                                     builder: (context) => IslandAlert(
                                       title: const Text('Cancelar reserva'),
                                       content: Text(
-                                        'Cancelar a reserva com ${booking.clientName}? Esta ação não pode ser desfeita.',
+                                        'Cancelar a reserva com ${booking.clientName}? Esta ação não pode ser desfeita.'
+                                        '${booking.status == BookingStatus.confirmado ? '\n\nO casal recebe de volta tudo o que pagou, de forma automática — a tua parte do sinal é descontada da tua conta Stripe.' : ''}',
                                       ),
                                       actions: [
                                         TextButton(
@@ -272,6 +274,8 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                                       'cancel_booking_by_partner',
                                       params: {'p_booking_id': booking.id},
                                     );
+                                    // Parceiro cancela → o casal é sempre reembolsado.
+                                    await requestBookingRefund(booking.id);
                                     ref.invalidate(partnerBookingsProvider);
                                     if (context.mounted) Navigator.of(context).pop();
                                   });

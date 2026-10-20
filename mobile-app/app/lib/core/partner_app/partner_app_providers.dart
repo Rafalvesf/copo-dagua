@@ -6,6 +6,7 @@ import '../auth/auth_controller.dart';
 import '../home/home_providers.dart' show mapRealBookingStatus;
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
+import '../payments/refunds.dart';
 
 String _partnerId(Ref ref) =>
     ref.watch(authControllerProvider.select((s) => s.profile!.id));
@@ -27,6 +28,8 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
   status,
 ) async {
   final partnerId = _partnerId(ref);
+  // Plano B do reembolso automático (2026-10-20).
+  await retryPendingRefunds(partnerId: partnerId);
   final categoryLabels = ref.watch(
     authControllerProvider.select((s) => s.profile?.categoryLabels),
   );
