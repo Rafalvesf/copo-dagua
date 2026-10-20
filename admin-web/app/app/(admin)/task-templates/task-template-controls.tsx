@@ -23,36 +23,16 @@ const initialState: TaskTemplateActionState = { error: null };
 
 export function ToggleSwitch({ templateId, isActive }: { templateId: string; isActive: boolean }) {
   const [isPending, startTransition] = useTransition();
-
   return (
     <button
-      onClick={() => startTransition(() => toggleTaskTemplate(templateId, isActive))}
-      disabled={isPending}
-      style={{
-        width: 40,
-        height: 22,
-        borderRadius: 999,
-        border: "none",
-        background: isActive ? "var(--status-published-fg)" : "var(--border-muted)",
-        position: "relative",
-        cursor: "pointer",
-        opacity: isPending ? 0.6 : 1,
-      }}
+      type="button"
+      role="switch"
+      className="switch"
+      aria-checked={isActive}
       aria-label={isActive ? "Desativar template" : "Ativar template"}
-    >
-      <span
-        style={{
-          position: "absolute",
-          top: 2,
-          left: isActive ? 20 : 2,
-          width: 18,
-          height: 18,
-          borderRadius: "50%",
-          background: "var(--surface)",
-          transition: "left 120ms",
-        }}
-      />
-    </button>
+      disabled={isPending}
+      onClick={() => startTransition(() => toggleTaskTemplate(templateId, isActive))}
+    />
   );
 }
 
@@ -61,14 +41,16 @@ export function NewTaskTemplateForm({ categories }: { categories: PartnerCategor
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} style={primaryButtonStyle}>
-        + Novo template
+      <button type="button" onClick={() => setOpen(true)} className="btn btn-primary">
+        + Nova tarefa
       </button>
     );
   }
 
   return (
-    <TaskTemplateForm mode="create" categories={categories} onDone={() => setOpen(false)} />
+    <EditModal onClose={() => setOpen(false)}>
+      <TaskTemplateForm mode="create" categories={categories} onDone={() => setOpen(false)} />
+    </EditModal>
   );
 }
 
@@ -82,7 +64,7 @@ export function RowActions({ template, categories }: { template: TaskTemplate; c
     <div style={{ position: "relative" }}>
       <button
         onClick={() => setMenuOpen((v) => !v)}
-        style={{ ...secondaryButtonStyle, padding: "6px 10px" }}
+        className="btn btn-ghost btn-sm"
         aria-label="Mais opções"
       >
         ⋯
@@ -95,10 +77,9 @@ export function RowActions({ template, categories }: { template: TaskTemplate; c
             top: "110%",
             zIndex: 10,
             background: "var(--surface)",
-            boxShadow: "var(--shadow-card)",
+            boxShadow: "var(--shadow-pop)",
             borderRadius: 10,
-            border: "1px solid var(--border-muted)",
-            minWidth: 140,
+            minWidth: 150,
             overflow: "hidden",
           }}
         >
@@ -155,7 +136,7 @@ export function RowActions({ template, categories }: { template: TaskTemplate; c
                 startTransition(() => softDeleteTaskTemplate(template.id));
                 setConfirmingDelete(false);
               }}
-              style={{ ...primaryButtonStyle, background: "var(--status-rejected-fg)" }}
+              style={{ ...primaryButtonStyle, background: "var(--danger-fg)" }}
             >
               Eliminar
             </button>
@@ -213,7 +194,7 @@ function EditModal({
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.4)",
+        background: "rgba(28,30,26,0.4)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -224,8 +205,9 @@ function EditModal({
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: "var(--background)",
+          background: "var(--surface)",
           borderRadius: 16,
+          boxShadow: "var(--shadow-pop)",
           padding: 28,
           maxWidth: narrow ? 420 : 960,
           width: "94%",
@@ -287,14 +269,10 @@ function TaskTemplateForm({
         display: "grid",
         gridTemplateColumns: "1fr 1fr",
         gap: 12,
-        padding: mode === "create" ? 20 : 0,
-        borderRadius: 16,
-        background: mode === "create" ? "var(--surface)" : "transparent",
-        boxShadow: mode === "create" ? "var(--shadow-card)" : "none",
-        marginBottom: mode === "create" ? 16 : 0,
+        padding: 0,
       }}
     >
-      {mode === "edit" && <h3 style={{ gridColumn: "1 / -1", marginTop: 0 }}>Editar template</h3>}
+      <h3 style={{ gridColumn: "1 / -1", marginTop: 0, fontSize: 18 }}>{mode === "edit" ? "Editar tarefa sugerida" : "Nova tarefa sugerida"}</h3>
       {mode === "edit" && <input type="hidden" name="id" value={template?.id} />}
 
       <Field label="Chave (única, ex: define_budget)">
@@ -456,17 +434,8 @@ function TaskTemplateForm({
           {Object.entries(EVENT_TYPES).map(([value, t]) => (
             <label
               key={value}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 13,
-                padding: "6px 10px",
-                borderRadius: 999,
-                border: "1px solid var(--border-muted)",
-                background: "var(--surface)",
-                cursor: "pointer",
-              }}
+              className="check"
+              style={{ alignItems: "center", fontSize: 13, padding: "6px 10px", borderRadius: 999, boxShadow: "0 0 0 1px var(--border-strong)" }}
             >
               <input type="checkbox" name="event_types" value={value} defaultChecked={template?.event_types?.includes(value) ?? false} />
               {t.label}
@@ -507,37 +476,42 @@ function TaskTemplateForm({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
-      {label}
+    <label className="field">
+      <span className="field-label" style={{ fontWeight: 500, fontSize: 13 }}>{label}</span>
       {children}
     </label>
   );
 }
 
 const inputStyle = {
+  minHeight: 38,
   padding: "8px 12px",
   borderRadius: 10,
-  border: "1px solid var(--border-muted)",
-  background: "var(--background)",
+  border: "1px solid var(--border-strong)",
+  background: "var(--surface)",
   fontSize: 14,
 };
 
 const primaryButtonStyle = {
-  padding: "10px 18px",
-  borderRadius: 999,
+  height: 38,
+  padding: "0 16px",
+  borderRadius: 10,
   border: "none",
-  background: "var(--ink)",
-  color: "var(--surface)",
+  background: "var(--accent)",
+  color: "#fff",
   fontWeight: 600,
+  fontSize: 13,
   cursor: "pointer",
 };
 
 const secondaryButtonStyle = {
-  padding: "10px 18px",
-  borderRadius: 999,
-  border: "1px solid var(--border-muted)",
+  height: 38,
+  padding: "0 16px",
+  borderRadius: 10,
+  border: "1px solid var(--border-strong)",
   background: "var(--surface)",
   color: "var(--ink)",
   fontWeight: 600,
+  fontSize: 13,
   cursor: "pointer",
 };
