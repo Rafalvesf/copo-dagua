@@ -398,7 +398,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.green,
+              color: AppTheme.accentTint,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Row(
@@ -438,7 +438,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.green,
+                color: AppTheme.accentTint,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Row(

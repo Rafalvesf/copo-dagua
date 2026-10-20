@@ -96,7 +96,7 @@ class V2Count extends StatelessWidget {
         height: 22,
         padding: const EdgeInsets.symmetric(horizontal: 6),
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: AppTheme.brandGreen, borderRadius: BorderRadius.circular(999)),
+        decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(999)),
         child: Text('$n', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
       );
 }
@@ -176,7 +176,7 @@ class V2Avatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: filled ? AppTheme.brandGreen : Colors.white,
+        color: filled ? AppTheme.accentOliveDark : Colors.white,
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: StickerIcon.shadow,
@@ -189,7 +189,7 @@ class V2Avatar extends StatelessWidget {
               style: TextStyle(
                 fontSize: size >= 40 ? 14 : 11,
                 fontWeight: FontWeight.w700,
-                color: filled ? Colors.white : AppTheme.brandGreen,
+                color: filled ? Colors.white : AppTheme.accentOliveDark,
               )),
     );
   }
@@ -206,9 +206,9 @@ class V2Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (fg, bg) = strong
-        ? (Colors.white, AppTheme.brandGreen)
+        ? (Colors.white, AppTheme.accentOliveDark)
         : switch (tone) {
-            V2Tone.green => (AppTheme.brandGreen, const Color(0xFFDDE5D3)),
+            V2Tone.green => (AppTheme.accentOliveDark, AppTheme.accentTint),
             V2Tone.amber => (const Color(0xFF7A5000), const Color(0xFFFCEFD6)),
             V2Tone.red => (const Color(0xFFA3412E), const Color(0xFFF7E3DC)),
             V2Tone.grey => (v2Muted, const Color(0xFFF2F0EB)),
@@ -244,7 +244,7 @@ class V2Segment extends StatelessWidget {
                 height: 38,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: i == selected ? AppTheme.brandGreen : Colors.transparent,
+                  color: i == selected ? AppTheme.accentOliveDark : Colors.transparent,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(options[i],
@@ -341,7 +341,7 @@ class V2SetRow extends StatelessWidget {
           Switch(
             value: toggle!,
             onChanged: onToggle,
-            activeTrackColor: AppTheme.brandGreen,
+            activeTrackColor: AppTheme.accentOliveDark,
             activeThumbColor: Colors.white,
           )
         else if (onTap != null) ...[
@@ -372,7 +372,7 @@ class V2RoundButton extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: solid ? AppTheme.brandGreen : Colors.white,
+            color: solid ? AppTheme.accentOliveDark : Colors.white,
             shape: BoxShape.circle,
             boxShadow: solid
                 ? const [BoxShadow(color: Color(0x594F6B4A), blurRadius: 14, offset: Offset(0, 6))]
@@ -402,7 +402,7 @@ class V2BigButton extends StatelessWidget {
           ? FilledButton(
               onPressed: onTap,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.brandGreen,
+                backgroundColor: AppTheme.accentOliveDark,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
@@ -412,8 +412,8 @@ class V2BigButton extends StatelessWidget {
           : OutlinedButton(
               onPressed: onTap,
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.brandGreen,
-                side: const BorderSide(color: AppTheme.brandGreen, width: 1.5),
+                foregroundColor: AppTheme.accentOliveDark,
+                side: BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
               ),

@@ -105,7 +105,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                             value: booking.amount <= 0 ? 0 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0),
                             minHeight: 9,
                             backgroundColor: const Color(0xFFF2F0EB),
-                            color: AppTheme.brandGreen,
+                            color: AppTheme.accentOliveDark,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -137,7 +137,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                       child: FilledButton(
                         onPressed: () => openPaymentFlow(context, ref, id),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.brandGreen,
+                          backgroundColor: AppTheme.accentOliveDark,
                           foregroundColor: Colors.white,
                           shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),

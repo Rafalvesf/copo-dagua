@@ -272,7 +272,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       case _Step.loading:
         return [
           const SizedBox(height: 60),
-          const Center(child: CircularProgressIndicator(color: AppTheme.brandGreen)),
+          Center(child: CircularProgressIndicator(color: AppTheme.accentOliveDark)),
           const SizedBox(height: 14),
           Center(
             child: Text(_step == _Step.checking ? 'A verificar o pagamento…' : 'A preparar o pagamento…',
@@ -306,7 +306,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                         _step = _Step.select;
                       });
                     },
-              child: const Text('Mudar método', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+              child: Text('Mudar método', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
             ),
           ),
           Container(
@@ -320,10 +320,10 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                   child: _element?.view() ?? const SizedBox.shrink(),
                 ),
                 if (!_formReady)
-                  const Positioned.fill(
+                  Positioned.fill(
                     child: ColoredBox(
                       color: Colors.white,
-                      child: Center(child: CircularProgressIndicator(color: AppTheme.brandGreen)),
+                      child: Center(child: CircularProgressIndicator(color: AppTheme.accentOliveDark)),
                     ),
                   ),
               ],
@@ -348,10 +348,10 @@ class _PayScreenState extends ConsumerState<PayScreen> {
               Text('Enviámos um pedido de $_amountLabel para o teu telemóvel. Tens 4 minutos para aprovar.',
                   textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.inkMuted, height: 1.4)),
               const SizedBox(height: 18),
-              const SizedBox(
+              SizedBox(
                 width: 26,
                 height: 26,
-                child: CircularProgressIndicator(strokeWidth: 3, color: AppTheme.brandGreen),
+                child: CircularProgressIndicator(strokeWidth: 3, color: AppTheme.accentOliveDark),
               ),
               const SizedBox(height: 8),
               const Text('À espera da confirmação…', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
@@ -438,8 +438,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         child: FilledButton(
           onPressed: onTap,
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.brandGreen,
-            disabledBackgroundColor: AppTheme.brandGreen.withValues(alpha: 0.4),
+            backgroundColor: AppTheme.accentOliveDark,
+            disabledBackgroundColor: AppTheme.accentOliveDark.withValues(alpha: 0.4),
             foregroundColor: Colors.white,
             disabledForegroundColor: Colors.white,
             shape: const StadiumBorder(),
@@ -490,7 +490,7 @@ class _MethodTile extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.all(14),
         decoration: whiteLineCard(
-          line: selected ? AppTheme.brandGreen : null,
+          line: selected ? AppTheme.accentOliveDark : null,
           width: selected ? 2 : 1,
         ),
         child: Row(children: [
@@ -511,8 +511,8 @@ class _MethodTile extends StatelessWidget {
             height: 24,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: selected ? AppTheme.brandGreen : Colors.white,
-              border: Border.all(color: selected ? AppTheme.brandGreen : AppTheme.borderMuted, width: 2),
+              color: selected ? AppTheme.accentOliveDark : Colors.white,
+              border: Border.all(color: selected ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: 2),
             ),
             child: selected ? const Icon(Icons.check, size: 15, color: Colors.white) : null,
           ),
@@ -539,7 +539,7 @@ class _RefRow extends StatelessWidget {
         const SizedBox(width: 6),
         IconButton(
           visualDensity: VisualDensity.compact,
-          icon: const Icon(Icons.copy_rounded, size: 18, color: AppTheme.brandGreen),
+          icon: Icon(Icons.copy_rounded, size: 18, color: AppTheme.accentOliveDark),
           onPressed: () async {
             await Clipboard.setData(ClipboardData(text: copy!));
             if (context.mounted) {

@@ -50,10 +50,10 @@ class ChatHeader extends StatelessWidget {
                   subtitle!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: AppFontSize.sm,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.brandGreen,
+                    color: AppTheme.accentOliveDark,
                   ),
                 ),
             ],

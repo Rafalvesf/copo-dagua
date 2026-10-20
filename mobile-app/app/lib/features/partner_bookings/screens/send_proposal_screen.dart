@@ -217,7 +217,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
                 child: SwitchListTile.adaptive(
                   value: _depositRefundable,
                   onChanged: (v) => setState(() => _depositRefundable = v),
-                  activeTrackColor: AppTheme.brandGreen,
+                  activeTrackColor: AppTheme.accentOliveDark,
                   title: const Text(
                     'Sinal reembolsável',
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),

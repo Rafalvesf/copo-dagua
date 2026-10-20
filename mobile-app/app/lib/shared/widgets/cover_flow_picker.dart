@@ -171,7 +171,7 @@ class CategoryPillLabel extends StatelessWidget {
       duration: const Duration(milliseconds: 180),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: selected ? AppColors.greenDark : Colors.transparent,
+        color: selected ? AppTheme.accentTintDark : Colors.transparent,
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(

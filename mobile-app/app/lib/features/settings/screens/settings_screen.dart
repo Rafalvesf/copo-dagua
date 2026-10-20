@@ -331,10 +331,10 @@ class _CoupleSettings extends ConsumerWidget {
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.xl),
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment(-0.6, -1),
                 end: Alignment(0.6, 1),
-                colors: [Color(0xFFDDE5D3), Color(0xFFF7EACA), Color(0xFFF3DEE0)],
+                colors: [AppTheme.accentTint, Color(0xFFF7EACA), Color(0xFFF3DEE0)],
                 stops: [0, 0.6, 1],
               ),
             ),
@@ -566,7 +566,7 @@ class _PartnerSettings extends ConsumerWidget {
                 width: 56,
                 height: 56,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(16)),
+                decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(16)),
                 child: Text(initials, style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
               ),
               const SizedBox(width: 14),

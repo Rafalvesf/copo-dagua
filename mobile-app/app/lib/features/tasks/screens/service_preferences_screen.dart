@@ -206,7 +206,7 @@ class _CategoryPreferenceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (status, color) = switch (preference) {
-      'already_booked' => ('Tratado', AppTheme.brandGreen),
+      'already_booked' => ('Tratado', AppTheme.accentOliveDark),
       'not_needed' => ('Não precisam', v2Muted),
       _ => ('Por tratar', const Color(0xFFB7791F)),
     };

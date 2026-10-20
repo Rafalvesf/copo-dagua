@@ -155,8 +155,8 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
             child: Stack(clipBehavior: Clip.none, children: [
               V2Avatar(name, size: 84, imageUrl: p?.logoUrl ?? p?.avatarUrl),
               if (_uploading)
-                const Positioned.fill(
-                  child: Center(child: SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.brandGreen))),
+                Positioned.fill(
+                  child: Center(child: SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.accentOliveDark))),
                 ),
               Positioned(
                 right: -2,
@@ -164,7 +164,7 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
                 child: Container(
                   width: 30,
                   height: 30,
-                  decoration: BoxDecoration(color: AppTheme.brandGreen, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
+                  decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
                   child: const Icon(Icons.photo_camera_rounded, size: 15, color: Colors.white),
                 ),
               ),
@@ -277,7 +277,7 @@ class _PaymentsRequiredCard extends ConsumerWidget {
         padding: const EdgeInsets.all(14),
         decoration: softCard(radius: 18),
         child: Row(children: [
-          const Icon(Icons.credit_card_rounded, color: AppTheme.brandGreen),
+          Icon(Icons.credit_card_rounded, color: AppTheme.accentOliveDark),
           const SizedBox(width: 12),
           const Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -290,7 +290,7 @@ class _PaymentsRequiredCard extends ConsumerWidget {
           const SizedBox(width: 8),
           FilledButton(
             onPressed: () => context.push('/partner-payments'),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.brandGreen, shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, shape: const StadiumBorder()),
             child: const Text('Ativar'),
           ),
         ]),

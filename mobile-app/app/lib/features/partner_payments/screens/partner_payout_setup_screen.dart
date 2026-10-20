@@ -161,10 +161,10 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
               child: _onb?.view() ?? const SizedBox.shrink(),
             ),
             if (!_ready)
-              const Positioned.fill(
+              Positioned.fill(
                 child: ColoredBox(
                   color: Colors.white,
-                  child: Center(child: CircularProgressIndicator(color: AppTheme.brandGreen)),
+                  child: Center(child: CircularProgressIndicator(color: AppTheme.accentOliveDark)),
                 ),
               ),
           ]),
@@ -175,8 +175,8 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
         Center(
           child: TextButton(
             onPressed: _finished,
-            child: const Text('Terminar mais tarde',
-                style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+            child: Text('Terminar mais tarde',
+                style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
           ),
         ),
       ];
@@ -201,9 +201,9 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
         ),
         const SectionTitle('O que a Stripe precisa'),
         if (async.isLoading && !async.hasValue)
-          const Padding(
+          Padding(
             padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator(color: AppTheme.brandGreen)),
+            child: Center(child: CircularProgressIndicator(color: AppTheme.accentOliveDark)),
           )
         else
           for (final (i, g) in ConnectGroup.values.indexed) ...[
@@ -220,16 +220,16 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
           onTap: () => setState(() => _agreed = !_agreed),
           child: Container(
             padding: const EdgeInsets.all(14),
-            decoration: whiteLineCard(line: _agreed ? AppTheme.brandGreen : null, width: _agreed ? 2 : 1),
+            decoration: whiteLineCard(line: _agreed ? AppTheme.accentOliveDark : null, width: _agreed ? 2 : 1),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
                 width: 22,
                 height: 22,
                 decoration: BoxDecoration(
-                  color: _agreed ? AppTheme.brandGreen : Colors.white,
+                  color: _agreed ? AppTheme.accentOliveDark : Colors.white,
                   borderRadius: BorderRadius.circular(7),
-                  border: Border.all(color: _agreed ? AppTheme.brandGreen : AppTheme.borderMuted, width: 2),
+                  border: Border.all(color: _agreed ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: 2),
                 ),
                 child: _agreed ? const Icon(Icons.check, size: 15, color: Colors.white) : null,
               ),
@@ -265,8 +265,8 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
         child: FilledButton(
           onPressed: _agreed && !_loading ? _open : null,
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.brandGreen,
-            disabledBackgroundColor: AppTheme.brandGreen.withValues(alpha: 0.4),
+            backgroundColor: AppTheme.accentOliveDark,
+            disabledBackgroundColor: AppTheme.accentOliveDark.withValues(alpha: 0.4),
             foregroundColor: Colors.white,
             disabledForegroundColor: Colors.white,
             shape: const StadiumBorder(),

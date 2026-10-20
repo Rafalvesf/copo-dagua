@@ -140,7 +140,7 @@ class _AttachOption extends StatelessWidget {
               width: 58,
               height: 58,
               decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(18)),
-              child: Icon(icon, color: AppTheme.brandGreen, size: 26),
+              child: Icon(icon, color: AppTheme.accentOliveDark, size: 26),
             ),
             const SizedBox(height: 6),
             Text(label, style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -330,11 +330,11 @@ class ChatAttachmentView extends StatelessWidget {
         constraints: BoxConstraints(maxWidth: maxW),
         padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
         decoration: BoxDecoration(
-          color: isMe ? AppTheme.brandGreen : const Color(0xFFF2F0EB),
+          color: isMe ? AppTheme.accentOliveDark : const Color(0xFFF2F0EB),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.insert_drive_file_outlined, color: isMe ? Colors.white : AppTheme.brandGreen),
+          Icon(Icons.insert_drive_file_outlined, color: isMe ? Colors.white : AppTheme.accentOliveDark),
           const SizedBox(width: 8),
           Flexible(
             child: Text(name ?? 'Ficheiro',

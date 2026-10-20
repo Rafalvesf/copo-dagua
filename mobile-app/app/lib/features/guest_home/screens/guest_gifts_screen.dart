@@ -69,7 +69,7 @@ class GuestGiftsScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.green,
+                color: AppTheme.accentTint,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: SelectableText(

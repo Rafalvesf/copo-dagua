@@ -136,7 +136,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
       background: AppBackground.subtle,
       body: SafeArea(
         child: RefreshIndicator(
-          color: AppTheme.brandGreen,
+          color: AppTheme.accentOliveDark,
           onRefresh: () async {
             ref.invalidate(partnerConnectStatusProvider);
             ref.invalidate(partnerBalanceProvider);
@@ -150,9 +150,9 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                 child: async.when(
-                  loading: () => const Padding(
+                  loading: () => Padding(
                     padding: EdgeInsets.all(40),
-                    child: Center(child: CircularProgressIndicator(color: AppTheme.brandGreen)),
+                    child: Center(child: CircularProgressIndicator(color: AppTheme.accentOliveDark)),
                   ),
                   error: (e, _) => _ErrorCard(
                     text: e is ConnectError ? connectErrorMessage(e.code) : 'Não foi possível carregar os pagamentos.',
@@ -231,9 +231,9 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
       else
         Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(22)),
           child: Row(children: [
-            const Icon(Icons.autorenew_rounded, color: AppTheme.brandGreen),
+            Icon(Icons.autorenew_rounded, color: AppTheme.accentOliveDark),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -318,7 +318,7 @@ class _ToReceive extends ConsumerWidget {
     return Row(children: [
       tile('Sinais a aguardar', b?.pendingDeposits ?? 0, AppColors.pink),
       const SizedBox(width: 10),
-      tile('Restante por cobrar', b?.uncollectedBalance ?? 0, AppColors.green),
+      tile('Restante por cobrar', b?.uncollectedBalance ?? 0, AppTheme.accentTint),
     ]);
   }
 }
@@ -429,8 +429,8 @@ class _PillButton extends StatelessWidget {
         child: FilledButton(
           onPressed: onPressed,
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.brandGreen,
-            disabledBackgroundColor: AppTheme.brandGreen.withValues(alpha: 0.35),
+            backgroundColor: AppTheme.accentOliveDark,
+            disabledBackgroundColor: AppTheme.accentOliveDark.withValues(alpha: 0.35),
             foregroundColor: Colors.white,
             disabledForegroundColor: Colors.white,
             shape: const StadiumBorder(),
@@ -451,7 +451,7 @@ class _SheetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(children: [
-        Icon(icon, size: 18, color: AppTheme.brandGreen),
+        Icon(icon, size: 18, color: AppTheme.accentOliveDark),
         const SizedBox(width: 10),
         Expanded(child: Text(text, style: const TextStyle(color: AppTheme.ink))),
       ]);
@@ -497,12 +497,12 @@ class _ModeSheetState extends State<_ModeSheet> {
               padding: const EdgeInsets.all(12),
               decoration: whiteLineCard(
                 radius: 18,
-                line: _sel == m ? AppTheme.brandGreen : null,
+                line: _sel == m ? AppTheme.accentOliveDark : null,
                 width: _sel == m ? 2 : 1,
               ),
               child: Row(children: [
                 Icon(m == PayoutMode.manual ? Icons.touch_app_outlined : Icons.autorenew_rounded,
-                    color: AppTheme.brandGreen),
+                    color: AppTheme.accentOliveDark),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -511,7 +511,7 @@ class _ModeSheetState extends State<_ModeSheet> {
                   ]),
                 ),
                 Icon(_sel == m ? Icons.radio_button_checked : Icons.radio_button_off,
-                    color: _sel == m ? AppTheme.brandGreen : AppTheme.borderMuted),
+                    color: _sel == m ? AppTheme.accentOliveDark : AppTheme.borderMuted),
               ]),
             ),
           ),

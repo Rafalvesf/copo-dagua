@@ -292,7 +292,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
-                                color: AppTheme.brandGreen,
+                                color: AppTheme.accentOliveDark,
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -390,7 +390,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                     children: [
                                       Text(
                                         pk.isStartingPrice ? 'desde ${euros(pk.price)}' : euros(pk.price),
-                                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.brandGreen),
+                                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
                                       ),
                                       if (!widget.selectionMode) ...[
                                         const SizedBox(height: 8),
@@ -465,7 +465,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                       height: 52,
                       child: FilledButton(
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.brandGreen,
+                          backgroundColor: AppTheme.accentOliveDark,
                           shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback,
                               fontSize: AppFontSize.md, fontWeight: FontWeight.w700),
@@ -515,7 +515,7 @@ class _Heading extends StatelessWidget {
             child: Text(text, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
           if (trailing != null)
-            Text(trailing!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+            Text(trailing!, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
         ],
       );
 }
@@ -867,7 +867,7 @@ class _PackageButton extends StatelessWidget {
     return Semantics(
       button: true,
       child: Material(
-        color: AppTheme.brandGreen,
+        color: AppTheme.accentOliveDark,
         shape: const StadiumBorder(),
         child: InkWell(
           customBorder: const StadiumBorder(),

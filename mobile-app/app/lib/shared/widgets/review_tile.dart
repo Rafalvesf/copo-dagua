@@ -138,7 +138,7 @@ class _RatingChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-        decoration: BoxDecoration(color: AppTheme.brandGreen, borderRadius: BorderRadius.circular(99)),
+        decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(99)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           const Icon(Icons.star_rounded, size: 14, color: Colors.white),
           const SizedBox(width: 3),
@@ -192,7 +192,7 @@ class _Reply extends StatelessWidget {
                           style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     const SizedBox(width: 6),
-                    const Icon(Icons.verified_rounded, size: 14, color: AppTheme.brandGreen),
+                    Icon(Icons.verified_rounded, size: 14, color: AppTheme.accentOliveDark),
                     if (date != null) ...[
                       const SizedBox(width: 6),
                       Text(_date(date!), style: const TextStyle(fontSize: AppFontSize.xxs, color: v2Muted)),
@@ -226,7 +226,7 @@ class _Pill extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 14, 8),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(icon, size: 16, color: AppTheme.brandGreen),
+              Icon(icon, size: 16, color: AppTheme.accentOliveDark),
               const SizedBox(width: 6),
               Text(label, style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ]),
@@ -275,7 +275,7 @@ class ReviewSummaryCard extends StatelessWidget {
                         value: n == 0 ? 0 : counts[s]! / n,
                         minHeight: 7,
                         backgroundColor: const Color(0xFFF2F0EB),
-                        color: AppTheme.brandGreen,
+                        color: AppTheme.accentOliveDark,
                       ),
                     ),
                   ),

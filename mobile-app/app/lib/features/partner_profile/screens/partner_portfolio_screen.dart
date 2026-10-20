@@ -173,7 +173,7 @@ class _RequirementBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: complete ? AppColors.green.withValues(alpha: 0.4) : AppColors.yellow.withValues(alpha: 0.5),
+        color: complete ? AppTheme.accentTint.withValues(alpha: 0.4) : AppColors.yellow.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Row(

@@ -48,9 +48,12 @@ class CopoDaguaApp extends ConsumerWidget {
     // da app toda, para o organizador (pedido 2026-10-18). Parceiros e
     // convidados ficam no verde da marca.
     final isCouple = ref.watch(authControllerProvider.select((s) => s.profile?.role)) == UserRole.couple;
-    final accent = isCouple ? ref.watch(currentMenuStyleProvider).color.accent : AppTheme.brandGreen;
-    if (AppTheme.accentOliveDark != accent) {
+    final menuColor = ref.watch(currentMenuStyleProvider).color;
+    final accent = isCouple ? menuColor.accent : AppTheme.brandGreen;
+    final tint = isCouple ? menuColor.tint : const Color(0xFFDDE5D3);
+    if (AppTheme.accentOliveDark != accent || AppTheme.accentTint != tint) {
       AppTheme.accentOliveDark = accent;
+      AppTheme.accentTint = tint;
       // Redesenha tudo o que já está no ecrã com a cor nova (sem perder
       // o estado nem a navegação).
       WidgetsBinding.instance.addPostFrameCallback((_) {

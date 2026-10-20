@@ -46,6 +46,11 @@ class AppTheme {
   static Color accentOliveDark = brandGreen;
   static Color get accentOlive => accentOliveDark;
 
+  /// Tom claro da cor de acento (fundos de chips, ícones e caixas).
+  /// Acompanha [accentOliveDark] (2026-10-20: a cor escolhida no menu muda
+  /// a app toda, também os tons claros).
+  static Color accentTint = const Color(0xFFDDE5D3);
+
   /// Cor de contorno neutra e quente, partilhada por bordas subtis
   /// (chips, botões outline, separadores).
   static const borderMuted = Color(0xFFE6E0D2);

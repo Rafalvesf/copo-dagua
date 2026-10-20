@@ -151,11 +151,11 @@ class _WelcomeContent extends StatelessWidget {
         Container(
           height: 318 + top,
           padding: EdgeInsets.only(top: top + 24),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment(-0.6, -1),
               end: Alignment(0.6, 1),
-              colors: [Color(0xFFDDE5D3), Color(0xFFF7EACA), Color(0xFFF3DEE0)],
+              colors: [AppTheme.accentTint, Color(0xFFF7EACA), Color(0xFFF3DEE0)],
               stops: [0, 0.55, 1],
             ),
           ),

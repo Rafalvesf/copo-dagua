@@ -287,7 +287,7 @@ class ConversationListItem extends StatelessWidget {
   // (canvas "Mensagens"): nome mais forte e hora a verde quando há
   // mensagens por ler.
   static const _tints = [
-    Color(0xFFDDE5D3),
+    AppTheme.accentTint,
     Color(0xFFECE7DC),
     Color(0xFFF7EACA),
     Color(0xFFF3DEE0),

@@ -562,7 +562,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      'Adicionar foto',
+                                      'Adicionar ${EventDecor.of(wedding.eventType).coverHint}',
                                       style: TextStyle(
                                         color: look.accent,
                                         fontSize: AppFontSize.sm,
@@ -664,7 +664,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            wedding.eventType == EventType.wedding ? 'O nosso casamento' : wedding.eventType.label,
+                            EventDecor.of(wedding.eventType).kicker,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: look.on.withValues(alpha: 0.85),
@@ -895,14 +895,15 @@ List<_Shortcut> _shortcuts(WidgetRef ref) {
   final pending = photos.where((p) => p.status == 'pending').length;
   final approved = photos.where((p) => p.status == 'approved').length;
   String plural(int n, String one, String many) => n == 1 ? one : many;
+  final decor = EventDecor.of(ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType)) ?? EventType.wedding);
   return [
     _Shortcut(Icons.savings_outlined, 'Orçamento',
         budget == null || budget.total == 0 ? 'Por definir' : '${euros(budget.spent)} de ${euros(budget.total)}', '/budget'),
     _Shortcut(Icons.people_outline, 'Convidados',
         guests.isEmpty ? 'Ainda sem convidados' : '$confirmed ${plural(confirmed, 'confirmado', 'confirmados')} de ${guests.length}', '/guests'),
-    _Shortcut(Icons.event_seat_outlined, 'Lugares', guests.isEmpty ? 'Sem convidados' : '$seated de ${guests.length} sentados', '/seating'),
+    _Shortcut(Icons.event_seat_outlined, 'Lugares', guests.isEmpty || seated == 0 ? decor.seatingEmpty : '$seated de ${guests.length} sentados', '/seating'),
     _Shortcut(Icons.photo_library_outlined, 'Galeria',
-        pending > 0 ? '$pending ${plural(pending, 'foto por aprovar', 'fotos por aprovar')}' : '$approved ${plural(approved, 'foto', 'fotos')}', '/gallery'),
+        pending > 0 ? '$pending ${plural(pending, 'foto por aprovar', 'fotos por aprovar')}' : approved == 0 ? decor.galleryEmpty : '$approved ${plural(approved, 'foto', 'fotos')}', '/gallery'),
     const _Shortcut(Icons.card_giftcard_outlined, 'Para os convidados', 'Programa e presentes', '/guest-page'),
     _Shortcut(Icons.checklist_rtl_outlined, 'Serviços tratados',
         handled == null ? '—' : handled == 0 ? 'Nenhum ainda' : '$handled ${plural(handled, 'categoria', 'categorias')}', '/service-preferences'),
@@ -1533,10 +1534,10 @@ class _WeddingSkeleton extends StatelessWidget {
               140,
             ),
             children: [
-              const SkeletonBox(
+              SkeletonBox(
                 height: 380,
                 radius: AppRadius.xxl,
-                color: AppColors.green,
+                color: AppTheme.accentTint,
               ),
               const SizedBox(height: 16),
               for (var row = 0; row < 2; row++) ...[
@@ -1623,7 +1624,7 @@ class _CoverPhoto extends ConsumerWidget {
                     children: [
                       Icon(Icons.add_photo_alternate_outlined, size: 28, color: look.accent),
                       const SizedBox(height: 4),
-                      Text('Adicionar foto', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent)),
+                      Text('Adicionar ${EventDecor.of(wedding.eventType).coverHint}', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent)),
                     ],
                   ),
                 ),
@@ -1999,7 +2000,7 @@ class _ClotheslineTop extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    (wedding.eventType == EventType.wedding ? 'O nosso casamento' : wedding.eventType.label).toUpperCase(),
+                    EventDecor.of(wedding.eventType).kicker.toUpperCase(),
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.4, color: look.accent),
                   ),
                   Text(

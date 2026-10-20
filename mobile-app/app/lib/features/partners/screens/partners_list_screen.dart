@@ -241,7 +241,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(AppRadius.pill),
-                                borderSide: const BorderSide(color: AppTheme.brandGreen),
+                                borderSide: BorderSide(color: AppTheme.accentOliveDark),
                               ),
                               contentPadding: const EdgeInsets.symmetric(
                                 vertical: 12,
@@ -317,7 +317,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 // Sem sombra: a lista horizontal cortava-a e
                                 // ficava uma linha por baixo das pílulas.
                                 decoration: BoxDecoration(
-                                  color: on ? AppTheme.brandGreen : const Color(0xFFF2F0EB),
+                                  color: on ? AppTheme.accentOliveDark : const Color(0xFFF2F0EB),
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(o?.label ?? 'Todos',
@@ -456,7 +456,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                       onTap: _showFilters,
                                       child: Text(
                                         _hasAdvancedFilters ? 'Filtros ativos' : 'Filtrar',
-                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.brandGreen),
+                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
                                       ),
                                     ),
                                   ],
@@ -580,7 +580,7 @@ class _SectionHeader extends StatelessWidget {
                 child: Text(trailing!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
               ),
             ],
           ],
@@ -618,7 +618,7 @@ class _RatingChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(color: AppTheme.brandGreen, borderRadius: BorderRadius.circular(999)),
+        decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(999)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           const Icon(Icons.star_rounded, size: 12, color: Colors.white),
           const SizedBox(width: 2),
@@ -669,7 +669,7 @@ class _FeaturedCard extends StatelessWidget {
                 Text(_priceLabel(partner),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
               ]),
             ),
           ],
@@ -720,9 +720,9 @@ class _PartnerCard extends ConsumerWidget {
                       TextSpan(text: meta),
                       if (rating != null) ...[
                         const TextSpan(text: ' · '),
-                        const WidgetSpan(
+                        WidgetSpan(
                           alignment: PlaceholderAlignment.middle,
-                          child: Icon(Icons.star_rounded, size: 13, color: AppTheme.brandGreen),
+                          child: Icon(Icons.star_rounded, size: 13, color: AppTheme.accentOliveDark),
                         ),
                         TextSpan(text: ' $rating (${partner.reviewCount})'),
                       ],
@@ -735,7 +735,7 @@ class _PartnerCard extends ConsumerWidget {
                   Text(_priceLabel(partner),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppTheme.brandGreen, fontWeight: FontWeight.w700, fontSize: 13)),
+                      style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 13)),
                 ],
               ),
             ),
@@ -749,7 +749,7 @@ class _PartnerCard extends ConsumerWidget {
                   height: 38,
                   decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: softShadow),
                   child: Icon(favorited ? Icons.favorite : Icons.favorite_border,
-                      size: 18, color: favorited ? const Color(0xFFA3412E) : AppTheme.brandGreen),
+                      size: 18, color: favorited ? const Color(0xFFA3412E) : AppTheme.accentOliveDark),
                 ),
               ),
             ),
