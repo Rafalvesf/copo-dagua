@@ -43,6 +43,14 @@ class TasksScreen extends ConsumerStatefulWidget {
 class _TasksScreenState extends ConsumerState<TasksScreen> {
   _TasksTab _tab = _TasksTab.todo;
 
+  @override
+  void initState() {
+    super.initState();
+    // Sempre atualizadas ao abrir (ex.: depois de uma reserva cancelada
+    // pelo parceiro noutro dispositivo) — 2026-10-21.
+    Future.microtask(() => ref.read(taskEngineControllerProvider.notifier).recompute());
+  }
+
   static IconData _iconForCategory(String? category) => switch (category) {
     'orcamento' => Icons.savings_outlined,
     'convidados' => Icons.people_outline,

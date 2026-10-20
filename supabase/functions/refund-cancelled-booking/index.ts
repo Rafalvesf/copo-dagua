@@ -2,10 +2,11 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
 
-// Reembolso automático (pedido do utilizador, 2026-10-20):
-// - casal cancela com pelo menos `cancellation_penalty_days` (30) dias
-//   antes do evento → reembolso de tudo o que pagou; mais tarde → só o
-//   sinal fica com o parceiro, o resto já pago é devolvido;
+// Reembolso automático (regras de 2026-10-21, migração 112):
+// - organizador cancela nas primeiras 48 h depois de pagar o sinal → o
+//   sinal é devolvido (se o parceiro o marcou como reembolsável);
+// - organizador cancela com 30+ dias de antecedência → o restante já
+//   pago é devolvido;
 // - parceiro cancela → reembolso sempre;
 // - o casal recebe 100%: a comissão À Nossa! é devolvida
 //   (`refund_application_fee`) e a parte do parceiro é recuperada da conta
@@ -70,17 +71,24 @@ Deno.serve(async (req) => {
     .eq("event_type", booking.status)
     .order("created_at", { ascending: false })
     .limit(1);
-  const refundRequired = (events?.[0]?.metadata as Record<string, unknown> | undefined)?.refund_required === true;
+  const meta = (events?.[0]?.metadata as Record<string, unknown> | undefined) ?? {};
+  const refundRequired = meta.refund_required === true;
 
   const { data: paidRows } = await admin
     .from("payments")
     .select("id, amount, status, type, provider_payment_id")
     .eq("booking_id", bookingId)
     .eq("status", "paid");
-  // Cancelamento tardio pelo casal: a regra é "o parceiro fica com o
-  // sinal" — só o sinal. Qualquer outro pagamento já feito (ex: o
-  // restante pago adiantado) é devolvido na mesma (2026-10-20).
-  const payments = refundRequired ? (paidRows ?? []) : (paidRows ?? []).filter((p) => p.type !== "deposit");
+  // Regras de 2026-10-21 (migração 112): o cancelamento grava o que se
+  // devolve — o sinal (`refund_deposit`, nas primeiras 48 h depois de o
+  // pagar) e o restante (`refund_final`, com 30+ dias de antecedência).
+  // Cancelamentos antigos sem esses campos seguem a regra anterior.
+  const hasSplit = "refund_deposit" in meta || "refund_final" in meta;
+  const payments = hasSplit
+    ? (paidRows ?? []).filter((p) => (p.type === "deposit" ? meta.refund_deposit === true : meta.refund_final === true))
+    : refundRequired
+      ? (paidRows ?? [])
+      : (paidRows ?? []).filter((p) => p.type !== "deposit");
   if (payments.length === 0) return json({ refunded: [], skipped: "not_eligible" });
 
   const stripe = stripeClient();

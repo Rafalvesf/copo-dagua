@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/home/home_providers.dart';
 import '../../../core/payments/payments.dart';
@@ -17,6 +16,7 @@ import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/sticker_icon.dart';
 import 'pay_done_screen.dart';
+import '../../../core/payments/pay_return.dart';
 
 enum _Step { checking, select, loading, form, confirming, mbWayWaiting, multibanco }
 
@@ -139,9 +139,6 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     } on CheckoutUnavailable catch (e) {
       if (!mounted) return;
       if (e.reason == 'invalid_state') return _done();
-      // Sem chave pública da Stripe configurada ainda: usa o checkout da
-      // Stripe (abre na mesma janela) — só até a chave existir (2026-10-19).
-      if (e.reason == 'not_configured') return _hostedFallback();
       setState(() {
         _step = _Step.select;
         _error = payErrorMessage(e.reason);
@@ -155,27 +152,6 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     }
   }
 
-  Future<void> _hostedFallback() async {
-    try {
-      final url = await createDepositCheckoutUrl(a.paymentId);
-      await launchUrl(Uri.parse(url), mode: LaunchMode.platformDefault, webOnlyWindowName: '_self');
-    } on CheckoutUnavailable catch (e) {
-      if (mounted) {
-        setState(() {
-          _step = _Step.select;
-          _error = payErrorMessage(e.reason);
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _step = _Step.select;
-          _error = 'Não foi possível iniciar o pagamento. Tenta novamente.';
-        });
-      }
-    }
-  }
-
   Future<void> _pay() async {
     final el = _element;
     if (el == null) return;
@@ -183,7 +159,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       _step = _Step.confirming;
       _error = null;
     });
-    final r = await el.confirm();
+    final r = await el.confirm(returnUrl: PayReturn.returnUrl(a.paymentId));
     if (!mounted) return;
     if (r['error'] != null) {
       setState(() {

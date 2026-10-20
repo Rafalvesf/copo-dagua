@@ -77,7 +77,7 @@ export default async function BookingDetailPage(props: PageProps<"/bookings/[id]
         <div className="stack">
           <div className="grid grid-3">
             <Stat label="Valor do serviço" value={fmtEur(b.total_amount)} hint={`organizador paga ${fmtEur(paidByCouple(Number(b.total_amount)), true)}`} />
-            <Stat label="Sinal" value={fmtEur(b.deposit_amount)} hint={proposal?.deposit_refundable === false ? "não reembolsável" : "reembolsável até 30 dias antes"} />
+            <Stat label="Sinal" value={fmtEur(b.deposit_amount)} hint={proposal?.deposit_refundable === false ? "não reembolsável" : "reembolsável nas 48 h após pagar"} />
             <Stat label="Restante" value={fmtEur(remaining)} hint="pago mais perto do evento" />
           </div>
 

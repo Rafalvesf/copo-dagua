@@ -16,7 +16,7 @@ extension type _TchinPay(JSObject _) implements JSObject {
     JSFunction onHeight,
     JSFunction onEvent,
   );
-  external JSPromise<JSString> confirm();
+  external JSPromise<JSString> confirm(JSString returnUrl);
   external void unmount();
 }
 
@@ -68,10 +68,10 @@ class _WebStripeElement implements StripeElement {
   }
 
   @override
-  Future<Map<String, dynamic>> confirm() async {
+  Future<Map<String, dynamic>> confirm({String? returnUrl}) async {
     final pay = _pay;
     if (pay == null) return {'error': 'Pagamento indisponível.'};
-    final raw = (await pay.confirm().toDart).toDart;
+    final raw = (await pay.confirm((returnUrl ?? '').toJS).toDart).toDart;
     return jsonDecode(raw) as Map<String, dynamic>;
   }
 
