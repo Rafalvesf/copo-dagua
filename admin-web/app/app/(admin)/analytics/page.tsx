@@ -50,18 +50,14 @@ export default async function AnalyticsPage() {
     <div>
       <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 600 }}>Analytics</h1>
       <p style={{ color: "var(--ink-muted)", marginTop: 4, marginBottom: 8, fontSize: 14, maxWidth: 640 }}>
-        Funil de conversão calculado a partir de <code>quote_requests</code>/<code>proposals</code>/
-        <code>bookings</code>/<code>payments</code> reais — sem números inventados.
+        Do pedido de orçamento à reserva concluída, com os dados reais da app.
       </p>
       <p style={{ color: "var(--ink-muted)", marginBottom: 24, fontSize: 13, maxWidth: 640 }}>
-        As etapas anteriores ao pedido de orçamento (registo → visualizou parceiros → abriu perfil)
-        não aparecem aqui: não existe ainda nenhum sistema de eventos de navegação/pesquisa
-        (nem, do lado do casal, um ecrã de descoberta de parceiros ligado a dados reais) a gravar
-        essa informação. Adicionar isso é um módulo próprio, não uma extensão desta página.
+        O que acontece antes do pedido (visitas e pesquisas na app) ainda não é medido.
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-        <FunnelCard title="Funil de casais" stages={couplesFunnel} />
+      <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <FunnelCard title="Funil de organizadores" stages={couplesFunnel} />
         <FunnelCard title="Funil de parceiros" stages={partnerFunnel} />
       </div>
     </div>

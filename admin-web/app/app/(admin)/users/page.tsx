@@ -5,7 +5,7 @@ import { AccountStatusBadge } from "@/components/AccountStatusBadge";
 import type { Profile, UserRole } from "@/lib/types";
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  couple: "Casal",
+  couple: "Organizador",
   partner: "Parceiro",
   admin: "Admin",
 };
@@ -20,7 +20,7 @@ const ADMIN_ROLE_LABELS: Record<string, string> = {
 
 const ROLE_FILTERS: { value: UserRole | "all"; label: string }[] = [
   { value: "all", label: "Todos" },
-  { value: "couple", label: "Casais" },
+  { value: "couple", label: "Organizadores" },
   { value: "partner", label: "Parceiros" },
   { value: "admin", label: "Admins" },
 ];
@@ -67,7 +67,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
         </Link>
       </div>
 
-      <div style={{ display: "flex", gap: 8, margin: "24px 0" }}>
+      <div style={{ display: "flex", gap: 8, margin: "24px 0", flexWrap: "wrap" }}>
         {ROLE_FILTERS.map((f) => (
           <Link
             key={f.value}

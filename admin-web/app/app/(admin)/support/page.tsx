@@ -45,8 +45,8 @@ export default async function SupportPage({ searchParams }: PageProps<"/support"
     <div>
       <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Suporte</h1>
       <p style={{ color: "var(--ink-muted)", marginTop: 4, maxWidth: 640 }}>
-        Pedidos de apoio de casais e parceiros (`support_tickets`). Disputas e atrasos são só uma categoria aqui —
-        resolvem-se diretamente nesta aba, sem módulo separado.
+        Pedidos de ajuda enviados pelos organizadores e parceiros a partir da app. Responde e marca como resolvido
+        aqui; problemas com uma reserva concreta tratam-se em Disputas.
       </p>
 
       <div style={{ display: "flex", gap: 8, margin: "24px 0", flexWrap: "wrap" }}>
@@ -105,7 +105,7 @@ export default async function SupportPage({ searchParams }: PageProps<"/support"
                   </div>
                   <p style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 2 }}>
                     {t.profiles?.full_name ?? "Utilizador desconhecido"} ·{" "}
-                    {t.profiles?.role === "partner" ? "Parceiro" : "Casal"} ·{" "}
+                    {t.profiles?.role === "partner" ? "Parceiro" : "Organizador"} ·{" "}
                     {new Date(t.created_at).toLocaleDateString("pt-PT")}
                   </p>
                 </div>

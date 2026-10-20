@@ -37,7 +37,7 @@ export default async function PartnersPage({
         Rever, aprovar e gerir perfis do Marketplace.
       </p>
 
-      <div style={{ display: "flex", gap: 8, margin: "24px 0" }}>
+      <div style={{ display: "flex", gap: 8, margin: "24px 0", flexWrap: "wrap" }}>
         {FILTERS.map((f) => (
           <Link
             key={f.value}

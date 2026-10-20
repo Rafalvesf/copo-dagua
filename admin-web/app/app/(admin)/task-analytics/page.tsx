@@ -21,7 +21,7 @@ const COMPLETION_SOURCE_LABEL: Record<string, string> = {
   has_interest_in_category: "Favorito/pedido/reserva na categoria",
   has_quote_for_category: "Pedido de orçamento na categoria",
   has_confirmed_booking_for_category: "Reserva confirmada na categoria",
-  manual: "Marcada manualmente pelo casal",
+  manual: "Marcada manualmente pelo organizador",
   payment_paid: "Pagamento liquidado",
   proposal_accepted: "Proposta aceite",
 };
@@ -106,17 +106,17 @@ export default async function TaskAnalyticsPage() {
     <div>
       <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Analytics de tarefas</h1>
       <p style={{ color: "var(--ink-muted)", marginTop: 4 }}>
-        Agregados reais sobre `wedding_tasks` — sem números inventados.
+        Como os organizadores estão a usar as tarefas sugeridas pela app.
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginTop: 24 }}>
+      <div className="kpi-row" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginTop: 24 }}>
         <StatCard label="Tarefas do sistema geradas" value={String(total)} />
         <StatCard label="Taxa de conclusão" value={completionRate === null ? "—" : `${completionRate.toFixed(0)}%`} sub={`${completed.length} concluídas / ${resolved} resolvidas`} />
         <StatCard label="Tempo médio até concluir" value={avgHours === null ? "—" : formatDuration(avgHours)} />
         <StatCard label="Descartadas/expiradas" value={String(dismissed.length)} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 32 }}>
+      <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 32 }}>
         <TemplateTable title="Templates mais concluídos" rows={mostCompleted} column="completed" columnLabel="Concluídas" />
         <TemplateTable title="Templates mais descartados/expirados" rows={mostDismissed} column="dismissed" columnLabel="Descartadas" />
       </div>
@@ -151,7 +151,7 @@ export default async function TaskAnalyticsPage() {
         </table>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 32 }}>
+      <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 32 }}>
         <StatCard label="Tarefas de pagamento (Pagar sinal)" value={String(dynamicPayments.length)} sub={`${dynamicPayments.filter((t) => t.status === "completed").length} pagas`} />
         <StatCard label="Tarefas de proposta (Rever proposta)" value={String(dynamicProposals.length)} sub={`${dynamicProposals.filter((t) => t.status === "completed").length} decididas`} />
       </div>

@@ -42,7 +42,7 @@ export default async function AdminLayout({
       <div className="admin-shell">
         <AdminSidebar fullName={fullName} pendingCount={count ?? 0} openDisputes={openDisputes ?? 0} />
         <main className="admin-main">
-          <TopBar fullName={fullName} />
+          <TopBar fullName={fullName} alerts={(count ?? 0) + (openDisputes ?? 0)} />
           {children}
         </main>
       </div>
@@ -55,46 +55,36 @@ export default async function AdminLayout({
 // backend próprio ainda (nenhum módulo de pesquisa global nem de
 // notificações existe no admin-web), ao contrário do avatar que já leva a
 // uma página real (`/settings`). Ver `admin-web/dashboard/tasks.md`.
-function TopBar({ fullName }: { fullName: string }) {
+function TopBar({ fullName, alerts }: { fullName: string; alerts: number }) {
   return (
     <div className="admin-topbar" style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, marginBottom: 14, flexShrink: 0 }}>
-      <div style={{ position: "relative", width: 260 }}>
+      {/* Pesquisa global (2026-10-20): pessoas, parceiros, eventos e reservas. */}
+      <form action="/search" style={{ position: "relative", width: 280 }}>
         <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--ink-muted)" }}>
           <SearchIcon />
         </span>
         <input
-          type="text"
-          placeholder="Pesquisar..."
-          disabled
+          type="search"
+          name="q"
+          placeholder="Pesquisar pessoas, parceiros, reservas…"
+          aria-label="Pesquisar"
           style={{
             width: "100%",
-            padding: "9px 44px 9px 36px",
+            padding: "9px 12px 9px 36px",
             borderRadius: 10,
             border: "1px solid var(--border-muted)",
             background: "var(--surface)",
             fontSize: 13,
           }}
         />
-        <span
-          style={{
-            position: "absolute",
-            right: 10,
-            top: "50%",
-            transform: "translateY(-50%)",
-            fontSize: 11,
-            color: "var(--ink-muted)",
-            border: "1px solid var(--border-muted)",
-            borderRadius: 6,
-            padding: "1px 5px",
-          }}
-        >
-          ⌘K
-        </span>
-      </div>
+      </form>
       <EditModeToggle />
-      <span
-        aria-hidden
+      <Link
+        href="/"
+        aria-label={alerts > 0 ? `${alerts} assuntos por tratar` : "Sem assuntos por tratar"}
+        title={alerts > 0 ? `${alerts} assuntos por tratar` : "Sem assuntos por tratar"}
         style={{
+          position: "relative",
           width: 36,
           height: 36,
           borderRadius: "50%",
@@ -107,7 +97,29 @@ function TopBar({ fullName }: { fullName: string }) {
         }}
       >
         <BellIcon />
-      </span>
+        {alerts > 0 && (
+          <span
+            style={{
+              position: "absolute",
+              top: -4,
+              right: -4,
+              minWidth: 18,
+              height: 18,
+              borderRadius: 999,
+              background: "var(--status-pending-fg)",
+              color: "var(--surface)",
+              fontSize: 11,
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "0 5px",
+            }}
+          >
+            {alerts}
+          </span>
+        )}
+      </Link>
       <Link
         href="/settings"
         aria-label="Definições da conta"

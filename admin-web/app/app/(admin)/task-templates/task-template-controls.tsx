@@ -142,7 +142,7 @@ export function RowActions({ template, categories }: { template: TaskTemplate; c
         <EditModal onClose={() => setConfirmingDelete(false)} narrow>
           <h3 style={{ marginTop: 0 }}>Eliminar template?</h3>
           <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>
-            Este template deixará de gerar novas tarefas. As tarefas já existentes e o histórico dos casais não serão
+            Este template deixará de gerar novas tarefas. As tarefas já existentes e o histórico dos organizadores não serão
             eliminados.
           </p>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
@@ -345,7 +345,7 @@ function TaskTemplateForm({
           ))}
         </select>
       </Field>
-      <Field label="Apresentação ao casal">
+      <Field label="Apresentação ao organizador">
         <select
           name="display_type"
           style={inputStyle}
@@ -384,7 +384,7 @@ function TaskTemplateForm({
             padding: "8px 12px",
           }}
         >
-          Aviso: uma tarefa &quot;Para concluir&quot; que se conclui ao abrir o CTA pode confundir o casal — ela
+          Aviso: uma tarefa &quot;Para concluir&quot; que se conclui ao abrir o CTA pode confundir o organizador — ela
           desaparece sem a ação real ter sido feita. A submissão não é bloqueada, mas confirma que é mesmo isto que
           queres.
         </div>

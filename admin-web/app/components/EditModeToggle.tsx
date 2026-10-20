@@ -1,9 +1,13 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEditMode } from "@/lib/edit-mode-context";
 
 export function EditModeToggle() {
   const { editMode, toggleEditMode } = useEditMode();
+  // Só o dashboard tem caixas para arrumar.
+  const pathname = usePathname();
+  if (pathname !== "/") return null;
 
   return (
     <button

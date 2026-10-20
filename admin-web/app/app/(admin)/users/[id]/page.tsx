@@ -41,7 +41,7 @@ export default async function UserDetailPage(props: PageProps<"/users/[id]">) {
       </div>
 
       <Section title="Identidade">
-        <Field label="Papel" value={u.role === "couple" ? "Casal" : u.role === "partner" ? "Parceiro" : "Admin"} />
+        <Field label="Papel" value={u.role === "couple" ? "Organizador" : u.role === "partner" ? "Parceiro" : "Admin"} />
         <Field label="Telefone" value={u.phone ?? "—"} />
         <Field label="Email verificado" value={u.email_verified_at ? new Date(u.email_verified_at).toLocaleString("pt-PT") : "Não"} />
         <Field label="Onboarding" value={u.onboarding_completed ? "Concluído" : "Incompleto"} />
@@ -50,7 +50,7 @@ export default async function UserDetailPage(props: PageProps<"/users/[id]">) {
           <Field label="Perfil de parceiro" value="" link={{ href: `/partners/${u.id}`, label: "Ver perfil de parceiro →" }} />
         )}
         {u.role === "couple" && wedding && (
-          <Field label="Casamento" value="" link={{ href: `/weddings/${wedding.id}`, label: "Ver casamento →" }} />
+          <Field label="Evento" value="" link={{ href: `/weddings/${wedding.id}`, label: "Ver evento →" }} />
         )}
       </Section>
 

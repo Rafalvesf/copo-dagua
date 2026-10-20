@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/dal";
+import { actorLabel, bookingEventLabel } from "@/lib/audit-labels";
 import { createClient } from "@/lib/supabase/server";
 import { BookingStatusBadge } from "@/components/BookingStatusBadge";
 import { PaymentStatusBadge } from "@/components/PaymentStatusBadge";
@@ -143,8 +144,8 @@ export default async function DisputeDetailPage(props: PageProps<"/disputes/[id]
         <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
           {(events ?? []).map((e) => (
             <li key={e.id as string} style={{ fontSize: 13 }}>
-              <span style={muted}>{new Date(e.created_at as string).toLocaleString("pt-PT")} —</span> {e.event_type as string}{" "}
-              <span style={muted}>({e.actor_type as string})</span>
+              <span style={muted}>{new Date(e.created_at as string).toLocaleString("pt-PT")} —</span> {bookingEventLabel(e.event_type as string)}{" "}
+              <span style={muted}>({actorLabel(e.actor_type as string)})</span>
             </li>
           ))}
         </ul>

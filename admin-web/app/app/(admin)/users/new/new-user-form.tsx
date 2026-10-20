@@ -6,7 +6,7 @@ import { createUserAccount, type CreateUserActionState } from "./actions";
 const initialState: CreateUserActionState = { error: null };
 
 const KIND_OPTIONS = [
-  { value: "couple", label: "Casal" },
+  { value: "couple", label: "Organizador" },
   { value: "partner", label: "Parceiro" },
   { value: "support", label: "Suporte (admin)" },
   { value: "moderator", label: "Moderador (admin)" },

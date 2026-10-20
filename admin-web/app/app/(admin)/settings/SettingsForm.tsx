@@ -65,6 +65,11 @@ export function SettingsForm({ settings }: { settings: PlatformSettings }) {
         label="Permitir review apenas depois de reserva concluída"
         defaultChecked={settings.review_requires_completed_booking}
       />
+      <ToggleField
+        name="guest_offers_enabled"
+        label="Ofertas dos parceiros para convidados (alojamento, transporte…)"
+        defaultChecked={Boolean((settings as unknown as { guest_offers_enabled?: boolean }).guest_offers_enabled)}
+      />
 
       {state.error && <p style={{ color: "var(--status-rejected-fg)", fontSize: 13 }}>{state.error}</p>}
 
@@ -88,7 +93,7 @@ export function SettingsForm({ settings }: { settings: PlatformSettings }) {
       </div>
 
       <p style={{ fontSize: 12, color: "var(--ink-muted)" }}>
-        Última alteração: {new Date(settings.updated_at).toLocaleString("pt-PT")}
+        Última alteração: {settings.updated_at ? new Date(settings.updated_at).toLocaleString("pt-PT") : "—"}
       </p>
     </form>
   );

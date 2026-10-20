@@ -48,7 +48,7 @@ export function KpiCard({
         >
           {icon}
         </span>
-        <div style={{ fontFamily: "var(--font-serif)", fontSize: 32, fontWeight: 500 }}>{value}</div>
+        <div className="kpi-value" style={{ fontFamily: "var(--font-serif)", fontSize: 32, fontWeight: 500, whiteSpace: "nowrap" }}>{value}</div>
       </div>
       <span style={{ fontSize: 13, color: "var(--ink-muted)", fontWeight: 400 }}>{label}</span>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
@@ -66,9 +66,11 @@ export function KpiCard({
               {positive ? "↑" : "↓"} {Math.abs(deltaPct).toFixed(1)}%
             </span>
           )}
-          <p style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 2 }}>vs. período anterior</p>
+          <p className="kpi-vs" style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 2 }}>vs. período anterior</p>
         </div>
-        <Sparkline points={trend} color={positive ? "var(--accent)" : "var(--status-rejected-fg)"} />
+        <span className="kpi-spark" style={{ display: "flex" }}>
+          <Sparkline points={trend} color={positive ? "var(--accent)" : "var(--status-rejected-fg)"} />
+        </span>
       </div>
     </div>
   );

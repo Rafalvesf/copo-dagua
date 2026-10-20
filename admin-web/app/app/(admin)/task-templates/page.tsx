@@ -53,9 +53,8 @@ export default async function TaskTemplatesPage() {
         <div>
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Templates de tarefas</h1>
           <p style={{ color: "var(--ink-muted)", marginTop: 4, maxWidth: 640 }}>
-            O catálogo do motor de tarefas do app (mobile-app/app/lib/core/tasks/). As regras de elegibilidade e
-            conclusão são chaves fixas, já implementadas do lado da app — um template só tem efeito real se usar uma
-            das chaves da lista abaixo.
+            As tarefas que a app sugere a cada organizador. As regras de quando aparecem e de quando ficam
+            concluídas são escolhidas de uma lista fixa, já preparada na app.
           </p>
         </div>
         <NewTaskTemplateForm categories={activeCategories} />

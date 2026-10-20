@@ -52,8 +52,8 @@ export default async function ModerationPage({ searchParams }: PageProps<"/moder
     <div>
       <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Avaliações e Denúncias</h1>
       <p style={{ color: "var(--ink-muted)", marginTop: 4, maxWidth: 640 }}>
-        Moderação de avaliações reais (`reviews`, só reservas concluídas podem ser avaliadas). Denunciadas saem do
-        Marketplace/perfil público de imediato — nunca um DELETE, só `published`/`flagged`/`removed`.
+        Avaliações deixadas pelos organizadores depois de uma reserva concluída. As denunciadas ou removidas
+        deixam de aparecer no perfil público do parceiro (nada é apagado).
       </p>
 
       <div style={{ display: "flex", gap: 8, margin: "24px 0", flexWrap: "wrap" }}>
@@ -86,7 +86,7 @@ export default async function ModerationPage({ searchParams }: PageProps<"/moder
               ? r.weddings.partner_name_2
                 ? `${r.weddings.partner_name_1} & ${r.weddings.partner_name_2}`
                 : r.weddings.partner_name_1
-              : "Casal desconhecido";
+              : "Organizador desconhecido";
             return (
               <div
                 key={r.id}

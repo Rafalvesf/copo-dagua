@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/dal";
+import { actorLabel, bookingEventLabel } from "@/lib/audit-labels";
 import { PaymentStatusBadge } from "@/components/PaymentStatusBadge";
 import { RefundPaymentForm } from "@/components/RefundForms";
 import { refundPayment } from "../../refunds/actions";
@@ -73,15 +74,13 @@ export default async function BookingDetailPage(props: PageProps<"/bookings/[id]
             marginBottom: 16,
           }}
         >
-          As ações abaixo são um registo administrativo — não processam pagamento
-          real (sem Stripe ainda), mas o valor introduzido é cruzado
-          automaticamente com o sinal esperado antes de avançar. Ver{" "}
-          <code>backend/bookings/api.md</code>.
+          Usa estas ações só para pagamentos feitos fora da app (ex: transferência). Não cobram nada na
+          Stripe — o valor que indicares tem de bater certo com o sinal esperado.
         </div>
       )}
 
       <Section title="Detalhe">
-        <Field label="Casal" value="" link={couple ? { href: `/users/${couple.id}`, label: couple.full_name } : undefined} />
+        <Field label="Organizador" value="" link={couple ? { href: `/users/${couple.id}`, label: couple.full_name } : undefined} />
         <Field
           label="Parceiro"
           value=""
@@ -154,7 +153,7 @@ export default async function BookingDetailPage(props: PageProps<"/bookings/[id]
                 <span style={{ color: "var(--ink-muted)" }}>
                   {new Date(e.created_at).toLocaleString("pt-PT")} —
                 </span>{" "}
-                {e.event_type} <span style={{ color: "var(--ink-muted)" }}>({e.actor_type})</span>
+                {bookingEventLabel(e.event_type)} <span style={{ color: "var(--ink-muted)" }}>({actorLabel(e.actor_type)})</span>
               </li>
             ))}
           </ul>

@@ -65,12 +65,11 @@ export default async function PaymentsPage({ searchParams }: PageProps<"/payment
     <div>
       <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 600 }}>Pagamentos</h1>
       <p style={{ color: "var(--ink-muted)", marginTop: 4, fontSize: 14 }}>
-        Sinais de reserva — ainda não existe integração com um processor real (Stripe Connect),
-        ver <code>admin-web/payments/README.md</code>. Só sinais são acompanhados aqui; pagamento
-        final/faseado ainda não tem nenhum fluxo em nenhuma app.
+        Sinais e pagamentos finais feitos na app pela Stripe. Os valores são a parte do parceiro; a comissão
+        À Nossa! é somada por cima. Para devolver dinheiro, abre a reserva ou vai a Reembolsos.
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, margin: "24px 0" }}>
+      <div className="kpi-row" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, margin: "24px 0" }}>
         <KpiTile label="Volume pago" value={`${paidVolume.toLocaleString("pt-PT")} €`} />
         <KpiTile label="Pendentes" value={`${pendingVolume.toLocaleString("pt-PT")} €`} />
         <KpiTile label="Em atraso" value={`${overdueVolume.toLocaleString("pt-PT")} €`} accent="var(--status-rejected-fg)" />
@@ -107,7 +106,7 @@ export default async function PaymentsPage({ searchParams }: PageProps<"/payment
           <thead>
             <tr style={{ textAlign: "left", fontSize: 13, color: "var(--ink-muted)" }}>
               <th style={{ padding: "8px 0" }}>Reserva</th>
-              <th>Casal</th>
+              <th>Organizador</th>
               <th>Parceiro</th>
               <th>Tipo</th>
               <th>Valor</th>

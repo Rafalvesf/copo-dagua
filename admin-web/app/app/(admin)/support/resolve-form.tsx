@@ -27,7 +27,7 @@ export function ResolveTicketForm({ ticketId }: { ticketId: string }) {
         required
         minLength={5}
         rows={2}
-        placeholder="Resposta para o casal/parceiro..."
+        placeholder="Resposta para o organizador/parceiro..."
         style={{
           borderRadius: 10,
           border: "1px solid var(--border-muted)",

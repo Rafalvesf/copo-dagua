@@ -287,7 +287,7 @@ export type TaskTemplate = {
 export const COMPLETION_BEHAVIOR_KEYS: { key: TaskCompletionBehavior; label: string }[] = [
   { key: "action_completed", label: "Ação concluída (dados reais confirmam)" },
   { key: "cta_opened", label: "Ao abrir o CTA (primeiro clique)" },
-  { key: "manual", label: "Manual (casal marca \"Feito\")" },
+  { key: "manual", label: "Manual (organizador marca \"Feito\")" },
 ];
 
 export const DISPLAY_TYPE_KEYS: { key: TaskDisplayType; label: string }[] = [
