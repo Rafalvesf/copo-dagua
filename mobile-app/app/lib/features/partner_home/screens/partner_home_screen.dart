@@ -193,8 +193,8 @@ class PartnerHomeScreen extends ConsumerWidget {
                   'Novos pedidos',
                   trailing: GestureDetector(
                     onTap: () => context.push('/partner-requests'),
-                    child: const Text('Ver todos',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+                    child: Text('Ver todos',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
                   ),
                 ),
                 if (newRequests.isEmpty)

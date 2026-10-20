@@ -75,14 +75,14 @@ class GuestTableScreen extends ConsumerWidget {
                                 width: 108,
                                 height: 108,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFDDE5D3),
+                                  color: AppTheme.accentTint,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: AppTheme.brandGreen, width: 1.6),
+                                  border: Border.all(color: AppTheme.accentOliveDark, width: 1.6),
                                 ),
                                 alignment: Alignment.center,
                                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                                   Text(tableNumber == null ? '—' : '$tableNumber',
-                                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
                                   if (groups.isNotEmpty)
                                     SizedBox(
                                       width: 90,
@@ -90,7 +90,7 @@ class GuestTableScreen extends ConsumerWidget {
                                           textAlign: TextAlign.center,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontSize: 11, color: AppTheme.brandGreen)),
+                                          style: TextStyle(fontSize: 11, color: AppTheme.accentOliveDark)),
                                     ),
                                 ]),
                               ),

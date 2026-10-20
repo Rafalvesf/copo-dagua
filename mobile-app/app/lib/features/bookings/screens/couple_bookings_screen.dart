@@ -526,7 +526,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
             Icon(
               proposal.depositRefundable ? Icons.replay_rounded : Icons.block_rounded,
               size: 14,
-              color: proposal.depositRefundable ? AppTheme.brandGreen : const Color(0xFFA3412E),
+              color: proposal.depositRefundable ? AppTheme.accentOliveDark : const Color(0xFFA3412E),
             ),
             const SizedBox(width: 6),
             Expanded(
@@ -537,7 +537,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
                 style: TextStyle(
                   fontSize: AppFontSize.xs,
                   fontWeight: FontWeight.w600,
-                  color: proposal.depositRefundable ? AppTheme.brandGreen : const Color(0xFFA3412E),
+                  color: proposal.depositRefundable ? AppTheme.accentOliveDark : const Color(0xFFA3412E),
                 ),
               ),
             ),

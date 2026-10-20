@@ -75,7 +75,7 @@ class DisputeCard extends ConsumerWidget {
     if (d != null && d['status'] == 'resolved' && !info.canOpen) {
       return _box(
         icon: Icons.verified_rounded,
-        color: AppTheme.brandGreen,
+        color: AppTheme.accentOliveDark,
         title: _resolutions[d['resolution']] ?? 'Disputa resolvida',
         body: (d['admin_note'] as String?) ?? '',
       );
@@ -86,7 +86,7 @@ class DisputeCard extends ConsumerWidget {
       if (d != null && d['status'] == 'resolved') ...[
         _box(
           icon: Icons.verified_rounded,
-          color: AppTheme.brandGreen,
+          color: AppTheme.accentOliveDark,
           title: _resolutions[d['resolution']] ?? 'Disputa resolvida',
           body: (d['admin_note'] as String?) ?? '',
         ),
@@ -201,7 +201,7 @@ class _OpenDisputeSheetState extends State<_OpenDisputeSheet> {
               label: Text(e.value),
               selected: _reason == e.key,
               onSelected: (_) => setState(() => _reason = e.key),
-              selectedColor: AppTheme.brandGreen,
+              selectedColor: AppTheme.accentOliveDark,
               labelStyle: TextStyle(color: _reason == e.key ? Colors.white : AppTheme.ink, fontWeight: FontWeight.w600),
               showCheckmark: false,
             ),
@@ -222,7 +222,7 @@ class _OpenDisputeSheetState extends State<_OpenDisputeSheet> {
           onPressed: _busy ? null : _submit,
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(50),
-            backgroundColor: AppTheme.brandGreen,
+            backgroundColor: AppTheme.accentOliveDark,
             shape: const StadiumBorder(),
           ),
           child: Text(_busy ? 'A enviar…' : 'Enviar disputa'),

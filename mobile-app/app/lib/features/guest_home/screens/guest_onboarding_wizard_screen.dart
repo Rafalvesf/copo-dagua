@@ -741,7 +741,7 @@ class _PersonRow extends StatelessWidget {
             width: 40,
             height: 40,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(color: Color(0xFFDDE5D3), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: AppTheme.accentTint, shape: BoxShape.circle),
             child: Text(initials, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
           ),
           const SizedBox(width: 12),

@@ -190,8 +190,8 @@ class _GroupsEntry extends StatelessWidget {
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: const [
             BoxShadow(color: Color(0x14171713), blurRadius: 18, offset: Offset(0, 6)),
           ]),
-          child: const Row(children: [
-            Icon(Icons.groups_rounded, color: AppTheme.brandGreen),
+          child: Row(children: [
+            Icon(Icons.groups_rounded, color: AppTheme.accentOliveDark),
             SizedBox(width: 12),
             Expanded(
               child: Text('Grupos do evento', style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.ink)),

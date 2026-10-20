@@ -183,7 +183,7 @@ class _ProgramCard extends StatelessWidget {
           SizedBox(
             width: 58,
             child: Text(time,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
           ),
           StickerIcon(_icon, size: 36, turns: StickerIcon.tilt(index)),
           const SizedBox(width: 12),
@@ -220,7 +220,7 @@ class _PlaceCard extends StatelessWidget {
         onTap: () => showNavigationSheet(context, label: title, address: sub, latitude: latitude, longitude: longitude),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(color: AppTheme.brandGreen, borderRadius: BorderRadius.circular(999)),
+          decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(999)),
           child: const Text('Como chegar',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
         ),

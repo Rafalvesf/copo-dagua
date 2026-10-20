@@ -76,7 +76,7 @@ class GroupsScreen extends ConsumerWidget {
                                   width: 48,
                                   height: 48,
                                   decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
-                                  child: const Icon(Icons.groups_rounded, color: AppTheme.brandGreen),
+                                  child: Icon(Icons.groups_rounded, color: AppTheme.accentOliveDark),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -96,7 +96,7 @@ class GroupsScreen extends ConsumerWidget {
                                   ]),
                                 ),
                                 if (g.unread)
-                                  Container(width: 10, height: 10, decoration: const BoxDecoration(color: AppTheme.brandGreen, shape: BoxShape.circle)),
+                                  Container(width: 10, height: 10, decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle)),
                               ]),
                             ),
                           );
@@ -122,7 +122,7 @@ class _Empty extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.groups_rounded, size: 56, color: AppTheme.brandGreen),
+            Icon(Icons.groups_rounded, size: 56, color: AppTheme.accentOliveDark),
             const SizedBox(height: 12),
             Text(title, style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 6),
@@ -131,7 +131,7 @@ class _Empty extends StatelessWidget {
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: action,
-                style: FilledButton.styleFrom(backgroundColor: AppTheme.brandGreen, shape: const StadiumBorder()),
+                style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, shape: const StadiumBorder()),
                 child: const Text('Criar grupo'),
               ),
             ],
@@ -214,7 +214,7 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
                       secondary: V2Avatar(p.name, size: 40, imageUrl: p.avatarUrl),
                       title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.w700)),
                       subtitle: Text(p.role == 'organizador' ? 'Organizador' : 'Convidado'),
-                      activeColor: AppTheme.brandGreen,
+                      activeColor: AppTheme.accentOliveDark,
                       contentPadding: EdgeInsets.zero,
                     ),
                 ]);
@@ -224,7 +224,7 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
           const SizedBox(height: 8),
           FilledButton(
             onPressed: _saving || _name.text.trim().isEmpty || _picked.isEmpty ? null : _create,
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.brandGreen, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
             child: Text(_saving ? 'A criar…' : 'Criar grupo'),
           ),
         ]),
@@ -387,7 +387,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                                   Padding(
                                     padding: const EdgeInsets.only(left: 4, bottom: 3),
                                     child: Text(sender?.name ?? '',
-                                        style: const TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+                                        style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
                                   ),
                                 content,
                               ],
@@ -433,14 +433,14 @@ class _AddPeopleSheetState extends State<_AddPeopleSheet> {
                           onChanged: (v) => setState(() => v == true ? _picked.add(p.id) : _picked.remove(p.id)),
                           secondary: V2Avatar(p.name, size: 38, imageUrl: p.avatarUrl),
                           title: Text(p.name),
-                          activeColor: AppTheme.brandGreen,
+                          activeColor: AppTheme.accentOliveDark,
                           contentPadding: EdgeInsets.zero,
                         ),
                     ]),
             ),
             FilledButton(
               onPressed: _picked.isEmpty ? null : () => Navigator.of(context).pop(_picked.toList()),
-              style: FilledButton.styleFrom(backgroundColor: AppTheme.brandGreen, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
               child: const Text('Adicionar'),
             ),
           ]),

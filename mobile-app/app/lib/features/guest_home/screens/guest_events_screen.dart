@@ -55,15 +55,15 @@ class GuestEventsScreen extends ConsumerWidget {
                 // Canvas "Convidado — eventos (redesign)": botão tracejado.
                 child: CustomPaint(
                   painter: _DashedBorder(),
-                  child: const SizedBox(
+                  child: SizedBox(
                     height: 56,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.qr_code_2_rounded, size: 20, color: AppTheme.brandGreen),
+                        Icon(Icons.qr_code_2_rounded, size: 20, color: AppTheme.accentOliveDark),
                         SizedBox(width: 10),
                         Text('Tenho um código',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.brandGreen)),
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
                       ],
                     ),
                   ),
@@ -88,7 +88,7 @@ class _DashedBorder extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppTheme.brandGreen
+      ..color = AppTheme.accentOliveDark
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     final path = Path()
@@ -114,7 +114,7 @@ class _EventCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final guest = ref.watch(myGuestRowProvider(wedding.weddingId)).value;
     final (label, bg, fg) = switch (guest?.rsvpStatus) {
-      RsvpStatus.confirmed => ('Vais', AppTheme.brandGreen, Colors.white),
+      RsvpStatus.confirmed => ('Vais', AppTheme.accentOliveDark, Colors.white),
       RsvpStatus.declined => ('Não vais', AppTheme.surface, AppTheme.inkMuted),
       _ => ('Por responder', const Color(0xFFFBEFD3), const Color(0xFF8A5A00)),
     };
@@ -147,7 +147,7 @@ class _EventCard extends ConsumerWidget {
                 children: [
                   Text(
                     wedding.eventType.label.toUpperCase(),
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppTheme.brandGreen),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppTheme.accentOliveDark),
                   ),
                   const SizedBox(height: 2),
                   Text(wedding.displayNames, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),

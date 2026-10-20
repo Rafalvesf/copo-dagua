@@ -1317,7 +1317,7 @@ class _GuestPickRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: selected ? AppColors.green : Colors.white,
+        color: selected ? AppTheme.accentTint : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: selected ? AppStatusColors.confirmed : AppTheme.borderMuted,

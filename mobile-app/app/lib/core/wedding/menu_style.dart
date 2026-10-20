@@ -83,36 +83,68 @@ class MenuColor {
       all.firstWhere((c) => c.id == id, orElse: () => all.first);
 }
 
-/// Frase e desenhos de cada tipo de evento (canvas "Menu principal por
-/// tipo de evento"). A cor vem de [MenuColor].
+/// Frase, desenhos e textos de cada tipo de evento (canvas "Menu principal
+/// por tipo de evento", 2026-10-20). A cor vem sempre de [MenuColor] —
+/// eucalipto por defeito em todos os tipos.
 class EventDecor {
   final String tagline;
   final IconData motif;
   final List<IconData> doodles;
 
-  const EventDecor(this.tagline, this.motif, this.doodles);
+  /// Linha por cima do nome ("O batizado de", "Festa de curso"…).
+  final String kicker;
+
+  /// O que pôr na capa ("foto do bebé", "logótipo da empresa"…).
+  final String coverHint;
+
+  /// Galeria ainda sem fotos.
+  final String galleryEmpty;
+
+  /// Lugares ainda por organizar.
+  final String seatingEmpty;
+
+  const EventDecor(
+    this.tagline,
+    this.motif,
+    this.doodles, {
+    required this.kicker,
+    required this.coverHint,
+    required this.galleryEmpty,
+    this.seatingEmpty = 'Por organizar',
+  });
 
   static EventDecor of(EventType type) => switch (type) {
         EventType.wedding => const EventDecor('Sim, aceitamos!', Icons.favorite_border,
-            [Icons.favorite_border, Icons.diamond_outlined, Icons.wine_bar_outlined, Icons.local_florist_outlined, Icons.eco_outlined]),
+            [Icons.favorite_border, Icons.diamond_outlined, Icons.wine_bar_outlined, Icons.local_florist_outlined, Icons.eco_outlined],
+            kicker: 'O nosso casamento', coverHint: 'foto do casal', galleryEmpty: 'Abre no dia do casamento'),
         EventType.baptism => const EventDecor('Um pequeno grande dia', Icons.water_drop_outlined,
-            [Icons.water_drop_outlined, Icons.flutter_dash, Icons.star_border, Icons.baby_changing_station_outlined, Icons.wb_sunny_outlined]),
+            [Icons.water_drop_outlined, Icons.flutter_dash, Icons.star_border, Icons.baby_changing_station_outlined, Icons.wb_sunny_outlined],
+            kicker: 'O batizado de', coverHint: 'foto do bebé', galleryEmpty: 'Abre no dia do batizado'),
         EventType.birthday => const EventDecor('Bora festejar!', Icons.cake_outlined,
-            [Icons.celebration_outlined, Icons.cake_outlined, Icons.auto_awesome_outlined, Icons.card_giftcard_outlined, Icons.star_border]),
+            [Icons.celebration_outlined, Icons.cake_outlined, Icons.auto_awesome_outlined, Icons.card_giftcard_outlined, Icons.star_border],
+            kicker: 'O aniversário de', coverHint: 'foto da festa', galleryEmpty: 'Abre no dia da festa'),
         EventType.communion => const EventDecor('Um dia de luz', Icons.church_outlined,
-            [Icons.flutter_dash, Icons.light_outlined, Icons.local_florist_outlined, Icons.wb_sunny_outlined, Icons.star_border]),
+            [Icons.flutter_dash, Icons.light_outlined, Icons.local_florist_outlined, Icons.wb_sunny_outlined, Icons.star_border],
+            kicker: 'A primeira comunhão de', coverHint: 'foto', galleryEmpty: 'Abre no dia da comunhão'),
         EventType.engagement => const EventDecor('Disseram que sim!', Icons.diamond_outlined,
-            [Icons.diamond_outlined, Icons.favorite_border, Icons.wine_bar_outlined, Icons.auto_awesome_outlined, Icons.local_florist_outlined]),
+            [Icons.diamond_outlined, Icons.favorite_border, Icons.wine_bar_outlined, Icons.auto_awesome_outlined, Icons.local_florist_outlined],
+            kicker: 'O nosso noivado', coverHint: 'foto do casal', galleryEmpty: 'Fotos do pedido'),
         EventType.vowRenewal => const EventDecor('E para sempre', Icons.favorite_border,
-            [Icons.favorite_border, Icons.diamond_outlined, Icons.eco_outlined, Icons.wine_bar_outlined, Icons.star_border]),
+            [Icons.favorite_border, Icons.diamond_outlined, Icons.eco_outlined, Icons.wine_bar_outlined, Icons.star_border],
+            kicker: 'Renovação de votos', coverHint: 'foto do casal', galleryEmpty: 'Fotos de então e de hoje'),
         EventType.graduation => const EventDecor('Missão cumprida!', Icons.school_outlined,
-            [Icons.school_outlined, Icons.workspace_premium_outlined, Icons.star_border, Icons.music_note_outlined, Icons.celebration_outlined]),
+            [Icons.school_outlined, Icons.workspace_premium_outlined, Icons.star_border, Icons.music_note_outlined, Icons.celebration_outlined],
+            kicker: 'Festa de curso', coverHint: 'foto do curso', galleryEmpty: 'Fotos do curso'),
         EventType.corporate => const EventDecor('Uma noite para a equipa', Icons.work_outline,
-            [Icons.work_outline, Icons.insights_outlined, Icons.coffee_outlined, Icons.mic_none_outlined, Icons.wine_bar_outlined]),
+            [Icons.work_outline, Icons.insights_outlined, Icons.coffee_outlined, Icons.mic_none_outlined, Icons.wine_bar_outlined],
+            kicker: 'Evento de empresa', coverHint: 'logótipo da empresa', galleryEmpty: 'Abre no dia do evento',
+            seatingEmpty: 'Por mesas de equipa'),
         EventType.babyShower => const EventDecor('Vem aí alguém especial', Icons.child_friendly_outlined,
-            [Icons.child_friendly_outlined, Icons.baby_changing_station_outlined, Icons.toys_outlined, Icons.favorite_border, Icons.star_border]),
+            [Icons.child_friendly_outlined, Icons.baby_changing_station_outlined, Icons.toys_outlined, Icons.favorite_border, Icons.star_border],
+            kicker: 'O chá de bebé de', coverHint: 'foto da barriga', galleryEmpty: 'Fotos da festa'),
         EventType.other => const EventDecor('Vamos celebrar', Icons.auto_awesome_outlined,
-            [Icons.auto_awesome_outlined, Icons.star_border, Icons.wine_bar_outlined, Icons.celebration_outlined, Icons.eco_outlined]),
+            [Icons.auto_awesome_outlined, Icons.star_border, Icons.wine_bar_outlined, Icons.celebration_outlined, Icons.eco_outlined],
+            kicker: 'O nosso evento', coverHint: 'foto de capa', galleryEmpty: 'Abre no dia do evento'),
       };
 }
 

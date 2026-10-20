@@ -838,7 +838,7 @@ class _MemberSheet extends ConsumerWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                               decoration: BoxDecoration(
-                                color: m.isCouple ? AppColors.green : AppTheme.surface,
+                                color: m.isCouple ? AppTheme.accentTint : AppTheme.surface,
                                 borderRadius: BorderRadius.circular(AppRadius.pill),
                               ),
                               child: Text(

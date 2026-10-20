@@ -96,7 +96,7 @@ class _Row extends StatelessWidget {
             height: 40,
             alignment: Alignment.center,
             decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, size: 20, color: AppTheme.brandGreen),
+            child: Icon(icon, size: 20, color: AppTheme.accentOliveDark),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -106,8 +106,8 @@ class _Row extends StatelessWidget {
             ]),
           ),
           busy
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.brandGreen))
-              : const Icon(Icons.download_rounded, size: 20, color: AppTheme.brandGreen),
+              ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.accentOliveDark))
+              : Icon(Icons.download_rounded, size: 20, color: AppTheme.accentOliveDark),
         ]),
       ),
     );

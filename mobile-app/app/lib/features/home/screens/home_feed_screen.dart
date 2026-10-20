@@ -160,7 +160,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.green,
+                              color: AppTheme.accentTint,
                               borderRadius:
                                   BorderRadius.circular(AppRadius.lg),
                             ),
@@ -640,8 +640,8 @@ class _ProfileHeader extends StatelessWidget {
             Container(
               width: 88,
               height: 88,
-              decoration: const BoxDecoration(
-                color: AppColors.green,
+              decoration: BoxDecoration(
+                color: AppTheme.accentTint,
                 shape: BoxShape.circle,
               ),
               child: ClipOval(
@@ -726,7 +726,7 @@ class _ProfileHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.green,
+              color: AppTheme.accentTint,
               borderRadius: BorderRadius.circular(AppRadius.pill),
             ),
             child: Text(

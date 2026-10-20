@@ -362,7 +362,7 @@ class _GuestProfileBody extends ConsumerWidget {
                 for (final c in companions)
                   _PersonLine(
                     initials: _initialsOf(c.name),
-                    color: AppColors.green,
+                    color: AppTheme.accentTint,
                     name: c.isChild && c.childAge != null ? '${c.name} · ${c.childAge} anos' : c.name,
                     detail: [c.menu ?? 'Menu por escolher', c.allergies.isEmpty ? 'Sem alergias' : c.allergies.join(', ')].join(' · '),
                     status: c.phone?.isNotEmpty == true ? 'Telemóvel ${c.phone}' : 'Sem contacto',
@@ -384,7 +384,7 @@ class _GuestProfileBody extends ConsumerWidget {
               else if (guest.plusOneName?.isNotEmpty == true)
                 _PersonLine(
                   initials: _initialsOf(guest.plusOneName!),
-                  color: AppColors.green,
+                  color: AppTheme.accentTint,
                   name: guest.plusOneName!,
                   detail: 'Acompanhante',
                   status: 'Sem conta — está contigo',
@@ -696,7 +696,7 @@ class _GuestHeader extends StatelessWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: AppTheme.brandGreen,
+                      color: AppTheme.accentOliveDark,
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                     ),
@@ -827,7 +827,7 @@ class _CompanionFormState extends State<_CompanionForm> {
                 label: Text(label),
                 selected: _group == code,
                 onSelected: (_) => setState(() => _group = code),
-                selectedColor: AppTheme.brandGreen,
+                selectedColor: AppTheme.accentOliveDark,
                 labelStyle: TextStyle(
                   fontWeight: FontWeight.w700,
                   color: _group == code ? Colors.white : AppTheme.ink,

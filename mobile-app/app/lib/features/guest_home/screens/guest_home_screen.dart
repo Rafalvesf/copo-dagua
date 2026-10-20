@@ -201,7 +201,7 @@ class _GuestHomeBody extends ConsumerWidget {
           Text(
             '${wedding.eventType.label.toUpperCase()} · ${wedding.displayNames.toUpperCase()}',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.brandGreen),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark),
           ),
           const SizedBox(height: 4),
           const Text(
@@ -324,7 +324,7 @@ class _RsvpCard extends StatelessWidget {
         decoration: softCard(),
         child: Row(
           children: [
-            StickerIcon(icon, color: filled ? AppTheme.brandGreen : AppTheme.inkMuted),
+            StickerIcon(icon, color: filled ? AppTheme.accentOliveDark : AppTheme.inkMuted),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -457,7 +457,7 @@ class _CountdownBox extends StatelessWidget {
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
           child: Text(
             '$value',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: AppTheme.brandGreen),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: AppTheme.accentOliveDark),
           ),
         ),
         const SizedBox(height: 5),

@@ -137,7 +137,7 @@ class _TableTypeCard extends StatelessWidget {
             width: 40,
             height: 40,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(color: AppColors.green, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: AppTheme.accentTint, shape: BoxShape.circle),
             child: Icon(_icon, size: 18, color: AppTheme.ink),
           ),
           const SizedBox(width: 12),

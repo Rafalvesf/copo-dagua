@@ -102,7 +102,7 @@ class ChatBubble extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isMe ? AppTheme.brandGreen : const Color(0xFFF2F0EB),
+          color: isMe ? AppTheme.accentOliveDark : const Color(0xFFF2F0EB),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
@@ -193,11 +193,11 @@ class ChatProposalCard extends StatelessWidget {
                     children: [
                       Text(
                         eyebrow,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.6,
-                          color: AppTheme.brandGreen,
+                          color: AppTheme.accentOliveDark,
                         ),
                       ),
                       Text(title,
@@ -238,7 +238,7 @@ class ChatProposalCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
                             color: actions[i].primary && actions[i].onTap != null
-                                ? AppTheme.brandGreen
+                                ? AppTheme.accentOliveDark
                                 : const Color(0xFFF2F0EB),
                             borderRadius: BorderRadius.circular(999),
                           ),

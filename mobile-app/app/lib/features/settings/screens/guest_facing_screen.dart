@@ -703,7 +703,7 @@ class _CodeCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('CÓDIGO DO EVENTO', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFFDDE5D3))),
+                Text('CÓDIGO DO EVENTO', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentTint)),
                 const SizedBox(height: 2),
                 FittedBox(
                   fit: BoxFit.scaleDown,

@@ -818,7 +818,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                                   : Image.network(
                                       item.mediaUrl,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (c, e, st) => Container(color: const Color(0xFFDDE5D3)),
+                                      errorBuilder: (c, e, st) => Container(color: AppTheme.accentTint),
                                     ),
                           Positioned(
                             top: 4,
