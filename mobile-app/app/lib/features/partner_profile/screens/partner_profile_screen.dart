@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../settings/screens/settings_screen.dart' show PartnerAccountSections;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 
 import '../../../core/auth/auth_controller.dart';
@@ -101,13 +102,40 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
   }
 }
 
-class _BusinessHeader extends StatelessWidget {
+class _BusinessHeader extends ConsumerStatefulWidget {
   final Profile? profile;
 
   const _BusinessHeader({required this.profile});
 
   @override
+  ConsumerState<_BusinessHeader> createState() => _BusinessHeaderState();
+}
+
+class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
+  bool _uploading = false;
+
+  /// Foto de perfil do parceiro (pedido do utilizador, 2026-10-20): fica
+  /// como logótipo do negócio (o que os organizadores veem) e como foto da
+  /// conta (comentários, publicações, chat).
+  Future<void> _pickPhoto() async {
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85, maxWidth: 1024);
+    if (file == null || !mounted) return;
+    setState(() => _uploading = true);
+    try {
+      await ref.read(partnerProfileControllerProvider.notifier).uploadLogo(file);
+      await ref.read(authControllerProvider.notifier).uploadAvatarPhoto(file);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível carregar a foto.')));
+      }
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final profile = widget.profile;
     final p = profile;
     final name = (p?.businessName?.isEmpty ?? true)
         ? (p?.fullName ?? '')
@@ -119,7 +147,30 @@ class _BusinessHeader extends StatelessWidget {
     final published = p?.partnerProfileStatus == 'published';
     return Column(
       children: [
-        V2Avatar(name, size: 84, imageUrl: p?.avatarUrl),
+        Semantics(
+          button: true,
+          label: 'Mudar foto de perfil',
+          child: GestureDetector(
+            onTap: _uploading ? null : _pickPhoto,
+            child: Stack(clipBehavior: Clip.none, children: [
+              V2Avatar(name, size: 84, imageUrl: p?.logoUrl ?? p?.avatarUrl),
+              if (_uploading)
+                const Positioned.fill(
+                  child: Center(child: SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.brandGreen))),
+                ),
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(color: AppTheme.brandGreen, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
+                  child: const Icon(Icons.photo_camera_rounded, size: 15, color: Colors.white),
+                ),
+              ),
+            ]),
+          ),
+        ),
         const SizedBox(height: 10),
         Text(
           name,

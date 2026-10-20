@@ -22,6 +22,7 @@ class PartnerContract {
   final String id;
   final String? number;
   final String couple;
+  final String? coupleAvatarUrl;
   final DateTime? date;
   final String? place;
   final String title;
@@ -36,6 +37,7 @@ class PartnerContract {
     required this.id,
     required this.number,
     required this.couple,
+    this.coupleAvatarUrl,
     required this.date,
     required this.place,
     required this.title,
@@ -56,7 +58,7 @@ final partnerContractsProvider = FutureProvider<List<PartnerContract>>((ref) asy
       .select(
         'id, booking_number, event_date, total_amount, deposit_amount, status, '
         'proposals(title, description, payment_terms), '
-        'weddings(partner_name_1, partner_name_2, venue, location), '
+        'weddings(partner_name_1, partner_name_2, venue, location, profile_photo_url, cover_photo_url), '
         'payments(status, amount)',
       )
       .eq('partner_id', partnerId)
@@ -73,6 +75,7 @@ final partnerContractsProvider = FutureProvider<List<PartnerContract>>((ref) asy
           id: r['id'] as String,
           number: r['booking_number'] as String?,
           couple: n1.isEmpty ? 'Casal' : (n2.isEmpty ? n1 : '$n1 & $n2'),
+          coupleAvatarUrl: (w?['profile_photo_url'] as String?) ?? (w?['cover_photo_url'] as String?),
           date: r['event_date'] == null ? null : DateTime.parse(r['event_date'] as String),
           place: (w?['venue'] as String?)?.isNotEmpty == true ? w!['venue'] as String : w?['location'] as String?,
           title: (p?['title'] as String?) ?? 'Serviço',
@@ -172,7 +175,7 @@ class _ContractCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                V2Avatar(c.couple),
+                V2Avatar(c.couple, imageUrl: c.coupleAvatarUrl),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(c.couple, style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),

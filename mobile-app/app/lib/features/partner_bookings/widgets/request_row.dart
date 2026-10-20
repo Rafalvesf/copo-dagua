@@ -83,7 +83,7 @@ class RequestRow extends StatelessWidget {
     ].join(' · ');
     final header = Row(
       children: [
-        V2Avatar(booking.clientName),
+        V2Avatar(booking.clientName, imageUrl: booking.clientAvatarUrl),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
