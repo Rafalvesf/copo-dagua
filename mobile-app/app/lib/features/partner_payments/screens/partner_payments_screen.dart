@@ -11,6 +11,8 @@ import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/sticker_icon.dart';
+import '../../../shared/widgets/export_card.dart';
+import '../../../core/exports/exports.dart';
 import '../../payments/screens/pay_done_screen.dart';
 
 /// Pagamentos do parceiro, tudo dentro da app (2026-10-19): saldo real da
@@ -158,6 +160,15 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
                   ),
                   data: (s) => s.hasAccount && s.detailsSubmitted ? _active(s) : _notActive(s),
                 ),
+              ),
+              // Relatórios para descarregar (2026-10-20).
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                child: SectionTitle('Exportar'),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                child: ExportCard(reportLabel: 'Lucros e clientes', partnerSide: true, load: loadPartnerReport),
               ),
             ],
           ),

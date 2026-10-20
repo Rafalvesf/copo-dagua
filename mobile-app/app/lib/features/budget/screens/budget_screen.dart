@@ -23,6 +23,9 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/export_card.dart';
+import '../../../core/exports/exports.dart';
+import '../../../core/wedding/wedding_controller.dart';
 
 enum _BudgetFilter { all, paid, pending }
 
@@ -164,6 +167,13 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                                 ),
                                 const SectionTitle('Pagamentos próximos'),
                                 _ExpenseList(expenses: _byDueDate(pending)),
+                                // Relatórios para descarregar (2026-10-20).
+                                const SectionTitle('Exportar'),
+                                ExportCard(
+                                  reportLabel: 'Gastos e parceiros',
+                                  partnerSide: false,
+                                  load: () => loadCoupleReport(ref.read(weddingControllerProvider).wedding!.id),
+                                ),
                               ],
                             ],
                           ),
