@@ -19,6 +19,12 @@ import '../supabase/supabase_config.dart';
 
 // ------------------------------------------------------------ dados
 
+/// Os preços na app incluem sempre IVA (o parceiro confirma ao escrevê-los,
+/// `shared/widgets/vat_confirm.dart`). Taxa normal em Portugal continental.
+const vatRate = 0.23;
+double vatBase(double gross) => double.parse((gross / (1 + vatRate)).toStringAsFixed(2));
+double vatAmount(double gross) => double.parse((gross - vatBase(gross)).toStringAsFixed(2));
+
 class ReportBooking {
   final String number;
   final String counterpart; // cliente (parceiro) ou parceiro (organizador)
@@ -311,7 +317,7 @@ List<List<String>> _bookingRows(ReportData r) => [
     ];
 List<List<String>> _paymentRows(ReportData r, {required bool partnerSide}) => [
       for (final p in r.payments)
-        [_d(p.paidAt ?? p.dueAt), p.bookingNumber, partnerSide ? p.payer : p.payee, p.type, p.status, _e(p.amount)],
+        [_d(p.paidAt ?? p.dueAt), p.bookingNumber, partnerSide ? p.payer : p.payee, p.type, p.status, _e(vatBase(p.amount)), _e(vatAmount(p.amount)), _e(p.amount)],
     ];
 
 /// PDF do relatório (parceiro ou organizador).
@@ -344,7 +350,11 @@ Future<Uint8List> reportPdf(ReportData r, {required bool partnerSide}) async {
       _section(partnerSide ? 'Clientes e reservas' : 'Parceiros e reservas'),
       _table(['Reserva', who, 'Serviço', 'Data', 'Estado', 'Total', 'Pago', 'Em falta'], _bookingRows(r), right: {5, 6, 7}),
       _section('Pagamentos'),
-      _table(['Data', 'Reserva', who, 'Tipo', 'Estado', 'Valor'], _paymentRows(r, partnerSide: partnerSide), right: {5}),
+      _table(['Data', 'Reserva', who, 'Tipo', 'Estado', 'Sem IVA', 'IVA', 'Total'], _paymentRows(r, partnerSide: partnerSide), right: {5, 6, 7}),
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(top: 4),
+        child: pw.Text('Valores com IVA incluído (${(vatRate * 100).round()}%).', style: const pw.TextStyle(color: _muted, fontSize: 8)),
+      ),
       if (!partnerSide) ...[
         _section('Gastos'),
         _table(['Descrição', 'Categoria', 'Data', 'Pago', 'Valor'],
@@ -397,8 +407,12 @@ Future<Uint8List> receiptsPdf(ReportData r) async {
             row('Descrição', [p.type, if (p.service.isNotEmpty) p.service].join(' · ')),
             row('Meio de pagamento', p.provider.isEmpty ? 'Pagamento na app' : (p.provider == 'stripe' ? 'Stripe (cartão, MB WAY ou Multibanco)' : p.provider)),
             pw.Divider(color: const PdfColor.fromInt(0xFFDDE5D3)),
+            // Detalhe do IVA (pedido do utilizador, 2026-10-20).
+            row('Valor sem IVA', _e(vatBase(p.amount))),
+            row('IVA (${(vatRate * 100).round()}%)', _e(vatAmount(p.amount))),
+            pw.Divider(color: const PdfColor.fromInt(0xFFDDE5D3)),
             pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-              pw.Text('Valor pago', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
+              pw.Text('Total pago (IVA incluído)', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
               pw.Text(_e(p.amount), style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: _green)),
             ]),
           ]),
@@ -406,6 +420,7 @@ Future<Uint8List> receiptsPdf(ReportData r) async {
         pw.Spacer(),
         pw.Text(
           'Documento emitido pela À Nossa! como comprovativo de um pagamento feito na app. '
+          'Valores com IVA incluído à taxa normal de ${(vatRate * 100).round()}% (Portugal continental), indicada pelo parceiro ao definir o preço. '
           'Não substitui a fatura, que é emitida pelo parceiro no seu programa de faturação certificado.',
           style: const pw.TextStyle(color: _muted, fontSize: 8),
         ),
@@ -459,8 +474,9 @@ Uint8List reportXlsx(ReportData r, {required bool partnerSide}) {
   sheet(partnerSide ? 'Clientes' : 'Parceiros', ['Reserva', who, 'Serviço', 'Data do evento', 'Local', 'Estado', 'Total (€)', 'Pago (€)', 'Em falta (€)'], [
     for (final b in r.bookings) [b.number, b.counterpart, b.service, b.eventDate, b.location, b.status, b.total, b.paid, b.due],
   ]);
-  sheet('Pagamentos', ['Data', 'Reserva', who, 'Tipo', 'Estado', 'Valor (€)'], [
-    for (final p in r.payments) [p.paidAt ?? p.dueAt, p.bookingNumber, partnerSide ? p.payer : p.payee, p.type, p.status, p.amount],
+  sheet('Pagamentos', ['Data', 'Reserva', who, 'Tipo', 'Estado', 'Sem IVA (€)', 'IVA ${(vatRate * 100).round()}% (€)', 'Total c/ IVA (€)'], [
+    for (final p in r.payments)
+      [p.paidAt ?? p.dueAt, p.bookingNumber, partnerSide ? p.payer : p.payee, p.type, p.status, vatBase(p.amount), vatAmount(p.amount), p.amount],
   ]);
   if (!partnerSide) {
     sheet('Gastos', ['Descrição', 'Categoria', 'Data', 'Pago', 'Valor (€)'], [

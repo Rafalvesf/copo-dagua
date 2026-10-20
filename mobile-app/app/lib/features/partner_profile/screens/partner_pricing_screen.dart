@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/vat_confirm.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
@@ -288,9 +289,12 @@ class _AverageQuoteFieldState extends State<_AverageQuoteField> {
           child: FilledButton(
             onPressed: widget.busy
                 ? null
-                : () => widget.onSave(
-                      double.tryParse(_price.text.trim().replaceAll(',', '.')),
-                    ),
+                : () async {
+                    final v = double.tryParse(_price.text.trim().replaceAll(',', '.'));
+                    if (v != null && v > 0 && !await confirmVatIncluded(context, v)) return;
+                    if (!mounted) return;
+                    widget.onSave(v);
+                  },
             child: const Text('Guardar'),
           ),
         ),
@@ -434,9 +438,12 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (_name.text.trim().isEmpty) return;
-    final price = double.tryParse(_price.text.trim()) ?? 0;
+    final price = double.tryParse(_price.text.trim().replaceAll(',', '.')) ?? 0;
+    // Confirma que o preço já inclui IVA; se não, fica no formulário.
+    if (price > 0 && !await confirmVatIncluded(context, price)) return;
+    if (!mounted) return;
     Navigator.of(context).pop(
       EditPackageResult(
         name: _name.text.trim(),

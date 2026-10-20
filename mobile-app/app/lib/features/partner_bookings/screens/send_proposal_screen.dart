@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/vat_confirm.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
@@ -78,6 +79,9 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
 
   Future<void> _submit() async {
     if (!_validate()) return;
+    // Confirma que o preço da proposta já inclui IVA (2026-10-20).
+    if (!await confirmVatIncluded(context, _parseAmount(_price.text)!)) return;
+    if (!mounted) return;
     setState(() {
       _submitting = true;
       _formError = null;
