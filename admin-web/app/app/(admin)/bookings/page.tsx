@@ -20,7 +20,7 @@ export default async function BookingsPage({ searchParams }: PageProps<"/booking
   const supabase = await createClient();
   let query = supabase
     .from("bookings")
-    .select("id, booking_number, couple_id, partner_id, event_date, total_amount, status, created_at")
+    .select("id, booking_number, couple_id, partner_id, event_date, total_amount, status, created_at, partner:partner_profiles!bookings_partner_id_fkey(business_name)")
     .order("created_at", { ascending: false });
 
   if (status !== "all") {
@@ -66,18 +66,22 @@ export default async function BookingsPage({ searchParams }: PageProps<"/booking
           <thead>
             <tr style={{ textAlign: "left", fontSize: 13, color: "var(--ink-muted)" }}>
               <th style={{ padding: "8px 0" }}>Reserva</th>
+              <th>Parceiro</th>
               <th>Data do evento</th>
               <th>Valor</th>
               <th>Estado</th>
             </tr>
           </thead>
           <tbody>
-            {(bookings as Booking[]).map((b) => (
+            {(bookings as (Booking & { partner: { business_name: string } | { business_name: string }[] | null })[]).map((b) => (
               <tr key={b.id} style={{ borderTop: "1px solid var(--border-muted)" }}>
                 <td style={{ padding: "12px 0" }}>
                   <Link href={`/bookings/${b.id}`} style={{ fontWeight: 600 }}>
                     {b.booking_number}
                   </Link>
+                </td>
+                <td style={{ fontSize: 13 }}>
+                  {(Array.isArray(b.partner) ? b.partner[0] : b.partner)?.business_name ?? "—"}
                 </td>
                 <td style={{ fontSize: 13 }}>{new Date(b.event_date).toLocaleDateString("pt-PT")}</td>
                 <td style={{ fontSize: 13 }}>{b.total_amount.toLocaleString("pt-PT")} €</td>

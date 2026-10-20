@@ -19,9 +19,10 @@ type ActivityEntry = {
   actor: { full_name: string } | { full_name: string }[] | null;
 };
 
-type ExpiringBooking = { id: string; booking_number: string; hold_expires_at: string };
+type PartnerRef = { business_name: string } | { business_name: string }[] | null;
+type ExpiringBooking = { id: string; booking_number: string; hold_expires_at: string; partner: PartnerRef };
 type StalePartner = { id: string; business_name: string; submitted_at: string };
-type FlaggedBooking = { id: string; booking_number: string; status: string };
+type FlaggedBooking = { id: string; booking_number: string; status: string; partner: PartnerRef };
 type SupportTicketRow = {
   id: string;
   subject: string;
@@ -165,7 +166,7 @@ export default async function DashboardPage() {
     supabase.from("bookings").select("created_at").gte("created_at", cutoff365),
     supabase
       .from("bookings")
-      .select("id, booking_number, hold_expires_at")
+      .select("id, booking_number, hold_expires_at, partner:partner_profiles!bookings_partner_id_fkey(business_name)")
       .eq("status", "awaiting_deposit")
       .lt("hold_expires_at", soon)
       .order("hold_expires_at", { ascending: true }),
@@ -177,7 +178,7 @@ export default async function DashboardPage() {
       .order("submitted_at", { ascending: true }),
     supabase
       .from("bookings")
-      .select("id, booking_number, status")
+      .select("id, booking_number, status, partner:partner_profiles!bookings_partner_id_fkey(business_name)")
       .in("status", ["disputed", "payment_overdue"]),
     supabase.from("quote_requests").select("id", { count: "exact", head: true }),
     supabase.from("proposals").select("id", { count: "exact", head: true }),
@@ -315,7 +316,7 @@ export default async function DashboardPage() {
         {expiring.map((b) => (
           <li key={b.id} style={{ fontSize: 14 }}>
             <Link href={`/bookings/${b.id}`} style={{ fontWeight: 600 }}>
-              {b.booking_number}
+              {b.booking_number} · {partnerName(b.partner)}
             </Link>{" "}
             — janela de sinal expira em {new Date(b.hold_expires_at).toLocaleString("pt-PT")}
           </li>
@@ -332,7 +333,7 @@ export default async function DashboardPage() {
         {flagged.map((b) => (
           <li key={b.id} style={{ fontSize: 14 }}>
             <Link href={`/bookings/${b.id}`} style={{ fontWeight: 600 }}>
-              {b.booking_number}
+              {b.booking_number} · {partnerName(b.partner)}
             </Link>{" "}
             — {b.status === "disputed" ? "em disputa" : "pagamento em atraso"}
           </li>
@@ -687,4 +688,11 @@ function CoinIcon() {
       <path d="M12 8v8M9.3 15.2c.4.7 1.4 1.2 2.7 1.2 1.7 0 3-.8 3-2.1 0-3-5.5-1.4-5.5-4.3 0-1.3 1.3-2.1 3-2.1 1.3 0 2.3.5 2.7 1.2" />
     </svg>
   );
+}
+
+// O número da reserva repete-se entre parceiros (WED-1 de cada um,
+// migração 107) — o nome do parceiro identifica a reserva no admin.
+function partnerName(p: PartnerRef): string {
+  const one = Array.isArray(p) ? p[0] : p;
+  return one?.business_name ?? "—";
 }

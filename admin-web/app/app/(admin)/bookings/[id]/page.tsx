@@ -38,7 +38,9 @@ export default async function BookingDetailPage(props: PageProps<"/bookings/[id]
       </Link>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0" }}>
-        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 26 }}>{b.booking_number}</h1>
+        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 26 }}>
+          {b.booking_number} · {partner?.business_name ?? "Parceiro"}
+        </h1>
         <BookingStatusBadge status={b.status} />
       </div>
 
