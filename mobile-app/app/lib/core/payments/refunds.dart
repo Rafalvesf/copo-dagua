@@ -70,5 +70,5 @@ String coupleCancelRefundNote({required DateTime eventDate, required bool deposi
   if (days >= penaltyDays) {
     return '\n\nFaltam $days dias para o evento: o que pagaste é reembolsado automaticamente, comissão incluída (chega em 5 a 10 dias úteis).';
   }
-  return '\n\nFaltam menos de $penaltyDays dias para o evento: o sinal fica com o parceiro e não há reembolso.';
+  return '\n\nFaltam menos de $penaltyDays dias para o evento: o sinal fica com o parceiro. Se já pagaste o restante, esse valor é devolvido automaticamente.';
 }

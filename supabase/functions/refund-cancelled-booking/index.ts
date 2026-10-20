@@ -4,7 +4,8 @@ import { stripeClient } from "../_shared/stripe.ts";
 
 // Reembolso automático (pedido do utilizador, 2026-10-20):
 // - casal cancela com pelo menos `cancellation_penalty_days` (30) dias
-//   antes do evento → reembolso de tudo o que pagou;
+//   antes do evento → reembolso de tudo o que pagou; mais tarde → só o
+//   sinal fica com o parceiro, o resto já pago é devolvido;
 // - parceiro cancela → reembolso sempre;
 // - o casal recebe 100%: a comissão À Nossa! é devolvida
 //   (`refund_application_fee`) e a parte do parceiro é recuperada da conta
@@ -70,20 +71,26 @@ Deno.serve(async (req) => {
     .order("created_at", { ascending: false })
     .limit(1);
   const refundRequired = (events?.[0]?.metadata as Record<string, unknown> | undefined)?.refund_required === true;
-  if (!refundRequired) return json({ refunded: [], skipped: "not_eligible" });
 
-  const { data: payments } = await admin
+  const { data: paidRows } = await admin
     .from("payments")
-    .select("id, amount, status, provider_payment_id")
+    .select("id, amount, status, type, provider_payment_id")
     .eq("booking_id", bookingId)
     .eq("status", "paid");
+  // Cancelamento tardio pelo casal: a regra é "o parceiro fica com o
+  // sinal" — só o sinal. Qualquer outro pagamento já feito (ex: o
+  // restante pago adiantado) é devolvido na mesma (2026-10-20).
+  const payments = refundRequired ? (paidRows ?? []) : (paidRows ?? []).filter((p) => p.type !== "deposit");
+  if (payments.length === 0) return json({ refunded: [], skipped: "not_eligible" });
 
   const stripe = stripeClient();
   const refunded: string[] = [];
   const manual: string[] = [];
   const failed: string[] = [];
+  // Total devolvido ao casal (o que pagou na Stripe, comissão incluída).
+  let refundedCents = 0;
 
-  for (const p of payments ?? []) {
+  for (const p of payments) {
     const sid = p.provider_payment_id as string | null;
     if (!sid || !(sid.startsWith("pi_") || sid.startsWith("cs_"))) {
       // Pago fora da Stripe (ex: dados de demonstração) — fica para o admin.
@@ -124,6 +131,7 @@ Deno.serve(async (req) => {
         continue;
       }
       refunded.push(p.id as string);
+      refundedCents += intent.amount;
     } catch (e) {
       const msg = String((e as Error).message ?? e);
       // Já reembolsado na Stripe (ex: à mão no painel) — alinha a base de dados.
@@ -131,6 +139,7 @@ Deno.serve(async (req) => {
         await admin.from("payments").update({ status: "refunded", updated_at: new Date().toISOString() })
           .eq("id", p.id).eq("status", "paid");
         refunded.push(p.id as string);
+        refundedCents += Math.round(Number(p.amount) * 100);
         continue;
       }
       console.error("refund failed", p.id, msg);
@@ -139,9 +148,7 @@ Deno.serve(async (req) => {
   }
 
   if (refunded.length > 0) {
-    const total = (payments ?? [])
-      .filter((p) => refunded.includes(p.id as string))
-      .reduce((a, p) => a + Number(p.amount), 0);
+    const total = refundedCents / 100;
     const euros = total.toFixed(2).replace(".", ",");
     await admin.from("booking_events").insert({
       booking_id: bookingId,
