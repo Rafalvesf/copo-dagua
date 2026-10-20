@@ -1,3 +1,4 @@
+import '../../core/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -38,7 +39,11 @@ class GuestBottomNav extends StatelessWidget {
   String _path(String base) => weddingId == null ? base : '$base/$weddingId';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      // Fica fixa por cima enquanto a página anima (page_transitions.dart).
+      StayOverNav(child: _buildNav(context));
+
+  Widget _buildNav(BuildContext context) {
     return SafeArea(
       top: false,
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),

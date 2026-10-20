@@ -528,9 +528,15 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
   @override
   Widget build(BuildContext context) {
     final photos = widget.photos;
+    final top = MediaQuery.of(context).padding.top;
+    // Foto com cantos arredondados (pedido do utilizador, 2026-10-20).
     return SizedBox(
-      height: 270 + MediaQuery.of(context).padding.top,
-      child: Stack(
+      height: 270 + top,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(10, top + 8, 10, 0),
+        child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: Stack(
         fit: StackFit.expand,
         children: [
           Container(
@@ -560,12 +566,12 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
             ),
           ),
           Positioned(
-            top: MediaQuery.of(context).padding.top + 12,
+            top: 12,
             left: 16,
             child: const CircleBackButton(),
           ),
           Positioned(
-            top: MediaQuery.of(context).padding.top + 12,
+            top: 12,
             right: 16,
             child: Semantics(
               label: widget.favorited ? 'Remover dos favoritos' : 'Guardar nos favoritos',
@@ -590,6 +596,8 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
               ),
             ),
         ],
+      ),
+        ),
       ),
     );
   }
