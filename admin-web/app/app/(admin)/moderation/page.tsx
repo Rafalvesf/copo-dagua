@@ -90,7 +90,7 @@ export default async function ModerationPage({ searchParams }: PageProps<"/moder
                     </div>
                     <Badge tone={TONE[r.status]}>{STATUS_LABEL[r.status]}</Badge>
                   </div>
-                  <div aria-label={`${r.rating} de 5 estrelas`} style={{ color: "#c29a4e", letterSpacing: 2 }}>
+                  <div aria-label={`${r.rating} de 5 estrelas`} style={{ color: "var(--star)", letterSpacing: 2 }}>
                     {"★".repeat(r.rating)}
                     <span style={{ color: "var(--border-strong)" }}>{"★".repeat(5 - r.rating)}</span>
                   </div>

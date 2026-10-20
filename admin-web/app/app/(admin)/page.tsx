@@ -83,10 +83,10 @@ function bucketizeSum(rows: { created_at: string; amount: number }[], buckets: n
 
 const DONUT_COLORS: Record<string, string> = {
   confirmed: "var(--accent)",
-  awaiting_deposit: "#c29a4e",
-  completed: "#8fa87a",
-  cancelled: "#9b9d95",
-  expired: "#c9c7bf",
+  awaiting_deposit: "var(--chart-2)",
+  completed: "var(--chart-3)",
+  cancelled: "var(--chart-4)",
+  expired: "var(--chart-5)",
   disputed: "var(--danger-fg)",
 };
 
