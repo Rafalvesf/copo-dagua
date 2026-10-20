@@ -249,6 +249,26 @@ export function AdminSidebar({
         </p>
       </div>
       <Link
+        href="/search"
+        aria-label="Pesquisar"
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: "50%",
+          border: "1px solid var(--border-muted)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          color: "var(--ink-muted)",
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.3-4.3" />
+        </svg>
+      </Link>
+      <Link
         href="/settings"
         aria-label="Definições da conta"
         style={{

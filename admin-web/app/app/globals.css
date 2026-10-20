@@ -175,3 +175,26 @@ input {
 .dash-stack > .dash-wide {
   grid-column: 1 / -1;
 }
+
+/* Revisão do admin (2026-10-20): grelhas de KPIs e colunas duplas
+   passam a 2 / 1 colunas no telemóvel. Os !important vencem o estilo
+   inline das páginas. */
+@media (max-width: 900px) {
+  .kpi-row {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .admin-two-col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* KPIs do dashboard no telemóvel: sem gráfico pequeno nem "vs. período". */
+@media (max-width: 900px) {
+  .kpi-spark,
+  .kpi-vs {
+    display: none !important;
+  }
+  .kpi-value {
+    font-size: 24px !important;
+  }
+}

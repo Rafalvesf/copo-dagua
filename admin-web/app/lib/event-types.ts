@@ -17,3 +17,10 @@ export function eventTypeLabel(type: string | null | undefined, other?: string |
   if (type === "other" && other) return other;
   return EVENT_TYPES[type ?? ""]?.label ?? "Evento";
 }
+
+// Estado do evento (weddings.status).
+export function eventStatusLabel(status: string | null | undefined): string {
+  if (status === "planning") return "Em planeamento";
+  if (status === "completed") return "Concluído";
+  return status ?? "—";
+}

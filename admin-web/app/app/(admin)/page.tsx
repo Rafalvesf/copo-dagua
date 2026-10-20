@@ -1,5 +1,6 @@
 ﻿import Link from "next/link";
 import { requireAdmin } from "@/lib/dal";
+import { auditActionLabel } from "@/lib/audit-labels";
 import { createClient } from "@/lib/supabase/server";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { KpiCard } from "@/components/KpiCard";
@@ -502,8 +503,7 @@ export default async function DashboardPage() {
                               const actor = one(entry.actor);
                               return (
                                 <li key={entry.id} style={{ fontSize: 13 }}>
-                                  <span style={{ fontWeight: 600 }}>{actor?.full_name ?? "Admin"}</span> {entry.action} (
-                                  {entry.target_table})
+                                  <span style={{ fontWeight: 600 }}>{actor?.full_name ?? "Sistema"}</span> {auditActionLabel(entry.action)}
                                   <br />
                                   <span style={{ color: "var(--ink-muted)", fontSize: 12 }}>
                                     {new Date(entry.created_at).toLocaleString("pt-PT")}
@@ -596,7 +596,7 @@ export default async function DashboardPage() {
                             <thead>
                               <tr style={{ textAlign: "left", fontSize: 12, color: "var(--ink-muted)" }}>
                                 <th style={{ padding: "6px 0" }}>ID</th>
-                                <th>Casal</th>
+                                <th>Organizador</th>
                                 <th>Parceiro</th>
                                 <th>Serviço</th>
                                 <th>Data</th>

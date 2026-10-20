@@ -50,8 +50,8 @@ export function CommissionsForm({ settings }: { settings: PlatformSettings }) {
       <NumberField
         name="cancellation_penalty_days"
         label="Janela sem penalização para cancelar"
-        hint="Se o casal cancelar com menos dias do que isto até ao casamento, o sinal fica cativo (parceiro + comissão da plataforma); fora da janela, o sinal já pago é reembolsado."
-        suffix="dias antes do casamento"
+        hint="Se o organizador cancelar com menos dias do que isto até ao evento, o sinal fica cativo (parceiro + comissão da plataforma); fora da janela, o sinal já pago é reembolsado."
+        suffix="dias antes do evento"
         defaultValue={settings.cancellation_penalty_days}
         min={0}
       />
@@ -78,7 +78,7 @@ export function CommissionsForm({ settings }: { settings: PlatformSettings }) {
       </div>
 
       <p style={{ fontSize: 12, color: "var(--ink-muted)" }}>
-        Última alteração: {new Date(settings.updated_at).toLocaleString("pt-PT")}
+        Última alteração: {settings.updated_at ? new Date(settings.updated_at).toLocaleString("pt-PT") : "—"}
       </p>
     </form>
   );

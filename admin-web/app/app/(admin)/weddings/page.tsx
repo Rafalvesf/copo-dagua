@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
-import { EVENT_TYPES, eventTypeLabel } from "@/lib/event-types";
+import { EVENT_TYPES, eventStatusLabel, eventTypeLabel } from "@/lib/event-types";
 
 // Eventos (antes "Casamentos", 2026-10-20): a app já tem vários tipos de
 // evento — batizados, aniversários, empresas… — com prefixo próprio no
@@ -90,7 +90,7 @@ export default async function WeddingsPage({ searchParams }: PageProps<"/wedding
                 <td style={{ fontSize: 13 }}>{w.location ?? "—"}</td>
                 <td style={{ fontSize: 13 }}>{w.guests?.[0]?.count ?? 0}</td>
                 <td style={{ fontSize: 13 }}>{w.bookings?.[0]?.count ?? 0}</td>
-                <td style={{ fontSize: 13 }}>{w.status}</td>
+                <td style={{ fontSize: 13 }}>{eventStatusLabel(w.status)}</td>
               </tr>
             ))}
           </tbody>

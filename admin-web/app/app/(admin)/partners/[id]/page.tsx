@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/dal";
+import { auditActionLabel } from "@/lib/audit-labels";
 import { createClient } from "@/lib/supabase/server";
 import { PartnerStatusBadge } from "@/components/PartnerStatusBadge";
 import { ACTIONS_BY_STATUS } from "@/lib/types";
@@ -169,8 +170,7 @@ export default async function PartnerDetailPage(
 
       <Section title="Pré-visualizar perfil">
         <p style={{ fontSize: 12.5, color: "var(--ink-muted)", marginBottom: 4 }}>
-          Exatamente o que um casal vê — só campos públicos, nunca dados de{" "}
-          <code>partner_verification</code> (NIF, morada).
+          O que os organizadores veem na app (o NIF e a morada de faturação nunca aparecem).
         </p>
         <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
           {p.cover_photo_url ? (
@@ -316,7 +316,7 @@ export default async function PartnerDetailPage(
                 <span style={{ color: "var(--ink-muted)" }}>
                   {new Date(entry.created_at).toLocaleString("pt-PT")} —
                 </span>{" "}
-                {entry.action}
+                {auditActionLabel(entry.action)}
               </li>
             ))}
           </ul>

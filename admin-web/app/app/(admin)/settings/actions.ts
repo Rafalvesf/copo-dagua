@@ -39,6 +39,7 @@ export async function updatePlatformSettings(
       payment_grace_period_days: graceDays,
       manual_partner_approval: formData.get("manual_partner_approval") === "on",
       review_requires_completed_booking: formData.get("review_requires_completed_booking") === "on",
+      guest_offers_enabled: formData.get("guest_offers_enabled") === "on",
       updated_at: new Date().toISOString(),
       updated_by: userId,
     })

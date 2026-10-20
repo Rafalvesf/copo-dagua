@@ -123,7 +123,7 @@ export function ResolveDisputeForm({
       </div>
       {resolution === "refund_full" && (
         <p style={hint}>
-          Devolve ao casal tudo o que ainda não foi reembolsado (
+          Devolve ao organizador tudo o que ainda não foi reembolsado (
           {maxAmount.toLocaleString("pt-PT", { minimumFractionDigits: 2 })} €).
         </p>
       )}
@@ -133,7 +133,7 @@ export function ResolveDisputeForm({
           <input name="amount" type="number" step="0.01" min="0.01" max={maxAmount} required style={input} />
         </>
       )}
-      <label style={label}>Decisão (enviada ao casal e ao parceiro, mín. 10 caracteres)</label>
+      <label style={label}>Decisão (enviada ao organizador e ao parceiro, mín. 10 caracteres)</label>
       <textarea name="note" required minLength={10} rows={3} style={{ ...input, resize: "vertical" }} />
       {state.error && <p style={errorText}>{state.error}</p>}
       <div>

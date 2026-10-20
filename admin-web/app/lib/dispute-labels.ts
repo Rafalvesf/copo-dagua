@@ -3,7 +3,7 @@ export const DISPUTE_REASONS: Record<string, string> = {
   service_not_provided: "Serviço não prestado",
   service_different: "Serviço diferente do combinado",
   partner_no_show: "O parceiro não apareceu",
-  couple_no_show: "O casal não apareceu / não respondeu",
+  couple_no_show: "O organizador não apareceu / não respondeu",
   payment_issue: "Problema com pagamento",
   other: "Outro",
 };

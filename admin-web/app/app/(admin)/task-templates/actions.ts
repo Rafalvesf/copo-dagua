@@ -25,7 +25,7 @@ const VALID_ACTION_TYPES = new Set<string>(ACTION_TYPE_KEYS.map((r) => r.key));
 // para avisar, sem bloquear (pode haver um caso legítimo).
 function consistencyWarning(displayType: string, completionBehavior: string): string | null {
   if (displayType === "required" && completionBehavior === "cta_opened") {
-    return "Aviso: uma tarefa \"Para concluir\" que se conclui ao abrir o CTA pode confundir o casal — ela desaparece sem a ação real ter sido feita. Confirma que é mesmo isto que queres.";
+    return "Aviso: uma tarefa \"Para concluir\" que se conclui ao abrir o CTA pode confundir o organizador — ela desaparece sem a ação real ter sido feita. Confirma que é mesmo isto que queres.";
   }
   return null;
 }

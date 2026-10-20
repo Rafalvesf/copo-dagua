@@ -4,7 +4,8 @@ import type { ReactNode } from "react";
 import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import type { Wedding } from "@/lib/types";
-import { eventTypeLabel } from "@/lib/event-types";
+import { eventStatusLabel, eventTypeLabel } from "@/lib/event-types";
+import { bookingStatusLabel } from "@/components/BookingStatusBadge";
 
 export default async function WeddingDetailPage(props: PageProps<"/weddings/[id]">) {
   await requireAdmin();
@@ -61,7 +62,7 @@ export default async function WeddingDetailPage(props: PageProps<"/weddings/[id]
           label="Orçamento estimado"
           value={w.estimated_budget ? `${w.estimated_budget.toLocaleString("pt-PT")} €` : "—"}
         />
-        <Field label="Estado" value={w.status} />
+        <Field label="Estado" value={eventStatusLabel(w.status)} />
         {ownerProfile && (
           <Field label="Dono" value="" link={{ href: `/users/${ownerProfile.id}`, label: `${ownerProfile.full_name} →` }} />
         )}
@@ -77,7 +78,7 @@ export default async function WeddingDetailPage(props: PageProps<"/weddings/[id]
             return (
               <Field
                 key={b.id as string}
-                label={`${Number(b.total_amount).toLocaleString("pt-PT")} € · ${b.status}`}
+                label={`${Number(b.total_amount).toLocaleString("pt-PT")} € · ${bookingStatusLabel(b.status as string)}`}
                 value=""
                 link={{ href: `/bookings/${b.id}`, label: `${b.booking_number} · ${name}` }}
               />

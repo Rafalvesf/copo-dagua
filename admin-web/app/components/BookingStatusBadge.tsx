@@ -5,11 +5,15 @@ const LABELS: Record<BookingStatus, string> = {
   confirmed: "Confirmada",
   completed: "Concluída",
   expired: "Expirada",
-  cancelled_by_couple: "Cancelada (casal)",
+  cancelled_by_couple: "Cancelada (organizador)",
   cancelled_by_partner: "Cancelada (parceiro)",
   payment_overdue: "Pagamento em atraso",
   disputed: "Em disputa",
 };
+
+export function bookingStatusLabel(status: string): string {
+  return LABELS[status as BookingStatus] ?? status;
+}
 
 const COLORS: Record<BookingStatus, { bg: string; fg: string }> = {
   awaiting_deposit: { bg: "var(--status-pending-bg)", fg: "var(--status-pending-fg)" },
