@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../settings/screens/settings_screen.dart' show PartnerAccountSections;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/partner_app/partner_app_providers.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
@@ -71,6 +73,8 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                 _BusinessHeader(profile: profile),
                 if (profile?.partnerProfileStatus != null &&
                     profile!.partnerProfileStatus != 'published') ...[
+                  // Pagamentos obrigatórios para a verificação (2026-10-20).
+                  const _PaymentsRequiredCard(),
                   const SizedBox(height: 16),
                   _ReviewStatusCard(
                     status: profile.partnerProfileStatus!,
@@ -154,7 +158,7 @@ class _ReviewStatusCard extends StatelessWidget {
     final (label, subtitle, color) = switch (status) {
       'draft' => (
           'Rascunho',
-          'Completa os passos em falta abaixo — o perfil é enviado para revisão sozinho assim que estiver tudo pronto.',
+          'Completa os passos em falta (incluindo ativar os pagamentos) — o perfil é enviado para revisão sozinho assim que estiver tudo pronto.',
           AppTheme.inkMuted,
         ),
       'pending_review' => (
@@ -200,6 +204,45 @@ class _ReviewStatusCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Aviso enquanto o perfil não está publicado e os pagamentos ainda não
+/// estão ativos: é obrigatório ativá-los para o perfil ser verificado e
+/// aparecer na página dos parceiros (pedido do utilizador, 2026-10-20;
+/// regra no servidor: `104_payments_required_for_verification.sql`).
+class _PaymentsRequiredCard extends ConsumerWidget {
+  const _PaymentsRequiredCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(partnerStripeStatusProvider).maybeWhen(data: (s) => s.chargesEnabled, orElse: () => true);
+    if (enabled) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: softCard(radius: 18),
+        child: Row(children: [
+          const Icon(Icons.credit_card_rounded, color: AppTheme.brandGreen),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Ativa os pagamentos', style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.md, color: AppTheme.ink)),
+              SizedBox(height: 2),
+              Text('Obrigatório para o teu perfil ser verificado e aparecer aos organizadores.',
+                  style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+            ]),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: () => context.push('/partner-payments'),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.brandGreen, shape: const StadiumBorder()),
+            child: const Text('Ativar'),
+          ),
+        ]),
       ),
     );
   }
