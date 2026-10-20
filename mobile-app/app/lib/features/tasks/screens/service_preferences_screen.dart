@@ -213,7 +213,7 @@ class _CategoryPreferenceCard extends StatelessWidget {
     const options = [
       ('needed', 'Precisamos', Icons.search_rounded),
       ('already_booked', 'Já tratámos', Icons.check_circle_outline_rounded),
-      ('not_needed', 'Não precisamos', Icons.block_rounded),
+      ('not_needed', 'Dispensamos', Icons.block_rounded),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
@@ -226,7 +226,7 @@ class _CategoryPreferenceCard extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(color: colorForCategorySlug(slug), borderRadius: BorderRadius.circular(14), boxShadow: StickerIcon.shadow),
-              child: Icon(iconForCategorySlug(slug), color: Colors.white, size: 21),
+              child: Icon(iconForCategorySlug(slug), color: AppTheme.accentOliveDark, size: 21),
             ),
           ),
           const SizedBox(width: 12),
