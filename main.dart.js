@@ -48275,7 +48275,7 @@ if(!a)return""
 s=new A.aA(Date.now(),0,!1)
 r=B.i.aV(A.c8(A.aK(b),A.aJ(b),A.bo(b),0,0).e_(A.c8(A.aK(s),A.aJ(s),A.bo(s),0,0)).a,864e8)
 if(r>=c)return"\n\nFaltam "+r+" dias para o evento: o que pagaste \xe9 reembolsado automaticamente, comiss\xe3o inclu\xedda (chega em 5 a 10 dias \xfateis)."
-return"\n\nFaltam menos de "+c+" dias para o evento: o sinal fica com o parceiro e n\xe3o h\xe1 reembolso."},
+return"\n\nFaltam menos de "+c+" dias para o evento: o sinal fica com o parceiro. Se j\xe1 pagaste o restante, esse valor \xe9 devolvido automaticamente."},
 bNU(a,b,c,d){var s=0,r=A.q(t.H),q,p,o,n
 var $async$bNU=A.m(function(e,f){if(e===1)return A.n(f,r)
 for(;;)switch(s){case 0:n=$.ab().b
@@ -92070,7 +92070,7 @@ s=new A.a3(B.FU,A.a2(p,B.v,B.p,B.r,0,q,q),q)
 return n?s:A.b9(s,o)}}
 A.avm.prototype={
 bP(a,b){var s=null
-return A.J(A.a([new A.a3(B.FX,A.bV(A.d_(B.bsM,s,s,new A.bGg(b),s,A.hN(s,s,s,s,s,s,s,s,s,B.fc,s,s,s,s,s,s,s,s,s,B.ok,s)),s,s),s),new A.a3(B.hp,A.l("Vers\xe3o 0947fcd",s,s,s,B.dA,s,s,s),s)],t.p),B.v,B.p,B.r,0,B.w)}}
+return A.J(A.a([new A.a3(B.FX,A.bV(A.d_(B.bsM,s,s,new A.bGg(b),s,A.hN(s,s,s,s,s,s,s,s,s,B.fc,s,s,s,s,s,s,s,s,s,B.ok,s)),s,s),s),new A.a3(B.hp,A.l("Vers\xe3o 3e42017",s,s,s,B.dA,s,s,s),s)],t.p),B.v,B.p,B.r,0,B.w)}}
 A.bGg.prototype={
 $0(){return this.a.am(0,$.bN().gb1(),t.F).qx()},
 $S:0}
