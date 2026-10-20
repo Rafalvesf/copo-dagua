@@ -1,6 +1,8 @@
 import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import type { TaskTemplate } from "@/lib/types";
+import { Alert, Card, PageHeader, Stat, SubNav } from "@/components/ui";
+import { TASK_TABS } from "@/lib/nav";
 
 type TaskRow = {
   id: string;
@@ -45,9 +47,10 @@ export default async function TaskAnalyticsPage() {
 
   if (error || !tasks) {
     return (
-      <div>
-        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Analytics de tarefas</h1>
-        <p style={{ color: "var(--status-rejected-fg)", marginTop: 24 }}>Não foi possível carregar os dados.</p>
+      <div className="page">
+        <PageHeader title="Tarefas sugeridas" />
+        <SubNav current="/task-analytics" items={TASK_TABS} />
+        <Alert tone="danger">Não foi possível carregar os dados.</Alert>
       </div>
     );
   }
@@ -103,68 +106,49 @@ export default async function TaskAnalyticsPage() {
   const dynamicProposals = dynamicRows.filter((t) => t.category === "parceiros" && t.task_template_id === null);
 
   return (
-    <div>
-      <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Analytics de tarefas</h1>
-      <p style={{ color: "var(--ink-muted)", marginTop: 4 }}>
-        Como os organizadores estão a usar as tarefas sugeridas pela app.
-      </p>
+    <div className="page">
+      <PageHeader title="Tarefas sugeridas" subtitle="Como os organizadores estão a usar as tarefas que a app sugere." />
+      <SubNav current="/task-analytics" items={TASK_TABS} />
 
-      <div className="kpi-row" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginTop: 24 }}>
-        <StatCard label="Tarefas do sistema geradas" value={String(total)} />
-        <StatCard label="Taxa de conclusão" value={completionRate === null ? "—" : `${completionRate.toFixed(0)}%`} sub={`${completed.length} concluídas / ${resolved} resolvidas`} />
-        <StatCard label="Tempo médio até concluir" value={avgHours === null ? "—" : formatDuration(avgHours)} />
-        <StatCard label="Descartadas/expiradas" value={String(dismissed.length)} />
+      <div className="grid grid-4">
+        <Stat label="Tarefas geradas" value={String(total)} />
+        <Stat label="Taxa de conclusão" value={completionRate === null ? "—" : `${completionRate.toFixed(0)}%`} hint={`${completed.length} feitas de ${resolved} fechadas`} />
+        <Stat label="Tempo médio até concluir" value={avgHours === null ? "—" : formatDuration(avgHours)} />
+        <Stat label="Descartadas ou expiradas" value={String(dismissed.length)} />
       </div>
 
-      <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 32 }}>
-        <TemplateTable title="Templates mais concluídos" rows={mostCompleted} column="completed" columnLabel="Concluídas" />
-        <TemplateTable title="Templates mais descartados/expirados" rows={mostDismissed} column="dismissed" columnLabel="Descartadas" />
+      <div className="grid grid-2">
+        <TemplateTable title="Mais concluídas" rows={mostCompleted} column="completed" columnLabel="Feitas" />
+        <TemplateTable title="Mais descartadas ou expiradas" rows={mostDismissed} column="dismissed" columnLabel="Descartadas" />
       </div>
 
-      <div style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600 }}>Como as tarefas foram concluídas</h2>
-        <p style={{ color: "var(--ink-muted)", fontSize: 13, marginTop: 2 }}>
-          Inclui quantas terminaram porque surgiu um pedido de orçamento ou reserva real na categoria.
-        </p>
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12 }}>
-          <thead>
-            <tr style={{ textAlign: "left", fontSize: 13, color: "var(--ink-muted)" }}>
-              <th style={{ padding: "8px 0" }}>Motivo</th>
-              <th>Nº de conclusões</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sourceStats.map(([source, count]) => (
-              <tr key={source} style={{ borderTop: "1px solid var(--border-muted)" }}>
-                <td style={{ padding: "10px 0" }}>{COMPLETION_SOURCE_LABEL[source] ?? source}</td>
-                <td>{count}</td>
-              </tr>
-            ))}
-            {sourceStats.length === 0 && (
-              <tr>
-                <td colSpan={2} style={{ padding: "10px 0", color: "var(--ink-muted)" }}>
-                  Ainda sem conclusões.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Card title="Porque ficaram concluídas" subtitle="Inclui as que terminaram porque surgiu um pedido de orçamento ou reserva na categoria." flush>
+        {sourceStats.length === 0 ? (
+          <div className="empty">Ainda sem conclusões.</div>
+        ) : (
+          <ul className="list">
+            {sourceStats.map(([source, count]) => {
+              const max = sourceStats[0][1] || 1;
+              return (
+                <li key={source}>
+                  <div className="list-main">
+                    <p>{COMPLETION_SOURCE_LABEL[source] ?? source}</p>
+                    <div className="bar-track" style={{ marginTop: 6 }}>
+                      <div className="bar-fill" style={{ width: `${(count / max) * 100}%` }} />
+                    </div>
+                  </div>
+                  <span className="strong tnum">{count}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Card>
 
-      <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 32 }}>
-        <StatCard label="Tarefas de pagamento (Pagar sinal)" value={String(dynamicPayments.length)} sub={`${dynamicPayments.filter((t) => t.status === "completed").length} pagas`} />
-        <StatCard label="Tarefas de proposta (Rever proposta)" value={String(dynamicProposals.length)} sub={`${dynamicProposals.filter((t) => t.status === "completed").length} decididas`} />
+      <div className="grid grid-2">
+        <Stat label="Tarefas “Pagar sinal”" value={String(dynamicPayments.length)} hint={`${dynamicPayments.filter((t) => t.status === "completed").length} pagas`} />
+        <Stat label="Tarefas “Rever proposta”" value={String(dynamicProposals.length)} hint={`${dynamicProposals.filter((t) => t.status === "completed").length} decididas`} />
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div style={{ padding: 18, borderRadius: 16, background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
-      <p style={{ fontSize: 12, color: "var(--ink-muted)" }}>{label}</p>
-      <p style={{ fontSize: 26, fontFamily: "var(--font-serif)", marginTop: 4 }}>{value}</p>
-      {sub && <p style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 2 }}>{sub}</p>}
     </div>
   );
 }
@@ -181,33 +165,31 @@ function TemplateTable({
   columnLabel: string;
 }) {
   return (
-    <div>
-      <h2 style={{ fontSize: 16, fontWeight: 600 }}>{title}</h2>
-      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12 }}>
-        <thead>
-          <tr style={{ textAlign: "left", fontSize: 13, color: "var(--ink-muted)" }}>
-            <th style={{ padding: "8px 0" }}>Template</th>
-            <th>{columnLabel}</th>
-            <th>Total gerado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} style={{ borderTop: "1px solid var(--border-muted)" }}>
-              <td style={{ padding: "10px 0", fontWeight: 600, fontSize: 13 }}>{r.title}</td>
-              <td>{r[column]}</td>
-              <td style={{ color: "var(--ink-muted)" }}>{r.total}</td>
-            </tr>
-          ))}
-          {rows.length === 0 && (
-            <tr>
-              <td colSpan={3} style={{ padding: "10px 0", color: "var(--ink-muted)" }}>
-                Sem dados ainda.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+    <Card title={title} flush>
+      {rows.length === 0 ? (
+        <div className="empty">Sem dados ainda.</div>
+      ) : (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Tarefa</th>
+                <th className="num">{columnLabel}</th>
+                <th className="num">Geradas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id}>
+                  <td className="cell-main">{r.title}</td>
+                  <td className="num">{r[column]}</td>
+                  <td className="num muted">{r.total}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
   );
 }

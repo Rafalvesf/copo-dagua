@@ -36,6 +36,6 @@ export async function setMaintenanceMode(
     return { error: "Não tens permissão para alterar o modo de manutenção." };
   }
 
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { error: null };
 }

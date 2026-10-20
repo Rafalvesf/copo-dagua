@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { updatePlatformSettings } from "./actions";
 import { initialActionState } from "@/components/ActionButtons";
 import type { PlatformSettings } from "@/lib/types";
+import { fmtDateTime } from "@/lib/format";
 
 export function SettingsForm({ settings }: { settings: PlatformSettings }) {
   const [state, formAction, isPending] = useActionState(updatePlatformSettings, initialActionState);
@@ -23,16 +24,8 @@ export function SettingsForm({ settings }: { settings: PlatformSettings }) {
       // para refletir efeito".
       key={settings.updated_at}
       action={formAction}
-      style={{
-        background: "var(--surface)",
-        borderRadius: 16,
-        boxShadow: "var(--shadow-card)",
-        padding: 24,
-        display: "flex",
-        flexDirection: "column",
-        gap: 20,
-        maxWidth: 560,
-      }}
+      className="stack"
+      style={{ gap: 18 }}
     >
       <NumberField
         name="booking_min_days_before_event"
@@ -71,30 +64,14 @@ export function SettingsForm({ settings }: { settings: PlatformSettings }) {
         defaultChecked={Boolean((settings as unknown as { guest_offers_enabled?: boolean }).guest_offers_enabled)}
       />
 
-      {state.error && <p style={{ color: "var(--status-rejected-fg)", fontSize: 13 }}>{state.error}</p>}
+      {state.error && <p className="form-error">{state.error}</p>}
 
-      <div>
-        <button
-          type="submit"
-          disabled={isPending}
-          style={{
-            padding: "10px 20px",
-            borderRadius: 999,
-            border: "none",
-            background: "var(--ink)",
-            color: "var(--surface)",
-            fontWeight: 600,
-            fontSize: 14,
-            cursor: "pointer",
-          }}
-        >
-          {isPending ? "A guardar..." : "Guardar definições"}
+      <div className="row" style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+        <button type="submit" disabled={isPending} className="btn btn-primary">
+          {isPending ? "A guardar…" : "Guardar definições"}
         </button>
+        <span className="field-hint">Última alteração: {fmtDateTime(settings.updated_at)}</span>
       </div>
-
-      <p style={{ fontSize: 12, color: "var(--ink-muted)" }}>
-        Última alteração: {settings.updated_at ? new Date(settings.updated_at).toLocaleString("pt-PT") : "—"}
-      </p>
     </form>
   );
 }
@@ -117,9 +94,9 @@ function NumberField({
   step?: number;
 }) {
   return (
-    <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14 }}>
-      {label}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <label className="field">
+      <span className="field-label">{label}</span>
+      <div className="row" style={{ flexWrap: "nowrap" }}>
         <input
           name={name}
           type="number"
@@ -128,15 +105,10 @@ function NumberField({
           max={max}
           step={step ?? 1}
           required
-          style={{
-            width: 100,
-            padding: "8px 10px",
-            borderRadius: 10,
-            border: "1px solid var(--border-muted)",
-            fontSize: 14,
-          }}
+          className="input tnum"
+          style={{ width: 110 }}
         />
-        <span style={{ color: "var(--ink-muted)", fontSize: 13 }}>{suffix}</span>
+        <span className="muted" style={{ fontSize: 13 }}>{suffix}</span>
       </div>
     </label>
   );
@@ -152,9 +124,9 @@ function ToggleField({
   defaultChecked: boolean;
 }) {
   return (
-    <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, cursor: "pointer" }}>
-      <input name={name} type="checkbox" defaultChecked={defaultChecked} style={{ width: 16, height: 16 }} />
-      {label}
+    <label className="check">
+      <input name={name} type="checkbox" defaultChecked={defaultChecked} />
+      <span>{label}</span>
     </label>
   );
 }

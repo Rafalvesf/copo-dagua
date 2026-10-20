@@ -2,97 +2,108 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { BookingStatusBadge } from "@/components/BookingStatusBadge";
-import type { Booking, BookingStatus } from "@/lib/types";
+import { Card, Empty, FilterTabs, PageHeader } from "@/components/ui";
+import { fmtDate, fmtEur } from "@/lib/format";
+import type { BookingStatus } from "@/lib/types";
 
-const FILTERS: { value: BookingStatus | "all"; label: string }[] = [
+const FILTERS: { value: string; label: string; statuses?: BookingStatus[] }[] = [
   { value: "all", label: "Todas" },
-  { value: "awaiting_deposit", label: "A aguardar sinal" },
-  { value: "confirmed", label: "Confirmadas" },
-  { value: "completed", label: "Concluídas" },
-  { value: "expired", label: "Expiradas" },
+  { value: "awaiting_deposit", label: "A aguardar sinal", statuses: ["awaiting_deposit"] },
+  { value: "confirmed", label: "Confirmadas", statuses: ["confirmed"] },
+  { value: "problems", label: "Com problemas", statuses: ["payment_overdue", "disputed"] },
+  { value: "completed", label: "Concluídas", statuses: ["completed"] },
+  { value: "cancelled", label: "Canceladas", statuses: ["cancelled_by_couple", "cancelled_by_partner"] },
+  { value: "expired", label: "Expiradas", statuses: ["expired"] },
 ];
+
+type Rel<T> = T | T[] | null;
+const one = <T,>(r: Rel<T>): T | null => (Array.isArray(r) ? (r[0] ?? null) : r);
+
+type Row = {
+  id: string;
+  booking_number: string;
+  event_date: string;
+  total_amount: number;
+  status: BookingStatus;
+  created_at: string;
+  partner: Rel<{ business_name: string }>;
+  couple: Rel<{ full_name: string }>;
+};
 
 export default async function BookingsPage({ searchParams }: PageProps<"/bookings">) {
   await requireAdmin();
   const params = await searchParams;
-  const status = typeof params.status === "string" ? params.status : "all";
+  const filter = FILTERS.find((f) => f.value === params.status) ?? FILTERS[0];
 
   const supabase = await createClient();
   let query = supabase
     .from("bookings")
-    .select("id, booking_number, couple_id, partner_id, event_date, total_amount, status, created_at, partner:partner_profiles!bookings_partner_id_fkey(business_name)")
+    .select(
+      "id, booking_number, event_date, total_amount, status, created_at, partner:partner_profiles!bookings_partner_id_fkey(business_name), couple:profiles!bookings_couple_id_fkey(full_name)",
+    )
     .order("created_at", { ascending: false });
+  if (filter.statuses) query = query.in("status", filter.statuses);
 
-  if (status !== "all") {
-    query = query.eq("status", status);
-  }
-
-  const { data: bookings, error } = await query;
+  const [{ data, error }, { data: all }] = await Promise.all([query, supabase.from("bookings").select("status")]);
+  const rows = (data ?? []) as unknown as Row[];
+  const statuses = ((all ?? []) as { status: BookingStatus }[]).map((r) => r.status);
+  const count = (f: (typeof FILTERS)[number]) => (f.statuses ? statuses.filter((s) => f.statuses!.includes(s)).length : statuses.length);
 
   return (
-    <div>
-      <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Reservas</h1>
-      <p style={{ color: "var(--ink-muted)", marginTop: 4 }}>
-        Reservas em curso na plataforma.
-      </p>
+    <div className="page">
+      <PageHeader
+        title="Reservas"
+        subtitle="Cada reserva nasce de uma proposta aceite. O número (WED-1, BAP-1…) é por parceiro, por isso aparece sempre com o nome do parceiro."
+      />
 
-      <div style={{ display: "flex", gap: 8, margin: "24px 0", flexWrap: "wrap" }}>
-        {FILTERS.map((f) => (
-          <Link
-            key={f.value}
-            href={`/bookings?status=${f.value}`}
-            style={{
-              padding: "8px 14px",
-              borderRadius: 999,
-              fontSize: 13,
-              fontWeight: 600,
-              background: status === f.value ? "var(--ink)" : "var(--surface)",
-              color: status === f.value ? "var(--surface)" : "var(--ink)",
-              border: "1px solid var(--border-muted)",
-            }}
-          >
-            {f.label}
-          </Link>
-        ))}
+      <div className="toolbar">
+        <FilterTabs
+          current={filter.value}
+          items={FILTERS.map((f) => ({ value: f.value, label: f.label, href: `/bookings?status=${f.value}`, count: count(f) }))}
+        />
       </div>
 
-      {error && <p style={{ color: "var(--status-rejected-fg)" }}>Não foi possível carregar a lista.</p>}
-      {!error && bookings?.length === 0 && (
-        <p style={{ color: "var(--ink-muted)" }}>Sem reservas neste filtro.</p>
-      )}
-
-      {!error && bookings && bookings.length > 0 && (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ textAlign: "left", fontSize: 13, color: "var(--ink-muted)" }}>
-              <th style={{ padding: "8px 0" }}>Reserva</th>
-              <th>Parceiro</th>
-              <th>Data do evento</th>
-              <th>Valor</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(bookings as (Booking & { partner: { business_name: string } | { business_name: string }[] | null })[]).map((b) => (
-              <tr key={b.id} style={{ borderTop: "1px solid var(--border-muted)" }}>
-                <td style={{ padding: "12px 0" }}>
-                  <Link href={`/bookings/${b.id}`} style={{ fontWeight: 600 }}>
-                    {b.booking_number}
-                  </Link>
-                </td>
-                <td style={{ fontSize: 13 }}>
-                  {(Array.isArray(b.partner) ? b.partner[0] : b.partner)?.business_name ?? "—"}
-                </td>
-                <td style={{ fontSize: 13 }}>{new Date(b.event_date).toLocaleDateString("pt-PT")}</td>
-                <td style={{ fontSize: 13 }}>{b.total_amount.toLocaleString("pt-PT")} €</td>
-                <td>
-                  <BookingStatusBadge status={b.status} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <Card flush>
+        {error ? (
+          <Empty title="Não foi possível carregar a lista">Tenta atualizar a página.</Empty>
+        ) : rows.length === 0 ? (
+          <Empty title="Sem reservas neste filtro" />
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Reserva</th>
+                  <th>Organizador</th>
+                  <th>Data do evento</th>
+                  <th>Criada em</th>
+                  <th className="num">Valor</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((b) => (
+                  <tr key={b.id}>
+                    <td>
+                      <Link href={`/bookings/${b.id}`} className="cell-main">
+                        {b.booking_number}
+                      </Link>
+                      <span className="cell-sub">{one(b.partner)?.business_name ?? "—"}</span>
+                    </td>
+                    <td>{one(b.couple)?.full_name ?? "—"}</td>
+                    <td className="nowrap">{fmtDate(b.event_date)}</td>
+                    <td className="muted nowrap">{fmtDate(b.created_at)}</td>
+                    <td className="num">{fmtEur(b.total_amount)}</td>
+                    <td>
+                      <BookingStatusBadge status={b.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

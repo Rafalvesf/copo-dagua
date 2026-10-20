@@ -1,12 +1,13 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { ResolveTicketForm } from "./resolve-form";
+import { Badge, Card, Empty, FilterTabs, PageHeader } from "@/components/ui";
+import { fmtDateTime } from "@/lib/format";
 import type { Profile, SupportTicket, SupportTicketCategory, SupportTicketStatus } from "@/lib/types";
 
 const FILTERS: { value: SupportTicketStatus | "all"; label: string }[] = [
-  { value: "all", label: "Todos" },
   { value: "open", label: "Abertos" },
+  { value: "all", label: "Todos" },
   { value: "pending", label: "A aguardar" },
   { value: "resolved", label: "Resolvidos" },
 ];
@@ -27,7 +28,7 @@ type TicketRow = SupportTicket & { profiles: Pick<Profile, "full_name" | "role">
 export default async function SupportPage({ searchParams }: PageProps<"/support">) {
   await requireAdmin();
   const params = await searchParams;
-  const status = typeof params.status === "string" ? params.status : "all";
+  const status = typeof params.status === "string" ? params.status : "open";
 
   const supabase = await createClient();
   let query = supabase
@@ -41,99 +42,55 @@ export default async function SupportPage({ searchParams }: PageProps<"/support"
 
   const { data: tickets, error } = await query;
 
-  return (
-    <div>
-      <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Suporte</h1>
-      <p style={{ color: "var(--ink-muted)", marginTop: 4, maxWidth: 640 }}>
-        Pedidos de ajuda enviados pelos organizadores e parceiros a partir da app. Responde e marca como resolvido
-        aqui; problemas com uma reserva concreta tratam-se em Disputas.
-      </p>
+  const rows = (tickets ?? []) as TicketRow[];
 
-      <div style={{ display: "flex", gap: 8, margin: "24px 0", flexWrap: "wrap" }}>
-        {FILTERS.map((f) => (
-          <Link
-            key={f.value}
-            href={`/support?status=${f.value}`}
-            style={{
-              padding: "8px 14px",
-              borderRadius: 999,
-              fontSize: 13,
-              fontWeight: 600,
-              background: status === f.value ? "var(--ink)" : "var(--surface)",
-              color: status === f.value ? "var(--surface)" : "var(--ink)",
-              border: "1px solid var(--border-muted)",
-            }}
-          >
-            {f.label}
-          </Link>
-        ))}
+  return (
+    <div className="page">
+      <PageHeader
+        title="Suporte"
+        subtitle="Pedidos de ajuda enviados a partir da app. Problemas com uma reserva concreta tratam-se em Disputas."
+      />
+
+      <div className="toolbar">
+        <FilterTabs current={status} items={FILTERS.map((f) => ({ ...f, href: `/support?status=${f.value}` }))} />
       </div>
 
-      {error && <p style={{ color: "var(--status-rejected-fg)" }}>Não foi possível carregar a lista.</p>}
-      {!error && tickets?.length === 0 && <p style={{ color: "var(--ink-muted)" }}>Sem pedidos neste filtro.</p>}
-
-      {!error && tickets && tickets.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {(tickets as TicketRow[]).map((t) => (
-            <div
-              key={t.id}
-              style={{
-                padding: 16,
-                borderRadius: 14,
-                background: "var(--surface)",
-                boxShadow: "var(--shadow-card)",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    {t.category === "dispute_delay" && (
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 800,
-                          padding: "3px 8px",
-                          borderRadius: 999,
-                          background: "var(--status-rejected-bg, #fde2e2)",
-                          color: "var(--status-rejected-fg)",
-                        }}
-                      >
-                        {CATEGORY_LABEL[t.category]}
-                      </span>
-                    )}
-                    <p style={{ fontWeight: 600 }}>{t.subject}</p>
+      {error ? (
+        <Card>
+          <Empty title="Não foi possível carregar a lista" />
+        </Card>
+      ) : rows.length === 0 ? (
+        <Card>
+          <Empty title="Sem pedidos neste filtro">Quando alguém pedir ajuda na app, aparece aqui.</Empty>
+        </Card>
+      ) : (
+        <div className="stack">
+          {rows.map((t) => (
+            <Card key={t.id} tone={t.status !== "resolved" && t.category === "dispute_delay" ? "danger" : t.status !== "resolved" ? "warning" : undefined}>
+              <div className="stack-sm" style={{ gap: 12 }}>
+                <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p className="strong" style={{ fontSize: 15 }}>{t.subject}</p>
+                    <p className="list-sub">
+                      {t.profiles?.full_name ?? "Utilizador"} · {t.profiles?.role === "partner" ? "Parceiro" : "Organizador"} · {fmtDateTime(t.created_at)}
+                    </p>
                   </div>
-                  <p style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 2 }}>
-                    {t.profiles?.full_name ?? "Utilizador desconhecido"} ·{" "}
-                    {t.profiles?.role === "partner" ? "Parceiro" : "Organizador"} ·{" "}
-                    {new Date(t.created_at).toLocaleDateString("pt-PT")}
-                  </p>
+                  <div className="row" style={{ gap: 6 }}>
+                    {t.category === "dispute_delay" && <Badge tone="danger" plain>{CATEGORY_LABEL[t.category]}</Badge>}
+                    <Badge tone={t.status === "resolved" ? "success" : t.status === "pending" ? "info" : "warning"}>{STATUS_LABEL[t.status]}</Badge>
+                  </div>
                 </div>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: "4px 10px",
-                    borderRadius: 999,
-                    background: t.status === "resolved" ? "var(--status-published-bg, #e2f5e9)" : "var(--border-muted)",
-                    color: t.status === "resolved" ? "var(--status-published-fg)" : "var(--ink-muted)",
-                  }}
-                >
-                  {STATUS_LABEL[t.status]}
-                </span>
+                {t.description && <p style={{ whiteSpace: "pre-wrap", maxWidth: "75ch" }}>{t.description}</p>}
+                {t.resolution_note ? (
+                  <div style={{ padding: "10px 12px", borderRadius: 10, background: "var(--surface-2)", boxShadow: "inset 2px 0 0 var(--accent)" }}>
+                    <p className="field-hint strong">Resposta enviada</p>
+                    <p style={{ fontSize: 13, marginTop: 2 }}>{t.resolution_note}</p>
+                  </div>
+                ) : (
+                  <ResolveTicketForm ticketId={t.id} />
+                )}
               </div>
-
-              {t.description && <p style={{ marginTop: 10, fontSize: 13.5 }}>{t.description}</p>}
-
-              {t.resolution_note ? (
-                <div style={{ marginTop: 10, padding: 10, borderRadius: 10, background: "var(--background)" }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-muted)" }}>Resposta enviada</p>
-                  <p style={{ fontSize: 13, marginTop: 3 }}>{t.resolution_note}</p>
-                </div>
-              ) : (
-                <ResolveTicketForm ticketId={t.id} />
-              )}
-            </div>
+            </Card>
           ))}
         </div>
       )}

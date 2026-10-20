@@ -2,6 +2,9 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { PaymentStatusBadge } from "@/components/PaymentStatusBadge";
+import { Card, Empty, FilterTabs, PageHeader, Stat } from "@/components/ui";
+import { fmtDate, fmtEur } from "@/lib/format";
+import { netPartnerAmount } from "@/lib/analytics";
 import type { PaymentStatus } from "@/lib/types";
 
 type PaymentRow = {
@@ -9,6 +12,7 @@ type PaymentRow = {
   booking_id: string;
   type: string;
   amount: number;
+  refunded_amount?: number | null;
   status: PaymentStatus;
   due_at: string | null;
   paid_at: string | null;
@@ -19,123 +23,11 @@ type PaymentRow = {
 
 const FILTERS: { value: PaymentStatus | "all"; label: string }[] = [
   { value: "all", label: "Todos" },
-  { value: "pending", label: "Pendentes" },
   { value: "paid", label: "Pagos" },
-  { value: "failed", label: "Falhados" },
+  { value: "pending", label: "Pendentes" },
   { value: "refunded", label: "Reembolsados" },
+  { value: "failed", label: "Falhados" },
 ];
-
-export default async function PaymentsPage({ searchParams }: PageProps<"/payments">) {
-  await requireAdmin();
-  const params = await searchParams;
-  const statusFilter = typeof params.status === "string" ? params.status : "all";
-
-  const supabase = await createClient();
-
-  // Um único fetch para os KPIs e a tabela — o volume de pagamentos é
-  // pequeno o suficiente nesta fase da plataforma para agregar em JS em
-  // vez de round-trips extra com `count`/`sum` do PostgREST (mesmo
-  // padrão usado no dashboard, ver app/(admin)/page.tsx).
-  const { data: allPayments } = await supabase
-    .from("payments")
-    .select(
-      "id, booking_id, type, amount, status, due_at, paid_at, bookings(booking_number), profiles(full_name), partner_profiles(business_name)",
-    )
-    .order("due_at", { ascending: false });
-
-  const payments = (allPayments ?? []) as unknown as PaymentRow[];
-
-  const paidVolume = payments.filter((p) => p.status === "paid").reduce((sum, p) => sum + p.amount, 0);
-  const pendingVolume = payments.filter((p) => p.status === "pending").reduce((sum, p) => sum + p.amount, 0);
-  const overdueVolume = payments
-    .filter((p) => p.status === "pending" && p.due_at && new Date(p.due_at) < new Date())
-    .reduce((sum, p) => sum + p.amount, 0);
-
-  const { data: settingsRow } = await supabase
-    .from("platform_settings")
-    .select("platform_commission_percentage")
-    .eq("id", 1)
-    .single();
-  const commissionPct = (settingsRow?.platform_commission_percentage as number | undefined) ?? 0;
-  const platformRevenue = (paidVolume * commissionPct) / 100;
-
-  const filtered = statusFilter === "all" ? payments : payments.filter((p) => p.status === statusFilter);
-
-  return (
-    <div>
-      <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 600 }}>Pagamentos</h1>
-      <p style={{ color: "var(--ink-muted)", marginTop: 4, fontSize: 14 }}>
-        Sinais e pagamentos finais feitos na app pela Stripe. Os valores são a parte do parceiro; a comissão
-        À Nossa! é somada por cima. Para devolver dinheiro, abre a reserva ou vai a Reembolsos.
-      </p>
-
-      <div className="kpi-row" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, margin: "24px 0" }}>
-        <KpiTile label="Volume pago" value={`${paidVolume.toLocaleString("pt-PT")} €`} />
-        <KpiTile label="Pendentes" value={`${pendingVolume.toLocaleString("pt-PT")} €`} />
-        <KpiTile label="Em atraso" value={`${overdueVolume.toLocaleString("pt-PT")} €`} accent="var(--status-rejected-fg)" />
-        <KpiTile
-          label={`Receita da plataforma (${commissionPct}%)`}
-          value={`${platformRevenue.toLocaleString("pt-PT")} €`}
-        />
-      </div>
-
-      <div style={{ display: "flex", gap: 8, margin: "16px 0", flexWrap: "wrap" }}>
-        {FILTERS.map((f) => (
-          <Link
-            key={f.value}
-            href={`/payments?status=${f.value}`}
-            style={{
-              padding: "8px 14px",
-              borderRadius: 999,
-              fontSize: 13,
-              fontWeight: 600,
-              background: statusFilter === f.value ? "var(--ink)" : "var(--surface)",
-              color: statusFilter === f.value ? "var(--surface)" : "var(--ink)",
-              border: "1px solid var(--border-muted)",
-            }}
-          >
-            {f.label}
-          </Link>
-        ))}
-      </div>
-
-      {filtered.length === 0 ? (
-        <p style={{ color: "var(--ink-muted)" }}>Sem pagamentos neste filtro.</p>
-      ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ textAlign: "left", fontSize: 13, color: "var(--ink-muted)" }}>
-              <th style={{ padding: "8px 0" }}>Reserva</th>
-              <th>Organizador</th>
-              <th>Parceiro</th>
-              <th>Tipo</th>
-              <th>Valor</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr key={p.id} style={{ borderTop: "1px solid var(--border-muted)" }}>
-                <td style={{ padding: "12px 0" }}>
-                  <Link href={`/bookings/${p.booking_id}`} style={{ fontWeight: 600 }}>
-                    {p.bookings?.booking_number ?? p.booking_id.slice(0, 8)}
-                  </Link>
-                </td>
-                <td style={{ fontSize: 13 }}>{p.profiles?.full_name ?? "—"}</td>
-                <td style={{ fontSize: 13 }}>{p.partner_profiles?.business_name ?? "—"}</td>
-                <td style={{ fontSize: 13 }}>{PAYMENT_TYPE_LABELS[p.type] ?? p.type}</td>
-                <td style={{ fontSize: 13 }}>{p.amount.toLocaleString("pt-PT")} €</td>
-                <td>
-                  <PaymentStatusBadge status={p.status} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
-}
 
 const PAYMENT_TYPE_LABELS: Record<string, string> = {
   deposit: "Sinal",
@@ -144,18 +36,106 @@ const PAYMENT_TYPE_LABELS: Record<string, string> = {
   refund: "Reembolso",
 };
 
-function KpiTile({ label, value, accent }: { label: string; value: string; accent?: string }) {
+export default async function PaymentsPage({ searchParams }: PageProps<"/payments">) {
+  await requireAdmin();
+  const params = await searchParams;
+  const statusFilter = typeof params.status === "string" && FILTERS.some((f) => f.value === params.status) ? params.status : "all";
+
+  const supabase = await createClient();
+  const [{ data: allPayments }, { data: settingsRow }] = await Promise.all([
+    supabase
+      .from("payments")
+      .select("*, bookings(booking_number), profiles(full_name), partner_profiles(business_name)")
+      .order("due_at", { ascending: false }),
+    supabase.from("platform_settings").select("platform_commission_percentage").eq("id", 1).single(),
+  ]);
+  const payments = (allPayments ?? []) as unknown as PaymentRow[];
+  const pct = Number((settingsRow?.platform_commission_percentage as number | undefined) ?? 0);
+  const net = (p: PaymentRow) => netPartnerAmount(Number(p.amount), p.status, Number(p.refunded_amount ?? 0), pct);
+
+  // Só o que ficou pago (sem reembolsos) conta como volume e receita.
+  const kept = payments.filter((p) => p.status === "paid" || Number(p.refunded_amount ?? 0) > 0);
+  const partnerVolume = kept.reduce((s, p) => s + net(p), 0);
+  const revenue = (partnerVolume * pct) / 100;
+  const pendingVolume = payments.filter((p) => p.status === "pending").reduce((s, p) => s + Number(p.amount), 0);
+  const overdue = payments.filter((p) => p.status === "pending" && p.due_at && new Date(p.due_at) < new Date());
+  const overdueVolume = overdue.reduce((s, p) => s + Number(p.amount), 0);
+
+  const filtered = statusFilter === "all" ? payments : payments.filter((p) => p.status === statusFilter);
+  const count = (v: string) => (v === "all" ? payments.length : payments.filter((p) => p.status === v).length);
+
   return (
-    <div
-      style={{
-        background: "var(--surface)",
-        borderRadius: 16,
-        boxShadow: "var(--shadow-card)",
-        padding: 18,
-      }}
-    >
-      <div style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 500, color: accent }}>{value}</div>
-      <p style={{ fontSize: 13, color: "var(--ink-muted)", marginTop: 4 }}>{label}</p>
+    <div className="page">
+      <PageHeader
+        title="Pagamentos"
+        subtitle={`Sinais e pagamentos finais feitos na app (Stripe). O organizador paga o valor do parceiro + ${pct}% de comissão À Nossa!.`}
+        actions={
+          <Link href="/refunds" className="btn btn-secondary">
+            Reembolsos
+          </Link>
+        }
+      />
+
+      <div className="grid grid-4">
+        <Stat label="Pago pelos organizadores" value={fmtEur(partnerVolume * (1 + pct / 100), true)} hint="já sem reembolsos" />
+        <Stat label={`Receita À Nossa! (${pct}%)`} value={fmtEur(revenue, true)} hint="comissão bruta, antes das taxas Stripe" />
+        <Stat label="Por pagar" value={fmtEur(pendingVolume)} hint={`${count("pending")} pagamentos pendentes`} />
+        <Stat label="Em atraso" value={fmtEur(overdueVolume)} hint={`${overdue.length} fora do prazo`} tone={overdue.length > 0 ? "danger" : undefined} />
+      </div>
+
+      <div className="toolbar">
+        <FilterTabs
+          current={statusFilter}
+          items={FILTERS.map((f) => ({ value: f.value, label: f.label, href: `/payments?status=${f.value}`, count: count(f.value) }))}
+        />
+      </div>
+
+      <Card flush>
+        {filtered.length === 0 ? (
+          <Empty title="Sem pagamentos neste filtro" />
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Reserva</th>
+                  <th>Organizador</th>
+                  <th>Tipo</th>
+                  <th>Data</th>
+                  <th className="num">Organizador paga</th>
+                  <th className="num">Parceiro recebe</th>
+                  <th className="num">Reembolsado</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((p) => {
+                  const refunded = Number(p.refunded_amount ?? 0);
+                  return (
+                    <tr key={p.id}>
+                      <td>
+                        <Link href={`/bookings/${p.booking_id}`} className="cell-main">
+                          {p.bookings?.booking_number ?? p.booking_id.slice(0, 8)}
+                        </Link>
+                        <span className="cell-sub">{p.partner_profiles?.business_name ?? "—"}</span>
+                      </td>
+                      <td>{p.profiles?.full_name ?? "—"}</td>
+                      <td>{PAYMENT_TYPE_LABELS[p.type] ?? p.type}</td>
+                      <td className="muted nowrap">{fmtDate(p.paid_at ?? p.due_at)}</td>
+                      <td className="num">{fmtEur(Number(p.amount) * (1 + pct / 100), true)}</td>
+                      <td className="num">{fmtEur(p.amount, true)}</td>
+                      <td className="num muted">{refunded > 0 ? fmtEur(refunded, true) : p.status === "refunded" ? "Total" : "—"}</td>
+                      <td>
+                        <PaymentStatusBadge status={p.status} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
