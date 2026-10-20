@@ -20,15 +20,17 @@ export async function setMaintenanceMode(
   const { userId } = await requireAdmin();
   const supabase = await createClient();
 
-  const { error } = await supabase
-    .from("platform_settings")
-    .update({
-      maintenance_mode_couple: formData.get("maintenance_mode_couple") === "on",
-      maintenance_mode_partner: formData.get("maintenance_mode_partner") === "on",
-      updated_at: new Date().toISOString(),
-      updated_by: userId,
-    })
-    .eq("id", 1);
+  const update: Record<string, unknown> = {
+    maintenance_mode_couple: formData.get("maintenance_mode_couple") === "on",
+    maintenance_mode_partner: formData.get("maintenance_mode_partner") === "on",
+    updated_at: new Date().toISOString(),
+    updated_by: userId,
+  };
+  // Convidados (migração 109, parte 5) — só quando a coluna já existe.
+  if (formData.get("has_guest") === "1") {
+    update.maintenance_mode_guest = formData.get("maintenance_mode_guest") === "on";
+  }
+  const { error } = await supabase.from("platform_settings").update(update).eq("id", 1);
 
   if (error) {
     return { error: "Não tens permissão para alterar o modo de manutenção." };

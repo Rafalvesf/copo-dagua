@@ -97,13 +97,14 @@ export default async function DashboardPage() {
 
   const { data: platformSettings } = await supabase
     .from("platform_settings")
-    .select("maintenance_mode_couple, maintenance_mode_partner")
+    .select("*")
     .eq("id", 1)
     .single();
-  const maintenance = platformSettings as Pick<
-    PlatformSettings,
-    "maintenance_mode_couple" | "maintenance_mode_partner"
-  > | null;
+  const maintenance = platformSettings as
+    | (Pick<PlatformSettings, "maintenance_mode_couple" | "maintenance_mode_partner"> & {
+        maintenance_mode_guest?: boolean;
+      })
+    | null;
 
   // `now` fixado a um único `Date.now()`, arredondado à meia-noite UTC, e
   // tudo o resto derivado dele — nunca uma segunda chamada independente a
@@ -120,6 +121,26 @@ export default async function DashboardPage() {
   // produzem o mesmo valor mesmo que caiam em milissegundos diferentes,
   // desde que não atravessem a própria meia-noite (risco aceite, o pior
   // cenário é uma diferença de um dia numa janela de 30/60 dias).
+  // Alertas novos (2026-10-20): disputas por decidir, reembolsos por
+  // tratar e parceiros à espera de aprovação sem pagamentos ativos.
+  // Cada um devolve 0 se a respetiva tabela/coluna ainda não existir.
+  const [openDisputesQ, refundsPendingQ, partnersNoStripeQ] = await Promise.all([
+    supabase.from("disputes").select("id", { count: "exact", head: true }).eq("status", "open"),
+    supabase
+      .from("payments")
+      .select("id, bookings!inner(status)", { count: "exact", head: true })
+      .eq("status", "paid")
+      .in("bookings.status", ["cancelled_by_couple", "cancelled_by_partner"]),
+    supabase
+      .from("partner_profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending_review")
+      .eq("stripe_charges_enabled", false),
+  ]);
+  const openDisputesCount = openDisputesQ.count ?? 0;
+  const refundsPendingCount = refundsPendingQ.count ?? 0;
+  const partnersNoStripeCount = partnersNoStripeQ.count ?? 0;
+
   const now = new Date();
   now.setUTCHours(0, 0, 0, 0);
   const nowMs = now.getTime();
@@ -230,7 +251,7 @@ export default async function DashboardPage() {
   const kpis = [
     {
       icon: <UsersIcon />,
-      label: "Casais registados",
+      label: "Organizadores registados",
       value: (couples.count ?? 0).toLocaleString("pt-PT"),
       deltaPct: deltaPct(couplesNew30, couplesNewPrev30),
       trend: bucketize(couplesRows60, 8, PERIOD_DAYS * 2, since60),
@@ -292,7 +313,8 @@ export default async function DashboardPage() {
   const expiring = (expiringHolds.data ?? []) as ExpiringBooking[];
   const stale = (stalePartners.data ?? []) as StalePartner[];
   const flagged = (flaggedBookings.data ?? []) as FlaggedBooking[];
-  const urgentCount = expiring.length + stale.length + flagged.length;
+  const urgentCount =
+    expiring.length + stale.length + flagged.length + openDisputesCount + refundsPendingCount + partnersNoStripeCount;
 
   const entries = (activity.data ?? []) as unknown as ActivityEntry[];
   const recent = (recentBookings.data ?? []) as unknown as RecentBooking[];
@@ -313,6 +335,30 @@ export default async function DashboardPage() {
       <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>Nada a precisar de atenção imediata.</p>
     ) : (
       <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+        {openDisputesCount > 0 && (
+          <li style={{ fontSize: 14 }}>
+            <Link href="/disputes" style={{ fontWeight: 600 }}>
+              {openDisputesCount} {openDisputesCount === 1 ? "disputa" : "disputas"} por decidir
+            </Link>{" "}
+            — a reserva fica parada até decidires
+          </li>
+        )}
+        {refundsPendingCount > 0 && (
+          <li style={{ fontSize: 14 }}>
+            <Link href="/refunds" style={{ fontWeight: 600 }}>
+              {refundsPendingCount} {refundsPendingCount === 1 ? "pagamento" : "pagamentos"} de reservas canceladas
+            </Link>{" "}
+            — confirma se há reembolso a fazer
+          </li>
+        )}
+        {partnersNoStripeCount > 0 && (
+          <li style={{ fontSize: 14 }}>
+            <Link href="/partners?status=pending_review" style={{ fontWeight: 600 }}>
+              {partnersNoStripeCount} {partnersNoStripeCount === 1 ? "parceiro" : "parceiros"} à espera sem pagamentos ativos
+            </Link>{" "}
+            — só podem ser aprovados depois de ativarem a Stripe
+          </li>
+        )}
         {expiring.map((b) => (
           <li key={b.id} style={{ fontSize: 14 }}>
             <Link href={`/bookings/${b.id}`} style={{ fontWeight: 600 }}>
@@ -377,7 +423,7 @@ export default async function DashboardPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexShrink: 0, marginBottom: 18 }}>
+      <div className="admin-page-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexShrink: 0, marginBottom: 18 }}>
         <div>
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 600 }}>Olá, {firstName}!</h1>
           <p style={{ color: "var(--ink-muted)", marginTop: 4, fontSize: 14, fontWeight: 400 }}>
@@ -389,6 +435,8 @@ export default async function DashboardPage() {
             <MaintenanceSwitch
               couple={maintenance.maintenance_mode_couple}
               partner={maintenance.maintenance_mode_partner}
+              guest={maintenance.maintenance_mode_guest ?? false}
+              guestAvailable={maintenance.maintenance_mode_guest !== undefined}
             />
           )}
           <LiveRefresh intervalSeconds={20} />

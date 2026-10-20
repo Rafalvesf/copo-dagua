@@ -7,7 +7,10 @@ class MaintenanceState {
   final bool couple;
   final bool partner;
 
-  const MaintenanceState({this.couple = false, this.partner = false});
+  /// Convidados (migração 109, parte 5 — pedido 2026-10-20).
+  final bool guest;
+
+  const MaintenanceState({this.couple = false, this.partner = false, this.guest = false});
 }
 
 /// Liga-se a `platform_settings.maintenance_mode_couple`/
@@ -35,13 +38,16 @@ class MaintenanceController extends Notifier<MaintenanceState> {
     try {
       final row = await supabase
           .from('platform_settings')
-          .select('maintenance_mode_couple, maintenance_mode_partner')
+          // `*` em vez da lista de colunas: se `maintenance_mode_guest` ainda
+          // não existir, os outros dois continuam a funcionar.
+          .select('*')
           .eq('id', 1)
           .maybeSingle();
       if (row == null) return;
       state = MaintenanceState(
         couple: row['maintenance_mode_couple'] as bool? ?? false,
         partner: row['maintenance_mode_partner'] as bool? ?? false,
+        guest: row['maintenance_mode_guest'] as bool? ?? false,
       );
     } catch (_) {
       // Falha aberto — ver nota na classe.
