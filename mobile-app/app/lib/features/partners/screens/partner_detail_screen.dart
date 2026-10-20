@@ -102,7 +102,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     }
   }
 
-  Future<void> _requestQuote() async {
+  Future<void> _requestQuote({String? initialMessage}) async {
     final wedding = ref.read(weddingControllerProvider).wedding;
     if (wedding == null || _requestingQuote) return;
 
@@ -112,6 +112,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       builder: (context) => _RequestQuoteSheet(
         initialDate: wedding.weddingDate,
         initialLocation: wedding.location,
+        initialMessage: initialMessage,
       ),
     );
     if (result == null || !mounted) return;
@@ -380,9 +381,30 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 10),
-                                  Text(
-                                    pk.isStartingPrice ? 'desde ${euros(pk.price)}' : euros(pk.price),
-                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.brandGreen),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        pk.isStartingPrice ? 'desde ${euros(pk.price)}' : euros(pk.price),
+                                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.brandGreen),
+                                      ),
+                                      if (!widget.selectionMode) ...[
+                                        const SizedBox(height: 8),
+                                        // Pedir este pacote (ou falar sobre ele, se já
+                                        // há pedido/reserva) — pedido do utilizador,
+                                        // 2026-10-20.
+                                        _PackageButton(
+                                          label: alreadyRelated ? 'Falar' : 'Pedir',
+                                          busy: _requestingQuote || _openingChat,
+                                          onTap: alreadyRelated
+                                              ? _openChat
+                                              : () => _requestQuote(
+                                                    initialMessage:
+                                                        'Olá! Tenho interesse no pacote "${pk.name}" (${pk.isStartingPrice ? 'desde ' : ''}${euros(pk.price)}).',
+                                                  ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ],
                               ),
@@ -825,8 +847,9 @@ class _RequestQuoteResult {
 class _RequestQuoteSheet extends StatefulWidget {
   final DateTime? initialDate;
   final String? initialLocation;
+  final String? initialMessage;
 
-  const _RequestQuoteSheet({this.initialDate, this.initialLocation});
+  const _RequestQuoteSheet({this.initialDate, this.initialLocation, this.initialMessage});
 
   @override
   State<_RequestQuoteSheet> createState() => _RequestQuoteSheetState();
@@ -836,7 +859,7 @@ class _RequestQuoteSheetState extends State<_RequestQuoteSheet> {
   late final _location = TextEditingController(
     text: widget.initialLocation ?? '',
   );
-  final _message = TextEditingController();
+  late final _message = TextEditingController(text: widget.initialMessage ?? '');
   DateTime? _eventDate;
 
   DateTime get _minSelectableDate =>
@@ -931,6 +954,44 @@ class _RequestQuoteSheetState extends State<_RequestQuoteSheet> {
     );
   }
 }
+/// Botão pequeno de cada pacote: abre o pedido (ou a conversa) já sobre
+/// esse pacote.
+class _PackageButton extends StatelessWidget {
+  final String label;
+  final bool busy;
+  final VoidCallback onTap;
+  const _PackageButton({required this.label, required this.busy, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: Material(
+        color: AppTheme.brandGreen,
+        shape: const StadiumBorder(),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: busy ? null : onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 6, 10, 6),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text(label,
+                  style: const TextStyle(
+                      fontFamily: AppTheme.fontFamily,
+                      fontFamilyFallback: AppTheme.fontFamilyFallback,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white)),
+              const SizedBox(width: 4),
+              const Icon(Icons.chat_bubble_outline_rounded, size: 14, color: Colors.white),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ComingSoonSection extends StatelessWidget {
   final String message;
 
