@@ -148,6 +148,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           message: result.message,
         );
       } catch (_) {}
+      // O botão passa logo a "Pedido já enviado".
+      ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
       if (mounted) {
         _comingSoon(
           'Pedido de orçamento enviado! O parceiro vai responder em breve.',
@@ -158,6 +160,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       final message = switch (e.code) {
         'P0002' => 'Este parceiro já não está disponível.',
         'P0003' => 'Escolhe uma data com pelo menos 7 dias de antecedência.',
+        // Migração 103: só um pedido de cada vez por parceiro.
+        'P0009' => 'Já pediste orçamento a este parceiro. Só podes pedir outra vez se o pedido ou a reserva for cancelado.',
         _ => 'Não foi possível enviar o pedido de orçamento.',
       };
       _comingSoon(message);
