@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
   const { data: booking } = await admin
     .from("bookings")
-    .select("id, booking_number, status, couple_id, partner_id, wedding_id")
+    .select("id, booking_number, status, couple_id, partner_id, wedding_id, partner_profiles(business_name)")
     .eq("id", bookingId)
     .maybeSingle();
   if (!booking) return json({ error: "not_found" }, 404);
@@ -143,6 +143,8 @@ Deno.serve(async (req) => {
       .filter((p) => refunded.includes(p.id as string))
       .reduce((a, p) => a + Number(p.amount), 0);
     const euros = total.toFixed(2).replace(".", ",");
+    const pp = (booking as { partner_profiles?: { business_name?: string } | { business_name?: string }[] | null }).partner_profiles;
+    const partnerName = (Array.isArray(pp) ? pp[0] : pp)?.business_name ?? "parceiro";
     await admin.from("booking_events").insert({
       booking_id: bookingId,
       event_type: "refunded",
@@ -155,7 +157,7 @@ Deno.serve(async (req) => {
       wedding_id: booking.wedding_id,
       type: "booking_refunded",
       title: "Reembolso enviado",
-      body: `Reembolsámos ${euros} € da reserva ${booking.booking_number}. Chega à tua conta em 5 a 10 dias úteis.`,
+      body: `Reembolsámos ${euros} € da reserva ${booking.booking_number} · ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`,
     }).then(({ error }) => error && console.error("notification insert failed", error));
   }
 
