@@ -101,7 +101,9 @@ const _guestProfile = Profile(
   onboardingComplete: true,
 );
 
-final _wedding = Wedding(
+Wedding _wedding = _baseWedding;
+
+final _baseWedding = Wedding(
   id: 'w1',
   ownerId: 'u-couple',
   partnerName1: 'Sofia',
@@ -917,6 +919,43 @@ void main() {
         }
       });
     }
+  }
+  // Menu principal de cada tipo de evento (canvas "Menu principal por tipo
+  // de evento", 2026-10-20) — sempre em eucalipto.
+  for (final (type, name1, name2) in const [
+    (EventType.wedding, 'Inês', 'Tomás'),
+    (EventType.baptism, 'Martim', null),
+    (EventType.birthday, 'Sofia', null),
+    (EventType.communion, 'Leonor', null),
+    (EventType.engagement, 'Ana', 'Rui'),
+    (EventType.vowRenewal, 'Marta', 'João'),
+    (EventType.graduation, 'Medicina 2027', null),
+    (EventType.corporate, 'Jantar anual', null),
+    (EventType.babyShower, 'Bebé Rodrigo', null),
+    (EventType.other, 'A nossa festa', null),
+  ]) {
+    final name = '95_menu_tipo_${type.name}';
+    testWidgets(name, (t) async {
+      _wedding = Wedding(
+        id: 'w1',
+        ownerId: 'u-couple',
+        partnerName1: name1,
+        partnerName2: name2,
+        weddingDate: _days(214),
+        location: 'Sintra',
+        estimatedGuests: 120,
+        estimatedBudget: 25000,
+        guestCode: 'SOFIATIAGO24',
+        eventType: type,
+      );
+      debugMenuStyle = const EventMenuStyle(MenuLayout.classic, MenuColor('eucalyptus', 'Eucalipto', Color(0xFF4F6B4A), Color(0xFFDCE4D8), Color(0xFFF3EBDD)));
+      try {
+        await _shoot(t, name, couple, '/wedding');
+      } finally {
+        debugMenuStyle = null;
+        _wedding = _baseWedding;
+      }
+    });
   }
   // Publicações (como o feed do Instagram), a abrir na 3.ª foto.
   testWidgets('91_publicacoes', (t) => _shoot(t, '91_publicacoes', couple, '/gallery', after: (t) async {
