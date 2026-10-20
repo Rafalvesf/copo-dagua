@@ -44,7 +44,7 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
   final quoteRows = await supabase
       .from('quote_requests')
       .select(
-        'id, partner_id, wedding_id, couple_id, event_date, location, message, status, profiles(full_name), weddings(partner_name_1, partner_name_2)',
+        'id, partner_id, wedding_id, couple_id, event_date, location, message, status, profiles(full_name, avatar_url), weddings(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url)',
       )
       .eq('partner_id', partnerId)
       .neq('status', 'accepted')
@@ -53,7 +53,7 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
   final bookingRows = await supabase
       .from('bookings')
       .select(
-        'id, partner_id, wedding_id, couple_id, event_date, status, profiles(full_name), proposals(title), weddings(location, partner_name_1, partner_name_2)',
+        'id, partner_id, wedding_id, couple_id, event_date, status, profiles(full_name, avatar_url), proposals(title), weddings(location, partner_name_1, partner_name_2, profile_photo_url, cover_photo_url)',
       )
       .eq('partner_id', partnerId)
       .order('event_date', ascending: false);
@@ -77,6 +77,10 @@ BookingStatus _mapQuoteRequestStatus(String status) => switch (status) {
 /// onboarding do casamento — muito mais identificável para o parceiro
 /// do que o nome da conta individual de quem enviou o pedido
 /// (`profiles.full_name`), que só serve de segundo fallback.
+/// Foto do casal: a do casamento, senão a capa, senão a da conta.
+String? _clientAvatar(Map<String, dynamic>? wedding, Map<String, dynamic>? profile) =>
+    (wedding?['profile_photo_url'] as String?) ?? (wedding?['cover_photo_url'] as String?) ?? (profile?['avatar_url'] as String?);
+
 String _clientDisplayName(
   Map<String, dynamic>? wedding,
   Map<String, dynamic>? profile,
@@ -114,6 +118,7 @@ Booking _bookingFromQuoteRequestRow(
     packageLabel: 'Pedido de orçamento',
     status: _mapQuoteRequestStatus(row['status'] as String),
     messageFromCouple: row['message'] as String?,
+    clientAvatarUrl: _clientAvatar(wedding, couple),
     fromQuoteRequest: true,
     proposalSent: row['status'] == 'proposal_sent',
   );
@@ -135,6 +140,7 @@ Booking _bookingFromBookingRow(Map<String, dynamic> row, String? category) {
     category: category,
     packageLabel: (proposal?['title'] as String?) ?? 'Serviço contratado',
     status: mapRealBookingStatus(row['status'] as String),
+    clientAvatarUrl: _clientAvatar(wedding, couple),
     fromQuoteRequest: false,
   );
 }
@@ -298,7 +304,7 @@ final partnerConversationsProvider = FutureProvider<List<ChatConversation>>((
   final rows = await supabase
       .from('conversations')
       .select(
-        'id, wedding_id, partner_id, last_message, last_message_at, weddings(partner_name_1, partner_name_2)',
+        'id, wedding_id, partner_id, last_message, last_message_at, weddings(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url)',
       )
       .eq('partner_id', partnerId)
       .order('last_message_at', ascending: false);
@@ -318,6 +324,7 @@ final partnerConversationsProvider = FutureProvider<List<ChatConversation>>((
       partnerId: row['partner_id'] as String,
       name: name,
       avatarSeed: row['wedding_id'] as String,
+      avatarUrl: _clientAvatar(wedding, null),
       lastMessage: row['last_message'] as String?,
       lastMessageAt: row['last_message_at'] == null
           ? null

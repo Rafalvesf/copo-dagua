@@ -826,6 +826,10 @@ class Booking {
   final BookingStatus status;
   final String? messageFromCouple;
 
+  /// Foto do casal (`weddings.profile_photo_url`, senão a capa) — PFP
+  /// em toda a app (2026-10-20).
+  final String? clientAvatarUrl;
+
   /// `true` quando esta linha vem de `quote_requests` ("Recebidos" —
   /// ainda não há reserva confirmada), `false` quando vem de `bookings`
   /// (Confirmados/Concluídos). Necessário porque as duas tabelas reais
@@ -855,9 +859,11 @@ class Booking {
     this.messageFromCouple,
     this.fromQuoteRequest = false,
     this.proposalSent = false,
+    this.clientAvatarUrl,
   });
 
   Booking copyWith({BookingStatus? status}) => Booking(
+    clientAvatarUrl: clientAvatarUrl,
     id: id,
     partnerId: partnerId,
     weddingId: weddingId,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/review_tile.dart';
 import '../../../core/page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,7 +15,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
-import '../../../shared/widgets/initials_avatar.dart';
 import '../partner_style.dart';
 import '../../../shared/money.dart';
 import '../../../core/partners/category_figure.dart';
@@ -419,7 +419,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         const SizedBox(height: 22),
                         const _Heading('Avaliações'),
                         const SizedBox(height: 10),
-                        _ReviewsSection(partnerId: partner.id),
+                        _ReviewsSection(partnerId: partner.id, partnerName: partner.name, partnerAvatarUrl: partner.imageUrl),
                       ],
                     ),
                   ),
@@ -696,8 +696,10 @@ class _InfoTile extends StatelessWidget {
 /// o casal (o próprio parceiro avaliado).
 class _ReviewsSection extends ConsumerWidget {
   final String partnerId;
+  final String partnerName;
+  final String? partnerAvatarUrl;
 
-  const _ReviewsSection({required this.partnerId});
+  const _ReviewsSection({required this.partnerId, required this.partnerName, this.partnerAvatarUrl});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -717,7 +719,7 @@ class _ReviewsSection extends ConsumerWidget {
         return Column(
           children: [
             for (final review in reviews) ...[
-              _ReviewCard(review: review),
+              ReviewTile(review: review, partnerName: partnerName, partnerAvatarUrl: partnerAvatarUrl),
               const SizedBox(height: 12),
             ],
           ],
@@ -726,112 +728,6 @@ class _ReviewsSection extends ConsumerWidget {
     );
   }
 }
-
-class _ReviewCard extends StatelessWidget {
-  final Review review;
-
-  const _ReviewCard({required this.review});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              review.coupleAvatarUrl == null
-                  ? InitialsAvatar(name: review.coupleDisplayName, radius: 16)
-                  : CircleAvatar(
-                      radius: 16,
-                      backgroundColor: AppColors.gray,
-                      backgroundImage: NetworkImage(review.coupleAvatarUrl!),
-                    ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  review.coupleDisplayName,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: AppFontSize.md,
-                    color: AppTheme.ink,
-                  ),
-                ),
-              ),
-              Text(
-                '${review.createdAt.day.toString().padLeft(2, '0')}/${review.createdAt.month.toString().padLeft(2, '0')}/${review.createdAt.year}',
-                style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (var i = 1; i <= 5; i++)
-                Icon(
-                  i <= review.rating ? Icons.star_rounded : Icons.star_border_rounded,
-                  size: 14,
-                  color: Colors.amber,
-                ),
-            ],
-          ),
-          if (review.comment != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              review.comment!,
-              style: TextStyle(
-                color: AppTheme.inkMuted,
-                fontSize: AppFontSize.md,
-                height: 1.4,
-              ),
-            ),
-          ],
-          if (review.response != null) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.muted,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Resposta do parceiro',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: AppFontSize.xs,
-                      color: AppTheme.accentOliveDark,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    review.response!,
-                    style: TextStyle(
-                      color: AppTheme.ink,
-                      fontSize: AppFontSize.sm,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 
 class _RequestQuoteResult {
   final DateTime? eventDate;
