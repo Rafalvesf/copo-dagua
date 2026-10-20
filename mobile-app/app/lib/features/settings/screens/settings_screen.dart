@@ -195,7 +195,7 @@ class _SignOut extends ConsumerWidget {
           ]),
         ),
       ),
-    );
+    ).withVersion();
   }
 }
 
@@ -808,4 +808,18 @@ class _AccountSection extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// Versão publicada (commit), para saber se o telemóvel já tem a última.
+const _appVersion = String.fromEnvironment('APP_VERSION', defaultValue: 'local');
+
+extension on Widget {
+  Widget withVersion() => Column(children: [
+        this,
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text('Versão $_appVersion',
+              style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted)),
+        ),
+      ]);
 }
