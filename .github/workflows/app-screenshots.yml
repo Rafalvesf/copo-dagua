@@ -58,6 +58,7 @@ jobs:
           out=$(mktemp -d)
           mkdir -p "$out/png"
           cp test/screenshots/goldens/*.png "$out/png/" 2>/dev/null || true
+          mkdir -p "$out/files" && cp test/screenshots/goldens/*.pdf test/screenshots/goldens/*.xlsx "$out/files/" 2>/dev/null || true
           cp screenshots.log "$out/" 2>/dev/null || true
           cp tests.log "$out/" 2>/dev/null || true
           cd "$out"

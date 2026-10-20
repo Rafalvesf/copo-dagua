@@ -43,6 +43,9 @@ dependencies:
   geolocator: ^13.0.2
   http: ^1.2.2
   image_picker: ^1.1.2
+  # Relatórios em PDF e Excel (lib/core/exports/exports.dart).
+  pdf: ^3.11.1
+  excel: ^4.0.6
 
 dev_dependencies:
   flutter_test:
