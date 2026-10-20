@@ -31,7 +31,7 @@ final coupleBookingsProvider = FutureProvider<List<CoupleBooking>>((ref) async {
   final rows = await supabase
       .from('bookings')
       .select(
-        'id, wedding_id, event_date, total_amount, deposit_amount, status, '
+        'id, wedding_id, partner_id, event_date, total_amount, deposit_amount, status, '
         'partner_profiles(business_name, cover_photo_url, partner_profile_categories(partner_categories(label_pt))), '
         'payments(id, type, status, amount, due_at)',
       )
@@ -64,6 +64,7 @@ CoupleBooking _coupleBookingFromRow(Map<String, dynamic> row) {
     id: row['id'] as String,
     weddingId: row['wedding_id'] as String,
     partnerName: (partner?['business_name'] as String?) ?? 'Parceiro',
+    partnerId: row['partner_id'] as String?,
     partnerLogoUrl: partner?['cover_photo_url'] as String?,
     category: firstCategory?['label_pt'] as String?,
     serviceDate: DateTime.parse(row['event_date'] as String),

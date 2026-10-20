@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
+import '../payments/pay_return.dart';
 import '../supabase/supabase_config.dart';
 import '../wedding/partner_invite.dart';
 import '../../shared/widgets/brinde_gate.dart';
@@ -211,7 +212,8 @@ class AuthController extends Notifier<AuthState> {
       return;
     }
     if (state.status != AuthStatus.unauthenticated) return;
-    BrindeGate.pending = true;
+    // Sem brinde quando volta de um pagamento (vai direto à confirmação).
+    BrindeGate.pending = PayReturn.pending == null;
     state = state.copyWith(status: AuthStatus.authenticating, errorMessage: null);
     try {
       await _applyPendingSocialChoices();

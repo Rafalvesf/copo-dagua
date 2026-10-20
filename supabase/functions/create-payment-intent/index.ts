@@ -16,7 +16,13 @@ import { stripeClient } from "../_shared/stripe.ts";
 // Um pagamento só tem uma tentativa viva: ao trocar de método, o
 // PaymentIntent/Checkout anterior é cancelado/expirado para nunca se
 // cobrar duas vezes.
+// `all` (2026-10-21): todos os métodos ativos na conta Stripe no mesmo
+// formulário — cartão, Apple Pay, Google Pay, Link e os restantes que
+// forem ativados no painel. Sem métodos que saem para uma página da
+// Stripe ou do banco (pedido 2026-10-21: tudo dentro da app).
+// Os outros três ficam para compatibilidade.
 const METHODS: Record<string, string> = {
+  all: "all",
   card: "card",
   mb_way: "mb_way",
   multibanco: "multibanco",
@@ -152,7 +158,9 @@ Deno.serve(async (req) => {
     intent = await stripe.paymentIntents.create({
       amount: totalChargeCents,
       currency: "eur",
-      payment_method_types: [method],
+      ...(method === "all"
+        ? { automatic_payment_methods: { enabled: true, allow_redirects: "never" as const } }
+        : { payment_method_types: [method] }),
       description: `${label} — reserva ${bookingNumber} · ${partner.business_name}`.trim(),
       receipt_email: user.email ?? undefined,
       application_fee_amount: applicationFeeCents,

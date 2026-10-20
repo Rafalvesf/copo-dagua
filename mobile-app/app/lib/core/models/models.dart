@@ -1173,6 +1173,9 @@ class CoupleBooking {
   final String weddingId;
   final String partnerName;
 
+  /// Para "Pedir nova proposta" depois de um cancelamento (2026-10-21).
+  final String? partnerId;
+
   /// `partner_profiles.cover_photo_url` (mesmo campo usado como logótipo
   /// em todo o resto da app, ver `partner_welcome_screen.dart`) — `null`
   /// quando o parceiro ainda não fez upload de nenhum, cai em
@@ -1211,6 +1214,7 @@ class CoupleBooking {
     required this.id,
     required this.weddingId,
     required this.partnerName,
+    this.partnerId,
     this.partnerLogoUrl,
     required this.category,
     required this.serviceDate,

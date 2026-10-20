@@ -22,7 +22,7 @@ abstract class StripeElement {
   });
 
   /// Confirma o pagamento. Devolve `{status, multibanco}` ou `{error}`.
-  Future<Map<String, dynamic>> confirm();
+  Future<Map<String, dynamic>> confirm({String? returnUrl});
 
   void dispose();
 }

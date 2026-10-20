@@ -48,52 +48,92 @@ Future<void> retryPendingRefunds({String? coupleId, String? partnerId}) async {
   } catch (_) {}
 }
 
-/// Dias mínimos de antecedência para o casal cancelar com reembolso
-/// (`platform_settings.cancellation_penalty_days`, editável no admin).
-Future<int> cancellationPenaltyDays() async {
+/// O que é preciso para dizer ao organizador, antes de cancelar, o que lhe
+/// é devolvido (regras de 2026-10-21, migração 112):
+/// - sinal: só nas primeiras [windowHours] horas depois de o pagar, e só se
+///   o parceiro o marcou como reembolsável;
+/// - restante: se faltarem pelo menos [penaltyDays] dias para o evento.
+/// O servidor decide na mesma — isto é só o aviso.
+class RefundInfo {
+  final bool depositRefundable;
+  final DateTime? depositPaidAt;
+  final bool finalPaid;
+  final int penaltyDays;
+  final int windowHours;
+  const RefundInfo({
+    required this.depositRefundable,
+    required this.depositPaidAt,
+    required this.finalPaid,
+    required this.penaltyDays,
+    required this.windowHours,
+  });
+}
+
+Future<RefundInfo> bookingRefundInfo(String bookingId) async {
+  var penaltyDays = 30;
+  var windowHours = 48;
   try {
-    final row = await supabase.from('platform_settings').select('cancellation_penalty_days').eq('id', 1).single();
-    return (row['cancellation_penalty_days'] as num?)?.toInt() ?? 30;
-  } catch (_) {
-    return 30;
-  }
-}
-
-/// Texto do aviso ao cancelar, do lado do casal. [depositPaid] = a reserva
-/// já está confirmada (sinal pago).
-String coupleCancelRefundNote({
-  required DateTime eventDate,
-  required bool depositPaid,
-  required int penaltyDays,
-  bool refundable = true,
-}) {
-  if (!depositPaid) return '';
-  if (!refundable) {
-    return '\n\nO parceiro definiu o sinal como não reembolsável: fica com ele. Se já pagaste o restante, esse valor é devolvido automaticamente.';
-  }
-  final today = DateTime.now();
-  final days = DateTime(eventDate.year, eventDate.month, eventDate.day)
-      .difference(DateTime(today.year, today.month, today.day))
-      .inDays;
-  if (days >= penaltyDays) {
-    return '\n\nFaltam $days dias para o evento: o que pagaste é reembolsado automaticamente, comissão incluída (chega em 5 a 10 dias úteis).';
-  }
-  return '\n\nFaltam menos de $penaltyDays dias para o evento: o sinal fica com o parceiro. Se já pagaste o restante, esse valor é devolvido automaticamente.';
-}
-
-/// Escolha do parceiro na proposta desta reserva (migração 108).
-/// Em caso de dúvida assume reembolsável (o servidor decide na mesma).
-Future<bool> bookingDepositRefundable(String bookingId) async {
+    final row = await supabase.from('platform_settings').select().eq('id', 1).single();
+    penaltyDays = (row['cancellation_penalty_days'] as num?)?.toInt() ?? 30;
+    windowHours = (row['deposit_refund_window_hours'] as num?)?.toInt() ?? 48;
+  } catch (_) {}
+  var refundable = true;
+  DateTime? depositPaidAt;
+  var finalPaid = false;
   try {
     final row = await supabase
         .from('bookings')
-        .select('proposals(deposit_refundable)')
+        .select('proposals(deposit_refundable), payments(type, status, paid_at, updated_at)')
         .eq('id', bookingId)
         .maybeSingle();
     final p = row?['proposals'];
     final m = p is List ? (p.isEmpty ? null : p.first) : p;
-    return (m as Map?)?['deposit_refundable'] as bool? ?? true;
-  } catch (_) {
-    return true;
+    refundable = (m as Map?)?['deposit_refundable'] as bool? ?? true;
+    for (final pay in ((row?['payments'] as List?) ?? const [])) {
+      if (pay['status'] != 'paid') continue;
+      if (pay['type'] == 'deposit') {
+        final at = DateTime.tryParse((pay['paid_at'] ?? pay['updated_at'] ?? '') as String);
+        if (at != null) depositPaidAt = at;
+      } else {
+        finalPaid = true;
+      }
+    }
+  } catch (_) {}
+  return RefundInfo(
+    depositRefundable: refundable,
+    depositPaidAt: depositPaidAt,
+    finalPaid: finalPaid,
+    penaltyDays: penaltyDays,
+    windowHours: windowHours,
+  );
+}
+
+/// Texto do aviso ao cancelar, do lado do organizador.
+String coupleCancelRefundNote({required DateTime eventDate, required RefundInfo info, DateTime? now}) {
+  final t = now ?? DateTime.now();
+  final lines = <String>[];
+  final paidAt = info.depositPaidAt;
+  if (paidAt != null) {
+    final deadline = paidAt.add(Duration(hours: info.windowHours));
+    if (!info.depositRefundable) {
+      lines.add('O parceiro definiu o sinal como não reembolsável: fica com ele.');
+    } else if (t.isBefore(deadline)) {
+      final left = deadline.difference(t);
+      final h = left.inHours;
+      final when = h >= 1 ? '$h h' : '${left.inMinutes.clamp(1, 59)} min';
+      lines.add('Ainda estás dentro das ${info.windowHours} h depois de pagar o sinal (faltam $when): o sinal é devolvido, comissão incluída.');
+    } else {
+      lines.add('Já passaram mais de ${info.windowHours} h desde que pagaste o sinal: o sinal fica com o parceiro.');
+    }
   }
+  if (info.finalPaid) {
+    final days = DateTime(eventDate.year, eventDate.month, eventDate.day)
+        .difference(DateTime(t.year, t.month, t.day))
+        .inDays;
+    lines.add(days >= info.penaltyDays
+        ? 'Faltam $days dias para o evento: o restante que pagaste é devolvido.'
+        : 'Faltam menos de ${info.penaltyDays} dias para o evento: o restante já pago não é devolvido.');
+  }
+  if (lines.isEmpty) return '';
+  return '\n\n${lines.join('\n')}${lines.any((l) => l.contains('devolvido,') || l.contains('é devolvido')) ? '\nOs reembolsos chegam em 5 a 10 dias úteis.' : ''}';
 }

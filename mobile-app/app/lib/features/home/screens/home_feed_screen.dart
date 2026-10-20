@@ -32,6 +32,12 @@ class HomeFeedScreen extends ConsumerStatefulWidget {
 class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   bool _uploadingProfilePhoto = false;
 
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(taskEngineControllerProvider.notifier).recompute());
+  }
+
   void _openNotifications(BuildContext context) {
     showIslandSheet(
       context: context,

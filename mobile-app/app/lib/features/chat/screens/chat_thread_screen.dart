@@ -147,7 +147,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                       content: (message, isMe) => message.hasAttachment
                           ? ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe)
                           : message.isProposal
-                          ? _ProposalCard(message: message)
+                          ? _ProposalCard(message: message, onRequestNew: _openPartnerProfile)
                           : message.isQuoteRequestNotice
                           ? GestureDetector(
                               onTap: _openPartnerProfile,
@@ -172,7 +172,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
 class _ProposalCard extends ConsumerStatefulWidget {
   final ChatMessage message;
 
-  const _ProposalCard({required this.message});
+  final VoidCallback? onRequestNew;
+  const _ProposalCard({required this.message, this.onRequestNew});
 
   @override
   ConsumerState<_ProposalCard> createState() => _ProposalCardState();
@@ -335,7 +336,10 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       note: pct > 0 ? 'Valores já com a comissão da À Nossa!' : null,
       actions: [
         ChatCardAction('Ver detalhe', () => context.push('/bookings')),
-        if (_accepted)
+        if (_accepted && _bookingState == 'cancelled')
+          // Reserva cancelada: pode pedir uma proposta nova (2026-10-21).
+          ChatCardAction('Pedir nova proposta', widget.onRequestNew, primary: true)
+        else if (_accepted)
           // Já aceite: o passo seguinte é pagar o sinal nas Reservas.
           ChatCardAction(
             _acceptedLabel,

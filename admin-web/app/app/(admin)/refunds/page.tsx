@@ -77,9 +77,11 @@ export default async function RefundsPage() {
         ? "Tem direito a reembolso — a regra automática ainda não correu ou falhou."
         : m.deposit_refundable === false
           ? "Sinal não reembolsável (escolha do parceiro)."
-          : m.penalty_applied === true
-            ? `Cancelado a ${m.days_until_event ?? "?"} dias do evento — sinal retido.`
-            : "Sem direito a reembolso automático.";
+          : "refund_deposit" in m
+            ? `Cancelou depois das ${m.deposit_window_hours ?? 48} h — sinal retido${m.refund_final === false && (m.days_until_event as number) < (m.penalty_days as number) ? "; restante também (menos de " + m.penalty_days + " dias)" : ""}.`
+            : m.penalty_applied === true
+              ? `Cancelado a ${m.days_until_event ?? "?"} dias do evento — sinal retido.`
+              : "Sem direito a reembolso automático.";
       eligible.set(e.booking_id as string, { refund, why });
     }
   }

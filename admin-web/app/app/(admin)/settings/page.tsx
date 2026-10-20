@@ -32,7 +32,8 @@ export default async function SettingsPage() {
             items={[
               { label: "Comissão da plataforma", value: `${settings.platform_commission_percentage}%` },
               { label: "Sinal", value: `${settings.deposit_percentage}% do total` },
-              { label: "Cancelar sem penalização", value: `até ${settings.cancellation_penalty_days} dias antes` },
+              { label: "Sinal reembolsável", value: `${(settings as { deposit_refund_window_hours?: number }).deposit_refund_window_hours ?? 48} h depois de pagar` },
+              { label: "Restante reembolsável", value: `até ${settings.cancellation_penalty_days} dias antes` },
             ]}
           />
         )}
