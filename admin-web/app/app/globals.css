@@ -155,7 +155,6 @@ h3 {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  scrollbar-gutter: stable;
 }
 .admin-content {
   flex: 1;
@@ -163,8 +162,8 @@ h3 {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 1320px;
-  margin: 0 auto;
+  max-width: 1600px;
+  margin: 0;
   padding: 8px 36px 40px;
 }
 .admin-mobilebar,
@@ -181,8 +180,11 @@ h3 {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0;
   padding: 14px 36px;
-  background: color-mix(in srgb, var(--background) 88%, transparent);
+  background: var(--background);
   backdrop-filter: blur(8px);
   flex-shrink: 0;
 }
@@ -513,7 +515,7 @@ h3 {
   flex-wrap: wrap;
 }
 .card-head + .card-body {
-  padding-top: 12px;
+  padding-top: 14px;
 }
 .card-title {
   font-size: var(--fs-md);
@@ -525,7 +527,20 @@ h3 {
   margin-top: 2px;
 }
 .card-body {
-  padding: 20px;
+  --card-pad: 20px;
+  padding: var(--card-pad);
+}
+/* Encosta uma lista/tabela às margens do cartão (mesmo padding do corpo). */
+.bleed {
+  margin-left: calc(-1 * var(--card-pad, 20px));
+  margin-right: calc(-1 * var(--card-pad, 20px));
+}
+.bleed-bottom {
+  margin-bottom: calc(-1 * var(--card-pad, 20px));
+}
+.list.bleed > li {
+  padding-left: var(--card-pad, 20px);
+  padding-right: var(--card-pad, 20px);
 }
 .card-flush {
   padding: 0;
@@ -625,6 +640,7 @@ a.card:hover {
   padding-right: 20px;
 }
 .table td {
+  white-space: nowrap;
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
@@ -1157,7 +1173,7 @@ a.list-row:hover .list-title,
     white-space: nowrap;
   }
   .card-body {
-    padding: 16px;
+    --card-pad: 16px;
   }
   .card-head {
     padding: 14px 16px 0;
@@ -1257,4 +1273,14 @@ a.list-row:hover .list-title,
 .grid-main-side > :last-child .dl {
   grid-template-columns: minmax(84px, max-content) minmax(0, 1fr);
   gap: 10px 16px;
+}
+
+/* KPI do Início: sem gráfico pequeno quando o cartão é estreito. */
+.kpi {
+  container-type: inline-size;
+}
+@container (max-width: 230px) {
+  .kpi-spark {
+    display: none !important;
+  }
 }

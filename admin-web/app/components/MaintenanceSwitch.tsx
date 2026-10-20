@@ -43,7 +43,7 @@ export function MaintenanceSwitch({
 
   return (
     <div className="stack-sm">
-      <ul className="list" style={{ margin: "0 -20px" }}>
+      <ul className="list bleed">
         {sides.map(({ side, label, hint }) => (
           <li key={side}>
             <div className="list-main">

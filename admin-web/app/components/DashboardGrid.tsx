@@ -13,7 +13,7 @@ export type DashboardGridItem = {
 
 const STORAGE_KEY = "copo-dagua-admin-dashboard-layout-v2";
 const GRID_COLS = 12;
-const GRID_MARGIN = 14;
+const GRID_MARGIN = 16;
 
 function loadSavedLayout(itemIds: string[]): Layout | null {
   try {

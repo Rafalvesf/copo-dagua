@@ -299,7 +299,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
           {topPartners.length === 0 ? (
             <Empty>Sem pagamentos no período.</Empty>
           ) : (
-            <div className="table-wrap" style={{ margin: "0 -20px -20px" }}><table className="table">
+            <div className="table-wrap bleed bleed-bottom"><table className="table">
               <thead>
                 <tr>
                   <th>Parceiro</th>
@@ -387,7 +387,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
           {partnersByCat.size === 0 && quotesByCat.size === 0 ? (
             <Empty>Sem dados.</Empty>
           ) : (
-            <div className="table-wrap" style={{ margin: "0 -20px -20px" }}><table className="table">
+            <div className="table-wrap bleed bleed-bottom"><table className="table">
               <thead>
                 <tr>
                   <th>Categoria</th>
