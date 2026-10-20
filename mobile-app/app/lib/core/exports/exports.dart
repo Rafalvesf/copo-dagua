@@ -25,6 +25,25 @@ const vatRate = 0.23;
 double vatBase(double gross) => double.parse((gross / (1 + vatRate)).toStringAsFixed(2));
 double vatAmount(double gross) => double.parse((gross - vatBase(gross)).toStringAsFixed(2));
 
+/// Comissão da À Nossa! (`platform_settings.platform_commission_percentage`),
+/// cobrada ao cliente por cima do valor do parceiro — mesma conta em
+/// cêntimos que `amountWithCommission()` e o checkout da Stripe.
+double exportCommissionPct = 0;
+double commissionOf(double partnerAmount) {
+  final cents = (partnerAmount * 100).round();
+  return (cents * exportCommissionPct / 100).round() / 100;
+}
+
+double withCommission(double partnerAmount) => partnerAmount + commissionOf(partnerAmount);
+String get _pctLabel => '${exportCommissionPct.toStringAsFixed(exportCommissionPct % 1 == 0 ? 0 : 1)}%';
+
+Future<void> _loadCommission() async {
+  try {
+    final row = await supabase.from('platform_settings').select('platform_commission_percentage').eq('id', 1).single();
+    exportCommissionPct = (row['platform_commission_percentage'] as num).toDouble();
+  } catch (_) {}
+}
+
 class ReportBooking {
   final String number;
   final String counterpart; // cliente (parceiro) ou parceiro (organizador)
@@ -139,6 +158,7 @@ extension on String {
 
 /// Lucros e clientes do parceiro com sessão iniciada.
 Future<ReportData> loadPartnerReport() async {
+  await _loadCommission();
   final uid = supabase.auth.currentUser!.id;
   final profile = await supabase.from('partner_profiles').select('business_name').eq('id', uid).maybeSingle();
   final business = (profile?['business_name'] ?? 'Parceiro').toString();
@@ -157,6 +177,7 @@ Future<ReportData> loadPartnerReport() async {
 
 /// Gastos e parceiros do casamento [weddingId] (organizador).
 Future<ReportData> loadCoupleReport(String weddingId) async {
+  await _loadCommission();
   final wedding = await supabase.from('weddings').select('partner_name_1, partner_name_2').eq('id', weddingId).maybeSingle();
   final rows = await supabase
       .from('bookings')
@@ -191,6 +212,7 @@ Future<ReportData> loadCoupleReport(String weddingId) async {
 
 /// Uma reserva só (detalhe da reserva do organizador).
 Future<ReportData> loadSingleBookingReport(String bookingId, {bool partnerSide = false}) async {
+  await _loadCommission();
   final rows = await supabase
       .from('bookings')
       .select('id, booking_number, event_date, status, total_amount, partner_profiles(business_name), weddings(partner_name_1, partner_name_2, location), proposals(title)')
@@ -332,12 +354,19 @@ pw.Widget _table(List<String> headers, List<List<String>> rows, {Set<int> right 
         cellPadding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
       );
 
-List<List<String>> _bookingRows(ReportData r) => [
-      for (final b in r.bookings) [b.number, b.counterpart, b.service, _d(b.eventDate), b.status, _e(b.total), _e(b.paid), _e(b.due)],
+/// Organizador: valores com a comissão (o que paga de facto).
+/// Parceiro: valores do parceiro (o que recebe).
+List<List<String>> _bookingRows(ReportData r, {required bool partnerSide}) => [
+      for (final b in r.bookings)
+        partnerSide
+            ? [b.number, b.counterpart, b.service, _d(b.eventDate), b.status, _e(b.total), _e(b.paid), _e(b.due)]
+            : [b.number, b.counterpart, b.service, _d(b.eventDate), b.status, _e(withCommission(b.total)), _e(withCommission(b.paid)), _e(withCommission(b.due))],
     ];
 List<List<String>> _paymentRows(ReportData r, {required bool partnerSide}) => [
       for (final p in r.payments)
-        [_d(p.paidAt ?? p.dueAt), p.bookingNumber, partnerSide ? p.payer : p.payee, p.type, p.status, _e(vatBase(p.amount)), _e(vatAmount(p.amount)), _e(p.amount)],
+        partnerSide
+            ? [_d(p.paidAt ?? p.dueAt), p.bookingNumber, p.payer, p.type, p.status, _e(p.amount), _e(commissionOf(p.amount)), _e(withCommission(p.amount))]
+            : [_d(p.paidAt ?? p.dueAt), p.bookingNumber, p.payee, p.type, p.status, _e(p.amount), _e(commissionOf(p.amount)), _e(withCommission(p.amount))],
     ];
 
 /// PDF do relatório (parceiro ou organizador).
@@ -363,14 +392,29 @@ Future<Uint8List> reportPdf(ReportData r, {required bool partnerSide}) async {
       else
         _stats([
           ('Orçamento', r.budgetTotal == null ? '—' : _e(r.budgetTotal!)),
-          ('Pago a parceiros', _e(r.paidTotal)),
-          ('Por pagar', _e(r.dueTotal)),
+          ('Pago (com comissão)', _e(withCommission(r.paidTotal))),
+          ('Por pagar', _e(withCommission(r.dueTotal))),
           ('Outros gastos', _e(r.expensesTotal)),
         ]),
       _section(partnerSide ? 'Clientes e reservas' : 'Parceiros e reservas'),
-      _table(['Reserva', who, 'Serviço', 'Data', 'Estado', 'Total', 'Pago', 'Em falta'], _bookingRows(r), right: {5, 6, 7}),
+      _table(['Reserva', who, 'Serviço', 'Data', 'Estado', 'Total', 'Pago', 'Em falta'], _bookingRows(r, partnerSide: partnerSide), right: {5, 6, 7}),
       _section('Pagamentos'),
-      _table(['Data', 'Reserva', who, 'Tipo', 'Estado', 'Sem IVA', 'IVA', 'Total'], _paymentRows(r, partnerSide: partnerSide), right: {5, 6, 7}),
+      _table(
+        partnerSide
+            ? ['Data', 'Reserva', who, 'Tipo', 'Estado', 'Recebido', 'Comissão*', 'Cliente pagou']
+            : ['Data', 'Reserva', who, 'Tipo', 'Estado', 'Serviço', 'Comissão', 'Total pago'],
+        _paymentRows(r, partnerSide: partnerSide),
+        right: {5, 6, 7},
+      ),
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(top: 4),
+        child: pw.Text(
+          partnerSide
+              ? '* Comissão da À Nossa! ($_pctLabel) paga pelo cliente por cima do teu valor — não é descontada ao que recebes.'
+              : 'Comissão da À Nossa! ($_pctLabel) sobre o valor do parceiro. ${partnerSide ? '' : 'Totais da tabela de reservas já com comissão.'}',
+          style: const pw.TextStyle(color: _muted, fontSize: 8),
+        ),
+      ),
       pw.Padding(
         padding: const pw.EdgeInsets.only(top: 4),
         child: pw.Text('Valores com IVA incluído (${(vatRate * 100).round()}%).', style: const pw.TextStyle(color: _muted, fontSize: 8)),
@@ -391,7 +435,7 @@ Future<Uint8List> reportPdf(ReportData r, {required bool partnerSide}) async {
 }
 
 /// Comprovativos de todos os pagamentos já feitos (um por página).
-Future<Uint8List> receiptsPdf(ReportData r) async {
+Future<Uint8List> receiptsPdf(ReportData r, {bool receiptForPartner = false}) async {
   final doc = pw.Document(theme: await _pdfTheme(), title: 'Comprovativos de pagamento — ${r.owner}', author: 'À Nossa!');
   final paid = r.payments.where((p) => p.isPaid).toList();
   if (paid.isEmpty) {
@@ -427,14 +471,22 @@ Future<Uint8List> receiptsPdf(ReportData r) async {
             row('Descrição', [p.type, if (p.service.isNotEmpty) p.service].join(' · ')),
             row('Meio de pagamento', p.provider.isEmpty ? 'Pagamento na app' : (p.provider == 'stripe' ? 'Stripe (cartão, MB WAY ou Multibanco)' : p.provider)),
             pw.Divider(color: const PdfColor.fromInt(0xFFDDE5D3)),
+            // Valor do parceiro + comissão da À Nossa! = total pago.
+            row('Valor do serviço', _e(p.amount)),
+            row('Comissão À Nossa! ($_pctLabel)', _e(commissionOf(p.amount))),
+            pw.Divider(color: const PdfColor.fromInt(0xFFDDE5D3)),
             // Detalhe do IVA (pedido do utilizador, 2026-10-20).
-            row('Valor sem IVA', _e(vatBase(p.amount))),
-            row('IVA (${(vatRate * 100).round()}%)', _e(vatAmount(p.amount))),
+            row('Total sem IVA', _e(vatBase(withCommission(p.amount)))),
+            row('IVA (${(vatRate * 100).round()}%)', _e(vatAmount(withCommission(p.amount)))),
             pw.Divider(color: const PdfColor.fromInt(0xFFDDE5D3)),
             pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
               pw.Text('Total pago (IVA incluído)', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
-              pw.Text(_e(p.amount), style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: _green)),
+              pw.Text(_e(withCommission(p.amount)), style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: _green)),
             ]),
+            if (receiptForPartner) ...[
+              pw.SizedBox(height: 6),
+              row('Recebido pelo parceiro', _e(p.amount)),
+            ],
           ]),
         ),
         pw.Spacer(),
@@ -487,16 +539,31 @@ Uint8List reportXlsx(ReportData r, {required bool partnerSide}) {
         ]
       : [
           ['Orçamento', r.budgetTotal ?? 0],
-          ['Pago a parceiros', r.paidTotal],
-          ['Por pagar a parceiros', r.dueTotal],
+          ['Pago (com comissão)', withCommission(r.paidTotal)],
+          ['Por pagar (com comissão)', withCommission(r.dueTotal)],
+          ['Comissão À Nossa! ($_pctLabel)', commissionOf(r.paidTotal)],
           ['Outros gastos', r.expensesTotal],
         ]);
   sheet(partnerSide ? 'Clientes' : 'Parceiros', ['Reserva', who, 'Serviço', 'Data do evento', 'Local', 'Estado', 'Total (€)', 'Pago (€)', 'Em falta (€)'], [
-    for (final b in r.bookings) [b.number, b.counterpart, b.service, b.eventDate, b.location, b.status, b.total, b.paid, b.due],
+    for (final b in r.bookings)
+      partnerSide
+          ? [b.number, b.counterpart, b.service, b.eventDate, b.location, b.status, b.total, b.paid, b.due]
+          : [b.number, b.counterpart, b.service, b.eventDate, b.location, b.status, withCommission(b.total), withCommission(b.paid), withCommission(b.due)],
   ]);
-  sheet('Pagamentos', ['Data', 'Reserva', who, 'Tipo', 'Estado', 'Sem IVA (€)', 'IVA ${(vatRate * 100).round()}% (€)', 'Total c/ IVA (€)'], [
+  sheet('Pagamentos', [
+    'Data', 'Reserva', who, 'Tipo', 'Estado',
+    partnerSide ? 'Recebido (€)' : 'Serviço (€)',
+    'Comissão $_pctLabel (€)',
+    partnerSide ? 'Cliente pagou (€)' : 'Total pago (€)',
+    'Sem IVA (€)', 'IVA ${(vatRate * 100).round()}% (€)',
+  ], [
     for (final p in r.payments)
-      [p.paidAt ?? p.dueAt, p.bookingNumber, partnerSide ? p.payer : p.payee, p.type, p.status, vatBase(p.amount), vatAmount(p.amount), p.amount],
+      [
+        p.paidAt ?? p.dueAt, p.bookingNumber, partnerSide ? p.payer : p.payee, p.type, p.status,
+        p.amount, commissionOf(p.amount), withCommission(p.amount),
+        vatBase(partnerSide ? p.amount : withCommission(p.amount)),
+        vatAmount(partnerSide ? p.amount : withCommission(p.amount)),
+      ],
   ]);
   if (!partnerSide) {
     sheet('Gastos', ['Descrição', 'Categoria', 'Data', 'Pago', 'Valor (€)'], [

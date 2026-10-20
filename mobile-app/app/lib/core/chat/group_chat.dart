@@ -65,6 +65,11 @@ class GroupMessage {
 
 String get _me => supabase.auth.currentUser!.id;
 
+/// Sem novas tentativas automáticas: se a base de dados dos grupos ainda
+/// não existir, mostra logo o aviso em vez de ficar a carregar para
+/// sempre (reportado 2026-10-20).
+Duration? _noRetry(int count, Object error) => null;
+
 final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, String>((ref, weddingId) async {
   final rows = await supabase
       .from('chat_groups')
@@ -91,7 +96,7 @@ final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, St
         );
       }(),
   ];
-});
+}, retry: _noRetry);
 
 final eventPeopleProvider = FutureProvider.autoDispose.family<List<EventPerson>, String>((ref, weddingId) async {
   final rows = await supabase.rpc('event_chat_people', params: {'p_wedding_id': weddingId}) as List;
@@ -99,7 +104,7 @@ final eventPeopleProvider = FutureProvider.autoDispose.family<List<EventPerson>,
     for (final r in rows.cast<Map<String, dynamic>>())
       EventPerson(r['profile_id'] as String, r['full_name'] as String, r['avatar_url'] as String?, r['role'] as String),
   ];
-});
+}, retry: _noRetry);
 
 final groupPeopleProvider = FutureProvider.autoDispose.family<Map<String, EventPerson>, String>((ref, groupId) async {
   final rows = await supabase.rpc('chat_group_people', params: {'p_group_id': groupId}) as List;
@@ -107,7 +112,7 @@ final groupPeopleProvider = FutureProvider.autoDispose.family<Map<String, EventP
     for (final r in rows.cast<Map<String, dynamic>>())
       r['profile_id'] as String: EventPerson(r['profile_id'] as String, r['full_name'] as String, r['avatar_url'] as String?, ''),
   };
-});
+}, retry: _noRetry);
 
 Future<String> createChatGroup(String weddingId, String name, List<String> memberIds) async {
   final id = await supabase.rpc('create_chat_group', params: {

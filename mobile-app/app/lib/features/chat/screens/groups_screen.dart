@@ -198,7 +198,7 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
           Expanded(
             child: people.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => const Center(child: Text('Não foi possível carregar as pessoas do evento.')),
+              error: (e, _) => const Center(child: Text('Os grupos ainda não estão ativos — falta aplicar a atualização da base de dados.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.inkMuted))),
               data: (list) {
                 final others = list.where((p) => p.id != me).toList();
                 if (others.isEmpty) {

@@ -67,7 +67,7 @@ class _ExportCardState extends State<ExportCard> {
           busy: _busy == 'rec',
           onTap: () => _run('rec', (r) async {
             final copy = ReportData(title: 'Comprovativos', owner: r.owner, bookings: r.bookings, payments: r.payments);
-            await deliverFile(await receiptsPdf(r), reportFileName(copy, 'pdf'), pdfMime);
+            await deliverFile(await receiptsPdf(r, receiptForPartner: side), reportFileName(copy, 'pdf'), pdfMime);
           }),
         ),
       ]),

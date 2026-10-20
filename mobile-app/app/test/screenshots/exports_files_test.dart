@@ -35,10 +35,11 @@ void main() {
   );
 
   test('gera relatórios', () async {
+    exportCommissionPct = 5;
     final dir = Directory('test/screenshots/goldens')..createSync(recursive: true);
     final p1 = await reportPdf(partner, partnerSide: true);
     final p2 = await reportPdf(couple, partnerSide: false);
-    final r1 = await receiptsPdf(partner);
+    final r1 = await receiptsPdf(couple);
     final x1 = reportXlsx(partner, partnerSide: true);
     final x2 = reportXlsx(couple, partnerSide: false);
     expect(String.fromCharCodes(p1.take(4)), '%PDF');
