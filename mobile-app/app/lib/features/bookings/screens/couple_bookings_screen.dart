@@ -156,11 +156,13 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
   Future<void> _cancel() async {
     if (_cancelling) return;
     final penaltyDays = await cancellationPenaltyDays();
+    final refundable = await bookingDepositRefundable(booking.id);
     if (!mounted) return;
     final refundNote = coupleCancelRefundNote(
       eventDate: booking.serviceDate,
       depositPaid: booking.status == BookingStatus.confirmado,
       penaltyDays: penaltyDays,
+      refundable: refundable,
     );
     final confirmed = await showIslandDialog<bool>(
       context: context,
@@ -518,6 +520,28 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
             ].join(' · '),
             style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
           ),
+          const SizedBox(height: 6),
+          // Política de reembolso escolhida pelo parceiro (migração 108).
+          Row(children: [
+            Icon(
+              proposal.depositRefundable ? Icons.replay_rounded : Icons.block_rounded,
+              size: 14,
+              color: proposal.depositRefundable ? AppTheme.brandGreen : const Color(0xFFA3412E),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                proposal.depositRefundable
+                    ? 'Sinal reembolsável se cancelares com 30+ dias de antecedência'
+                    : 'Sinal não reembolsável',
+                style: TextStyle(
+                  fontSize: AppFontSize.xs,
+                  fontWeight: FontWeight.w600,
+                  color: proposal.depositRefundable ? AppTheme.brandGreen : const Color(0xFFA3412E),
+                ),
+              ),
+            ),
+          ]),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,

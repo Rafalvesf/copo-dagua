@@ -61,8 +61,16 @@ Future<int> cancellationPenaltyDays() async {
 
 /// Texto do aviso ao cancelar, do lado do casal. [depositPaid] = a reserva
 /// já está confirmada (sinal pago).
-String coupleCancelRefundNote({required DateTime eventDate, required bool depositPaid, required int penaltyDays}) {
+String coupleCancelRefundNote({
+  required DateTime eventDate,
+  required bool depositPaid,
+  required int penaltyDays,
+  bool refundable = true,
+}) {
   if (!depositPaid) return '';
+  if (!refundable) {
+    return '\n\nO parceiro definiu o sinal como não reembolsável: fica com ele. Se já pagaste o restante, esse valor é devolvido automaticamente.';
+  }
   final today = DateTime.now();
   final days = DateTime(eventDate.year, eventDate.month, eventDate.day)
       .difference(DateTime(today.year, today.month, today.day))
@@ -71,4 +79,21 @@ String coupleCancelRefundNote({required DateTime eventDate, required bool deposi
     return '\n\nFaltam $days dias para o evento: o que pagaste é reembolsado automaticamente, comissão incluída (chega em 5 a 10 dias úteis).';
   }
   return '\n\nFaltam menos de $penaltyDays dias para o evento: o sinal fica com o parceiro. Se já pagaste o restante, esse valor é devolvido automaticamente.';
+}
+
+/// Escolha do parceiro na proposta desta reserva (migração 108).
+/// Em caso de dúvida assume reembolsável (o servidor decide na mesma).
+Future<bool> bookingDepositRefundable(String bookingId) async {
+  try {
+    final row = await supabase
+        .from('bookings')
+        .select('proposals(deposit_refundable)')
+        .eq('id', bookingId)
+        .maybeSingle();
+    final p = row?['proposals'];
+    final m = p is List ? (p.isEmpty ? null : p.first) : p;
+    return (m as Map?)?['deposit_refundable'] as bool? ?? true;
+  } catch (_) {
+    return true;
+  }
 }
