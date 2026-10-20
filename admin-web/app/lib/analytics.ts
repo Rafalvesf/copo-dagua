@@ -87,3 +87,14 @@ export function duration(hours: number | null): string {
   if (hours < 48) return `${Math.round(hours)} h`;
   return `${Math.round(hours / 24)} dias`;
 }
+
+/// Parte do parceiro que ficou mesmo paga, já sem reembolsos.
+/// `refunded_amount` está no que o casal pagou (com comissão); reembolsos
+/// anteriores à migração 109 ficaram só com status "refunded" e 0 — conta
+/// como devolvido por inteiro.
+export function netPartnerAmount(amount: number, status: string | null, refunded: number, commissionPct: number): number {
+  if (status === "refunded" && !(refunded > 0)) return 0;
+  const gross = amount * (1 + commissionPct / 100);
+  if (!(refunded > 0) || gross <= 0) return amount;
+  return Math.max(0, amount * (1 - refunded / gross));
+}

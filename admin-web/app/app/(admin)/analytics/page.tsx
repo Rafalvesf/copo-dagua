@@ -18,6 +18,7 @@ import {
   periodStart,
   sumBy,
   topN,
+  netPartnerAmount,
 } from "@/lib/analytics";
 
 // Analytics detalhado (2026-10-20): muito mais do que o dashboard —
@@ -107,7 +108,9 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
   // ---------- Dinheiro ----------
   const paidAll = payments.filter((p) => s(p, "status") === "paid" || n(p, "refunded_amount") > 0 || s(p, "status") === "refunded");
   const paidIn = paidAll.filter((p) => within(s(p, "paid_at")));
-  const partnerAmount = paidIn.reduce((a, p) => a + n(p, "amount"), 0);
+  // Valor líquido: sem o que já foi reembolsado (a comissão devolvida não é receita).
+  const net = (p: Row) => netPartnerAmount(n(p, "amount"), s(p, "status"), n(p, "refunded_amount"), commissionPct);
+  const partnerAmount = paidIn.reduce((a, p) => a + net(p), 0);
   const grossPaid = withCommission(partnerAmount);
   const revenue = partnerAmount * (commissionPct / 100);
   const refundedIn = payments.filter((p) => n(p, "refunded_amount") > 0 && within(s(p, "updated_at")));
@@ -119,8 +122,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
   const offersPaid = offers.filter((o) => s(o, "status") === "paid" && within(s(o, "created_at")));
 
   const months = monthBuckets(12, nowMs);
-  const paidByMonth = sumBy(paidAll.filter((p) => s(p, "paid_at")), (p) => monthKey(s(p, "paid_at")!), (p) => withCommission(n(p, "amount")));
-  const revenueByMonth = sumBy(paidAll.filter((p) => s(p, "paid_at")), (p) => monthKey(s(p, "paid_at")!), (p) => n(p, "amount") * (commissionPct / 100));
+  const paidByMonth = sumBy(paidAll.filter((p) => s(p, "paid_at")), (p) => monthKey(s(p, "paid_at")!), (p) => withCommission(net(p)));
+  const revenueByMonth = sumBy(paidAll.filter((p) => s(p, "paid_at")), (p) => monthKey(s(p, "paid_at")!), (p) => net(p) * (commissionPct / 100));
 
   // Categorias de cada parceiro (para dinheiro e pedidos por categoria).
   const catsOf = new Map<string, string[]>();
@@ -134,8 +137,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
   const primaryCat = (partnerId: string | null) => (partnerId ? catsOf.get(partnerId)?.[0] ?? "Sem categoria" : "Sem categoria");
   const partnerName = new Map(partners.map((p) => [s(p, "id")!, s(p, "business_name") ?? "Parceiro"]));
 
-  const revenueByCat = sumBy(paidIn, (p) => primaryCat(s(p, "partner_id")), (p) => withCommission(n(p, "amount")));
-  const revenueByPartner = sumBy(paidIn, (p) => s(p, "partner_id"), (p) => withCommission(n(p, "amount")));
+  const revenueByCat = sumBy(paidIn, (p) => primaryCat(s(p, "partner_id")), (p) => withCommission(net(p)));
+  const revenueByPartner = sumBy(paidIn, (p) => s(p, "partner_id"), (p) => withCommission(net(p)));
 
   // ---------- Funil ----------
   const quotesIn = quotes.filter((r) => within(s(r, "created_at")));
