@@ -17,6 +17,22 @@
   <base href="/copo-dagua/">
 
   <meta charset="UTF-8">
+  <!-- Regresso de um pagamento que precisou de sair da app (2026-10-21):
+       guarda o id, limpa o endereço e salta a abertura e o brinde —
+       a app abre logo na confirmação do pagamento. -->
+  <script>
+    (function () {
+      try {
+        var q = new URLSearchParams(location.search);
+        var id = q.get('pay_return');
+        if (!id) return;
+        window.tchinPayReturn = id;
+        window.tchinSkipOpening = true;
+        history.replaceState(null, '', location.pathname + '#/pay/return');
+        document.documentElement.classList.remove('tt-opening');
+      } catch (e) {}
+    })();
+  </script>
   <!-- Versões novas chegam logo (2026-10-17): o service worker antigo do
        Flutter guardava a app em cache e o telemóvel continuava com a
        versão anterior. Remove-o (e as caches dele) uma vez e recarrega. -->
@@ -171,6 +187,12 @@
       document.body.style.background = c;
     };
     (function () {
+      if (window.tchinSkipOpening) {
+        window.tchinOpening = false;
+        var sp0 = document.getElementById('tt-splash'); if (sp0) sp0.remove();
+        var cf0 = document.getElementById('tt-cf'); if (cf0) cf0.remove();
+        return;
+      }
       var colors = ['#4F6B4A', '#F2D98D', '#F3C9CF', '#A9BC8F', '#E8B44C', '#DDE5D3', '#F3B9C1'];
       var cf = document.getElementById('tt-cf');
       for (var i = 0; i < 30; i++) {
@@ -293,14 +315,14 @@
             return 'ok';
           });
         },
-        confirm: function () {
+        confirm: function (returnUrl) {
           if (!stripe || !elements) return Promise.resolve(JSON.stringify({ error: 'Formulário não carregado.' }));
           return elements.submit().then(function (r) {
             if (r.error) return JSON.stringify({ error: r.error.message || 'Dados em falta.' });
             return stripe.confirmPayment({
               elements: elements,
               redirect: 'if_required',
-              confirmParams: { return_url: location.href }
+              confirmParams: { return_url: returnUrl || location.href }
             }).then(function (res) {
               if (res.error) return JSON.stringify({ error: res.error.message || 'Pagamento recusado.', code: res.error.code || null });
               var pi = res.paymentIntent || {};
@@ -391,6 +413,6 @@
       };
     })();
   </script>
-  <script src="flutter_bootstrap.js?v=db31036" async></script>
+  <script src="flutter_bootstrap.js?v=7782ec0" async></script>
 </body>
 </html>
