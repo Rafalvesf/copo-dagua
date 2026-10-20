@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
@@ -68,13 +69,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
         );
   }
 
-  Future<void> _shareInvite(Wedding wedding) {
-    return showIslandSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => InviteShareSheet(wedding: wedding),
-    );
-  }
+  Future<void> _shareInvite(Wedding wedding) => shareWeddingInvite(context, wedding);
 
   @override
   Widget build(BuildContext context) {
@@ -325,6 +320,30 @@ class _ListHero extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Partilhar convite": abre logo a partilha do telemóvel (WhatsApp,
+/// Mensagens, Mail…) com o link e o código (pedido do utilizador,
+/// 2026-10-20). Sem partilha disponível (ex: computador), mostra a folha
+/// com o link e o código para copiar.
+Future<void> shareWeddingInvite(BuildContext context, Wedding wedding) async {
+  final url = wedding.inviteUrl;
+  final code = wedding.guestCode;
+  if (url != null) {
+    final text = 'Estás convidado/a para o evento de ${wedding.displayNames}! '
+        'Confirma a tua presença aqui: $url'
+        '${code == null ? '' : '\nCódigo do evento: $code'}';
+    try {
+      final result = await SharePlus.instance.share(ShareParams(text: text, subject: 'Convite — ${wedding.displayNames}'));
+      if (result.status != ShareResultStatus.unavailable) return;
+    } catch (_) {}
+  }
+  if (!context.mounted) return;
+  await showIslandSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (context) => InviteShareSheet(wedding: wedding),
+  );
 }
 
 class InviteShareSheet extends StatefulWidget {

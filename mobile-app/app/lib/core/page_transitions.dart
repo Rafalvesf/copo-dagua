@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'browser_back_stub.dart' if (dart.library.js_interop) 'browser_back_web.dart' as back;
+
+/// Quando o utilizador volta atrás com o gesto do Safari (deslizar da
+/// esquerda para a direita) o próprio Safari já anima a saída — a app não
+/// repete a animação (pedido do utilizador, 2026-10-20).
+DateTime? _browserBackAt;
+bool get _fromBrowserBack =>
+    _browserBackAt != null && DateTime.now().difference(_browserBackAt!) < const Duration(milliseconds: 900);
+
+/// Chamado uma vez no arranque (`main.dart`).
+void installBrowserBackDetection() => back.listenBrowserBack(() => _browserBackAt = DateTime.now());
+
 /// Animações de navegação da app (pedido do utilizador, 2026-10-19):
 /// - navbar: o separador novo desliza na horizontal, sem sombra;
 /// - botões (qualquer outra página): a página desce de cima para baixo,
@@ -78,6 +90,9 @@ class _TabSlide extends StatelessWidget {
       builder: (context, child) {
         // A entrar vem do lado da direção; a sair vai para o lado oposto.
         final leaving = animation.status == AnimationStatus.reverse;
+        if (_fromBrowserBack && animation.value < 1) {
+          return leaving ? Opacity(opacity: 0, child: child) : child!;
+        }
         final t = Curves.easeOutCubic.transform(animation.value);
         final dx = (leaving ? -_tabDir : _tabDir) * (1 - t);
         return LayoutBuilder(builder: (context, c) {
@@ -101,6 +116,10 @@ class TopDownTransition extends StatelessWidget {
       animation: animation,
       child: child,
       builder: (context, child) {
+        // Voltar pelo gesto do Safari: sem animação de cima para baixo.
+        if (_fromBrowserBack && animation.value < 1) {
+          return animation.status == AnimationStatus.reverse ? Opacity(opacity: 0, child: child) : child!;
+        }
         final t = Curves.easeOutCubic.transform(animation.value);
         final shadow = (1 - t) * 0.9 + 0.1;
         return LayoutBuilder(builder: (context, c) {

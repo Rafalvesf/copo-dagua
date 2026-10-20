@@ -16,7 +16,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/menu_style.dart';
-import '../../guests/screens/guests_list_screen.dart' show InviteShareSheet;
+import '../../guests/screens/guests_list_screen.dart' show shareWeddingInvite;
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
@@ -1052,11 +1052,7 @@ class _ShareWeddingButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SnappyTap(
-      onTap: () => showIslandSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (context) => InviteShareSheet(wedding: wedding),
-      ),
+      onTap: () => shareWeddingInvite(context, wedding),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
