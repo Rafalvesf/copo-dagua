@@ -13,6 +13,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import '../../../core/exports/exports.dart' show bookingRef;
 
 /// Um contrato = uma reserva com a proposta que o casal aceitou: o que
 /// foi combinado (título, descrição, condições), o valor e o estado dos
@@ -59,7 +60,7 @@ final partnerContractsProvider = FutureProvider<List<PartnerContract>>((ref) asy
         'id, booking_number, event_date, total_amount, deposit_amount, status, '
         'proposals(title, description, payment_terms), '
         'weddings(partner_name_1, partner_name_2, venue, location, profile_photo_url, cover_photo_url), '
-        'payments(status, amount)',
+        'payments(status, amount), partner_profiles(business_name)',
       )
       .eq('partner_id', partnerId)
       .order('event_date', ascending: true);
@@ -73,7 +74,9 @@ final partnerContractsProvider = FutureProvider<List<PartnerContract>>((ref) asy
         final pays = ((r['payments'] as List?) ?? const []).cast<Map<String, dynamic>>();
         return PartnerContract(
           id: r['id'] as String,
-          number: r['booking_number'] as String?,
+          number: r['booking_number'] == null
+              ? null
+              : bookingRef(r['booking_number'], ((r['partner_profiles'] as Map?)?['business_name'] ?? '').toString()),
           couple: n1.isEmpty ? 'Casal' : (n2.isEmpty ? n1 : '$n1 & $n2'),
           coupleAvatarUrl: (w?['profile_photo_url'] as String?) ?? (w?['cover_photo_url'] as String?),
           date: r['event_date'] == null ? null : DateTime.parse(r['event_date'] as String),

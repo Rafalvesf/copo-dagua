@@ -15,13 +15,13 @@ void main() {
     title: 'Lucros e clientes',
     owner: 'Cravos & Canela',
     bookings: [
-      ReportBooking(number: 'WED-1016', counterpart: 'Sofia & Tiago', service: 'Flores e Decoração', eventDate: DateTime(2027, 5, 21), location: 'Sintra', status: 'Concluída', total: 300, paid: 300),
-      ReportBooking(number: 'WED-1040', counterpart: 'Inês & João', service: 'Arranjos de mesa', eventDate: DateTime(2027, 2, 16), location: 'Cascais', status: 'Confirmada', total: 1200, paid: 240),
+      ReportBooking(number: 'WED-1 · Cravos & Canela', counterpart: 'Sofia & Tiago', service: 'Flores e Decoração', eventDate: DateTime(2027, 5, 21), location: 'Sintra', status: 'Concluída', total: 300, paid: 300),
+      ReportBooking(number: 'WED-2 · Cravos & Canela', counterpart: 'Inês & João', service: 'Arranjos de mesa', eventDate: DateTime(2027, 2, 16), location: 'Cascais', status: 'Confirmada', total: 1200, paid: 240),
     ],
     payments: [
-      ReportPayment(bookingNumber: 'WED-1016', payer: 'Sofia & Tiago', payee: 'Cravos & Canela', type: 'Sinal', status: 'Pago', amount: 150, paidAt: DateTime(2026, 9, 5), dueAt: null, provider: 'stripe', service: 'Flores e Decoração'),
-      ReportPayment(bookingNumber: 'WED-1016', payer: 'Sofia & Tiago', payee: 'Cravos & Canela', type: 'Pagamento final', status: 'Pago', amount: 150, paidAt: DateTime(2026, 10, 1), dueAt: null, provider: 'stripe', service: 'Flores e Decoração'),
-      ReportPayment(bookingNumber: 'WED-1040', payer: 'Inês & João', payee: 'Cravos & Canela', type: 'Sinal', status: 'Pago', amount: 240, paidAt: DateTime(2026, 10, 12), dueAt: null, provider: 'stripe', service: 'Arranjos de mesa'),
+      ReportPayment(bookingNumber: 'WED-1 · Cravos & Canela', payer: 'Sofia & Tiago', payee: 'Cravos & Canela', type: 'Sinal', status: 'Pago', amount: 150, paidAt: DateTime(2026, 9, 5), dueAt: null, provider: 'stripe', service: 'Flores e Decoração'),
+      ReportPayment(bookingNumber: 'WED-1 · Cravos & Canela', payer: 'Sofia & Tiago', payee: 'Cravos & Canela', type: 'Pagamento final', status: 'Pago', amount: 150, paidAt: DateTime(2026, 10, 1), dueAt: null, provider: 'stripe', service: 'Flores e Decoração'),
+      ReportPayment(bookingNumber: 'WED-2 · Cravos & Canela', payer: 'Inês & João', payee: 'Cravos & Canela', type: 'Sinal', status: 'Pago', amount: 240, paidAt: DateTime(2026, 10, 12), dueAt: null, provider: 'stripe', service: 'Arranjos de mesa'),
     ],
   );
   final couple = ReportData(

@@ -227,8 +227,17 @@ Future<ReportData> loadSingleBookingReport(String bookingId, {bool partnerSide =
       : partnerSide
           ? ((rows.first['partner_profiles'] as Map?)?['business_name'] ?? 'Parceiro').toString()
           : _couple(rows.first['weddings'] as Map?);
-  final base = _assemble(owner, 'Reserva ${rows.isEmpty ? '' : rows.first['booking_number']}', rows, pays, partnerSide: partnerSide);
+  final partnerName = rows.isEmpty ? '' : ((rows.first['partner_profiles'] as Map?)?['business_name'] ?? '').toString();
+  final base = _assemble(owner, 'Reserva ${rows.isEmpty ? '' : bookingRef(rows.first['booking_number'], partnerName)}', rows, pays, partnerSide: partnerSide);
   return base;
+}
+
+/// Número da reserva com o nome do parceiro (2026-10-20): os números
+/// repetem-se entre parceiros (WED-1 de cada um, migração 107).
+String bookingRef(Object? number, String partnerName) {
+  final n = (number ?? '').toString();
+  if (n.isEmpty) return partnerName;
+  return partnerName.isEmpty ? n : '$n · $partnerName';
 }
 
 ReportData _assemble(String owner, String title, List<Map<String, dynamic>> rows, List<Map<String, dynamic>> pays, {required bool partnerSide}) {
@@ -244,9 +253,9 @@ ReportData _assemble(String owner, String title, List<Map<String, dynamic>> rows
       () {
         final r = byBooking[p['booking_id']];
         final couple = _couple(r?['weddings'] as Map?);
-        final partner = ((r?['partner_profiles'] as Map?)?['business_name'] ?? owner).toString();
+        final partner = ((r?['partner_profiles'] as Map?)?['business_name'] ?? (partnerSide ? owner : '')).toString();
         return ReportPayment(
-          bookingNumber: (r?['booking_number'] ?? '').toString(),
+          bookingNumber: bookingRef(r?['booking_number'], partner),
           payer: partnerSide ? couple : owner,
           payee: partnerSide ? owner : partner,
           type: _paymentType[p['type']] ?? '${p['type']}',
@@ -269,7 +278,7 @@ ReportData _assemble(String owner, String title, List<Map<String, dynamic>> rows
   final bookings = [
     for (final r in rows)
       ReportBooking(
-        number: (r['booking_number'] ?? '').toString(),
+        number: bookingRef(r['booking_number'], ((r['partner_profiles'] as Map?)?['business_name'] ?? (partnerSide ? owner : '')).toString()),
         counterpart: other(r),
         service: service(r),
         eventDate: _date(r['event_date']),
@@ -459,7 +468,7 @@ Future<Uint8List> receiptsPdf(ReportData r, {bool receiptForPartner = false}) as
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(40),
       build: (c) => pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-        _header('Comprovativo de pagamento', 'N.º ${p.bookingNumber}-${(i + 1).toString().padLeft(2, '0')}'),
+        _header('Comprovativo de pagamento', 'N.º ${p.bookingNumber} · ${(i + 1).toString().padLeft(2, '0')}'),
         pw.Container(
           padding: const pw.EdgeInsets.all(16),
           decoration: pw.BoxDecoration(border: pw.Border.all(color: const PdfColor.fromInt(0xFFDDE5D3)), borderRadius: pw.BorderRadius.circular(10)),
