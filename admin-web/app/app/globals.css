@@ -1284,3 +1284,124 @@ a.list-row:hover .list-title,
     display: none !important;
   }
 }
+
+/* ============================================================
+ * Analytics — cartões de métrica ao estilo Shopify (2026-10-21)
+ * ============================================================ */
+.mcard {
+  padding: 16px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.mcard-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline dotted var(--border-strong);
+  text-underline-offset: 4px;
+  cursor: default;
+  width: fit-content;
+}
+.mcard-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mcard-value {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.mcard-delta {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+.mcard-delta.is-good {
+  color: var(--success-fg);
+}
+.mcard-delta.is-bad {
+  color: var(--danger-fg);
+}
+.mcard-chart {
+  width: 100%;
+  height: 92px;
+  margin-top: 6px;
+  overflow: visible;
+}
+.mc-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+.mc-base {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.mc-area {
+  fill: var(--accent);
+  opacity: 0.08;
+}
+.mc-cur {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.mc-prev {
+  fill: none;
+  stroke: #9fb4cc;
+  stroke-width: 1.6;
+  stroke-dasharray: 4 4;
+}
+.mcard-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-subtle);
+}
+.mcard-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--ink-muted);
+  padding-top: 4px;
+}
+.mcard-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.lg-cur,
+.lg-prev {
+  display: inline-block;
+  width: 14px;
+  height: 0;
+  border-top: 2px solid var(--accent);
+}
+.lg-prev {
+  border-top: 2px dashed #9fb4cc;
+}
+.mcard-foot {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+.an-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.an-compare {
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+}
