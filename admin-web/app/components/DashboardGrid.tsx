@@ -11,7 +11,7 @@ export type DashboardGridItem = {
   defaultLayout: { x: number; y: number; w: number; h: number };
 };
 
-const STORAGE_KEY = "copo-dagua-admin-dashboard-layout-v1";
+const STORAGE_KEY = "copo-dagua-admin-dashboard-layout-v2";
 const GRID_COLS = 12;
 const GRID_MARGIN = 14;
 
@@ -86,16 +86,12 @@ export function DashboardGrid({ items }: { items: DashboardGridItem[] }) {
       <div className="dash-stack">
         {ordered.map((item) => {
           const narrow = item.defaultLayout.w <= 3 && item.defaultLayout.h <= 6;
-          const urgent = item.id.startsWith("urgentes");
+          const chart = item.id.startsWith("reservas-chart") || item.id.startsWith("estado");
           return (
             <div
               key={item.id}
               className={narrow ? undefined : "dash-wide"}
-              style={{
-                height: narrow ? 168 : urgent ? "auto" : Math.min(380, Math.max(260, item.defaultLayout.h * 24)),
-                minHeight: urgent ? 200 : undefined,
-                minWidth: 0,
-              }}
+              style={{ height: narrow ? 120 : chart ? 300 : "auto", maxHeight: narrow || chart ? undefined : 460, display: "flex", flexDirection: "column", minWidth: 0 }}
             >
               {item.content}
             </div>

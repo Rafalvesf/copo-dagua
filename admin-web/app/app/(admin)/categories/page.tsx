@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { ToggleSwitch, NewCategoryForm, DeleteCategoryButton } from "./category-controls";
 import type { PartnerCategory } from "@/lib/types";
+import { Card, Empty, PageHeader } from "@/components/ui";
 
 export default async function CategoriesPage() {
   await requireAdmin();
@@ -18,52 +19,60 @@ export default async function CategoriesPage() {
     countByCategory.set(row.category_id, (countByCategory.get(row.category_id) ?? 0) + 1);
   });
 
+  const rows = (categories ?? []) as PartnerCategory[];
+  const active = rows.filter((c) => c.is_active).length;
+
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Categorias</h1>
-          <p style={{ color: "var(--ink-muted)", marginTop: 4 }}>Taxonomia do Marketplace.</p>
-        </div>
+    <div className="page">
+      <PageHeader title="Categorias" subtitle={`As áreas de serviço do Marketplace (${active} ativas de ${rows.length}). Uma categoria inativa deixa de aparecer na app, mas os parceiros mantêm-na.`} />
+
+      <Card title="Nova categoria">
         <NewCategoryForm />
-      </div>
+      </Card>
 
-      {error && <p style={{ color: "var(--status-rejected-fg)", marginTop: 24 }}>Não foi possível carregar a lista.</p>}
-
-      {!error && categories && (
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 24 }}>
-          <thead>
-            <tr style={{ textAlign: "left", fontSize: 13, color: "var(--ink-muted)" }}>
-              <th style={{ padding: "8px 0" }}>Categoria</th>
-              <th>Parceiros</th>
-              <th>Estado</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {(categories as PartnerCategory[]).map((c) => {
-              const partnerCount = countByCategory.get(c.id) ?? 0;
-              return (
-                <tr key={c.id} style={{ borderTop: "1px solid var(--border-muted)" }}>
-                  <td style={{ padding: "12px 0", fontWeight: 600 }}>{c.label_pt}</td>
-                  <td style={{ fontSize: 13 }}>{partnerCount}</td>
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 13, color: "var(--ink-muted)" }}>
-                        {c.is_active ? "Ativa" : "Inativa"}
-                      </span>
-                      <ToggleSwitch categoryId={c.id} isActive={c.is_active} />
-                    </div>
-                  </td>
-                  <td style={{ textAlign: "right" }}>
-                    <DeleteCategoryButton categoryId={c.id} categoryLabel={c.label_pt} partnerCount={partnerCount} />
-                  </td>
+      <Card flush>
+        {error ? (
+          <Empty title="Não foi possível carregar a lista" />
+        ) : rows.length === 0 ? (
+          <Empty title="Ainda sem categorias" />
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Categoria</th>
+                  <th className="num">Parceiros</th>
+                  <th>Visível na app</th>
+                  <th />
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
+              </thead>
+              <tbody>
+                {rows.map((c) => {
+                  const partnerCount = countByCategory.get(c.id) ?? 0;
+                  return (
+                    <tr key={c.id}>
+                      <td>
+                        <span className="cell-main">{c.label_pt}</span>
+                        <span className="cell-sub">{c.slug}</span>
+                      </td>
+                      <td className="num">{partnerCount}</td>
+                      <td>
+                        <div className="row" style={{ flexWrap: "nowrap" }}>
+                          <ToggleSwitch categoryId={c.id} isActive={c.is_active} />
+                          <span className="muted" style={{ fontSize: 13 }}>{c.is_active ? "Sim" : "Não"}</span>
+                        </div>
+                      </td>
+                      <td className="num">
+                        <DeleteCategoryButton categoryId={c.id} categoryLabel={c.label_pt} partnerCount={partnerCount} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

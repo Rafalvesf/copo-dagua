@@ -50,5 +50,6 @@ export async function updateCommissionSettings(
   }
 
   revalidatePath("/commissions");
+  revalidatePath("/settings");
   return { error: null };
 }

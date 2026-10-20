@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { requireAdmin } from "@/lib/dal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EVENT_TYPES } from "@/lib/event-types";
+import { Card, FilterTabs, PageHeader, Stat } from "@/components/ui";
 import {
   PERIODS,
   type Period,
@@ -251,47 +252,38 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
   const periodLabel = PERIODS.find((p) => p.value === period)!.label.toLowerCase();
 
   return (
-    <div style={{ overflowY: "auto", minHeight: 0, paddingBottom: 40 }}>
-      <div className="admin-page-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16 }}>
-        <div>
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 600 }}>Analytics</h1>
-          <p style={{ color: "var(--ink-muted)", marginTop: 4, fontSize: 14, maxWidth: 680 }}>
-            Tudo o que se passa na plataforma, com os dados reais da app. Os valores do período contam o que aconteceu
-            nos últimos {periodLabel === "sempre" ? "tempos (desde o início)" : periodLabel}.
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {PERIODS.map((p) => (
-            <Link
-              key={p.value}
-              href={`/analytics?p=${p.value}`}
-              style={{
-                padding: "7px 13px",
-                borderRadius: 999,
-                fontSize: 13,
-                fontWeight: 600,
-                background: period === p.value ? "var(--ink)" : "var(--surface)",
-                color: period === p.value ? "var(--surface)" : "var(--ink)",
-                border: "1px solid var(--border-muted)",
-              }}
-            >
-              {p.label}
-            </Link>
-          ))}
-        </div>
-      </div>
+    <div className="page">
+      <PageHeader
+        title="Analytics"
+        subtitle={`Tudo o que se passa na plataforma, com dados reais da app. Valores do período: ${periodLabel === "sempre" ? "desde o início" : `últimos ${periodLabel}`}.`}
+        actions={<FilterTabs current={period} items={PERIODS.map((p) => ({ value: p.value, label: p.label, href: `/analytics?p=${p.value}` }))} />}
+      />
+      <nav className="subnav" aria-label="Secções">
+        {[
+          ["dinheiro", "Dinheiro"],
+          ["funil", "Do pedido à reserva"],
+          ["organizadores", "Organizadores e eventos"],
+          ["parceiros", "Parceiros"],
+          ["qualidade", "Qualidade e risco"],
+          ["uso", "Uso da app"],
+        ].map(([id, label]) => (
+          <a key={id} href={`#${id}`}>
+            {label}
+          </a>
+        ))}
+      </nav>
 
       {/* ---------------- Dinheiro ---------------- */}
-      <SectionTitle title="Dinheiro" sub="Pagamentos feitos na app pela Stripe (valor pago pelo organizador, comissão incluída)." />
-      <div className="kpi-row" style={kpiGrid}>
+      <SectionTitle id="dinheiro" title="Dinheiro" sub="Pagamentos feitos na app pela Stripe (valor pago pelo organizador, comissão incluída)." />
+      <div className="grid grid-3">
         <Stat label="Pago pelos organizadores" value={eur(grossPaid)} hint={`${paidIn.length} pagamentos`} />
         <Stat label={`Receita À Nossa! (${commissionPct}%)`} value={eur(revenue, true)} hint="comissão sobre o valor dos parceiros" />
         <Stat label="Para os parceiros" value={eur(partnerAmount)} hint={`${deposits.length} sinais · ${finals.length} restantes`} />
-        <Stat label="Reembolsado" value={eur(refundedTotal, true)} hint={`${refundedIn.length} pagamentos`} tone={refundedTotal > 0 ? "warn" : undefined} />
+        <Stat label="Reembolsado" value={eur(refundedTotal, true)} hint={`${refundedIn.length} pagamentos`} tone={refundedTotal > 0 ? "warning" : undefined} />
         <Stat label="Valor médio por reserva" value={avgBooking == null ? "—" : eur(avgBooking)} hint={`${bookingsIn.length} reservas criadas`} />
         <Stat label="Ofertas a convidados" value={eur(offersPaid.reduce((a, o) => a + n(o, "amount"), 0))} hint={`${offersPaid.length} reservas pagas`} />
       </div>
-      <div className="admin-two-col" style={twoCol}>
+      <div className="grid grid-2">
         <Card title="Pago por mês (12 meses)">
           <Bars data={months.map((m) => ({ label: m.label, value: paidByMonth.get(m.key) ?? 0 }))} format={(v) => eur(v)} />
         </Card>
@@ -299,7 +291,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
           <Bars data={months.map((m) => ({ label: m.label, value: revenueByMonth.get(m.key) ?? 0 }))} format={(v) => eur(v, true)} />
         </Card>
       </div>
-      <div className="admin-two-col" style={twoCol}>
+      <div className="grid grid-2">
         <Card title="Pago por categoria">
           <HBars data={topN(revenueByCat, 8)} format={(v) => eur(v)} empty="Sem pagamentos no período." />
         </Card>
@@ -307,43 +299,43 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
           {topPartners.length === 0 ? (
             <Empty>Sem pagamentos no período.</Empty>
           ) : (
-            <table style={table}>
+            <div className="table-wrap" style={{ margin: "0 -20px -20px" }}><table className="table">
               <thead>
-                <tr style={thead}>
-                  <th style={th}>Parceiro</th>
-                  <th style={th}>Pago</th>
-                  <th style={th}>Reservas</th>
-                  <th style={th}>Resposta</th>
-                  <th style={th}>Avaliação</th>
+                <tr>
+                  <th>Parceiro</th>
+                  <th>Pago</th>
+                  <th>Reservas</th>
+                  <th>Resposta</th>
+                  <th>Avaliação</th>
                 </tr>
               </thead>
               <tbody>
                 {topPartners.map((t) => (
-                  <tr key={t.id} style={{ borderTop: "1px solid var(--border-muted)" }}>
-                    <td style={td}>
-                      <Link href={`/partners/${t.id}`} style={{ fontWeight: 600 }}>
+                  <tr key={t.id}>
+                    <td>
+                      <Link href={`/partners/${t.id}`} className="cell-main">
                         {t.name}
                       </Link>
                     </td>
-                    <td style={td}>{eur(t.revenue)}</td>
-                    <td style={td}>{t.bookings}</td>
-                    <td style={td}>{t.quotes ? pct(t.answered, t.quotes) : "—"}</td>
-                    <td style={td}>{t.rating == null ? "—" : `${t.rating.toFixed(1)} ★`}</td>
+                    <td>{eur(t.revenue)}</td>
+                    <td>{t.bookings}</td>
+                    <td>{t.quotes ? pct(t.answered, t.quotes) : "—"}</td>
+                    <td>{t.rating == null ? "—" : `${t.rating.toFixed(1)} ★`}</td>
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </Card>
       </div>
 
       {/* ---------------- Funil ---------------- */}
-      <SectionTitle title="Do pedido à reserva" sub="Pedidos de orçamento feitos no período e o que lhes aconteceu depois." />
-      <div className="admin-two-col" style={twoCol}>
+      <SectionTitle id="funil" title="Do pedido à reserva" sub="Pedidos de orçamento feitos no período e o que lhes aconteceu depois." />
+      <div className="grid grid-2">
         <Card title="Funil">
           <Funnel stages={funnel} />
         </Card>
-        <div className="kpi-row" style={{ ...kpiGrid, gridTemplateColumns: "1fr 1fr", margin: 0 }}>
+        <div className="grid grid-2" style={{ alignContent: "start" }}>
           <Stat label="Tempo de resposta do parceiro" value={duration(median(responseHours))} hint="mediana, do pedido à proposta" />
           <Stat label="Tempo de decisão do organizador" value={duration(median(decisionHours))} hint="mediana, da proposta à aceitação" />
           <Stat label="Valor médio das propostas" value={avgProposal == null ? "—" : eur(avgProposal)} hint={`${proposalsIn.length} propostas`} />
@@ -356,8 +348,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
       </div>
 
       {/* ---------------- Organizadores e eventos ---------------- */}
-      <SectionTitle title="Organizadores e eventos" sub="Quem organiza, que eventos, quando e onde." />
-      <div className="kpi-row" style={kpiGrid}>
+      <SectionTitle id="organizadores" title="Organizadores e eventos" sub="Quem organiza, que eventos, quando e onde." />
+      <div className="grid grid-3">
         <Stat label="Organizadores" value={String(couples.length)} hint={`+${couplesNew.length} no período`} />
         <Stat label="Eventos criados" value={String(weddings.length)} hint={`+${eventsIn.length} no período`} />
         <Stat label="Orçamento estimado" value={median(budgets) == null ? "—" : eur(median(budgets)!)} hint="mediana por evento" />
@@ -365,7 +357,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
         <Stat label="Respostas confirmadas" value={pct(rsvpConfirmed, guests.length)} hint={`${rsvpConfirmed} vão · ${rsvpDeclined} não vão · ${guests.length} na lista`} />
         <Stat label="Convidados com a app" value={pct(guestsWithApp, guests.length)} hint={`${guestAccounts.length} contas de convidado`} />
       </div>
-      <div className="admin-two-col" style={twoCol}>
+      <div className="grid grid-2">
         <Card title="Eventos por tipo">
           <HBars data={topN(eventsByType, 10)} empty="Sem eventos." />
         </Card>
@@ -373,7 +365,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
           <Bars data={nextMonths.map((m) => ({ label: m.label, value: eventsByMonth.get(m.key) ?? 0 }))} />
         </Card>
       </div>
-      <div className="admin-two-col" style={twoCol}>
+      <div className="grid grid-2">
         <Card title="Onde são os eventos">
           <HBars data={topN(eventsByPlace, 8)} empty="Sem local definido." />
         </Card>
@@ -383,26 +375,26 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
       </div>
 
       {/* ---------------- Parceiros ---------------- */}
-      <SectionTitle title="Parceiros" sub="Oferta disponível, resposta aos pedidos e avaliações." />
-      <div className="kpi-row" style={kpiGrid}>
+      <SectionTitle id="parceiros" title="Parceiros" sub="Oferta disponível, resposta aos pedidos e avaliações." />
+      <div className="grid grid-4">
         <Stat label="Publicados" value={String(published.length)} hint={`${pending.length} à espera de aprovação`} />
         <Stat label="Com pagamentos ativos" value={pct(withStripe.length, partners.length)} hint={`${withStripe.length} de ${partners.length}`} />
         <Stat label="Respondem aos pedidos" value={responseRate == null ? "—" : `${Math.round(responseRate * 100)}%`} hint="pedidos com proposta, no período" />
         <Stat label="Avaliação média" value={ratingAvg == null ? "—" : `${ratingAvg.toFixed(1)} ★`} hint={`${publishedReviews.length} avaliações`} />
       </div>
-      <div className="admin-two-col" style={twoCol}>
+      <div className="grid grid-2">
         <Card title="Oferta vs procura por categoria">
           {partnersByCat.size === 0 && quotesByCat.size === 0 ? (
             <Empty>Sem dados.</Empty>
           ) : (
-            <table style={table}>
+            <div className="table-wrap" style={{ margin: "0 -20px -20px" }}><table className="table">
               <thead>
-                <tr style={thead}>
-                  <th style={th}>Categoria</th>
-                  <th style={th}>Parceiros</th>
-                  <th style={th}>Pedidos</th>
-                  <th style={th}>Reservas</th>
-                  <th style={th}>Pedidos/parceiro</th>
+                <tr>
+                  <th>Categoria</th>
+                  <th>Parceiros</th>
+                  <th>Pedidos</th>
+                  <th>Reservas</th>
+                  <th>Pedidos/parceiro</th>
                 </tr>
               </thead>
               <tbody>
@@ -412,19 +404,19 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
                     const np = partnersByCat.get(cat) ?? 0;
                     const nq = quotesByCat.get(cat) ?? 0;
                     return (
-                      <tr key={cat} style={{ borderTop: "1px solid var(--border-muted)" }}>
-                        <td style={td}>{cat}</td>
-                        <td style={td}>{np}</td>
-                        <td style={td}>{nq}</td>
-                        <td style={td}>{bookingsByCat.get(cat) ?? 0}</td>
-                        <td style={{ ...td, color: np === 0 && nq > 0 ? "var(--status-rejected-fg)" : undefined, fontWeight: np === 0 && nq > 0 ? 700 : 400 }}>
+                      <tr key={cat}>
+                        <td>{cat}</td>
+                        <td>{np}</td>
+                        <td>{nq}</td>
+                        <td>{bookingsByCat.get(cat) ?? 0}</td>
+                        <td style={{ color: np === 0 && nq > 0 ? "var(--danger-fg)" : undefined, fontWeight: np === 0 && nq > 0 ? 600 : 400 }}>
                           {np ? (nq / np).toFixed(1) : nq > 0 ? "falta oferta" : "—"}
                         </td>
                       </tr>
                     );
                   })}
               </tbody>
-            </table>
+            </table></div>
           )}
         </Card>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -438,16 +430,16 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
       </div>
 
       {/* ---------------- Qualidade ---------------- */}
-      <SectionTitle title="Qualidade e risco" sub="O que corre mal: cancelamentos, reembolsos, disputas e pedidos de ajuda." />
-      <div className="kpi-row" style={kpiGrid}>
+      <SectionTitle id="qualidade" title="Qualidade e risco" sub="O que corre mal: cancelamentos, reembolsos, disputas e pedidos de ajuda." />
+      <div className="grid grid-3">
         <Stat label="Canceladas pelo organizador" value={String(cancelledCouple)} hint={`${pct(cancelledCouple, bookingsIn.length)} das reservas do período`} />
-        <Stat label="Canceladas pelo parceiro" value={String(cancelledPartner)} hint={`${pct(cancelledPartner, bookingsIn.length)} das reservas`} tone={cancelledPartner > 0 ? "warn" : undefined} />
+        <Stat label="Canceladas pelo parceiro" value={String(cancelledPartner)} hint={`${pct(cancelledPartner, bookingsIn.length)} das reservas`} tone={cancelledPartner > 0 ? "warning" : undefined} />
         <Stat label="Sinal não pago a tempo" value={String(expired)} hint="reservas expiradas" />
-        <Stat label="Disputas" value={String(disputesIn.length)} hint={`${disputesOpen} por decidir`} tone={disputesOpen > 0 ? "warn" : undefined} />
+        <Stat label="Disputas" value={String(disputesIn.length)} hint={`${disputesOpen} por decidir`} tone={disputesOpen > 0 ? "warning" : undefined} />
         <Stat label="Pedidos de ajuda" value={String(supportIn.length)} hint={`${supportOpen} em aberto`} />
         <Stat label="Tempo de resposta ao suporte" value={duration(median(supportHours))} hint="mediana até resolver" />
       </div>
-      <div className="admin-two-col" style={twoCol}>
+      <div className="grid grid-2">
         <Card title="Motivos das disputas">
           <HBars data={topN(disputeReasons, 6)} empty="Sem disputas no período." />
           {disputeResolutions.size > 0 && (
@@ -462,8 +454,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
       </div>
 
       {/* ---------------- Uso da app ---------------- */}
-      <SectionTitle title="Uso da app" sub="Sinais de que as pessoas estão a usar a app no dia a dia." />
-      <div className="kpi-row" style={kpiGrid}>
+      <SectionTitle id="uso" title="Uso da app" sub="Sinais de que as pessoas estão a usar a app no dia a dia." />
+      <div className="grid grid-4">
         <Stat label="Mensagens com parceiros" value={String(messagesC.count ?? 0)} hint="no período" />
         <Stat label="Mensagens em grupos" value={String(groupMessagesC.count ?? 0)} hint="no período" />
         <Stat label="Fotos na galeria" value={String(photosIn.length)} hint={`${photosIn.filter((g) => s(g, "status") === "pending").length} por aprovar`} />
@@ -492,46 +484,19 @@ const SUPPORT_CAT: Record<string, string> = {
 };
 
 // ---------------- peças visuais ----------------
-const kpiGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14, margin: "14px 0 16px" } as const;
-const twoCol = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 } as const;
 const muted = { color: "var(--ink-muted)", fontSize: 13 } as const;
-const table = { width: "100%", borderCollapse: "collapse", fontSize: 13 } as const;
-const thead = { textAlign: "left", color: "var(--ink-muted)" } as const;
-const th = { padding: "6px 8px 6px 0", fontWeight: 500 } as const;
-const td = { padding: "8px 8px 8px 0" } as const;
 
-function SectionTitle({ title, sub }: { title: string; sub: string }) {
+function SectionTitle({ id, title, sub }: { id: string; title: string; sub: string }) {
   return (
-    <div style={{ marginTop: 28 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 700 }}>{title}</h2>
-      <p style={muted}>{sub}</p>
+    <div id={id} style={{ marginTop: 20, scrollMarginTop: 80 }}>
+      <h2 style={{ fontSize: 19 }}>{title}</h2>
+      <p className="muted" style={{ fontSize: 13, marginTop: 2 }}>{sub}</p>
     </div>
-  );
-}
-
-function Card({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section style={{ background: "var(--surface)", borderRadius: 16, boxShadow: "var(--shadow-card)", padding: 18, minWidth: 0, overflowX: "auto" }}>
-      <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{title}</h3>
-      {children}
-    </section>
   );
 }
 
 function Empty({ children }: { children: ReactNode }) {
   return <p style={muted}>{children}</p>;
-}
-
-function Stat({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: "warn" }) {
-  return (
-    <div style={{ background: "var(--surface)", borderRadius: 16, boxShadow: "var(--shadow-card)", padding: "14px 16px", minWidth: 0 }}>
-      <p style={{ fontSize: 12.5, color: "var(--ink-muted)" }}>{label}</p>
-      <p style={{ fontSize: 24, fontWeight: 600, marginTop: 4, color: tone === "warn" ? "var(--status-rejected-fg)" : "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-        {value}
-      </p>
-      {hint && <p style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 2 }}>{hint}</p>}
-    </div>
-  );
 }
 
 /// Barras verticais simples (um valor por mês).
@@ -571,7 +536,7 @@ function HBars({ data, format = (v: number) => String(Math.round(v)), empty }: {
             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.label}</span>
             <span style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{format(d.value)}</span>
           </div>
-          <div style={{ height: 8, borderRadius: 999, background: "var(--status-suspended-bg)" }}>
+          <div style={{ height: 8, borderRadius: 999, background: "var(--surface-3)" }}>
             <div style={{ height: "100%", width: `${Math.max(3, (d.value / max) * 100)}%`, borderRadius: 999, background: "var(--accent)" }} />
           </div>
         </div>
@@ -599,7 +564,7 @@ function Funnel({ stages }: { stages: { label: string; value: number }[] }) {
                 </span>
               </span>
             </div>
-            <div style={{ height: 10, borderRadius: 999, background: "var(--status-suspended-bg)" }}>
+            <div style={{ height: 10, borderRadius: 999, background: "var(--surface-3)" }}>
               <div style={{ height: "100%", width: `${Math.max(3, (st.value / first) * 100)}%`, borderRadius: 999, background: "var(--accent)" }} />
             </div>
           </div>

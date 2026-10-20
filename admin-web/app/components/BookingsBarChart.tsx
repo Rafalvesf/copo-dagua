@@ -130,25 +130,11 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexShrink: 0 }}>
-        <h2 style={{ fontSize: 14, fontWeight: 600 }}>Reservas</h2>
-        <div style={{ display: "flex", gap: 4, background: "var(--status-suspended-bg)", borderRadius: 10, padding: 3 }}>
+      <div className="row" style={{ justifyContent: "space-between", marginBottom: 12, flexShrink: 0 }}>
+        <h2 className="card-title">Novas reservas</h2>
+        <div className="tabs" role="tablist">
           {PERIODS.map((p) => (
-            <button
-              key={p.key}
-              onClick={() => setPeriod(p.key)}
-              style={{
-                padding: "6px 12px",
-                borderRadius: 8,
-                border: "none",
-                cursor: "pointer",
-                fontSize: 12.5,
-                fontWeight: 600,
-                background: period === p.key ? "var(--surface)" : "transparent",
-                color: period === p.key ? "var(--ink)" : "var(--ink-muted)",
-                boxShadow: period === p.key ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-              }}
-            >
+            <button key={p.key} type="button" role="tab" className="tab" aria-selected={period === p.key} onClick={() => setPeriod(p.key)}>
               {p.label}
             </button>
           ))}
@@ -196,14 +182,14 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
                   x2={width}
                   y1={y}
                   y2={y}
-                  stroke="var(--border-muted)"
+                  stroke="var(--border)"
                   strokeWidth={1}
                 />
                 <text
                   x={0}
                   y={y + 4}
                   fontSize={11}
-                  fill="var(--ink-muted)"
+                  fill="var(--ink-subtle)"
                   transform={textTransform(0, y + 4)}
                 >
                   {Math.round(axisMax * f)}
@@ -247,7 +233,7 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
                   x={x}
                   y={y}
                   fontSize={11}
-                  fill="var(--ink-muted)"
+                  fill="var(--ink-subtle)"
                   transform={textTransform(x, y)}
                 >
                   {d.label}

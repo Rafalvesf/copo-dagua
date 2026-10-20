@@ -10,63 +10,30 @@ export function ResolveTicketForm({ ticketId }: { ticketId: string }) {
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} style={buttonStyle}>
-        Resolver
-      </button>
+      <div>
+        <button type="button" onClick={() => setOpen(true)} className="btn btn-primary btn-sm">
+          Responder e resolver
+        </button>
+      </div>
     );
   }
 
   return (
-    <form
-      action={formAction}
-      style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}
-    >
+    <form action={formAction} className="stack-sm">
       <input type="hidden" name="ticket_id" value={ticketId} />
-      <textarea
-        name="resolution_note"
-        required
-        minLength={5}
-        rows={2}
-        placeholder="Resposta para o organizador/parceiro..."
-        style={{
-          borderRadius: 10,
-          border: "1px solid var(--border-muted)",
-          padding: 10,
-          fontSize: 13,
-          resize: "vertical",
-        }}
-      />
-      {state.error && <p style={{ color: "var(--status-rejected-fg)", fontSize: 12.5 }}>{state.error}</p>}
-      <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" onClick={() => setOpen(false)} style={secondaryButtonStyle}>
-          Cancelar
+      <label className="field">
+        <span className="field-label">Resposta</span>
+        <textarea name="resolution_note" required minLength={5} rows={3} className="textarea" placeholder="Enviada ao organizador/parceiro e o pedido fica resolvido." />
+      </label>
+      {state.error && <p className="form-error">{state.error}</p>}
+      <div className="row">
+        <button type="submit" disabled={isPending} className="btn btn-primary btn-sm">
+          {isPending ? "A enviar…" : "Enviar e resolver"}
         </button>
-        <button type="submit" disabled={isPending} style={buttonStyle}>
-          {isPending ? "A resolver..." : "Confirmar resolução"}
+        <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost btn-sm">
+          Cancelar
         </button>
       </div>
     </form>
   );
 }
-
-const buttonStyle = {
-  padding: "8px 14px",
-  borderRadius: 999,
-  border: "none",
-  background: "var(--ink)",
-  color: "var(--surface)",
-  fontWeight: 600,
-  fontSize: 13,
-  cursor: "pointer",
-};
-
-const secondaryButtonStyle = {
-  padding: "8px 14px",
-  borderRadius: 999,
-  border: "1px solid var(--border-muted)",
-  background: "var(--surface)",
-  color: "var(--ink)",
-  fontWeight: 600,
-  fontSize: 13,
-  cursor: "pointer",
-};
