@@ -26,6 +26,7 @@ export type PartnerProfile = {
   status: PartnerProfileStatus;
   pricing_mode: "packages" | "quote_only";
   is_paused: boolean;
+  featured: boolean;
   rejection_reason: string | null;
   submitted_at: string | null;
   reviewed_at: string | null;

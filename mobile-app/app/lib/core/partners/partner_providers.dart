@@ -23,7 +23,7 @@ final partnersProvider = FutureProvider.family<List<Partner>, String?>((
       .from('partner_profiles')
       .select(
         'id, business_name, description, cover_photo_url, service_areas, nationwide, '
-        'pricing_mode, average_quote_price, partner_service_packages(price, is_starting_price), '
+        'pricing_mode, average_quote_price, featured, partner_service_packages(price, is_starting_price), '
         'partner_profile_categories(partner_categories(label_pt, slug))',
       )
       .eq('status', 'published');
@@ -44,7 +44,7 @@ final partnerByIdProvider = FutureProvider.family<Partner?, String>((
       .from('partner_profiles')
       .select(
         'id, business_name, description, cover_photo_url, service_areas, nationwide, '
-        'pricing_mode, average_quote_price, partner_service_packages(price, is_starting_price), '
+        'pricing_mode, average_quote_price, featured, partner_service_packages(price, is_starting_price), '
         'partner_profile_categories(partner_categories(label_pt, slug))',
       )
       .eq('id', partnerId)
@@ -96,6 +96,7 @@ Partner _partnerFromRow(Map<String, dynamic> row) {
         : null,
     description: row['description'] as String? ?? '',
     imageUrl: row['cover_photo_url'] as String?,
+    featured: row['featured'] as bool? ?? false,
   );
 }
 
