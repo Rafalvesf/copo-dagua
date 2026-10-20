@@ -5,9 +5,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 type Period = "7d" | "30d" | "3m" | "1y";
 
 const PERIODS: { key: Period; label: string }[] = [
-  { key: "7d", label: "7 dias" },
-  { key: "30d", label: "30 dias" },
-  { key: "3m", label: "3 meses" },
+  { key: "7d", label: "7 d" },
+  { key: "30d", label: "30 d" },
+  { key: "3m", label: "3 m" },
   { key: "1y", label: "1 ano" },
 ];
 

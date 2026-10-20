@@ -21,19 +21,19 @@ export function KpiCard({
 }) {
   const positive = (deltaPct ?? 0) >= 0;
   const content = (
-    <div className="card stat" style={{ height: "100%", justifyContent: "space-between", gap: 8 }}>
-      <span className="stat-label">
-        <span aria-hidden style={{ display: "inline-flex", color: "var(--accent)" }}>
+    <div className="card stat kpi" style={{ height: "100%", justifyContent: "space-between", gap: 6 }}>
+      <span className="stat-label" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <span aria-hidden style={{ display: "inline-flex", color: "var(--accent)", flexShrink: 0 }}>
           {icon}
         </span>
         {label}
       </span>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div className="stat-value kpi-value" style={{ fontSize: 26 }}>
             {value}
           </div>
-          <div className="stat-hint" style={{ marginTop: 2, whiteSpace: "nowrap" }}>
+          <div className="stat-hint" style={{ marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {deltaPct === null ? (
               "sem histórico"
             ) : (
@@ -46,7 +46,7 @@ export function KpiCard({
             )}
           </div>
         </div>
-        <span className="kpi-spark" style={{ display: "flex", flexShrink: 0 }}>
+        <span className="kpi-spark" style={{ display: "flex", flexShrink: 0, marginBottom: 2 }}>
           <Sparkline points={trend} color={positive ? "var(--accent)" : "var(--danger-fg)"} />
         </span>
       </div>
