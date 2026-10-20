@@ -60,6 +60,9 @@ function mapSqlState(code: string | undefined): string {
       return "validation_error";
     case "P0002":
       return "not_found";
+    case "P0010":
+      // Migração 104: só é verificado quem tem os pagamentos ativos.
+      return "payments_not_enabled";
     default:
       return "unknown_error";
   }
@@ -75,6 +78,8 @@ function statusFor(code: string | undefined): number {
       return 400;
     case "P0002":
       return 404;
+    case "P0010":
+      return 409;
     default:
       return 500;
   }

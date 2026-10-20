@@ -51,7 +51,7 @@ export default function LoginPage() {
               fontWeight: 600,
             }}
           >
-            Copo d&apos;Água — Admin
+            À Nossa! — Admin
           </h1>
         </div>
 

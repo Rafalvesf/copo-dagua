@@ -24,8 +24,8 @@ const robotoSerifAlias = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Copo d'Água — Admin",
-  description: "Painel de administração da Copo d'Água.",
+  title: "À Nossa! — Admin",
+  description: "Painel de administração da À Nossa!.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

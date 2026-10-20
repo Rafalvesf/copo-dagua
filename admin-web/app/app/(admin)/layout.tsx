@@ -24,6 +24,11 @@ export default async function AdminLayout({
     .from("partner_profiles")
     .select("id", { count: "exact", head: true })
     .eq("status", "pending_review");
+  // Disputas por decidir (migração 109) — 0 se a tabela ainda não existir.
+  const { count: openDisputes } = await supabase
+    .from("disputes")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "open");
 
   return (
     // `height` (não `minHeight`) — teto rígido no ecrã visível, não um
@@ -35,7 +40,7 @@ export default async function AdminLayout({
     // minHeight: 0` em page.tsx) é a que cede espaço primeiro.
     <EditModeProvider>
       <div style={{ display: "flex", height: "100dvh" }}>
-        <AdminSidebar fullName={fullName} pendingCount={count ?? 0} />
+        <AdminSidebar fullName={fullName} pendingCount={count ?? 0} openDisputes={openDisputes ?? 0} />
         <main
           style={{
             flex: 1,
