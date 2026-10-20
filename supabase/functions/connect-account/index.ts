@@ -65,11 +65,39 @@ Deno.serve(async (req) => {
     if (action === "session") {
       const publishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY");
       if (!publishableKey) return json({ error: "not_configured" }, 503);
+      // Tudo dentro da app (pedido 2026-10-20): as contas novas são geridas
+      // pela À Nossa! (sem painel nem login da Stripe), por isso o
+      // formulário embutido não abre a janela de "entrar na Stripe".
+      // Contas Express antigas ainda por ativar são substituídas; as que
+      // já recebem pagamentos ficam como estão.
+      if (accountId) {
+        try {
+          const existing = await stripe.accounts.retrieve(accountId);
+          const managed = (existing as unknown as { controller?: { stripe_dashboard?: { type?: string } } })
+            .controller?.stripe_dashboard?.type === "none";
+          if (!managed && !existing.charges_enabled) {
+            try {
+              await stripe.accounts.del(accountId);
+            } catch (e) {
+              console.error("old account delete failed", accountId, (e as Error).message);
+            }
+            accountId = null;
+          }
+        } catch (e) {
+          console.error("account retrieve failed", accountId, (e as Error).message);
+          accountId = null;
+        }
+      }
       if (!accountId) {
         const account = await stripe.accounts.create({
-          type: "express",
           country: "PT",
           email: (profile.contact_email as string | null) ?? user.email ?? undefined,
+          controller: {
+            stripe_dashboard: { type: "none" },
+            requirement_collection: "application",
+            losses: { payments: "application" },
+            fees: { payer: "application" },
+          },
           business_profile: {
             name: (profile.business_name as string | null) || undefined,
             mcc: "7299", // serviços pessoais diversos (eventos/casamentos)
@@ -80,23 +108,32 @@ Deno.serve(async (req) => {
           },
           settings: { payouts: { schedule: { interval: "manual" } } },
           metadata: { partner_id: user.id },
-        });
+        } as never);
         accountId = account.id;
-        const { error: updateError } = await supabase
+        // Com a chave de serviço: os campos da Stripe estão protegidos
+        // contra alterações feitas pela própria app (migração 111).
+        const { error: updateError } = await admin
           .from("partner_profiles")
-          .update({ stripe_account_id: accountId })
+          .update({ stripe_account_id: accountId, stripe_charges_enabled: false, stripe_payouts_enabled: false })
           .eq("id", user.id);
         if (updateError) return json({ error: "unknown_error" }, 500);
       }
+      const current = await stripe.accounts.retrieve(accountId);
+      const managedNow = (current as unknown as { controller?: { stripe_dashboard?: { type?: string } } })
+        .controller?.stripe_dashboard?.type === "none";
       const session = await stripe.accountSessions.create({
         account: accountId,
         components: {
           account_onboarding: {
             enabled: true,
-            features: { external_account_collection: true },
+            features: {
+              external_account_collection: true,
+              // Sem a janela de login da Stripe (só nas contas geridas pela À Nossa!).
+              ...(managedNow ? { disable_stripe_user_authentication: true } : {}),
+            },
           },
         },
-      });
+      } as never);
       return json({ client_secret: session.client_secret, publishable_key: publishableKey, account_id: accountId });
     }
 
