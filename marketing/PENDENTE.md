@@ -17,9 +17,6 @@ Correr cada ficheiro no SQL Editor do Supabase (ou aprovar quando o Claude volta
 
 - Criar uma chave em developers.giphy.com e guardá-la no GitHub como segredo `GIPHY_KEY` (Settings → Secrets and variables → Actions). O deploy já a passa à app.
 
-## Por fazer
-
-- Redesenho das páginas "Serviços tratados" e "Para os convidados".
 
 ## Base de dados
 
