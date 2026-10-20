@@ -63,7 +63,7 @@ class MenuColor {
     MenuColor('navy', 'Azul-noite', Color(0xFF2F4A7A), Color(0xFFDCE4F0), Color(0xFFF6ECD8)),
     MenuColor('lilac', 'Lilás', Color(0xFF6B5B95), Color(0xFFE5E1EF), Color(0xFFF5EEDC)),
     MenuColor('teal', 'Verde-água', Color(0xFF3F6B66), Color(0xFFDCEBE8), Color(0xFFF6E6E4)),
-    MenuColor('olive', 'Oliva', Color(0xFF5F7545), AppTheme.accentTint, Color(0xFFF3EBDD)),
+    MenuColor('olive', 'Oliva', Color(0xFF5F7545), Color(0xFFDDE5D3), Color(0xFFF3EBDD)),
     MenuColor('graphite', 'Grafite', Color(0xFF3A4750), Color(0xFFE3E7EA), Color(0xFFF1ECE4)),
     // Pastéis (pedido 2026-10-18).
     MenuColor.pastel('p-sage', 'Sálvia', Color(0xFFC9D8C2), Color(0xFFE6EEE2), Color(0xFFF4EDE2), Color(0xFF4F6B4A)),

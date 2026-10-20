@@ -4,7 +4,7 @@ import '../../core/theme/app_theme.dart';
 
 /// Cores dos quadrados da Galeria — as mesmas do design (canvas
 /// "Galeria"). Usadas enquanto uma foto carrega/falha e no estado vazio.
-const galleryTints = [
+List<Color> get galleryTints => [
   AppTheme.accentTint,
   Color(0xFFF7EACA),
   Color(0xFFECE7DC),

@@ -286,7 +286,7 @@ class ConversationListItem extends StatelessWidget {
   // Linhas sem cartão, com separador por baixo do texto, como no design
   // (canvas "Mensagens"): nome mais forte e hora a verde quando há
   // mensagens por ler.
-  static const _tints = [
+  static List<Color> get _tints => [
     AppTheme.accentTint,
     Color(0xFFECE7DC),
     Color(0xFFF7EACA),
