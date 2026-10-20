@@ -2,12 +2,15 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/dal";
+import { PaymentStatusBadge } from "@/components/PaymentStatusBadge";
+import { RefundPaymentForm } from "@/components/RefundForms";
+import { refundPayment } from "../../refunds/actions";
 import { createClient } from "@/lib/supabase/server";
 import { BookingStatusBadge } from "@/components/BookingStatusBadge";
 import { SimpleActionButton, AmountVerificationForm } from "@/components/ActionButtons";
 import { BOOKING_ACTIONS_BY_STATUS } from "@/lib/types";
 import { confirmDeposit, completeBooking } from "./actions";
-import type { Booking, BookingEvent } from "@/lib/types";
+import type { Booking, BookingEvent, PaymentStatus } from "@/lib/types";
 
 export default async function BookingDetailPage(props: PageProps<"/bookings/[id]">) {
   await requireAdmin();
@@ -22,11 +25,26 @@ export default async function BookingDetailPage(props: PageProps<"/bookings/[id]
 
   const b = booking as Booking;
 
-  const [{ data: events }, { data: couple }, { data: partner }] = await Promise.all([
-    supabase.from("booking_events").select("*").eq("booking_id", id).order("created_at", { ascending: false }),
-    supabase.from("profiles").select("id, full_name").eq("id", b.couple_id).maybeSingle(),
-    supabase.from("partner_profiles").select("id, business_name").eq("id", b.partner_id).maybeSingle(),
-  ]);
+  const [{ data: events }, { data: couple }, { data: partner }, { data: pays }, { data: proposal }, { data: settings }, { data: openDispute }] =
+    await Promise.all([
+      supabase.from("booking_events").select("*").eq("booking_id", id).order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, full_name").eq("id", b.couple_id).maybeSingle(),
+      supabase.from("partner_profiles").select("id, business_name").eq("id", b.partner_id).maybeSingle(),
+      supabase.from("payments").select("id, type, amount, refunded_amount, status, paid_at").eq("booking_id", id).order("created_at"),
+      supabase.from("proposals").select("deposit_refundable").eq("id", b.proposal_id).maybeSingle(),
+      supabase.from("platform_settings").select("platform_commission_percentage").eq("id", 1).single(),
+      supabase.from("disputes").select("id").eq("booking_id", id).eq("status", "open").maybeSingle(),
+    ]);
+  const pct = Number(settings?.platform_commission_percentage ?? 0);
+  const paidByCouple = (a: number) => Math.round(a * (100 + pct)) / 100;
+  const payments = (pays ?? []) as {
+    id: string;
+    type: string;
+    amount: number;
+    refunded_amount: number | null;
+    status: PaymentStatus;
+    paid_at: string | null;
+  }[];
 
   const entries = (events ?? []) as BookingEvent[];
   const availableActions = BOOKING_ACTIONS_BY_STATUS[b.status];
@@ -74,6 +92,55 @@ export default async function BookingDetailPage(props: PageProps<"/bookings/[id]
         <Field label="Sinal" value={`${b.deposit_amount.toLocaleString("pt-PT")} €`} />
         {b.status === "awaiting_deposit" && (
           <Field label="Janela expira em" value={new Date(b.hold_expires_at).toLocaleString("pt-PT")} />
+        )}
+      </Section>
+
+      {openDispute && (
+        <div
+          style={{
+            background: "var(--status-rejected-bg)",
+            color: "var(--status-rejected-fg)",
+            borderRadius: 12,
+            padding: "10px 16px",
+            fontSize: 14,
+            marginBottom: 16,
+          }}
+        >
+          Esta reserva está em disputa —{" "}
+          <Link href={`/disputes/${openDispute.id}`} style={{ fontWeight: 700, textDecoration: "underline" }}>
+            decidir
+          </Link>
+          .
+        </div>
+      )}
+
+      <Section title="Pagamentos e reembolsos">
+        <Field
+          label="Sinal"
+          value={proposal?.deposit_refundable === false ? "Não reembolsável (escolha do parceiro)" : "Reembolsável até 30 dias antes"}
+        />
+        {payments.length === 0 ? (
+          <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>Sem pagamentos.</p>
+        ) : (
+          payments.map((p) => {
+            const paid = paidByCouple(Number(p.amount));
+            const refunded = Number(p.refunded_amount ?? 0);
+            return (
+              <div key={p.id} style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 14, flexWrap: "wrap" }}>
+                <span style={{ minWidth: 90 }}>{p.type === "deposit" ? "Sinal" : "Restante"}</span>
+                <span>{paid.toLocaleString("pt-PT", { minimumFractionDigits: 2 })} €</span>
+                <PaymentStatusBadge status={p.status} />
+                {refunded > 0 && (
+                  <span style={{ color: "var(--ink-muted)", fontSize: 13 }}>
+                    devolvido {refunded.toLocaleString("pt-PT", { minimumFractionDigits: 2 })} €
+                  </span>
+                )}
+                {p.status === "paid" && !openDispute && (
+                  <RefundPaymentForm paymentId={p.id} maxAmount={Math.max(0, paid - refunded)} action={refundPayment} />
+                )}
+              </div>
+            );
+          })
         )}
       </Section>
 

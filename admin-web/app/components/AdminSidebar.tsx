@@ -70,6 +70,21 @@ const icons = {
       <path d="M19 19v.5a3 3 0 0 1-3 3h-2.5" />
     </Icon>
   ),
+  scale: (
+    <Icon>
+      <path d="M12 4v16" />
+      <path d="M7 20h10" />
+      <path d="M5 8h14" />
+      <path d="m5 8-3 6a3 3 0 0 0 6 0Z" />
+      <path d="m19 8-3 6a3 3 0 0 0 6 0Z" />
+    </Icon>
+  ),
+  refund: (
+    <Icon>
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h11a5 5 0 0 1 0 10h-3" />
+    </Icon>
+  ),
   flag: (
     <Icon>
       <path d="M5 21V4" />
@@ -100,7 +115,7 @@ const icons = {
 // sections without a real backend yet show an honest "não disponível"
 // state (components/ComingSoon.tsx) instead of being hidden or faked.
 // See ROADMAP.md, "Nota de arquiteto".
-function buildGroups(pendingPartners: number): NavGroup[] {
+function buildGroups(pendingPartners: number, openDisputes: number): NavGroup[] {
   return [
     { title: "Visão geral", items: [{ href: "/", label: "Dashboard", icon: icons.home }] },
     {
@@ -111,6 +126,8 @@ function buildGroups(pendingPartners: number): NavGroup[] {
         { href: "/partners", label: "Parceiros", icon: icons.store, badge: pendingPartners },
         { href: "/bookings", label: "Reservas", icon: icons.calendar },
         { href: "/payments", label: "Pagamentos", icon: icons.coin },
+        { href: "/refunds", label: "Reembolsos", icon: icons.refund },
+        { href: "/disputes", label: "Disputas", icon: icons.scale, badge: openDisputes },
       ],
     },
     {
@@ -145,9 +162,11 @@ function buildGroups(pendingPartners: number): NavGroup[] {
 export function AdminSidebar({
   fullName,
   pendingCount,
+  openDisputes = 0,
 }: {
   fullName: string;
   pendingCount: number;
+  openDisputes?: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -165,7 +184,7 @@ export function AdminSidebar({
     router.push("/login");
   }
 
-  const groups = buildGroups(pendingCount);
+  const groups = buildGroups(pendingCount, openDisputes);
 
   return (
     <nav

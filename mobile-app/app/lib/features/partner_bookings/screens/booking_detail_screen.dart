@@ -16,6 +16,7 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
+import '../../../shared/widgets/dispute_card.dart';
 
 class BookingDetailScreen extends ConsumerStatefulWidget {
   final Booking booking;
@@ -137,6 +138,8 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                       partnerSide: true,
                       load: () => loadSingleBookingReport(booking.id, partnerSide: true),
                     ),
+                    const SizedBox(height: 14),
+                    DisputeCard(bookingId: booking.id, partnerSide: true),
                   ],
                 ],
               ),

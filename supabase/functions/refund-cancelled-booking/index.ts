@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
       );
       const { error } = await admin
         .from("payments")
-        .update({ status: "refunded", updated_at: new Date().toISOString() })
+        .update({ status: "refunded", refunded_amount: intent.amount / 100, updated_at: new Date().toISOString() })
         .eq("id", p.id)
         .eq("status", "paid");
       if (error) {
