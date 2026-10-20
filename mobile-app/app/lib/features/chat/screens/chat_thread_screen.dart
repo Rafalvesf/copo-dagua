@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/chat/chat_attachments.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
@@ -84,6 +85,21 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     }
   }
 
+  /// Fotos, ficheiros, stickers e GIFs (2026-10-20).
+  Future<void> _attach() async {
+    try {
+      final a = await pickChatAttachment(context);
+      if (a == null || !mounted) return;
+      await ref.read(chatThreadControllerProvider(_conversationKey).notifier).sendAttachment(a);
+      _scrollToBottom();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível enviar o anexo. Tenta novamente.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final chat = ref.watch(chatThreadControllerProvider(_conversationKey));
@@ -128,7 +144,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                       // Aqui é sempre o casal a enviar — `fromPartner`
                       // significa "veio da outra parte".
                       isMine: (m) => !m.fromPartner,
-                      content: (message, isMe) => message.isProposal
+                      content: (message, isMe) => message.hasAttachment
+                          ? ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe)
+                          : message.isProposal
                           ? _ProposalCard(message: message)
                           : message.isQuoteRequestNotice
                           ? GestureDetector(
@@ -139,7 +157,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                     ).reversed.toList(),
                   ),
           ),
-          ChatComposer(controller: _messageController, onSend: _send),
+          ChatComposer(controller: _messageController, onSend: _send, onAttach: _attach),
         ],
       ),
     );

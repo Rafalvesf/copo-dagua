@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/chat/chat_attachments.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/chat/partner_chat_thread_controller.dart';
@@ -59,6 +60,21 @@ class _PartnerChatThreadScreenState
     _scrollToBottom();
   }
 
+  /// Fotos, ficheiros, stickers e GIFs (2026-10-20).
+  Future<void> _attach() async {
+    try {
+      final a = await pickChatAttachment(context);
+      if (a == null || !mounted) return;
+      await ref.read(partnerChatThreadControllerProvider(widget.conversation.id).notifier).sendAttachment(a);
+      _scrollToBottom();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível enviar o anexo. Tenta novamente.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final chat = ref.watch(
@@ -94,7 +110,9 @@ class _PartnerChatThreadScreenState
                       messages: chat.messages,
                       // Do lado do parceiro, "minha" é a mensagem do parceiro.
                       isMine: (m) => m.fromPartner,
-                      content: (message, isMe) => message.isProposal
+                      content: (message, isMe) => message.hasAttachment
+                          ? ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe)
+                          : message.isProposal
                           ? ChatProposalCard(
                               eyebrow: 'PROPOSTA ENVIADA',
                               title: message.proposalTitle ?? 'Proposta',
@@ -105,7 +123,7 @@ class _PartnerChatThreadScreenState
                     ).reversed.toList(),
                   ),
           ),
-          ChatComposer(controller: _messageController, onSend: _send),
+          ChatComposer(controller: _messageController, onSend: _send, onAttach: _attach),
         ],
       ),
     );

@@ -275,7 +275,10 @@ class ChatComposer extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
 
-  const ChatComposer({super.key, required this.controller, required this.onSend});
+  /// Botão "+" para anexos (fotos, ficheiros, stickers e GIFs).
+  final VoidCallback? onAttach;
+
+  const ChatComposer({super.key, required this.controller, required this.onSend, this.onAttach});
 
   @override
   Widget build(BuildContext context) {
@@ -289,6 +292,19 @@ class ChatComposer extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
           child: Row(
             children: [
+              if (onAttach != null) ...[
+                SnappyTap(
+                  onTap: onAttach!,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
+                    child: const Icon(Icons.add_rounded, color: AppTheme.ink, size: 22),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: Container(
                   height: 44,
