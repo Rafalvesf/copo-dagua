@@ -80,7 +80,10 @@ class _TabSlide extends StatelessWidget {
         final leaving = animation.status == AnimationStatus.reverse;
         final t = Curves.easeOutCubic.transform(animation.value);
         final dx = (leaving ? -_tabDir : _tabDir) * (1 - t);
-        return FractionalTranslation(translation: Offset(dx, 0), child: child);
+        return LayoutBuilder(builder: (context, c) {
+          final o = Offset(dx * c.maxWidth, 0);
+          return Transform.translate(offset: o, child: PageMotion(offset: o, child: child!));
+        });
       },
     );
   }
@@ -100,9 +103,11 @@ class TopDownTransition extends StatelessWidget {
       builder: (context, child) {
         final t = Curves.easeOutCubic.transform(animation.value);
         final shadow = (1 - t) * 0.9 + 0.1;
-        return FractionalTranslation(
-          translation: Offset(0, -(1 - t)),
-          child: DecoratedBox(
+        return LayoutBuilder(builder: (context, c) {
+          final o = Offset(0, -(1 - t) * c.maxHeight);
+          return Transform.translate(
+          offset: o,
+          child: PageMotion(offset: o, child: DecoratedBox(
             decoration: BoxDecoration(
               boxShadow: t >= 1
                   ? const []
@@ -115,10 +120,38 @@ class TopDownTransition extends StatelessWidget {
                     ],
             ),
             child: child,
-          ),
+          )),
         );
+        });
       },
     );
+  }
+}
+
+/// Deslocamento atual da página durante a animação. A navbar desfaz este
+/// deslocamento ([StayOverNav]) para ficar sempre fixa por cima: só o
+/// conteúdo da página se mexe (pedido do utilizador, 2026-10-20).
+class PageMotion extends InheritedWidget {
+  final Offset offset;
+  const PageMotion({super.key, required this.offset, required super.child});
+
+  static Offset of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<PageMotion>()?.offset ?? Offset.zero;
+
+  @override
+  bool updateShouldNotify(PageMotion old) => old.offset != offset;
+}
+
+/// Mantém a navbar parada enquanto a página anima.
+class StayOverNav extends StatelessWidget {
+  final Widget child;
+  const StayOverNav({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final o = PageMotion.of(context);
+    if (o == Offset.zero) return child;
+    return Transform.translate(offset: -o, child: child);
   }
 }
 

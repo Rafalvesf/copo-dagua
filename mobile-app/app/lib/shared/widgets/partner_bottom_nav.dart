@@ -1,3 +1,4 @@
+import '../../core/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -24,7 +25,11 @@ class PartnerBottomNav extends ConsumerWidget {
   const PartnerBottomNav({super.key, required this.current, this.top});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) =>
+      // Fica fixa por cima enquanto a página anima (page_transitions.dart).
+      StayOverNav(child: _buildNav(context, ref));
+
+  Widget _buildNav(BuildContext context, WidgetRef ref) {
     final unreadCount = ref
         .watch(partnerUnreadMessagesCountProvider)
         .maybeWhen(data: (count) => count, orElse: () => 0);
