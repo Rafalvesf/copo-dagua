@@ -48,6 +48,8 @@ function readTemplateFields(formData: FormData) {
   const actionTypeRaw = String(formData.get("action_type") ?? "");
   const actionType = actionTypeRaw || null;
   const ctaLabel = String(formData.get("cta_label") ?? "").trim() || null;
+  // Tipos de evento (migração 110): nenhum marcado = todos.
+  const eventTypes = formData.getAll("event_types").map(String).filter(Boolean);
 
   return {
     key,
@@ -65,6 +67,7 @@ function readTemplateFields(formData: FormData) {
     displayType,
     actionType,
     ctaLabel,
+    eventTypes,
   };
 }
 
@@ -120,6 +123,7 @@ export async function createTaskTemplate(
     display_type: f.displayType,
     action_type: f.actionType,
     cta_label: f.ctaLabel,
+    event_types: f.eventTypes,
   });
 
   if (error) {
@@ -163,6 +167,7 @@ export async function updateTaskTemplate(
       display_type: f.displayType,
       action_type: f.actionType,
       cta_label: f.ctaLabel,
+      event_types: f.eventTypes,
       updated_at: new Date().toISOString(),
     })
     // `key` não é editável de propósito — `wedding_tasks` não referencia
@@ -216,6 +221,7 @@ export async function duplicateTaskTemplate(templateId: string) {
     display_type: original.display_type,
     action_type: original.action_type,
     cta_label: original.cta_label,
+    event_types: original.event_types ?? [],
     active: false,
   });
 

@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/dal";
+import { EVENT_TYPES } from "@/lib/event-types";
 import { createClient } from "@/lib/supabase/server";
 import { ToggleSwitch, NewTaskTemplateForm, RowActions } from "./task-template-controls";
 import { ELIGIBILITY_RULE_KEYS, COMPLETION_RULE_KEYS, DISPLAY_TYPE_KEYS, ACTION_TYPE_KEYS } from "@/lib/types";
@@ -11,8 +13,10 @@ const PRIORITY_LABEL: Record<string, string> = {
   urgent: "Urgente",
 };
 
-export default async function TaskTemplatesPage() {
+export default async function TaskTemplatesPage({ searchParams }: PageProps<"/task-templates">) {
   await requireAdmin();
+  const params = await searchParams;
+  const typeFilter = typeof params.type === "string" && EVENT_TYPES[params.type] ? params.type : "all";
 
   const supabase = await createClient();
   // `deleted_at` — soft delete, nunca aparece na listagem normal (ver
@@ -41,7 +45,10 @@ export default async function TaskTemplatesPage() {
   });
 
   const groups = new Map<string, TaskTemplate[]>();
-  (templates as TaskTemplate[] | null ?? []).forEach((t) => {
+  (templates as TaskTemplate[] | null ?? [])
+    // Filtro por tipo de evento: os gerais (sem tipos) aparecem sempre.
+    .filter((t) => typeFilter === "all" || !t.event_types?.length || t.event_types.includes(typeFilter))
+    .forEach((t) => {
     const list = groups.get(t.category) ?? [];
     list.push(t);
     groups.set(t.category, list);
@@ -58,6 +65,26 @@ export default async function TaskTemplatesPage() {
           </p>
         </div>
         <NewTaskTemplateForm categories={activeCategories} />
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+        {[["all", "Todos os eventos"], ...Object.entries(EVENT_TYPES).map(([k, v]) => [k, v.label])].map(([value, label]) => (
+          <Link
+            key={value}
+            href={value === "all" ? "/task-templates" : `/task-templates?type=${value}`}
+            style={{
+              padding: "7px 13px",
+              borderRadius: 999,
+              fontSize: 13,
+              fontWeight: 600,
+              background: typeFilter === value ? "var(--ink)" : "var(--surface)",
+              color: typeFilter === value ? "var(--surface)" : "var(--ink)",
+              border: "1px solid var(--border-muted)",
+            }}
+          >
+            {label}
+          </Link>
+        ))}
       </div>
 
       {error && <p style={{ color: "var(--status-rejected-fg)", marginTop: 24 }}>Não foi possível carregar a lista.</p>}
@@ -106,6 +133,9 @@ export default async function TaskTemplatesPage() {
                           {t.partner_category_slug ? ` · ${t.partner_category_slug}` : ""}
                         </p>
                         <p style={{ fontSize: 11, color: "var(--ink-muted)", marginTop: 2 }}>{displayTypeLabel}</p>
+                        <p style={{ fontSize: 11, marginTop: 4, color: t.event_types?.length ? "var(--accent-dark)" : "var(--ink-muted)", fontWeight: 600 }}>
+                          {t.event_types?.length ? t.event_types.map((e) => EVENT_TYPES[e]?.label ?? e).join(" · ") : "Todos os eventos"}
+                        </p>
                       </td>
                       <td style={{ fontSize: 13, verticalAlign: "top", paddingTop: 12 }}>{actionTypeLabel}</td>
                       <td style={{ fontSize: 13, verticalAlign: "top", paddingTop: 12 }}>{completionBehaviorLabel}</td>

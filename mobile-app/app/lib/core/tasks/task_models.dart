@@ -150,6 +150,10 @@ class TaskTemplate {
   final TaskCompletionBehavior completionBehavior;
   final TaskDisplayType displayType;
 
+  /// Tipos de evento a que se aplica (`task_templates.event_types`,
+  /// migração 110). Vazio = todos.
+  final List<String> eventTypes;
+
   const TaskTemplate({
     required this.id,
     required this.key,
@@ -165,7 +169,10 @@ class TaskTemplate {
     required this.position,
     this.completionBehavior = TaskCompletionBehavior.actionCompleted,
     this.displayType = TaskDisplayType.required,
+    this.eventTypes = const [],
   });
+
+  bool appliesTo(String eventType) => eventTypes.isEmpty || eventTypes.contains(eventType);
 
   factory TaskTemplate.fromRow(Map<String, dynamic> row) => TaskTemplate(
     id: row['id'] as String,
@@ -184,6 +191,7 @@ class TaskTemplate {
         taskCompletionBehaviorFromDb(row['completion_behavior'] as String?) ??
         TaskCompletionBehavior.actionCompleted,
     displayType: taskDisplayTypeFromDb(row['display_type'] as String?) ?? TaskDisplayType.required,
+    eventTypes: (row['event_types'] as List?)?.cast<String>() ?? const [],
   );
 }
 

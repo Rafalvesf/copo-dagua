@@ -17,6 +17,7 @@ import {
   ACTION_TYPE_KEYS,
 } from "@/lib/types";
 import type { PartnerCategory, TaskTemplate } from "@/lib/types";
+import { EVENT_TYPES } from "@/lib/event-types";
 
 const initialState: TaskTemplateActionState = { error: null };
 
@@ -447,6 +448,32 @@ function TaskTemplateForm({
             )}
         </select>
       </Field>
+      <div style={{ gridColumn: "1 / -1" }}>
+        <p style={{ fontSize: 12.5, color: "var(--ink-muted)", marginBottom: 6 }}>
+          Tipos de evento — nenhum marcado = aparece em todos
+        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {Object.entries(EVENT_TYPES).map(([value, t]) => (
+            <label
+              key={value}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 13,
+                padding: "6px 10px",
+                borderRadius: 999,
+                border: "1px solid var(--border-muted)",
+                background: "var(--surface)",
+                cursor: "pointer",
+              }}
+            >
+              <input type="checkbox" name="event_types" value={value} defaultChecked={template?.event_types?.includes(value) ?? false} />
+              {t.label}
+            </label>
+          ))}
+        </div>
+      </div>
       <Field label="Posição (ordem de exibição)">
         <input name="position" type="number" defaultValue={template?.position ?? 0} style={inputStyle} />
       </Field>
