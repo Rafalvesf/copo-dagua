@@ -1,114 +1,607 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { requireAdmin } from "@/lib/dal";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { EVENT_TYPES } from "@/lib/event-types";
+import {
+  PERIODS,
+  type Period,
+  avg,
+  duration,
+  eur,
+  hoursBetween,
+  inPeriod,
+  median,
+  monthBuckets,
+  monthKey,
+  pct,
+  periodStart,
+  sumBy,
+  topN,
+} from "@/lib/analytics";
 
-export default async function AnalyticsPage() {
+// Analytics detalhado (2026-10-20): muito mais do que o dashboard —
+// dinheiro, funil com tempos, organizadores e eventos, parceiros por
+// categoria, qualidade (cancelamentos, reembolsos, disputas, suporte) e
+// uso da app. Lê com a chave de serviço (as contas precisam de tabelas que
+// o RLS não mostra ao admin, ex: mensagens), só depois de requireAdmin().
+// Volume atual pequeno: lê as linhas e agrega aqui (até 10 000 por tabela).
+
+const LIMIT = 10000;
+
+type Row = Record<string, unknown>;
+const s = (r: Row, k: string) => (r[k] as string | null | undefined) ?? null;
+const n = (r: Row, k: string) => Number(r[k] ?? 0);
+
+export default async function AnalyticsPage({ searchParams }: PageProps<"/analytics">) {
   await requireAdmin();
-  const supabase = await createClient();
+  const params = await searchParams;
+  const period: Period = (["30", "90", "365", "all"] as const).includes(params.p as Period) ? (params.p as Period) : "90";
+
+  // Um só "agora" para a página toda (mesmo padrão do dashboard).
+  const nowMs = new Date().getTime();
+  const sinceIso = periodStart(period, nowMs)?.toISOString() ?? "1970-01-01";
+
+  const db = createAdminClient();
+  const q = (table: string, cols: string) => db.from(table).select(cols).range(0, LIMIT - 1);
 
   const [
-    { count: quoteRequestsTotal },
-    { count: proposalsSent },
-    { count: bookingsCreated },
-    { count: depositsPaid },
-    { count: bookingsCompleted },
-    { count: partnersPublished },
-    { data: quoteRequestPartners },
-    { data: proposalPartners },
-    { data: bookingPartners },
+    profilesR,
+    weddingsR,
+    guestsR,
+    quotesR,
+    proposalsR,
+    bookingsR,
+    paymentsR,
+    partnersR,
+    partnerCatsR,
+    reviewsR,
+    disputesR,
+    supportR,
+    galleryR,
+    offersR,
+    settingsR,
+    messagesC,
+    groupMessagesC,
   ] = await Promise.all([
-    supabase.from("quote_requests").select("id", { count: "exact", head: true }),
-    supabase.from("proposals").select("id", { count: "exact", head: true }),
-    supabase.from("bookings").select("id", { count: "exact", head: true }),
-    supabase.from("payments").select("id", { count: "exact", head: true }).eq("type", "deposit").eq("status", "paid"),
-    supabase.from("bookings").select("id", { count: "exact", head: true }).eq("status", "completed"),
-    supabase.from("partner_profiles").select("id", { count: "exact", head: true }).eq("status", "published"),
-    supabase.from("quote_requests").select("partner_id"),
-    supabase.from("proposals").select("partner_id"),
-    supabase.from("bookings").select("partner_id"),
+    q("profiles", "id, role, created_at, status"),
+    q("weddings", "id, created_at, event_type, wedding_date, location, estimated_budget, estimated_guests"),
+    q("guests", "wedding_id, rsvp_status, linked_profile_id"),
+    q("quote_requests", "id, partner_id, created_at, status"),
+    q("proposals", "id, partner_id, quote_request_id, created_at, status, price, deposit_refundable"),
+    q("bookings", "id, partner_id, wedding_id, proposal_id, created_at, status, total_amount, cancelled_at"),
+    q("payments", "id, booking_id, partner_id, type, amount, status, paid_at, refunded_amount, updated_at"),
+    q("partner_profiles", "id, business_name, status, stripe_charges_enabled, featured, region, city, created_at"),
+    q("partner_profile_categories", "partner_id, partner_categories(label_pt)"),
+    q("reviews", "partner_id, rating, created_at, status"),
+    q("disputes", "status, reason, resolution, refund_amount, created_at"),
+    q("support_tickets", "status, category, created_at, resolved_at"),
+    q("wedding_gallery_photos", "status, created_at"),
+    q("guest_offer_reservations", "amount, status, created_at"),
+    db.from("platform_settings").select("platform_commission_percentage").eq("id", 1).maybeSingle(),
+    db.from("messages").select("id", { count: "exact", head: true }).gte("created_at", sinceIso),
+    db.from("chat_group_messages").select("id", { count: "exact", head: true }).gte("created_at", sinceIso),
   ]);
 
-  const couplesFunnel = [
-    { label: "Pedidos de orçamento", count: quoteRequestsTotal ?? 0 },
-    { label: "Propostas enviadas", count: proposalsSent ?? 0 },
-    { label: "Reservas criadas (proposta aceite)", count: bookingsCreated ?? 0 },
-    { label: "Sinal pago", count: depositsPaid ?? 0 },
-    { label: "Reserva concluída", count: bookingsCompleted ?? 0 },
-  ];
+  const rows = (r: { data: unknown }) => ((r.data as Row[] | null) ?? []) as Row[];
+  const profiles = rows(profilesR);
+  const weddings = rows(weddingsR);
+  const guests = rows(guestsR);
+  const quotes = rows(quotesR);
+  const proposals = rows(proposalsR);
+  const bookings = rows(bookingsR);
+  const payments = rows(paymentsR);
+  const partners = rows(partnersR);
+  const partnerCats = rows(partnerCatsR);
+  const reviews = rows(reviewsR);
+  const disputes = rows(disputesR);
+  const support = rows(supportR);
+  const gallery = rows(galleryR);
+  const offers = rows(offersR);
+  const commissionPct = Number((settingsR.data as Row | null)?.platform_commission_percentage ?? 0);
 
-  const partnersWithLeads = new Set((quoteRequestPartners ?? []).map((r) => r.partner_id)).size;
-  const partnersWithProposals = new Set((proposalPartners ?? []).map((r) => r.partner_id)).size;
-  const partnersWithBookings = new Set((bookingPartners ?? []).map((r) => r.partner_id)).size;
+  const start = periodStart(period, nowMs);
+  const within = (iso: string | null) => inPeriod(iso, start);
+  const withCommission = (a: number) => a * (1 + commissionPct / 100);
 
-  const partnerFunnel = [
-    { label: "Parceiros publicados", count: partnersPublished ?? 0 },
-    { label: "Receberam ≥1 pedido", count: partnersWithLeads },
-    { label: "Enviaram ≥1 proposta", count: partnersWithProposals },
-    { label: "Obtiveram ≥1 reserva", count: partnersWithBookings },
+  // ---------- Dinheiro ----------
+  const paidAll = payments.filter((p) => s(p, "status") === "paid" || n(p, "refunded_amount") > 0 || s(p, "status") === "refunded");
+  const paidIn = paidAll.filter((p) => within(s(p, "paid_at")));
+  const partnerAmount = paidIn.reduce((a, p) => a + n(p, "amount"), 0);
+  const grossPaid = withCommission(partnerAmount);
+  const revenue = partnerAmount * (commissionPct / 100);
+  const refundedIn = payments.filter((p) => n(p, "refunded_amount") > 0 && within(s(p, "updated_at")));
+  const refundedTotal = refundedIn.reduce((a, p) => a + n(p, "refunded_amount"), 0);
+  const deposits = paidIn.filter((p) => s(p, "type") === "deposit");
+  const finals = paidIn.filter((p) => s(p, "type") !== "deposit");
+  const bookingsIn = bookings.filter((b) => within(s(b, "created_at")));
+  const avgBooking = avg(bookingsIn.map((b) => n(b, "total_amount")));
+  const offersPaid = offers.filter((o) => s(o, "status") === "paid" && within(s(o, "created_at")));
+
+  const months = monthBuckets(12, nowMs);
+  const paidByMonth = sumBy(paidAll.filter((p) => s(p, "paid_at")), (p) => monthKey(s(p, "paid_at")!), (p) => withCommission(n(p, "amount")));
+  const revenueByMonth = sumBy(paidAll.filter((p) => s(p, "paid_at")), (p) => monthKey(s(p, "paid_at")!), (p) => n(p, "amount") * (commissionPct / 100));
+
+  // Categorias de cada parceiro (para dinheiro e pedidos por categoria).
+  const catsOf = new Map<string, string[]>();
+  for (const pc of partnerCats) {
+    const cat = pc.partner_categories as { label_pt?: string } | { label_pt?: string }[] | null;
+    const label = (Array.isArray(cat) ? cat[0] : cat)?.label_pt;
+    if (!label) continue;
+    const id = s(pc, "partner_id")!;
+    catsOf.set(id, [...(catsOf.get(id) ?? []), label]);
+  }
+  const primaryCat = (partnerId: string | null) => (partnerId ? catsOf.get(partnerId)?.[0] ?? "Sem categoria" : "Sem categoria");
+  const partnerName = new Map(partners.map((p) => [s(p, "id")!, s(p, "business_name") ?? "Parceiro"]));
+
+  const revenueByCat = sumBy(paidIn, (p) => primaryCat(s(p, "partner_id")), (p) => withCommission(n(p, "amount")));
+  const revenueByPartner = sumBy(paidIn, (p) => s(p, "partner_id"), (p) => withCommission(n(p, "amount")));
+
+  // ---------- Funil ----------
+  const quotesIn = quotes.filter((r) => within(s(r, "created_at")));
+  const quoteIds = new Set(quotesIn.map((r) => s(r, "id")));
+  const proposalsOfQuotes = proposals.filter((p) => quoteIds.has(s(p, "quote_request_id")));
+  const proposalIds = new Set(proposalsOfQuotes.map((p) => s(p, "id")));
+  const bookingsOfQuotes = bookings.filter((b) => proposalIds.has(s(b, "proposal_id")));
+  const bookingIdsOfQuotes = new Set(bookingsOfQuotes.map((b) => s(b, "id")));
+  const depositPaidBookings = new Set(
+    payments.filter((p) => s(p, "type") === "deposit" && (s(p, "status") === "paid" || s(p, "status") === "refunded")).map((p) => s(p, "booking_id")),
+  );
+  const funnel = [
+    { label: "Pedidos de orçamento", value: quotesIn.length },
+    { label: "Com proposta do parceiro", value: new Set(proposalsOfQuotes.map((p) => s(p, "quote_request_id"))).size },
+    { label: "Proposta aceite (reserva criada)", value: bookingsOfQuotes.length },
+    { label: "Sinal pago", value: [...bookingIdsOfQuotes].filter((id) => depositPaidBookings.has(id)).length },
+    { label: "Concluída", value: bookingsOfQuotes.filter((b) => s(b, "status") === "completed").length },
   ];
+  const quoteCreated = new Map(quotes.map((r) => [s(r, "id"), s(r, "created_at")]));
+  const responseHours = proposalsOfQuotes
+    .map((p) => {
+      const qc = quoteCreated.get(s(p, "quote_request_id"));
+      return qc ? hoursBetween(qc, s(p, "created_at")!) : NaN;
+    })
+    .filter((h) => h >= 0);
+  const proposalCreated = new Map(proposals.map((p) => [s(p, "id"), s(p, "created_at")]));
+  const decisionHours = bookingsOfQuotes
+    .map((b) => {
+      const pc = proposalCreated.get(s(b, "proposal_id"));
+      return pc ? hoursBetween(pc, s(b, "created_at")!) : NaN;
+    })
+    .filter((h) => h >= 0);
+  const proposalsIn = proposals.filter((p) => within(s(p, "created_at")));
+  const nonRefundable = proposalsIn.filter((p) => p.deposit_refundable === false).length;
+  const avgProposal = avg(proposalsIn.map((p) => n(p, "price")));
+
+  // ---------- Organizadores e eventos ----------
+  const couples = profiles.filter((p) => s(p, "role") === "couple");
+  const couplesNew = couples.filter((p) => within(s(p, "created_at")));
+  const guestAccounts = profiles.filter((p) => s(p, "role") === "guest");
+  const eventsIn = weddings.filter((w) => within(s(w, "created_at")));
+  const eventsByType = sumBy(weddings, (w) => EVENT_TYPES[s(w, "event_type") ?? "other"]?.label ?? "Outro");
+  const nextMonths = (() => {
+    const out: { key: string; label: string }[] = [];
+    const d = new Date(nowMs);
+    for (let i = 0; i < 12; i++) {
+      const m = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + i, 1));
+      out.push({
+        key: `${m.getUTCFullYear()}-${String(m.getUTCMonth() + 1).padStart(2, "0")}`,
+        label: m.toLocaleDateString("pt-PT", { month: "short", timeZone: "UTC" }).replace(".", ""),
+      });
+    }
+    return out;
+  })();
+  const eventsByMonth = sumBy(weddings.filter((w) => s(w, "wedding_date")), (w) => monthKey(s(w, "wedding_date")!));
+  const eventsByPlace = sumBy(weddings, (w) => (s(w, "location") ?? "").split(",")[0].trim() || null);
+  const budgets = weddings.map((w) => n(w, "estimated_budget")).filter((v) => v > 0);
+  const estGuests = weddings.map((w) => n(w, "estimated_guests")).filter((v) => v > 0);
+  const guestsPerEvent = [...sumBy(guests, (g) => s(g, "wedding_id")).values()];
+  const rsvpConfirmed = guests.filter((g) => s(g, "rsvp_status") === "confirmed").length;
+  const rsvpDeclined = guests.filter((g) => s(g, "rsvp_status") === "declined").length;
+  const guestsWithApp = guests.filter((g) => s(g, "linked_profile_id")).length;
+
+  // ---------- Parceiros ----------
+  const published = partners.filter((p) => s(p, "status") === "published");
+  const pending = partners.filter((p) => s(p, "status") === "pending_review");
+  const withStripe = partners.filter((p) => p.stripe_charges_enabled === true);
+  const quotesByCat = sumBy(quotesIn, (r) => primaryCat(s(r, "partner_id")));
+  const bookingsByCat = sumBy(bookingsIn, (b) => primaryCat(s(b, "partner_id")));
+  const partnersByCat = sumBy(published, (p) => primaryCat(s(p, "id")));
+  const partnersByRegion = sumBy(published, (p) => s(p, "region") ?? s(p, "city"));
+  const quotesByPartner = sumBy(quotesIn, (r) => s(r, "partner_id"));
+  const answeredByPartner = sumBy(proposalsOfQuotes, (p) => s(p, "partner_id"));
+  const responseRate = quotesIn.length ? new Set(proposalsOfQuotes.map((p) => s(p, "quote_request_id"))).size / quotesIn.length : null;
+  const publishedReviews = reviews.filter((r) => s(r, "status") !== "removed");
+  const ratingAvg = avg(publishedReviews.map((r) => n(r, "rating")));
+  const ratingByPartner = new Map<string, number[]>();
+  for (const r of publishedReviews) {
+    const id = s(r, "partner_id")!;
+    ratingByPartner.set(id, [...(ratingByPartner.get(id) ?? []), n(r, "rating")]);
+  }
+  const ratingDist = [5, 4, 3, 2, 1].map((star) => ({ label: `${star} ★`, value: publishedReviews.filter((r) => n(r, "rating") === star).length }));
+  const topPartners = topN(revenueByPartner, 10).map((t) => ({
+    id: t.label,
+    name: partnerName.get(t.label) ?? "Parceiro",
+    revenue: t.value,
+    bookings: bookingsIn.filter((b) => s(b, "partner_id") === t.label).length,
+    quotes: quotesByPartner.get(t.label) ?? 0,
+    answered: answeredByPartner.get(t.label) ?? 0,
+    rating: avg(ratingByPartner.get(t.label) ?? []),
+  }));
+
+  // ---------- Qualidade ----------
+  const cancelledCouple = bookingsIn.filter((b) => s(b, "status") === "cancelled_by_couple").length;
+  const cancelledPartner = bookingsIn.filter((b) => s(b, "status") === "cancelled_by_partner").length;
+  const expired = bookingsIn.filter((b) => s(b, "status") === "expired").length;
+  const disputesIn = disputes.filter((d) => within(s(d, "created_at")));
+  const disputesOpen = disputes.filter((d) => s(d, "status") === "open").length;
+  const disputeReasons = sumBy(disputesIn, (d) => DISPUTE_REASON[s(d, "reason") ?? ""] ?? s(d, "reason"));
+  const disputeResolutions = sumBy(disputesIn.filter((d) => s(d, "resolution")), (d) => RESOLUTION[s(d, "resolution") ?? ""] ?? s(d, "resolution"));
+  const supportIn = support.filter((t) => within(s(t, "created_at")));
+  const supportOpen = support.filter((t) => s(t, "status") !== "resolved").length;
+  const supportHours = support
+    .filter((t) => s(t, "resolved_at") && within(s(t, "created_at")))
+    .map((t) => hoursBetween(s(t, "created_at")!, s(t, "resolved_at")!));
+  const supportByCat = sumBy(supportIn, (t) => SUPPORT_CAT[s(t, "category") ?? ""] ?? s(t, "category") ?? "Outro");
+
+  // ---------- Uso da app ----------
+  const photosIn = gallery.filter((g) => within(s(g, "created_at")));
+  const periodLabel = PERIODS.find((p) => p.value === period)!.label.toLowerCase();
 
   return (
-    <div>
-      <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 600 }}>Analytics</h1>
-      <p style={{ color: "var(--ink-muted)", marginTop: 4, marginBottom: 8, fontSize: 14, maxWidth: 640 }}>
-        Do pedido de orçamento à reserva concluída, com os dados reais da app.
-      </p>
-      <p style={{ color: "var(--ink-muted)", marginBottom: 24, fontSize: 13, maxWidth: 640 }}>
-        O que acontece antes do pedido (visitas e pesquisas na app) ainda não é medido.
-      </p>
+    <div style={{ overflowY: "auto", minHeight: 0, paddingBottom: 40 }}>
+      <div className="admin-page-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16 }}>
+        <div>
+          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 600 }}>Analytics</h1>
+          <p style={{ color: "var(--ink-muted)", marginTop: 4, fontSize: 14, maxWidth: 680 }}>
+            Tudo o que se passa na plataforma, com os dados reais da app. Os valores do período contam o que aconteceu
+            nos últimos {periodLabel === "sempre" ? "tempos (desde o início)" : periodLabel}.
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {PERIODS.map((p) => (
+            <Link
+              key={p.value}
+              href={`/analytics?p=${p.value}`}
+              style={{
+                padding: "7px 13px",
+                borderRadius: 999,
+                fontSize: 13,
+                fontWeight: 600,
+                background: period === p.value ? "var(--ink)" : "var(--surface)",
+                color: period === p.value ? "var(--surface)" : "var(--ink)",
+                border: "1px solid var(--border-muted)",
+              }}
+            >
+              {p.label}
+            </Link>
+          ))}
+        </div>
+      </div>
 
-      <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-        <FunnelCard title="Funil de organizadores" stages={couplesFunnel} />
-        <FunnelCard title="Funil de parceiros" stages={partnerFunnel} />
+      {/* ---------------- Dinheiro ---------------- */}
+      <SectionTitle title="Dinheiro" sub="Pagamentos feitos na app pela Stripe (valor pago pelo organizador, comissão incluída)." />
+      <div className="kpi-row" style={kpiGrid}>
+        <Stat label="Pago pelos organizadores" value={eur(grossPaid)} hint={`${paidIn.length} pagamentos`} />
+        <Stat label={`Receita À Nossa! (${commissionPct}%)`} value={eur(revenue, true)} hint="comissão sobre o valor dos parceiros" />
+        <Stat label="Para os parceiros" value={eur(partnerAmount)} hint={`${deposits.length} sinais · ${finals.length} restantes`} />
+        <Stat label="Reembolsado" value={eur(refundedTotal, true)} hint={`${refundedIn.length} pagamentos`} tone={refundedTotal > 0 ? "warn" : undefined} />
+        <Stat label="Valor médio por reserva" value={avgBooking == null ? "—" : eur(avgBooking)} hint={`${bookingsIn.length} reservas criadas`} />
+        <Stat label="Ofertas a convidados" value={eur(offersPaid.reduce((a, o) => a + n(o, "amount"), 0))} hint={`${offersPaid.length} reservas pagas`} />
+      </div>
+      <div className="admin-two-col" style={twoCol}>
+        <Card title="Pago por mês (12 meses)">
+          <Bars data={months.map((m) => ({ label: m.label, value: paidByMonth.get(m.key) ?? 0 }))} format={(v) => eur(v)} />
+        </Card>
+        <Card title="Receita À Nossa! por mês (12 meses)">
+          <Bars data={months.map((m) => ({ label: m.label, value: revenueByMonth.get(m.key) ?? 0 }))} format={(v) => eur(v, true)} />
+        </Card>
+      </div>
+      <div className="admin-two-col" style={twoCol}>
+        <Card title="Pago por categoria">
+          <HBars data={topN(revenueByCat, 8)} format={(v) => eur(v)} empty="Sem pagamentos no período." />
+        </Card>
+        <Card title="Melhores parceiros (pago no período)">
+          {topPartners.length === 0 ? (
+            <Empty>Sem pagamentos no período.</Empty>
+          ) : (
+            <table style={table}>
+              <thead>
+                <tr style={thead}>
+                  <th style={th}>Parceiro</th>
+                  <th style={th}>Pago</th>
+                  <th style={th}>Reservas</th>
+                  <th style={th}>Resposta</th>
+                  <th style={th}>Avaliação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topPartners.map((t) => (
+                  <tr key={t.id} style={{ borderTop: "1px solid var(--border-muted)" }}>
+                    <td style={td}>
+                      <Link href={`/partners/${t.id}`} style={{ fontWeight: 600 }}>
+                        {t.name}
+                      </Link>
+                    </td>
+                    <td style={td}>{eur(t.revenue)}</td>
+                    <td style={td}>{t.bookings}</td>
+                    <td style={td}>{t.quotes ? pct(t.answered, t.quotes) : "—"}</td>
+                    <td style={td}>{t.rating == null ? "—" : `${t.rating.toFixed(1)} ★`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </Card>
+      </div>
+
+      {/* ---------------- Funil ---------------- */}
+      <SectionTitle title="Do pedido à reserva" sub="Pedidos de orçamento feitos no período e o que lhes aconteceu depois." />
+      <div className="admin-two-col" style={twoCol}>
+        <Card title="Funil">
+          <Funnel stages={funnel} />
+        </Card>
+        <div className="kpi-row" style={{ ...kpiGrid, gridTemplateColumns: "1fr 1fr", margin: 0 }}>
+          <Stat label="Tempo de resposta do parceiro" value={duration(median(responseHours))} hint="mediana, do pedido à proposta" />
+          <Stat label="Tempo de decisão do organizador" value={duration(median(decisionHours))} hint="mediana, da proposta à aceitação" />
+          <Stat label="Valor médio das propostas" value={avgProposal == null ? "—" : eur(avgProposal)} hint={`${proposalsIn.length} propostas`} />
+          <Stat
+            label="Sinal não reembolsável"
+            value={pct(nonRefundable, proposalsIn.length)}
+            hint={`${nonRefundable} de ${proposalsIn.length} propostas`}
+          />
+        </div>
+      </div>
+
+      {/* ---------------- Organizadores e eventos ---------------- */}
+      <SectionTitle title="Organizadores e eventos" sub="Quem organiza, que eventos, quando e onde." />
+      <div className="kpi-row" style={kpiGrid}>
+        <Stat label="Organizadores" value={String(couples.length)} hint={`+${couplesNew.length} no período`} />
+        <Stat label="Eventos criados" value={String(weddings.length)} hint={`+${eventsIn.length} no período`} />
+        <Stat label="Orçamento estimado" value={median(budgets) == null ? "—" : eur(median(budgets)!)} hint="mediana por evento" />
+        <Stat label="Convidados por evento" value={median(guestsPerEvent) == null ? "—" : String(Math.round(median(guestsPerEvent)!))} hint={`estimados: ${median(estGuests) == null ? "—" : Math.round(median(estGuests)!)}`} />
+        <Stat label="Respostas confirmadas" value={pct(rsvpConfirmed, guests.length)} hint={`${rsvpConfirmed} vão · ${rsvpDeclined} não vão · ${guests.length} na lista`} />
+        <Stat label="Convidados com a app" value={pct(guestsWithApp, guests.length)} hint={`${guestAccounts.length} contas de convidado`} />
+      </div>
+      <div className="admin-two-col" style={twoCol}>
+        <Card title="Eventos por tipo">
+          <HBars data={topN(eventsByType, 10)} empty="Sem eventos." />
+        </Card>
+        <Card title="Eventos nos próximos 12 meses">
+          <Bars data={nextMonths.map((m) => ({ label: m.label, value: eventsByMonth.get(m.key) ?? 0 }))} />
+        </Card>
+      </div>
+      <div className="admin-two-col" style={twoCol}>
+        <Card title="Onde são os eventos">
+          <HBars data={topN(eventsByPlace, 8)} empty="Sem local definido." />
+        </Card>
+        <Card title="Pedidos de orçamento por categoria (período)">
+          <HBars data={topN(quotesByCat, 8)} empty="Sem pedidos no período." />
+        </Card>
+      </div>
+
+      {/* ---------------- Parceiros ---------------- */}
+      <SectionTitle title="Parceiros" sub="Oferta disponível, resposta aos pedidos e avaliações." />
+      <div className="kpi-row" style={kpiGrid}>
+        <Stat label="Publicados" value={String(published.length)} hint={`${pending.length} à espera de aprovação`} />
+        <Stat label="Com pagamentos ativos" value={pct(withStripe.length, partners.length)} hint={`${withStripe.length} de ${partners.length}`} />
+        <Stat label="Respondem aos pedidos" value={responseRate == null ? "—" : `${Math.round(responseRate * 100)}%`} hint="pedidos com proposta, no período" />
+        <Stat label="Avaliação média" value={ratingAvg == null ? "—" : `${ratingAvg.toFixed(1)} ★`} hint={`${publishedReviews.length} avaliações`} />
+      </div>
+      <div className="admin-two-col" style={twoCol}>
+        <Card title="Oferta vs procura por categoria">
+          {partnersByCat.size === 0 && quotesByCat.size === 0 ? (
+            <Empty>Sem dados.</Empty>
+          ) : (
+            <table style={table}>
+              <thead>
+                <tr style={thead}>
+                  <th style={th}>Categoria</th>
+                  <th style={th}>Parceiros</th>
+                  <th style={th}>Pedidos</th>
+                  <th style={th}>Reservas</th>
+                  <th style={th}>Pedidos/parceiro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...new Set([...partnersByCat.keys(), ...quotesByCat.keys()])]
+                  .sort((a, b) => (quotesByCat.get(b) ?? 0) - (quotesByCat.get(a) ?? 0))
+                  .map((cat) => {
+                    const np = partnersByCat.get(cat) ?? 0;
+                    const nq = quotesByCat.get(cat) ?? 0;
+                    return (
+                      <tr key={cat} style={{ borderTop: "1px solid var(--border-muted)" }}>
+                        <td style={td}>{cat}</td>
+                        <td style={td}>{np}</td>
+                        <td style={td}>{nq}</td>
+                        <td style={td}>{bookingsByCat.get(cat) ?? 0}</td>
+                        <td style={{ ...td, color: np === 0 && nq > 0 ? "var(--status-rejected-fg)" : undefined, fontWeight: np === 0 && nq > 0 ? 700 : 400 }}>
+                          {np ? (nq / np).toFixed(1) : nq > 0 ? "falta oferta" : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          )}
+        </Card>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <Card title="Avaliações">
+            <HBars data={ratingDist} empty="Sem avaliações." />
+          </Card>
+          <Card title="Parceiros por região">
+            <HBars data={topN(partnersByRegion, 6)} empty="Sem região definida." />
+          </Card>
+        </div>
+      </div>
+
+      {/* ---------------- Qualidade ---------------- */}
+      <SectionTitle title="Qualidade e risco" sub="O que corre mal: cancelamentos, reembolsos, disputas e pedidos de ajuda." />
+      <div className="kpi-row" style={kpiGrid}>
+        <Stat label="Canceladas pelo organizador" value={String(cancelledCouple)} hint={`${pct(cancelledCouple, bookingsIn.length)} das reservas do período`} />
+        <Stat label="Canceladas pelo parceiro" value={String(cancelledPartner)} hint={`${pct(cancelledPartner, bookingsIn.length)} das reservas`} tone={cancelledPartner > 0 ? "warn" : undefined} />
+        <Stat label="Sinal não pago a tempo" value={String(expired)} hint="reservas expiradas" />
+        <Stat label="Disputas" value={String(disputesIn.length)} hint={`${disputesOpen} por decidir`} tone={disputesOpen > 0 ? "warn" : undefined} />
+        <Stat label="Pedidos de ajuda" value={String(supportIn.length)} hint={`${supportOpen} em aberto`} />
+        <Stat label="Tempo de resposta ao suporte" value={duration(median(supportHours))} hint="mediana até resolver" />
+      </div>
+      <div className="admin-two-col" style={twoCol}>
+        <Card title="Motivos das disputas">
+          <HBars data={topN(disputeReasons, 6)} empty="Sem disputas no período." />
+          {disputeResolutions.size > 0 && (
+            <p style={{ ...muted, marginTop: 10 }}>
+              Decisões: {topN(disputeResolutions, 3).map((r) => `${r.label} (${r.value})`).join(" · ")}
+            </p>
+          )}
+        </Card>
+        <Card title="Pedidos de ajuda por tipo">
+          <HBars data={topN(supportByCat, 6)} empty="Sem pedidos no período." />
+        </Card>
+      </div>
+
+      {/* ---------------- Uso da app ---------------- */}
+      <SectionTitle title="Uso da app" sub="Sinais de que as pessoas estão a usar a app no dia a dia." />
+      <div className="kpi-row" style={kpiGrid}>
+        <Stat label="Mensagens com parceiros" value={String(messagesC.count ?? 0)} hint="no período" />
+        <Stat label="Mensagens em grupos" value={String(groupMessagesC.count ?? 0)} hint="no período" />
+        <Stat label="Fotos na galeria" value={String(photosIn.length)} hint={`${photosIn.filter((g) => s(g, "status") === "pending").length} por aprovar`} />
+        <Stat label="Contas ativas" value={String(profiles.filter((p) => s(p, "status") === "active").length)} hint={`${profiles.length} contas no total`} />
       </div>
     </div>
   );
 }
 
-function FunnelCard({ title, stages }: { title: string; stages: { label: string; count: number }[] }) {
-  const max = Math.max(...stages.map((s) => s.count), 1);
+const DISPUTE_REASON: Record<string, string> = {
+  service_not_provided: "Serviço não prestado",
+  service_different: "Diferente do combinado",
+  partner_no_show: "Parceiro não apareceu",
+  couple_no_show: "Organizador não apareceu",
+  payment_issue: "Pagamento",
+  other: "Outro",
+};
+const RESOLUTION: Record<string, string> = {
+  refund_full: "reembolso total",
+  refund_partial: "reembolso parcial",
+  partner_favor: "a favor do parceiro",
+};
+const SUPPORT_CAT: Record<string, string> = {
+  general: "Geral",
+  dispute_delay: "Disputa ou atraso",
+};
+
+// ---------------- peças visuais ----------------
+const kpiGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14, margin: "14px 0 16px" } as const;
+const twoCol = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 } as const;
+const muted = { color: "var(--ink-muted)", fontSize: 13 } as const;
+const table = { width: "100%", borderCollapse: "collapse", fontSize: 13 } as const;
+const thead = { textAlign: "left", color: "var(--ink-muted)" } as const;
+const th = { padding: "6px 8px 6px 0", fontWeight: 500 } as const;
+const td = { padding: "8px 8px 8px 0" } as const;
+
+function SectionTitle({ title, sub }: { title: string; sub: string }) {
   return (
-    <section
-      style={{
-        background: "var(--surface)",
-        borderRadius: 16,
-        boxShadow: "var(--shadow-card)",
-        padding: 20,
-      }}
-    >
-      <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>{title}</h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {stages.map((stage, i) => {
-          const previous = i === 0 ? null : stages[i - 1].count;
-          const conversionPct = previous && previous > 0 ? (stage.count / previous) * 100 : null;
-          const widthPct = Math.max(6, (stage.count / max) * 100);
-          return (
-            <div key={stage.label}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
-                <span>{stage.label}</span>
-                <span style={{ fontWeight: 600 }}>
-                  {stage.count}
-                  {conversionPct !== null && (
-                    <span style={{ color: "var(--ink-muted)", fontWeight: 400 }}>
-                      {" "}
-                      ({conversionPct.toFixed(0)}%)
-                    </span>
-                  )}
-                </span>
-              </div>
-              <div style={{ height: 8, borderRadius: 999, background: "var(--status-suspended-bg)" }}>
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${widthPct}%`,
-                    borderRadius: 999,
-                    background: "var(--accent)",
-                  }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+    <div style={{ marginTop: 28 }}>
+      <h2 style={{ fontSize: 18, fontWeight: 700 }}>{title}</h2>
+      <p style={muted}>{sub}</p>
+    </div>
+  );
+}
+
+function Card({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section style={{ background: "var(--surface)", borderRadius: 16, boxShadow: "var(--shadow-card)", padding: 18, minWidth: 0, overflowX: "auto" }}>
+      <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{title}</h3>
+      {children}
     </section>
+  );
+}
+
+function Empty({ children }: { children: ReactNode }) {
+  return <p style={muted}>{children}</p>;
+}
+
+function Stat({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: "warn" }) {
+  return (
+    <div style={{ background: "var(--surface)", borderRadius: 16, boxShadow: "var(--shadow-card)", padding: "14px 16px", minWidth: 0 }}>
+      <p style={{ fontSize: 12.5, color: "var(--ink-muted)" }}>{label}</p>
+      <p style={{ fontSize: 24, fontWeight: 600, marginTop: 4, color: tone === "warn" ? "var(--status-rejected-fg)" : "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        {value}
+      </p>
+      {hint && <p style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 2 }}>{hint}</p>}
+    </div>
+  );
+}
+
+/// Barras verticais simples (um valor por mês).
+function Bars({ data, format = (v: number) => String(Math.round(v)) }: { data: { label: string; value: number }[]; format?: (v: number) => string }) {
+  const max = Math.max(...data.map((d) => d.value), 0);
+  if (max === 0) return <Empty>Ainda sem dados.</Empty>;
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 150 }}>
+        {data.map((d) => (
+          <div key={d.label} title={`${d.label}: ${format(d.value)}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%", minWidth: 0 }}>
+            {d.value > 0 && <span style={{ fontSize: 10, color: "var(--ink-muted)", marginBottom: 3, whiteSpace: "nowrap" }}>{format(d.value)}</span>}
+            <div style={{ width: "100%", maxWidth: 28, height: `${Math.max(d.value > 0 ? 4 : 0, (d.value / max) * 110)}px`, background: "var(--accent)", borderRadius: "6px 6px 2px 2px" }} />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+        {data.map((d) => (
+          <span key={d.label} style={{ flex: 1, textAlign: "center", fontSize: 10.5, color: "var(--ink-muted)", minWidth: 0 }}>
+            {d.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/// Barras horizontais (ranking).
+function HBars({ data, format = (v: number) => String(Math.round(v)), empty }: { data: { label: string; value: number }[]; format?: (v: number) => string; empty: string }) {
+  const max = Math.max(...data.map((d) => d.value), 0);
+  if (max === 0) return <Empty>{empty}</Empty>;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {data.map((d) => (
+        <div key={d.label}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13, marginBottom: 3 }}>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.label}</span>
+            <span style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{format(d.value)}</span>
+          </div>
+          <div style={{ height: 8, borderRadius: 999, background: "var(--status-suspended-bg)" }}>
+            <div style={{ height: "100%", width: `${Math.max(3, (d.value / max) * 100)}%`, borderRadius: 999, background: "var(--accent)" }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Funnel({ stages }: { stages: { label: string; value: number }[] }) {
+  const first = stages[0]?.value ?? 0;
+  if (first === 0) return <Empty>Sem pedidos de orçamento no período.</Empty>;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {stages.map((st, i) => {
+        const prev = i === 0 ? null : stages[i - 1].value;
+        return (
+          <div key={st.label}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
+              <span>{st.label}</span>
+              <span style={{ fontWeight: 600 }}>
+                {st.value}
+                <span style={{ color: "var(--ink-muted)", fontWeight: 400 }}>
+                  {" "}
+                  {i === 0 ? "" : `· ${pct(st.value, prev ?? 0)} do passo anterior · ${pct(st.value, first)} do total`}
+                </span>
+              </span>
+            </div>
+            <div style={{ height: 10, borderRadius: 999, background: "var(--status-suspended-bg)" }}>
+              <div style={{ height: "100%", width: `${Math.max(3, (st.value / first) * 100)}%`, borderRadius: 999, background: "var(--accent)" }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }

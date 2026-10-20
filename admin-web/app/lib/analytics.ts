@@ -1,0 +1,89 @@
+// Contas da página Analytics (2026-10-20): tudo calculado a partir das
+// linhas reais, sem números inventados. Funções puras — a página vai
+// buscar os dados e passa-os aqui.
+
+export type Period = "30" | "90" | "365" | "all";
+
+export const PERIODS: { value: Period; label: string }[] = [
+  { value: "30", label: "30 dias" },
+  { value: "90", label: "90 dias" },
+  { value: "365", label: "12 meses" },
+  { value: "all", label: "Sempre" },
+];
+
+export function periodStart(p: Period, nowMs: number): Date | null {
+  if (p === "all") return null;
+  return new Date(nowMs - Number(p) * 86400000);
+}
+
+export function inPeriod(iso: string | null | undefined, start: Date | null): boolean {
+  if (!iso) return false;
+  return start == null || new Date(iso) >= start;
+}
+
+/// Agrupa por mês ("2026-10") os últimos `months` meses, a contar de hoje.
+export function monthBuckets(months: number, nowMs: number): { key: string; label: string }[] {
+  const out: { key: string; label: string }[] = [];
+  const d = new Date(nowMs);
+  d.setUTCDate(1);
+  for (let i = months - 1; i >= 0; i--) {
+    const m = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - i, 1));
+    const key = `${m.getUTCFullYear()}-${String(m.getUTCMonth() + 1).padStart(2, "0")}`;
+    const label = m.toLocaleDateString("pt-PT", { month: "short", timeZone: "UTC" }).replace(".", "");
+    out.push({ key, label });
+  }
+  return out;
+}
+
+export function monthKey(iso: string): string {
+  return iso.slice(0, 7);
+}
+
+export function sumBy<T>(rows: T[], key: (r: T) => string | null | undefined, val: (r: T) => number = () => 1) {
+  const m = new Map<string, number>();
+  for (const r of rows) {
+    const k = key(r);
+    if (!k) continue;
+    m.set(k, (m.get(k) ?? 0) + val(r));
+  }
+  return m;
+}
+
+export function topN(m: Map<string, number>, n: number): { label: string; value: number }[] {
+  return [...m.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([label, value]) => ({ label, value }));
+}
+
+export function pct(part: number, total: number): string {
+  if (!total) return "—";
+  return `${Math.round((part / total) * 100)}%`;
+}
+
+export function avg(nums: number[]): number | null {
+  const v = nums.filter((n) => Number.isFinite(n));
+  return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+}
+
+export function median(nums: number[]): number | null {
+  const v = nums.filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
+  if (!v.length) return null;
+  const mid = Math.floor(v.length / 2);
+  return v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
+}
+
+export function hoursBetween(a: string, b: string): number {
+  return (new Date(b).getTime() - new Date(a).getTime()) / 3600000;
+}
+
+export function eur(n: number, cents = false): string {
+  return `${n.toLocaleString("pt-PT", { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 })} €`;
+}
+
+export function duration(hours: number | null): string {
+  if (hours == null) return "—";
+  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))} min`;
+  if (hours < 48) return `${Math.round(hours)} h`;
+  return `${Math.round(hours / 24)} dias`;
+}
