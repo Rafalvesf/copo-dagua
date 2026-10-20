@@ -100,7 +100,7 @@ Future<ChatAttachment?> pickChatAttachment(BuildContext context) async {
       final type = name.toLowerCase().endsWith('.gif') ? 'gif' : 'image';
       return ChatAttachment(await _upload(bytes, name, _mimeFor(name)), type, name);
     case 'file':
-      final res = await FilePicker.platform.pickFiles(withData: true);
+      final res = await FilePicker.pickFiles(withData: true);
       final f = res?.files.single;
       if (f == null || f.bytes == null) return null;
       if (f.size > 15 * 1024 * 1024) {
