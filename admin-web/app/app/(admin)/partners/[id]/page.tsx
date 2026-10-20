@@ -160,7 +160,7 @@ export default async function PartnerDetailPage(
                     // eslint-disable-next-line @next/next/no-img-element
                     <img key={item.id} src={item.media_url} alt="" width={84} height={84} style={{ borderRadius: 10, objectFit: "cover" }} />
                   ) : (
-                    <div key={item.id} className="row" style={{ width: 84, height: 84, borderRadius: 10, background: "var(--ink)", color: "#fff", justifyContent: "center", fontSize: 12 }}>
+                    <div key={item.id} className="row" style={{ width: 84, height: 84, borderRadius: 10, background: "var(--ink)", color: "var(--surface)", justifyContent: "center", fontSize: 12 }}>
                       vídeo
                     </div>
                   ),

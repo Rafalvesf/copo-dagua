@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { initials } from "@/lib/format";
+import { ThemeToggle } from "./ThemeToggle";
 
 type NavItem = { href: string; label: string; icon: ReactNode; badge?: number; also?: string[] };
 type NavGroup = { title?: string; items: NavItem[] };
@@ -236,6 +237,7 @@ export function AdminSidebar({
             Manutenção
           </Link>
         )}
+        <ThemeToggle />
         <Link href="/search" className="icon-btn" aria-label="Pesquisar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
             <circle cx="11" cy="11" r="7" />

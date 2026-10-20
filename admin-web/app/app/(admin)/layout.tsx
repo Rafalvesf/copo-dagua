@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { EditModeProvider } from "@/lib/edit-mode-context";
 import { EditModeToggle } from "@/components/EditModeToggle";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { initials } from "@/lib/format";
 
 // Estrutura de todas as páginas do admin: menu à esquerda, barra de topo
@@ -59,6 +60,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               </Link>
             )}
             <EditModeToggle />
+            <ThemeToggle />
             <Link
               href="/"
               className="icon-btn"
