@@ -220,7 +220,7 @@ export function AdminSidebar({
         />
         <div>
           <p style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: 15, letterSpacing: "0.01em" }}>
-            Copo d&apos;Água
+            À Nossa!
           </p>
           <p style={{ fontSize: 12, fontWeight: 400, color: "var(--ink-muted)" }}>
             Admin
