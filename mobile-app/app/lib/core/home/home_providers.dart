@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, 
 import '../auth/auth_controller.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
+import '../payments/refunds.dart';
 import '../../shared/public_link.dart';
 
 /// Providers para o painel do casal (`home_feed_screen.dart`) — mesmo
@@ -26,6 +27,7 @@ final coupleBookingsProvider = FutureProvider<List<CoupleBooking>>((ref) async {
   if (userId == null) return const [];
 
   await syncPendingStripePayments(coupleId: userId);
+  await retryPendingRefunds(coupleId: userId);
   final rows = await supabase
       .from('bookings')
       .select(
@@ -148,6 +150,8 @@ Future<void> cancelBookingByCouple(String bookingId, {String? reason}) async {
     'cancel_booking_by_couple',
     params: {'p_booking_id': bookingId, 'p_reason': reason},
   );
+  // Reembolso automático se cancelou a tempo (2026-10-20).
+  await requestBookingRefund(bookingId);
 }
 
 /// Estado atual de uma proposta (`proposals.status`) — usado quando

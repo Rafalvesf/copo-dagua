@@ -20,6 +20,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../core/payments/refunds.dart';
 
 /// Reservas do lado do casal — lê `coupleBookingsProvider`
 /// (`core/home/home_providers.dart`), mesmos dados mock que alimentam
@@ -154,12 +155,19 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
   /// função aceita (`invalid_state` para qualquer outro).
   Future<void> _cancel() async {
     if (_cancelling) return;
+    final penaltyDays = await cancellationPenaltyDays();
+    if (!mounted) return;
+    final refundNote = coupleCancelRefundNote(
+      eventDate: booking.serviceDate,
+      depositPaid: booking.status == BookingStatus.confirmado,
+      penaltyDays: penaltyDays,
+    );
     final confirmed = await showIslandDialog<bool>(
       context: context,
       builder: (context) => IslandAlert(
         title: const Text('Cancelar reserva'),
         content: Text(
-          'Cancelar a reserva com ${booking.partnerName}? Esta ação não pode ser desfeita.',
+          'Cancelar a reserva com ${booking.partnerName}? Esta ação não pode ser desfeita.$refundNote',
         ),
         actions: [
           TextButton(
