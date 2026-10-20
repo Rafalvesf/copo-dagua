@@ -190,7 +190,7 @@ Future<ReportData> loadCoupleReport(String weddingId) async {
 }
 
 /// Uma reserva só (detalhe da reserva do organizador).
-Future<ReportData> loadSingleBookingReport(String bookingId) async {
+Future<ReportData> loadSingleBookingReport(String bookingId, {bool partnerSide = false}) async {
   final rows = await supabase
       .from('bookings')
       .select('id, booking_number, event_date, status, total_amount, partner_profiles(business_name), weddings(partner_name_1, partner_name_2, location), proposals(title)')
@@ -200,8 +200,12 @@ Future<ReportData> loadSingleBookingReport(String bookingId) async {
       .select('booking_id, type, status, amount, paid_at, due_at, provider')
       .eq('booking_id', bookingId)
       .order('created_at');
-  final owner = rows.isEmpty ? 'Organizador' : _couple(rows.first['weddings'] as Map?);
-  final base = _assemble(owner, 'Reserva ${rows.isEmpty ? '' : rows.first['booking_number']}', rows, pays, partnerSide: false);
+  final owner = rows.isEmpty
+      ? (partnerSide ? 'Parceiro' : 'Organizador')
+      : partnerSide
+          ? ((rows.first['partner_profiles'] as Map?)?['business_name'] ?? 'Parceiro').toString()
+          : _couple(rows.first['weddings'] as Map?);
+  final base = _assemble(owner, 'Reserva ${rows.isEmpty ? '' : rows.first['booking_number']}', rows, pays, partnerSide: partnerSide);
   return base;
 }
 

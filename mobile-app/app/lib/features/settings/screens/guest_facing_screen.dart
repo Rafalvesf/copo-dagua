@@ -15,6 +15,8 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/guest_widgets.dart' show CompanionLimitRow;
 import '../../../shared/widgets/navigation_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import '../../guest_home/screens/guest_wedding_details_screen.dart';
@@ -280,13 +282,13 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
   @override
   Widget build(BuildContext context) {
     final code = widget.wedding.guestCode;
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return GradientScaffold(
+      background: AppBackground.subtle,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            const PageHeader(title: 'Para os convidados', centered: true),
+            const PageHeader(title: 'Para os convidados', subtitle: 'O que os convidados veem do vosso evento.', centered: true),
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
@@ -298,34 +300,65 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                         _PreviewButton(onTap: _preview),
                         if (_joinMode != null) ..._joinSection(),
                         _CompanionsSection(weddingId: widget.wedding.id),
-                        const _Caps('Boas-vindas'),
-                        _Field(
-                          controller: _welcome,
-                          hint: 'Ex: Mal podemos esperar por brindar convosco!',
-                          maxLines: 3,
+                        // Redesign 2026-10-20: cada parte num cartão com
+                        // ícone, título e o que os convidados vão ver.
+                        const SizedBox(height: 18),
+                        _SectionCard(
+                          icon: Icons.waving_hand_outlined,
+                          title: 'Boas-vindas',
+                          subtitle: 'Aparece no topo da página dos convidados.',
+                          children: [
+                            _Field(controller: _welcome, hint: 'Ex: Mal podemos esperar por brindar convosco!', maxLines: 3),
+                          ],
                         ),
-                        _Caps('Programa', key: _programKey),
-                        if (_info.programAvailable) ..._programSection() else _Field(controller: _time, label: 'Hora da cerimónia', hint: 'Ex: 16:00'),
+                        _SectionCard(
+                          key: _programKey,
+                          icon: Icons.schedule_rounded,
+                          title: 'Programa',
+                          subtitle: 'Os momentos do dia, por ordem.',
+                          children: [
+                            if (_info.programAvailable) ..._programSection() else _Field(controller: _time, label: 'Hora da cerimónia', hint: 'Ex: 16:00'),
+                          ],
+                        ),
                         if (_info.programAvailable) ...[
-                          const _Caps('Local'),
-                          ..._placeSection(),
-                          const _Caps('Dress code'),
-                          ..._dressSection(),
+                          _SectionCard(
+                            icon: Icons.place_outlined,
+                            title: 'Local',
+                            subtitle: 'Com o botão "Como chegar" para os convidados.',
+                            children: _placeSection(),
+                          ),
+                          _SectionCard(
+                            icon: Icons.checkroom_outlined,
+                            title: 'Dress code',
+                            subtitle: 'Indicação e paleta de cores sugerida.',
+                            children: _dressSection(),
+                          ),
                         ],
-                        if (_info.giftsAvailable) ...[
-                          const _Caps('Presentes'),
-                          _Field(controller: _giftUrl, label: 'Link da lista', hint: 'https://…', keyboardType: TextInputType.url),
-                          const SizedBox(height: 10),
-                          _Field(controller: _iban, label: 'IBAN para contribuições', hint: 'PT50 …'),
-                          const SizedBox(height: 10),
-                          _Field(controller: _giftMessage, label: 'Mensagem', hint: 'Ex: A vossa presença é o melhor presente.', maxLines: 2),
-                        ],
-                        const _Caps('Modo convidado'),
-                        _PreviewButton(
-                          onTap: () => showGuestModeSheet(context),
+                        if (_info.giftsAvailable)
+                          _SectionCard(
+                            icon: Icons.card_giftcard_outlined,
+                            title: 'Presentes',
+                            subtitle: 'Lista de presentes e contribuições.',
+                            children: [
+                              _Field(controller: _giftUrl, label: 'Link da lista', hint: 'https://…', keyboardType: TextInputType.url),
+                              const SizedBox(height: 10),
+                              _Field(controller: _iban, label: 'IBAN para contribuições', hint: 'PT50 …'),
+                              const SizedBox(height: 10),
+                              _Field(controller: _giftMessage, label: 'Mensagem', hint: 'Ex: A vossa presença é o melhor presente.', maxLines: 2),
+                            ],
+                          ),
+                        _SectionCard(
                           icon: Icons.key_outlined,
-                          title: 'Entrar noutro evento',
+                          title: 'Modo convidado',
                           subtitle: 'Foste convidado para outro evento? Usa o código.',
+                          children: [
+                            _PreviewButton(
+                              onTap: () => showGuestModeSheet(context),
+                              icon: Icons.login_rounded,
+                              title: 'Entrar noutro evento',
+                              subtitle: 'Abre o evento com o código que recebeste.',
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -550,6 +583,45 @@ class _Moment {
     time.dispose();
     title.dispose();
     place.dispose();
+  }
+}
+
+/// Cartão de secção: ícone, título, explicação e o conteúdo.
+class _SectionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+  const _SectionCard({super.key, required this.icon, required this.title, required this.subtitle, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        decoration: softCard(radius: 24),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(13)),
+              child: Icon(icon, size: 20, color: _olive),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(title, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(subtitle, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+              ]),
+            ),
+          ]),
+          const SizedBox(height: 14),
+          ...children,
+        ]),
+      ),
+    );
   }
 }
 

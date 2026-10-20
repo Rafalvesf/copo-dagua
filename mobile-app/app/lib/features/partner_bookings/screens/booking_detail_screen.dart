@@ -13,6 +13,8 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../widgets/request_row.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import '../../../shared/widgets/export_card.dart';
+import '../../../core/exports/exports.dart';
 
 class BookingDetailScreen extends ConsumerStatefulWidget {
   final Booking booking;
@@ -120,6 +122,19 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                         Text('“${booking.messageFromCouple!.trim()}”',
                             style: const TextStyle(fontSize: 14, height: 1.5, fontStyle: FontStyle.italic, color: AppTheme.ink)),
                       ]),
+                    ),
+                  ],
+                  // Faturas/comprovativos e resumo desta reserva (2026-10-20).
+                  if (!booking.fromQuoteRequest) ...[
+                    const SizedBox(height: 18),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 4, bottom: 8),
+                      child: Text('Documentos', style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    ),
+                    ExportCard(
+                      reportLabel: 'Resumo da reserva',
+                      partnerSide: true,
+                      load: () => loadSingleBookingReport(booking.id, partnerSide: true),
                     ),
                   ],
                 ],
