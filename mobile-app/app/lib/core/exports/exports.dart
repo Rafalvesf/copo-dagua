@@ -189,6 +189,22 @@ Future<ReportData> loadCoupleReport(String weddingId) async {
   );
 }
 
+/// Uma reserva só (detalhe da reserva do organizador).
+Future<ReportData> loadSingleBookingReport(String bookingId) async {
+  final rows = await supabase
+      .from('bookings')
+      .select('id, booking_number, event_date, status, total_amount, partner_profiles(business_name), weddings(partner_name_1, partner_name_2, location), proposals(title)')
+      .eq('id', bookingId);
+  final pays = await supabase
+      .from('payments')
+      .select('booking_id, type, status, amount, paid_at, due_at, provider')
+      .eq('booking_id', bookingId)
+      .order('created_at');
+  final owner = rows.isEmpty ? 'Organizador' : _couple(rows.first['weddings'] as Map?);
+  final base = _assemble(owner, 'Reserva ${rows.isEmpty ? '' : rows.first['booking_number']}', rows, pays, partnerSide: false);
+  return base;
+}
+
 ReportData _assemble(String owner, String title, List<Map<String, dynamic>> rows, List<Map<String, dynamic>> pays, {required bool partnerSide}) {
   final byBooking = <String, Map<String, dynamic>>{for (final r in rows) r['id'] as String: r};
   String other(Map<String, dynamic>? r) => r == null

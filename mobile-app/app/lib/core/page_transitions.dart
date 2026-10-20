@@ -90,7 +90,9 @@ class _TabSlide extends StatelessWidget {
       builder: (context, child) {
         // A entrar vem do lado da direção; a sair vai para o lado oposto.
         final leaving = animation.status == AnimationStatus.reverse;
-        if (_fromBrowserBack && animation.value < 1) {
+        // Voltar com o gesto do Safari: o Safari já animou; a app não
+        // mostra a página a sair (evita o "piscar", reportado 2026-10-20).
+        if (_fromBrowserBack) {
           return leaving ? Opacity(opacity: 0, child: child) : child!;
         }
         final t = Curves.easeOutCubic.transform(animation.value);
@@ -117,7 +119,7 @@ class TopDownTransition extends StatelessWidget {
       child: child,
       builder: (context, child) {
         // Voltar pelo gesto do Safari: sem animação de cima para baixo.
-        if (_fromBrowserBack && animation.value < 1) {
+        if (_fromBrowserBack) {
           return animation.status == AnimationStatus.reverse ? Opacity(opacity: 0, child: child) : child!;
         }
         final t = Curves.easeOutCubic.transform(animation.value);
@@ -178,6 +180,13 @@ class StayOverNav extends StatelessWidget {
 /// `Navigator.push` e rotas sem animação própria.
 class TopDownPageTransitionsBuilder extends PageTransitionsBuilder {
   const TopDownPageTransitionsBuilder();
+
+  @override
+  Duration get transitionDuration => _pushDuration;
+
+  /// Lido no momento de voltar atrás: com o gesto do Safari, sai logo.
+  @override
+  Duration get reverseTransitionDuration => _fromBrowserBack ? Duration.zero : _pushDuration;
 
   @override
   Widget buildTransitions<T>(
