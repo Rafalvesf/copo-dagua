@@ -96,6 +96,12 @@ export default async function PartnerDetailPage(
       detail: p.pricing_mode === "quote_only" ? "só orçamento" : `${servicePackages.length} pacote(s)`,
     },
     { label: "Contactos (NIF)", done: Boolean(v?.tax_id) },
+    // Migração 104: obrigatório antes de aprovar.
+    {
+      label: "Pagamentos ativos (Stripe)",
+      done: Boolean((p as unknown as { stripe_charges_enabled?: boolean }).stripe_charges_enabled),
+      detail: (p as unknown as { stripe_charges_enabled?: boolean }).stripe_charges_enabled ? undefined : "o parceiro tem de ativar em Perfil → Pagamentos",
+    },
   ];
 
   return (

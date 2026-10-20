@@ -61,6 +61,8 @@ async function mapError(error: unknown): Promise<string> {
       return "Não tens permissão para esta ação.";
     case "not_found":
       return "Este parceiro já não existe.";
+    case "payments_not_enabled":
+      return "Este parceiro ainda não ativou os pagamentos (Stripe). Só pode ser aprovado depois de o fazer em Perfil → Pagamentos.";
     default:
       return "Não foi possível completar a ação. Tenta novamente.";
   }
