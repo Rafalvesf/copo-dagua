@@ -8,6 +8,8 @@ import { ACTIONS_BY_STATUS } from "@/lib/types";
 import { SimpleActionButton, ReasonActionForm } from "@/components/ActionButtons";
 import {
   approvePartner,
+  featurePartner,
+  unfeaturePartner,
   rejectPartner,
   requestChangesFromPartner,
   restorePartner,
@@ -107,6 +109,20 @@ export default async function PartnerDetailPage(
           {p.business_name}
         </h1>
         <PartnerStatusBadge status={p.status} />
+        {p.featured && (
+          <span
+            style={{
+              background: "#FBF1D6",
+              color: "#7A5A00",
+              borderRadius: 999,
+              padding: "4px 10px",
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            ★ Em destaque
+          </span>
+        )}
       </div>
 
       {accountSuspended && (
@@ -240,6 +256,23 @@ export default async function PartnerDetailPage(
           )}
         </div>
       </Section>
+
+      {p.status === "published" && (
+        <Section title="Destaque na app">
+          <p style={{ fontSize: 14, color: "var(--ink-muted)" }}>
+            {p.featured
+              ? "Este parceiro aparece primeiro no carrossel \"Em destaque\" para todos os organizadores."
+              : "O carrossel \"Em destaque\" é automático (melhor avaliação). Marca este parceiro para ele aparecer primeiro."}
+          </p>
+          <div>
+            {p.featured ? (
+              <SimpleActionButton id={p.id} label="Tirar do destaque" action={unfeaturePartner} />
+            ) : (
+              <SimpleActionButton id={p.id} label="★ Pôr em destaque" action={featurePartner} />
+            )}
+          </div>
+        </Section>
+      )}
 
       <Section title="Negócio">
         <Field label="Tipo" value={p.business_type === "company" ? "Empresa" : "Individual"} />

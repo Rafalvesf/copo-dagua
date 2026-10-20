@@ -764,6 +764,10 @@ class Partner {
   final String description;
   final String? imageUrl;
 
+  /// Marcado à mão no admin (`partner_profiles.featured`, migração 106):
+  /// aparece primeiro no carrossel "Em destaque".
+  final bool featured;
+
   const Partner({
     required this.id,
     required this.name,
@@ -776,6 +780,7 @@ class Partner {
     this.averageQuotePrice,
     required this.description,
     this.imageUrl,
+    this.featured = false,
   });
 
   String get primaryCategoryLabel =>

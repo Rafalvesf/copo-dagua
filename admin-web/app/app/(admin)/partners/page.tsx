@@ -24,7 +24,7 @@ export default async function PartnersPage({
   const supabase = await createClient();
   const { data: partners, error } = await supabase
     .from("partner_profiles")
-    .select("id, business_name, status, submitted_at")
+    .select("id, business_name, status, submitted_at, featured")
     .eq("status", status)
     .order("submitted_at", { ascending: true });
 
@@ -80,7 +80,7 @@ export default async function PartnersPage({
             </tr>
           </thead>
           <tbody>
-            {(partners as Pick<PartnerProfile, "id" | "business_name" | "status" | "submitted_at">[]).map(
+            {(partners as Pick<PartnerProfile, "id" | "business_name" | "status" | "submitted_at" | "featured">[]).map(
               (p) => (
                 <tr
                   key={p.id}
@@ -90,6 +90,11 @@ export default async function PartnersPage({
                     <Link href={`/partners/${p.id}`} style={{ fontWeight: 600 }}>
                       {p.business_name}
                     </Link>
+                    {p.featured && (
+                      <span style={{ marginLeft: 8, color: "#B08400", fontSize: 13 }} title="Em destaque">
+                        ★
+                      </span>
+                    )}
                   </td>
                   <td>
                     <PartnerStatusBadge status={p.status} />

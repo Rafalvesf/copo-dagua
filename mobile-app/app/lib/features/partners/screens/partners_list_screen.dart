@@ -529,10 +529,15 @@ extension _FirstOrNull<T> on Iterable<T> {
 /// categorias de cada vez, com espaço visível entre elas.
 
 /// Os mais bem avaliados (com avaliações reais), para o carrossel.
+/// Carrossel "Em destaque" (2026-10-20): primeiro os escolhidos à mão no
+/// admin, depois o automático (melhor avaliação), até 6.
 List<Partner> featured(List<Partner> all) {
-  final rated = all.where((p) => (p.rating ?? 0) > 0).toList()
+  final manual = all.where((p) => p.featured).toList();
+  final rest = all.where((p) => !p.featured).toList();
+  final rated = rest.where((p) => (p.rating ?? 0) > 0).toList()
     ..sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
-  return (rated.length >= 3 ? rated : all).take(6).toList();
+  final auto = rated.length >= 3 ? rated : [...rated, ...rest.where((p) => (p.rating ?? 0) <= 0)];
+  return [...manual, ...auto].take(6).toList();
 }
 
 String _priceLabel(Partner p) {

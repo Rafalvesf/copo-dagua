@@ -109,3 +109,30 @@ export async function requestChangesFromPartner(
   }
   return invoke("request-partner-changes", { partner_id: partnerId, reason });
 }
+
+// Destaque manual (migração 106): o admin escolhe parceiros que passam à
+// frente do carrossel "Em destaque" na app. O resto continua automático.
+export async function setPartnerFeatured(partnerId: string, featured: boolean): Promise<ActionState> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_partner_featured", {
+    p_partner_id: partnerId,
+    p_featured: featured,
+  });
+  if (error) {
+    return {
+      error: error.code === "42501" ? "Não tens permissão para esta ação." : "Não foi possível mudar o destaque. Tenta novamente.",
+    };
+  }
+  revalidatePath("/partners");
+  revalidatePath(`/partners/${partnerId}`);
+  return { error: null };
+}
+
+export async function featurePartner(partnerId: string) {
+  return setPartnerFeatured(partnerId, true);
+}
+
+export async function unfeaturePartner(partnerId: string) {
+  return setPartnerFeatured(partnerId, false);
+}
