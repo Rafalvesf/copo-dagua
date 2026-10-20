@@ -62,7 +62,52 @@ function useContainerSize() {
 // `localStorage`, por navegador/dispositivo — não há tabela própria na
 // base de dados para isto (ficaria fora do âmbito pedido); documentado
 // como limitação conhecida em admin-web/dashboard/tasks.md.
+// Telemóvel (até 900px, mesma quebra de globals.css): a grelha de 12
+// colunas fica ilegível, por isso as caixas empilham-se — KPIs dois a dois,
+// o resto a toda a largura — e a página faz scroll normal.
+function useIsMobile() {
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 900px)");
+    const update = () => setMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return mobile;
+}
+
 export function DashboardGrid({ items }: { items: DashboardGridItem[] }) {
+  const isMobile = useIsMobile();
+  if (isMobile) {
+    // No telemóvel o que pede ação vem primeiro ("urgentes"), depois os KPIs.
+    const ordered = [...items].sort((a, b) => Number(b.id.startsWith("urgentes")) - Number(a.id.startsWith("urgentes")));
+    return (
+      <div className="dash-stack">
+        {ordered.map((item) => {
+          const narrow = item.defaultLayout.w <= 3 && item.defaultLayout.h <= 6;
+          const urgent = item.id.startsWith("urgentes");
+          return (
+            <div
+              key={item.id}
+              className={narrow ? undefined : "dash-wide"}
+              style={{
+                height: narrow ? 168 : urgent ? "auto" : Math.min(380, Math.max(260, item.defaultLayout.h * 24)),
+                minHeight: urgent ? 200 : undefined,
+                minWidth: 0,
+              }}
+            >
+              {item.content}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  return <DesktopGrid items={items} />;
+}
+
+function DesktopGrid({ items }: { items: DashboardGridItem[] }) {
   const { editMode } = useEditMode();
   const { containerRef, size } = useContainerSize();
 

@@ -162,3 +162,7 @@ end;
 $$;
 revoke execute on function public.admin_resolve_dispute(uuid, text, numeric, text) from public, anon;
 grant execute on function public.admin_resolve_dispute(uuid, text, numeric, text) to authenticated;
+
+-- Parte 5 — modo de manutenção também para os convidados (pedido 2026-10-20)
+alter table public.platform_settings
+  add column if not exists maintenance_mode_guest boolean not null default false;

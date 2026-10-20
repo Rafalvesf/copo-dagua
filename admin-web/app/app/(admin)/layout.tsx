@@ -39,17 +39,9 @@ export default async function AdminLayout({
     // sempre contido, e a última secção da página (`flex: 1,
     // minHeight: 0` em page.tsx) é a que cede espaço primeiro.
     <EditModeProvider>
-      <div style={{ display: "flex", height: "100dvh" }}>
+      <div className="admin-shell">
         <AdminSidebar fullName={fullName} pendingCount={count ?? 0} openDisputes={openDisputes ?? 0} />
-        <main
-          style={{
-            flex: 1,
-            padding: "18px 40px 24px",
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-          }}
-        >
+        <main className="admin-main">
           <TopBar fullName={fullName} />
           {children}
         </main>
@@ -65,7 +57,7 @@ export default async function AdminLayout({
 // uma página real (`/settings`). Ver `admin-web/dashboard/tasks.md`.
 function TopBar({ fullName }: { fullName: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, marginBottom: 14, flexShrink: 0 }}>
+    <div className="admin-topbar" style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, marginBottom: 14, flexShrink: 0 }}>
       <div style={{ position: "relative", width: 260 }}>
         <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--ink-muted)" }}>
           <SearchIcon />

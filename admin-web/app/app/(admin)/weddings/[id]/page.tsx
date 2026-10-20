@@ -4,15 +4,22 @@ import type { ReactNode } from "react";
 import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import type { Wedding } from "@/lib/types";
+import { eventTypeLabel } from "@/lib/event-types";
 
 export default async function WeddingDetailPage(props: PageProps<"/weddings/[id]">) {
   await requireAdmin();
   const { id } = await props.params;
 
   const supabase = await createClient();
-  const [{ data: wedding }, { data: collaborators }] = await Promise.all([
+  const [{ data: wedding }, { data: collaborators }, { data: bookings }, { count: guestCount }] = await Promise.all([
     supabase.from("weddings").select("*").eq("id", id).single(),
     supabase.from("wedding_collaborators").select("invited_email, status").eq("wedding_id", id),
+    supabase
+      .from("bookings")
+      .select("id, booking_number, status, total_amount, event_date, partner_profiles(business_name)")
+      .eq("wedding_id", id)
+      .order("created_at"),
+    supabase.from("guests").select("id", { count: "exact", head: true }).eq("wedding_id", id),
   ]);
 
   if (!wedding) {
@@ -29,7 +36,7 @@ export default async function WeddingDetailPage(props: PageProps<"/weddings/[id]
   return (
     <div>
       <Link href="/weddings" style={{ color: "var(--ink-muted)", fontSize: 13 }}>
-        ← Casamentos
+        ← Eventos
       </Link>
 
       <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 26, margin: "16px 0" }}>
@@ -37,11 +44,19 @@ export default async function WeddingDetailPage(props: PageProps<"/weddings/[id]
         {w.partner_name_2 ? ` & ${w.partner_name_2}` : ""}
       </h1>
 
-      <Section title="Casamento">
+      <Section title="Evento">
+        <Field
+          label="Tipo"
+          value={eventTypeLabel(
+            (w as unknown as { event_type?: string }).event_type,
+            (w as unknown as { event_type_other?: string }).event_type_other,
+          )}
+        />
         <Field label="Data" value={w.wedding_date ? new Date(w.wedding_date).toLocaleDateString("pt-PT") : "Por definir"} />
         <Field label="Local" value={w.location ?? "—"} />
         <Field label="Espaço" value={w.venue ?? "—"} />
         <Field label="Convidados estimados" value={w.estimated_guests?.toString() ?? "—"} />
+        <Field label="Convidados na lista" value={String(guestCount ?? 0)} />
         <Field
           label="Orçamento estimado"
           value={w.estimated_budget ? `${w.estimated_budget.toLocaleString("pt-PT")} €` : "—"}
@@ -49,6 +64,25 @@ export default async function WeddingDetailPage(props: PageProps<"/weddings/[id]
         <Field label="Estado" value={w.status} />
         {ownerProfile && (
           <Field label="Dono" value="" link={{ href: `/users/${ownerProfile.id}`, label: `${ownerProfile.full_name} →` }} />
+        )}
+      </Section>
+
+      <Section title="Reservas">
+        {!bookings || bookings.length === 0 ? (
+          <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>Sem reservas.</p>
+        ) : (
+          bookings.map((b) => {
+            const pp = b.partner_profiles as unknown as { business_name: string } | { business_name: string }[] | null;
+            const name = (Array.isArray(pp) ? pp[0] : pp)?.business_name ?? "Parceiro";
+            return (
+              <Field
+                key={b.id as string}
+                label={`${Number(b.total_amount).toLocaleString("pt-PT")} € · ${b.status}`}
+                value=""
+                link={{ href: `/bookings/${b.id}`, label: `${b.booking_number} · ${name}` }}
+              />
+            );
+          })
         )}
       </Section>
 

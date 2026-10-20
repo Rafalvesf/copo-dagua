@@ -132,17 +132,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       // — só faz sentido uma vez a role conhecida (perfil já carregado);
       // um visitante ainda não autenticado continua a ver o login
       // normalmente. Pedido explícito do utilizador: interruptores
-      // independentes por lado, "ambos" é só ligar os dois. Convidado não
-      // tem interruptor próprio (`MaintenanceState` só tem `couple`/
-      // `partner`) e nunca é bloqueado por manutenção de outro lado.
+      // independentes por lado.
+      // Convidados passaram a ter interruptor próprio (2026-10-20).
       final role = auth.profile?.role;
-      if (role != null && role != UserRole.guest) {
+      if (role != null) {
         final maintenance = ref.read(maintenanceControllerProvider);
-        final blocked = role == UserRole.couple ? maintenance.couple : maintenance.partner;
+        final blocked = switch (role) {
+          UserRole.couple => maintenance.couple,
+          UserRole.partner => maintenance.partner,
+          UserRole.guest => maintenance.guest,
+        };
         if (blocked && location != '/maintenance') return '/maintenance';
         if (!blocked && location == '/maintenance') {
           return auth.status == AuthStatus.active
-              ? (role == UserRole.partner ? '/partner-home' : '/home')
+              ? switch (role) {
+                  UserRole.partner => '/partner-home',
+                  UserRole.guest => '/guest-home',
+                  UserRole.couple => '/home',
+                }
               : '/welcome';
         }
       }

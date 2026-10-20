@@ -24,7 +24,7 @@ export default async function PartnersPage({
   const supabase = await createClient();
   const { data: partners, error } = await supabase
     .from("partner_profiles")
-    .select("id, business_name, status, submitted_at, featured")
+    .select("id, business_name, status, submitted_at, featured, stripe_charges_enabled")
     .eq("status", status)
     .order("submitted_at", { ascending: true });
 
@@ -76,11 +76,12 @@ export default async function PartnersPage({
             <tr style={{ textAlign: "left", fontSize: 13, color: "var(--ink-muted)" }}>
               <th style={{ padding: "8px 0" }}>Parceiro</th>
               <th>Estado</th>
+              <th>Pagamentos</th>
               <th>Submetido em</th>
             </tr>
           </thead>
           <tbody>
-            {(partners as Pick<PartnerProfile, "id" | "business_name" | "status" | "submitted_at" | "featured">[]).map(
+            {(partners as (Pick<PartnerProfile, "id" | "business_name" | "status" | "submitted_at" | "featured"> & { stripe_charges_enabled: boolean })[]).map(
               (p) => (
                 <tr
                   key={p.id}
@@ -98,6 +99,13 @@ export default async function PartnersPage({
                   </td>
                   <td>
                     <PartnerStatusBadge status={p.status} />
+                  </td>
+                  <td style={{ fontSize: 13 }}>
+                    {p.stripe_charges_enabled ? (
+                      <span style={{ color: "var(--status-published-fg)", fontWeight: 600 }}>✓ Ativos</span>
+                    ) : (
+                      <span style={{ color: "var(--status-rejected-fg)", fontWeight: 600 }}>✗ Por ativar</span>
+                    )}
                   </td>
                   <td style={{ color: "var(--ink-muted)", fontSize: 13 }}>
                     {p.submitted_at
