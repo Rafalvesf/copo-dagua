@@ -96,7 +96,7 @@ final pendingProposalsProvider = FutureProvider<List<ReceivedProposal>>((
   final rows = await supabase
       .from('proposals')
       .select(
-        'id, title, description, price, deposit_amount, '
+        'id, title, description, price, deposit_amount, deposit_refundable, '
         'quote_requests(wedding_id, event_date), '
         'partner_profiles(business_name, partner_profile_categories(partner_categories(label_pt)))',
       )
@@ -128,6 +128,7 @@ ReceivedProposal _receivedProposalFromRow(Map<String, dynamic> row) {
     price: (row['price'] as num).toDouble(),
     depositAmount: (row['deposit_amount'] as num).toDouble(),
     eventDate: eventDate == null ? null : DateTime.parse(eventDate),
+    depositRefundable: row['deposit_refundable'] as bool? ?? true,
   );
 }
 

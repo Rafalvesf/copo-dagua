@@ -45,6 +45,9 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
   String? _priceError;
   String? _formError;
   bool _submitting = false;
+  // Escolha do parceiro (migração 108): sinal reembolsável se o casal
+  // cancelar com 30+ dias de antecedência.
+  bool _depositRefundable = true;
 
   @override
   void initState() {
@@ -112,6 +115,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
                   'p_payment_terms': _paymentTerms.text.trim().isEmpty
                       ? null
                       : _paymentTerms.text.trim(),
+                  'p_deposit_refundable': _depositRefundable,
                 },
               )
               as String;
@@ -204,6 +208,28 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
               ),
               const SizedBox(height: 12),
               _DepositPreview(priceText: _price.text),
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: SwitchListTile.adaptive(
+                  value: _depositRefundable,
+                  onChanged: (v) => setState(() => _depositRefundable = v),
+                  activeTrackColor: AppTheme.brandGreen,
+                  title: const Text(
+                    'Sinal reembolsável',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
+                  ),
+                  subtitle: Text(
+                    _depositRefundable
+                        ? 'Se o casal cancelar com 30+ dias de antecedência, recebe o sinal de volta. Mais tarde, fica contigo.'
+                        : 'Se o casal cancelar, o sinal fica sempre contigo. Se fores tu a cancelar, o casal recebe tudo de volta.',
+                    style: const TextStyle(fontSize: AppFontSize.xs),
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               AuthTextField(
                 label: 'Condições de pagamento (opcional)',

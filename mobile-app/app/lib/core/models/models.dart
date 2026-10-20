@@ -1248,6 +1248,10 @@ class ReceivedProposal {
   final double depositAmount;
   final DateTime? eventDate;
 
+  /// Escolha do parceiro na proposta (migração 108): se o casal cancelar a
+  /// tempo, recebe o sinal de volta.
+  final bool depositRefundable;
+
   const ReceivedProposal({
     required this.id,
     required this.weddingId,
@@ -1258,6 +1262,7 @@ class ReceivedProposal {
     required this.price,
     required this.depositAmount,
     this.eventDate,
+    this.depositRefundable = true,
   });
 }
 
