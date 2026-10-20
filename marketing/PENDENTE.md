@@ -5,6 +5,22 @@
 - **Mascote nova**: aplicada na app, no site e no vídeo.
 - **Domínio**: `anossa.app` está livre (confirmado pelo Rafael). Falta registá-lo e apontá-lo para o GitHub Pages. O vídeo já mostra `anossa.app`.
 
+
+## Por aplicar no Supabase (pedido de aprovação cancelado)
+
+- `database/migrations/104_payments_required_for_verification.sql` — pagamentos ativos obrigatórios para o parceiro ser verificado.
+- `database/migrations/105_chat_groups_attachments.sql` — grupos do evento e anexos no chat (fotos, ficheiros, stickers, GIFs).
+
+Correr cada ficheiro no SQL Editor do Supabase (ou aprovar quando o Claude voltar a tentar).
+
+## GIFs
+
+- Criar uma chave em developers.giphy.com e guardá-la no GitHub como segredo `GIPHY_KEY` (Settings → Secrets and variables → Actions). O deploy já a passa à app.
+
+## Por fazer
+
+- Redesenho das páginas "Serviços tratados" e "Para os convidados".
+
 ## Base de dados
 
 - **Reservas repetidas da Cravos & Canela**: o Rafael aprovou apagá-las, mas o pedido de aprovação ficou cancelado. Fica a WED-1016 e saem a WED-1017 e a WED-1018 (com pagamentos, avaliações e mensagens). Correr no SQL Editor:
