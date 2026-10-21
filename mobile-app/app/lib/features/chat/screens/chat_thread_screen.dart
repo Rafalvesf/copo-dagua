@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/chat/chat_thread_controller.dart';
 import '../../../core/home/home_providers.dart';
+import '../../../core/bookings/hire_privacy.dart';
 import '../../../core/payments/payments.dart' show PayArgs;
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
@@ -255,9 +256,12 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
   }
 
   Future<void> _accept() async {
+    // Partilhar com os outros organizadores ou guardar em segredo (2026-10-21).
+    final secret = await askHirePrivacy(context, ref.read(weddingControllerProvider).wedding?.id, 'este parceiro');
+    if (secret == null || !mounted) return;
     setState(() => _accepting = true);
     try {
-      await acceptProposal(widget.message.proposalId!);
+      await acceptProposal(widget.message.proposalId!, private: secret);
       if (!mounted) return;
       ref.invalidate(pendingProposalsProvider);
       ref.invalidate(coupleBookingsProvider);
