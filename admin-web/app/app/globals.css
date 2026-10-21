@@ -1613,3 +1613,72 @@ a.list-row:hover .list-title,
 .bar-col:hover .bar-fill-v {
   filter: brightness(1.12);
 }
+
+/* Sino de notificações da barra de topo (2026-10-21). */
+.notif-wrap {
+  position: relative;
+}
+.notif-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(340px, calc(100vw - 32px));
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-pop);
+  z-index: 50;
+  overflow: hidden;
+}
+.notif-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.notif-head span {
+  color: var(--ink-muted);
+  font-size: 12.5px;
+}
+.notif-empty {
+  margin: 0;
+  padding: 18px 16px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+.notif-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  max-height: min(420px, 70vh);
+  overflow-y: auto;
+}
+.notif-list a {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 16px;
+  color: var(--ink);
+}
+.notif-list a:hover {
+  background: var(--surface-2);
+}
+.notif-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+.notif-title {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.notif-detail {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}

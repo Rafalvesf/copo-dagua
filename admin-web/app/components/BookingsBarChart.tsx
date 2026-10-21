@@ -83,12 +83,14 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
   const barWidth = Math.max(2, chartWidth / days.length - barGap);
   const rawMax = Math.max(...days.map((d) => d.count), 1);
   const totalCount = days.reduce((sum, d) => sum + d.count, 0);
-  // Chão de 5 no eixo — com `rawMax` de 0 ou 1 (poucos/nenhuns dados
-  // reais ainda), `niceAxisMax` sozinho devolvia 1, e cinco marcas em 0/
-  // 0.25/0.5/0.75/1 arredondadas davam legendas repetidas ("1, 1, 1, 0,
-  // 0"). Não inventa dados: só evita que o eixo fique feio quando o
-  // volume real ainda é trivial.
-  const axisMax = Math.max(niceAxisMax(rawMax), 5);
+  // Eixo Y com 4 intervalos de números inteiros (2026-10-21): antes as
+  // marcas eram 0/¼/½/¾ de um máximo arredondado (ex: 0, 1, 3, 4, 5) e as
+  // barras usavam outra escala, por isso não batiam certo com as linhas.
+  const axisStep = tickStep(rawMax);
+  const axisMax = axisStep * 4;
+  // Folga em cima para o número da linha de topo não ser cortado.
+  const plotTop = 10;
+  const plotHeight = height - plotTop;
 
   // `preserveAspectRatio="none"` (nota abaixo) estica tudo dentro do
   // SVG de forma não-uniforme para preencher a caixa redimensionável —
@@ -175,7 +177,7 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
           preserveAspectRatio="none"
         >
           {[0, 0.25, 0.5, 0.75, 1].map((f) => {
-            const y = height - height * f;
+            const y = height - plotHeight * f;
             return (
               <g key={f}>
                 <line
@@ -193,13 +195,13 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
                   fill="var(--ink-subtle)"
                   transform={textTransform(0, y + 4)}
                 >
-                  {Math.round(axisMax * f)}
+                  {axisStep * Math.round(f * 4)}
                 </text>
               </g>
             );
           })}
           {days.map((d, i) => {
-            const barHeight = (d.count / axisMax) * (height - 8);
+            const barHeight = (d.count / axisMax) * plotHeight;
             const x = axisWidth + i * (barWidth + barGap);
             return (
               <g key={i}>
@@ -269,12 +271,13 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
   );
 }
 
-// Arredonda o máximo do eixo Y para cima, para o "próximo número redondo"
-// (1/2/5 × potência de 10) — evita eixos tipo "0, 17, 34, 51..." quando o
-// máximo real de um período é, por exemplo, 17.
-function niceAxisMax(value: number): number {
-  const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
-  const normalized = value / magnitude;
-  const niceNormalized = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
-  return niceNormalized * magnitude;
+// Intervalo entre marcas do eixo Y: inteiro, com 4 intervalos a cobrir o
+// máximo (1 → 0‑4, 9 → 0‑12, 17 → 0‑20, 230 → 0‑250…).
+function tickStep(max: number): number {
+  const raw = Math.max(1, Math.ceil(max / 4));
+  if (raw <= 5) return raw;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / magnitude;
+  const nice = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10;
+  return Math.ceil(nice * magnitude);
 }
