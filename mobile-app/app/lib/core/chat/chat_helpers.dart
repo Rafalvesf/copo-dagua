@@ -5,7 +5,7 @@ import '../../shared/money.dart';
 /// Parceiro contratado em segredo por outro organizador do evento.
 class PartnerUnavailableException implements Exception {
   const PartnerUnavailableException();
-  static const message = '$NEUTRAL';
+  static const message = 'Este parceiro já não está disponível para o vosso evento.';
 }
 
 /// Devolve o id da conversa real entre este casamento e este parceiro
