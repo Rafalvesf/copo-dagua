@@ -1,0 +1,17 @@
+
+::group::✅ Passing tests
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/shared/charts_test.dart: LineAreaChart desenha e mostra o valor ao tocar
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/shared/charts_test.dart: LineAreaChart aguenta tudo a zero
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/shared/charts_test.dart: SimpleBarChart e Sparkline desenham
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/shared/feedback_test.dart: AsyncErrorView mostra a mensagem e chama onRetry
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/shared/feedback_test.dart: AsyncErrorView sem onRetry não mostra o botão
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/shared/feedback_test.dart: EmptyStateView mostra a mensagem
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/shared/feedback_test.dart: O tema usa a Roboto embutida em todos os estilos de texto
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/shared/money_test.dart: euros usa espaço nos milhares e vírgula nos cêntimos
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/shared/money_test.dart: euros não deixa o € partir para outra linha
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/partners/featured_test.dart: destaque manual aparece primeiro, depois o automático
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/partners/featured_test.dart: sem destaque manual mantém o automático e no máximo 6
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/widget_test.dart: App arranca no ecrã de boas-vindas
+::endgroup::
+
+🎉 12 tests passed.
