@@ -279,6 +279,8 @@ export type TaskTemplate = {
   display_type: TaskDisplayType;
   action_type: TaskActionType | null;
   cta_label: string | null;
+  /** Tipos de evento (migração 110); vazio = todos. */
+  event_types: string[] | null;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
