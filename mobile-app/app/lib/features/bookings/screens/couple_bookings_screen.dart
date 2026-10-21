@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/home/home_providers.dart';
 import '../../../core/bookings/hire_privacy.dart';
+import '../../../core/chat/chat_helpers.dart' show PartnerUnavailableException;
 import '../../../core/payments/payments.dart' show PayArgs;
 import '../../../core/models/models.dart';
 import '../../../core/reviews/review_providers.dart';
@@ -506,6 +507,8 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
                   : e.code == 'P0007'
                       ? 'Este parceiro já tem outra reserva confirmada nessa data. Não é possível aceitar esta proposta.'
                       // `P0008` = `already_booked_with_partner` (migração 102).
+                      : e.code == 'P0010'
+                          ? PartnerUnavailableException.message
                       : e.code == 'P0008'
                           ? 'Já tens uma reserva com este parceiro. Só podes aceitar outra se essa for cancelada sem o sinal pago.'
                           : 'Não foi possível aceitar a proposta. Tenta novamente.',

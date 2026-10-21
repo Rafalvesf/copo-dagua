@@ -2,6 +2,12 @@ import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import '../../shared/money.dart';
 
+/// Parceiro contratado em segredo por outro organizador do evento.
+class PartnerUnavailableException implements Exception {
+  const PartnerUnavailableException();
+  static const message = '$NEUTRAL';
+}
+
 /// Devolve o id da conversa real entre este casamento e este parceiro
 /// (036_chat.sql), criando-a se ainda não existir. Usado tanto pelo
 /// botão "Chat" no perfil público do parceiro (lado do casal) como
@@ -18,6 +24,17 @@ Future<String> getOrCreateConversation({
       .eq('partner_id', partnerId)
       .maybeSingle();
   if (existing != null) return existing['id'] as String;
+
+  // Outro organizador contratou-o em segredo (migração 117): não se abre
+  // outra conversa, e o aviso não revela a surpresa.
+  bool blocked = false;
+  try {
+    blocked = await supabase.rpc('partner_blocked_by_secret', params: {
+      'p_wedding_id': weddingId,
+      'p_partner_id': partnerId,
+    }) == true;
+  } catch (_) {}
+  if (blocked) throw const PartnerUnavailableException();
 
   final row = await supabase
       .from('conversations')

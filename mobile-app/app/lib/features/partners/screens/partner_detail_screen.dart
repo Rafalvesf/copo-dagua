@@ -95,6 +95,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           avatarUrl: partner.imageUrl,
         ),
       );
+    } on PartnerUnavailableException {
+      if (mounted) _comingSoon(PartnerUnavailableException.message);
     } catch (_) {
       if (mounted) _comingSoon('Não foi possível abrir o chat.');
     } finally {
@@ -159,6 +161,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       if (!mounted) return;
       final message = switch (e.code) {
         'P0002' => 'Este parceiro já não está disponível.',
+        // Migração 117: contratado em segredo por outro organizador.
+        'P0010' => PartnerUnavailableException.message,
         'P0003' => 'Escolhe uma data com pelo menos 7 dias de antecedência.',
         // Migração 103: só um pedido de cada vez por parceiro.
         'P0009' => 'Já pediste orçamento a este parceiro. Só podes pedir outra vez se o pedido ou a reserva for cancelado.',
