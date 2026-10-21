@@ -28,25 +28,25 @@
   --accent-ink: #2f4329;
   --on-accent: #ffffff;
 
-  --success-bg: #e7f1ea;
-  --success-fg: #2b6e46;
-  --warning-bg: #f8eedb;
-  --warning-fg: #8c5e0e;
-  --danger-bg: #f9e7e3;
-  --danger-fg: #b0392b;
-  --danger-hover: #93301f;
-  --danger-line: #edc9c1;
-  --info-bg: #e8eef6;
-  --info-fg: #335b8c;
+  --success-bg: #e8efe4;
+  --success-fg: #3e5639;
+  --warning-bg: #eef1ea;
+  --warning-fg: #55684f;
+  --danger-bg: #dde6d8;
+  --danger-fg: #24331f;
+  --danger-hover: #141d11;
+  --danger-line: #c3cfbd;
+  --info-bg: #eef1ea;
+  --info-fg: #4f6b4a;
   --neutral-bg: #efeee8;
-  --neutral-fg: #55544e;
+  --neutral-fg: #5e5d59;
 
-  --chart-prev: #9fb4cc;
-  --chart-2: #d4a15a;
-  --chart-3: #8fa87a;
+  --chart-prev: #b5b3aa;
+  --chart-2: #7d9876;
+  --chart-3: #a9bca2;
   --chart-4: #9b9a93;
   --chart-5: #cfccc1;
-  --star: #d4a15a;
+  --star: #4f6b4a;
 
   --shadow-card: 0 0 0 1px var(--border);
   --shadow-pop: 0 12px 32px -12px rgba(20, 20, 19, 0.25), 0 0 0 1px var(--border);
@@ -93,25 +93,25 @@
     --accent-ink: #bcd4b3;
     --on-accent: #1f1e1d;
 
-    --success-bg: #22382a;
-    --success-fg: #86c99e;
-    --warning-bg: #3d3120;
-    --warning-fg: #e5b86a;
-    --danger-bg: #45251f;
-    --danger-fg: #f0907f;
-    --danger-hover: #f5a596;
-    --danger-line: #6a3a31;
-    --info-bg: #23303f;
-    --info-fg: #93b8e3;
+    --success-bg: #2e3a2b;
+    --success-fg: #a5c29c;
+    --warning-bg: #33372f;
+    --warning-fg: #c3cfbb;
+    --danger-bg: #3b4a36;
+    --danger-fg: #d6e6cf;
+    --danger-hover: #eef6ea;
+    --danger-line: #4f5f49;
+    --info-bg: #30362d;
+    --info-fg: #a5c29c;
     --neutral-bg: #383834;
     --neutral-fg: #c2c0b8;
 
-    --chart-prev: #6f86a3;
-    --chart-2: #c99449;
-    --chart-3: #7f9a6c;
+    --chart-prev: #6f6e68;
+    --chart-2: #7f9a77;
+    --chart-3: #5f7558;
     --chart-4: #8a8983;
     --chart-5: #5a5954;
-    --star: #e0ae63;
+    --star: #8fae86;
 
     --shadow-card: 0 0 0 1px var(--border);
     --shadow-pop: 0 16px 40px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border);
@@ -138,25 +138,25 @@
   --accent-ink: #bcd4b3;
   --on-accent: #1f1e1d;
 
-  --success-bg: #22382a;
-  --success-fg: #86c99e;
-  --warning-bg: #3d3120;
-  --warning-fg: #e5b86a;
-  --danger-bg: #45251f;
-  --danger-fg: #f0907f;
-  --danger-hover: #f5a596;
-  --danger-line: #6a3a31;
-  --info-bg: #23303f;
-  --info-fg: #93b8e3;
+  --success-bg: #2e3a2b;
+  --success-fg: #a5c29c;
+  --warning-bg: #33372f;
+  --warning-fg: #c3cfbb;
+  --danger-bg: #3b4a36;
+  --danger-fg: #d6e6cf;
+  --danger-hover: #eef6ea;
+  --danger-line: #4f5f49;
+  --info-bg: #30362d;
+  --info-fg: #a5c29c;
   --neutral-bg: #383834;
   --neutral-fg: #c2c0b8;
 
-  --chart-prev: #6f86a3;
-  --chart-2: #c99449;
-  --chart-3: #7f9a6c;
+  --chart-prev: #6f6e68;
+  --chart-2: #7f9a77;
+  --chart-3: #5f7558;
   --chart-4: #8a8983;
   --chart-5: #5a5954;
-  --star: #e0ae63;
+  --star: #8fae86;
 
   --shadow-card: 0 0 0 1px var(--border);
   --shadow-pop: 0 16px 40px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border);
