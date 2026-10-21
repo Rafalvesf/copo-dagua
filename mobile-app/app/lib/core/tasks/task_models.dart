@@ -112,7 +112,7 @@ class WeddingTask {
 
   factory WeddingTask.fromRow(Map<String, dynamic> row) => WeddingTask(
     id: row['id'] as String,
-    weddingId: row['wedding_id'] as String,
+    weddingId: row['wedding_id'] as String? ?? '',
     taskTemplateId: row['task_template_id'] as String?,
     source: TaskSource.values.byName(row['source'] as String),
     title: row['title'] as String,
@@ -212,7 +212,7 @@ class AppNotification {
 
   factory AppNotification.fromRow(Map<String, dynamic> row) => AppNotification(
     id: row['id'] as String,
-    weddingId: row['wedding_id'] as String,
+    weddingId: row['wedding_id'] as String? ?? '',
     type: row['type'] as String,
     title: row['title'] as String,
     body: row['body'] as String?,
