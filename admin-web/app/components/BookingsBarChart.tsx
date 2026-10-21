@@ -72,6 +72,7 @@ function buildBuckets(rows: { created_at: string }[], period: Period, nowMs: num
 // divergirem entre a passagem SSR e a hidratação.
 export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }[]; nowMs: number }) {
   const [period, setPeriod] = useState<Period>("30d");
+  const [hover, setHover] = useState<number | null>(null);
   const days = useMemo(() => buildBuckets(rows, period, nowMs), [rows, period, nowMs]);
 
   const axisWidth = 28;
@@ -201,25 +202,28 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
             const barHeight = (d.count / axisMax) * (height - 8);
             const x = axisWidth + i * (barWidth + barGap);
             return (
-              <rect
-                key={i}
-                x={x}
-                y={height - barHeight}
-                width={barWidth}
-                height={barHeight}
-                rx={2}
-                fill="var(--accent)"
-                opacity={d.count === 0 ? 0.15 : 0.85}
-              >
-                {/* Um único nó de texto (string interpolada), não vários
-                    filhos JSX separados — `<title>` dentro de SVG inline
-                    fora do `<head>` já causou um mismatch de hidratação
-                    real aqui (2026-08-30/31) com `{d.label}: {d.count}`
-                    (três nós). `suppressHydrationWarning` como rede de
-                    segurança: é só uma dica de acessibilidade/tooltip,
-                    nunca lógica de aplicação. */}
-                <title suppressHydrationWarning>{`${d.label}: ${d.count}`}</title>
-              </rect>
+              <g key={i}>
+                <rect
+                  x={x}
+                  y={height - barHeight}
+                  width={barWidth}
+                  height={barHeight}
+                  rx={2}
+                  fill="var(--accent)"
+                  opacity={hover === i ? 1 : d.count === 0 ? 0.15 : hover == null ? 0.85 : 0.5}
+                />
+                {/* Zona de toque/rato com a altura toda, para a dica. */}
+                <rect
+                  x={x - barGap / 2}
+                  y={0}
+                  width={barWidth + barGap}
+                  height={height}
+                  fill="transparent"
+                  onMouseEnter={() => setHover(i)}
+                  onMouseLeave={() => setHover(null)}
+                  onTouchStart={() => setHover(i)}
+                />
+              </g>
             );
           })}
           {days
@@ -241,6 +245,25 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
               );
             })}
         </svg>
+        {hover != null && days[hover] && (
+          <div
+            className={`chart-tip${(axisWidth + hover * (barWidth + barGap)) / width > 0.6 ? " tip-left" : ""}`}
+            style={{
+              left: `${((axisWidth + hover * (barWidth + barGap) + barWidth / 2) / width) * 100}%`,
+              top: 0,
+              bottom: "auto",
+              minWidth: 0,
+            }}
+            role="status"
+          >
+            <div className="tip-row">
+              <span className="tip-label">{days[hover].label}</span>
+              <span className="tip-value">
+                {days[hover].count} {days[hover].count === 1 ? "reserva" : "reservas"}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

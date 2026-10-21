@@ -1530,3 +1530,86 @@ a.list-row:hover .list-title,
   font-family: var(--font-sans), system-ui, sans-serif;
   letter-spacing: 0;
 }
+
+/* Dicas dos gráficos ao passar o rato (2026-10-21) */
+.chart-hit {
+  position: relative;
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+.mc-cursor {
+  stroke: var(--ink-subtle);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.mc-dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--surface);
+  pointer-events: none;
+}
+.mc-dot-prev {
+  background: var(--chart-prev);
+}
+.chart-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  z-index: 5;
+  min-width: 190px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  font-size: 12px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.chart-tip.tip-left {
+  transform: translateX(-90%);
+}
+.tip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.tip-label {
+  color: var(--ink-muted);
+  flex: 1;
+}
+.tip-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.bar-col {
+  position: relative;
+}
+.bar-col .bar-tip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.bar-col:hover .bar-tip {
+  display: block;
+}
+.bar-col:hover .bar-fill-v {
+  filter: brightness(1.12);
+}

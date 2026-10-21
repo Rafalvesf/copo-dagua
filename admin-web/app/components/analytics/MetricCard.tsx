@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { change, type Metric } from "@/lib/analytics";
+import { LineChartHover } from "./LineChartHover";
 
 // Cartão de métrica ao estilo Shopify (2026-10-21): título, valor do
 // período, variação face ao período anterior e a linha dos dois períodos
@@ -10,6 +11,8 @@ export function MetricCard({
   metric,
   format,
   labels,
+  tips,
+  prevTips,
   current,
   previous,
   invert,
@@ -21,6 +24,9 @@ export function MetricCard({
   format: (v: number) => string;
   /** Primeiro e último rótulo do eixo X. */
   labels: [string, string];
+  /** Rótulo completo de cada ponto (atual e anterior), para a dica. */
+  tips: string[];
+  prevTips: string[];
   current: string;
   previous: string;
   /** Subir é mau (ex.: cancelamentos, reembolsos). */
@@ -46,7 +52,14 @@ export function MetricCard({
         )}
         {pct === null && <span className="mcard-delta">novo</span>}
       </div>
-      <LineChart series={metric.series} prevSeries={metric.prevSeries} />
+      <LineChartHover
+        series={metric.series}
+        prevSeries={metric.prevSeries}
+        tips={tips}
+        prevTips={prevTips}
+        values={metric.series.map(format)}
+        prevValues={metric.prevSeries.map(format)}
+      />
       <div className="mcard-axis">
         <span>{labels[0]}</span>
         <span>{labels[1]}</span>
@@ -63,29 +76,6 @@ export function MetricCard({
       </div>
       {footer && <div className="mcard-foot">{footer}</div>}
     </section>
-  );
-}
-
-function LineChart({ series, prevSeries }: { series: number[]; prevSeries: number[] }) {
-  const W = 300;
-  const H = 92;
-  const pad = 4;
-  const max = Math.max(1e-9, ...series, ...prevSeries);
-  const n = Math.max(series.length, 2);
-  const x = (i: number) => (i / (n - 1)) * W;
-  const y = (v: number) => H - pad - (v / max) * (H - pad * 2);
-  const path = (arr: number[]) => arr.map((v, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-  const area = `${path(series)} L${x(series.length - 1).toFixed(1)},${H} L0,${H} Z`;
-  return (
-    <svg className="mcard-chart" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden>
-      {[0.25, 0.5, 0.75].map((f) => (
-        <line key={f} x1={0} x2={W} y1={H * f} y2={H * f} className="mc-grid" vectorEffect="non-scaling-stroke" />
-      ))}
-      <line x1={0} x2={W} y1={H - 0.5} y2={H - 0.5} className="mc-base" vectorEffect="non-scaling-stroke" />
-      <path d={area} className="mc-area" />
-      <path d={path(prevSeries)} className="mc-prev" vectorEffect="non-scaling-stroke" />
-      <path d={path(series)} className="mc-cur" vectorEffect="non-scaling-stroke" />
-    </svg>
   );
 }
 
