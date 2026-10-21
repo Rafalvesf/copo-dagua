@@ -16,6 +16,7 @@ import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/push_opt_in.dart';
 
 /// Perfil — conta de quem está com sessão iniciada. Pedido explícito do
 /// utilizador (redesign 2026-10): "o perfil fica apenas de quem criou a
@@ -404,6 +405,7 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
                 ),
               ),
               const SizedBox(height: 16),
+              const PushOptInCard(),
               Expanded(
                 child: visible.isEmpty
                     ? const Center(

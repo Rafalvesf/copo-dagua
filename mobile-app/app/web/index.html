@@ -41,6 +41,12 @@
       try {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker.getRegistrations().then(function (regs) {
+          // Só o service worker antigo do Flutter (cache). O das
+          // notificações (push_sw.js) fica — 2026-10-21.
+          regs = regs.filter(function (r) {
+            var sw = r.active || r.waiting || r.installing;
+            return !(sw && /push_sw\.js/.test(sw.scriptURL));
+          });
           if (!regs.length) return;
           Promise.all(regs.map(function (r) { return r.unregister(); }))
             .then(function () {
@@ -335,6 +341,62 @@
           }).catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'Pagamento falhou.' }); });
         },
         unmount: clean
+      };
+    })();
+  </script>
+  <script>
+    // Notificações com a app fechada (Web Push, 2026-10-21). O pedido de
+    // permissão tem de vir de um toque do utilizador (botão na app).
+    window.tchinPush = (function () {
+      function b64ToBytes(b64) {
+        var pad = '='.repeat((4 - b64.length % 4) % 4);
+        var raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+        var out = new Uint8Array(raw.length);
+        for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+        return out;
+      }
+      function supported() {
+        return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+      }
+      function standalone() {
+        return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+      }
+      function ios() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+      function reg() { return navigator.serviceWorker.register('push_sw.js'); }
+      return {
+        status: function () {
+          if (!supported()) return ios() && !standalone() ? 'ios_install' : 'unsupported';
+          return Notification.permission; // granted | denied | default
+        },
+        subscribe: function (publicKey) {
+          if (!supported()) return Promise.resolve(JSON.stringify({ error: 'unsupported' }));
+          return Notification.requestPermission().then(function (perm) {
+            if (perm !== 'granted') return JSON.stringify({ error: perm });
+            return reg().then(function (r) { return navigator.serviceWorker.ready.then(function () { return r; }); })
+              .then(function (r) {
+                return r.pushManager.getSubscription().then(function (sub) {
+                  return sub || r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(publicKey) });
+                });
+              })
+              .then(function (sub) { return JSON.stringify(sub.toJSON()); });
+          }).catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'failed' }); });
+        },
+        current: function () {
+          if (!supported() || Notification.permission !== 'granted') return Promise.resolve('');
+          return reg().then(function (r) { return r.pushManager.getSubscription(); })
+            .then(function (sub) { return sub ? JSON.stringify(sub.toJSON()) : ''; })
+            .catch(function () { return ''; });
+        },
+        unsubscribe: function () {
+          if (!supported()) return Promise.resolve('');
+          return navigator.serviceWorker.getRegistration().then(function (r) {
+            return r ? r.pushManager.getSubscription() : null;
+          }).then(function (sub) {
+            if (!sub) return '';
+            var ep = sub.endpoint;
+            return sub.unsubscribe().then(function () { return ep; });
+          }).catch(function () { return ''; });
+        }
       };
     })();
   </script>

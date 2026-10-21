@@ -6,6 +6,7 @@ import '../../core/notifications/partner_notifications_providers.dart';
 import '../../core/theme/app_theme.dart';
 import 'feedback.dart';
 import 'island_sheet.dart';
+import 'push_opt_in.dart';
 
 /// Sino de notificações do parceiro e do convidado — versão simples do sino do casal
 /// (`home_feed_screen.dart`, `_NotificationsSheet`), sem os separadores
@@ -81,6 +82,7 @@ class _PartnerNotificationsSheet extends ConsumerWidget {
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg),
               ),
               const SizedBox(height: 12),
+              const PushOptInCard(),
               Expanded(
                 child: notificationsAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
