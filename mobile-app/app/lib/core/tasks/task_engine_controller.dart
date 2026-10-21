@@ -126,12 +126,24 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         .map((r) => WeddingTask.fromRow(r as Map<String, dynamic>))
         .toList();
 
-    final notificationRows = await supabase
-        .from('notifications')
-        .select()
-        .eq('wedding_id', weddingId)
-        .order('created_at', ascending: false)
-        .limit(50);
+    // Do evento + pessoais (grupos, suporte — migração 114).
+    final me = supabase.auth.currentUser?.id;
+    List notificationRows;
+    try {
+      notificationRows = await supabase
+          .from('notifications')
+          .select()
+          .or(me == null ? 'wedding_id.eq.$weddingId' : 'wedding_id.eq.$weddingId,profile_id.eq.$me')
+          .order('created_at', ascending: false)
+          .limit(50);
+    } catch (_) {
+      notificationRows = await supabase
+          .from('notifications')
+          .select()
+          .eq('wedding_id', weddingId)
+          .order('created_at', ascending: false)
+          .limit(50);
+    }
     final notifications = (notificationRows as List)
         .map((r) => AppNotification.fromRow(r as Map<String, dynamic>))
         .toList();
@@ -876,6 +888,12 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         .update({'read': true})
         .eq('wedding_id', weddingId)
         .eq('read', false);
+    final me = supabase.auth.currentUser?.id;
+    if (me != null) {
+      try {
+        await supabase.from('notifications').update({'read': true}).eq('profile_id', me).eq('read', false);
+      } catch (_) {}
+    }
     await _load(weddingId);
   }
 }

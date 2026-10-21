@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/notifications/partner_notifications_providers.dart';
 import '../../core/theme/app_theme.dart';
 import 'feedback.dart';
 import 'island_sheet.dart';
 
-/// Sino de notificações do parceiro — versão simples do sino do casal
+/// Sino de notificações do parceiro e do convidado — versão simples do sino do casal
 /// (`home_feed_screen.dart`, `_NotificationsSheet`), sem os separadores
 /// Todas/Não lidas/Lidas. Ver `partner_notifications_providers.dart`.
 class PartnerNotificationBell extends ConsumerWidget {
@@ -96,9 +97,11 @@ class _PartnerNotificationsSheet extends ConsumerWidget {
                         final n = notifications[index];
                         return ListTile(
                           leading: Icon(
-                            n.read
-                                ? Icons.notifications_none_rounded
-                                : Icons.notifications_active_rounded,
+                            switch (n.type) {
+                              'new_message' => n.read ? Icons.chat_bubble_outline_rounded : Icons.chat_bubble_rounded,
+                              'support_reply' => Icons.support_agent_rounded,
+                              _ => n.read ? Icons.notifications_none_rounded : Icons.notifications_active_rounded,
+                            },
                             color: n.read ? AppTheme.inkMuted : AppTheme.accentOliveDark,
                           ),
                           title: Text(
@@ -107,13 +110,18 @@ class _PartnerNotificationsSheet extends ConsumerWidget {
                               fontWeight: n.read ? FontWeight.w500 : FontWeight.w700,
                             ),
                           ),
-                          subtitle: n.body == null ? null : Text(n.body!),
-                          onTap: n.read
-                              ? null
-                              : () async {
-                                  await markPartnerNotificationRead(n.id);
-                                  ref.invalidate(partnerNotificationsProvider);
-                                },
+                          subtitle: n.body == null ? null : Text(n.body!, maxLines: 2, overflow: TextOverflow.ellipsis),
+                          onTap: () async {
+                            if (!n.read) {
+                              await markPartnerNotificationRead(n.id);
+                              ref.invalidate(partnerNotificationsProvider);
+                            }
+                            final link = n.link;
+                            if (link != null && context.mounted) {
+                              Navigator.of(context).pop();
+                              GoRouter.of(context).push(link);
+                            }
+                          },
                         );
                       },
                     );
