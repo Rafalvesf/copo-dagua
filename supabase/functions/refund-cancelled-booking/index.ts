@@ -168,8 +168,13 @@ Deno.serve(async (req) => {
       actor_type: "system",
       metadata: { payment_ids: refunded, amount: total },
     }).then(({ error }) => error && console.error("booking_events insert failed", error));
+    // Contratação em segredo (migração 116): só quem a fez é avisado.
+    // Consulta à parte para não falhar antes de a migração correr.
+    const { data: priv } = await admin.from("bookings").select("private_owner").eq("id", bookingId).maybeSingle();
+    const owner = (priv as { private_owner?: string | null } | null)?.private_owner;
     await admin.from("notifications").insert({
       wedding_id: booking.wedding_id,
+      ...(owner ? { profile_id: owner } : {}),
       type: "booking_refunded",
       title: "Reembolso enviado",
       body: `Reembolsámos ${euros} € da reserva ${booking.booking_number} · ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`,

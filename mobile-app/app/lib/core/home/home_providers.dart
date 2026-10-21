@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, FunctionResponse;
+import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, FunctionResponse, PostgrestException;
 
 import '../auth/auth_controller.dart';
+import '../bookings/hire_privacy.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import '../payments/refunds.dart';
@@ -28,17 +29,22 @@ final coupleBookingsProvider = FutureProvider<List<CoupleBooking>>((ref) async {
 
   await syncPendingStripePayments(coupleId: userId);
   await retryPendingRefunds(coupleId: userId);
-  final rows = await supabase
-      .from('bookings')
-      .select(
-        'id, wedding_id, partner_id, event_date, total_amount, deposit_amount, status, '
-        'partner_profiles(business_name, cover_photo_url, partner_profile_categories(partner_categories(label_pt))), '
-        'payments(id, type, status, amount, due_at)',
-      )
-      .eq('couple_id', userId)
-      .order('event_date', ascending: true);
+  const cols = 'id, wedding_id, partner_id, event_date, total_amount, deposit_amount, status, '
+      'partner_profiles(business_name, cover_photo_url, partner_profile_categories(partner_categories(label_pt))), '
+      'payments(id, type, status, amount, due_at)';
+  List<dynamic> rows;
+  try {
+    rows = await supabase
+        .from('bookings')
+        .select('$cols, private_owner')
+        .eq('couple_id', userId)
+        .order('event_date', ascending: true);
+  } on PostgrestException {
+    // Migração 116 (contratações em segredo) ainda por correr.
+    rows = await supabase.from('bookings').select(cols).eq('couple_id', userId).order('event_date', ascending: true);
+  }
 
-  return rows.map<CoupleBooking>(_coupleBookingFromRow).toList();
+  return rows.cast<Map<String, dynamic>>().map<CoupleBooking>(_coupleBookingFromRow).toList();
 });
 
 CoupleBooking _coupleBookingFromRow(Map<String, dynamic> row) {
@@ -79,6 +85,7 @@ CoupleBooking _coupleBookingFromRow(Map<String, dynamic> row) {
         .cast<Map<String, dynamic>>()
         .where((p) => p['status'] == 'paid')
         .fold<double>(0, (sum, p) => sum + (p['amount'] as num).toDouble()),
+    isPrivate: row['private_owner'] != null,
   );
 }
 
@@ -138,8 +145,10 @@ ReceivedProposal _receivedProposalFromRow(Map<String, dynamic> row) {
 /// [pendingProposalsProvider] e [coupleBookingsProvider] depois (mesmo
 /// padrão de `acceptProposal` não guardar estado próprio, ver
 /// `couple_bookings_screen.dart`).
-Future<void> acceptProposal(String proposalId) async {
-  await supabase.rpc('accept_proposal', params: {'p_proposal_id': proposalId});
+Future<void> acceptProposal(String proposalId, {bool private = false}) async {
+  final bookingId = await supabase.rpc('accept_proposal', params: {'p_proposal_id': proposalId});
+  // Contratação em segredo (migração 116): só quem contratou a vê.
+  if (private && bookingId is String) await setBookingPrivate(bookingId, true);
 }
 
 /// Cancela uma booking em curso pelo lado do casal

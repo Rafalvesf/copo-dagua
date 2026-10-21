@@ -645,14 +645,34 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         .select('partner_id, status')
         .eq('wedding_id', weddingId)
         .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed', 'payment_overdue', 'disputed']);
-    final liveBookings = (liveBookingRows as List).cast<Map<String, dynamic>>();
+    // Contratações em segredo (migração 116) não mexem nas tarefas
+    // partilhadas — senão "Contratar X" aparecia feito aos outros
+    // organizadores e estragava a surpresa.
+    final secretPartnerIds = <String>{};
+    try {
+      final secretRows = await supabase
+          .from('conversations')
+          .select('partner_id')
+          .eq('wedding_id', weddingId)
+          .not('private_owner', 'is', null);
+      for (final r in (secretRows as List).cast<Map<String, dynamic>>()) {
+        secretPartnerIds.add(r['partner_id'] as String);
+      }
+    } catch (_) {}
+    final liveBookings = (liveBookingRows as List)
+        .cast<Map<String, dynamic>>()
+        .where((r) => !secretPartnerIds.contains(r['partner_id']))
+        .toList();
     final liveBookingPartnerIds = liveBookings.map((r) => r['partner_id'] as String).toSet();
 
     final quoteRows = await supabase
         .from('quote_requests')
         .select('id, partner_id, status')
         .eq('wedding_id', weddingId);
-    final quoteRequests = (quoteRows as List).cast<Map<String, dynamic>>();
+    final quoteRequests = (quoteRows as List)
+        .cast<Map<String, dynamic>>()
+        .where((r) => !secretPartnerIds.contains(r['partner_id']))
+        .toList();
     final quotePartnerIds = <String>{
       for (final r in quoteRequests)
         if (const {'pending', 'viewed', 'proposal_sent'}.contains(r['status'])) r['partner_id'] as String,

@@ -1226,7 +1226,11 @@ class CoupleBooking {
     this.pendingFinalPaymentId,
     this.finalPaymentAmount,
     this.paidAmount = 0,
+    this.isPrivate = false,
   });
+
+  /// Contratação em segredo (migração 116): só quem a fez a vê.
+  final bool isPrivate;
 
   /// Total já pago na app (pagamentos `paid`, sem a comissão).
   final double paidAmount;

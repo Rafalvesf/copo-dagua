@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/home/home_providers.dart';
+import '../../../core/bookings/hire_privacy.dart';
 import '../../../core/payments/payments.dart' show PayArgs;
 import '../../../core/models/models.dart';
 import '../../../core/reviews/review_providers.dart';
@@ -286,14 +287,26 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        booking.partnerName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: AppFontSize.base,
-                          color: AppTheme.ink,
+                      Row(children: [
+                        Flexible(
+                          child: Text(
+                            booking.partnerName,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: AppFontSize.base,
+                              color: AppTheme.ink,
+                            ),
+                          ),
                         ),
-                      ),
+                        // Contratação em segredo (2026-10-21).
+                        if (booking.isPrivate) ...[
+                          const SizedBox(width: 6),
+                          const Icon(Icons.lock_outline, size: 14, color: AppTheme.inkMuted),
+                          const SizedBox(width: 2),
+                          const Text('Surpresa', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                        ],
+                      ]),
                       const SizedBox(height: 2),
                       Text(
                         '$dateLabel · ${euros(amountWithCommission(booking.amount, commissionPct))}',
@@ -458,9 +471,12 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
   bool _accepting = false;
 
   Future<void> _accept() async {
+    // Partilhar com os outros organizadores ou guardar em segredo (2026-10-21).
+    final secret = await askHirePrivacy(context, widget.proposal.weddingId, widget.proposal.partnerName);
+    if (secret == null || !mounted) return;
     setState(() => _accepting = true);
     try {
-      await acceptProposal(widget.proposal.id);
+      await acceptProposal(widget.proposal.id, private: secret);
       ref.invalidate(pendingProposalsProvider);
       ref.invalidate(coupleBookingsProvider);
       if (mounted) {
