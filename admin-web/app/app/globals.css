@@ -22,10 +22,10 @@
   --border: #e8e6dc;
   --border-strong: #d6d3c7;
 
-  --accent: #c96442;
-  --accent-dark: #ad5232;
-  --accent-soft: #f6e9e2;
-  --accent-ink: #8a3a1e;
+  --accent: #4f6b4a;
+  --accent-dark: #3e5639;
+  --accent-soft: #e8efe4;
+  --accent-ink: #2f4329;
   --on-accent: #ffffff;
 
   --success-bg: #e7f1ea;
@@ -87,10 +87,10 @@
     --border: #3f3e3a;
     --border-strong: #52514c;
 
-    --accent: #d97757;
-    --accent-dark: #e48d70;
-    --accent-soft: #43302a;
-    --accent-ink: #f2b8a2;
+    --accent: #8fae86;
+    --accent-dark: #a5c29c;
+    --accent-soft: #2e3a2b;
+    --accent-ink: #bcd4b3;
     --on-accent: #1f1e1d;
 
     --success-bg: #22382a;
@@ -132,10 +132,10 @@
   --border: #3f3e3a;
   --border-strong: #52514c;
 
-  --accent: #d97757;
-  --accent-dark: #e48d70;
-  --accent-soft: #43302a;
-  --accent-ink: #f2b8a2;
+  --accent: #8fae86;
+  --accent-dark: #a5c29c;
+  --accent-soft: #2e3a2b;
+  --accent-ink: #bcd4b3;
   --on-accent: #1f1e1d;
 
   --success-bg: #22382a;
@@ -256,8 +256,9 @@ h3 {
   overflow-y: auto;
 }
 .admin-content {
-  flex: 1;
-  min-height: 0;
+  /* Cresce com o conteúdo (nunca encolhe), para a margem de baixo ficar
+     depois do último cartão e não a meio do scroll (2026-10-21). */
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -404,6 +405,7 @@ h3 {
 .sb-logo {
   width: 32px;
   height: 32px;
+  object-fit: cover;
   border-radius: 9px;
   background: var(--accent);
   color: var(--on-accent);
@@ -1512,4 +1514,19 @@ a.list-row:hover .list-title,
 .an-compare {
   font-size: var(--fs-sm);
   color: var(--ink-muted);
+}
+
+/* O Início ocupa exatamente o ecrã (a grelha mede o espaço disponível). */
+.admin-content:has(> .dash) {
+  flex: 1 1 0;
+  min-height: 0;
+}
+@media (max-width: 900px) {
+  .admin-content:has(> .dash) {
+    flex: 1 0 auto;
+  }
+}
+.page-title .badge {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  letter-spacing: 0;
 }
