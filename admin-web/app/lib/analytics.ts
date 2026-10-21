@@ -122,6 +122,9 @@ export type Ranges = {
   buckets: Bucket[];
   /** Mesmos baldes, deslocados para o período anterior. */
   prevBuckets: Bucket[];
+  /** Rótulo completo de cada balde (atual e anterior), para as dicas. */
+  tips: string[];
+  prevTips: string[];
   label: string;
   prevLabel: string;
 };
@@ -153,7 +156,12 @@ export function ranges(key: RangeKey, nowMs: number): Ranges {
     const e = Math.min(end, t + step);
     buckets.push({ start: t, end: e, label: days > 120 ? new Date(t).toLocaleDateString("pt-PT", { month: "short", timeZone: "UTC" }).replace(".", "") : fmtShort(t) });
   }
-  const prevBuckets = buckets.map((b) => ({ start: b.start - span, end: b.end - span, label: b.label }));
+  const bucketLabel = (t: number) =>
+    days > 120 ? new Date(t).toLocaleDateString("pt-PT", { month: "short", year: "numeric", timeZone: "UTC" }).replace(".", "") : fmtShort(t, true);
+  const prevBuckets = buckets.map((b) => ({ start: b.start - span, end: b.end - span, label: bucketLabel(b.start - span) }));
+  // Rótulo completo de cada balde (para a dica ao passar o rato).
+  const tips = buckets.map((b) => (step > DAY && days <= 120 ? `${fmtShort(b.start)} – ${fmtShort(b.end - DAY, true)}` : bucketLabel(b.start)));
+  const prevTips = prevBuckets.map((b) => (step > DAY && days <= 120 ? `${fmtShort(b.start)} – ${fmtShort(b.end - DAY, true)}` : bucketLabel(b.start)));
   return {
     start,
     end,
@@ -161,6 +169,8 @@ export function ranges(key: RangeKey, nowMs: number): Ranges {
     prevEnd,
     buckets,
     prevBuckets,
+    tips,
+    prevTips,
     label: `${fmtShort(start)} – ${fmtShort(end - DAY, true)}`,
     prevLabel: `${fmtShort(prevStart)} – ${fmtShort(prevEnd - DAY, true)}`,
   };

@@ -88,7 +88,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
 
   const within = (iso: string | null) => inRange(iso, r);
   const labels: [string, string] = [r.buckets[0]?.label ?? "", r.buckets[r.buckets.length - 1]?.label ?? ""];
-  const card = { labels, current: r.label, previous: r.prevLabel };
+  const card = { labels, tips: r.tips, prevTips: r.prevTips, current: r.label, previous: r.prevLabel };
   const int = (v: number) => Math.round(v).toLocaleString("pt-PT");
   const money = (v: number) => eur(v, v < 1000);
   const percent = (v: number) => `${Math.round(v * 100)}%`;
@@ -474,9 +474,11 @@ function Bars({ data, format = (v: number) => String(Math.round(v)) }: { data: {
     <div>
       <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 150 }}>
         {data.map((d) => (
-          <div key={d.label} title={`${d.label}: ${format(d.value)}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%", minWidth: 0 }}>
-            {d.value > 0 && <span style={{ fontSize: 10, color: "var(--ink-muted)", marginBottom: 3, whiteSpace: "nowrap" }}>{format(d.value)}</span>}
-            <div style={{ width: "100%", maxWidth: 28, height: `${Math.max(d.value > 0 ? 4 : 0, (d.value / max) * 110)}px`, background: "var(--accent)", borderRadius: "6px 6px 2px 2px" }} />
+          <div key={d.label} className="bar-col" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%", minWidth: 0, cursor: "default" }}>
+            <span className="bar-tip">
+              {d.label} · <strong>{format(d.value)}</strong>
+            </span>
+            <div className="bar-fill-v" style={{ width: "100%", maxWidth: 28, height: `${Math.max(d.value > 0 ? 4 : 2, (d.value / max) * 120)}px`, background: d.value > 0 ? "var(--accent)" : "var(--surface-3)", borderRadius: "6px 6px 2px 2px" }} />
           </div>
         ))}
       </div>
