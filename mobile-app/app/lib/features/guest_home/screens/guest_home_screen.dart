@@ -15,6 +15,7 @@ import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'guest_table_screen.dart';
 
@@ -182,7 +183,7 @@ class _GuestHomeBody extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 120),
       children: [
         Row(children: [
-          const SizedBox(width: 44),
+          const PartnerNotificationBell(),
           const Expanded(
             child: Text('O teu evento',
                 textAlign: TextAlign.center,

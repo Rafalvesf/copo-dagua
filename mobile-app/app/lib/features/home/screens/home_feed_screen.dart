@@ -520,6 +520,8 @@ class _NotificationRow extends ConsumerWidget {
   const _NotificationRow({required this.notification});
 
   IconData get _icon => switch (notification.type) {
+    'new_message' => Icons.chat_bubble_outline_rounded,
+    'support_reply' => Icons.support_agent_rounded,
     'new_task' => Icons.star_outline_rounded,
     'task_completed' => Icons.check_circle_outline,
     _ => Icons.notifications_outlined,
@@ -535,7 +537,7 @@ class _NotificationRow extends ConsumerWidget {
               .markNotificationRead(notification.id);
         }
         if (context.mounted) Navigator.of(context).pop();
-        if (context.mounted) context.push('/tasks');
+        if (context.mounted) context.push(notification.link ?? '/tasks');
       },
       child: Padding(
         padding: const EdgeInsets.only(bottom: 18),
