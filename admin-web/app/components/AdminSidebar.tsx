@@ -248,9 +248,8 @@ export function AdminSidebar({
       <div className="admin-scrim" data-open={open} onClick={() => setOpen(false)} aria-hidden />
       <nav className="admin-sidebar" data-open={open} aria-label="Menu principal">
         <div className="sb-brand">
-          <span className="sb-logo" aria-hidden>
-            À
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" className="sb-logo" width={32} height={32} />
           <div style={{ minWidth: 0 }}>
             <p className="sb-brand-name">À Nossa!</p>
             <p className="sb-brand-sub">Administração</p>
