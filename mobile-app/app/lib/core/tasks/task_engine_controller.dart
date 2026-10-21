@@ -504,7 +504,9 @@ class TaskEngineController extends Notifier<TaskEngineState> {
 
         final partnerName = quotePartnerName[p['quote_request_id'] as String] ?? 'o parceiro';
         try {
-          final inserted = await supabase
+          // O aviso "Nova proposta" é criado pela base de dados quando o
+          // parceiro envia (migração 115, chega também com a app fechada).
+          await supabase
               .from('wedding_tasks')
               .insert({
                 'wedding_id': weddingId,
@@ -520,13 +522,6 @@ class TaskEngineController extends Notifier<TaskEngineState> {
               })
               .select()
               .single();
-          await supabase.from('notifications').insert({
-            'wedding_id': weddingId,
-            'type': 'new_task',
-            'title': 'Nova proposta',
-            'body': '$partnerName enviou uma proposta nova.',
-            'wedding_task_id': inserted['id'],
-          });
         } catch (_) {
           // Idem — índice único evita duplicados em corridas.
         }

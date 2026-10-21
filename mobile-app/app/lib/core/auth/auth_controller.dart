@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
 import '../payments/pay_return.dart';
+import '../notifications/push.dart';
 import '../supabase/supabase_config.dart';
 import '../wedding/partner_invite.dart';
 import '../../shared/widgets/brinde_gate.dart';
@@ -689,6 +690,7 @@ class AuthController extends Notifier<AuthState> {
     // As boas-vindas a seguir despedem-se pelo nome (2026-10-19).
     TchinSplash.farewellName = state.profile?.fullName.trim().split(' ').first;
     TchinSplash.farewellPending = true;
+    await PushNotifications.disableForThisDevice();
     await supabase.auth.signOut();
     state = const AuthState.unauthenticated();
   }
