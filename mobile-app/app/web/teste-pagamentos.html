@@ -103,7 +103,7 @@
           });
           var el = instance.create('account-onboarding');
           try { el.setCollectionOptions({ fields: 'eventually_due', futureRequirements: 'include' }); } catch (e) {}
-          el.setOnExit(function () { location.href = './'; });
+          el.setOnExit(function () { session().finally(function () { location.href = './'; }); });
           document.getElementById('host').appendChild(el);
         });
       }).catch(function () { fail('Sem ligação. Tenta outra vez.'); });
