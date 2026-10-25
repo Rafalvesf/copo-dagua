@@ -12,9 +12,8 @@ export default function LoginPage() {
     <main style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px max(16px, env(safe-area-inset-left, 0px))" }}>
       <div style={{ width: "100%", maxWidth: 380 }} className="stack">
         <div className="row" style={{ justifyContent: "center", gap: 10, marginBottom: 6 }}>
-          <span className="sb-logo" aria-hidden>
-            À
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" className="sb-logo" width={32} height={32} />
           <div>
             <p className="sb-brand-name">À Nossa!</p>
             <p className="sb-brand-sub">Administração</p>

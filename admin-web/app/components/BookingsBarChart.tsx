@@ -5,9 +5,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 type Period = "7d" | "30d" | "3m" | "1y";
 
 const PERIODS: { key: Period; label: string }[] = [
-  { key: "7d", label: "7 dias" },
-  { key: "30d", label: "30 dias" },
-  { key: "3m", label: "3 meses" },
+  { key: "7d", label: "7 d" },
+  { key: "30d", label: "30 d" },
+  { key: "3m", label: "3 m" },
   { key: "1y", label: "1 ano" },
 ];
 
@@ -72,6 +72,7 @@ function buildBuckets(rows: { created_at: string }[], period: Period, nowMs: num
 // divergirem entre a passagem SSR e a hidratação.
 export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }[]; nowMs: number }) {
   const [period, setPeriod] = useState<Period>("30d");
+  const [hover, setHover] = useState<number | null>(null);
   const days = useMemo(() => buildBuckets(rows, period, nowMs), [rows, period, nowMs]);
 
   const axisWidth = 28;
@@ -82,12 +83,14 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
   const barWidth = Math.max(2, chartWidth / days.length - barGap);
   const rawMax = Math.max(...days.map((d) => d.count), 1);
   const totalCount = days.reduce((sum, d) => sum + d.count, 0);
-  // Chão de 5 no eixo — com `rawMax` de 0 ou 1 (poucos/nenhuns dados
-  // reais ainda), `niceAxisMax` sozinho devolvia 1, e cinco marcas em 0/
-  // 0.25/0.5/0.75/1 arredondadas davam legendas repetidas ("1, 1, 1, 0,
-  // 0"). Não inventa dados: só evita que o eixo fique feio quando o
-  // volume real ainda é trivial.
-  const axisMax = Math.max(niceAxisMax(rawMax), 5);
+  // Eixo Y com 4 intervalos de números inteiros (2026-10-21): antes as
+  // marcas eram 0/¼/½/¾ de um máximo arredondado (ex: 0, 1, 3, 4, 5) e as
+  // barras usavam outra escala, por isso não batiam certo com as linhas.
+  const axisStep = tickStep(rawMax);
+  const axisMax = axisStep * 4;
+  // Folga em cima para o número da linha de topo não ser cortado.
+  const plotTop = 10;
+  const plotHeight = height - plotTop;
 
   // `preserveAspectRatio="none"` (nota abaixo) estica tudo dentro do
   // SVG de forma não-uniforme para preencher a caixa redimensionável —
@@ -174,7 +177,7 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
           preserveAspectRatio="none"
         >
           {[0, 0.25, 0.5, 0.75, 1].map((f) => {
-            const y = height - height * f;
+            const y = height - plotHeight * f;
             return (
               <g key={f}>
                 <line
@@ -192,34 +195,37 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
                   fill="var(--ink-subtle)"
                   transform={textTransform(0, y + 4)}
                 >
-                  {Math.round(axisMax * f)}
+                  {axisStep * Math.round(f * 4)}
                 </text>
               </g>
             );
           })}
           {days.map((d, i) => {
-            const barHeight = (d.count / axisMax) * (height - 8);
+            const barHeight = (d.count / axisMax) * plotHeight;
             const x = axisWidth + i * (barWidth + barGap);
             return (
-              <rect
-                key={i}
-                x={x}
-                y={height - barHeight}
-                width={barWidth}
-                height={barHeight}
-                rx={2}
-                fill="var(--accent)"
-                opacity={d.count === 0 ? 0.15 : 0.85}
-              >
-                {/* Um único nó de texto (string interpolada), não vários
-                    filhos JSX separados — `<title>` dentro de SVG inline
-                    fora do `<head>` já causou um mismatch de hidratação
-                    real aqui (2026-08-30/31) com `{d.label}: {d.count}`
-                    (três nós). `suppressHydrationWarning` como rede de
-                    segurança: é só uma dica de acessibilidade/tooltip,
-                    nunca lógica de aplicação. */}
-                <title suppressHydrationWarning>{`${d.label}: ${d.count}`}</title>
-              </rect>
+              <g key={i}>
+                <rect
+                  x={x}
+                  y={height - barHeight}
+                  width={barWidth}
+                  height={barHeight}
+                  rx={2}
+                  fill="var(--accent)"
+                  opacity={hover === i ? 1 : d.count === 0 ? 0.15 : hover == null ? 0.85 : 0.5}
+                />
+                {/* Zona de toque/rato com a altura toda, para a dica. */}
+                <rect
+                  x={x - barGap / 2}
+                  y={0}
+                  width={barWidth + barGap}
+                  height={height}
+                  fill="transparent"
+                  onMouseEnter={() => setHover(i)}
+                  onMouseLeave={() => setHover(null)}
+                  onTouchStart={() => setHover(i)}
+                />
+              </g>
             );
           })}
           {days
@@ -241,17 +247,37 @@ export function BookingsBarChart({ rows, nowMs }: { rows: { created_at: string }
               );
             })}
         </svg>
+        {hover != null && days[hover] && (
+          <div
+            className={`chart-tip${(axisWidth + hover * (barWidth + barGap)) / width > 0.6 ? " tip-left" : ""}`}
+            style={{
+              left: `${((axisWidth + hover * (barWidth + barGap) + barWidth / 2) / width) * 100}%`,
+              top: 0,
+              bottom: "auto",
+              minWidth: 0,
+            }}
+            role="status"
+          >
+            <div className="tip-row">
+              <span className="tip-label">{days[hover].label}</span>
+              <span className="tip-value">
+                {days[hover].count} {days[hover].count === 1 ? "reserva" : "reservas"}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// Arredonda o máximo do eixo Y para cima, para o "próximo número redondo"
-// (1/2/5 × potência de 10) — evita eixos tipo "0, 17, 34, 51..." quando o
-// máximo real de um período é, por exemplo, 17.
-function niceAxisMax(value: number): number {
-  const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
-  const normalized = value / magnitude;
-  const niceNormalized = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
-  return niceNormalized * magnitude;
+// Intervalo entre marcas do eixo Y: inteiro, com 4 intervalos a cobrir o
+// máximo (1 → 0‑4, 9 → 0‑12, 17 → 0‑20, 230 → 0‑250…).
+function tickStep(max: number): number {
+  const raw = Math.max(1, Math.ceil(max / 4));
+  if (raw <= 5) return raw;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / magnitude;
+  const nice = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10;
+  return Math.ceil(nice * magnitude);
 }

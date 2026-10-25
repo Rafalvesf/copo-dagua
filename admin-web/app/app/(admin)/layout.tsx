@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { EditModeProvider } from "@/lib/edit-mode-context";
 import { EditModeToggle } from "@/components/EditModeToggle";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationsMenu, type AdminAlert } from "@/components/NotificationsMenu";
 import { initials } from "@/lib/format";
 
 // Estrutura de todas as páginas do admin: menu à esquerda, barra de topo
@@ -15,16 +17,32 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const { fullName } = await requireAdmin();
 
   const supabase = await createClient();
-  const [pendingQ, disputesQ, ticketsQ, settingsQ] = await Promise.all([
+  const [pendingQ, disputesQ, ticketsQ, settingsQ, flaggedQ, refundsQ] = await Promise.all([
     supabase.from("partner_profiles").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
     // Disputas por decidir (migração 109) — 0 se a tabela ainda não existir.
     supabase.from("disputes").select("id", { count: "exact", head: true }).eq("status", "open"),
     supabase.from("support_tickets").select("id", { count: "exact", head: true }).in("status", ["open", "pending"]),
     supabase.from("platform_settings").select("*").eq("id", 1).maybeSingle(),
+    supabase.from("bookings").select("id", { count: "exact", head: true }).eq("status", "payment_overdue"),
+    supabase
+      .from("payments")
+      .select("id, bookings!inner(status)", { count: "exact", head: true })
+      .eq("status", "paid")
+      .in("bookings.status", ["cancelled_by_couple", "cancelled_by_partner"]),
   ]);
   const pending = pendingQ.count ?? 0;
   const openDisputes = disputesQ.count ?? 0;
   const openTickets = ticketsQ.count ?? 0;
+  const overdue = flaggedQ.count ?? 0;
+  const refunds = refundsQ.count ?? 0;
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  const alerts: AdminAlert[] = [
+    ...(openDisputes > 0 ? [{ key: "disp", href: "/disputes", title: plural(openDisputes, "disputa por decidir", "disputas por decidir"), detail: "A reserva fica parada até decidires" }] : []),
+    ...(overdue > 0 ? [{ key: "over", href: "/bookings?status=problems", title: plural(overdue, "reserva com pagamento em atraso", "reservas com pagamento em atraso"), detail: "Ver reservas" }] : []),
+    ...(refunds > 0 ? [{ key: "ref", href: "/refunds", title: plural(refunds, "reembolso por confirmar", "reembolsos por confirmar"), detail: "Pagamentos de reservas canceladas" }] : []),
+    ...(pending > 0 ? [{ key: "pp", href: "/partners?status=pending_review", title: plural(pending, "parceiro para aprovar", "parceiros para aprovar"), detail: "Rever perfil e aprovar" }] : []),
+    ...(openTickets > 0 ? [{ key: "sup", href: "/support", title: plural(openTickets, "pedido de suporte", "pedidos de suporte"), detail: "Por responder" }] : []),
+  ];
   const s = (settingsQ.data ?? {}) as Record<string, unknown>;
   const maintenance = [
     s.maintenance_mode_couple ? "Organizadores" : null,
@@ -59,18 +77,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               </Link>
             )}
             <EditModeToggle />
-            <Link
-              href="/"
-              className="icon-btn"
-              aria-label={pending + openDisputes > 0 ? `${pending + openDisputes} assuntos por tratar` : "Sem assuntos por tratar"}
-              title={pending + openDisputes > 0 ? `${pending + openDisputes} assuntos por tratar` : "Sem assuntos por tratar"}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 9a6 6 0 0 1 12 0c0 4.5 1.5 6 1.5 6H4.5S6 13.5 6 9Z" />
-                <path d="M10 19a2 2 0 0 0 4 0" />
-              </svg>
-              {pending + openDisputes > 0 && <span className="dot-count">{pending + openDisputes}</span>}
-            </Link>
+            <ThemeToggle />
+            <NotificationsMenu alerts={alerts} />
             <Link href="/settings" className="avatar" aria-label="Definições" title={fullName}>
               {initials(fullName)}
             </Link>

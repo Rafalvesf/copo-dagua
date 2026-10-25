@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/auth_ui.dart';
 
-/// "Início 6 · Recuperar password" — igual ao canvas.
+/// "Início 6 · Recuperar password". Desde 2026-10-25 tudo dentro da app:
+/// pede o email, envia um código de 6 dígitos e, no mesmo ecrã, escreve-se
+/// o código e a password nova (antes só dizia "vê o teu email" e não havia
+/// onde pôr o código).
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -15,19 +19,34 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _email = TextEditingController();
+  final _code = TextEditingController();
+  final _password = TextEditingController();
+  final _confirm = TextEditingController();
   bool _loading = false;
   bool _sent = false;
+  String? _error;
 
   @override
   void dispose() {
     _email.dispose();
+    _code.dispose();
+    _password.dispose();
+    _confirm.dispose();
     super.dispose();
   }
 
   Future<void> _send() async {
-    setState(() => _loading = true);
+    final email = _email.text.trim();
+    if (!email.contains('@')) {
+      setState(() => _error = 'Escreve o teu email.');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      await ref.read(authControllerProvider.notifier).requestPasswordReset(_email.text.trim());
+      await ref.read(authControllerProvider.notifier).requestPasswordReset(email);
     } catch (_) {}
     if (!mounted) return;
     setState(() {
@@ -36,36 +55,85 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     });
   }
 
+  Future<void> _reset() async {
+    final code = _code.text.replaceAll(RegExp(r'\s'), '');
+    if (code.length < 6) {
+      setState(() => _error = 'Escreve o código de 6 dígitos que recebeste por email.');
+      return;
+    }
+    if (_password.text.length < 8) {
+      setState(() => _error = 'A password nova tem de ter pelo menos 8 caracteres.');
+      return;
+    }
+    if (_password.text != _confirm.text) {
+      setState(() => _error = 'As passwords não coincidem.');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authControllerProvider.notifier).resetPasswordWithCode(
+            email: _email.text.trim(),
+            code: code,
+            newPassword: _password.text,
+          );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.message.toLowerCase().contains('expired') || e.message.toLowerCase().contains('invalid')
+            ? 'Código errado ou expirado. Pede um novo.'
+            : 'Não foi possível mudar a password. Tenta outra vez.';
+      });
+      return;
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = 'Não foi possível mudar a password. Tenta outra vez.';
+      });
+      return;
+    }
+    if (mounted) setState(() => _loading = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AuthPage(
       children: [
-        const AuthHeading(
+        AuthHeading(
           icon: Icons.lock_reset_rounded,
-          title: 'Esqueceste-te da password?',
-          subtitle: 'Enviamos-te um link para criares uma nova.',
+          title: _sent ? 'Cria uma password nova' : 'Esqueceste-te da password?',
+          subtitle: _sent
+              ? 'Enviámos um código de 6 dígitos para ${_email.text.trim()}. Escreve-o aqui com a password nova.'
+              : 'Enviamos-te um código para criares uma nova, aqui na app.',
         ),
-        AuthField(label: 'Email', controller: _email, hint: 'nome@email.pt', keyboardType: TextInputType.emailAddress, topGap: 24),
+        if (!_sent)
+          AuthField(label: 'Email', controller: _email, hint: 'nome@email.pt', keyboardType: TextInputType.emailAddress, topGap: 24)
+        else ...[
+          AuthField(label: 'Código', controller: _code, hint: '123456', keyboardType: TextInputType.number, topGap: 24, autofillHints: const [AutofillHints.oneTimeCode]),
+          AuthField(label: 'Password nova', controller: _password, password: true, autofillHints: const [AutofillHints.newPassword]),
+          AuthField(label: 'Confirmar password', controller: _confirm, password: true, autofillHints: const [AutofillHints.newPassword]),
+        ],
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(_error!, style: const TextStyle(fontSize: 13, color: AppTheme.ink, fontWeight: FontWeight.w600)),
+          ),
       ],
       footer: [
-        AuthPrimaryButton(label: 'Enviar link', loading: _loading, onPressed: _send),
+        AuthPrimaryButton(
+          label: _sent ? 'Guardar e entrar' : 'Enviar código',
+          loading: _loading,
+          onPressed: _sent ? _reset : _send,
+        ),
         if (_sent)
-          Container(
-            margin: const EdgeInsets.only(top: 14),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(12)),
-            child: const Row(
-              children: [
-                Icon(Icons.check_circle_outline, size: 18, color: Color(0xFF3E5539)),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Link enviado — vê o teu email.',
-                    style: TextStyle(fontSize: 13, color: Color(0xFF3E5539)),
-                  ),
-                ),
-              ],
-            ),
+          TextButton(
+            onPressed: _loading ? null : _send,
+            style: TextButton.styleFrom(foregroundColor: AppTheme.accentOliveDark),
+            child: const Text('Reenviar código'),
           ),
       ],
     );

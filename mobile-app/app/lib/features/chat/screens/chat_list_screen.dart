@@ -70,6 +70,12 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       if (mounted) {
         ref.read(chatListControllerProvider.notifier).load(wedding.id);
       }
+    } on PartnerUnavailableException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(PartnerUnavailableException.message)),
+        );
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

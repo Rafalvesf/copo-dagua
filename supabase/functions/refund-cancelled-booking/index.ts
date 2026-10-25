@@ -2,10 +2,11 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
 
-// Reembolso automático (pedido do utilizador, 2026-10-20):
-// - casal cancela com pelo menos `cancellation_penalty_days` (30) dias
-//   antes do evento → reembolso de tudo o que pagou; mais tarde → só o
-//   sinal fica com o parceiro, o resto já pago é devolvido;
+// Reembolso automático (regras de 2026-10-21, migração 112):
+// - organizador cancela nas primeiras 48 h depois de pagar o sinal → o
+//   sinal é devolvido (se o parceiro o marcou como reembolsável);
+// - organizador cancela com 30+ dias de antecedência → o restante já
+//   pago é devolvido;
 // - parceiro cancela → reembolso sempre;
 // - o casal recebe 100%: a comissão À Nossa! é devolvida
 //   (`refund_application_fee`) e a parte do parceiro é recuperada da conta
@@ -70,17 +71,24 @@ Deno.serve(async (req) => {
     .eq("event_type", booking.status)
     .order("created_at", { ascending: false })
     .limit(1);
-  const refundRequired = (events?.[0]?.metadata as Record<string, unknown> | undefined)?.refund_required === true;
+  const meta = (events?.[0]?.metadata as Record<string, unknown> | undefined) ?? {};
+  const refundRequired = meta.refund_required === true;
 
   const { data: paidRows } = await admin
     .from("payments")
     .select("id, amount, status, type, provider_payment_id")
     .eq("booking_id", bookingId)
     .eq("status", "paid");
-  // Cancelamento tardio pelo casal: a regra é "o parceiro fica com o
-  // sinal" — só o sinal. Qualquer outro pagamento já feito (ex: o
-  // restante pago adiantado) é devolvido na mesma (2026-10-20).
-  const payments = refundRequired ? (paidRows ?? []) : (paidRows ?? []).filter((p) => p.type !== "deposit");
+  // Regras de 2026-10-21 (migração 112): o cancelamento grava o que se
+  // devolve — o sinal (`refund_deposit`, nas primeiras 48 h depois de o
+  // pagar) e o restante (`refund_final`, com 30+ dias de antecedência).
+  // Cancelamentos antigos sem esses campos seguem a regra anterior.
+  const hasSplit = "refund_deposit" in meta || "refund_final" in meta;
+  const payments = hasSplit
+    ? (paidRows ?? []).filter((p) => (p.type === "deposit" ? meta.refund_deposit === true : meta.refund_final === true))
+    : refundRequired
+      ? (paidRows ?? [])
+      : (paidRows ?? []).filter((p) => p.type !== "deposit");
   if (payments.length === 0) return json({ refunded: [], skipped: "not_eligible" });
 
   const stripe = stripeClient();
@@ -120,6 +128,7 @@ Deno.serve(async (req) => {
         },
         { idempotencyKey: `refund-${p.id}` },
       );
+      await reverseReleasedShare(stripe, admin, p.id as string, intent.amount, intent.amount);
       const { error } = await admin
         .from("payments")
         .update({ status: "refunded", refunded_amount: intent.amount / 100, updated_at: new Date().toISOString() })
@@ -160,8 +169,13 @@ Deno.serve(async (req) => {
       actor_type: "system",
       metadata: { payment_ids: refunded, amount: total },
     }).then(({ error }) => error && console.error("booking_events insert failed", error));
+    // Contratação em segredo (migração 116): só quem a fez é avisado.
+    // Consulta à parte para não falhar antes de a migração correr.
+    const { data: priv } = await admin.from("bookings").select("private_owner").eq("id", bookingId).maybeSingle();
+    const owner = (priv as { private_owner?: string | null } | null)?.private_owner;
     await admin.from("notifications").insert({
       wedding_id: booking.wedding_id,
+      ...(owner ? { profile_id: owner } : {}),
       type: "booking_refunded",
       title: "Reembolso enviado",
       body: `Reembolsámos ${euros} € da reserva ${booking.booking_number} · ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`,
@@ -176,4 +190,27 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+// Se o dinheiro já tinha sido libertado ao parceiro (migração 119),
+// recupera a parte dele na mesma proporção do reembolso.
+async function reverseReleasedShare(
+  stripe: ReturnType<typeof stripeClient>,
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  paymentId: string,
+  refundedCents: number,
+  chargeCents: number,
+): Promise<void> {
+  const { data } = await admin.from("payments").select("transfer_id, amount").eq("id", paymentId).maybeSingle();
+  const transferId = (data as { transfer_id?: string | null } | null)?.transfer_id;
+  if (!transferId || !transferId.startsWith("tr_") || chargeCents <= 0) return;
+  const partnerCents = Math.round(Number((data as { amount: number }).amount) * 100);
+  const share = Math.min(partnerCents, Math.round((refundedCents * partnerCents) / chargeCents));
+  if (share <= 0) return;
+  try {
+    await stripe.transfers.createReversal(transferId, { amount: share }, { idempotencyKey: `reverse-${paymentId}-${refundedCents}` });
+  } catch (e) {
+    console.error("transfer reversal failed", paymentId, (e as Error).message);
+  }
 }

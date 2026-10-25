@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/router.dart';
 import 'core/auth/auth_controller.dart';
+import 'core/notifications/push.dart';
 import 'core/models/models.dart';
 import 'core/wedding/menu_style.dart';
 import 'core/supabase/supabase_config.dart';
@@ -44,6 +45,11 @@ class CopoDaguaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    // Notificações com a app fechada: ao entrar numa conta, este
+    // dispositivo (se já autorizou) fica ligado a ela.
+    ref.listen(authControllerProvider.select((s) => s.profile?.id), (prev, next) {
+      if (next != null && next != prev) PushNotifications.resync();
+    });
     // A cor escolhida em "Aparência do menu" passa a ser a cor de acento
     // da app toda, para o organizador (pedido 2026-10-18). Parceiros e
     // convidados ficam no verde da marca.

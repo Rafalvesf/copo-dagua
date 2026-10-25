@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'feedback.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -47,9 +48,8 @@ class GalleryEmptyState extends StatelessWidget {
         Container(
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
           decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: const Color(0xFFD9D6CF)),
+            color: kInfoNoteColor,
+            borderRadius: BorderRadius.circular(18),
           ),
           child: Row(
             children: [

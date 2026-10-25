@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
+import '../../../shared/widgets/first_run_tour.dart' show TourRole;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
@@ -407,6 +409,9 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
   }
 
   bool _sent = false;
+
+  /// Permissões pedidas no último passo, antes do "Perfil enviado!" (2026-10-25).
+  bool _permsDone = false;
   int? _figureMin;
   int? _figureMax;
   final Set<String> _offerings = {};
@@ -502,6 +507,9 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_sent && !_permsDone) {
+      return PermissionsStep(role: TourRole.partner, onDone: () => setState(() => _permsDone = true));
+    }
     if (_sent) {
       final cats = _categoryOptions
           .where((o) => _selectedCategoryIds.contains(o.id))

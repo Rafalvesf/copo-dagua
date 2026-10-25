@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,6 +43,14 @@ class TasksScreen extends ConsumerStatefulWidget {
 
 class _TasksScreenState extends ConsumerState<TasksScreen> {
   _TasksTab _tab = _TasksTab.todo;
+
+  @override
+  void initState() {
+    super.initState();
+    // Sempre atualizadas ao abrir (ex.: depois de uma reserva cancelada
+    // pelo parceiro noutro dispositivo) — 2026-10-21.
+    Future.microtask(() => ref.read(taskEngineControllerProvider.notifier).recompute());
+  }
 
   static IconData _iconForCategory(String? category) => switch (category) {
     'orcamento' => Icons.savings_outlined,
@@ -190,14 +199,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                   ),
                                 )
                               else if (state.systemActive.isEmpty)
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(18),
-                                  decoration: whiteLineCard(radius: 20),
-                                  child: const Text(
-                                    'Sem tarefas recomendadas por agora — bom trabalho! 🎉',
-                                  ),
-                                )
+                                const InfoNote('Sem tarefas recomendadas por agora — bom trabalho!', icon: Icons.check_circle_outline_rounded)
                               else
                                 for (final (i, task) in state.systemActive.indexed) ...[
                                   _TaskRow(

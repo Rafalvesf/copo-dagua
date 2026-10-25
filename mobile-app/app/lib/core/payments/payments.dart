@@ -5,7 +5,7 @@ import '../home/home_providers.dart' show CheckoutUnavailable;
 
 /// Métodos do ecrã de seleção (têm de estar ativos na conta Stripe).
 enum PayMethod {
-  card('card', 'Cartão', 'Visa, Mastercard · Apple Pay e Google Pay'),
+  card('all', 'Cartão, Apple Pay ou Google Pay', 'E os outros métodos ativos, sem sair da app'),
   mbWay('mb_way', 'MB WAY', 'Recebes o pedido na app MB WAY e aprovas'),
   multibanco('multibanco', 'Multibanco', 'Referência para pagar no multibanco ou homebanking');
 

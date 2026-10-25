@@ -19,6 +19,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/first_run_tour.dart' show FirstRunTour, TourRole;
 import '../../../shared/widgets/v2_kit.dart';
 
 /// Definições — uma por tipo de conta (organizadores, parceiros,
@@ -199,13 +200,24 @@ class _SignOut extends ConsumerWidget {
   }
 }
 
-class _HelpGroup extends StatelessWidget {
+class _HelpGroup extends ConsumerWidget {
   const _HelpGroup();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final role = switch (ref.watch(authControllerProvider.select((s) => s.profile?.role))) {
+      UserRole.partner => TourRole.partner,
+      UserRole.guest => TourRole.guest,
+      _ => TourRole.organizer,
+    };
     return _Group(
       children: [
+        // Guia da primeira entrada outra vez (2026-10-25).
+        _Row(
+          icon: Icons.explore_outlined,
+          label: 'Ver o guia da app',
+          onTap: () => FirstRunTour.replay(context, role),
+        ),
         _Row(
           icon: Icons.support_agent_outlined,
           label: 'Falar com a equipa À Nossa!',

@@ -194,7 +194,7 @@ function EditModal({
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(28,30,26,0.4)",
+        background: "var(--overlay)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -357,8 +357,8 @@ function TaskTemplateForm({
           style={{
             gridColumn: "1 / -1",
             fontSize: 12.5,
-            color: "var(--status-changes-requested-fg, #92620a)",
-            background: "var(--status-changes-requested-bg, #fff4e0)",
+            color: "var(--warning-fg)",
+            background: "var(--warning-bg)",
             borderRadius: 8,
             padding: "8px 12px",
           }}
@@ -452,8 +452,8 @@ function TaskTemplateForm({
           style={{
             gridColumn: "1 / -1",
             fontSize: 12.5,
-            color: "var(--status-changes-requested-fg, #92620a)",
-            background: "var(--status-changes-requested-bg, #fff4e0)",
+            color: "var(--warning-fg)",
+            background: "var(--warning-bg)",
             borderRadius: 8,
             padding: "8px 12px",
           }}
@@ -498,7 +498,7 @@ const primaryButtonStyle = {
   borderRadius: 10,
   border: "none",
   background: "var(--accent)",
-  color: "#fff",
+  color: "var(--on-accent)",
   fontWeight: 600,
   fontSize: 13,
   cursor: "pointer",

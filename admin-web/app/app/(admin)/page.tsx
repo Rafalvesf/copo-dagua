@@ -83,10 +83,10 @@ function bucketizeSum(rows: { created_at: string; amount: number }[], buckets: n
 
 const DONUT_COLORS: Record<string, string> = {
   confirmed: "var(--accent)",
-  awaiting_deposit: "#c29a4e",
-  completed: "#8fa87a",
-  cancelled: "#9b9d95",
-  expired: "#c9c7bf",
+  awaiting_deposit: "var(--chart-2)",
+  completed: "var(--chart-3)",
+  cancelled: "var(--chart-4)",
+  expired: "var(--chart-5)",
   disputed: "var(--danger-fg)",
 };
 
@@ -229,7 +229,7 @@ export default async function DashboardPage() {
   const kpis = [
     {
       icon: <UsersIcon />,
-      label: "Organizadores registados",
+      label: "Organizadores",
       value: (couples.count ?? 0).toLocaleString("pt-PT"),
       deltaPct: deltaPct(couplesNew30, couplesNewPrev30),
       trend: bucketize(couplesRows60, 8, PERIOD_DAYS * 2, since60),
@@ -244,7 +244,7 @@ export default async function DashboardPage() {
     },
     {
       icon: <CalendarIcon />,
-      label: "Reservas (30 dias)",
+      label: "Reservas · 30 dias",
       value: bookings30Count.toLocaleString("pt-PT"),
       deltaPct: deltaPct(bookings30Count, bookingsPrev30Count),
       trend: bucketize(bookingsRows30, 8, PERIOD_DAYS, since30),
@@ -252,7 +252,7 @@ export default async function DashboardPage() {
     },
     {
       icon: <CoinIcon />,
-      label: "Volume de reservas (30 dias)",
+      label: "Volume · 30 dias",
       value: `${volume30.toLocaleString("pt-PT")} €`,
       deltaPct: deltaPct(volume30, volumePrev30),
       trend: bucketizeSum(
@@ -425,13 +425,13 @@ export default async function DashboardPage() {
             content: (
               <section className="card card-body" style={{ height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
                 <h2 className="card-title" style={{ flexShrink: 0 }}>Estado das reservas</h2>
-                <p className="card-sub" style={{ marginBottom: 12, flexShrink: 0 }}>Últimos 30 dias</p>
-                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 12, flex: 1, minHeight: 0, overflowY: "auto" }}>
+                <p className="card-sub" style={{ marginBottom: 10, flexShrink: 0 }}>Últimos 30 dias</p>
+                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 9, flex: 1, minHeight: 0, overflowY: "auto" }}>
                   {donutSlices.map((sl) => {
                     const max = Math.max(1, ...donutSlices.map((x) => x.value));
                     return (
                       <li key={sl.label} style={{ fontSize: 13, opacity: sl.value === 0 ? 0.55 : 1 }}>
-                        <div className="row" style={{ justifyContent: "space-between", marginBottom: 5, flexWrap: "nowrap" }}>
+                        <div className="row" style={{ justifyContent: "space-between", marginBottom: 4, flexWrap: "nowrap" }}>
                           <span>{sl.label}</span>
                           <span className="strong tnum">{sl.value}</span>
                         </div>

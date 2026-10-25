@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { initials } from "@/lib/format";
+import { ThemeToggle } from "./ThemeToggle";
 
 type NavItem = { href: string; label: string; icon: ReactNode; badge?: number; also?: string[] };
 type NavGroup = { title?: string; items: NavItem[] };
@@ -236,6 +237,7 @@ export function AdminSidebar({
             Manutenção
           </Link>
         )}
+        <ThemeToggle />
         <Link href="/search" className="icon-btn" aria-label="Pesquisar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
             <circle cx="11" cy="11" r="7" />
@@ -246,9 +248,8 @@ export function AdminSidebar({
       <div className="admin-scrim" data-open={open} onClick={() => setOpen(false)} aria-hidden />
       <nav className="admin-sidebar" data-open={open} aria-label="Menu principal">
         <div className="sb-brand">
-          <span className="sb-logo" aria-hidden>
-            À
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" className="sb-logo" width={32} height={32} />
           <div style={{ minWidth: 0 }}>
             <p className="sb-brand-name">À Nossa!</p>
             <p className="sb-brand-sub">Administração</p>

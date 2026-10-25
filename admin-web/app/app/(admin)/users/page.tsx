@@ -9,6 +9,7 @@ import { fmtDate, initials } from "@/lib/format";
 const ROLE_LABELS: Record<UserRole, string> = {
   couple: "Organizador",
   partner: "Parceiro",
+  guest: "Convidado",
   admin: "Admin",
 };
 
@@ -24,6 +25,7 @@ const ROLE_FILTERS: { value: UserRole | "all"; label: string }[] = [
   { value: "all", label: "Todos" },
   { value: "couple", label: "Organizadores" },
   { value: "partner", label: "Parceiros" },
+  { value: "guest", label: "Convidados" },
   { value: "admin", label: "Admins" },
 ];
 
@@ -50,7 +52,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
     <div className="page">
       <PageHeader
         title="Utilizadores"
-        subtitle="Todas as contas: organizadores, parceiros e equipa À Nossa!."
+        subtitle="Todas as contas: organizadores, parceiros, convidados e equipa À Nossa!."
         actions={
           <Link href="/users/new" className="btn btn-primary">
             + Novo utilizador

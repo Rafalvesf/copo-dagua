@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/feedback.dart';
 import '../../settings/screens/settings_screen.dart' show CoupleAccountSections;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +17,8 @@ import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/push_opt_in.dart';
+import '../../../shared/widgets/first_run_tour.dart' show TourAnchor;
 
 /// Perfil — conta de quem está com sessão iniciada. Pedido explícito do
 /// utilizador (redesign 2026-10): "o perfil fica apenas de quem criou a
@@ -31,6 +34,12 @@ class HomeFeedScreen extends ConsumerStatefulWidget {
 
 class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   bool _uploadingProfilePhoto = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(taskEngineControllerProvider.notifier).recompute());
+  }
 
   void _openNotifications(BuildContext context) {
     showIslandSheet(
@@ -107,10 +116,13 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                             Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                IconButton(
-                                  tooltip: 'Notificações',
-                                  onPressed: () => _openNotifications(context),
-                                  icon: const Icon(Icons.notifications_none_rounded, size: 26, color: AppTheme.ink),
+                                TourAnchor(
+                                  id: 'bell',
+                                  child: IconButton(
+                                    tooltip: 'Notificações',
+                                    onPressed: () => _openNotifications(context),
+                                    icon: const Icon(Icons.notifications_none_rounded, size: 26, color: AppTheme.ink),
+                                  ),
                                 ),
                                 if (unreadNotifications > 0)
                                   Positioned(
@@ -398,15 +410,13 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
                 ),
               ),
               const SizedBox(height: 16),
+              const PushOptInCard(),
               Expanded(
                 child: visible.isEmpty
                     ? const Center(
                         child: Padding(
                           padding: EdgeInsets.all(24),
-                          child: Text(
-                            'Sem notificações por agora.',
-                            style: TextStyle(color: AppTheme.inkMuted),
-                          ),
+                          child: InfoNote('Sem notificações por agora.', icon: Icons.notifications_none_rounded),
                         ),
                       )
                     : ListView(
@@ -514,6 +524,8 @@ class _NotificationRow extends ConsumerWidget {
   const _NotificationRow({required this.notification});
 
   IconData get _icon => switch (notification.type) {
+    'new_message' => Icons.chat_bubble_outline_rounded,
+    'support_reply' => Icons.support_agent_rounded,
     'new_task' => Icons.star_outline_rounded,
     'task_completed' => Icons.check_circle_outline,
     _ => Icons.notifications_outlined,
@@ -529,7 +541,7 @@ class _NotificationRow extends ConsumerWidget {
               .markNotificationRead(notification.id);
         }
         if (context.mounted) Navigator.of(context).pop();
-        if (context.mounted) context.push('/tasks');
+        if (context.mounted) context.push(notification.link ?? '/tasks');
       },
       child: Padding(
         padding: const EdgeInsets.only(bottom: 18),

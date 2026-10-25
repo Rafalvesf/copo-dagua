@@ -567,30 +567,25 @@ class AppColors {
 /// Aplicados através de GradientScaffold, nunca diretamente num
 /// Scaffold (que só aceita uma Color sólida).
 class AppGradients {
+  /// Fundo da app toda (pedido 2026-10-25): cinzento claro em cima,
+  /// branco em baixo. A barra do telemóvel fica com o cinzento do topo.
+  static const appTop = Color(0xFFEDECE8);
+  static const appBackground = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [appTop, Colors.white],
+  );
+
   /// Verde-sálvia → branco, diagonal (creme antes, ver nota em
   /// [AppTheme]). Ecrãs de primeira impressão / emoção (boas-vindas,
   /// onboarding).
-  static const hero = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    // Branco, como em todos os ecrãs do canvas (pedido 2026-10-17:
-    // "colocaste um gradiente no fundo" — os modelos são brancos).
-    colors: [Colors.white, Colors.white],
-  );
+  static const hero = appBackground;
 
   /// Branco sólido. Ecrãs de lista/dashboard.
-  static const feed = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Colors.white, Colors.white],
-  );
+  static const feed = appBackground;
 
   /// Branco sólido. Ecrãs de formulário/detalhe.
-  static const subtle = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Colors.white, Colors.white],
-  );
+  static const subtle = appBackground;
 
   /// Sálvia sólido — momento único e celebratório (ex: fim do
   /// onboarding).

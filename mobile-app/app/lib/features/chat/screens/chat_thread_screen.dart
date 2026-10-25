@@ -6,6 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/chat/chat_thread_controller.dart';
 import '../../../core/home/home_providers.dart';
+import '../../../core/bookings/hire_privacy.dart';
+import '../../../core/chat/chat_helpers.dart' show PartnerUnavailableException;
 import '../../../core/payments/payments.dart' show PayArgs;
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
@@ -147,7 +149,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                       content: (message, isMe) => message.hasAttachment
                           ? ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe)
                           : message.isProposal
-                          ? _ProposalCard(message: message)
+                          ? _ProposalCard(message: message, onRequestNew: _openPartnerProfile)
                           : message.isQuoteRequestNotice
                           ? GestureDetector(
                               onTap: _openPartnerProfile,
@@ -172,7 +174,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
 class _ProposalCard extends ConsumerStatefulWidget {
   final ChatMessage message;
 
-  const _ProposalCard({required this.message});
+  final VoidCallback? onRequestNew;
+  const _ProposalCard({required this.message, this.onRequestNew});
 
   @override
   ConsumerState<_ProposalCard> createState() => _ProposalCardState();
@@ -254,9 +257,12 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
   }
 
   Future<void> _accept() async {
+    // Partilhar com os outros organizadores ou guardar em segredo (2026-10-21).
+    final secret = await askHirePrivacy(context, ref.read(weddingControllerProvider).wedding?.id, 'este parceiro');
+    if (secret == null || !mounted) return;
     setState(() => _accepting = true);
     try {
-      await acceptProposal(widget.message.proposalId!);
+      await acceptProposal(widget.message.proposalId!, private: secret);
       if (!mounted) return;
       ref.invalidate(pendingProposalsProvider);
       ref.invalidate(coupleBookingsProvider);
@@ -291,6 +297,8 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
                   : e.code == 'P0007'
                       ? 'Este parceiro já tem outra reserva confirmada nessa data. Não é possível aceitar esta proposta.'
                       // `P0008` = `already_booked_with_partner` (migração 102).
+                      : e.code == 'P0010'
+                          ? PartnerUnavailableException.message
                       : e.code == 'P0008'
                           ? 'Já tens uma reserva com este parceiro. Só podes aceitar outra se essa for cancelada sem o sinal pago.'
                           : 'Não foi possível aceitar a proposta. Tenta novamente.',
@@ -335,7 +343,10 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       note: pct > 0 ? 'Valores já com a comissão da À Nossa!' : null,
       actions: [
         ChatCardAction('Ver detalhe', () => context.push('/bookings')),
-        if (_accepted)
+        if (_accepted && _bookingState == 'cancelled')
+          // Reserva cancelada: pode pedir uma proposta nova (2026-10-21).
+          ChatCardAction('Pedir nova proposta', widget.onRequestNew, primary: true)
+        else if (_accepted)
           // Já aceite: o passo seguinte é pagar o sinal nas Reservas.
           ChatCardAction(
             _acceptedLabel,

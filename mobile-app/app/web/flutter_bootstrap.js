@@ -11,4 +11,8 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-_flutter.loader.load();
+// A app desenha-se dentro de #app-host (index.html), que começa abaixo
+// da barra das horas/bateria do telemóvel (2026-10-25).
+_flutter.loader.load({
+  config: { hostElement: document.getElementById('app-host') },
+});

@@ -25,11 +25,15 @@ export async function updateCommissionSettings(
   const commission = Number(formData.get("platform_commission_percentage"));
   const depositPct = Number(formData.get("deposit_percentage"));
   const penaltyDays = Number(formData.get("cancellation_penalty_days"));
+  // Migração 112: só vem no formulário depois de a coluna existir.
+  const windowRaw = formData.get("deposit_refund_window_hours");
+  const windowHours = windowRaw == null ? null : Number(windowRaw);
 
   if (
     !Number.isFinite(commission) || commission < 0 || commission > 100 ||
     !Number.isFinite(depositPct) || depositPct <= 0 || depositPct > 100 ||
-    !Number.isFinite(penaltyDays) || penaltyDays < 0
+    !Number.isFinite(penaltyDays) || penaltyDays < 0 ||
+    (windowHours != null && (!Number.isInteger(windowHours) || windowHours < 0 || windowHours > 720))
   ) {
     return { error: "Valores inválidos — confirma os números introduzidos." };
   }
@@ -40,6 +44,7 @@ export async function updateCommissionSettings(
       platform_commission_percentage: commission,
       deposit_percentage: depositPct,
       cancellation_penalty_days: penaltyDays,
+      ...(windowHours != null ? { deposit_refund_window_hours: windowHours } : {}),
       updated_at: new Date().toISOString(),
       updated_by: userId,
     })

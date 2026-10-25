@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -129,6 +130,10 @@ class GalleryScreen extends ConsumerWidget {
       ),
     );
     if (source == null) return;
+    // Câmara: pede outra vez, se for preciso (2026-10-25).
+    if (source == ImageSource.camera) {
+      if (!context.mounted || !await ensurePermission(context, AppPermission.camera)) return;
+    }
 
     final file = await ImagePicker().pickImage(source: source);
     if (file == null) return;

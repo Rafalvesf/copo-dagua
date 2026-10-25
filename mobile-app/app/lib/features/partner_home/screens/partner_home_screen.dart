@@ -9,6 +9,7 @@ import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
+import '../../../shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_bookings/widgets/request_row.dart';
 import '../../../shared/money.dart';
@@ -91,6 +92,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                         ),
                       ),
                     const Spacer(),
+                    const PartnerNotificationBell(),
                     PopupMenuButton<String>(
                       tooltip: 'Mais opções',
                       onSelected: (value) {
