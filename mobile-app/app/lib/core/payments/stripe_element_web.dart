@@ -8,16 +8,15 @@ import 'stripe_element.dart';
 
 extension type _TchinPay(JSObject _) implements JSObject {
   external JSObject createHost();
-  external JSPromise<JSString> mount(
-    JSObject host,
-    JSString pk,
-    JSString secret,
-    JSString email,
-    JSFunction onHeight,
-    JSFunction onEvent,
-  );
-  external JSPromise<JSString> confirm(JSString returnUrl);
+  external JSPromise<JSString> mountCard(JSString pk, JSObject hosts, JSFunction onChange);
+  external JSPromise<JSString> payCard(JSString secret, JSString email);
+  external JSPromise<JSString> wallet(JSString pk, JSNumber cents, JSString label);
+  external JSPromise<JSString> payWallet(JSFunction getSecret);
   external void unmount();
+}
+
+extension type _Hosts._(JSObject _) implements JSObject {
+  external factory _Hosts({JSObject number, JSObject expiry, JSObject cvc});
 }
 
 @JS('tchinPay')
@@ -25,60 +24,79 @@ external _TchinPay? get _pay;
 
 int _seq = 0;
 
-class _WebStripeElement implements StripeElement {
-  late final String _viewType;
-  JSObject? _host;
+class _WebStripePay implements StripePay {
+  final Map<CardPart, String> _views = {};
+  final Map<CardPart, JSObject> _hosts = {};
 
-  _WebStripeElement() {
+  _WebStripePay() {
     final pay = _pay;
-    _viewType = 'tchin-stripe-element-${_seq++}';
     if (pay == null) return;
-    final host = pay.createHost();
-    _host = host;
-    ui_web.platformViewRegistry.registerViewFactory(_viewType, (int _) => host);
+    final n = _seq++;
+    for (final p in CardPart.values) {
+      final host = pay.createHost();
+      final type = 'tchin-card-${p.name}-$n';
+      ui_web.platformViewRegistry.registerViewFactory(type, (int _) => host);
+      _views[p] = type;
+      _hosts[p] = host;
+    }
   }
 
   @override
-  bool get supported => _host != null;
+  bool get supported => _pay != null;
 
   @override
-  Widget view() => supported ? HtmlElementView(viewType: _viewType) : const SizedBox.shrink();
+  Widget cardPart(CardPart part) {
+    final type = _views[part];
+    return type == null ? const SizedBox.shrink() : HtmlElementView(viewType: type);
+  }
 
   @override
-  Future<void> mount({
-    required String publishableKey,
-    required String clientSecret,
-    String? email,
-    required void Function(double height) onHeight,
-    required void Function(String event) onEvent,
-  }) async {
+  Future<void> mountCard(String publishableKey, void Function(CardFieldsState s) onChange) async {
     final pay = _pay;
-    final host = _host;
-    if (pay == null || host == null) throw StateError('stripe_unavailable');
+    if (pay == null) throw StateError('stripe_unavailable');
     await pay
-        .mount(
-          host,
+        .mountCard(
           publishableKey.toJS,
-          clientSecret.toJS,
-          (email ?? '').toJS,
-          ((JSNumber h) => onHeight(h.toDartDouble)).toJS,
-          ((JSString e) => onEvent(e.toDart)).toJS,
+          _Hosts(number: _hosts[CardPart.number]!, expiry: _hosts[CardPart.expiry]!, cvc: _hosts[CardPart.cvc]!),
+          ((JSString raw) {
+            final m = jsonDecode(raw.toDart) as Map<String, dynamic>;
+            onChange(CardFieldsState(complete: m['complete'] == true, error: (m['error'] as String?) ?? ''));
+          }).toJS,
         )
         .toDart;
   }
 
   @override
-  Future<Map<String, dynamic>> confirm({String? returnUrl}) async {
+  Future<Map<String, dynamic>> payCard(String clientSecret, String? email) async {
     final pay = _pay;
     if (pay == null) return {'error': 'Pagamento indisponível.'};
-    final raw = (await pay.confirm((returnUrl ?? '').toJS).toDart).toDart;
+    final raw = (await pay.payCard(clientSecret.toJS, (email ?? '').toJS).toDart).toDart;
     return jsonDecode(raw) as Map<String, dynamic>;
   }
 
   @override
-  void dispose() {
-    _pay?.unmount();
+  Future<String> wallet(String publishableKey, int amountCents, String label) async {
+    final pay = _pay;
+    if (pay == null) return '';
+    try {
+      return (await pay.wallet(publishableKey.toJS, amountCents.toJS, label.toJS).toDart).toDart;
+    } catch (_) {
+      return '';
+    }
   }
+
+  @override
+  Future<Map<String, dynamic>> payWallet(Future<String?> Function() clientSecret) async {
+    final pay = _pay;
+    if (pay == null) return {'error': 'Pagamento indisponível.'};
+    // Chamado de forma síncrona no toque: `pr.show()` exige-o.
+    final promise = pay.payWallet((() => clientSecret().then((s) => (s ?? '').toJS).toJS).toJS);
+    final raw = (await promise.toDart).toDart;
+    return jsonDecode(raw) as Map<String, dynamic>;
+  }
+
+  @override
+  void dispose() => _pay?.unmount();
 }
 
-StripeElement create() => _WebStripeElement();
+StripePay create() => _WebStripePay();

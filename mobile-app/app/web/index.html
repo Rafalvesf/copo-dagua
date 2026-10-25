@@ -264,12 +264,17 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script>
-    // Pagamento dentro da app (2026-10-19): Payment Element da Stripe
-    // montado num platform view do Flutter — o formulário é um iframe da
-    // própria Stripe (nada de cartões passa pela app) e nunca se abre o
-    // browser. Stripe.js só é carregado quando se chega ao pagamento.
+    // Pagamento dentro da app. 2026-10-25 ("quero tudo feito na app"): o
+    // ecrã é todo desenhado pelo Flutter. Daqui só vem o que não pode
+    // passar pela app:
+    // - os 3 campos do cartão (número, validade, CVC) — iframes mínimos da
+    //   Stripe com a letra e as cores da app, sem nada da Stripe à vista
+    //   (regras PCI: o número do cartão nunca toca na app);
+    // - Apple Pay / Google Pay — a janela de pagamento do próprio telemóvel.
+    // MB WAY e Multibanco já não usam nada daqui (confirmados no servidor).
     window.tchinPay = (function () {
-      var stripe = null, key = null, elements = null, pe = null, ro = null;
+      var stripe = null, key = null, elements = null, parts = {}, pr = null, prKey = '';
+      var FONT = 'LouisGeorgeCafe';
       function load() {
         return new Promise(function (res, rej) {
           if (window.Stripe) return res();
@@ -280,79 +285,118 @@
           document.head.appendChild(s);
         });
       }
-      function clean() {
-        if (ro) { ro.disconnect(); ro = null; }
-        if (pe) { try { pe.destroy(); } catch (e) {} pe = null; }
-        elements = null;
+      function init(pk) {
+        return load().then(function () {
+          if (!stripe || key !== pk) { stripe = window.Stripe(pk, { locale: 'pt' }); key = pk; elements = null; pr = null; prKey = ''; }
+        });
+      }
+      function base() {
+        var b = document.querySelector('base');
+        return new URL((b && b.getAttribute('href')) || '/', location.href).href;
+      }
+      function destroyCard() {
+        Object.keys(parts).forEach(function (k) { try { parts[k].destroy(); } catch (e) {} });
+        parts = {};
+      }
+      function result(res) {
+        if (res.error) return JSON.stringify({ error: res.error.message || 'Pagamento recusado.', code: res.error.code || null });
+        var pi = res.paymentIntent || {};
+        return JSON.stringify({ status: pi.status || null });
       }
       return {
         createHost: function () {
           var d = document.createElement('div');
-          d.style.width = '100%'; d.style.height = '100%'; d.style.overflow = 'hidden';
+          d.style.width = '100%'; d.style.height = '100%';
+          d.style.display = 'flex'; d.style.alignItems = 'center';
           return d;
         },
-        mount: function (host, pk, secret, email, onHeight, onEvent) {
-          return load().then(function () {
-            if (!stripe || key !== pk) { stripe = window.Stripe(pk, { locale: 'pt' }); key = pk; }
-            clean();
+        // Campos do cartão: number | expiry | cvc, cada um no seu host.
+        mountCard: function (pk, hosts, onChange) {
+          return init(pk).then(function () {
+            destroyCard();
             elements = stripe.elements({
-              clientSecret: secret,
-              appearance: {
-                theme: 'stripe',
-                variables: {
-                  colorPrimary: '#4F6B4A', colorText: '#171713', colorTextSecondary: '#57534E',
-                  colorBackground: '#FFFFFF', colorDanger: '#B3261E', borderRadius: '14px',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                  fontSizeBase: '15px', spacingUnit: '4px'
-                },
-                rules: {
-                  '.Input': { border: '1px solid #E6E0D2', boxShadow: 'none', padding: '13px 14px' },
-                  '.Input:focus': { border: '1px solid #4F6B4A', boxShadow: '0 0 0 3px rgba(79,107,74,.15)' },
-                  '.Label': { fontWeight: '600' },
-                  '.Tab': { border: '1px solid #E6E0D2', boxShadow: 'none' },
-                  '.Tab--selected': { border: '1.5px solid #4F6B4A' }
-                }
-              }
+              locale: 'pt',
+              fonts: [{ family: FONT, src: 'url(' + base() + 'assets/assets/fonts/louis_george_cafe/LouisGeorgeCafe-Regular.ttf)', weight: '400' }]
             });
-            pe = elements.create('payment', {
-              layout: 'tabs',
-              business: { name: 'À Nossa!' },
-              defaultValues: { billingDetails: { email: email || undefined } },
-              wallets: { applePay: 'auto', googlePay: 'auto' }
+            var style = {
+              base: {
+                color: '#171713', fontFamily: FONT + ', Roboto, -apple-system, sans-serif', fontSize: '16px',
+                '::placeholder': { color: '#9A958C' }, iconColor: '#4F6B4A'
+              },
+              invalid: { color: '#B3261E', iconColor: '#B3261E' }
+            };
+            var state = { number: false, expiry: false, cvc: false }, brand = '', err = '';
+            var map = { number: 'cardNumber', expiry: 'cardExpiry', cvc: 'cardCvc' };
+            Object.keys(map).forEach(function (k) {
+              var opts = { style: style };
+              if (k === 'number') { opts.showIcon = true; opts.placeholder = '1234 1234 1234 1234'; }
+              if (k === 'expiry') opts.placeholder = 'MM / AA';
+              if (k === 'cvc') opts.placeholder = 'CVC';
+              var el = elements.create(map[k], opts);
+              var host = hosts[k];
+              host.innerHTML = '';
+              var inner = document.createElement('div');
+              inner.style.width = '100%';
+              host.appendChild(inner);
+              el.mount(inner);
+              el.on('change', function (e) {
+                state[k] = !!e.complete;
+                if (k === 'number' && e.brand) brand = e.brand;
+                err = e.error ? e.error.message : '';
+                onChange(JSON.stringify({ complete: state.number && state.expiry && state.cvc, error: err, brand: brand }));
+              });
+              parts[k] = el;
             });
-            pe.on('ready', function () { onEvent('ready'); });
-            pe.on('change', function (e) { onEvent(e.complete ? 'complete' : 'incomplete'); });
-            pe.on('loaderror', function () { onEvent('loaderror'); });
-            host.innerHTML = '';
-            var inner = document.createElement('div');
-            inner.style.padding = '2px 2px 6px';
-            host.appendChild(inner);
-            pe.mount(inner);
-            ro = new ResizeObserver(function () { onHeight(Math.ceil(inner.getBoundingClientRect().height)); });
-            ro.observe(inner);
             return 'ok';
           });
         },
-        confirm: function (returnUrl) {
-          if (!stripe || !elements) return Promise.resolve(JSON.stringify({ error: 'Formulário não carregado.' }));
-          return elements.submit().then(function (r) {
-            if (r.error) return JSON.stringify({ error: r.error.message || 'Dados em falta.' });
-            return stripe.confirmPayment({
-              elements: elements,
-              redirect: 'if_required',
-              confirmParams: { return_url: returnUrl || location.href }
-            }).then(function (res) {
-              if (res.error) return JSON.stringify({ error: res.error.message || 'Pagamento recusado.', code: res.error.code || null });
-              var pi = res.paymentIntent || {};
-              var mb = pi.next_action && pi.next_action.multibanco_display_details;
-              return JSON.stringify({
-                status: pi.status || null,
-                multibanco: mb ? { entity: mb.entity, reference: mb.reference, expires_at: mb.expires_at } : null
-              });
-            });
-          }).catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'Pagamento falhou.' }); });
+        payCard: function (secret, email) {
+          if (!stripe || !parts.number) return Promise.resolve(JSON.stringify({ error: 'Os campos do cartão não carregaram.' }));
+          return stripe.confirmCardPayment(secret, {
+            payment_method: { card: parts.number, billing_details: { email: email || undefined } }
+          }).then(result).catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'Pagamento falhou.' }); });
         },
-        unmount: clean
+        // Apple Pay / Google Pay disponível neste telemóvel? '' se não.
+        wallet: function (pk, cents, label) {
+          return init(pk).then(function () {
+            var k = cents + '|' + label;
+            if (!pr || prKey !== k) {
+              pr = stripe.paymentRequest({ country: 'PT', currency: 'eur', total: { label: label, amount: cents } });
+              prKey = k;
+            }
+            return pr.canMakePayment().then(function (r) {
+              if (!r) return '';
+              return r.applePay ? 'apple_pay' : (r.googlePay ? 'google_pay' : '');
+            });
+          }).catch(function () { return ''; });
+        },
+        // Abre a janela do telemóvel (tem de ser chamado no toque). O
+        // client secret só é pedido depois de a pessoa escolher o cartão.
+        payWallet: function (getSecret) {
+          if (!pr) return Promise.resolve(JSON.stringify({ error: 'Indisponível neste dispositivo.' }));
+          return new Promise(function (resolve) {
+            var done = false;
+            function finish(v) { if (!done) { done = true; resolve(v); } }
+            pr.off && pr.off('paymentmethod'); pr.off && pr.off('cancel');
+            pr.on('cancel', function () { finish(JSON.stringify({ cancelled: true })); });
+            pr.on('paymentmethod', function (ev) {
+              Promise.resolve(getSecret()).then(function (secret) {
+                if (!secret) { ev.complete('fail'); return finish(JSON.stringify({ error: 'Não foi possível iniciar o pagamento.' })); }
+                return stripe.confirmCardPayment(secret, { payment_method: ev.paymentMethod.id }, { handleActions: false })
+                  .then(function (r) {
+                    if (r.error) { ev.complete('fail'); return finish(result(r)); }
+                    ev.complete('success');
+                    if (r.paymentIntent && r.paymentIntent.status === 'requires_action') {
+                      return stripe.confirmCardPayment(secret).then(function (r2) { finish(result(r2)); });
+                    }
+                    finish(result(r));
+                  });
+              }).catch(function (e) { try { ev.complete('fail'); } catch (x) {} finish(JSON.stringify({ error: (e && e.message) || 'Pagamento falhou.' })); });
+            });
+            try { pr.show(); } catch (e) { finish(JSON.stringify({ error: 'Não foi possível abrir a janela de pagamento.' })); }
+          });
+        },
+        unmount: destroyCard
       };
     })();
   </script>

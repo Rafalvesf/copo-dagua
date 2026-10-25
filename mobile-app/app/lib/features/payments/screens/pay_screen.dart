@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/auth/auth_controller.dart';
 import '../../../core/home/home_providers.dart';
 import '../../../core/payments/payments.dart';
 import '../../../core/payments/stripe_element.dart';
@@ -16,13 +17,17 @@ import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/sticker_icon.dart';
 import 'pay_done_screen.dart';
-import '../../../core/payments/pay_return.dart';
 
-enum _Step { checking, select, loading, form, confirming, mbWayWaiting, multibanco }
+enum _Step { checking, select, loading, card, confirming, mbWayPhone, mbWayWaiting, multibanco }
 
-/// Pagamento dentro da app (pedido 2026-10-19): escolher o método →
-/// formulário da Stripe embutido → página de pagamento feito. Nunca abre
-/// o browser.
+/// Pagamento dentro da app. 2026-10-25 ("quero tudo feito na app"): o ecrã
+/// é todo desenhado pela app — nada de formulários da Stripe.
+/// - Apple Pay / Google Pay: botão da app → janela do próprio telemóvel.
+/// - Cartão: campos da app; o número, a validade e o CVC são campos
+///   mínimos da Stripe com a letra e as cores da app (regras PCI: o número
+///   do cartão nunca passa pela app).
+/// - MB WAY: a app pede o telemóvel e o pedido é enviado pelo servidor.
+/// - Multibanco: a referência é gerada no servidor e mostrada aqui.
 class PayScreen extends ConsumerStatefulWidget {
   final PayArgs args;
   const PayScreen({super.key, required this.args});
@@ -34,10 +39,12 @@ class PayScreen extends ConsumerStatefulWidget {
 class _PayScreenState extends ConsumerState<PayScreen> {
   _Step _step = _Step.checking;
   PayMethod _method = PayMethod.card;
-  StripeElement? _element;
-  double _formHeight = 280;
-  bool _formReady = false;
-  bool _formComplete = false;
+  final StripePay _stripe = createStripePay();
+  String? _pk;
+  String _wallet = ''; // apple_pay | google_pay | ''
+  bool _cardMounted = false;
+  CardFieldsState _card = const CardFieldsState();
+  final _phone = TextEditingController();
   String? _error;
   int? _amountCents;
   MultibancoRef? _mb;
@@ -45,18 +52,44 @@ class _PayScreenState extends ConsumerState<PayScreen> {
 
   PayArgs get a => widget.args;
   String get _amountLabel => euros((_amountCents ?? (a.amount * 100).round()) / 100, cents: true);
+  String? get _email => ref.read(authControllerProvider).profile?.email;
+  String get _walletName => _wallet == 'apple_pay' ? 'Apple Pay' : 'Google Pay';
+
+  List<PayMethod> get _methods => [
+        if (_wallet.isNotEmpty) PayMethod.wallet,
+        PayMethod.card,
+        PayMethod.mbWay,
+        PayMethod.multibanco,
+      ];
 
   @override
   void initState() {
     super.initState();
+    _phone.text = ref.read(authControllerProvider).profile?.phone ?? '';
     _checkExisting();
+    _prepare();
   }
 
   @override
   void dispose() {
     _poll?.cancel();
-    _element?.dispose();
+    _stripe.dispose();
+    _phone.dispose();
     super.dispose();
+  }
+
+  /// Chave pública + Apple Pay / Google Pay disponível neste telemóvel.
+  Future<void> _prepare() async {
+    if (!_stripe.supported) return;
+    final pk = await stripePublishableKey();
+    if (pk == null || !mounted) return;
+    _pk = pk;
+    final w = await _stripe.wallet(pk, (a.amount * 100).round(), 'À Nossa! · ${a.title} ${a.partnerName}');
+    if (!mounted || w.isEmpty) return;
+    setState(() {
+      _wallet = w;
+      if (_step == _Step.select || _step == _Step.checking) _method = PayMethod.wallet;
+    });
   }
 
   /// Pode já estar pago (ou ter uma referência Multibanco por pagar).
@@ -82,103 +115,142 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     }
   }
 
-  Future<void> _continue() async {
+  void _fail(Object e, _Step back) {
+    if (!mounted) return;
+    if (e is CheckoutUnavailable && e.reason == 'invalid_state') return _done();
     setState(() {
-      _step = _Step.loading;
-      _error = null;
-      _formReady = false;
-      _formComplete = false;
+      _step = back;
+      _error = e is CheckoutUnavailable ? payErrorMessage(e.reason) : 'Não foi possível iniciar o pagamento. Verifica a ligação.';
     });
-    try {
-      final info = await createPaymentIntent(a.paymentId, _method);
-      if (!mounted) return;
-      _amountCents = info.amountCents;
-      if (info.multibanco != null) {
-        setState(() {
-          _mb = info.multibanco;
-          _step = _Step.multibanco;
-        });
-        _startPolling(slow: true);
-        return;
-      }
-      _element?.dispose();
-      final el = createStripeElement();
-      if (!el.supported) {
-        setState(() {
-          _step = _Step.select;
-          _error = 'O pagamento só está disponível na app web por agora.';
-        });
-        return;
-      }
-      setState(() {
-        _element = el;
-        _step = _Step.form;
-      });
-      // Deixa o platform view entrar na árvore antes de montar.
-      await Future<void>.delayed(const Duration(milliseconds: 60));
-      await el.mount(
-        publishableKey: info.publishableKey,
-        clientSecret: info.clientSecret,
-        email: info.email,
-        onHeight: (h) {
-          if (mounted && h > 40) setState(() => _formHeight = h + 8);
-        },
-        onEvent: (e) {
+  }
+
+  /// "Continuar" no ecrã de escolha.
+  Future<void> _continue() async {
+    setState(() => _error = null);
+    switch (_method) {
+      case PayMethod.wallet:
+        _payWallet();
+      case PayMethod.card:
+        setState(() => _step = _Step.card);
+        await _mountCard();
+      case PayMethod.mbWay:
+        setState(() => _step = _Step.mbWayPhone);
+      case PayMethod.multibanco:
+        setState(() => _step = _Step.loading);
+        try {
+          final info = await createPaymentIntent(a.paymentId, PayMethod.multibanco);
           if (!mounted) return;
+          _amountCents = info.amountCents;
           setState(() {
-            if (e == 'ready') _formReady = true;
-            if (e == 'complete') _formComplete = true;
-            if (e == 'incomplete') _formComplete = false;
-            if (e == 'loaderror') {
-              _step = _Step.select;
-              _error = 'Não foi possível carregar o formulário de pagamento.';
-            }
+            _mb = info.multibanco;
+            _step = info.multibanco == null ? _Step.select : _Step.multibanco;
+            if (info.multibanco == null) _error = 'Não foi possível gerar a referência. Tenta outra vez.';
           });
-        },
-      );
-    } on CheckoutUnavailable catch (e) {
-      if (!mounted) return;
-      if (e.reason == 'invalid_state') return _done();
-      setState(() {
-        _step = _Step.select;
-        _error = payErrorMessage(e.reason);
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _step = _Step.select;
-        _error = 'Não foi possível iniciar o pagamento. Verifica a ligação.';
-      });
+          if (info.multibanco != null) _startPolling(slow: true);
+        } catch (e) {
+          _fail(e, _Step.select);
+        }
     }
   }
 
-  Future<void> _pay() async {
-    final el = _element;
-    if (el == null) return;
+  Future<void> _mountCard() async {
+    final pk = _pk ?? await stripePublishableKey();
+    if (!mounted) return;
+    if (pk == null || !_stripe.supported) {
+      setState(() {
+        _step = _Step.select;
+        _error = 'Não foi possível preparar o pagamento com cartão.';
+      });
+      return;
+    }
+    _pk = pk;
+    if (_cardMounted) return;
+    // Deixa os campos entrarem no ecrã antes de os ligar.
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    try {
+      await _stripe.mountCard(pk, (s) {
+        if (mounted) setState(() => _card = s);
+      });
+      if (mounted) setState(() => _cardMounted = true);
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _step = _Step.select;
+          _error = 'Não foi possível carregar os campos do cartão.';
+        });
+      }
+    }
+  }
+
+  Future<void> _payCard() async {
     setState(() {
       _step = _Step.confirming;
       _error = null;
     });
-    final r = await el.confirm(returnUrl: PayReturn.returnUrl(a.paymentId));
+    try {
+      final info = await createPaymentIntent(a.paymentId, PayMethod.card);
+      _amountCents = info.amountCents;
+      final r = await _stripe.payCard(info.clientSecret, _email);
+      _handleResult(r, back: _Step.card);
+    } catch (e) {
+      _fail(e, _Step.card);
+    }
+  }
+
+  /// Tem de abrir a janela do telemóvel logo no toque (sem esperas antes).
+  void _payWallet() {
+    setState(() => _error = null);
+    final future = _stripe.payWallet(() async {
+      try {
+        final info = await createPaymentIntent(a.paymentId, PayMethod.wallet);
+        _amountCents = info.amountCents;
+        return info.clientSecret;
+      } catch (e) {
+        _fail(e, _Step.select);
+        return null;
+      }
+    });
+    future.then((r) {
+      if (!mounted) return;
+      if (r['cancelled'] == true) return;
+      _handleResult(r, back: _Step.select);
+    });
+  }
+
+  Future<void> _sendMbWay() async {
+    final phone = _phone.text.trim();
+    if (phone.replaceAll(RegExp(r'\D'), '').length < 9) {
+      setState(() => _error = 'Escreve o teu número de telemóvel com MB WAY.');
+      return;
+    }
+    setState(() {
+      _step = _Step.loading;
+      _error = null;
+    });
+    try {
+      final info = await createPaymentIntent(a.paymentId, PayMethod.mbWay, phone: phone);
+      if (!mounted) return;
+      _amountCents = info.amountCents;
+      if (info.status == 'succeeded') return _done();
+      setState(() => _step = _Step.mbWayWaiting);
+      _startPolling();
+    } catch (e) {
+      _fail(e, _Step.mbWayPhone);
+    }
+  }
+
+  Future<void> _handleResult(Map<String, dynamic> r, {required _Step back}) async {
     if (!mounted) return;
     if (r['error'] != null) {
       setState(() {
-        _step = _Step.form;
+        _step = back;
         _error = r['error'] as String;
       });
       return;
     }
-    final status = r['status'] as String?;
-    final mb = MultibancoRef.fromJson(r['multibanco'], amountCents: _amountCents);
-    if (status == 'succeeded') {
+    if (r['status'] == 'succeeded') {
       await paymentState(a.paymentId); // confirma já na base de dados
       if (mounted) _done();
-    } else if (mb != null) {
-      setState(() {
-        _mb = mb;
-        _step = _Step.multibanco;
-      });
-      _startPolling(slow: true);
     } else {
       setState(() => _step = _Step.mbWayWaiting);
       _startPolling();
@@ -189,10 +261,26 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     _poll?.cancel();
     _poll = Timer.periodic(Duration(seconds: slow ? 15 : 3), (_) async {
       final (state, _) = await paymentState(a.paymentId);
-      if (state == 'paid' && mounted) {
+      if (!mounted) return;
+      if (state == 'paid') {
         _poll?.cancel();
         _done();
+      } else if (state == 'open' && _step == _Step.mbWayWaiting) {
+        // MB WAY recusado ou expirado.
+        _poll?.cancel();
+        setState(() {
+          _step = _Step.select;
+          _error = 'O pedido MB WAY não foi aprovado a tempo. Tenta outra vez.';
+        });
       }
+    });
+  }
+
+  void _backToSelect() {
+    _poll?.cancel();
+    setState(() {
+      _error = null;
+      _step = _Step.select;
     });
   }
 
@@ -242,6 +330,11 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     );
   }
 
+  Widget _changeMethod() => TextButton(
+        onPressed: _step == _Step.confirming ? null : _backToSelect,
+        child: Text('Mudar método', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+      );
+
   List<Widget> _body() {
     switch (_step) {
       case _Step.checking:
@@ -258,56 +351,79 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       case _Step.select:
         return [
           const SectionTitle('Como queres pagar?'),
-          for (final m in PayMethod.values) ...[
-            _MethodTile(method: m, selected: m == _method, onTap: () => setState(() => _method = m)),
+          for (final m in _methods) ...[
+            _MethodTile(
+              method: m,
+              label: m == PayMethod.wallet ? _walletName : null,
+              icon: m == PayMethod.wallet && _wallet == 'apple_pay' ? Icons.apple : null,
+              selected: m == _method,
+              onTap: () => setState(() => _method = m),
+            ),
             const SizedBox(height: 10),
           ],
           if (_error != null) _ErrorNote(_error!),
           const SizedBox(height: 8),
           const _SecureNote(),
         ];
-      case _Step.form:
+      case _Step.card:
       case _Step.confirming:
         return [
-          SectionTitle(
-            _method.label,
-            trailing: TextButton(
-              onPressed: _step == _Step.confirming
-                  ? null
-                  : () {
-                      _element?.dispose();
-                      setState(() {
-                        _element = null;
-                        _error = null;
-                        _step = _Step.select;
-                      });
-                    },
-              child: Text('Mudar método', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-            ),
-          ),
+          SectionTitle('Cartão', trailing: _changeMethod()),
           Container(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+            padding: const EdgeInsets.all(16),
             decoration: whiteLineCard(),
-            child: Stack(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  height: _formHeight,
-                  child: _element?.view() ?? const SizedBox.shrink(),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const _FieldLabel('Número do cartão'),
+              _CardBox(child: _stripe.cardPart(CardPart.number)),
+              const SizedBox(height: 12),
+              Row(children: [
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const _FieldLabel('Validade'),
+                    _CardBox(child: _stripe.cardPart(CardPart.expiry)),
+                  ]),
                 ),
-                if (!_formReady)
-                  Positioned.fill(
-                    child: ColoredBox(
-                      color: Colors.white,
-                      child: Center(child: CircularProgressIndicator(color: AppTheme.accentOliveDark)),
-                    ),
-                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const _FieldLabel('CVC'),
+                    _CardBox(child: _stripe.cardPart(CardPart.cvc)),
+                  ]),
+                ),
+              ]),
+              if (_card.error.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(_card.error, style: const TextStyle(fontSize: AppFontSize.sm, color: Color(0xFFB3261E))),
               ],
-            ),
+            ]),
           ),
           if (_error != null) ...[const SizedBox(height: 10), _ErrorNote(_error!)],
           const SizedBox(height: 12),
           const _SecureNote(),
+        ];
+      case _Step.mbWayPhone:
+        return [
+          SectionTitle('MB WAY', trailing: _changeMethod()),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: whiteLineCard(),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const _FieldLabel('Telemóvel com MB WAY'),
+              TextField(
+                controller: _phone,
+                keyboardType: TextInputType.phone,
+                autofillHints: const [AutofillHints.telephoneNumber],
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d +]'))],
+                style: const TextStyle(fontSize: AppFontSize.lg, color: AppTheme.ink),
+                decoration: const InputDecoration(hintText: '912 345 678', prefixText: '+351  '),
+                onSubmitted: (_) => _sendMbWay(),
+              ),
+              const SizedBox(height: 10),
+              const Text('Vais receber um pedido de pagamento na app MB WAY para aprovar.',
+                  style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4)),
+            ]),
+          ),
+          if (_error != null) ...[const SizedBox(height: 10), _ErrorNote(_error!)],
         ];
       case _Step.mbWayWaiting:
         return [
@@ -331,13 +447,15 @@ class _PayScreenState extends ConsumerState<PayScreen> {
               ),
               const SizedBox(height: 8),
               const Text('À espera da confirmação…', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+              const SizedBox(height: 6),
+              _changeMethod(),
             ]),
           ),
         ];
       case _Step.multibanco:
         final mb = _mb;
         return [
-          const SectionTitle('Referência Multibanco'),
+          SectionTitle('Referência Multibanco', trailing: _changeMethod()),
           Container(
             padding: const EdgeInsets.all(18),
             decoration: whiteLineCard(),
@@ -375,17 +493,28 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   Widget _bottomBar() {
     String? label;
     VoidCallback? onTap;
+    IconData? icon;
     var busy = false;
     switch (_step) {
       case _Step.select:
-        label = 'Continuar';
-        onTap = _continue;
-      case _Step.form:
+        if (_method == PayMethod.wallet) {
+          label = 'Pagar com $_walletName';
+          icon = _wallet == 'apple_pay' ? Icons.apple : Icons.account_balance_wallet_outlined;
+          onTap = _payWallet;
+        } else {
+          label = 'Continuar';
+          onTap = _continue;
+        }
+      case _Step.card:
         label = 'Pagar $_amountLabel';
-        onTap = _formReady && _formComplete ? _pay : null;
+        icon = Icons.lock_outline;
+        onTap = _cardMounted && _card.complete ? _payCard : null;
       case _Step.confirming:
         label = 'A pagar…';
         busy = true;
+      case _Step.mbWayPhone:
+        label = 'Enviar pedido MB WAY';
+        onTap = _sendMbWay;
       case _Step.multibanco:
         label = 'Já paguei';
         onTap = () async {
@@ -414,7 +543,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         child: FilledButton(
           onPressed: onTap,
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.accentOliveDark,
+            backgroundColor: _method == PayMethod.wallet && _step == _Step.select ? AppTheme.ink : AppTheme.accentOliveDark,
             disabledBackgroundColor: AppTheme.accentOliveDark.withValues(alpha: 0.4),
             foregroundColor: Colors.white,
             disabledForegroundColor: Colors.white,
@@ -424,7 +553,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           child: busy
               ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
               : Row(mainAxisSize: MainAxisSize.min, children: [
-                  if (_step == _Step.form) ...[const Icon(Icons.lock_outline, size: 18), const SizedBox(width: 8)],
+                  if (icon != null) ...[Icon(icon, size: 18), const SizedBox(width: 8)],
                   Text(label),
                 ]),
         ),
@@ -446,13 +575,46 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 }
 
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  const _FieldLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: AppFontSize.md, color: AppTheme.ink)),
+      );
+}
+
+/// Caixa da app à volta de um campo de cartão (o campo em si é da Stripe).
+class _CardBox extends StatelessWidget {
+  final Widget child;
+  const _CardBox({required this.child});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppTheme.borderMuted),
+        ),
+        alignment: Alignment.centerLeft,
+        child: SizedBox(height: 24, width: double.infinity, child: child),
+      );
+}
+
 class _MethodTile extends StatelessWidget {
   final PayMethod method;
+  final String? label;
+  final IconData? icon;
   final bool selected;
   final VoidCallback onTap;
-  const _MethodTile({required this.method, required this.selected, required this.onTap});
+  const _MethodTile({required this.method, this.label, this.icon, required this.selected, required this.onTap});
 
-  IconData get _icon => switch (method) {
+  IconData get _icon => icon ?? switch (method) {
+    PayMethod.wallet => Icons.account_balance_wallet_outlined,
     PayMethod.card => Icons.credit_card,
     PayMethod.mbWay => Icons.phone_iphone,
     PayMethod.multibanco => Icons.account_balance_outlined,
@@ -474,7 +636,7 @@ class _MethodTile extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(method.label,
+              Text(label ?? method.label,
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, color: AppTheme.ink)),
               const SizedBox(height: 2),
               Text(method.hint, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
@@ -538,7 +700,7 @@ class _SecureNote extends StatelessWidget {
       SizedBox(width: 8),
       Expanded(
         child: Text(
-          'Pagamento processado pela Stripe. Nunca vemos os dados do teu cartão.',
+          'Pagamento seguro processado pela Stripe. Os dados do teu cartão nunca passam pela À Nossa!.',
           style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4),
         ),
       ),

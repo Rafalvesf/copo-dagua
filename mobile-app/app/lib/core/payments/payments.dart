@@ -4,8 +4,10 @@ import '../supabase/supabase_config.dart';
 import '../home/home_providers.dart' show CheckoutUnavailable;
 
 /// Métodos do ecrã de seleção (têm de estar ativos na conta Stripe).
+/// [wallet] só aparece quando o telemóvel tem Apple Pay ou Google Pay.
 enum PayMethod {
-  card('all', 'Cartão, Apple Pay ou Google Pay', 'E os outros métodos ativos, sem sair da app'),
+  wallet('wallet', 'Apple Pay ou Google Pay', 'Pagas com o cartão guardado no telemóvel'),
+  card('card', 'Cartão', 'Visa, Mastercard e outros cartões'),
   mbWay('mb_way', 'MB WAY', 'Recebes o pedido na app MB WAY e aprovas'),
   multibanco('multibanco', 'Multibanco', 'Referência para pagar no multibanco ou homebanking');
 
@@ -60,12 +62,14 @@ class MultibancoRef {
 }
 
 class PaymentIntentInfo {
+  final String? status;
   final String clientSecret;
   final String publishableKey;
   final int amountCents;
   final String? email;
   final MultibancoRef? multibanco;
   const PaymentIntentInfo({
+    this.status,
     required this.clientSecret,
     required this.publishableKey,
     required this.amountCents,
@@ -77,12 +81,12 @@ class PaymentIntentInfo {
 /// `create-payment-intent`: um PaymentIntent para o método escolhido.
 /// Erros legíveis chegam como [CheckoutUnavailable] (`method_unavailable`,
 /// `partner_not_onboarded`, `invalid_state`, `processing`, `not_configured`).
-Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method) async {
+Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method, {String? phone}) async {
   final FunctionResponse res;
   try {
     res = await supabase.functions.invoke(
       'create-payment-intent',
-      body: {'payment_id': paymentId, 'method': method.code},
+      body: {'payment_id': paymentId, 'method': method.code, if (phone != null) 'phone': phone},
     );
   } on FunctionException catch (e) {
     final d = e.details;
@@ -92,12 +96,25 @@ Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method
   final d = res.data as Map<String, dynamic>;
   final cents = (d['amount_cents'] as num).toInt();
   return PaymentIntentInfo(
+    status: d['status'] as String?,
     clientSecret: d['client_secret'] as String,
     publishableKey: d['publishable_key'] as String,
     amountCents: cents,
     email: d['email'] as String?,
     multibanco: MultibancoRef.fromJson(d['multibanco'], amountCents: cents),
   );
+}
+
+/// Chave pública da Stripe (para preparar os campos do cartão e ver se há
+/// Apple Pay / Google Pay antes de criar o pagamento). `null` se falhar.
+Future<String?> stripePublishableKey() async {
+  try {
+    final res = await supabase.functions.invoke('create-payment-intent', body: {'method': 'config'});
+    final d = res.data;
+    return d is Map ? d['publishable_key'] as String? : null;
+  } catch (_) {
+    return null;
+  }
 }
 
 /// Estado real de um pagamento: pergunta à Stripe (`sync-checkout-payment`,
@@ -127,6 +144,8 @@ String payErrorMessage(String code) => switch (code) {
   'invalid_state' => 'Este pagamento já está feito.',
   'processing' => 'Já há um pagamento a ser processado. Aguarda uns minutos.',
   'method_unavailable' => 'Este método ainda não está disponível. Escolhe outro.',
+  'invalid_phone' => 'O número de telemóvel não é válido.',
+  'declined' => 'O MB WAY recusou o pedido. Confirma o número e se tens o MB WAY ativo.',
   'not_configured' => 'Os pagamentos na app ainda estão a ser configurados.',
   _ => 'Não foi possível iniciar o pagamento. Tenta novamente.',
 };
