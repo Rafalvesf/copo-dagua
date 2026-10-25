@@ -113,7 +113,7 @@ begin
     delete from public.favorite_partners where partner_id = p_user;
     update public.partner_profiles set
       status = 'suspended', is_paused = true, featured = false,
-      description = null, phone = null, contact_email = null,
+      description = '', phone = null, contact_email = null,
       website_url = null, instagram_url = null, facebook_url = null,
       cover_photo_url = null, address_line = null, postal_code = null,
       latitude = null, longitude = null
