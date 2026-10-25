@@ -144,7 +144,7 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProvider
                           (
                             deposit ? Icons.event_available_outlined : Icons.verified_outlined,
                             deposit
-                                ? 'A reserva está confirmada. O restante paga-se depois do serviço.'
+                                ? 'A reserva está confirmada. O restante paga-se até 30 dias antes do evento.'
                                 : 'A reserva está paga na totalidade.',
                           ),
                           (Icons.receipt_long_outlined, 'Vês este pagamento no Orçamento, em Pagas.'),
