@@ -125,7 +125,7 @@ class EventDecor {
             kicker: 'O aniversário de', coverHint: 'foto da festa', galleryEmpty: 'Abre no dia da festa'),
         EventType.communion => const EventDecor('Um dia de luz', Icons.church_outlined,
             [Icons.flutter_dash, Icons.light_outlined, Icons.local_florist_outlined, Icons.wb_sunny_outlined, Icons.star_border],
-            kicker: 'A primeira comunhão de', coverHint: 'foto', galleryEmpty: 'Abre no dia da comunhão'),
+            kicker: 'A primeira comunhão de', coverHint: 'foto da comunhão', galleryEmpty: 'Abre no dia da comunhão'),
         EventType.engagement => const EventDecor('Disseram que sim!', Icons.diamond_outlined,
             [Icons.diamond_outlined, Icons.favorite_border, Icons.wine_bar_outlined, Icons.auto_awesome_outlined, Icons.local_florist_outlined],
             kicker: 'O nosso noivado', coverHint: 'foto do casal', galleryEmpty: 'Fotos do pedido'),

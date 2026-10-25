@@ -596,7 +596,12 @@ class TaskEngineController extends Notifier<TaskEngineState> {
 
   Future<List<TaskTemplate>> _loadTemplates() async {
     final rows = await supabase.from('task_templates').select().eq('active', true);
-    return (rows as List).map((r) => TaskTemplate.fromRow(r as Map<String, dynamic>)).toList();
+    // Só os templates deste tipo de evento (ou de todos) — 2026-10-20.
+    final eventType = ref.read(weddingControllerProvider).wedding?.eventType.dbValue ?? 'wedding';
+    return (rows as List)
+        .map((r) => TaskTemplate.fromRow(r as Map<String, dynamic>))
+        .where((t) => t.appliesTo(eventType))
+        .toList();
   }
 
   Future<_TaskContext> _gatherContext(String weddingId) async {

@@ -1,9 +1,10 @@
 import { requireAdmin } from "@/lib/dal";
+import { EVENT_TYPES } from "@/lib/event-types";
 import { createClient } from "@/lib/supabase/server";
 import { ToggleSwitch, NewTaskTemplateForm, RowActions } from "./task-template-controls";
 import { ELIGIBILITY_RULE_KEYS, COMPLETION_RULE_KEYS, DISPLAY_TYPE_KEYS, ACTION_TYPE_KEYS } from "@/lib/types";
 import type { TaskTemplate, PartnerCategory } from "@/lib/types";
-import { Alert, Badge, Card, PageHeader, SubNav } from "@/components/ui";
+import { Alert, Badge, Card, FilterTabs, PageHeader, SubNav } from "@/components/ui";
 import { TASK_TABS } from "@/lib/nav";
 
 const PRIORITY_LABEL: Record<string, string> = {
@@ -13,8 +14,10 @@ const PRIORITY_LABEL: Record<string, string> = {
   urgent: "Urgente",
 };
 
-export default async function TaskTemplatesPage() {
+export default async function TaskTemplatesPage({ searchParams }: PageProps<"/task-templates">) {
   await requireAdmin();
+  const params = await searchParams;
+  const typeFilter = typeof params.type === "string" && EVENT_TYPES[params.type] ? params.type : "all";
 
   const supabase = await createClient();
   // `deleted_at` — soft delete, nunca aparece na listagem normal (ver
@@ -43,7 +46,10 @@ export default async function TaskTemplatesPage() {
   });
 
   const groups = new Map<string, TaskTemplate[]>();
-  (templates as TaskTemplate[] | null ?? []).forEach((t) => {
+  (templates as TaskTemplate[] | null ?? [])
+    // Filtro por tipo de evento: os gerais (sem tipos) aparecem sempre.
+    .filter((t) => typeFilter === "all" || !t.event_types?.length || t.event_types.includes(typeFilter))
+    .forEach((t) => {
     const list = groups.get(t.category) ?? [];
     list.push(t);
     groups.set(t.category, list);
@@ -57,6 +63,15 @@ export default async function TaskTemplatesPage() {
         actions={<NewTaskTemplateForm categories={activeCategories} />}
       />
       <SubNav current="/task-templates" items={TASK_TABS} />
+      <div className="toolbar">
+        <FilterTabs
+          current={typeFilter}
+          items={[{ value: "all", label: "Todos os eventos" }, ...Object.entries(EVENT_TYPES).map(([k, v]) => ({ value: k, label: v.label }))].map((f) => ({
+            ...f,
+            href: f.value === "all" ? "/task-templates" : `/task-templates?type=${f.value}`,
+          }))}
+        />
+      </div>
 
       {error && <Alert tone="danger">Não foi possível carregar a lista.</Alert>}
 
@@ -94,6 +109,9 @@ export default async function TaskTemplatesPage() {
                           <span className="cell-sub">
                             {t.key}
                             {t.partner_category_slug ? ` · ${t.partner_category_slug}` : ""} · {displayTypeLabel}
+                          </span>
+                          <span className="cell-sub" style={{ color: t.event_types?.length ? "var(--accent)" : undefined, fontWeight: 600 }}>
+                            {t.event_types?.length ? t.event_types.map((e) => EVENT_TYPES[e]?.label ?? e).join(" · ") : "Todos os eventos"}
                           </span>
                         </td>
                         <td>{actionTypeLabel}</td>
