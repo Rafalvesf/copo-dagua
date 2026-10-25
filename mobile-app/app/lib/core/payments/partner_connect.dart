@@ -148,7 +148,10 @@ extension ConnectGroups on ConnectStatus {
 
 class ConnectError implements Exception {
   final String code;
-  const ConnectError(this.code);
+
+  /// Mensagem já em português vinda do servidor (ex.: "O IBAN não é válido.").
+  final String? message;
+  const ConnectError(this.code, [this.message]);
 }
 
 Future<Map<String, dynamic>> _call(Map<String, dynamic> body) async {
@@ -157,7 +160,10 @@ Future<Map<String, dynamic>> _call(Map<String, dynamic> body) async {
     return (res.data as Map).cast<String, dynamic>();
   } on FunctionException catch (e) {
     final d = e.details;
-    throw ConnectError(d is Map ? (d['error'] as String? ?? 'unknown_error') : 'unknown_error');
+    throw ConnectError(
+      d is Map ? (d['error'] as String? ?? 'unknown_error') : 'unknown_error',
+      d is Map ? d['message'] as String? : null,
+    );
   }
 }
 
@@ -165,6 +171,34 @@ final partnerConnectStatusProvider = FutureProvider.autoDispose<ConnectStatus>((
   final j = await _call({'action': 'status'});
   return ConnectStatus.fromJson(j);
 });
+
+/// Dados de pagamento pedidos com o UI da app (2026-10-25) — sem
+/// formulários nem links da Stripe. O que já está preenchido:
+Future<Map<String, dynamic>?> fetchPayoutPrefill() async {
+  final j = await _call({'action': 'prefill'});
+  return (j['prefill'] as Map?)?.cast<String, dynamic>();
+}
+
+/// Envia os dados (a app passa-os à Stripe pelo servidor) e devolve o
+/// estado atualizado. Erros: [ConnectError.message] em português.
+Future<ConnectStatus> submitPayoutDetails(Map<String, dynamic> details) async {
+  final j = await _call({'action': 'details', 'details': details});
+  return ConnectStatus.fromJson(j);
+}
+
+/// Fotografias do documento de identificação, quando a Stripe as pede.
+Future<ConnectStatus> submitIdDocument({required String frontBase64, required String frontType, String? backBase64, String? backType}) async {
+  final j = await _call({
+    'action': 'document',
+    'front': {'data': frontBase64, 'type': frontType},
+    if (backBase64 != null) 'back': {'data': backBase64, 'type': backType ?? 'image/jpeg'},
+  });
+  return ConnectStatus.fromJson(j);
+}
+
+/// O documento de identificação está em falta.
+bool needsIdDocument(ConnectStatus s) =>
+    [...s.currentlyDue, ...s.pastDue].any((r) => r.contains('verification.document') || r.contains('verification.additional_document'));
 
 /// Sessão para o formulário embutido (cria a conta se ainda não existir).
 Future<(String clientSecret, String publishableKey)> createConnectSession() async {

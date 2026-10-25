@@ -139,36 +139,64 @@ export async function unfeaturePartner(partnerId: string) {
   return setPartnerFeatured(partnerId, false);
 }
 
-// Ativação de pagamentos do parceiro dentro do admin (2026-10-25): sessão
-// para o formulário embutido da Stripe — nunca por link.
-export type PaymentsSession =
-  | { clientSecret: string; publishableKey: string; chargesEnabled: boolean; currentlyDue: string[]; pendingVerification: string[]; disabledReason: string | null }
-  | { error: string };
-export async function createPaymentsSession(partnerId: string): Promise<PaymentsSession> {
+// Dados de pagamento do parceiro preenchidos no admin, com o UI do admin
+// (2026-10-25: nada de links nem formulários da Stripe).
+export type PayoutPrefill = {
+  business_type: "individual" | "company" | null;
+  person: { first_name?: string; last_name?: string; email?: string; phone?: string; dob?: string | null; address?: { line1: string; line2: string; postal_code: string; city: string } | null; nif_provided?: boolean; title?: string };
+  company: { name: string; tax_id_provided: boolean; phone: string; address: { line1: string; line2: string; postal_code: string; city: string } | null } | null;
+  product_description: string;
+  url: string;
+  bank_last4: string | null;
+  account_holder_name: string;
+  tos_accepted: boolean;
+} | null;
+export type PayoutStatus =
+  | { ok: true; hasAccount: boolean; chargesEnabled: boolean; payoutsEnabled: boolean; currentlyDue: string[]; pendingVerification: string[]; prefill: PayoutPrefill }
+  | { ok: false; error: string };
+
+async function callPayments(partnerId: string, body: Record<string, unknown>): Promise<PayoutStatus> {
   await requireAdmin();
-  if (!partnerId) return { error: "Parceiro em falta." };
+  if (!partnerId) return { ok: false, error: "Parceiro em falta." };
   const supabase = await createClient();
   const { data, error } = await supabase.functions.invoke("admin-partner-payments", {
-    body: { partner_id: partnerId },
+    body: { partner_id: partnerId, ...body },
   });
+  if (error) {
+    let message = "Não foi possível falar com a Stripe. Tenta novamente.";
+    try {
+      const ctx = (error as { context?: Response }).context;
+      const j = ctx ? await ctx.json() : null;
+      if (j?.message) message = j.message;
+    } catch {
+      /* corpo sem JSON */
+    }
+    return { ok: false, error: message };
+  }
   const d = data as {
-    client_secret?: string;
-    publishable_key?: string;
+    has_account?: boolean;
     charges_enabled?: boolean;
+    payouts_enabled?: boolean;
     currently_due?: string[];
     pending_verification?: string[];
-    disabled_reason?: string | null;
-  } | null;
-  if (error || !d?.client_secret || !d.publishable_key) {
-    return { error: "Não foi possível abrir o formulário da Stripe. Tenta novamente." };
-  }
+    prefill?: PayoutPrefill;
+  };
   revalidatePath(`/partners/${partnerId}`);
   return {
-    clientSecret: d.client_secret,
-    publishableKey: d.publishable_key,
+    ok: true,
+    hasAccount: d.has_account === true,
     chargesEnabled: d.charges_enabled === true,
+    payoutsEnabled: d.payouts_enabled === true,
     currentlyDue: d.currently_due ?? [],
     pendingVerification: d.pending_verification ?? [],
-    disabledReason: d.disabled_reason ?? null,
+    prefill: d.prefill ?? null,
   };
+}
+
+export async function getPayoutStatus(partnerId: string): Promise<PayoutStatus> {
+  return callPayments(partnerId, { action: "status" });
+}
+
+export async function submitPayoutDetails(partnerId: string, details: Record<string, unknown>): Promise<PayoutStatus> {
+  return callPayments(partnerId, { action: "details", details });
 }
