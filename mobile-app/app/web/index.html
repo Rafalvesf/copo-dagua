@@ -347,6 +347,22 @@
   <script>
     // Notificações com a app fechada (Web Push, 2026-10-21). O pedido de
     // permissão tem de vir de um toque do utilizador (botão na app).
+    // Câmara (passo de permissões do registo, 2026-10-25): pede e fecha
+    // logo a câmara, só para ficar autorizada.
+    window.tchinCamera = {
+      status: function () {
+        if (!navigator.permissions || !navigator.permissions.query) return Promise.resolve('prompt');
+        return navigator.permissions.query({ name: 'camera' })
+          .then(function (r) { return r.state; })
+          .catch(function () { return 'prompt'; });
+      },
+      request: function () {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Promise.resolve('unsupported');
+        return navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); return 'granted'; })
+          .catch(function (e) { return (e && e.name === 'NotFoundError') ? 'unsupported' : 'denied'; });
+      }
+    };
     window.tchinPush = (function () {
       function b64ToBytes(b64) {
         var pad = '='.repeat((4 - b64.length % 4) % 4);

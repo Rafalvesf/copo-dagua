@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
+import '../../../shared/widgets/first_run_tour.dart' show TourRole;
 import '../../../core/supabase/supabase_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -112,6 +114,10 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   late int _index = widget.initialStep;
   bool _saving = false;
   bool _confirmed = false;
+
+  /// Permissões pedidas no último passo, antes do ecrã de sucesso (2026-10-25).
+  /// Só com conta: sem sessão não há onde guardar as notificações.
+  bool _permsDone = false;
   late final _Person _me = _Person(
     name: widget.guest.name.split(' ').first,
     ageGroup: widget.guest.ageGroup,
@@ -347,6 +353,9 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
 
   @override
   Widget build(BuildContext context) {
+    if (_confirmed && !_permsDone && supabase.auth.currentUser != null) {
+      return PermissionsStep(role: TourRole.guest, onDone: () => setState(() => _permsDone = true));
+    }
     if (_confirmed) {
       final names = _companions.map((c) => c.name).toList();
       return _ConfirmedView(
