@@ -17,6 +17,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/push_opt_in.dart';
+import '../../../shared/widgets/first_run_tour.dart' show TourAnchor;
 
 /// Perfil — conta de quem está com sessão iniciada. Pedido explícito do
 /// utilizador (redesign 2026-10): "o perfil fica apenas de quem criou a
@@ -114,10 +115,13 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                             Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                IconButton(
-                                  tooltip: 'Notificações',
-                                  onPressed: () => _openNotifications(context),
-                                  icon: const Icon(Icons.notifications_none_rounded, size: 26, color: AppTheme.ink),
+                                TourAnchor(
+                                  id: 'bell',
+                                  child: IconButton(
+                                    tooltip: 'Notificações',
+                                    onPressed: () => _openNotifications(context),
+                                    icon: const Icon(Icons.notifications_none_rounded, size: 26, color: AppTheme.ink),
+                                  ),
                                 ),
                                 if (unreadNotifications > 0)
                                   Positioned(
