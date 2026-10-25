@@ -57,7 +57,7 @@ jobs:
         run: flutter pub get
 
       - name: Build web
-        run: flutter build web --release --pwa-strategy=none --base-href /copo-dagua/ --dart-define=APP_VERSION=$(git rev-parse --short HEAD) --dart-define=GIPHY_KEY=${{ secrets.GIPHY_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+        run: flutter build web --release --pwa-strategy=none --base-href /copo-dagua/ --dart-define=APP_VERSION=$(git rev-parse --short HEAD) --dart-define=GIPHY_KEY=${{ secrets.GIPHY_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN || 'https://368a846af558523e0e4dacd76ba059b6@o4512319391924224.ingest.de.sentry.io/4512319454642256' }}
 
       - name: Prepare GitHub Pages fallback
         run: cp build/web/index.html build/web/404.html
