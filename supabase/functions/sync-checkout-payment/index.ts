@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
         states[p.id as string] = paid
           ? { state: "paid" }
           : intent.status === "processing" ||
-              (intent.status === "requires_action" && (intent.next_action as { type?: string } | null)?.type?.startsWith("mb_way"))
+              (intent.status === "requires_action" && (intent.payment_method_types ?? []).includes("mb_way"))
           ? { state: "processing" }
           : mb && intent.status === "requires_action"
           ? {
