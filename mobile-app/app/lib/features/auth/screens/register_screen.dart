@@ -318,17 +318,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: _acceptedTerms ? const Icon(Icons.check_rounded, size: 16, color: Colors.white) : null,
               ),
               const SizedBox(width: 10),
-              const Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    text: 'Aceito os ',
-                    children: [
-                      TextSpan(text: 'Termos', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      TextSpan(text: ' e a '),
-                      TextSpan(text: 'Política de Privacidade', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    ],
-                  ),
-                  style: TextStyle(fontSize: 13, height: 19 / 13, color: AppTheme.inkMuted),
+              Expanded(
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    const Text('Aceito os ', style: _termsStyle),
+                    GestureDetector(
+                      onTap: () => context.push('/termos'),
+                      child: const Text('Termos', style: _termsLink),
+                    ),
+                    const Text(' e a ', style: _termsStyle),
+                    GestureDetector(
+                      onTap: () => context.push('/privacidade'),
+                      child: const Text('Política de Privacidade', style: _termsLink),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -357,3 +361,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 }
+
+const _termsStyle = TextStyle(fontSize: 13, height: 19 / 13, color: AppTheme.inkMuted);
+const _termsLink = TextStyle(
+  fontSize: 13,
+  height: 19 / 13,
+  fontWeight: FontWeight.w700,
+  color: AppTheme.ink,
+  decoration: TextDecoration.underline,
+);

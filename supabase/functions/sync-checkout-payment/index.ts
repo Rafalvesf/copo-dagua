@@ -74,7 +74,8 @@ Deno.serve(async (req) => {
         const mb = (intent.next_action as any)?.multibanco_display_details;
         states[p.id as string] = paid
           ? { state: "paid" }
-          : intent.status === "processing"
+          : intent.status === "processing" ||
+              (intent.status === "requires_action" && (intent.next_action as { type?: string } | null)?.type?.startsWith("mb_way"))
           ? { state: "processing" }
           : mb && intent.status === "requires_action"
           ? {

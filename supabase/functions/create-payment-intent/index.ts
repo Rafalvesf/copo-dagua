@@ -21,12 +21,27 @@ import { stripeClient } from "../_shared/stripe.ts";
 // forem ativados no painel. Sem métodos que saem para uma página da
 // Stripe ou do banco (pedido 2026-10-21: tudo dentro da app).
 // Os outros três ficam para compatibilidade.
+//
+// 2026-10-25 ("quero tudo feito na app"): a app desenha o ecrã todo.
+// - `card` / `wallet`: só cartão (Apple Pay e Google Pay são cartões); a
+//   app confirma com os campos de cartão da Stripe ou a janela do telemóvel.
+// - `mb_way`: a app manda o telemóvel (`phone`) e o pedido é enviado daqui.
+// - `multibanco`: a referência é gerada aqui e a app mostra-a.
+// - `config`: só devolve a chave pública (para preparar o ecrã).
 const METHODS: Record<string, string> = {
   all: "all",
   card: "card",
+  wallet: "card",
   mb_way: "mb_way",
   multibanco: "multibanco",
 };
+
+function e164(raw: string): string | null {
+  let d = raw.replace(/[^\d+]/g, "");
+  if (d.startsWith("00")) d = "+" + d.slice(2);
+  if (!d.startsWith("+")) d = "+351" + d;
+  return /^\+\d{9,15}$/.test(d) ? d : null;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -52,8 +67,11 @@ Deno.serve(async (req) => {
   } catch {
     return json({ error: "validation_error" }, 400);
   }
+  if (body.method === "config") return json({ publishable_key: publishableKey });
   const paymentId = body.payment_id;
   const method = typeof body.method === "string" ? METHODS[body.method] : undefined;
+  const phone = method === "mb_way" ? e164(typeof body.phone === "string" ? body.phone : "") : null;
+  if (method === "mb_way" && !phone) return json({ error: "invalid_phone" }, 400);
   if (typeof paymentId !== "string" || !method) {
     return json({ error: "validation_error" }, 400);
   }
@@ -149,6 +167,13 @@ Deno.serve(async (req) => {
       ...(method === "all"
         ? { automatic_payment_methods: { enabled: true, allow_redirects: "never" as const } }
         : { payment_method_types: [method] }),
+      // MB WAY e Multibanco confirmados já aqui: a app não mostra nenhum
+      // formulário da Stripe.
+      ...(method === "mb_way"
+        ? { payment_method_data: { type: "mb_way" as never, billing_details: { phone: phone! } }, confirm: true }
+        : method === "multibanco"
+        ? { payment_method_data: { type: "multibanco", billing_details: { email: user.email ?? undefined } }, confirm: true }
+        : {}),
       description: `${label} — reserva ${bookingNumber} · ${partner.business_name}`.trim(),
       receipt_email: user.email ?? undefined,
       // Pagamento antecipado (2026-10-25, migração 119): o dinheiro fica na
@@ -163,10 +188,14 @@ Deno.serve(async (req) => {
         partner_amount_cents: String(partnerAmountCents),
         commission_cents: String(applicationFeeCents),
       },
-    });
+    }, method === "mb_way" ? { apiVersion: "2025-09-30.clover" as never } : undefined);
   } catch (err) {
     console.error("paymentIntents.create failed", err);
     const code = (err as { code?: string; param?: string }).code;
+    // MB WAY recusado logo (número sem MB WAY, por exemplo).
+    if ((err as { type?: string }).type === "StripeCardError") {
+      return json({ error: "declined", message: (err as Error).message }, 402);
+    }
     // Método não ativado na conta Stripe (ex.: MB WAY/Multibanco).
     if (code === "payment_intent_invalid_parameter" || code === "parameter_invalid_empty" ||
         String((err as Error).message ?? "").includes("payment_method_types")) {
@@ -184,12 +213,15 @@ Deno.serve(async (req) => {
     return json({ error: "unknown_error" }, 500);
   }
 
+  const mbNew = (intent.next_action as any)?.multibanco_display_details;
   return json({
     client_secret: intent.client_secret,
     publishable_key: publishableKey,
     payment_intent_id: intent.id,
     amount_cents: totalChargeCents,
     email: user.email ?? null,
+    status: intent.status,
+    ...(mbNew ? { multibanco: { entity: mbNew.entity, reference: mbNew.reference, expires_at: mbNew.expires_at } } : {}),
   });
 });
 

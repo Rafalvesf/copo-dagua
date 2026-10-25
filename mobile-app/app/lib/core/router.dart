@@ -76,6 +76,8 @@ import 'auth/auth_controller.dart';
 import 'models/models.dart';
 import 'partners/partner_providers.dart';
 import 'platform/maintenance_controller.dart';
+import '../features/legal/legal_screen.dart';
+import '../features/legal/legal_texts.dart';
 
 const _authRoutes = {
   '/welcome',
@@ -121,6 +123,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Link "Convidar o teu par" (079) — também público.
       if (location.startsWith('/juntar/')) return null;
+
+      // Termos e Política de Privacidade — públicos (abrem do registo).
+      if (location == '/termos' || location == '/privacidade') return null;
 
       // `/register` sem uma role válida na URL (ver role_selection_screen.dart
       // e a nota na rota `/register` abaixo) volta sempre a `/role` em vez
@@ -264,6 +269,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             GuestHomeScreen(weddingId: state.pathParameters['weddingId']),
       ),
+      GoRoute(path: '/termos', builder: (context, state) => const LegalScreen(doc: termsDoc)),
+      GoRoute(path: '/privacidade', builder: (context, state) => const LegalScreen(doc: privacyDoc)),
       GoRoute(
         path: '/juntar/:token',
         builder: (context, state) => JoinWeddingScreen(token: state.pathParameters['token']!),

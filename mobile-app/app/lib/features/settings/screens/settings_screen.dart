@@ -221,6 +221,8 @@ class _HelpGroup extends ConsumerWidget {
           label: 'Falar com a equipa À Nossa!',
           onTap: () => context.push('/support'),
         ),
+        _Row(icon: Icons.description_outlined, label: 'Termos e Condições', onTap: () => context.push('/termos')),
+        _Row(icon: Icons.privacy_tip_outlined, label: 'Política de Privacidade', onTap: () => context.push('/privacidade')),
       ],
     );
   }
