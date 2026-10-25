@@ -1,14 +1,12 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
+import { applyDetails, type Details, ensureAccount, prefill, stripeMessage } from "../_shared/connect_details.ts";
 
-// Ativação de pagamentos de um parceiro feita pelo admin, DENTRO do admin
-// (2026-10-25: "nunca por link, tal como vai ser a app"): cria a conta
-// Stripe gerida pela À Nossa! se ainda não existir (mesma configuração de
-// `connect-account`) e devolve uma Account Session para o formulário
-// embutido de onboarding (Connect.js). Os dados vão do formulário
-// diretamente para a Stripe.
-// Só admins. Body: { partner_id: string }
+// Dados de pagamento de um parceiro preenchidos pelo admin, com o UI do
+// próprio admin (2026-10-25: "nada de caixas com o site da Stripe" nem
+// links). Mesma lógica que a app (`_shared/connect_details.ts`).
+// Só admins. Body: { partner_id, action: "status" | "details", details? }
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const authHeader = req.headers.get("Authorization");
@@ -28,6 +26,8 @@ Deno.serve(async (req) => {
   } catch { /* vazio */ }
   const partnerId = typeof body.partner_id === "string" ? body.partner_id : null;
   if (!partnerId) return json({ error: "validation_error" }, 400);
+  const action = typeof body.action === "string" ? body.action : "status";
+
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: profile } = await admin
     .from("partner_profiles")
@@ -38,85 +38,58 @@ Deno.serve(async (req) => {
 
   const stripe = stripeClient();
   try {
-    let accountId = profile.stripe_account_id as string | null;
-    if (accountId) {
-      try {
-        await stripe.accounts.retrieve(accountId);
-      } catch {
-        accountId = null;
+    let accountId = (profile.stripe_account_id as string | null) ?? null;
+    if (action === "details") {
+      const d = body.details as Details | undefined;
+      if (!d || !d.person || (d.business_type !== "individual" && d.business_type !== "company")) {
+        return json({ error: "validation_error" }, 400);
       }
+      const { data: authUser } = await admin.auth.admin.getUserById(partnerId);
+      accountId = await ensureAccount(
+        stripe,
+        admin,
+        partnerId,
+        (profile.contact_email as string | null) ?? authUser?.user?.email ?? null,
+        (profile.business_name as string | null) ?? null,
+        accountId,
+      );
+      try {
+        await applyDetails(stripe, accountId, d, {
+          ip: (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "0.0.0.0",
+          userAgent: req.headers.get("user-agent") ?? "",
+        });
+      } catch (e) {
+        console.error("admin details rejected", partnerId, (e as Error).message);
+        return json({ error: "invalid_details", message: stripeMessage(e) }, 400);
+      }
+      await admin.from("audit_logs").insert({
+        actor_id: user.id,
+        action: "partner_payment_details_updated",
+        target_table: "partner_profiles",
+        target_id: partnerId,
+        metadata: { account_id: accountId },
+      });
     }
-    if (!accountId) {
-      const account = await stripe.accounts.create({
-        country: "PT",
-        email: (profile.contact_email as string | null) ?? undefined,
-        controller: {
-          stripe_dashboard: { type: "none" },
-          requirement_collection: "application",
-          losses: { payments: "application" },
-          fees: { payer: "application" },
-        },
-        business_profile: {
-          name: (profile.business_name as string | null) || undefined,
-          mcc: "7299",
-        },
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
-        },
-        settings: { payouts: { schedule: { interval: "manual" } } },
-        metadata: { partner_id: partnerId },
-      } as never);
-      accountId = account.id;
-      const { error } = await admin
-        .from("partner_profiles")
-        .update({ stripe_account_id: accountId, stripe_charges_enabled: false, stripe_payouts_enabled: false })
-        .eq("id", partnerId);
-      if (error) return json({ error: "unknown_error" }, 500);
-    }
-    const publishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY");
-    if (!publishableKey) return json({ error: "not_configured" }, 503);
-    const current = await stripe.accounts.retrieve(accountId);
-    const managed = (current as unknown as { controller?: { stripe_dashboard?: { type?: string } } })
-      .controller?.stripe_dashboard?.type === "none";
-    const session = await stripe.accountSessions.create({
-      account: accountId,
-      components: {
-        account_onboarding: {
-          enabled: true,
-          features: {
-            external_account_collection: true,
-            ...(managed ? { disable_stripe_user_authentication: true } : {}),
-          },
-        },
-      },
-    } as never);
-    // Estado atual (para o admin ver logo se já ficou ativo).
+    if (!accountId) return json({ has_account: false, prefill: null });
+
+    const acc = await stripe.accounts.retrieve(accountId);
     await admin.rpc("sync_stripe_account_status", {
       p_account_id: accountId,
-      p_charges_enabled: current.charges_enabled,
-      p_payouts_enabled: current.payouts_enabled,
+      p_charges_enabled: acc.charges_enabled,
+      p_payouts_enabled: acc.payouts_enabled,
     });
-    await admin.from("audit_logs").insert({
-      actor_id: user.id,
-      action: "partner_payments_session_created",
-      target_table: "partner_profiles",
-      target_id: partnerId,
-      metadata: { account_id: accountId },
-    });
-    const reqs = (current.requirements ?? {}) as { currently_due?: string[]; past_due?: string[]; disabled_reason?: string | null; pending_verification?: string[] };
+    const reqs = acc.requirements;
     return json({
-      client_secret: session.client_secret,
-      publishable_key: publishableKey,
-      charges_enabled: current.charges_enabled,
-      payouts_enabled: current.payouts_enabled,
-      currently_due: [...new Set([...(reqs.past_due ?? []), ...(reqs.currently_due ?? [])])],
-      pending_verification: reqs.pending_verification ?? [],
-      disabled_reason: reqs.disabled_reason ?? null,
+      has_account: true,
+      charges_enabled: acc.charges_enabled,
+      payouts_enabled: acc.payouts_enabled,
+      currently_due: [...new Set([...(reqs?.past_due ?? []), ...(reqs?.currently_due ?? [])])],
+      pending_verification: reqs?.pending_verification ?? [],
+      prefill: await prefill(stripe, acc),
     });
   } catch (e) {
-    console.error("payments session failed", partnerId, (e as Error).message);
-    return json({ error: "stripe_error", message: (e as Error).message }, 502);
+    console.error("admin partner payments failed", partnerId, (e as Error).message);
+    return json({ error: "stripe_error" }, 502);
   }
 });
 

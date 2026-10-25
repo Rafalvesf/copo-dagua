@@ -3,20 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/payments/partner_connect.dart';
-import '../../../core/payments/stripe_onboarding.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
-import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../payments/screens/pay_done_screen.dart';
+import '../widgets/payout_details_form.dart';
 
 /// "Confirma os teus dados" (pedido 2026-10-19): antes de receber e
-/// levantar, a página mostra tudo o que a Stripe precisa, com o estado de
-/// cada grupo, e depois abre o formulário da Stripe embutido na app —
-/// nunca o browser. Os dados vão diretamente para a Stripe.
+/// levantar, a página mostra tudo o que é preciso, com o estado de cada
+/// grupo, e depois pede os dados com os formulários da própria app
+/// (2026-10-25 — nada de links nem caixas da Stripe).
 class PartnerPayoutSetupScreen extends ConsumerStatefulWidget {
   const PartnerPayoutSetupScreen({super.key});
 
@@ -27,71 +26,20 @@ class PartnerPayoutSetupScreen extends ConsumerStatefulWidget {
 class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
   bool _agreed = false;
   bool _form = false;
-  bool _loading = false;
-  bool _ready = false;
-  double _height = 520;
+  final bool _loading = false;
   String? _error;
-  StripeOnboarding? _onb;
 
-  @override
-  void dispose() {
-    _onb?.dispose();
-    super.dispose();
-  }
-
-  Future<void> _open() async {
+  /// Abre o formulário da própria app (2026-10-25 — sem formulários nem
+  /// links da Stripe).
+  void _open() {
     setState(() {
-      _loading = true;
+      _form = true;
       _error = null;
     });
-    try {
-      final (secret, pk) = await createConnectSession();
-      final onb = createStripeOnboarding();
-      if (!onb.supported) {
-        setState(() => _error = 'Disponível na app web por agora.');
-        return;
-      }
-      final token = supabase.auth.currentSession?.accessToken ?? '';
-      setState(() {
-        _onb = onb;
-        _form = true;
-        _ready = false;
-      });
-      await Future<void>.delayed(const Duration(milliseconds: 60));
-      await onb.mount(
-        publishableKey: pk,
-        clientSecret: secret,
-        functionUrl: '${SupabaseConfig.url}/functions/v1/connect-account',
-        anonKey: SupabaseConfig.publishableKey,
-        accessToken: token,
-        onHeight: (h) {
-          if (mounted && h > 80) setState(() => _height = h + 12);
-        },
-        onEvent: (e) {
-          if (!mounted) return;
-          if (e == 'ready') setState(() => _ready = true);
-          if (e == 'loaderror') {
-            setState(() {
-              _form = false;
-              _error = 'Não foi possível carregar o formulário da Stripe.';
-            });
-          }
-          if (e == 'exit') _finished();
-        },
-      );
-      if (mounted) setState(() => _ready = true);
-    } on ConnectError catch (e) {
-      if (mounted) setState(() => _error = connectErrorMessage(e.code));
-    } catch (_) {
-      if (mounted) setState(() => _error = 'Não foi possível abrir o formulário. Verifica a ligação.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
   }
 
-  /// O parceiro terminou (ou saiu) do formulário da Stripe.
+  /// O parceiro terminou (ou saiu) do formulário.
   Future<void> _finished() async {
-    _onb?.dispose();
     ref.invalidate(partnerConnectStatusProvider);
     ref.invalidate(partnerStripeStatusProvider);
     final s = await ref.read(partnerConnectStatusProvider.future);
@@ -122,7 +70,6 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
     } else {
       setState(() {
         _form = false;
-        _onb = null;
         _error = s.needsData ? 'Ainda faltam alguns dados. Podes continuar quando quiseres.' : null;
       });
     }
@@ -151,33 +98,9 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
   }
 
   List<Widget> _formBody() => [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: whiteLineCard(),
-          child: Stack(children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              height: _height,
-              child: _onb?.view() ?? const SizedBox.shrink(),
-            ),
-            if (!_ready)
-              Positioned.fill(
-                child: ColoredBox(
-                  color: Colors.white,
-                  child: Center(child: CircularProgressIndicator(color: AppTheme.accentOliveDark)),
-                ),
-              ),
-          ]),
-        ),
-        const SizedBox(height: 12),
-        const _Note('Formulário seguro da Stripe. Não guardamos o teu documento nem o IBAN completo.'),
-        const SizedBox(height: 8),
-        Center(
-          child: TextButton(
-            onPressed: _finished,
-            child: Text('Terminar mais tarde',
-                style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-          ),
+        PayoutDetailsForm(
+          onDone: (_) => _finished(),
+          onLater: () => setState(() => _form = false),
         ),
       ];
 
@@ -199,7 +122,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
           'Tem isto à mão — demora cerca de 5 minutos:',
           style: TextStyle(color: AppTheme.inkMuted, height: 1.45, fontSize: AppFontSize.base),
         ),
-        const SectionTitle('O que a Stripe precisa'),
+        const SectionTitle('O que é preciso'),
         if (async.isLoading && !async.hasValue)
           Padding(
             padding: EdgeInsets.all(24),
@@ -244,7 +167,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        const _Note('Os dados vão diretamente para a Stripe, num formulário seguro dentro da app.'),
+        const _Note('Pedimos tudo aqui na app, de forma segura. São passados à Stripe, que processa os pagamentos.'),
       ];
 
   Widget _bottom(ConnectStatus s) {
