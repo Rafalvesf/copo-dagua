@@ -139,17 +139,19 @@ export async function unfeaturePartner(partnerId: string) {
   return setPartnerFeatured(partnerId, false);
 }
 
-// Link de ativação de pagamentos (Stripe) gerado pelo admin (2026-10-25).
-export type PaymentsLinkState = { url: string | null; error: string | null };
-export async function createPaymentsLink(_prev: PaymentsLinkState, formData: FormData): Promise<PaymentsLinkState> {
+// Ativação de pagamentos do parceiro dentro do admin (2026-10-25): sessão
+// para o formulário embutido da Stripe — nunca por link.
+export type PaymentsSession = { clientSecret: string; publishableKey: string } | { error: string };
+export async function createPaymentsSession(partnerId: string): Promise<PaymentsSession> {
   await requireAdmin();
-  const partnerId = String(formData.get("partner_id") ?? "");
-  if (!partnerId) return { url: null, error: "Parceiro em falta." };
+  if (!partnerId) return { error: "Parceiro em falta." };
   const supabase = await createClient();
-  const { data, error } = await supabase.functions.invoke("admin-partner-payments-link", {
+  const { data, error } = await supabase.functions.invoke("admin-partner-payments", {
     body: { partner_id: partnerId },
   });
-  if (error) return { url: null, error: "Não foi possível gerar o link. Tenta novamente." };
-  const url = (data as { url?: string } | null)?.url ?? null;
-  return url ? { url, error: null } : { url: null, error: "A Stripe não devolveu um link." };
+  const d = data as { client_secret?: string; publishable_key?: string } | null;
+  if (error || !d?.client_secret || !d.publishable_key) {
+    return { error: "Não foi possível abrir o formulário da Stripe. Tenta novamente." };
+  }
+  return { clientSecret: d.client_secret, publishableKey: d.publishable_key };
 }

@@ -7,7 +7,7 @@ import { Alert, Badge, Card, DetailList, PageHeader } from "@/components/ui";
 import { fmtDateTime, fmtEur } from "@/lib/format";
 import { ACTIONS_BY_STATUS } from "@/lib/types";
 import { SimpleActionButton, ReasonActionForm } from "@/components/ActionButtons";
-import { PaymentsLinkButton } from "@/components/PaymentsLinkButton";
+import { PaymentsOnboarding } from "@/components/PaymentsOnboarding";
 import {
   approvePartner,
   featurePartner,
@@ -284,9 +284,9 @@ export default async function PartnerDetailPage(
             {!stripeOn && (
               <>
                 <p className="field-hint" style={{ marginTop: 8 }}>
-                  O parceiro ativa em Perfil → Pagamentos, na app, ou pelo link abaixo. Sem isto não pode receber sinais.
+                  O parceiro ativa em Perfil → Pagamentos, na app, ou preenche aqui os dados dele. Sem isto não pode receber sinais.
                 </p>
-                <PaymentsLinkButton partnerId={p.id} />
+                <PaymentsOnboarding partnerId={p.id} />
               </>
             )}
           </Card>
