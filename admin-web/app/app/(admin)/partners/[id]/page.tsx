@@ -7,6 +7,7 @@ import { Alert, Badge, Card, DetailList, PageHeader } from "@/components/ui";
 import { fmtDateTime, fmtEur } from "@/lib/format";
 import { ACTIONS_BY_STATUS } from "@/lib/types";
 import { SimpleActionButton, ReasonActionForm } from "@/components/ActionButtons";
+import { PaymentsLinkButton } from "@/components/PaymentsLinkButton";
 import {
   approvePartner,
   featurePartner,
@@ -281,9 +282,12 @@ export default async function PartnerDetailPage(
               {stripeOn ? <Badge tone="success">Ativos</Badge> : <Badge tone="warning">Por ativar</Badge>}
             </div>
             {!stripeOn && (
-              <p className="field-hint" style={{ marginTop: 8 }}>
-                O parceiro ativa em Perfil → Pagamentos, na app. Sem isto não pode receber sinais.
-              </p>
+              <>
+                <p className="field-hint" style={{ marginTop: 8 }}>
+                  O parceiro ativa em Perfil → Pagamentos, na app, ou pelo link abaixo. Sem isto não pode receber sinais.
+                </p>
+                <PaymentsLinkButton partnerId={p.id} />
+              </>
             )}
           </Card>
 

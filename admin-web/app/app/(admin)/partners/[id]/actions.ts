@@ -138,3 +138,18 @@ export async function featurePartner(partnerId: string) {
 export async function unfeaturePartner(partnerId: string) {
   return setPartnerFeatured(partnerId, false);
 }
+
+// Link de ativação de pagamentos (Stripe) gerado pelo admin (2026-10-25).
+export type PaymentsLinkState = { url: string | null; error: string | null };
+export async function createPaymentsLink(_prev: PaymentsLinkState, formData: FormData): Promise<PaymentsLinkState> {
+  await requireAdmin();
+  const partnerId = String(formData.get("partner_id") ?? "");
+  if (!partnerId) return { url: null, error: "Parceiro em falta." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.functions.invoke("admin-partner-payments-link", {
+    body: { partner_id: partnerId },
+  });
+  if (error) return { url: null, error: "Não foi possível gerar o link. Tenta novamente." };
+  const url = (data as { url?: string } | null)?.url ?? null;
+  return url ? { url, error: null } : { url: null, error: "A Stripe não devolveu um link." };
+}
