@@ -41,32 +41,16 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
       </a>
       <h1>Ativar pagamentos</h1>
-      <span class="badge">Teste</span>
     </header>
-    <div class="intro">
-      <div class="ico" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>
-      </div>
-      <div>
-        <b id="who">A carregar…</b>
-        <span>Os dados vão diretamente para a Stripe. Quando terminares, já podes receber sinais na app.</span>
-      </div>
-    </div>
-    <p class="status" id="status"></p>
     <div id="error" class="err" hidden></div>
     <div id="host"></div>
-    <div class="hint">
-      Modo de teste da Stripe: telefone <code>000 000 0000</code>, código SMS <code>000000</code>,
-      data de nascimento <code>01/01/1901</code>, morada linha 1 <code>address_full_match</code>,
-      IBAN <code>PT50000201231234567890154</code>.
-    </div>
   </div>
   <script>
     (function () {
       var FN = 'https://yknbtsmcmjxzzhijyiav.supabase.co/functions/v1/test-partner-onboarding';
       var KEY = 'sb_publishable_TkmeAQOlKuN4kUii5i70Rg_Qiz8D7cc';
       var partnerId = new URLSearchParams(location.search).get('p') || 'c1fd9373-b755-42aa-b4cd-bf0ada59647e';
-      var who = document.getElementById('who'), status = document.getElementById('status'), err = document.getElementById('error');
+      var err = document.getElementById('error');
 
       function session() {
         return fetch(FN, {
@@ -75,11 +59,7 @@
           body: JSON.stringify({ partner_id: partnerId })
         }).then(function (r) { return r.json(); });
       }
-      function fail(msg) { err.textContent = msg; err.hidden = false; who.textContent = 'Não foi possível abrir'; }
-      function showStatus(d) {
-        if (d.charges_enabled) { status.textContent = 'Pagamentos ativos ✓'; status.className = 'status ok'; }
-        else { status.textContent = 'Pagamentos por ativar'; status.className = 'status'; }
-      }
+      function fail(msg) { err.textContent = msg; err.hidden = false; }
       function loadConnect() {
         return new Promise(function (res, rej) {
           if (window.StripeConnect && window.StripeConnect.init) return res();
@@ -100,8 +80,6 @@
           var m = { test_mode_only: 'A Stripe não está em modo de teste.', test_accounts_only: 'Só funciona com contas de teste.', not_found: 'Parceiro não encontrado.' }[first && first.error];
           return fail(m || 'Não foi possível abrir o formulário da Stripe.');
         }
-        who.textContent = first.business_name || 'Parceiro';
-        showStatus(first);
         return loadConnect().then(function () {
           var used = false;
           var instance = window.StripeConnect.init({
@@ -125,7 +103,7 @@
           });
           var el = instance.create('account-onboarding');
           try { el.setCollectionOptions({ fields: 'eventually_due', futureRequirements: 'include' }); } catch (e) {}
-          el.setOnExit(function () { session().then(showStatus); });
+          el.setOnExit(function () { location.href = './'; });
           document.getElementById('host').appendChild(el);
         });
       }).catch(function () { fail('Sem ligação. Tenta outra vez.'); });
