@@ -104,7 +104,16 @@ Deno.serve(async (req) => {
       target_id: partnerId,
       metadata: { account_id: accountId },
     });
-    return json({ client_secret: session.client_secret, publishable_key: publishableKey, charges_enabled: current.charges_enabled });
+    const reqs = (current.requirements ?? {}) as { currently_due?: string[]; past_due?: string[]; disabled_reason?: string | null; pending_verification?: string[] };
+    return json({
+      client_secret: session.client_secret,
+      publishable_key: publishableKey,
+      charges_enabled: current.charges_enabled,
+      payouts_enabled: current.payouts_enabled,
+      currently_due: [...new Set([...(reqs.past_due ?? []), ...(reqs.currently_due ?? [])])],
+      pending_verification: reqs.pending_verification ?? [],
+      disabled_reason: reqs.disabled_reason ?? null,
+    });
   } catch (e) {
     console.error("payments session failed", partnerId, (e as Error).message);
     return json({ error: "stripe_error", message: (e as Error).message }, 502);

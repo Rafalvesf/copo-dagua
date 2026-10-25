@@ -141,7 +141,9 @@ export async function unfeaturePartner(partnerId: string) {
 
 // Ativação de pagamentos do parceiro dentro do admin (2026-10-25): sessão
 // para o formulário embutido da Stripe — nunca por link.
-export type PaymentsSession = { clientSecret: string; publishableKey: string } | { error: string };
+export type PaymentsSession =
+  | { clientSecret: string; publishableKey: string; chargesEnabled: boolean; currentlyDue: string[]; pendingVerification: string[]; disabledReason: string | null }
+  | { error: string };
 export async function createPaymentsSession(partnerId: string): Promise<PaymentsSession> {
   await requireAdmin();
   if (!partnerId) return { error: "Parceiro em falta." };
@@ -149,9 +151,24 @@ export async function createPaymentsSession(partnerId: string): Promise<Payments
   const { data, error } = await supabase.functions.invoke("admin-partner-payments", {
     body: { partner_id: partnerId },
   });
-  const d = data as { client_secret?: string; publishable_key?: string } | null;
+  const d = data as {
+    client_secret?: string;
+    publishable_key?: string;
+    charges_enabled?: boolean;
+    currently_due?: string[];
+    pending_verification?: string[];
+    disabled_reason?: string | null;
+  } | null;
   if (error || !d?.client_secret || !d.publishable_key) {
     return { error: "Não foi possível abrir o formulário da Stripe. Tenta novamente." };
   }
-  return { clientSecret: d.client_secret, publishableKey: d.publishable_key };
+  revalidatePath(`/partners/${partnerId}`);
+  return {
+    clientSecret: d.client_secret,
+    publishableKey: d.publishable_key,
+    chargesEnabled: d.charges_enabled === true,
+    currentlyDue: d.currently_due ?? [],
+    pendingVerification: d.pending_verification ?? [],
+    disabledReason: d.disabled_reason ?? null,
+  };
 }
