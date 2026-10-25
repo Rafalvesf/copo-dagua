@@ -36,5 +36,5 @@ Future<void> runWithErrorReporting(FutureOr<void> Function() appRunner) async {
 /// foram afetadas. `null` ao terminar sessão.
 void setErrorReportingUser(String? profileId) {
   if (!errorReportingEnabled) return;
-  unawaited(Sentry.configureScope((s) => s.setUser(profileId == null ? null : SentryUser(id: profileId))));
+  Sentry.configureScope((s) => s.setUser(profileId == null ? null : SentryUser(id: profileId)));
 }
