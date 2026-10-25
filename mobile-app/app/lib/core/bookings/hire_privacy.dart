@@ -28,17 +28,22 @@ Future<void> setBookingPrivate(String bookingId, bool private) async {
 }
 
 /// Antes de aceitar uma proposta: `true` = em segredo, `false` =
-/// partilhar, `null` = desistiu. Sem outros organizadores não pergunta.
+/// partilhar, `null` = desistiu. Pergunta sempre (2026-10-25): quem ainda
+/// organiza sozinho pode convidar alguém depois, e a surpresa tem de já
+/// estar guardada.
 Future<bool?> askHirePrivacy(BuildContext context, String? weddingId, String partnerName) async {
-  if (await otherOrganizersCount(weddingId) == 0) return false;
+  final others = await otherOrganizersCount(weddingId);
   if (!context.mounted) return null;
   return showIslandDialog<bool>(
     context: context,
     builder: (ctx) => IslandAlert(
       title: const Text('Partilhar esta contratação?'),
       content: Text(
-        'Os outros organizadores podem ver a contratação de $partnerName, a conversa, '
-        'os pagamentos e as tarefas. Se for uma surpresa, guarda-a só para ti.',
+        others > 0
+            ? 'Os outros organizadores podem ver a contratação de $partnerName, a conversa, '
+                'os pagamentos e as tarefas. Se for uma surpresa, guarda-a só para ti.'
+            : 'Se convidares outro organizador, ele vai poder ver a contratação de $partnerName, '
+                'a conversa, os pagamentos e as tarefas. Se for uma surpresa, guarda-a só para ti.',
       ),
       actions: [
         TextButton(
@@ -55,7 +60,7 @@ Future<bool?> askHirePrivacy(BuildContext context, String? weddingId, String par
 }
 
 /// No detalhe da reserva: mudar de ideias (revelar a surpresa, ou
-/// escondê-la). Só aparece com outros organizadores, ou se já é segredo.
+/// escondê-la). Aparece sempre (2026-10-25).
 class HirePrivacyCard extends ConsumerStatefulWidget {
   final String bookingId;
   final String weddingId;
@@ -69,20 +74,7 @@ class HirePrivacyCard extends ConsumerStatefulWidget {
 
 class _HirePrivacyCardState extends ConsumerState<HirePrivacyCard> {
   late bool _private = widget.isPrivate;
-  bool _show = false;
   bool _busy = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (_private) {
-      _show = true;
-    } else {
-      otherOrganizersCount(widget.weddingId).then((n) {
-        if (mounted && n > 0) setState(() => _show = true);
-      });
-    }
-  }
 
   Future<void> _toggle(bool value) async {
     setState(() {
@@ -104,7 +96,6 @@ class _HirePrivacyCardState extends ConsumerState<HirePrivacyCard> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_show) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
       decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.lg)),
@@ -118,7 +109,7 @@ class _HirePrivacyCardState extends ConsumerState<HirePrivacyCard> {
             Text(
               _private
                   ? 'Só tu vês esta contratação, a conversa e os pagamentos.'
-                  : 'Os outros organizadores veem esta contratação.',
+                  : 'Os outros organizadores (e quem convidares) veem esta contratação.',
               style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.35),
             ),
           ]),
