@@ -17,6 +17,22 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
+  <!-- Regresso de um pagamento que precisou de sair da app (2026-10-21):
+       guarda o id, limpa o endereço e salta a abertura e o brinde —
+       a app abre logo na confirmação do pagamento. -->
+  <script>
+    (function () {
+      try {
+        var q = new URLSearchParams(location.search);
+        var id = q.get('pay_return');
+        if (!id) return;
+        window.tchinPayReturn = id;
+        window.tchinSkipOpening = true;
+        history.replaceState(null, '', location.pathname + '#/pay/return');
+        document.documentElement.classList.remove('tt-opening');
+      } catch (e) {}
+    })();
+  </script>
   <!-- Versões novas chegam logo (2026-10-17): o service worker antigo do
        Flutter guardava a app em cache e o telemóvel continuava com a
        versão anterior. Remove-o (e as caches dele) uma vez e recarrega. -->
@@ -25,6 +41,12 @@
       try {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker.getRegistrations().then(function (regs) {
+          // Só o service worker antigo do Flutter (cache). O das
+          // notificações (push_sw.js) fica — 2026-10-21.
+          regs = regs.filter(function (r) {
+            var sw = r.active || r.waiting || r.installing;
+            return !(sw && /push_sw\.js/.test(sw.scriptURL));
+          });
           if (!regs.length) return;
           Promise.all(regs.map(function (r) { return r.unregister(); }))
             .then(function () {
@@ -77,6 +99,18 @@
        (e passaram pelo menos 3,2 s) o verde fecha em círculo e rebenta em
        confetti. */
     html.tt-opening, html.tt-opening body { background: #4F6B4A; }
+    /* A app começa por baixo da barra do telemóvel (horas, bateria):
+       no iPhone, como app no ecrã principal, a página ocupa o ecrã todo e
+       o topo da app ficava por baixo das horas (2026-10-25). A faixa da
+       barra mostra o fundo da página, que acompanha a cor do topo do ecrã
+       visível (tchinSetThemeColor). Sem barra (computador), não muda nada. */
+    #app-host {
+      position: fixed;
+      top: env(safe-area-inset-top, 0px);
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
     @font-face { font-family: TT; src: url('assets/assets/fonts/louis_george_cafe/LouisGeorgeCafe-Bold.ttf'); font-weight: 700; }
     #tt-splash { position: fixed; inset: 0; background: #4F6B4A; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 18px; z-index: 10; font-family: TT, Roboto, sans-serif; color: #fff;
@@ -171,6 +205,12 @@
       document.body.style.background = c;
     };
     (function () {
+      if (window.tchinSkipOpening) {
+        window.tchinOpening = false;
+        var sp0 = document.getElementById('tt-splash'); if (sp0) sp0.remove();
+        var cf0 = document.getElementById('tt-cf'); if (cf0) cf0.remove();
+        return;
+      }
       var colors = ['#4F6B4A', '#F2D98D', '#F3C9CF', '#A9BC8F', '#E8B44C', '#DDE5D3', '#F3B9C1'];
       var cf = document.getElementById('tt-cf');
       for (var i = 0; i < 30; i++) {
@@ -293,14 +333,14 @@
             return 'ok';
           });
         },
-        confirm: function () {
+        confirm: function (returnUrl) {
           if (!stripe || !elements) return Promise.resolve(JSON.stringify({ error: 'Formulário não carregado.' }));
           return elements.submit().then(function (r) {
             if (r.error) return JSON.stringify({ error: r.error.message || 'Dados em falta.' });
             return stripe.confirmPayment({
               elements: elements,
               redirect: 'if_required',
-              confirmParams: { return_url: location.href }
+              confirmParams: { return_url: returnUrl || location.href }
             }).then(function (res) {
               if (res.error) return JSON.stringify({ error: res.error.message || 'Pagamento recusado.', code: res.error.code || null });
               var pi = res.paymentIntent || {};
@@ -313,6 +353,78 @@
           }).catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'Pagamento falhou.' }); });
         },
         unmount: clean
+      };
+    })();
+  </script>
+  <script>
+    // Notificações com a app fechada (Web Push, 2026-10-21). O pedido de
+    // permissão tem de vir de um toque do utilizador (botão na app).
+    // Câmara (passo de permissões do registo, 2026-10-25): pede e fecha
+    // logo a câmara, só para ficar autorizada.
+    window.tchinCamera = {
+      status: function () {
+        if (!navigator.permissions || !navigator.permissions.query) return Promise.resolve('prompt');
+        return navigator.permissions.query({ name: 'camera' })
+          .then(function (r) { return r.state; })
+          .catch(function () { return 'prompt'; });
+      },
+      request: function () {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Promise.resolve('unsupported');
+        return navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); return 'granted'; })
+          .catch(function (e) { return (e && e.name === 'NotFoundError') ? 'unsupported' : 'denied'; });
+      }
+    };
+    window.tchinPush = (function () {
+      function b64ToBytes(b64) {
+        var pad = '='.repeat((4 - b64.length % 4) % 4);
+        var raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+        var out = new Uint8Array(raw.length);
+        for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+        return out;
+      }
+      function supported() {
+        return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+      }
+      function standalone() {
+        return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+      }
+      function ios() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+      function reg() { return navigator.serviceWorker.register('push_sw.js'); }
+      return {
+        status: function () {
+          if (!supported()) return ios() && !standalone() ? 'ios_install' : 'unsupported';
+          return Notification.permission; // granted | denied | default
+        },
+        subscribe: function (publicKey) {
+          if (!supported()) return Promise.resolve(JSON.stringify({ error: 'unsupported' }));
+          return Notification.requestPermission().then(function (perm) {
+            if (perm !== 'granted') return JSON.stringify({ error: perm });
+            return reg().then(function (r) { return navigator.serviceWorker.ready.then(function () { return r; }); })
+              .then(function (r) {
+                return r.pushManager.getSubscription().then(function (sub) {
+                  return sub || r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(publicKey) });
+                });
+              })
+              .then(function (sub) { return JSON.stringify(sub.toJSON()); });
+          }).catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'failed' }); });
+        },
+        current: function () {
+          if (!supported() || Notification.permission !== 'granted') return Promise.resolve('');
+          return reg().then(function (r) { return r.pushManager.getSubscription(); })
+            .then(function (sub) { return sub ? JSON.stringify(sub.toJSON()) : ''; })
+            .catch(function () { return ''; });
+        },
+        unsubscribe: function () {
+          if (!supported()) return Promise.resolve('');
+          return navigator.serviceWorker.getRegistration().then(function (r) {
+            return r ? r.pushManager.getSubscription() : null;
+          }).then(function (sub) {
+            if (!sub) return '';
+            var ep = sub.endpoint;
+            return sub.unsubscribe().then(function () { return ep; });
+          }).catch(function () { return ''; });
+        }
       };
     })();
   </script>
@@ -391,6 +503,7 @@
       };
     })();
   </script>
+  <div id="app-host"></div>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

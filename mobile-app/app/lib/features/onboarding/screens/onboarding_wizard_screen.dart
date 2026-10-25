@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
+import '../../../shared/widgets/first_run_tour.dart' show TourRole;
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -69,6 +71,9 @@ class _OnboardingWizardScreenState
   bool _saving = false;
   bool _ownNamePrefilled = false;
   Wedding? _createdWedding;
+
+  /// Permissões pedidas no último passo, antes do ecrã de sucesso (2026-10-25).
+  bool _permsDone = false;
   final Set<String> _alreadyBookedSlugs = {};
 
   final _ownName = TextEditingController();
@@ -282,6 +287,9 @@ class _OnboardingWizardScreenState
     }
 
     final created = _createdWedding;
+    if (created != null && !_permsDone) {
+      return PermissionsStep(role: TourRole.organizer, onDone: () => setState(() => _permsDone = true));
+    }
     if (created != null) {
       return _DoneView(
         name: _firstName(profile),

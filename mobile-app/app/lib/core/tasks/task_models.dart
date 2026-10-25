@@ -112,7 +112,7 @@ class WeddingTask {
 
   factory WeddingTask.fromRow(Map<String, dynamic> row) => WeddingTask(
     id: row['id'] as String,
-    weddingId: row['wedding_id'] as String,
+    weddingId: row['wedding_id'] as String? ?? '',
     taskTemplateId: row['task_template_id'] as String?,
     source: TaskSource.values.byName(row['source'] as String),
     title: row['title'] as String,
@@ -150,6 +150,10 @@ class TaskTemplate {
   final TaskCompletionBehavior completionBehavior;
   final TaskDisplayType displayType;
 
+  /// Tipos de evento a que se aplica (`task_templates.event_types`,
+  /// migração 110). Vazio = todos.
+  final List<String> eventTypes;
+
   const TaskTemplate({
     required this.id,
     required this.key,
@@ -165,7 +169,10 @@ class TaskTemplate {
     required this.position,
     this.completionBehavior = TaskCompletionBehavior.actionCompleted,
     this.displayType = TaskDisplayType.required,
+    this.eventTypes = const [],
   });
+
+  bool appliesTo(String eventType) => eventTypes.isEmpty || eventTypes.contains(eventType);
 
   factory TaskTemplate.fromRow(Map<String, dynamic> row) => TaskTemplate(
     id: row['id'] as String,
@@ -184,6 +191,7 @@ class TaskTemplate {
         taskCompletionBehaviorFromDb(row['completion_behavior'] as String?) ??
         TaskCompletionBehavior.actionCompleted,
     displayType: taskDisplayTypeFromDb(row['display_type'] as String?) ?? TaskDisplayType.required,
+    eventTypes: (row['event_types'] as List?)?.cast<String>() ?? const [],
   );
 }
 
@@ -196,6 +204,7 @@ class AppNotification {
   final String title;
   final String? body;
   final String? weddingTaskId;
+  final String? link;
   final bool read;
   final DateTime createdAt;
 
@@ -206,17 +215,19 @@ class AppNotification {
     required this.title,
     this.body,
     this.weddingTaskId,
+    this.link,
     required this.read,
     required this.createdAt,
   });
 
   factory AppNotification.fromRow(Map<String, dynamic> row) => AppNotification(
     id: row['id'] as String,
-    weddingId: row['wedding_id'] as String,
+    weddingId: row['wedding_id'] as String? ?? '',
     type: row['type'] as String,
     title: row['title'] as String,
     body: row['body'] as String?,
     weddingTaskId: row['wedding_task_id'] as String?,
+    link: row['link'] as String?,
     read: row['read'] as bool? ?? false,
     createdAt: DateTime.parse(row['created_at'] as String),
   );

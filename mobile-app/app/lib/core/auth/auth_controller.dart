@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
+import '../payments/pay_return.dart';
+import '../notifications/push.dart';
 import '../supabase/supabase_config.dart';
 import '../wedding/partner_invite.dart';
 import '../../shared/widgets/brinde_gate.dart';
@@ -211,7 +213,8 @@ class AuthController extends Notifier<AuthState> {
       return;
     }
     if (state.status != AuthStatus.unauthenticated) return;
-    BrindeGate.pending = true;
+    // Sem brinde quando volta de um pagamento (vai direto à confirmação).
+    BrindeGate.pending = PayReturn.pending == null;
     state = state.copyWith(status: AuthStatus.authenticating, errorMessage: null);
     try {
       await _applyPendingSocialChoices();
@@ -625,7 +628,24 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> requestPasswordReset(String email) async {
-    await supabase.auth.resetPasswordForEmail(email);
+    await supabase.auth.resetPasswordForEmail(
+      email,
+      redirectTo: kIsWeb ? '${Uri.base.origin}${Uri.base.path}' : null,
+    );
+  }
+
+  /// Recuperar a password dentro da app (2026-10-25): o código de 6
+  /// dígitos do email confirma que a conta é tua, a password nova fica
+  /// gravada e entras logo. A app nunca guarda a password.
+  Future<void> resetPasswordWithCode({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    await supabase.auth.verifyOTP(email: email, token: code, type: OtpType.recovery);
+    await supabase.auth.updateUser(UserAttributes(password: newPassword));
+    await supabase.auth.signOut();
+    await login(email: email, password: newPassword, keepSignedIn: false);
   }
 
   /// Partilhado por casal (fim do wizard, depois de `create()` em
@@ -687,6 +707,7 @@ class AuthController extends Notifier<AuthState> {
     // As boas-vindas a seguir despedem-se pelo nome (2026-10-19).
     TchinSplash.farewellName = state.profile?.fullName.trim().split(' ').first;
     TchinSplash.farewellPending = true;
+    await PushNotifications.disableForThisDevice();
     await supabase.auth.signOut();
     state = const AuthState.unauthenticated();
   }

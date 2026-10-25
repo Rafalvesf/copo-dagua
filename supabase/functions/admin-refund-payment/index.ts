@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
     return json({ error: "stripe_error", message: (e as Error).message }, 502);
   }
 
+  await reverseReleasedShare(stripe, admin, paymentId, cents, intent.amount);
   const totalRefunded = alreadyRefunded + cents;
   const fully = totalRefunded >= intent.amount;
   await admin.from("payments").update({
@@ -122,8 +123,13 @@ Deno.serve(async (req) => {
     metadata: { payment_ids: [paymentId], amount: cents / 100, partial: !fully, note: reason },
   }).then(({ error }) => error && console.error("booking_events insert failed", error));
   if (b?.wedding_id) {
+    // Contratação em segredo (migração 116): só quem a fez é avisado.
+    // Consulta à parte para não falhar antes de a migração correr.
+    const { data: priv } = await admin.from("bookings").select("private_owner").eq("id", p.booking_id).maybeSingle();
+    const owner = (priv as { private_owner?: string | null } | null)?.private_owner;
     await admin.from("notifications").insert({
       wedding_id: b.wedding_id,
+      ...(owner ? { profile_id: owner } : {}),
       type: "booking_refunded",
       title: "Reembolso enviado",
       body: `Reembolsámos ${euros} € da reserva ${b.booking_number} · ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`,
@@ -145,4 +151,27 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+// Se o dinheiro já tinha sido libertado ao parceiro (migração 119),
+// recupera a parte dele na mesma proporção do reembolso.
+async function reverseReleasedShare(
+  stripe: ReturnType<typeof stripeClient>,
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  paymentId: string,
+  refundedCents: number,
+  chargeCents: number,
+): Promise<void> {
+  const { data } = await admin.from("payments").select("transfer_id, amount").eq("id", paymentId).maybeSingle();
+  const transferId = (data as { transfer_id?: string | null } | null)?.transfer_id;
+  if (!transferId || !transferId.startsWith("tr_") || chargeCents <= 0) return;
+  const partnerCents = Math.round(Number((data as { amount: number }).amount) * 100);
+  const share = Math.min(partnerCents, Math.round((refundedCents * partnerCents) / chargeCents));
+  if (share <= 0) return;
+  try {
+    await stripe.transfers.createReversal(transferId, { amount: share }, { idempotencyKey: `reverse-${paymentId}-${refundedCents}` });
+  } catch (e) {
+    console.error("transfer reversal failed", paymentId, (e as Error).message);
+  }
 }

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/dal";
 import { actorLabel, bookingEventLabel } from "@/lib/audit-labels";
@@ -9,6 +8,8 @@ import { PaymentStatusBadge } from "@/components/PaymentStatusBadge";
 import { ResolveDisputeForm } from "@/components/RefundForms";
 import { DISPUTE_REASONS, DISPUTE_RESOLUTIONS } from "@/lib/dispute-labels";
 import { resolveDispute } from "../../refunds/actions";
+import { Badge, Card, DetailList, PageHeader } from "@/components/ui";
+import { fmtDate, fmtDateTime } from "@/lib/format";
 import type { BookingStatus, PaymentStatus } from "@/lib/types";
 
 type Dispute = {
@@ -82,103 +83,101 @@ export default async function DisputeDetailPage(props: PageProps<"/disputes/[id]
   const partnerName = b?.partner_profiles?.business_name ?? "Parceiro";
 
   return (
-    <div style={{ overflowY: "auto", minHeight: 0 }}>
-      <Link href="/disputes" style={{ color: "var(--ink-muted)", fontSize: 13 }}>
-        ← Disputas
-      </Link>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0", flexWrap: "wrap" }}>
-        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 26 }}>
-          Disputa · {b?.booking_number} · {partnerName}
-        </h1>
-        {b && <BookingStatusBadge status={b.status} />}
+    <div className="page">
+      <PageHeader
+        back={{ href: "/disputes", label: "Disputas" }}
+        title={`Disputa · ${b?.booking_number ?? ""} · ${partnerName}`}
+        badge={d.status === "open" ? <Badge tone="danger">Por decidir</Badge> : <Badge tone="success">Resolvida</Badge>}
+        subtitle={`Aberta por ${d.opened_by_role === "couple" ? "organizador" : "parceiro"}${d.opener?.full_name ? ` (${d.opener.full_name})` : ""} a ${fmtDateTime(d.created_at)}`}
+      />
+
+      <div className="grid grid-main-side">
+        <div className="stack">
+          <Card title={DISPUTE_REASONS[d.reason] ?? d.reason} subtitle="O que foi reportado" tone="warning">
+            <p style={{ whiteSpace: "pre-wrap", maxWidth: "68ch" }}>{d.description}</p>
+          </Card>
+
+          <Card title={d.status === "open" ? "Decidir" : "Decisão"} tone={d.status === "open" ? "accent" : undefined}>
+            {d.status === "open" ? (
+              <ResolveDisputeForm disputeId={d.id} maxAmount={Math.round(refundable * 100) / 100} action={resolveDispute} />
+            ) : (
+              <div className="stack">
+                <DetailList
+                  items={[
+                    { label: "Decisão", value: DISPUTE_RESOLUTIONS[d.resolution ?? ""] ?? "—" },
+                    ...(d.refund_amount != null ? [{ label: "Devolvido", value: eur(Number(d.refund_amount)) }] : []),
+                    { label: "Fechada a", value: fmtDateTime(d.resolved_at) },
+                  ]}
+                />
+                {d.admin_note && <p style={{ whiteSpace: "pre-wrap" }}>{d.admin_note}</p>}
+              </div>
+            )}
+          </Card>
+
+          <Card title="Pagamentos da reserva" subtitle="Valores pagos pelo organizador (com comissão)." flush>
+            {payments.length === 0 ? (
+              <div className="empty">Sem pagamentos.</div>
+            ) : (
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th className="num">Pago</th>
+                      <th className="num">Devolvido</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((p) => (
+                      <tr key={p.id}>
+                        <td className="strong">{p.type === "deposit" ? "Sinal" : "Restante"}</td>
+                        <td className="num">{eur(paidByCouple(Number(p.amount)))}</td>
+                        <td className="num muted">{Number(p.refunded_amount) > 0 ? eur(Number(p.refunded_amount)) : "—"}</td>
+                        <td>
+                          <PaymentStatusBadge status={p.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        <div className="stack">
+          <Card title="Reserva" actions={b && <BookingStatusBadge status={b.status} />}>
+            <DetailList
+              items={[
+                { label: "Reserva", value: <Link href={`/bookings/${d.booking_id}`} className="link">{b?.booking_number ?? "Abrir"}</Link> },
+                { label: "Organizador", value: <Link href={`/users/${b?.couple_id}`} className="link">{couple}</Link> },
+                { label: "Parceiro", value: <Link href={`/partners/${b?.partner_id}`} className="link">{partnerName}</Link> },
+                { label: "Serviço", value: b?.proposals?.title ?? "—" },
+                { label: "Evento", value: fmtDate(b?.event_date) },
+                { label: "Valor", value: b ? eur(Number(b.total_amount)) : "—" },
+                { label: "Sinal", value: b?.proposals?.deposit_refundable === false ? "Não reembolsável" : "Reembolsável" },
+              ]}
+            />
+          </Card>
+          <Card title="Histórico">
+            <ul className="timeline">
+              {(events ?? []).map((e) => (
+                <li key={e.id as string}>
+                  <p>
+                    {bookingEventLabel(e.event_type as string)} <span className="muted">· {actorLabel(e.actor_type as string)}</span>
+                  </p>
+                  <p className="timeline-time">{fmtDateTime(e.created_at as string)}</p>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
       </div>
-
-      <Section title="O que foi reportado">
-        <Field label="Aberta por" value={`${d.opened_by_role === "couple" ? "Organizador" : "Parceiro"} — ${d.opener?.full_name ?? ""}`} />
-        <Field label="Motivo" value={DISPUTE_REASONS[d.reason] ?? d.reason} />
-        <Field label="Data" value={new Date(d.created_at).toLocaleString("pt-PT")} />
-        <p style={{ fontSize: 14, whiteSpace: "pre-wrap", background: "var(--status-pending-bg)", padding: 12, borderRadius: 12 }}>
-          {d.description}
-        </p>
-      </Section>
-
-      <Section title="Reserva">
-        <Field label="Reserva" value="" link={{ href: `/bookings/${d.booking_id}`, label: `${b?.booking_number} · ${partnerName}` }} />
-        <Field label="Organizador" value="" link={{ href: `/users/${b?.couple_id}`, label: couple }} />
-        <Field label="Parceiro" value="" link={{ href: `/partners/${b?.partner_id}`, label: partnerName }} />
-        <Field label="Serviço" value={b?.proposals?.title ?? "—"} />
-        <Field label="Data do evento" value={b ? new Date(b.event_date).toLocaleDateString("pt-PT") : "—"} />
-        <Field label="Valor total" value={b ? eur(Number(b.total_amount)) : "—"} />
-        <Field label="Sinal" value={b?.proposals?.deposit_refundable === false ? "Não reembolsável (escolha do parceiro)" : "Reembolsável"} />
-      </Section>
-
-      <Section title="Pagamentos">
-        {payments.length === 0 ? (
-          <p style={muted}>Sem pagamentos.</p>
-        ) : (
-          payments.map((p) => (
-            <div key={p.id} style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 14, flexWrap: "wrap" }}>
-              <span style={{ minWidth: 90 }}>{p.type === "deposit" ? "Sinal" : "Restante"}</span>
-              <span>{eur(paidByCouple(Number(p.amount)))}</span>
-              <PaymentStatusBadge status={p.status} />
-              {Number(p.refunded_amount) > 0 && <span style={muted}>devolvido {eur(Number(p.refunded_amount))}</span>}
-            </div>
-          ))
-        )}
-      </Section>
-
-      <Section title="Decisão">
-        {d.status === "open" ? (
-          <ResolveDisputeForm disputeId={d.id} maxAmount={Math.round(refundable * 100) / 100} action={resolveDispute} />
-        ) : (
-          <>
-            <Field label="Decisão" value={DISPUTE_RESOLUTIONS[d.resolution ?? ""] ?? "—"} />
-            {d.refund_amount != null && <Field label="Devolvido" value={eur(Number(d.refund_amount))} />}
-            <Field label="Fechada em" value={d.resolved_at ? new Date(d.resolved_at).toLocaleString("pt-PT") : "—"} />
-            <p style={{ fontSize: 14, whiteSpace: "pre-wrap" }}>{d.admin_note}</p>
-          </>
-        )}
-      </Section>
-
-      <Section title="Histórico da reserva">
-        <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-          {(events ?? []).map((e) => (
-            <li key={e.id as string} style={{ fontSize: 13 }}>
-              <span style={muted}>{new Date(e.created_at as string).toLocaleString("pt-PT")} —</span> {bookingEventLabel(e.event_type as string)}{" "}
-              <span style={muted}>({actorLabel(e.actor_type as string)})</span>
-            </li>
-          ))}
-        </ul>
-      </Section>
     </div>
   );
 }
 
 function eur(n: number) {
   return `${n.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
-}
-const muted = { color: "var(--ink-muted)", fontSize: 13 };
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section style={{ background: "var(--surface)", borderRadius: 16, boxShadow: "var(--shadow-card)", padding: 20, marginBottom: 16 }}>
-      <h2 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{title}</h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{children}</div>
-    </section>
-  );
-}
-
-function Field({ label, value, link }: { label: string; value: string; link?: { href: string; label: string } }) {
-  return (
-    <div style={{ display: "flex", gap: 12, fontSize: 14, flexWrap: "wrap" }}>
-      <span style={{ color: "var(--ink-muted)", minWidth: 140 }}>{label}</span>
-      {link ? (
-        <Link href={link.href} style={{ fontWeight: 600 }}>
-          {link.label}
-        </Link>
-      ) : (
-        <span>{value}</span>
-      )}
-    </div>
-  );
 }

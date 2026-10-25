@@ -92,7 +92,7 @@ export const ACTIONS_BY_STATUS: Record<PartnerProfileStatus, PartnerAction[]> = 
 };
 
 // Mirrors database/migrations/001_authentication.sql — see admin-web/users/database.md.
-export type UserRole = "couple" | "partner" | "admin";
+export type UserRole = "couple" | "partner" | "admin" | "guest";
 export type AccountStatus = "active" | "pending_deletion" | "suspended" | "deleted";
 
 export type Profile = {
@@ -279,6 +279,8 @@ export type TaskTemplate = {
   display_type: TaskDisplayType;
   action_type: TaskActionType | null;
   cta_label: string | null;
+  /** Tipos de evento (migração 110); vazio = todos. */
+  event_types: string[] | null;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;

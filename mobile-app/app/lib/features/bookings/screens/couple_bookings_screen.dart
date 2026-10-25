@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/home/home_providers.dart';
+import '../../../core/bookings/hire_privacy.dart';
+import '../../../core/chat/chat_helpers.dart' show PartnerUnavailableException;
 import '../../../core/payments/payments.dart' show PayArgs;
 import '../../../core/models/models.dart';
 import '../../../core/reviews/review_providers.dart';
@@ -21,6 +23,8 @@ import '../../../shared/widgets/feedback.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../core/payments/refunds.dart';
+import '../../../core/partners/partner_providers.dart';
+import '../../partners/screens/partner_detail_screen.dart';
 
 /// Reservas do lado do casal — lê `coupleBookingsProvider`
 /// (`core/home/home_providers.dart`), mesmos dados mock que alimentam
@@ -149,21 +153,26 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
   CoupleBooking get booking => widget.booking;
   bool _cancelling = false;
 
+  /// Depois de cancelar: abre o perfil do parceiro com "Pedir orçamento"
+  /// outra vez disponível (2026-10-21).
+  Future<void> _openPartnerForNewQuote() async {
+    final id = booking.partnerId;
+    if (id == null) return;
+    ref.invalidate(partnerRelationshipStatusProvider(id));
+    final partner = await ref.read(partnerByIdProvider(id).future);
+    if (!mounted || partner == null) return;
+    await PartnerDetailScreen.show(context, partner);
+  }
+
   /// `cancel_booking_by_couple()` (`059_cancel_booking.sql`) — só
   /// oferecido enquanto a booking está `aceite`/`confirmado`
   /// (`awaiting_deposit`/`confirmed` reais), mesmos dois estados que a
   /// função aceita (`invalid_state` para qualquer outro).
   Future<void> _cancel() async {
     if (_cancelling) return;
-    final penaltyDays = await cancellationPenaltyDays();
-    final refundable = await bookingDepositRefundable(booking.id);
+    final info = await bookingRefundInfo(booking.id);
     if (!mounted) return;
-    final refundNote = coupleCancelRefundNote(
-      eventDate: booking.serviceDate,
-      depositPaid: booking.status == BookingStatus.confirmado,
-      penaltyDays: penaltyDays,
-      refundable: refundable,
-    );
+    final refundNote = coupleCancelRefundNote(eventDate: booking.serviceDate, info: info);
     final confirmed = await showIslandDialog<bool>(
       context: context,
       builder: (context) => IslandAlert(
@@ -199,6 +208,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
     } finally {
       if (mounted) setState(() => _cancelling = false);
       ref.invalidate(coupleBookingsProvider);
+      if (booking.partnerId != null) ref.invalidate(partnerRelationshipStatusProvider(booking.partnerId!));
       // O sinal pendente já foi marcado `failed` por `cancel_booking_by_couple()`
       // — recomputar agora dispensa a tarefa "Pagar sinal" desatualizada
       // em vez de esperar por um recompute não relacionado (próximo
@@ -278,14 +288,26 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        booking.partnerName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: AppFontSize.base,
-                          color: AppTheme.ink,
+                      Row(children: [
+                        Flexible(
+                          child: Text(
+                            booking.partnerName,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: AppFontSize.base,
+                              color: AppTheme.ink,
+                            ),
+                          ),
                         ),
-                      ),
+                        // Contratação em segredo (2026-10-21).
+                        if (booking.isPrivate) ...[
+                          const SizedBox(width: 6),
+                          const Icon(Icons.lock_outline, size: 14, color: AppTheme.inkMuted),
+                          const SizedBox(width: 2),
+                          const Text('Surpresa', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                        ],
+                      ]),
                       const SizedBox(height: 2),
                       Text(
                         '$dateLabel · ${euros(amountWithCommission(booking.amount, commissionPct))}',
@@ -402,6 +424,27 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                 ),
               ),
             ],
+            if (booking.status == BookingStatus.recusado && booking.partnerId != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                'Reserva cancelada. Podes pedir uma nova proposta a ${booking.partnerName} ou escolher outro parceiro.',
+                style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.35),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: _openPartnerForNewQuote,
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Pedir nova proposta'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.accentOliveDark,
+                    side: BorderSide(color: AppTheme.accentOliveDark),
+                    shape: const StadiumBorder(),
+                  ),
+                ),
+              ),
+            ],
             if (booking.status == BookingStatus.concluido) ...[
               const SizedBox(height: 12),
               ReviewAction(booking: booking),
@@ -429,9 +472,12 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
   bool _accepting = false;
 
   Future<void> _accept() async {
+    // Partilhar com os outros organizadores ou guardar em segredo (2026-10-21).
+    final secret = await askHirePrivacy(context, widget.proposal.weddingId, widget.proposal.partnerName);
+    if (secret == null || !mounted) return;
     setState(() => _accepting = true);
     try {
-      await acceptProposal(widget.proposal.id);
+      await acceptProposal(widget.proposal.id, private: secret);
       ref.invalidate(pendingProposalsProvider);
       ref.invalidate(coupleBookingsProvider);
       if (mounted) {
@@ -461,6 +507,8 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
                   : e.code == 'P0007'
                       ? 'Este parceiro já tem outra reserva confirmada nessa data. Não é possível aceitar esta proposta.'
                       // `P0008` = `already_booked_with_partner` (migração 102).
+                      : e.code == 'P0010'
+                          ? PartnerUnavailableException.message
                       : e.code == 'P0008'
                           ? 'Já tens uma reserva com este parceiro. Só podes aceitar outra se essa for cancelada sem o sinal pago.'
                           : 'Não foi possível aceitar a proposta. Tenta novamente.',
@@ -532,7 +580,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
             Expanded(
               child: Text(
                 proposal.depositRefundable
-                    ? 'Sinal reembolsável se cancelares com 30+ dias de antecedência'
+                    ? 'Sinal reembolsável se cancelares nas 48 h depois de pagar'
                     : 'Sinal não reembolsável',
                 style: TextStyle(
                   fontSize: AppFontSize.xs,

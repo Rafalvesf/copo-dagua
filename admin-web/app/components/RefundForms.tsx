@@ -24,29 +24,31 @@ export function RefundPaymentForm({
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} style={secondaryButton}>
+      <button type="button" onClick={() => setOpen(true)} className="btn btn-secondary btn-sm">
         Reembolsar…
       </button>
     );
   }
 
   return (
-    <form action={formAction} style={formBox}>
+    <form action={formAction} className="stack-sm" style={formBox}>
       <input type="hidden" name="payment_id" value={paymentId} />
-      <label style={label}>
-        Valor a devolver (€) — vazio = tudo ({maxAmount.toLocaleString("pt-PT", { minimumFractionDigits: 2 })} €)
+      <label className="field">
+        <span className="field-label">Valor a devolver (€)</span>
+        <input name="amount" type="number" step="0.01" min="0.01" max={maxAmount} className="input" placeholder={`Tudo: ${maxAmount.toLocaleString("pt-PT", { minimumFractionDigits: 2 })}`} />
+        <span className="field-hint">Vazio devolve tudo. Comissão e parte do parceiro saem na mesma proporção.</span>
       </label>
-      <input name="amount" type="number" step="0.01" min="0.01" max={maxAmount} style={input} />
-      <label style={label}>Motivo (fica no histórico)</label>
-      <input name="reason" required minLength={5} style={input} />
-      <p style={hint}>A comissão e a parte do parceiro são devolvidas na mesma proporção.</p>
-      {state.error && <p style={errorText}>{state.error}</p>}
-      <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" onClick={() => setOpen(false)} style={secondaryButton}>
-          Cancelar
+      <label className="field">
+        <span className="field-label">Motivo</span>
+        <input name="reason" required minLength={5} className="input" placeholder="Fica no histórico da reserva" />
+      </label>
+      {state.error && <p className="form-error">{state.error}</p>}
+      <div className="row">
+        <button type="submit" disabled={isPending} className="btn btn-danger">
+          {isPending ? "A reembolsar…" : "Confirmar reembolso"}
         </button>
-        <button type="submit" disabled={isPending} style={dangerButton}>
-          {isPending ? "A reembolsar..." : "Confirmar reembolso"}
+        <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost">
+          Cancelar
         </button>
       </div>
     </form>
@@ -74,11 +76,11 @@ export function RunRefundButton({
             setError(r.error);
           })
         }
-        style={primaryButton}
+        className="btn btn-primary btn-sm"
       >
-        {isPending ? "A reembolsar..." : "Reembolsar agora"}
+        {isPending ? "A reembolsar…" : "Reembolsar agora"}
       </button>
-      {error && <p style={errorText}>{error}</p>}
+      {error && <p className="form-error">{error}</p>}
     </div>
   );
 }
@@ -97,48 +99,35 @@ export function ResolveDisputeForm({
   const [state, formAction, isPending] = useActionState(action, initial);
 
   return (
-    <form action={formAction} style={{ ...formBox, marginTop: 0 }}>
+    <form action={formAction} className="stack">
       <input type="hidden" name="dispute_id" value={disputeId} />
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div className="tabs" role="radiogroup" aria-label="Decisão" style={{ display: "flex", flexWrap: "wrap" }}>
         {Object.entries(DISPUTE_RESOLUTIONS).map(([value, text]) => (
-          <label
-            key={value}
-            style={{
-              ...chip,
-              background: resolution === value ? "var(--ink)" : "var(--surface)",
-              color: resolution === value ? "var(--surface)" : "var(--ink)",
-            }}
-          >
-            <input
-              type="radio"
-              name="resolution"
-              value={value}
-              checked={resolution === value}
-              onChange={() => setResolution(value)}
-              style={{ display: "none" }}
-            />
+          <label key={value} className="tab" aria-selected={resolution === value} style={{ flex: 1, justifyContent: "center" }}>
+            <input type="radio" name="resolution" value={value} checked={resolution === value} onChange={() => setResolution(value)} style={{ display: "none" }} />
             {text}
           </label>
         ))}
       </div>
       {resolution === "refund_full" && (
-        <p style={hint}>
-          Devolve ao organizador tudo o que ainda não foi reembolsado (
-          {maxAmount.toLocaleString("pt-PT", { minimumFractionDigits: 2 })} €).
-        </p>
+        <p className="field-hint">Devolve ao organizador tudo o que ainda não foi reembolsado ({maxAmount.toLocaleString("pt-PT", { minimumFractionDigits: 2 })} €).</p>
       )}
+      {resolution === "partner_favor" && <p className="field-hint">Não há reembolso; a reserva volta ao estado normal.</p>}
       {resolution === "refund_partial" && (
-        <>
-          <label style={label}>Valor a devolver (€), máximo {maxAmount.toLocaleString("pt-PT", { minimumFractionDigits: 2 })} €</label>
-          <input name="amount" type="number" step="0.01" min="0.01" max={maxAmount} required style={input} />
-        </>
+        <label className="field">
+          <span className="field-label">Valor a devolver (€)</span>
+          <input name="amount" type="number" step="0.01" min="0.01" max={maxAmount} required className="input" />
+          <span className="field-hint">Máximo {maxAmount.toLocaleString("pt-PT", { minimumFractionDigits: 2 })} €</span>
+        </label>
       )}
-      <label style={label}>Decisão (enviada ao organizador e ao parceiro, mín. 10 caracteres)</label>
-      <textarea name="note" required minLength={10} rows={3} style={{ ...input, resize: "vertical" }} />
-      {state.error && <p style={errorText}>{state.error}</p>}
+      <label className="field">
+        <span className="field-label">Explicação da decisão</span>
+        <textarea name="note" required minLength={10} rows={4} className="textarea" placeholder="Enviada ao organizador e ao parceiro (mín. 10 caracteres)" />
+      </label>
+      {state.error && <p className="form-error">{state.error}</p>}
       <div>
-        <button type="submit" disabled={isPending} style={resolution === "partner_favor" ? primaryButton : dangerButton}>
-          {isPending ? "A decidir..." : "Fechar disputa"}
+        <button type="submit" disabled={isPending} className={resolution === "partner_favor" ? "btn btn-primary" : "btn btn-danger"}>
+          {isPending ? "A decidir…" : "Fechar disputa"}
         </button>
       </div>
     </form>
@@ -146,41 +135,11 @@ export function ResolveDisputeForm({
 }
 
 const formBox: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 8,
   marginTop: 8,
-  padding: 16,
-  borderRadius: 16,
-  background: "var(--surface)",
-  boxShadow: "var(--shadow-card)",
-  maxWidth: 520,
-};
-const label: CSSProperties = { fontSize: 13, color: "var(--ink-muted)" };
-const hint: CSSProperties = { fontSize: 12, color: "var(--ink-muted)" };
-const input: CSSProperties = { borderRadius: 10, border: "1px solid var(--border-muted)", padding: 10, font: "inherit" };
-const errorText: CSSProperties = { color: "var(--status-rejected-fg)", fontSize: 13 };
-const chip: CSSProperties = {
-  padding: "8px 14px",
-  borderRadius: 999,
-  fontSize: 13,
-  fontWeight: 600,
-  border: "1px solid var(--border-muted)",
-  cursor: "pointer",
-};
-const baseButton: CSSProperties = {
-  padding: "10px 18px",
-  borderRadius: 999,
-  fontSize: 14,
-  fontWeight: 600,
-  border: "none",
-  cursor: "pointer",
-};
-const primaryButton: CSSProperties = { ...baseButton, background: "var(--ink)", color: "var(--surface)" };
-const dangerButton: CSSProperties = { ...baseButton, background: "var(--status-rejected-fg)", color: "#fff" };
-const secondaryButton: CSSProperties = {
-  ...baseButton,
-  background: "var(--surface)",
-  color: "var(--ink)",
-  border: "1px solid var(--border-muted)",
+  padding: 14,
+  borderRadius: 12,
+  background: "var(--surface-2)",
+  boxShadow: "0 0 0 1px var(--border)",
+  maxWidth: 420,
+  textAlign: "left",
 };

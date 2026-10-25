@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { ModerationActions } from "./moderation-controls";
 import type { Review, ReviewStatus } from "@/lib/types";
+import { Badge, Card, Empty, FilterTabs, PageHeader } from "@/components/ui";
+import { fmtDate } from "@/lib/format";
 
 const FILTERS: { value: ReviewStatus | "all"; label: string }[] = [
   { value: "all", label: "Todas" },
@@ -48,112 +49,61 @@ export default async function ModerationPage({ searchParams }: PageProps<"/moder
     return STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
   });
 
-  return (
-    <div>
-      <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Avaliações e Denúncias</h1>
-      <p style={{ color: "var(--ink-muted)", marginTop: 4, maxWidth: 640 }}>
-        Avaliações deixadas pelos organizadores depois de uma reserva concluída. As denunciadas ou removidas
-        deixam de aparecer no perfil público do parceiro (nada é apagado).
-      </p>
+  const TONE: Record<ReviewStatus, "danger" | "success" | "neutral"> = { flagged: "danger", published: "success", removed: "neutral" };
 
-      <div style={{ display: "flex", gap: 8, margin: "24px 0", flexWrap: "wrap" }}>
-        {FILTERS.map((f) => (
-          <Link
-            key={f.value}
-            href={`/moderation?status=${f.value}`}
-            style={{
-              padding: "8px 14px",
-              borderRadius: 999,
-              fontSize: 13,
-              fontWeight: 600,
-              background: status === f.value ? "var(--ink)" : "var(--surface)",
-              color: status === f.value ? "var(--surface)" : "var(--ink)",
-              border: "1px solid var(--border-muted)",
-            }}
-          >
-            {f.label}
-          </Link>
-        ))}
+  return (
+    <div className="page">
+      <PageHeader
+        title="Avaliações"
+        subtitle="Avaliações dos organizadores depois de uma reserva concluída. As denunciadas aparecem primeiro; remover só esconde do perfil público (nada é apagado)."
+      />
+
+      <div className="toolbar">
+        <FilterTabs current={status} items={FILTERS.map((f) => ({ ...f, href: `/moderation?status=${f.value}` }))} />
       </div>
 
-      {error && <p style={{ color: "var(--status-rejected-fg)" }}>Não foi possível carregar a lista.</p>}
-      {!error && sorted?.length === 0 && <p style={{ color: "var(--ink-muted)" }}>Sem avaliações neste filtro.</p>}
-
-      {!error && sorted && sorted.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {error ? (
+        <Card>
+          <Empty title="Não foi possível carregar a lista" />
+        </Card>
+      ) : !sorted || sorted.length === 0 ? (
+        <Card>
+          <Empty title="Sem avaliações neste filtro" />
+        </Card>
+      ) : (
+        <div className="grid grid-2">
           {sorted.map((r) => {
             const coupleName = r.weddings
               ? r.weddings.partner_name_2
                 ? `${r.weddings.partner_name_1} & ${r.weddings.partner_name_2}`
                 : r.weddings.partner_name_1
-              : "Organizador desconhecido";
+              : "Organizador";
             return (
-              <div
-                key={r.id}
-                style={{
-                  padding: 16,
-                  borderRadius: 14,
-                  background: "var(--surface)",
-                  boxShadow: "var(--shadow-card)",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-                  <div>
-                    <p style={{ fontWeight: 600 }}>
-                      {r.partner_profiles?.business_name ?? "Parceiro desconhecido"}
-                      <span style={{ color: "var(--ink-muted)", fontWeight: 400 }}> · {coupleName}</span>
-                    </p>
-                    <p style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 2 }}>
-                      {r.bookings?.booking_number ?? r.booking_id} · {new Date(r.created_at).toLocaleDateString("pt-PT")}
-                    </p>
+              <Card key={r.id} tone={r.status === "flagged" ? "danger" : undefined}>
+                <div className="stack-sm" style={{ gap: 10 }}>
+                  <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start", flexWrap: "nowrap" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <p className="strong">{r.partner_profiles?.business_name ?? "Parceiro"}</p>
+                      <p className="list-sub">
+                        por {coupleName} · {r.bookings?.booking_number ?? "reserva"} · {fmtDate(r.created_at)}
+                      </p>
+                    </div>
+                    <Badge tone={TONE[r.status]}>{STATUS_LABEL[r.status]}</Badge>
                   </div>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      padding: "4px 10px",
-                      borderRadius: 999,
-                      background:
-                        r.status === "flagged"
-                          ? "var(--status-rejected-bg, #fde2e2)"
-                          : r.status === "removed"
-                            ? "var(--border-muted)"
-                            : "var(--status-published-bg, #e2f5e9)",
-                      color:
-                        r.status === "flagged"
-                          ? "var(--status-rejected-fg)"
-                          : r.status === "removed"
-                            ? "var(--ink-muted)"
-                            : "var(--status-published-fg)",
-                    }}
-                  >
-                    {STATUS_LABEL[r.status]}
-                  </span>
-                </div>
-
-                <div style={{ marginTop: 10, fontSize: 14 }}>
-                  {"★".repeat(r.rating)}
-                  {"☆".repeat(5 - r.rating)}
-                </div>
-                {r.comment && <p style={{ marginTop: 6, fontSize: 13.5 }}>{r.comment}</p>}
-                {r.partner_response && (
-                  <div
-                    style={{
-                      marginTop: 10,
-                      padding: 10,
-                      borderRadius: 10,
-                      background: "var(--background)",
-                    }}
-                  >
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-muted)" }}>Resposta do parceiro</p>
-                    <p style={{ fontSize: 13, marginTop: 3 }}>{r.partner_response}</p>
+                  <div aria-label={`${r.rating} de 5 estrelas`} style={{ color: "var(--star)", letterSpacing: 2 }}>
+                    {"★".repeat(r.rating)}
+                    <span style={{ color: "var(--border-strong)" }}>{"★".repeat(5 - r.rating)}</span>
                   </div>
-                )}
-
-                <div style={{ marginTop: 12 }}>
+                  {r.comment ? <p style={{ fontSize: 14 }}>{r.comment}</p> : <p className="subtle">Sem comentário.</p>}
+                  {r.partner_response && (
+                    <div style={{ padding: "10px 12px", borderRadius: 10, background: "var(--surface-2)", boxShadow: "inset 2px 0 0 var(--accent)" }}>
+                      <p className="field-hint strong">Resposta do parceiro</p>
+                      <p style={{ fontSize: 13, marginTop: 2 }}>{r.partner_response}</p>
+                    </div>
+                  )}
                   <ModerationActions reviewId={r.id} status={r.status} />
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>

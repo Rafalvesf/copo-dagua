@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'first_run_tour.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
 import 'floating_bottom_nav.dart' show NavBubble, kNavRadius;
 
@@ -41,7 +42,7 @@ class GuestBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       // Fica fixa por cima enquanto a página anima (page_transitions.dart).
-      StayOverNav(child: _buildNav(context));
+      StayOverNav(child: TourHost(role: TourRole.guest, guestWeddingId: weddingId, child: _buildNav(context)));
 
   Widget _buildNav(BuildContext context) {
     return SafeArea(

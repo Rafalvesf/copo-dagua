@@ -1,9 +1,10 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { RefundPaymentForm, RunRefundButton } from "@/components/RefundForms";
 import { refundPayment, runBookingRefund } from "./actions";
+import { Alert, Badge, Card, Empty, PageHeader, Stat } from "@/components/ui";
+import { fmtDate } from "@/lib/format";
 
 // Reembolsos (pedido do utilizador, 2026-10-20).
 // - "Por tratar": reservas canceladas com pagamentos ainda pagos. Se a
@@ -76,9 +77,11 @@ export default async function RefundsPage() {
         ? "Tem direito a reembolso — a regra automática ainda não correu ou falhou."
         : m.deposit_refundable === false
           ? "Sinal não reembolsável (escolha do parceiro)."
-          : m.penalty_applied === true
-            ? `Cancelado a ${m.days_until_event ?? "?"} dias do evento — sinal retido.`
-            : "Sem direito a reembolso automático.";
+          : "refund_deposit" in m
+            ? `Cancelou depois das ${m.deposit_window_hours ?? 48} h — sinal retido${m.refund_final === false && (m.days_until_event as number) < (m.penalty_days as number) ? "; restante também (menos de " + m.penalty_days + " dias)" : ""}.`
+            : m.penalty_applied === true
+              ? `Cancelado a ${m.days_until_event ?? "?"} dias do evento — sinal retido.`
+              : "Sem direito a reembolso automático.";
       eligible.set(e.booking_id as string, { refund, why });
     }
   }
@@ -86,42 +89,52 @@ export default async function RefundsPage() {
   const totalDone = done.reduce((a, p) => a + Number(p.refunded_amount), 0);
 
   return (
-    <div style={{ overflowY: "auto", minHeight: 0 }}>
-      <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Reembolsos</h1>
-      <p style={{ color: "var(--ink-muted)", marginTop: 4, marginBottom: 24 }}>
-        Reservas canceladas ou em disputa com dinheiro por devolver, e reembolsos já feitos. Total devolvido (últimos 50):{" "}
-        <strong>{eur(totalDone)}</strong>
-      </p>
+    <div className="page">
+      <PageHeader
+        title="Reembolsos"
+        subtitle="Dinheiro a devolver de reservas canceladas ou em disputa, e o que já foi devolvido. As regras automáticas tratam da maioria; aqui ficam os casos que precisam de ti."
+      />
 
-      {error && <p style={{ color: "var(--status-rejected-fg)" }}>Não foi possível carregar os reembolsos.</p>}
+      <div className="grid grid-3">
+        <Stat label="Por tratar" value={String(pending.length)} hint="pagamentos de reservas canceladas" tone={pending.length > 0 ? "warning" : undefined} />
+        <Stat label="Reembolsos feitos" value={String(done.length)} hint="últimos 50" />
+        <Stat label="Total devolvido" value={eur(totalDone)} hint="aos organizadores" />
+      </div>
 
-      <Card title={`Por tratar (${pending.length})`}>
+      {error && <Alert tone="danger">Não foi possível carregar os reembolsos.</Alert>}
+
+      <Card title="Por tratar" subtitle="Abre a reserva para ver o histórico completo." flush>
         {pending.length === 0 ? (
-          <Empty>Nada por tratar.</Empty>
+          <Empty title="Nada por tratar">Quando uma reserva paga for cancelada, aparece aqui.</Empty>
         ) : (
-          <ul style={list}>
+          <ul className="list">
             {pending.map((p) => {
               const e = eligible.get(p.booking_id);
               const max = Math.max(0, paidByCouple(Number(p.amount)) - Number(p.refunded_amount));
+              const disputed = p.bookings?.status === "disputed";
               return (
-                <li key={p.id} style={row}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Link href={`/bookings/${p.booking_id}`} style={{ fontWeight: 600 }}>
+                <li key={p.id} style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
+                  <div className="list-main" style={{ minWidth: 220 }}>
+                    <Link href={`/bookings/${p.booking_id}`} className="list-title">
                       {ref(p)}
                     </Link>
-                    <div style={muted}>
+                    <p className="list-sub">
                       {couple(p)} · {TYPE_LABELS[p.type] ?? p.type} · pago {eur(paidByCouple(Number(p.amount)))}
                       {Number(p.refunded_amount) > 0 && ` · já devolvido ${eur(Number(p.refunded_amount))}`}
-                    </div>
-                    <div style={{ ...muted, marginTop: 4 }}>
-                      {p.bookings?.status === "disputed" ? "Em disputa — decide em Disputas." : e?.why ?? "—"}
+                    </p>
+                    <div style={{ marginTop: 8 }}>
+                      {disputed ? (
+                        <Badge tone="danger">Em disputa — decide em Disputas</Badge>
+                      ) : e?.refund ? (
+                        <Badge tone="warning">Tem direito a reembolso</Badge>
+                      ) : (
+                        <Badge tone="neutral">{e?.why ?? "Sem regra registada"}</Badge>
+                      )}
                     </div>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+                  <div className="stack-sm" style={{ alignItems: "flex-end" }}>
                     {e?.refund && <RunRefundButton bookingId={p.booking_id} action={runBookingRefund} />}
-                    {p.bookings?.status !== "disputed" && (
-                      <RefundPaymentForm paymentId={p.id} maxAmount={max} action={refundPayment} />
-                    )}
+                    {!disputed && <RefundPaymentForm paymentId={p.id} maxAmount={max} action={refundPayment} />}
                   </div>
                 </li>
               );
@@ -130,39 +143,42 @@ export default async function RefundsPage() {
         )}
       </Card>
 
-      <Card title="Feitos">
+      <Card title="Já devolvidos" flush>
         {done.length === 0 ? (
           <Empty>Ainda não houve reembolsos.</Empty>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ textAlign: "left", color: "var(--ink-muted)" }}>
-                <th style={{ padding: "8px 0" }}>Reserva</th>
-                <th>Organizador</th>
-                <th>Pagamento</th>
-                <th>Devolvido</th>
-                <th>Data</th>
-              </tr>
-            </thead>
-            <tbody>
-              {done.map((p) => (
-                <tr key={p.id} style={{ borderTop: "1px solid var(--border-muted)" }}>
-                  <td style={{ padding: "10px 0" }}>
-                    <Link href={`/bookings/${p.booking_id}`} style={{ fontWeight: 600 }}>
-                      {ref(p)}
-                    </Link>
-                  </td>
-                  <td>{couple(p)}</td>
-                  <td>{TYPE_LABELS[p.type] ?? p.type}</td>
-                  <td>
-                    {eur(Number(p.refunded_amount))}
-                    {p.status !== "refunded" && <span style={muted}> (parcial)</span>}
-                  </td>
-                  <td style={muted}>{new Date(p.updated_at).toLocaleDateString("pt-PT")}</td>
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Reserva</th>
+                  <th>Organizador</th>
+                  <th>Pagamento</th>
+                  <th className="num">Devolvido</th>
+                  <th>Data</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {done.map((p) => (
+                  <tr key={p.id}>
+                    <td>
+                      <Link href={`/bookings/${p.booking_id}`} className="cell-main">
+                        {p.bookings?.booking_number ?? "—"}
+                      </Link>
+                      <span className="cell-sub">{p.bookings?.partner_profiles?.business_name ?? "Parceiro"}</span>
+                    </td>
+                    <td>{couple(p)}</td>
+                    <td>{TYPE_LABELS[p.type] ?? p.type}</td>
+                    <td className="num">
+                      {eur(Number(p.refunded_amount))}
+                      {p.status !== "refunded" && <span className="cell-sub">parcial</span>}
+                    </td>
+                    <td className="muted nowrap">{fmtDate(p.updated_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
     </div>
@@ -182,24 +198,3 @@ function eur(n: number) {
   return `${n.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 }
 
-function Card({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section style={{ background: "var(--surface)", borderRadius: 16, boxShadow: "var(--shadow-card)", padding: 20, marginBottom: 16 }}>
-      <h2 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{title}</h2>
-      {children}
-    </section>
-  );
-}
-function Empty({ children }: { children: ReactNode }) {
-  return <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>{children}</p>;
-}
-const list = { listStyle: "none", display: "flex", flexDirection: "column" as const, gap: 0 };
-const row = {
-  display: "flex",
-  gap: 16,
-  alignItems: "flex-start",
-  padding: "14px 0",
-  borderTop: "1px solid var(--border-muted)",
-  flexWrap: "wrap" as const,
-};
-const muted = { color: "var(--ink-muted)", fontSize: 13 };

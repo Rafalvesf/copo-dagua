@@ -3,8 +3,8 @@
 export function StatusDonut({ slices }: { slices: { label: string; value: number; color: string }[] }) {
   const total = slices.reduce((sum, s) => sum + s.value, 0);
   const size = 180;
-  const radius = 70;
-  const strokeWidth = 26;
+  const radius = 72;
+  const strokeWidth = 18;
   const circumference = 2 * Math.PI * radius;
 
   let offset = 0;
@@ -44,7 +44,7 @@ export function StatusDonut({ slices }: { slices: { label: string; value: number
       <div style={{ position: "relative", height: "100%", aspectRatio: "1", maxWidth: "50%", flexShrink: 0 }}>
         <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
           {total === 0 ? (
-            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--border-muted)" strokeWidth={strokeWidth} />
+            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--surface-3)" strokeWidth={strokeWidth} />
           ) : (
             segments
           )}
@@ -67,17 +67,15 @@ export function StatusDonut({ slices }: { slices: { label: string; value: number
           </p>
         )}
       </div>
-      <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+      <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 140 }}>
         {slices.map((s) => (
-          <li key={s.label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+          <li key={s.label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, opacity: s.value === 0 ? 0.5 : 1 }}>
             <span
               aria-hidden
               style={{ width: 9, height: 9, borderRadius: "50%", background: s.color, flexShrink: 0 }}
             />
-            <span style={{ color: "var(--ink)" }}>{s.label}</span>
-            <span style={{ color: "var(--ink-muted)" }}>
-              {s.value} ({total === 0 ? 0 : Math.round((s.value / total) * 100)}%)
-            </span>
+            <span style={{ color: "var(--ink)", flex: 1 }}>{s.label}</span>
+            <span className="tnum strong">{s.value}</span>
           </li>
         ))}
       </ul>

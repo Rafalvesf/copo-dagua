@@ -1173,6 +1173,9 @@ class CoupleBooking {
   final String weddingId;
   final String partnerName;
 
+  /// Para "Pedir nova proposta" depois de um cancelamento (2026-10-21).
+  final String? partnerId;
+
   /// `partner_profiles.cover_photo_url` (mesmo campo usado como logótipo
   /// em todo o resto da app, ver `partner_welcome_screen.dart`) — `null`
   /// quando o parceiro ainda não fez upload de nenhum, cai em
@@ -1211,6 +1214,7 @@ class CoupleBooking {
     required this.id,
     required this.weddingId,
     required this.partnerName,
+    this.partnerId,
     this.partnerLogoUrl,
     required this.category,
     required this.serviceDate,
@@ -1222,7 +1226,11 @@ class CoupleBooking {
     this.pendingFinalPaymentId,
     this.finalPaymentAmount,
     this.paidAmount = 0,
+    this.isPrivate = false,
   });
+
+  /// Contratação em segredo (migração 116): só quem a fez a vê.
+  final bool isPrivate;
 
   /// Total já pago na app (pagamentos `paid`, sem a comissão).
   final double paidAmount;

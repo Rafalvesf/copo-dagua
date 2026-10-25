@@ -1,12 +1,13 @@
-import Link from "next/link";
-import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/dal";
 import { auditActionLabel } from "@/lib/audit-labels";
 import { createClient } from "@/lib/supabase/server";
 import { PartnerStatusBadge } from "@/components/PartnerStatusBadge";
+import { Alert, Badge, Card, DetailList, PageHeader } from "@/components/ui";
+import { fmtDateTime, fmtEur } from "@/lib/format";
 import { ACTIONS_BY_STATUS } from "@/lib/types";
 import { SimpleActionButton, ReasonActionForm } from "@/components/ActionButtons";
+import { PaymentsOnboarding } from "@/components/PaymentsOnboarding";
 import {
   approvePartner,
   featurePartner,
@@ -105,274 +106,207 @@ export default async function PartnerDetailPage(
     },
   ];
 
-  return (
-    <div>
-      <Link href="/partners" style={{ color: "var(--ink-muted)", fontSize: 13 }}>
-        ← Parceiros
-      </Link>
+  const stripeOn = Boolean((p as unknown as { stripe_charges_enabled?: boolean }).stripe_charges_enabled);
+  const reviewing = p.status === "pending_review" || p.status === "changes_required";
+  const missing = checklist.filter((c) => !c.done).length;
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0" }}>
-        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 26 }}>
-          {p.business_name}
-        </h1>
-        <PartnerStatusBadge status={p.status} />
-        {p.featured && (
-          <span
-            style={{
-              background: "#FBF1D6",
-              color: "#7A5A00",
-              borderRadius: 999,
-              padding: "4px 10px",
-              fontSize: 12,
-              fontWeight: 600,
-            }}
-          >
-            ★ Em destaque
+  return (
+    <div className="page">
+      <PageHeader
+        back={{ href: "/partners", label: "Parceiros" }}
+        title={p.business_name || "(sem nome)"}
+        badge={
+          <span className="row" style={{ gap: 6 }}>
+            <PartnerStatusBadge status={p.status} />
+            {p.featured && (
+              <Badge tone="accent" plain>
+                ★ Em destaque
+              </Badge>
+            )}
           </span>
-        )}
-      </div>
+        }
+        subtitle={`${categoryLabels.length > 0 ? categoryLabels.join(" · ") : "Sem categorias"} · ${p.nationwide ? "Âmbito nacional" : p.service_areas.join(", ") || "Sem área"}`}
+      />
 
       {accountSuspended && (
-        <div
-          style={{
-            background: "var(--status-rejected-bg)",
-            color: "var(--status-rejected-fg)",
-            borderRadius: 12,
-            padding: "10px 16px",
-            fontSize: 14,
-            marginBottom: 16,
-          }}
-        >
-          Conta suspensa em <code>admin-web/users/</code> — o perfil está{" "}
-          <code>{p.status}</code> aqui, mas está invisível no Marketplace porque
-          a conta associada não está ativa (ver{" "}
-          <code>admin-web/users/edge-cases.md</code>).
-        </div>
+        <Alert tone="danger">
+          <span>
+            <strong>Conta suspensa.</strong> O perfil não aparece no Marketplace enquanto a conta do parceiro estiver suspensa (Utilizadores).
+          </span>
+        </Alert>
       )}
 
-      {(p.status === "pending_review" || p.status === "changes_required") && (
-        <Section title="Checklist de aprovação">
-          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
-            {checklist.map((item) => (
-              <li key={item.label} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14 }}>
-                <span style={{ color: item.done ? "var(--status-published-fg)" : "var(--status-rejected-fg)" }}>
-                  {item.done ? "✓" : "✗"}
-                </span>
-                <span>{item.label}</span>
-                {item.detail && (
-                  <span style={{ color: "var(--ink-muted)", fontSize: 13 }}>— {item.detail}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      <Section title="Pré-visualizar perfil">
-        <p style={{ fontSize: 12.5, color: "var(--ink-muted)", marginBottom: 4 }}>
-          O que os organizadores veem na app (o NIF e a morada de faturação nunca aparecem).
-        </p>
-        <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-          {p.cover_photo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={p.cover_photo_url}
-              alt="Logótipo"
-              width={72}
-              height={72}
-              style={{ borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-            />
-          ) : (
-            <div
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: "50%",
-                background: "var(--surface-muted, #eee)",
-                flexShrink: 0,
-              }}
-            />
-          )}
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>{p.business_name || "(sem nome)"}</div>
-            <div style={{ fontSize: 13, color: "var(--ink-muted)", marginTop: 2 }}>
-              {categoryLabels.length > 0 ? categoryLabels.join(" · ") : "Sem categorias"}
-            </div>
-            <p style={{ fontSize: 14, marginTop: 8 }}>{p.description || "—"}</p>
-            <div style={{ fontSize: 13, color: "var(--ink-muted)", marginTop: 6 }}>
-              {p.nationwide ? "Âmbito nacional" : p.service_areas.join(", ") || "Sem área de serviço"}
-            </div>
-          </div>
-        </div>
-
-        {portfolioItems.length > 0 && (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
-            {portfolioItems.map((item) =>
-              item.media_type === "image" ? (
+      <div className="grid grid-main-side">
+        <div className="stack">
+          <Card title="Como aparece na app" subtitle="O que os organizadores veem. O NIF e a morada de faturação nunca aparecem.">
+            <div className="row" style={{ alignItems: "flex-start", gap: 16, flexWrap: "nowrap" }}>
+              {p.cover_photo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={item.id}
-                  src={item.media_url}
-                  alt=""
-                  width={88}
-                  height={88}
-                  style={{ borderRadius: 10, objectFit: "cover" }}
-                />
+                <img src={p.cover_photo_url} alt="Logótipo" width={64} height={64} style={{ borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
               ) : (
-                <div
-                  key={item.id}
-                  style={{
-                    width: 88,
-                    height: 88,
-                    borderRadius: 10,
-                    background: "var(--ink)",
-                    color: "white",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 12,
-                  }}
-                >
-                  vídeo
-                </div>
-              ),
+                <div aria-hidden style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--surface-3)", flexShrink: 0 }} />
+              )}
+              <div style={{ minWidth: 0 }}>
+                <p className="strong" style={{ fontSize: 16 }}>
+                  {p.business_name || "(sem nome)"}
+                </p>
+                <p style={{ marginTop: 6, maxWidth: "68ch" }}>{p.description || <span className="subtle">Sem descrição</span>}</p>
+              </div>
+            </div>
+
+            {portfolioItems.length > 0 && (
+              <div className="row" style={{ marginTop: 16 }}>
+                {portfolioItems.map((item) =>
+                  item.media_type === "image" ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={item.id} src={item.media_url} alt="" width={84} height={84} style={{ borderRadius: 10, objectFit: "cover" }} />
+                  ) : (
+                    <div key={item.id} className="row" style={{ width: 84, height: 84, borderRadius: 10, background: "var(--ink)", color: "var(--surface)", justifyContent: "center", fontSize: 12 }}>
+                      vídeo
+                    </div>
+                  ),
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        <div style={{ marginTop: 16 }}>
-          {p.pricing_mode === "quote_only" ? (
-            <p style={{ fontSize: 14, color: "var(--ink-muted)" }}>Só orçamento à medida — sem pacotes fixos.</p>
-          ) : servicePackages.length === 0 ? (
-            <p style={{ fontSize: 14, color: "var(--status-rejected-fg)" }}>
-              Modo &quot;Pacotes&quot; escolhido mas nenhum pacote adicionado.
-            </p>
-          ) : (
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
-              {servicePackages.map((pkg) => (
-                <li key={pkg.id} style={{ fontSize: 14 }}>
-                  <strong>{pkg.name}</strong> — {pkg.is_starting_price ? "a partir de " : ""}
-                  {pkg.price.toFixed(0)}€
-                  {pkg.description && (
-                    <span style={{ color: "var(--ink-muted)" }}> · {pkg.description}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </Section>
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+              <p className="field-label" style={{ marginBottom: 8 }}>
+                Serviços e preços
+              </p>
+              {p.pricing_mode === "quote_only" ? (
+                <p className="muted">Só orçamento à medida — sem pacotes fixos.</p>
+              ) : servicePackages.length === 0 ? (
+                <p className="form-error">Escolheu “Pacotes” mas ainda não adicionou nenhum.</p>
+              ) : (
+                <ul className="list bleed">
+                  {servicePackages.map((pkg) => (
+                    <li key={pkg.id}>
+                      <div className="list-main">
+                        <p className="list-title">{pkg.name}</p>
+                        {pkg.description && <p className="list-sub">{pkg.description}</p>}
+                      </div>
+                      <span className="strong tnum nowrap">
+                        {pkg.is_starting_price ? "desde " : ""}
+                        {fmtEur(pkg.price)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Card>
 
-      {p.status === "published" && (
-        <Section title="Destaque na app">
-          <p style={{ fontSize: 14, color: "var(--ink-muted)" }}>
-            {p.featured
-              ? "Este parceiro aparece primeiro no carrossel \"Em destaque\" para todos os organizadores."
-              : "O carrossel \"Em destaque\" é automático (melhor avaliação). Marca este parceiro para ele aparecer primeiro."}
-          </p>
-          <div>
-            {p.featured ? (
-              <SimpleActionButton id={p.id} label="Tirar do destaque" action={unfeaturePartner} />
-            ) : (
-              <SimpleActionButton id={p.id} label="★ Pôr em destaque" action={featurePartner} />
-            )}
-          </div>
-        </Section>
-      )}
-
-      <Section title="Negócio">
-        <Field label="Tipo" value={p.business_type === "company" ? "Empresa" : "Individual"} />
-        <Field label="Descrição" value={p.description || "—"} />
-        <Field
-          label="Área de atuação"
-          value={p.nationwide ? "Âmbito nacional" : p.service_areas.join(", ") || "—"}
-        />
-        <Field label="Website" value={p.website_url ?? "—"} />
-        <Field
-          label="Submetido em"
-          value={p.submitted_at ? new Date(p.submitted_at).toLocaleString("pt-PT") : "—"}
-        />
-        {p.rejection_reason && (
-          <Field label="Motivo (última rejeição)" value={p.rejection_reason} />
-        )}
-      </Section>
-
-      {v && (
-        <Section title="Dados fiscais (só admin)">
-          <Field label="NIF" value={v.tax_id} />
-          <Field label="Morada de faturação" value={v.billing_address} />
-        </Section>
-      )}
-
-      <Section title="Histórico">
-        {entries.length === 0 ? (
-          <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>
-            Sem decisões administrativas registadas.
-          </p>
-        ) : (
-          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
-            {entries.map((entry) => (
-              <li key={entry.id} style={{ fontSize: 14 }}>
-                <span style={{ color: "var(--ink-muted)" }}>
-                  {new Date(entry.created_at).toLocaleString("pt-PT")} —
-                </span>{" "}
-                {auditActionLabel(entry.action)}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      {availableActions.length > 0 && (
-        <div style={{ display: "flex", gap: 12, marginTop: 24, flexWrap: "wrap" }}>
-          {availableActions.includes("approve") && (
-            <SimpleActionButton id={p.id} label="Aprovar" action={approvePartner} />
-          )}
-          {availableActions.includes("reject") && (
-            <ReasonActionForm id={p.id} idFieldName="partner_id" label="Rejeitar" action={rejectPartner} />
-          )}
-          {availableActions.includes("request_changes") && (
-            <ReasonActionForm
-              id={p.id}
-              idFieldName="partner_id"
-              label="Pedir alterações"
-              action={requestChangesFromPartner}
+          <Card title="Dados do negócio">
+            <DetailList
+              items={[
+                { label: "Tipo", value: p.business_type === "company" ? "Empresa" : "Individual" },
+                { label: "Área de atuação", value: p.nationwide ? "Âmbito nacional" : p.service_areas.join(", ") || "—" },
+                {
+                  label: "Website",
+                  value: p.website_url ? (
+                    <a href={p.website_url} target="_blank" rel="noreferrer" className="link">
+                      {p.website_url}
+                    </a>
+                  ) : (
+                    "—"
+                  ),
+                },
+                { label: "Enviado para revisão", value: fmtDateTime(p.submitted_at) },
+                ...(v ? [{ label: "NIF (só admin)", value: v.tax_id || "—" }, { label: "Morada de faturação", value: v.billing_address || "—" }] : []),
+                ...(p.rejection_reason ? [{ label: "Último motivo", value: p.rejection_reason }] : []),
+              ]}
             />
+          </Card>
+
+          <Card title="Histórico">
+            {entries.length === 0 ? (
+              <p className="muted">Sem decisões registadas.</p>
+            ) : (
+              <ul className="timeline">
+                {entries.map((entry) => (
+                  <li key={entry.id}>
+                    <p>{auditActionLabel(entry.action).replace(/^./, (c) => c.toUpperCase())}</p>
+                    <p className="timeline-time">{fmtDateTime(entry.created_at)}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+
+        <div className="stack">
+          {(reviewing || availableActions.length > 0) && (
+            <Card
+              title={reviewing ? "Aprovação" : "Ações"}
+              subtitle={reviewing ? (missing === 0 ? "Tudo pronto para aprovar." : `Faltam ${missing} ${missing === 1 ? "requisito" : "requisitos"}.`) : undefined}
+              tone={reviewing ? (missing === 0 ? "accent" : "warning") : undefined}
+            >
+              <div className="stack">
+                {reviewing && (
+                  <ul className="checklist">
+                    {checklist.map((item) => (
+                      <li key={item.label}>
+                        <span className="check-icon" data-done={item.done} aria-label={item.done ? "feito" : "em falta"}>
+                          {item.done ? "✓" : "!"}
+                        </span>
+                        <span>
+                          {item.label}
+                          {item.detail && <span className="muted"> · {item.detail}</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {availableActions.length > 0 && (
+                  <div className="stack-sm">
+                    {availableActions.includes("approve") && <SimpleActionButton id={p.id} label="Aprovar e publicar" action={approvePartner} block />}
+                    {availableActions.includes("request_changes") && (
+                      <ReasonActionForm id={p.id} idFieldName="partner_id" label="Pedir alterações" action={requestChangesFromPartner} block />
+                    )}
+                    {availableActions.includes("restore") && <SimpleActionButton id={p.id} label="Restaurar" action={restorePartner} block />}
+                    {availableActions.includes("reject") && (
+                      <ReasonActionForm id={p.id} idFieldName="partner_id" label="Rejeitar" action={rejectPartner} variant="danger" block />
+                    )}
+                    {availableActions.includes("suspend") && (
+                      <ReasonActionForm id={p.id} idFieldName="partner_id" label="Suspender" action={suspendPartner} variant="danger" block />
+                    )}
+                  </div>
+                )}
+              </div>
+            </Card>
           )}
-          {availableActions.includes("suspend") && (
-            <ReasonActionForm id={p.id} idFieldName="partner_id" label="Suspender" action={suspendPartner} />
-          )}
-          {availableActions.includes("restore") && (
-            <SimpleActionButton id={p.id} label="Restaurar" action={restorePartner} />
+
+          <Card title="Pagamentos">
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <span className="muted">Stripe</span>
+              {stripeOn ? <Badge tone="success">Ativos</Badge> : <Badge tone="warning">Por ativar</Badge>}
+            </div>
+            {!stripeOn && (
+              <>
+                <p className="field-hint" style={{ marginTop: 8 }}>
+                  O parceiro ativa em Perfil → Pagamentos, na app, ou preenche aqui os dados dele. Sem isto não pode receber sinais.
+                </p>
+                <PaymentsOnboarding partnerId={p.id} />
+              </>
+            )}
+          </Card>
+
+          {p.status === "published" && (
+            <Card title="Destaque na app">
+              <p className="muted" style={{ marginBottom: 12, fontSize: 13 }}>
+                {p.featured
+                  ? "Aparece primeiro no carrossel “Em destaque” para todos os organizadores."
+                  : "O carrossel “Em destaque” é automático (melhor avaliação). Marca para aparecer primeiro."}
+              </p>
+              {p.featured ? (
+                <SimpleActionButton id={p.id} label="Tirar do destaque" action={unfeaturePartner} variant="secondary" block />
+              ) : (
+                <SimpleActionButton id={p.id} label="★ Pôr em destaque" action={featurePartner} variant="secondary" block />
+              )}
+            </Card>
           )}
         </div>
-      )}
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section
-      style={{
-        background: "var(--surface)",
-        borderRadius: 16,
-        boxShadow: "var(--shadow-card)",
-        padding: 20,
-        marginBottom: 16,
-      }}
-    >
-      <h2 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{title}</h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{children}</div>
-    </section>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ display: "flex", gap: 12, fontSize: 14 }}>
-      <span style={{ color: "var(--ink-muted)", minWidth: 160 }}>{label}</span>
-      <span>{value}</span>
+      </div>
     </div>
   );
 }

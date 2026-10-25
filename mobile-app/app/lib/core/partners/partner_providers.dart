@@ -227,8 +227,10 @@ enum PartnerRelationshipStatus { none, requestPending, booked }
 /// casamento + parceiro → bloqueia um novo pedido. Um `quote_request`
 /// `declined`/`expired` ou uma `booking` `cancelled_by_*`/`expired` não
 /// contam — pedir de novo nesses casos continua legítimo (edge-cases.md).
+// autoDispose (2026-10-21): volta a perguntar sempre que o perfil abre —
+// antes ficava "Reservado" depois de a reserva ser cancelada.
 final partnerRelationshipStatusProvider =
-    FutureProvider.family<PartnerRelationshipStatus, String>((
+    FutureProvider.autoDispose.family<PartnerRelationshipStatus, String>((
       ref,
       partnerId,
     ) async {

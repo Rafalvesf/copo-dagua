@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/chat/chat_list_controller.dart';
 import '../../core/theme/app_theme.dart';
+import 'first_run_tour.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
 import '../../core/wedding/menu_style.dart';
 import '../../core/wedding/wedding_controller.dart';
@@ -40,7 +41,7 @@ class FloatingBottomNav extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) =>
       // Fica fixa por cima enquanto a página anima (page_transitions.dart).
-      StayOverNav(child: _buildNav(context, ref));
+      StayOverNav(child: TourHost(role: TourRole.organizer, child: _buildNav(context, ref)));
 
   Widget _buildNav(BuildContext context, WidgetRef ref) {
     // A navbar acompanha a cor escolhida em "Aparência do menu" (098).

@@ -5,12 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { KpiCard } from "@/components/KpiCard";
 import { BookingsBarChart } from "@/components/BookingsBarChart";
-import { StatusDonut } from "@/components/StatusDonut";
 import { BookingStatusBadge } from "@/components/BookingStatusBadge";
-import { TabbedCard } from "@/components/TabbedCard";
 import { DashboardGrid } from "@/components/DashboardGrid";
-import { MaintenanceSwitch } from "@/components/MaintenanceSwitch";
-import type { BookingStatus, PlatformSettings } from "@/lib/types";
+import { fmtDate, fmtDateTime, fmtEur } from "@/lib/format";
+import type { BookingStatus } from "@/lib/types";
 
 type ActivityEntry = {
   id: string;
@@ -85,27 +83,16 @@ function bucketizeSum(rows: { created_at: string; amount: number }[], buckets: n
 
 const DONUT_COLORS: Record<string, string> = {
   confirmed: "var(--accent)",
-  awaiting_deposit: "#c9a86a",
-  completed: "#8fa87a",
-  cancelled: "var(--status-suspended-fg)",
-  expired: "#b8b2a3",
-  disputed: "var(--status-rejected-fg)",
+  awaiting_deposit: "var(--chart-2)",
+  completed: "var(--chart-3)",
+  cancelled: "var(--chart-4)",
+  expired: "var(--chart-5)",
+  disputed: "var(--danger-fg)",
 };
 
 export default async function DashboardPage() {
-  const { fullName, adminRole } = await requireAdmin();
+  const { fullName } = await requireAdmin();
   const supabase = await createClient();
-
-  const { data: platformSettings } = await supabase
-    .from("platform_settings")
-    .select("*")
-    .eq("id", 1)
-    .single();
-  const maintenance = platformSettings as
-    | (Pick<PlatformSettings, "maintenance_mode_couple" | "maintenance_mode_partner"> & {
-        maintenance_mode_guest?: boolean;
-      })
-    | null;
 
   // `now` fixado a um único `Date.now()`, arredondado à meia-noite UTC, e
   // tudo o resto derivado dele — nunca uma segunda chamada independente a
@@ -166,11 +153,6 @@ export default async function DashboardPage() {
     expiringHolds,
     stalePartners,
     flaggedBookings,
-    quoteRequests,
-    proposalsSent,
-    proposalsAccepted,
-    bookingsTotal,
-    confirmedBookingsTotal,
     activity,
     recentBookings,
     openSupportTickets,
@@ -202,11 +184,6 @@ export default async function DashboardPage() {
       .from("bookings")
       .select("id, booking_number, status, partner:partner_profiles!bookings_partner_id_fkey(business_name)")
       .in("status", ["disputed", "payment_overdue"]),
-    supabase.from("quote_requests").select("id", { count: "exact", head: true }),
-    supabase.from("proposals").select("id", { count: "exact", head: true }),
-    supabase.from("proposals").select("id", { count: "exact", head: true }).eq("status", "accepted"),
-    supabase.from("bookings").select("id", { count: "exact", head: true }),
-    supabase.from("bookings").select("id", { count: "exact", head: true }).eq("status", "confirmed"),
     supabase
       .from("audit_logs")
       .select("id, action, target_table, created_at, actor:profiles!audit_logs_actor_id_fkey(full_name)")
@@ -252,7 +229,7 @@ export default async function DashboardPage() {
   const kpis = [
     {
       icon: <UsersIcon />,
-      label: "Organizadores registados",
+      label: "Organizadores",
       value: (couples.count ?? 0).toLocaleString("pt-PT"),
       deltaPct: deltaPct(couplesNew30, couplesNewPrev30),
       trend: bucketize(couplesRows60, 8, PERIOD_DAYS * 2, since60),
@@ -267,7 +244,7 @@ export default async function DashboardPage() {
     },
     {
       icon: <CalendarIcon />,
-      label: "Reservas (30 dias)",
+      label: "Reservas · 30 dias",
       value: bookings30Count.toLocaleString("pt-PT"),
       deltaPct: deltaPct(bookings30Count, bookingsPrev30Count),
       trend: bucketize(bookingsRows30, 8, PERIOD_DAYS, since30),
@@ -275,7 +252,7 @@ export default async function DashboardPage() {
     },
     {
       icon: <CoinIcon />,
-      label: "Volume de reservas (30 dias)",
+      label: "Volume · 30 dias",
       value: `${volume30.toLocaleString("pt-PT")} €`,
       deltaPct: deltaPct(volume30, volumePrev30),
       trend: bucketizeSum(
@@ -314,388 +291,254 @@ export default async function DashboardPage() {
   const expiring = (expiringHolds.data ?? []) as ExpiringBooking[];
   const stale = (stalePartners.data ?? []) as StalePartner[];
   const flagged = (flaggedBookings.data ?? []) as FlaggedBooking[];
-  const urgentCount =
-    expiring.length + stale.length + flagged.length + openDisputesCount + refundsPendingCount + partnersNoStripeCount;
-
   const entries = (activity.data ?? []) as unknown as ActivityEntry[];
   const recent = (recentBookings.data ?? []) as unknown as RecentBooking[];
   const supportTicketRows = (openSupportTickets.data ?? []) as unknown as SupportTicketRow[];
 
-  const funnel = [
-    { label: "Pedidos de orçamento", value: quoteRequests.count ?? 0 },
-    { label: "Propostas enviadas", value: proposalsSent.count ?? 0 },
-    { label: "Propostas aceites", value: proposalsAccepted.count ?? 0 },
-    { label: "Reservas criadas", value: bookingsTotal.count ?? 0 },
-    { label: "Reservas confirmadas", value: confirmedBookingsTotal.count ?? 0 },
+  const firstName = fullName.split(" ")[0];
+  const openTickets = supportTicketRows.length;
+  const nowLabel = new Date().toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Lisbon" });
+
+  type Todo = { key: string; href: string; title: string; detail: string; tone: "danger" | "warning" | "info" };
+  const todos: Todo[] = [
+    ...(openDisputesCount > 0
+      ? [{ key: "disp", href: "/disputes", tone: "danger" as const, title: `${openDisputesCount} ${openDisputesCount === 1 ? "disputa" : "disputas"} por decidir`, detail: "A reserva fica parada até decidires" }]
+      : []),
+    ...flagged.map((b) => ({
+      key: `f-${b.id}`,
+      href: `/bookings/${b.id}`,
+      tone: "danger" as const,
+      title: `${b.booking_number ?? "Reserva"} · ${partnerName(b.partner)}`,
+      detail: b.status === "disputed" ? "Reserva em disputa" : "Pagamento em atraso",
+    })),
+    ...(refundsPendingCount > 0
+      ? [{ key: "ref", href: "/refunds", tone: "warning" as const, title: `${refundsPendingCount} ${refundsPendingCount === 1 ? "reembolso" : "reembolsos"} por confirmar`, detail: "Pagamentos de reservas canceladas" }]
+      : []),
+    ...expiring.map((b) => ({
+      key: `e-${b.id}`,
+      href: `/bookings/${b.id}`,
+      tone: "warning" as const,
+      title: `${b.booking_number ?? "Reserva"} · ${partnerName(b.partner)}`,
+      detail: `Prazo do sinal termina ${fmtDateTime(b.hold_expires_at)}`,
+    })),
+    ...((pendingPartners.count ?? 0) > 0
+      ? [{
+          key: "pp",
+          href: "/partners?status=pending_review",
+          tone: "info" as const,
+          title: `${pendingPartners.count} ${pendingPartners.count === 1 ? "parceiro" : "parceiros"} para aprovar`,
+          detail:
+            partnersNoStripeCount > 0
+              ? `${partnersNoStripeCount} ainda sem pagamentos ativos (Stripe)`
+              : stale.length > 0
+                ? `${stale.length} à espera há mais de ${STALE_APPROVAL_DAYS} dias`
+                : "Rever perfil e aprovar",
+        }]
+      : []),
+    ...(openTickets > 0
+      ? [{ key: "sup", href: "/support", tone: "info" as const, title: `${openTickets} ${openTickets === 1 ? "pedido" : "pedidos"} de suporte`, detail: supportTicketRows[0]?.subject ?? "Por responder" }]
+      : []),
   ];
 
-  const firstName = fullName.split(" ")[0];
-
-  const urgentPanel =
-    urgentCount === 0 ? (
-      <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>Nada a precisar de atenção imediata.</p>
-    ) : (
-      <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
-        {openDisputesCount > 0 && (
-          <li style={{ fontSize: 14 }}>
-            <Link href="/disputes" style={{ fontWeight: 600 }}>
-              {openDisputesCount} {openDisputesCount === 1 ? "disputa" : "disputas"} por decidir
-            </Link>{" "}
-            — a reserva fica parada até decidires
-          </li>
-        )}
-        {refundsPendingCount > 0 && (
-          <li style={{ fontSize: 14 }}>
-            <Link href="/refunds" style={{ fontWeight: 600 }}>
-              {refundsPendingCount} {refundsPendingCount === 1 ? "pagamento" : "pagamentos"} de reservas canceladas
-            </Link>{" "}
-            — confirma se há reembolso a fazer
-          </li>
-        )}
-        {partnersNoStripeCount > 0 && (
-          <li style={{ fontSize: 14 }}>
-            <Link href="/partners?status=pending_review" style={{ fontWeight: 600 }}>
-              {partnersNoStripeCount} {partnersNoStripeCount === 1 ? "parceiro" : "parceiros"} à espera sem pagamentos ativos
-            </Link>{" "}
-            — só podem ser aprovados depois de ativarem a Stripe
-          </li>
-        )}
-        {expiring.map((b) => (
-          <li key={b.id} style={{ fontSize: 14 }}>
-            <Link href={`/bookings/${b.id}`} style={{ fontWeight: 600 }}>
-              {b.booking_number} · {partnerName(b.partner)}
-            </Link>{" "}
-            — janela de sinal expira em {new Date(b.hold_expires_at).toLocaleString("pt-PT")}
-          </li>
-        ))}
-        {stale.map((p) => (
-          <li key={p.id} style={{ fontSize: 14 }}>
-            <Link href={`/partners/${p.id}`} style={{ fontWeight: 600 }}>
-              {p.business_name}
-            </Link>{" "}
-            — a aguardar aprovação desde {new Date(p.submitted_at).toLocaleDateString("pt-PT")} (
-            {STALE_APPROVAL_DAYS}+ dias)
-          </li>
-        ))}
-        {flagged.map((b) => (
-          <li key={b.id} style={{ fontSize: 14 }}>
-            <Link href={`/bookings/${b.id}`} style={{ fontWeight: 600 }}>
-              {b.booking_number} · {partnerName(b.partner)}
-            </Link>{" "}
-            — {b.status === "disputed" ? "em disputa" : "pagamento em atraso"}
-          </li>
-        ))}
-      </ul>
-    );
-
-  const quickActionsPanel = (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <QuickAction href="/partners?status=pending_review" label="Aprovar parceiro" />
-        <QuickAction href="/categories" label="Nova categoria" />
-      </div>
-
-      {(pendingPartners.count ?? 0) > 0 && (
-        <div style={{ background: "var(--status-pending-bg)", borderRadius: 12, padding: 16 }}>
-          <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Parceiros aguardam aprovação</h3>
-          <p style={{ fontSize: 13, color: "var(--ink-muted)", marginBottom: 12 }}>
-            {pendingPartners.count} parceiro{pendingPartners.count === 1 ? "" : "s"} a aguardar aprovação
-          </p>
-          <Link
-            href="/partners?status=pending_review"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 13,
-              fontWeight: 600,
-              background: "var(--accent)",
-              color: "var(--surface)",
-              padding: "8px 14px",
-              borderRadius: 999,
-            }}
-          >
-            Rever parceiros →
-          </Link>
+  const todoPanel = (
+    <section className="card" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div className="card-head" style={{ paddingBottom: 10 }}>
+        <div>
+          <h2 className="card-title">Precisa de ti</h2>
+          <p className="card-sub">{todos.length === 0 ? "Está tudo em dia." : `${todos.length} ${todos.length === 1 ? "assunto" : "assuntos"} por tratar`}</p>
         </div>
-      )}
-    </div>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", borderTop: "1px solid var(--border)" }}>
+        {todos.length === 0 ? (
+          <div className="empty">
+            <p className="empty-title">Nada pendente</p>
+            Disputas, reembolsos, aprovações e suporte aparecem aqui.
+          </div>
+        ) : (
+          <ul className="list">
+            {todos.map((t) => (
+              <li key={t.key} style={{ padding: 0 }}>
+                <Link href={t.href} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 20px", width: "100%" }}>
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                      background: t.tone === "danger" ? "var(--danger-fg)" : t.tone === "warning" ? "var(--warning-fg)" : "var(--info-fg)",
+                    }}
+                  />
+                  <span className="list-main">
+                    <span className="list-title" style={{ display: "block" }}>{t.title}</span>
+                    <span className="list-sub" style={{ display: "block" }}>{t.detail}</span>
+                  </span>
+                  <span className="subtle" aria-hidden>›</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-      <div className="admin-page-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexShrink: 0, marginBottom: 18 }}>
-        <div>
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 600 }}>Olá, {firstName}!</h1>
-          <p style={{ color: "var(--ink-muted)", marginTop: 4, fontSize: 14, fontWeight: 400 }}>
-            Aqui está o que está a acontecer na plataforma hoje.
-          </p>
+    <div className="dash">
+      <header className="page-header" style={{ flexShrink: 0 }}>
+        <div className="page-header-text">
+          <p className="page-eyebrow" style={{ marginBottom: 4 }}>{nowLabel.charAt(0).toUpperCase() + nowLabel.slice(1)}</p>
+          <h1 className="page-title">Olá, {firstName}</h1>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          {adminRole === "super_admin" && maintenance && (
-            <MaintenanceSwitch
-              couple={maintenance.maintenance_mode_couple}
-              partner={maintenance.maintenance_mode_partner}
-              guest={maintenance.maintenance_mode_guest ?? false}
-              guestAvailable={maintenance.maintenance_mode_guest !== undefined}
-            />
-          )}
+        <div className="page-actions">
           <LiveRefresh intervalSeconds={20} />
+          <Link href="/analytics" className="btn btn-secondary btn-sm">
+            Ver analytics
+          </Link>
         </div>
-      </div>
+      </header>
 
       <DashboardGrid
         items={[
           ...kpis.map((kpi, i) => ({
             id: `kpi-${i}`,
             content: <KpiCard key={kpi.label} {...kpi} />,
-            defaultLayout: { x: i * 3, y: 0, w: 3, h: 6 },
+            defaultLayout: { x: i * 3, y: 0, w: 3, h: 5 },
           })),
           {
+            id: "urgentes",
+            defaultLayout: { x: 0, y: 5, w: 4, h: 12 },
+            content: todoPanel,
+          },
+          {
             id: "reservas-chart",
-            defaultLayout: { x: 0, y: 6, w: 5, h: 11 },
+            defaultLayout: { x: 4, y: 5, w: 5, h: 12 },
             content: (
-              <section style={{ background: "var(--surface)", borderRadius: 16, boxShadow: "var(--shadow-card)", padding: 20, height: "100%", overflow: "hidden" }}>
+              <section className="card card-body" style={{ height: "100%", overflow: "hidden" }}>
                 <BookingsBarChart rows={bookingsRows365} nowMs={nowMs} />
               </section>
             ),
           },
           {
             id: "estado-donut",
-            defaultLayout: { x: 5, y: 6, w: 3, h: 11 },
+            defaultLayout: { x: 9, y: 5, w: 3, h: 12 },
             content: (
-              <section
-                style={{
-                  background: "var(--surface)",
-                  borderRadius: 16,
-                  boxShadow: "var(--shadow-card)",
-                  padding: 20,
-                  height: "100%",
-                  overflow: "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <h2 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, flexShrink: 0 }}>Estado das reservas</h2>
-                <div style={{ flex: 1, minHeight: 0 }}>
-                  <StatusDonut slices={donutSlices} />
+              <section className="card card-body" style={{ height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                <h2 className="card-title" style={{ flexShrink: 0 }}>Estado das reservas</h2>
+                <p className="card-sub" style={{ marginBottom: 10, flexShrink: 0 }}>Últimos 30 dias</p>
+                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 9, flex: 1, minHeight: 0, overflowY: "auto" }}>
+                  {donutSlices.map((sl) => {
+                    const max = Math.max(1, ...donutSlices.map((x) => x.value));
+                    return (
+                      <li key={sl.label} style={{ fontSize: 13, opacity: sl.value === 0 ? 0.55 : 1 }}>
+                        <div className="row" style={{ justifyContent: "space-between", marginBottom: 4, flexWrap: "nowrap" }}>
+                          <span>{sl.label}</span>
+                          <span className="strong tnum">{sl.value}</span>
+                        </div>
+                        <div className="bar-track">
+                          <div className="bar-fill" style={{ width: `${(sl.value / max) * 100}%`, background: sl.color }} />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ),
+          },
+          {
+            id: "reservas-recentes",
+            defaultLayout: { x: 0, y: 17, w: 8, h: 12 },
+            content: (
+              <section className="card" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <div className="card-head" style={{ paddingBottom: 12 }}>
+                  <h2 className="card-title">Últimas reservas</h2>
+                  <Link href="/bookings" className="link" style={{ fontSize: 13 }}>
+                    Ver todas
+                  </Link>
+                </div>
+                <div className="table-wrap" style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+                  {recent.length === 0 ? (
+                    <div className="empty">Sem reservas ainda.</div>
+                  ) : (
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Reserva</th>
+                          <th>Organizador</th>
+                          <th>Serviço</th>
+                          <th>Data do evento</th>
+                          <th className="num">Valor</th>
+                          <th>Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recent.map((b) => {
+                          const couple = one(b.couple);
+                          const partner = one(b.partner);
+                          const proposal = one(b.proposal);
+                          return (
+                            <tr key={b.id}>
+                              <td>
+                                <Link href={`/bookings/${b.id}`} className="cell-main">
+                                  {b.booking_number}
+                                </Link>
+                                <span className="cell-sub">{partner?.business_name ?? "—"}</span>
+                              </td>
+                              <td>{couple?.full_name ?? "—"}</td>
+                              <td className="muted">{proposal?.title ?? "—"}</td>
+                              <td className="muted nowrap">{fmtDate(b.event_date)}</td>
+                              <td className="num">{fmtEur(b.total_amount)}</td>
+                              <td>
+                                <BookingStatusBadge status={b.status} />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </section>
             ),
           },
           {
-            id: "atividade-suporte",
-            defaultLayout: { x: 8, y: 6, w: 4, h: 11 },
+            id: "atividade",
+            defaultLayout: { x: 8, y: 17, w: 4, h: 12 },
             content: (
-              <TabbedCard
-                height="100%"
-                tabs={[
-                  {
-                    key: "atividade",
-                    label: "Atividade recente",
-                    content: (
-                      <div style={{ overflowY: "auto", maxHeight: 190 }}>
-                        {entries.length === 0 ? (
-                          <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>Sem atividade registada ainda.</p>
-                        ) : (
-                          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 12 }}>
-                            {entries.map((entry) => {
-                              const actor = one(entry.actor);
-                              return (
-                                <li key={entry.id} style={{ fontSize: 13 }}>
-                                  <span style={{ fontWeight: 600 }}>{actor?.full_name ?? "Sistema"}</span> {auditActionLabel(entry.action)}
-                                  <br />
-                                  <span style={{ color: "var(--ink-muted)", fontSize: 12 }}>
-                                    {new Date(entry.created_at).toLocaleString("pt-PT")}
-                                  </span>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        )}
-                      </div>
-                    ),
-                  },
-                  {
-                    key: "suporte",
-                    label: "Suporte",
-                    content: (
-                      <div style={{ overflowY: "auto", maxHeight: 190 }}>
-                        {supportTicketRows.length === 0 ? (
-                          <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>Sem pedidos por resolver.</p>
-                        ) : (
-                          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 12 }}>
-                            {supportTicketRows.map((t) => {
-                              const author = one(t.profiles);
-                              return (
-                                <li key={t.id} style={{ fontSize: 13 }}>
-                                  <Link href="/support" style={{ fontWeight: 600, color: "var(--ink)" }}>
-                                    {t.subject}
-                                  </Link>
-                                  {t.category === "dispute_delay" && (
-                                    <span
-                                      style={{
-                                        marginLeft: 6,
-                                        fontSize: 10,
-                                        fontWeight: 800,
-                                        padding: "2px 7px",
-                                        borderRadius: 999,
-                                        background: "var(--status-rejected-bg, #fde2e2)",
-                                        color: "var(--status-rejected-fg)",
-                                      }}
-                                    >
-                                      Disputa/atraso
-                                    </span>
-                                  )}
-                                  <br />
-                                  <span style={{ color: "var(--ink-muted)", fontSize: 12 }}>
-                                    {author?.full_name ?? "Utilizador"} · {new Date(t.created_at).toLocaleString("pt-PT")}
-                                  </span>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        )}
-                      </div>
-                    ),
-                  },
-                ]}
-              />
-            ),
-          },
-          {
-            id: "reservas-recentes-funil",
-            defaultLayout: { x: 0, y: 17, w: 7, h: 13 },
-            content: (
-              <TabbedCard
-                height="100%"
-                tabs={[
-                  {
-                    key: "recentes",
-                    label: "Reservas recentes",
-                    content: (
-                      <>
-                        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-                          <Link
-                            href="/bookings"
-                            style={{
-                              fontSize: 13,
-                              fontWeight: 600,
-                              border: "1px solid var(--border-muted)",
-                              borderRadius: 10,
-                              padding: "7px 14px",
-                            }}
-                          >
-                            Ver todas as reservas
-                          </Link>
-                        </div>
-                        {recent.length === 0 ? (
-                          <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>Sem reservas ainda.</p>
-                        ) : (
-                          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                            <thead>
-                              <tr style={{ textAlign: "left", fontSize: 12, color: "var(--ink-muted)" }}>
-                                <th style={{ padding: "6px 0" }}>ID</th>
-                                <th>Organizador</th>
-                                <th>Parceiro</th>
-                                <th>Serviço</th>
-                                <th>Data</th>
-                                <th>Valor</th>
-                                <th>Estado</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {recent.map((b) => {
-                                const couple = one(b.couple);
-                                const partner = one(b.partner);
-                                const proposal = one(b.proposal);
-                                return (
-                                  <tr key={b.id} style={{ borderTop: "1px solid var(--border-muted)", fontSize: 13 }}>
-                                    <td style={{ padding: "16px 0" }}>
-                                      <Link href={`/bookings/${b.id}`} style={{ fontWeight: 600 }}>
-                                        {b.booking_number}
-                                      </Link>
-                                    </td>
-                                    <td>{couple?.full_name ?? "—"}</td>
-                                    <td>{partner?.business_name ?? "—"}</td>
-                                    <td>{proposal?.title ?? "—"}</td>
-                                    <td style={{ color: "var(--ink-muted)" }}>
-                                      {new Date(b.event_date).toLocaleDateString("pt-PT")}
-                                    </td>
-                                    <td>{Number(b.total_amount).toLocaleString("pt-PT")} €</td>
-                                    <td>
-                                      <BookingStatusBadge status={b.status} />
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        )}
-                      </>
-                    ),
-                  },
-                  {
-                    key: "funil",
-                    label: "Funil de reservas",
-                    content: (
-                      <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-                        {funnel.map((step) => (
-                          <div key={step.label} style={{ textAlign: "center" }}>
-                            <div style={{ fontFamily: "var(--font-serif)", fontSize: 24 }}>{step.value}</div>
-                            <div style={{ fontSize: 12, color: "var(--ink-muted)" }}>{step.label}</div>
-                          </div>
-                        ))}
-                      </div>
-                    ),
-                  },
-                ]}
-              />
-            ),
-          },
-          {
-            id: "urgentes-acoes",
-            defaultLayout: { x: 7, y: 17, w: 5, h: 13 },
-            content: (
-              <TabbedCard
-                height="100%"
-                tabs={[
-                  {
-                    key: "urgent",
-                    label: "Assuntos urgentes",
-                    badge: urgentCount,
-                    highlight: urgentCount > 0,
-                    content: urgentPanel,
-                  },
-                  { key: "actions", label: "Ações rápidas", content: quickActionsPanel },
-                ]}
-                defaultTabKey={urgentCount > 0 ? "urgent" : "actions"}
-              />
+              <section className="card" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <div className="card-head" style={{ paddingBottom: 10 }}>
+                  <h2 className="card-title">Atividade da equipa</h2>
+                </div>
+                <div style={{ flex: 1, minHeight: 0, overflowY: "auto", borderTop: "1px solid var(--border)" }}>
+                  {entries.length === 0 ? (
+                    <div className="empty">Sem atividade registada.</div>
+                  ) : (
+                    <ul className="list">
+                      {entries.map((entry) => {
+                        const actor = one(entry.actor);
+                        return (
+                          <li key={entry.id}>
+                            <span className="avatar" style={{ width: 28, height: 28, fontSize: 11 }} aria-hidden>
+                              {(actor?.full_name ?? "S").slice(0, 1)}
+                            </span>
+                            <div className="list-main">
+                              <p>
+                                <span className="strong">{actor?.full_name ?? "Sistema"}</span> {auditActionLabel(entry.action)}
+                              </p>
+                              <p className="list-sub">{fmtDateTime(entry.created_at)}</p>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </section>
             ),
           },
         ]}
       />
     </div>
-  );
-}
-
-function QuickAction({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        padding: "10px 12px",
-        borderRadius: 12,
-        border: "1px solid var(--border-muted)",
-        fontSize: 13,
-        fontWeight: 600,
-      }}
-    >
-      {label}
-    </Link>
   );
 }
 

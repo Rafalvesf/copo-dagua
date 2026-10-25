@@ -19,6 +19,8 @@ import '../features/bookings/screens/couple_bookings_screen.dart';
 import '../features/payments/screens/pay_screen.dart';
 import '../features/partner_payments/screens/partner_payout_setup_screen.dart';
 import '../features/payments/screens/pay_done_screen.dart';
+import '../features/payments/screens/pay_return_screen.dart';
+import 'payments/pay_return.dart';
 import 'payments/payments.dart' show PayArgs;
 import '../features/guest_offers/screens/guest_offers_screen.dart';
 import '../features/budget/screens/budget_screen.dart';
@@ -176,6 +178,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             UserRole.guest => '/guest-home',
             _ => '/home',
           };
+          // Regresso de um pagamento (página recarregou): direto à confirmação.
+          if (PayReturn.pending != null && location != '/pay/return') return '/pay/return';
           if (_authRoutes.contains(location) ||
               location == '/verify-email' ||
               location == '/onboarding') {
@@ -476,6 +480,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => state.extra is PayArgs
             ? PayScreen(args: state.extra as PayArgs)
             : const _LostRoute('/bookings'),
+      ),
+      GoRoute(
+        path: '/pay/return',
+        builder: (context, state) => const PayReturnScreen(),
       ),
       GoRoute(
         path: '/pay/done',

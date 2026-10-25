@@ -1,7 +1,9 @@
-﻿import type { ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Sparkline } from "./Sparkline";
 
+// Indicador do dashboard: valor, variação face aos 30 dias anteriores e
+// tendência (dados reais agregados em page.tsx).
 export function KpiCard({
   icon,
   label,
@@ -19,61 +21,43 @@ export function KpiCard({
 }) {
   const positive = (deltaPct ?? 0) >= 0;
   const content = (
-    <div
-      style={{
-        background: "var(--surface)",
-        borderRadius: 18,
-        boxShadow: "var(--shadow-card)",
-        padding: 18,
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-        height: "100%",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <span
-          aria-hidden
-          style={{
-            width: 38,
-            height: 38,
-            flexShrink: 0,
-            borderRadius: "50%",
-            background: "var(--status-published-bg)",
-            color: "var(--accent-dark)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+    <div className="card stat kpi" style={{ height: "100%", justifyContent: "space-between", gap: 6 }}>
+      <span className="stat-label" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <span aria-hidden style={{ display: "inline-flex", color: "var(--accent)", flexShrink: 0 }}>
           {icon}
         </span>
-        <div className="kpi-value" style={{ fontFamily: "var(--font-serif)", fontSize: 32, fontWeight: 500, whiteSpace: "nowrap" }}>{value}</div>
-      </div>
-      <span style={{ fontSize: 13, color: "var(--ink-muted)", fontWeight: 400 }}>{label}</span>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
-        <div>
-          {deltaPct === null ? (
-            <span style={{ fontSize: 12.5, color: "var(--ink-muted)" }}>sem histórico</span>
-          ) : (
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 500,
-                color: positive ? "var(--status-published-fg)" : "var(--status-rejected-fg)",
-              }}
-            >
-              {positive ? "↑" : "↓"} {Math.abs(deltaPct).toFixed(1)}%
-            </span>
-          )}
-          <p className="kpi-vs" style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 2 }}>vs. período anterior</p>
+        {label}
+      </span>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="stat-value kpi-value" style={{ fontSize: 26 }}>
+            {value}
+          </div>
+          <div className="stat-hint" style={{ marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {deltaPct === null ? (
+              "sem histórico"
+            ) : (
+              <>
+                <span className={positive ? "stat-up" : "stat-down"}>
+                  {positive ? "▲" : "▼"} {Math.abs(deltaPct).toFixed(0)}%
+                </span>{" "}
+                <span className="kpi-vs">vs. mês anterior</span>
+              </>
+            )}
+          </div>
         </div>
-        <span className="kpi-spark" style={{ display: "flex" }}>
-          <Sparkline points={trend} color={positive ? "var(--accent)" : "var(--status-rejected-fg)"} />
+        <span className="kpi-spark" style={{ display: "flex", flexShrink: 0, marginBottom: 2 }}>
+          <Sparkline points={trend} color={positive ? "var(--accent)" : "var(--danger-fg)"} />
         </span>
       </div>
     </div>
   );
 
-  return href ? <Link href={href}>{content}</Link> : content;
+  return href ? (
+    <Link href={href} style={{ display: "block", height: "100%" }}>
+      {content}
+    </Link>
+  ) : (
+    content
+  );
 }

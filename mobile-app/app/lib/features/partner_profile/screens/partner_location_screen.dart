@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/auth_controller.dart';
@@ -58,6 +59,9 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
   }
 
   Future<void> _useCurrent() async {
+    // Pede a localização outra vez, se for preciso (2026-10-25).
+    if (!await ensurePermission(context, AppPermission.location)) return;
+    if (!mounted) return;
     setState(() => _locating = true);
     try {
       final pos = await currentPosition();

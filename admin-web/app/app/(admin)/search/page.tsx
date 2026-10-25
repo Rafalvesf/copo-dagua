@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { bookingStatusLabel } from "@/components/BookingStatusBadge";
 import { eventTypeLabel } from "@/lib/event-types";
+import { Card, Empty, PageHeader } from "@/components/ui";
 
 // Pesquisa global do admin (2026-10-20): substitui a caixa "Pesquisar..."
 // que não fazia nada. Procura em utilizadores, parceiros, eventos e
@@ -38,27 +39,20 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
     (users?.data?.length ?? 0) + (partners?.data?.length ?? 0) + (events?.data?.length ?? 0) + (bookings?.data?.length ?? 0);
 
   return (
-    <div style={{ maxWidth: 820 }}>
-      <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Pesquisa</h1>
-      <form action="/search" style={{ display: "flex", gap: 8, margin: "16px 0 24px", flexWrap: "wrap" }}>
-        <input
-          type="search"
-          name="q"
-          defaultValue={raw}
-          autoFocus
-          placeholder="Nome, parceiro, local ou número da reserva (ex: WED-1)"
-          style={{ flex: 1, minWidth: 0, padding: "11px 14px", borderRadius: 12, border: "1px solid var(--border-muted)", background: "var(--surface)" }}
-        />
-        <button
-          type="submit"
-          style={{ padding: "10px 18px", borderRadius: 999, border: "none", background: "var(--ink)", color: "var(--surface)", fontWeight: 600, cursor: "pointer" }}
-        >
+    <div className="page" style={{ maxWidth: 860 }}>
+      <PageHeader title="Pesquisa" subtitle={q ? `${total} ${total === 1 ? "resultado" : "resultados"} para “${q}”` : "Pessoas, parceiros, eventos e reservas."} />
+      <form action="/search" className="row" style={{ flexWrap: "nowrap" }}>
+        <input type="search" name="q" defaultValue={raw} autoFocus placeholder="Nome, parceiro, local ou número da reserva (ex.: WED-1)" className="input" style={{ flex: 1, minWidth: 0, height: 42 }} />
+        <button type="submit" className="btn btn-primary" style={{ height: 42 }}>
           Pesquisar
         </button>
       </form>
 
-      {!q && <p style={muted}>Escreve o que procuras.</p>}
-      {q && total === 0 && <p style={muted}>Nada encontrado para &quot;{q}&quot;.</p>}
+      {q && total === 0 && (
+        <Card>
+          <Empty title="Nada encontrado">Experimenta outro nome ou o número da reserva.</Empty>
+        </Card>
+      )}
 
       {(users?.data?.length ?? 0) > 0 && (
         <Group title="Utilizadores">
@@ -119,21 +113,23 @@ function statusLabel(s: string) {
     >
   )[s] ?? s;
 }
-const muted = { color: "var(--ink-muted)", fontSize: 14 };
-
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section style={{ background: "var(--surface)", borderRadius: 16, boxShadow: "var(--shadow-card)", padding: "14px 20px", marginBottom: 14 }}>
-      <h2 style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-muted)", marginBottom: 6 }}>{title}</h2>
-      <div style={{ display: "flex", flexDirection: "column" }}>{children}</div>
-    </section>
+    <Card title={title} flush>
+      <ul className="list">{children}</ul>
+    </Card>
   );
 }
 function Row({ href, title, sub }: { href: string; title: string; sub: string }) {
   return (
-    <Link href={href} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: "1px solid var(--border-muted)" }}>
-      <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{title}</span>
-      <span style={{ color: "var(--ink-muted)", fontSize: 13, textAlign: "right" }}>{sub}</span>
-    </Link>
+    <li style={{ padding: 0 }}>
+      <Link href={href} className="row" style={{ flexWrap: "nowrap", padding: "12px 20px", width: "100%", gap: 12 }}>
+        <span className="list-main">
+          <span className="list-title" style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</span>
+          <span className="list-sub" style={{ display: "block" }}>{sub}</span>
+        </span>
+        <span className="subtle" aria-hidden>›</span>
+      </Link>
+    </li>
   );
 }

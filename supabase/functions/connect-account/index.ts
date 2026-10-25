@@ -1,6 +1,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
+import { applyDetails, applyDocument, type Details, ensureAccount, prefill, stripeMessage } from "../_shared/connect_details.ts";
 
 // Conta Stripe do parceiro DENTRO da app (pedido 2026-10-19: "algo
 // semelhante para os parceiros, botão para levantar; inicialmente uma
@@ -10,10 +11,8 @@ import { stripeClient } from "../_shared/stripe.ts";
 // action:
 //  - "status"  → resumo da conta: o que a Stripe ainda pede, IBAN (só os
 //                últimos 4), saldo disponível/pendente e últimos levantamentos.
-//  - "session" → cria a conta Express se ainda não existir e devolve um
-//                Account Session para o componente embutido de onboarding
-//                (Connect.js). Os dados de identidade/IBAN vão do
-//                formulário da Stripe diretamente para a Stripe.
+//  - "prefill" / "details" / "document" → dados pedidos com o UI da app
+//                (2026-10-25), enviados à Stripe pela API.
 //  - "payout"  → levanta o saldo disponível para o IBAN (levantamentos
 //                passam a manuais: só saem quando o parceiro carrega).
 //
@@ -62,42 +61,69 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Antigo formulário embutido da Stripe — a app já não o usa (2026-10-25).
     if (action === "session") {
       const publishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY");
       if (!publishableKey) return json({ error: "not_configured" }, 503);
-      if (!accountId) {
-        const account = await stripe.accounts.create({
-          type: "express",
-          country: "PT",
-          email: (profile.contact_email as string | null) ?? user.email ?? undefined,
-          business_profile: {
-            name: (profile.business_name as string | null) || undefined,
-            mcc: "7299", // serviços pessoais diversos (eventos/casamentos)
-          },
-          capabilities: {
-            card_payments: { requested: true },
-            transfers: { requested: true },
-          },
-          settings: { payouts: { schedule: { interval: "manual" } } },
-          metadata: { partner_id: user.id },
-        });
-        accountId = account.id;
-        const { error: updateError } = await supabase
-          .from("partner_profiles")
-          .update({ stripe_account_id: accountId })
-          .eq("id", user.id);
-        if (updateError) return json({ error: "unknown_error" }, 500);
-      }
+      accountId = await ensureAccount(
+        stripe,
+        admin,
+        user.id,
+        (profile.contact_email as string | null) ?? user.email ?? null,
+        (profile.business_name as string | null) ?? null,
+        accountId,
+      );
       const session = await stripe.accountSessions.create({
         account: accountId,
         components: {
           account_onboarding: {
             enabled: true,
-            features: { external_account_collection: true },
+            features: { external_account_collection: true, disable_stripe_user_authentication: true },
           },
         },
-      });
+      } as never);
       return json({ client_secret: session.client_secret, publishable_key: publishableKey, account_id: accountId });
+    }
+
+    // Dados pedidos com o UI da app (2026-10-25): sem formulários da Stripe.
+    if (action === "prefill") {
+      if (!accountId) return json({ prefill: null });
+      const a = await stripe.accounts.retrieve(accountId);
+      return json({ prefill: await prefill(stripe, a) });
+    }
+    if (action === "details") {
+      const d = body.details as Details | undefined;
+      if (!d || !d.person || (d.business_type !== "individual" && d.business_type !== "company")) {
+        return json({ error: "validation_error" }, 400);
+      }
+      accountId = await ensureAccount(
+        stripe,
+        admin,
+        user.id,
+        (profile.contact_email as string | null) ?? user.email ?? null,
+        (profile.business_name as string | null) ?? null,
+        accountId,
+      );
+      try {
+        await applyDetails(stripe, accountId, d, {
+          ip: (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "0.0.0.0",
+          userAgent: req.headers.get("user-agent") ?? "",
+        });
+      } catch (e) {
+        console.error("details rejected", (e as Error).message);
+        return json({ error: "invalid_details", message: stripeMessage(e) }, 400);
+      }
+    }
+    if (action === "document") {
+      if (!accountId) return json({ error: "no_account" }, 409);
+      const front = body.front as { data: string; type: string } | undefined;
+      if (!front?.data) return json({ error: "validation_error" }, 400);
+      try {
+        await applyDocument(stripe, accountId, front, (body.back as { data: string; type: string } | undefined) ?? null);
+      } catch (e) {
+        console.error("document rejected", (e as Error).message);
+        return json({ error: "invalid_document", message: "A Stripe não aceitou a fotografia. Tenta outra mais nítida." }, 400);
+      }
     }
 
     if (!accountId) return json({ has_account: false });

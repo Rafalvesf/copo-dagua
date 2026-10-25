@@ -1,26 +1,19 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { Roboto, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 
-// Roboto em todo o lado — pedido explícito do utilizador (2026-08-31):
-// "Use Roboto throughout the entire Admin interface", sem tipo de letra
-// serifado nenhum. Duas variáveis CSS ("--font-sans" e "--font-serif")
-// apontam para a MESMA fonte de propósito: `var(--font-serif)` continua
-// usada nos ficheiros já escritos antes deste pedido (títulos de página)
-// sem ser preciso editar cada um — passa a resolver para Roboto 600
-// também, em vez de precisar de duas famílias de tipo de letra distintas.
-// Pesos limitados a 400/500/600 — o pedido é explícito em evitar
-// 700-900 ("a interface deve parecer leve, elegante e premium").
-const robotoSans = Roboto({
+// Texto em Roboto (pedido 2026-08-31); títulos com serifa ao estilo do
+// Claude (pedido 2026-10-21: "usa um estilo do design do Claude").
+const sans = Roboto({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
 
-const robotoSerifAlias = Roboto({
+const serif = Source_Serif_4({
   variable: "--font-serif",
   subsets: ["latin"],
-  weight: ["500", "600"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -28,9 +21,16 @@ export const metadata: Metadata = {
   description: "Painel de administração da À Nossa!.",
 };
 
+// Aplica o tema escolhido (claro/escuro/sistema) antes de pintar, para não
+// piscar ao abrir. Só lê uma preferência local deste navegador.
+const themeScript = `try{var t=localStorage.getItem('admin-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-PT" className={`${robotoSans.variable} ${robotoSerifAlias.variable}`}>
+    <html lang="pt-PT" className={`${sans.variable} ${serif.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body style={{ fontFamily: "var(--font-sans)" }}>{children}</body>
     </html>
   );

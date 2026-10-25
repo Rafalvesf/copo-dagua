@@ -10,8 +10,8 @@ import { useId } from "react";
 // dois `id="fill"` iguais no mesmo documento fariam todos os gradientes
 // apontarem para a definição do primeiro.
 export function Sparkline({ points, color = "var(--accent)" }: { points: number[]; color?: string }) {
-  const width = 120;
-  const height = 40;
+  const width = 72;
+  const height = 26;
   const gradientId = `sparkline-fill-${useId()}`;
   if (points.length < 2) return <svg width={width} height={height} aria-hidden />;
 

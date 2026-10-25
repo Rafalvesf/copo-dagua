@@ -87,3 +87,141 @@ export function duration(hours: number | null): string {
   if (hours < 48) return `${Math.round(hours)} h`;
   return `${Math.round(hours / 24)} dias`;
 }
+
+/// Parte do parceiro que ficou mesmo paga, já sem reembolsos.
+/// `refunded_amount` está no que o casal pagou (com comissão); reembolsos
+/// anteriores à migração 109 ficaram só com status "refunded" e 0 — conta
+/// como devolvido por inteiro.
+export function netPartnerAmount(amount: number, status: string | null, refunded: number, commissionPct: number): number {
+  if (status === "refunded" && !(refunded > 0)) return 0;
+  const gross = amount * (1 + commissionPct / 100);
+  if (!(refunded > 0) || gross <= 0) return amount;
+  return Math.max(0, amount * (1 - refunded / gross));
+}
+
+// ---------------- Comparação com o período anterior (2026-10-21) ----------------
+// Ao estilo Shopify: cada métrica mostra o total do período, a variação
+// face ao período imediatamente anterior e uma linha para cada um.
+
+export type RangeKey = "7" | "30" | "90" | "365";
+
+export const RANGES: { value: RangeKey; label: string }[] = [
+  { value: "7", label: "Últimos 7 dias" },
+  { value: "30", label: "Últimos 30 dias" },
+  { value: "90", label: "Últimos 90 dias" },
+  { value: "365", label: "Últimos 12 meses" },
+];
+
+export type Bucket = { start: number; end: number; label: string };
+
+export type Ranges = {
+  start: number;
+  end: number;
+  prevStart: number;
+  prevEnd: number;
+  buckets: Bucket[];
+  /** Mesmos baldes, deslocados para o período anterior. */
+  prevBuckets: Bucket[];
+  /** Rótulo completo de cada balde (atual e anterior), para as dicas. */
+  tips: string[];
+  prevTips: string[];
+  label: string;
+  prevLabel: string;
+};
+
+const DAY = 86400000;
+
+function fmtShort(ms: number, withYear = false): string {
+  return new Date(ms).toLocaleDateString("pt-PT", {
+    day: "numeric",
+    month: "short",
+    ...(withYear ? { year: "numeric" } : {}),
+    timeZone: "Europe/Lisbon",
+  }).replace(/\./g, "");
+}
+
+/** Períodos fechados ao fim do dia de hoje (UTC), com baldes regulares. */
+export function ranges(key: RangeKey, nowMs: number): Ranges {
+  const days = Number(key);
+  const today = new Date(nowMs);
+  today.setUTCHours(0, 0, 0, 0);
+  const end = today.getTime() + DAY;
+  const start = end - days * DAY;
+  const span = end - start;
+  const prevEnd = start;
+  const prevStart = start - span;
+  const step = days <= 31 ? DAY : days <= 120 ? 7 * DAY : Math.round(span / 12);
+  const buckets: Bucket[] = [];
+  for (let t = start; t < end; t += step) {
+    const e = Math.min(end, t + step);
+    buckets.push({ start: t, end: e, label: days > 120 ? new Date(t).toLocaleDateString("pt-PT", { month: "short", timeZone: "UTC" }).replace(".", "") : fmtShort(t) });
+  }
+  const bucketLabel = (t: number) =>
+    days > 120 ? new Date(t).toLocaleDateString("pt-PT", { month: "short", year: "numeric", timeZone: "UTC" }).replace(".", "") : fmtShort(t, true);
+  const prevBuckets = buckets.map((b) => ({ start: b.start - span, end: b.end - span, label: bucketLabel(b.start - span) }));
+  // Rótulo completo de cada balde (para a dica ao passar o rato).
+  const tips = buckets.map((b) => (step > DAY && days <= 120 ? `${fmtShort(b.start)} – ${fmtShort(b.end - DAY, true)}` : bucketLabel(b.start)));
+  const prevTips = prevBuckets.map((b) => (step > DAY && days <= 120 ? `${fmtShort(b.start)} – ${fmtShort(b.end - DAY, true)}` : bucketLabel(b.start)));
+  return {
+    start,
+    end,
+    prevStart,
+    prevEnd,
+    buckets,
+    prevBuckets,
+    tips,
+    prevTips,
+    label: `${fmtShort(start)} – ${fmtShort(end - DAY, true)}`,
+    prevLabel: `${fmtShort(prevStart)} – ${fmtShort(prevEnd - DAY, true)}`,
+  };
+}
+
+export type Metric = { value: number; prev: number; series: number[]; prevSeries: number[] };
+
+/** Soma (ou conta) linhas por data, no período, no anterior e por balde. */
+export function metric<T>(rows: T[], date: (r: T) => string | null | undefined, r: Ranges, val: (r: T) => number = () => 1): Metric {
+  const series = r.buckets.map(() => 0);
+  const prevSeries = r.prevBuckets.map(() => 0);
+  let value = 0;
+  let prev = 0;
+  for (const row of rows) {
+    const iso = date(row);
+    if (!iso) continue;
+    const t = new Date(iso).getTime();
+    if (Number.isNaN(t)) continue;
+    const v = val(row);
+    if (t >= r.start && t < r.end) {
+      value += v;
+      const i = r.buckets.findIndex((b) => t >= b.start && t < b.end);
+      if (i >= 0) series[i] += v;
+    } else if (t >= r.prevStart && t < r.prevEnd) {
+      prev += v;
+      const i = r.prevBuckets.findIndex((b) => t >= b.start && t < b.end);
+      if (i >= 0) prevSeries[i] += v;
+    }
+  }
+  return { value, prev, series, prevSeries };
+}
+
+/** Rácio entre duas métricas (ex.: conversão), por balde e no total. */
+export function ratio(a: Metric, b: Metric): Metric {
+  const div = (x: number, y: number) => (y ? x / y : 0);
+  return {
+    value: div(a.value, b.value),
+    prev: div(a.prev, b.prev),
+    series: a.series.map((x, i) => div(x, b.series[i])),
+    prevSeries: a.prevSeries.map((x, i) => div(x, b.prevSeries[i])),
+  };
+}
+
+/** Variação percentual; null quando não há base de comparação. */
+export function change(value: number, prev: number): number | null {
+  if (!prev) return value ? null : 0;
+  return ((value - prev) / Math.abs(prev)) * 100;
+}
+
+export function inRange(iso: string | null | undefined, r: Ranges): boolean {
+  if (!iso) return false;
+  const t = new Date(iso).getTime();
+  return t >= r.start && t < r.end;
+}

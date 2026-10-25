@@ -19,7 +19,7 @@ class _Unsupported implements StripeElement {
   }) async {}
 
   @override
-  Future<Map<String, dynamic>> confirm() async => {'error': 'Pagamento indisponível neste dispositivo.'};
+  Future<Map<String, dynamic>> confirm({String? returnUrl}) async => {'error': 'Pagamento indisponível neste dispositivo.'};
 
   @override
   void dispose() {}

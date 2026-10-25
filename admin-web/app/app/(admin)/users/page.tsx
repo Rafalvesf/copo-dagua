@@ -3,10 +3,13 @@ import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { AccountStatusBadge } from "@/components/AccountStatusBadge";
 import type { Profile, UserRole } from "@/lib/types";
+import { Badge, Card, Empty, FilterTabs, PageHeader } from "@/components/ui";
+import { fmtDate, initials } from "@/lib/format";
 
 const ROLE_LABELS: Record<UserRole, string> = {
   couple: "Organizador",
   partner: "Parceiro",
+  guest: "Convidado",
   admin: "Admin",
 };
 
@@ -22,6 +25,7 @@ const ROLE_FILTERS: { value: UserRole | "all"; label: string }[] = [
   { value: "all", label: "Todos" },
   { value: "couple", label: "Organizadores" },
   { value: "partner", label: "Parceiros" },
+  { value: "guest", label: "Convidados" },
   { value: "admin", label: "Admins" },
 ];
 
@@ -42,89 +46,72 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
 
   const { data: users, error } = await query;
 
+  const rows = (users ?? []) as Profile[];
+
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Utilizadores</h1>
-          <p style={{ color: "var(--ink-muted)", marginTop: 4 }}>
-            Todas as contas da plataforma.
-          </p>
-        </div>
-        <Link
-          href="/users/new"
-          style={{
-            padding: "10px 18px",
-            borderRadius: 999,
-            border: "none",
-            background: "var(--ink)",
-            color: "var(--surface)",
-            fontWeight: 600,
-            fontSize: 14,
-          }}
-        >
-          + Novo utilizador
-        </Link>
-      </div>
-
-      <div style={{ display: "flex", gap: 8, margin: "24px 0", flexWrap: "wrap" }}>
-        {ROLE_FILTERS.map((f) => (
-          <Link
-            key={f.value}
-            href={`/users?role=${f.value}`}
-            style={{
-              padding: "8px 14px",
-              borderRadius: 999,
-              fontSize: 13,
-              fontWeight: 600,
-              background: role === f.value ? "var(--ink)" : "var(--surface)",
-              color: role === f.value ? "var(--surface)" : "var(--ink)",
-              border: "1px solid var(--border-muted)",
-            }}
-          >
-            {f.label}
+    <div className="page">
+      <PageHeader
+        title="Utilizadores"
+        subtitle="Todas as contas: organizadores, parceiros, convidados e equipa À Nossa!."
+        actions={
+          <Link href="/users/new" className="btn btn-primary">
+            + Novo utilizador
           </Link>
-        ))}
+        }
+      />
+
+      <div className="toolbar">
+        <FilterTabs current={role} items={ROLE_FILTERS.map((f) => ({ value: f.value, label: f.label, href: `/users?role=${f.value}` }))} />
       </div>
 
-      {error && <p style={{ color: "var(--status-rejected-fg)" }}>Não foi possível carregar a lista.</p>}
-      {!error && users?.length === 0 && (
-        <p style={{ color: "var(--ink-muted)" }}>Sem utilizadores neste filtro.</p>
-      )}
-
-      {!error && users && users.length > 0 && (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ textAlign: "left", fontSize: 13, color: "var(--ink-muted)" }}>
-              <th style={{ padding: "8px 0" }}>Nome</th>
-              <th>Papel</th>
-              <th>Email verificado</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(users as Profile[]).map((u) => (
-              <tr key={u.id} style={{ borderTop: "1px solid var(--border-muted)" }}>
-                <td style={{ padding: "12px 0" }}>
-                  <Link href={`/users/${u.id}`} style={{ fontWeight: 600 }}>
-                    {u.full_name}
-                  </Link>
-                </td>
-                <td style={{ fontSize: 13 }}>
-                  {ROLE_LABELS[u.role]}
-                  {u.role === "admin" && u.admin_role && u.admin_role !== "admin" && (
-                    <span style={{ color: "var(--ink-muted)" }}> · {ADMIN_ROLE_LABELS[u.admin_role]}</span>
-                  )}
-                </td>
-                <td style={{ fontSize: 13 }}>{u.email_verified_at ? "✓" : "—"}</td>
-                <td>
-                  <AccountStatusBadge status={u.status} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <Card flush>
+        {error ? (
+          <Empty title="Não foi possível carregar a lista">Tenta atualizar a página.</Empty>
+        ) : rows.length === 0 ? (
+          <Empty title="Sem utilizadores neste filtro" />
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Tipo de conta</th>
+                  <th>Email verificado</th>
+                  <th>Registo</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((u) => (
+                  <tr key={u.id}>
+                    <td>
+                      <div className="row" style={{ flexWrap: "nowrap", gap: 10 }}>
+                        <span className="avatar" style={{ width: 30, height: 30, fontSize: 11 }} aria-hidden>
+                          {initials(u.full_name || "?")}
+                        </span>
+                        <Link href={`/users/${u.id}`} className="cell-main">
+                          {u.full_name || "Sem nome"}
+                        </Link>
+                      </div>
+                    </td>
+                    <td>
+                      {ROLE_LABELS[u.role]}
+                      {u.role === "admin" && u.admin_role && u.admin_role !== "admin" && (
+                        <span className="muted"> · {ADMIN_ROLE_LABELS[u.admin_role]}</span>
+                      )}
+                    </td>
+                    <td>{u.email_verified_at ? <Badge tone="success" plain>Sim</Badge> : <span className="subtle">Não</span>}</td>
+                    <td className="muted nowrap">{fmtDate(u.created_at)}</td>
+                    <td>
+                      <AccountStatusBadge status={u.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

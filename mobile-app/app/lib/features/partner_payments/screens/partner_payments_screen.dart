@@ -315,10 +315,18 @@ class _ToReceive extends ConsumerWidget {
             ]),
           ),
         );
-    return Row(children: [
-      tile('Sinais a aguardar', b?.pendingDeposits ?? 0, AppColors.pink),
-      const SizedBox(width: 10),
-      tile('Restante por cobrar', b?.uncollectedBalance ?? 0, AppTheme.accentTint),
+    return Column(children: [
+      Row(children: [
+        tile('Sinais a aguardar', b?.pendingDeposits ?? 0, AppColors.pink),
+        const SizedBox(width: 10),
+        tile('Restante por cobrar', b?.uncollectedBalance ?? 0, AppTheme.accentTint),
+      ]),
+      // Pagamentos antecipados (2026-10-25): o que já foi pago fica retido
+      // até 3 dias depois do evento e só então passa para o teu saldo.
+      if ((b?.held ?? 0) > 0.009) ...[
+        const SizedBox(height: 10),
+        Row(children: [tile('Pago, liberta 3 dias após o evento', b!.held, const Color(0xFFE9E8E4))]),
+      ],
     ]);
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../../../shared/widgets/feedback.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -389,11 +390,7 @@ Widget _hiddenNote(int hidden) => Padding(
 
 Widget _noneOfShape(TableShape shape) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 18),
-      child: Text(
-        'Ainda não há mesas ${shape.label.toLowerCase()}s desbloqueadas.',
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-      ),
+      child: InfoNote('Ainda não há mesas ${shape.label.toLowerCase()}s desbloqueadas.', icon: Icons.info_outline_rounded),
     );
 
 /// Planta da sala: Mesa de Honra em cima, mesas desenhadas com os

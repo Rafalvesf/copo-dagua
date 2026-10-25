@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/dal";
 import { actorLabel, bookingEventLabel } from "@/lib/audit-labels";
@@ -8,6 +7,8 @@ import { RefundPaymentForm } from "@/components/RefundForms";
 import { refundPayment } from "../../refunds/actions";
 import { createClient } from "@/lib/supabase/server";
 import { BookingStatusBadge } from "@/components/BookingStatusBadge";
+import { Alert, Card, DetailList, PageHeader, Stat } from "@/components/ui";
+import { fmtDate, fmtDateTime, fmtEur } from "@/lib/format";
 import { SimpleActionButton, AmountVerificationForm } from "@/components/ActionButtons";
 import { BOOKING_ACTIONS_BY_STATUS } from "@/lib/types";
 import { confirmDeposit, completeBooking } from "./actions";
@@ -50,173 +51,147 @@ export default async function BookingDetailPage(props: PageProps<"/bookings/[id]
   const entries = (events ?? []) as BookingEvent[];
   const availableActions = BOOKING_ACTIONS_BY_STATUS[b.status];
 
+  const remaining = Math.max(0, Number(b.total_amount) - Number(b.deposit_amount));
+
   return (
-    <div>
-      <Link href="/bookings" style={{ color: "var(--ink-muted)", fontSize: 13 }}>
-        ← Reservas
-      </Link>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0" }}>
-        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 26 }}>
-          {b.booking_number} · {partner?.business_name ?? "Parceiro"}
-        </h1>
-        <BookingStatusBadge status={b.status} />
-      </div>
-
-      {availableActions.length > 0 && (
-        <div
-          style={{
-            background: "var(--status-pending-bg)",
-            color: "var(--status-pending-fg)",
-            borderRadius: 12,
-            padding: "10px 16px",
-            fontSize: 13,
-            marginBottom: 16,
-          }}
-        >
-          Usa estas ações só para pagamentos feitos fora da app (ex: transferência). Não cobram nada na
-          Stripe — o valor que indicares tem de bater certo com o sinal esperado.
-        </div>
-      )}
-
-      <Section title="Detalhe">
-        <Field label="Organizador" value="" link={couple ? { href: `/users/${couple.id}`, label: couple.full_name } : undefined} />
-        <Field
-          label="Parceiro"
-          value=""
-          link={partner ? { href: `/partners/${partner.id}`, label: partner.business_name } : undefined}
-        />
-        <Field label="Data do evento" value={new Date(b.event_date).toLocaleDateString("pt-PT")} />
-        <Field label="Valor total" value={`${b.total_amount.toLocaleString("pt-PT")} €`} />
-        <Field label="Sinal" value={`${b.deposit_amount.toLocaleString("pt-PT")} €`} />
-        {b.status === "awaiting_deposit" && (
-          <Field label="Janela expira em" value={new Date(b.hold_expires_at).toLocaleString("pt-PT")} />
-        )}
-      </Section>
+    <div className="page">
+      <PageHeader
+        back={{ href: "/bookings", label: "Reservas" }}
+        title={`${b.booking_number} · ${partner?.business_name ?? "Parceiro"}`}
+        badge={<BookingStatusBadge status={b.status} />}
+        subtitle={`Evento a ${fmtDate(b.event_date)} · criada a ${fmtDate(b.created_at)}`}
+      />
 
       {openDispute && (
-        <div
-          style={{
-            background: "var(--status-rejected-bg)",
-            color: "var(--status-rejected-fg)",
-            borderRadius: 12,
-            padding: "10px 16px",
-            fontSize: 14,
-            marginBottom: 16,
-          }}
-        >
-          Esta reserva está em disputa —{" "}
-          <Link href={`/disputes/${openDispute.id}`} style={{ fontWeight: 700, textDecoration: "underline" }}>
-            decidir
-          </Link>
-          .
-        </div>
+        <Alert tone="danger">
+          <span>
+            <strong>Reserva em disputa.</strong> Os reembolsos ficam bloqueados até decidires.{" "}
+            <Link href={`/disputes/${openDispute.id}`} className="strong" style={{ textDecoration: "underline" }}>
+              Abrir disputa
+            </Link>
+          </span>
+        </Alert>
       )}
 
-      <Section title="Pagamentos e reembolsos">
-        <Field
-          label="Sinal"
-          value={proposal?.deposit_refundable === false ? "Não reembolsável (escolha do parceiro)" : "Reembolsável até 30 dias antes"}
-        />
-        {payments.length === 0 ? (
-          <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>Sem pagamentos.</p>
-        ) : (
-          payments.map((p) => {
-            const paid = paidByCouple(Number(p.amount));
-            const refunded = Number(p.refunded_amount ?? 0);
-            return (
-              <div key={p.id} style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 14, flexWrap: "wrap" }}>
-                <span style={{ minWidth: 90 }}>{p.type === "deposit" ? "Sinal" : "Restante"}</span>
-                <span>{paid.toLocaleString("pt-PT", { minimumFractionDigits: 2 })} €</span>
-                <PaymentStatusBadge status={p.status} />
-                {refunded > 0 && (
-                  <span style={{ color: "var(--ink-muted)", fontSize: 13 }}>
-                    devolvido {refunded.toLocaleString("pt-PT", { minimumFractionDigits: 2 })} €
-                  </span>
+      <div className="grid grid-main-side">
+        <div className="stack">
+          <div className="grid grid-3">
+            <Stat label="Valor do serviço" value={fmtEur(b.total_amount)} hint={`organizador paga ${fmtEur(paidByCouple(Number(b.total_amount)), true)}`} />
+            <Stat label="Sinal" value={fmtEur(b.deposit_amount)} hint={proposal?.deposit_refundable === false ? "não reembolsável" : "reembolsável nas 48 h após pagar"} />
+            <Stat label="Restante" value={fmtEur(remaining)} hint="pago mais perto do evento" />
+          </div>
+
+          <Card title="Pagamentos" subtitle="Valores pagos pelo organizador (já com comissão)." flush>
+            {payments.length === 0 ? (
+              <div className="empty">Ainda sem pagamentos.</div>
+            ) : (
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Pago em</th>
+                      <th className="num">Valor</th>
+                      <th className="num">Devolvido</th>
+                      <th>Estado</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((p) => {
+                      const paid = paidByCouple(Number(p.amount));
+                      const refunded = Number(p.refunded_amount ?? 0);
+                      return (
+                        <tr key={p.id}>
+                          <td className="strong">{p.type === "deposit" ? "Sinal" : "Restante"}</td>
+                          <td className="muted nowrap">{fmtDate(p.paid_at)}</td>
+                          <td className="num">{fmtEur(paid, true)}</td>
+                          <td className="num muted">{refunded > 0 ? fmtEur(refunded, true) : "—"}</td>
+                          <td>
+                            <PaymentStatusBadge status={p.status} />
+                          </td>
+                          <td className="num">
+                            {p.status === "paid" && !openDispute && (
+                              <RefundPaymentForm paymentId={p.id} maxAmount={Math.max(0, paid - refunded)} action={refundPayment} />
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+
+          <Card title="Histórico">
+            {entries.length === 0 ? (
+              <p className="muted">Sem eventos registados.</p>
+            ) : (
+              <ul className="timeline">
+                {entries.map((e) => (
+                  <li key={e.id}>
+                    <p>
+                      {bookingEventLabel(e.event_type)} <span className="muted">· {actorLabel(e.actor_type)}</span>
+                    </p>
+                    <p className="timeline-time">{fmtDateTime(e.created_at)}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+
+        <div className="stack">
+          <Card title="Pessoas">
+            <DetailList
+              items={[
+                {
+                  label: "Organizador",
+                  value: couple ? (
+                    <Link href={`/users/${couple.id}`} className="link">
+                      {couple.full_name}
+                    </Link>
+                  ) : (
+                    "—"
+                  ),
+                },
+                {
+                  label: "Parceiro",
+                  value: partner ? (
+                    <Link href={`/partners/${partner.id}`} className="link">
+                      {partner.business_name}
+                    </Link>
+                  ) : (
+                    "—"
+                  ),
+                },
+                ...(b.status === "awaiting_deposit" ? [{ label: "Prazo do sinal", value: fmtDateTime(b.hold_expires_at) }] : []),
+              ]}
+            />
+          </Card>
+
+          {availableActions.length > 0 && (
+            <Card title="Ações manuais" subtitle="Só para pagamentos feitos fora da app (ex.: transferência). Não cobram nada na Stripe.">
+              <div className="stack-sm">
+                {availableActions.includes("confirm_deposit") && (
+                  <AmountVerificationForm
+                    id={b.id}
+                    idFieldName="booking_id"
+                    amountFieldName="amount_received"
+                    label="Confirmar sinal recebido"
+                    expectedAmount={b.deposit_amount}
+                    action={confirmDeposit}
+                  />
                 )}
-                {p.status === "paid" && !openDispute && (
-                  <RefundPaymentForm paymentId={p.id} maxAmount={Math.max(0, paid - refunded)} action={refundPayment} />
+                {availableActions.includes("complete") && (
+                  <SimpleActionButton id={b.id} label="Marcar como concluída" action={completeBooking} variant="secondary" />
                 )}
               </div>
-            );
-          })
-        )}
-      </Section>
-
-      <Section title="Histórico">
-        {entries.length === 0 ? (
-          <p style={{ color: "var(--ink-muted)", fontSize: 14 }}>Sem eventos registados.</p>
-        ) : (
-          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
-            {entries.map((e) => (
-              <li key={e.id} style={{ fontSize: 14 }}>
-                <span style={{ color: "var(--ink-muted)" }}>
-                  {new Date(e.created_at).toLocaleString("pt-PT")} —
-                </span>{" "}
-                {bookingEventLabel(e.event_type)} <span style={{ color: "var(--ink-muted)" }}>({actorLabel(e.actor_type)})</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      {availableActions.length > 0 && (
-        <div style={{ display: "flex", gap: 12, marginTop: 24, flexWrap: "wrap" }}>
-          {availableActions.includes("confirm_deposit") && (
-            <AmountVerificationForm
-              id={b.id}
-              idFieldName="booking_id"
-              amountFieldName="amount_received"
-              label="Confirmar sinal recebido"
-              expectedAmount={b.deposit_amount}
-              action={confirmDeposit}
-            />
-          )}
-          {availableActions.includes("complete") && (
-            <SimpleActionButton id={b.id} label="Marcar como concluída" action={completeBooking} />
+            </Card>
           )}
         </div>
-      )}
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section
-      style={{
-        background: "var(--surface)",
-        borderRadius: 16,
-        boxShadow: "var(--shadow-card)",
-        padding: 20,
-        marginBottom: 16,
-      }}
-    >
-      <h2 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{title}</h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{children}</div>
-    </section>
-  );
-}
-
-function Field({
-  label,
-  value,
-  link,
-}: {
-  label: string;
-  value: string;
-  link?: { href: string; label: string };
-}) {
-  return (
-    <div style={{ display: "flex", gap: 12, fontSize: 14 }}>
-      <span style={{ color: "var(--ink-muted)", minWidth: 160 }}>{label}</span>
-      {link ? (
-        <Link href={link.href} style={{ fontWeight: 600 }}>
-          {link.label} →
-        </Link>
-      ) : (
-        <span>{value || "—"}</span>
-      )}
+      </div>
     </div>
   );
 }

@@ -14,6 +14,7 @@ import '../../../core/home/home_providers.dart';
 import '../../../shared/money.dart';
 import '../../payments/open_payment.dart';
 import '../../../shared/widgets/dispute_card.dart';
+import '../../../core/bookings/hire_privacy.dart';
 
 /// Detalhes de uma reserva já confirmada/concluída — antes disto, tocar
 /// numa reserva em `couple_bookings_screen.dart` só mostrava "em
@@ -157,6 +158,8 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                     partnerSide: false,
                     load: () => loadSingleBookingReport(booking.id),
                   ),
+                  const SizedBox(height: 14),
+                  HirePrivacyCard(bookingId: booking.id, weddingId: booking.weddingId, isPrivate: booking.isPrivate),
                   const SizedBox(height: 14),
                   DisputeCard(bookingId: booking.id, partnerSide: false),
                   if (booking.status == BookingStatus.concluido) ...[

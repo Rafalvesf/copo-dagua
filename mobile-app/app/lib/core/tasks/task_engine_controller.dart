@@ -95,6 +95,12 @@ class _TaskContext {
 /// necessárias — é idempotente (o índice único em
 /// `wedding_tasks(wedding_id, task_template_id)` evita duplicados) e
 /// só escreve o que realmente mudou.
+const _categoryRules = {
+  'has_interest_in_category',
+  'has_quote_for_category',
+  'has_confirmed_booking_for_category',
+};
+
 class TaskEngineController extends Notifier<TaskEngineState> {
   String? _weddingId;
   bool _recomputing = false;
@@ -120,12 +126,24 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         .map((r) => WeddingTask.fromRow(r as Map<String, dynamic>))
         .toList();
 
-    final notificationRows = await supabase
-        .from('notifications')
-        .select()
-        .eq('wedding_id', weddingId)
-        .order('created_at', ascending: false)
-        .limit(50);
+    // Do evento + pessoais (grupos, suporte — migração 114).
+    final me = supabase.auth.currentUser?.id;
+    List notificationRows;
+    try {
+      notificationRows = await supabase
+          .from('notifications')
+          .select()
+          .or(me == null ? 'wedding_id.eq.$weddingId' : 'wedding_id.eq.$weddingId,profile_id.eq.$me')
+          .order('created_at', ascending: false)
+          .limit(50);
+    } catch (_) {
+      notificationRows = await supabase
+          .from('notifications')
+          .select()
+          .eq('wedding_id', weddingId)
+          .order('created_at', ascending: false)
+          .limit(50);
+    }
     final notifications = (notificationRows as List)
         .map((r) => AppNotification.fromRow(r as Map<String, dynamic>))
         .toList();
@@ -215,6 +233,25 @@ class TaskEngineController extends Notifier<TaskEngineState> {
             'updated_at': DateTime.now().toIso8601String(),
           }).eq('id', task.id);
         }
+      }
+
+      // 1b) Reabrir tarefas de categoria que o motor deu como feitas mas
+      // que deixaram de o estar (ex.: a reserva foi cancelada) — só as
+      // concluídas automaticamente por essa mesma regra, nunca as que o
+      // organizador marcou à mão (2026-10-21).
+      for (final task in existing) {
+        if (task.status != TaskStatus.completed || task.taskTemplateId == null) continue;
+        final template = templates.where((t) => t.id == task.taskTemplateId).firstOrNull;
+        final rule = template?.completionRule;
+        if (rule == null || !_categoryRules.contains(rule)) continue;
+        if (task.completionSource != rule) continue;
+        if (_isComplete(rule, template!.partnerCategorySlug, ctx)) continue;
+        await supabase.from('wedding_tasks').update({
+          'status': 'upcoming',
+          'completed_at': null,
+          'completion_source': null,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('id', task.id);
       }
 
       // 2) Criar linhas `upcoming` para templates elegíveis que ainda
@@ -344,10 +381,13 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         .eq('wedding_id', weddingId);
     final bookingPartnerName = <String, String>{};
     final completedBookingIds = <String>{};
+    final deadBookingIds = <String>{};
     for (final r in (bookingRows as List).cast<Map<String, dynamic>>()) {
       final name = (r['partner_profiles'] as Map<String, dynamic>?)?['business_name'] as String?;
       bookingPartnerName[r['id'] as String] = (name == null || name.isEmpty) ? 'o parceiro' : name;
       if (r['status'] == 'completed') completedBookingIds.add(r['id'] as String);
+      final st = r['status'] as String? ?? '';
+      if (st.startsWith('cancelled') || st == 'expired') deadBookingIds.add(r['id'] as String);
     }
     final bookingIds = bookingPartnerName.keys.toList();
 
@@ -358,7 +398,10 @@ class TaskEngineController extends Notifier<TaskEngineState> {
           .inFilter('booking_id', bookingIds);
       for (final p in (paymentRows as List).cast<Map<String, dynamic>>()) {
         final paymentId = p['id'] as String;
-        final status = p['status'] as String;
+        // Reserva cancelada/expirada: nada para pagar, a tarefa sai.
+        final status = deadBookingIds.contains(p['booking_id']) && (p['status'] == 'pending' || p['status'] == 'overdue')
+            ? 'failed'
+            : p['status'] as String;
         final existingTask = existingByEntity[paymentId];
 
         if (status != 'pending' && status != 'overdue') {
@@ -461,7 +504,9 @@ class TaskEngineController extends Notifier<TaskEngineState> {
 
         final partnerName = quotePartnerName[p['quote_request_id'] as String] ?? 'o parceiro';
         try {
-          final inserted = await supabase
+          // O aviso "Nova proposta" é criado pela base de dados quando o
+          // parceiro envia (migração 115, chega também com a app fechada).
+          await supabase
               .from('wedding_tasks')
               .insert({
                 'wedding_id': weddingId,
@@ -477,13 +522,6 @@ class TaskEngineController extends Notifier<TaskEngineState> {
               })
               .select()
               .single();
-          await supabase.from('notifications').insert({
-            'wedding_id': weddingId,
-            'type': 'new_task',
-            'title': 'Nova proposta',
-            'body': '$partnerName enviou uma proposta nova.',
-            'wedding_task_id': inserted['id'],
-          });
         } catch (_) {
           // Idem — índice único evita duplicados em corridas.
         }
@@ -558,7 +596,12 @@ class TaskEngineController extends Notifier<TaskEngineState> {
 
   Future<List<TaskTemplate>> _loadTemplates() async {
     final rows = await supabase.from('task_templates').select().eq('active', true);
-    return (rows as List).map((r) => TaskTemplate.fromRow(r as Map<String, dynamic>)).toList();
+    // Só os templates deste tipo de evento (ou de todos) — 2026-10-20.
+    final eventType = ref.read(weddingControllerProvider).wedding?.eventType.dbValue ?? 'wedding';
+    return (rows as List)
+        .map((r) => TaskTemplate.fromRow(r as Map<String, dynamic>))
+        .where((t) => t.appliesTo(eventType))
+        .toList();
   }
 
   Future<_TaskContext> _gatherContext(String weddingId) async {
@@ -600,12 +643,46 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         .map((r) => (r as Map<String, dynamic>)['partner_id'] as String)
         .toSet();
 
+    // Só contam pedidos e reservas "vivos" (2026-10-21): depois de cancelar
+    // com um parceiro, as tarefas dessa categoria voltam a aparecer.
+    final liveBookingRows = await supabase
+        .from('bookings')
+        .select('partner_id, status')
+        .eq('wedding_id', weddingId)
+        .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed', 'payment_overdue', 'disputed']);
+    // Contratações em segredo (migração 116) não mexem nas tarefas
+    // partilhadas — senão "Contratar X" aparecia feito aos outros
+    // organizadores e estragava a surpresa.
+    final secretPartnerIds = <String>{};
+    try {
+      final secretRows = await supabase
+          .from('conversations')
+          .select('partner_id')
+          .eq('wedding_id', weddingId)
+          .not('private_owner', 'is', null);
+      for (final r in (secretRows as List).cast<Map<String, dynamic>>()) {
+        secretPartnerIds.add(r['partner_id'] as String);
+      }
+    } catch (_) {}
+    final liveBookings = (liveBookingRows as List)
+        .cast<Map<String, dynamic>>()
+        .where((r) => !secretPartnerIds.contains(r['partner_id']))
+        .toList();
+    final liveBookingPartnerIds = liveBookings.map((r) => r['partner_id'] as String).toSet();
+
     final quoteRows = await supabase
         .from('quote_requests')
-        .select('id, partner_id')
+        .select('id, partner_id, status')
         .eq('wedding_id', weddingId);
-    final quoteRequests = (quoteRows as List).cast<Map<String, dynamic>>();
-    final quotePartnerIds = quoteRequests.map((r) => r['partner_id'] as String).toSet();
+    final quoteRequests = (quoteRows as List)
+        .cast<Map<String, dynamic>>()
+        .where((r) => !secretPartnerIds.contains(r['partner_id']))
+        .toList();
+    final quotePartnerIds = <String>{
+      for (final r in quoteRequests)
+        if (const {'pending', 'viewed', 'proposal_sent'}.contains(r['status'])) r['partner_id'] as String,
+      ...liveBookingPartnerIds,
+    };
     final quoteRequestIds = quoteRequests.map((r) => r['id'] as String).toList();
 
     Set<String> proposalPartnerIds = {};
@@ -620,14 +697,10 @@ class TaskEngineController extends Notifier<TaskEngineState> {
           .toSet();
     }
 
-    final bookingRows = await supabase
-        .from('bookings')
-        .select('partner_id, status')
-        .eq('wedding_id', weddingId)
-        .eq('status', 'confirmed');
-    final confirmedBookingPartnerIds = (bookingRows as List)
-        .map((r) => (r as Map<String, dynamic>)['partner_id'] as String)
-        .toSet();
+    final confirmedBookingPartnerIds = <String>{
+      for (final r in liveBookings)
+        if (r['status'] == 'confirmed' || r['status'] == 'completed') r['partner_id'] as String,
+    };
 
     final allPartnerIds = <String>{
       ...favPartnerIds,
@@ -835,6 +908,12 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         .update({'read': true})
         .eq('wedding_id', weddingId)
         .eq('read', false);
+    final me = supabase.auth.currentUser?.id;
+    if (me != null) {
+      try {
+        await supabase.from('notifications').update({'read': true}).eq('profile_id', me).eq('read', false);
+      } catch (_) {}
+    }
     await _load(weddingId);
   }
 }

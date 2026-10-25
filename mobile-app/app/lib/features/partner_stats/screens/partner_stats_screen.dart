@@ -170,12 +170,12 @@ class _Dashboard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.gray,
-                borderRadius: BorderRadius.circular(AppRadius.md),
+                color: kInfoNoteColor,
+                borderRadius: BorderRadius.circular(18),
               ),
-              child: Text(
+              child: const Text(
                 'Ainda sem pedidos nem reservas neste período. Assim que chegarem, os gráficos enchem-se sozinhos.',
-                style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.accentOliveDark),
+                style: TextStyle(fontSize: 13, color: AppTheme.ink, height: 1.4),
               ),
             ),
           ],

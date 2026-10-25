@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { updateCommissionSettings } from "./actions";
 import { initialActionState } from "@/components/ActionButtons";
 import type { PlatformSettings } from "@/lib/types";
+import { fmtDateTime } from "@/lib/format";
 
 export function CommissionsForm({ settings }: { settings: PlatformSettings }) {
   const [state, formAction, isPending] = useActionState(updateCommissionSettings, initialActionState);
@@ -16,16 +17,8 @@ export function CommissionsForm({ settings }: { settings: PlatformSettings }) {
       // remontar depois de guardar.
       key={settings.updated_at}
       action={formAction}
-      style={{
-        background: "var(--surface)",
-        borderRadius: 16,
-        boxShadow: "var(--shadow-card)",
-        padding: 24,
-        display: "flex",
-        flexDirection: "column",
-        gap: 20,
-        maxWidth: 560,
-      }}
+      className="stack"
+      style={{ gap: 18 }}
     >
       <NumberField
         name="platform_commission_percentage"
@@ -47,39 +40,34 @@ export function CommissionsForm({ settings }: { settings: PlatformSettings }) {
         max={100}
         step={0.1}
       />
+      {(settings as unknown as { deposit_refund_window_hours?: number }).deposit_refund_window_hours !== undefined && (
+        <NumberField
+          name="deposit_refund_window_hours"
+          label="Sinal reembolsável durante"
+          hint="Se o organizador cancelar dentro deste tempo depois de pagar o sinal, o sinal é devolvido (comissão incluída) — desde que o parceiro o tenha marcado como reembolsável na proposta. Depois disso, o sinal fica com o parceiro."
+          suffix="horas depois de pagar"
+          defaultValue={(settings as unknown as { deposit_refund_window_hours: number }).deposit_refund_window_hours}
+          min={0}
+          max={720}
+        />
+      )}
       <NumberField
         name="cancellation_penalty_days"
-        label="Janela sem penalização para cancelar"
-        hint="Se o organizador cancelar com menos dias do que isto até ao evento, o sinal fica cativo (parceiro + comissão da plataforma); fora da janela, o sinal já pago é reembolsado."
+        label="Restante reembolsável até"
+        hint="Se o organizador cancelar com pelo menos estes dias de antecedência, o restante que já pagou é devolvido. Com menos, não é. Se for o parceiro a cancelar, devolve-se sempre tudo."
         suffix="dias antes do evento"
         defaultValue={settings.cancellation_penalty_days}
         min={0}
       />
 
-      {state.error && <p style={{ color: "var(--status-rejected-fg)", fontSize: 13 }}>{state.error}</p>}
+      {state.error && <p className="form-error">{state.error}</p>}
 
-      <div>
-        <button
-          type="submit"
-          disabled={isPending}
-          style={{
-            padding: "10px 20px",
-            borderRadius: 999,
-            border: "none",
-            background: "var(--ink)",
-            color: "var(--surface)",
-            fontWeight: 600,
-            fontSize: 14,
-            cursor: "pointer",
-          }}
-        >
-          {isPending ? "A guardar..." : "Guardar comissões"}
+      <div className="row" style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+        <button type="submit" disabled={isPending} className="btn btn-primary">
+          {isPending ? "A guardar…" : "Guardar comissões"}
         </button>
+        <span className="field-hint">Última alteração: {fmtDateTime(settings.updated_at)}</span>
       </div>
-
-      <p style={{ fontSize: 12, color: "var(--ink-muted)" }}>
-        Última alteração: {settings.updated_at ? new Date(settings.updated_at).toLocaleString("pt-PT") : "—"}
-      </p>
     </form>
   );
 }
@@ -104,9 +92,9 @@ function NumberField({
   step?: number;
 }) {
   return (
-    <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14 }}>
-      {label}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <label className="field">
+      <span className="field-label">{label}</span>
+      <div className="row" style={{ flexWrap: "nowrap" }}>
         <input
           name={name}
           type="number"
@@ -115,17 +103,12 @@ function NumberField({
           max={max}
           step={step ?? 1}
           required
-          style={{
-            width: 100,
-            padding: "8px 10px",
-            borderRadius: 10,
-            border: "1px solid var(--border-muted)",
-            fontSize: 14,
-          }}
+          className="input tnum"
+          style={{ width: 110 }}
         />
-        <span style={{ color: "var(--ink-muted)", fontSize: 13 }}>{suffix}</span>
+        <span className="muted" style={{ fontSize: 13 }}>{suffix}</span>
       </div>
-      {hint && <span style={{ fontSize: 12, color: "var(--ink-muted)" }}>{hint}</span>}
+      {hint && <span className="field-hint" style={{ maxWidth: "62ch" }}>{hint}</span>}
     </label>
   );
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
@@ -411,13 +412,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             if (noneNear && !widget.selectionMode)
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 14),
-                                child: Container(
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(color: const Color(0xFFF3EBDD), borderRadius: BorderRadius.circular(18)),
-                                  child: Text(
-                                    'Ainda não há parceiros em $effectiveLocation. Mostramos todos os parceiros.',
-                                    style: const TextStyle(fontSize: 13, color: AppTheme.ink, height: 1.4),
-                                  ),
+                                child: InfoNote(
+                                  'Ainda não há parceiros em $effectiveLocation. Mostramos todos os parceiros.',
+                                  icon: Icons.info_outline_rounded,
                                 ),
                               ),
                             if (!widget.selectionMode && query.isEmpty && _filter == null && partners.isNotEmpty) ...[
@@ -994,6 +991,9 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
   }
 
   Future<void> _useCurrent() async {
+    // Pede a localização outra vez, se for preciso (2026-10-25).
+    if (!await ensurePermission(context, AppPermission.location)) return;
+    if (!mounted) return;
     setState(() => _locating = true);
     try {
       final pos = await currentPosition();

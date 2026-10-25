@@ -16,7 +16,13 @@ import { stripeClient } from "../_shared/stripe.ts";
 // Um pagamento só tem uma tentativa viva: ao trocar de método, o
 // PaymentIntent/Checkout anterior é cancelado/expirado para nunca se
 // cobrar duas vezes.
+// `all` (2026-10-21): todos os métodos ativos na conta Stripe no mesmo
+// formulário — cartão, Apple Pay, Google Pay, Link e os restantes que
+// forem ativados no painel. Sem métodos que saem para uma página da
+// Stripe ou do banco (pedido 2026-10-21: tudo dentro da app).
+// Os outros três ficam para compatibilidade.
 const METHODS: Record<string, string> = {
+  all: "all",
   card: "card",
   mb_way: "mb_way",
   multibanco: "multibanco",
@@ -73,28 +79,16 @@ Deno.serve(async (req) => {
     stripe_charges_enabled: boolean;
     business_name: string;
   } | null;
-  if (!partner?.stripe_account_id) return json({ error: "partner_not_onboarded" }, 409);
+  if (!partner) return json({ error: "not_found" }, 404);
+  // O organizador pode pagar mesmo que o parceiro ainda não tenha ativado
+  // os pagamentos (2026-10-25): o dinheiro fica na À Nossa! até 3 dias
+  // depois do evento e só é transferido quando a conta dele estiver ativa.
 
   const stripe = stripeClient();
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-
-  if (!partner.stripe_charges_enabled) {
-    try {
-      const account = await stripe.accounts.retrieve(partner.stripe_account_id);
-      await admin.rpc("sync_stripe_account_status", {
-        p_account_id: account.id,
-        p_charges_enabled: account.charges_enabled,
-        p_payouts_enabled: account.payouts_enabled,
-      });
-      if (!account.charges_enabled) return json({ error: "partner_not_onboarded" }, 409);
-    } catch (e) {
-      console.error("stripe account refresh failed", e);
-      return json({ error: "partner_not_onboarded" }, 409);
-    }
-  }
 
   // Tentativa anterior: se já foi paga, confirma e recusa nova; senão
   // anula-a para não haver duas cobranças possíveis.
@@ -152,12 +146,23 @@ Deno.serve(async (req) => {
     intent = await stripe.paymentIntents.create({
       amount: totalChargeCents,
       currency: "eur",
-      payment_method_types: [method],
+      ...(method === "all"
+        ? { automatic_payment_methods: { enabled: true, allow_redirects: "never" as const } }
+        : { payment_method_types: [method] }),
       description: `${label} — reserva ${bookingNumber} · ${partner.business_name}`.trim(),
       receipt_email: user.email ?? undefined,
-      application_fee_amount: applicationFeeCents,
-      transfer_data: { destination: partner.stripe_account_id },
-      metadata: { payment_id: payment.id, booking_id: payment.booking_id, kind: "booking_payment" },
+      // Pagamento antecipado (2026-10-25, migração 119): o dinheiro fica na
+      // À Nossa! e só é transferido ao parceiro 3 dias depois do evento,
+      // sem disputa (`release-partner-funds`). Antes ia logo para o parceiro.
+      transfer_group: payment.booking_id as string,
+      metadata: {
+        payment_id: payment.id,
+        booking_id: payment.booking_id,
+        kind: "booking_payment",
+        partner_account: partner.stripe_account_id ?? "",
+        partner_amount_cents: String(partnerAmountCents),
+        commission_cents: String(applicationFeeCents),
+      },
     });
   } catch (err) {
     console.error("paymentIntents.create failed", err);

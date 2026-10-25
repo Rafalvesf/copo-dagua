@@ -224,8 +224,8 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
                   ),
                   subtitle: Text(
                     _depositRefundable
-                        ? 'Se o casal cancelar com 30+ dias de antecedência, recebe o sinal de volta. Mais tarde, fica contigo.'
-                        : 'Se o casal cancelar, o sinal fica sempre contigo. Se fores tu a cancelar, o casal recebe tudo de volta.',
+                        ? 'Se o organizador cancelar nas 48 h depois de pagar, recebe o sinal de volta. Depois disso, fica contigo.'
+                        : 'Se o organizador cancelar, o sinal fica sempre contigo. Se fores tu a cancelar, o organizador recebe tudo de volta.',
                     style: const TextStyle(fontSize: AppFontSize.xs),
                   ),
                 ),

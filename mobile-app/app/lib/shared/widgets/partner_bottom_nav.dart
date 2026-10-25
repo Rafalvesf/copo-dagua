@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/partner_app/partner_app_providers.dart';
 import '../../core/theme/app_theme.dart';
 import 'floating_bottom_nav.dart' show NavBubble, kNavRadius;
+import 'first_run_tour.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
 
 enum PartnerTab { home, requests, chat, profile }
@@ -27,7 +28,7 @@ class PartnerBottomNav extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) =>
       // Fica fixa por cima enquanto a página anima (page_transitions.dart).
-      StayOverNav(child: _buildNav(context, ref));
+      StayOverNav(child: TourHost(role: TourRole.partner, child: _buildNav(context, ref)));
 
   Widget _buildNav(BuildContext context, WidgetRef ref) {
     final unreadCount = ref

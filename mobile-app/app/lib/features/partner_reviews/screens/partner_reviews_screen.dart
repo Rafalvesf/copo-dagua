@@ -112,10 +112,9 @@ class PartnerReviewsScreen extends ConsumerWidget {
                     if (reviews.isEmpty)
                       const Padding(
                         padding: EdgeInsets.all(24),
-                        child: Text(
+                        child: InfoNote(
                           'Ainda não tens avaliações — aparecem aqui assim que um casal avaliar uma reserva concluída.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: AppTheme.inkMuted),
+                          icon: Icons.star_outline_rounded,
                         ),
                       )
                     else ...[
