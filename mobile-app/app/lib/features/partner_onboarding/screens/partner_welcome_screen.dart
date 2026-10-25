@@ -23,6 +23,7 @@ import '../../../shared/widgets/pronto_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/onboarding_exit.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// Primeiro ecrã visto por uma conta de parceiro recém-registada.
 ///
@@ -750,7 +751,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                     child: _pickedLogoBytes != null
                         ? Image.memory(_pickedLogoBytes!, fit: BoxFit.cover)
                         : (_existingLogoUrl?.isNotEmpty ?? false)
-                            ? Image.network(_existingLogoUrl!, fit: BoxFit.cover)
+                            ? SizedNetworkImage(_existingLogoUrl!, fit: BoxFit.cover)
                             : const Icon(Icons.storefront_outlined, size: 40, color: AppTheme.inkMuted),
                   ),
                 ),
@@ -823,7 +824,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                                 )
                               : _localMedia[item.id] != null
                                   ? Image.memory(_localMedia[item.id]!.bytes, fit: BoxFit.cover)
-                                  : Image.network(
+                                  : SizedNetworkImage(
                                       item.mediaUrl,
                                       fit: BoxFit.cover,
                                       errorBuilder: (c, e, st) => Container(color: AppTheme.accentTint),

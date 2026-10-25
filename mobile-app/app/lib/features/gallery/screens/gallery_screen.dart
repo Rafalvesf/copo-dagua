@@ -17,6 +17,7 @@ import '../../../shared/widgets/gallery_placeholder.dart';
 import '../../../core/gallery/gallery_social.dart';
 import '../widgets/gallery_social_ui.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -338,7 +339,7 @@ class _PendingPhotoCard extends ConsumerWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.sm),
-            child: Image.network(
+            child: SizedNetworkImage(
               photo.imageUrl,
               width: 56,
               height: 56,

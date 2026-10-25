@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// Pequeno grupo de avatares sobrepostos (responsáveis por uma
 /// tarefa/despesa), com um selo "+N" quando há mais do que 2 — usado em
@@ -28,9 +29,7 @@ class AssigneeCluster extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 11,
                   backgroundColor: AppColors.gray,
-                  backgroundImage: NetworkImage(
-                    'https://i.pravatar.cc/64?u=$seed',
-                  ),
+                  backgroundImage: sizedNetworkImage('https://i.pravatar.cc/64?u=$seed', 22, context),
                 ),
               ),
             ),

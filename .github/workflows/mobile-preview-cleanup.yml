@@ -1,0 +1,40 @@
+name: Remove PR preview
+
+# Apaga https://rafalvesf.github.io/copo-dagua/pr-<número>/ quando o PR é
+# fechado ou junto (2026-10-25: os previews antigos ocupavam 4 GB no
+# gh-pages, acima do limite de 1 GB do GitHub Pages).
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-gh-pages-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+
+      - name: Delete preview folder
+        run: |
+          DIR="pr-${{ github.event.pull_request.number }}"
+          if [ ! -d "$DIR" ]; then echo "Sem preview $DIR."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -rq "$DIR"
+          git commit -qm "Remove preview $DIR"
+          for i in 1 2 3; do
+            git push origin HEAD:gh-pages && exit 0
+            git pull --rebase -q origin gh-pages
+          done
+          exit 1

@@ -7,6 +7,7 @@ import 'rsvp_status_badge.dart';
 import 'snappy_tap.dart';
 import 'sticker_icon.dart';
 import 'v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// Fundo fotográfico para cartões de destaque (hero, parceiros): a
 /// foto preenche o cartão todo e um gradiente escuro no fundo garante
@@ -29,7 +30,7 @@ class PhotoCardBackground extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         Container(color: fallbackColor),
-        Image.network(
+        SizedNetworkImage(
           imageUrl,
           fit: BoxFit.cover,
           loadingBuilder: (context, child, progress) =>
@@ -314,7 +315,7 @@ class ConversationListItem extends StatelessWidget {
                 : CircleAvatar(
                     radius: 24,
                     backgroundColor: tint,
-                    backgroundImage: NetworkImage(avatarUrl),
+                    backgroundImage: sizedNetworkImage(avatarUrl, 48, context),
                   ),
             const SizedBox(width: 14),
             Expanded(

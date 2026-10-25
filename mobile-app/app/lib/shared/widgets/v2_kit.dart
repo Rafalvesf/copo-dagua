@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import 'snappy_tap.dart';
 import 'sticker_icon.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 export 'green_hero.dart' show GreenHero, HeroPill, SectionTitle;
 export 'sticker_icon.dart' show StickerIcon, DateSticker;
@@ -180,7 +181,7 @@ class V2Avatar extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: StickerIcon.shadow,
-        image: imageUrl == null ? null : DecorationImage(image: NetworkImage(imageUrl!), fit: BoxFit.cover),
+        image: imageUrl == null ? null : DecorationImage(image: sizedNetworkImage(imageUrl!, size, context), fit: BoxFit.cover),
       ),
       alignment: Alignment.center,
       child: imageUrl != null

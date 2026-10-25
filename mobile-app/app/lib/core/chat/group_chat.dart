@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show PostgresChangeEvent, PostgresChangeFilter, PostgresChangeFilterType, RealtimeChannel;
 
 import '../supabase/supabase_config.dart';
 import 'chat_attachments.dart';
@@ -134,25 +136,55 @@ class GroupThreadState {
   const GroupThreadState({this.loading = true, this.messages = const []});
 }
 
-/// Mensagens de um grupo — volta a carregar a cada 4 s enquanto está aberto.
+/// Mensagens de um grupo. As novas chegam em tempo real (Supabase
+/// Realtime, 2026-10-25 — antes perguntava ao servidor a cada 4 s). Fica
+/// uma verificação a cada 60 s para o caso de a ligação em tempo real cair.
+const _groupColumns = 'id, group_id, sender_id, body, attachment_url, attachment_type, attachment_name, created_at';
+
 class GroupThreadController extends Notifier<GroupThreadState> {
   GroupThreadController(this.groupId);
   final String groupId;
   Timer? _timer;
+  RealtimeChannel? _channel;
 
   @override
   GroupThreadState build() {
     Future.microtask(load);
-    _timer = Timer.periodic(const Duration(seconds: 4), (_) => load(silent: true));
-    ref.onDispose(() => _timer?.cancel());
+    _timer = Timer.periodic(const Duration(seconds: 60), (_) => load(silent: true));
+    _channel = supabase
+        .channel('group-chat-$groupId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'chat_group_messages',
+          filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'group_id', value: groupId),
+          callback: (payload) => _onInsert(payload.newRecord),
+        )
+        .subscribe();
+    ref.onDispose(() {
+      _timer?.cancel();
+      final c = _channel;
+      if (c != null) unawaited(supabase.removeChannel(c));
+    });
     return const GroupThreadState();
   }
+
+  void _onInsert(Map<String, dynamic> row) {
+    if (row['id'] == null || row['created_at'] == null) return;
+    final m = GroupMessage.fromRow(row);
+    if (state.messages.any((x) => x.id == m.id)) return;
+    state = GroupThreadState(loading: false, messages: [...state.messages, m]);
+    _markRead();
+  }
+
+  void _markRead() =>
+      unawaited(supabase.rpc('mark_chat_group_read', params: {'p_group_id': groupId}).then((_) {}, onError: (_) {}));
 
   Future<void> load({bool silent = false}) async {
     try {
       final rows = await supabase
           .from('chat_group_messages')
-          .select()
+          .select(_groupColumns)
           .eq('group_id', groupId)
           .order('created_at', ascending: true)
           .limit(500);
@@ -160,7 +192,7 @@ class GroupThreadController extends Notifier<GroupThreadState> {
       if (!silent || list.length != state.messages.length) {
         state = GroupThreadState(loading: false, messages: list);
       }
-      unawaited(supabase.rpc('mark_chat_group_read', params: {'p_group_id': groupId}).then((_) {}, onError: (_) {}));
+      _markRead();
     } catch (_) {
       if (!silent) state = const GroupThreadState(loading: false);
     }
@@ -172,9 +204,9 @@ class GroupThreadController extends Notifier<GroupThreadState> {
     final row = await supabase
         .from('chat_group_messages')
         .insert({'group_id': groupId, 'sender_id': _me, 'body': t})
-        .select()
+        .select(_groupColumns)
         .single();
-    state = GroupThreadState(loading: false, messages: [...state.messages, GroupMessage.fromRow(row)]);
+    _append(GroupMessage.fromRow(row));
   }
 
   Future<void> sendAttachment(ChatAttachment a) async {
@@ -187,9 +219,14 @@ class GroupThreadController extends Notifier<GroupThreadState> {
           'attachment_type': a.type,
           'attachment_name': a.name,
         })
-        .select()
+        .select(_groupColumns)
         .single();
-    state = GroupThreadState(loading: false, messages: [...state.messages, GroupMessage.fromRow(row)]);
+    _append(GroupMessage.fromRow(row));
+  }
+
+  void _append(GroupMessage m) {
+    if (state.messages.any((x) => x.id == m.id)) return;
+    state = GroupThreadState(loading: false, messages: [...state.messages, m]);
   }
 }
 

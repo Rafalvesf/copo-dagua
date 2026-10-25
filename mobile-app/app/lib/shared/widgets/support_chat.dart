@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/app_theme.dart';
 import 'snappy_tap.dart';
 
 void openSupportScreen(BuildContext context) {
   context.push('/support');
 }
 
-/// Ícone ilustrado de chat/ajuda — substitui o ícone Material usado
-/// antes nos pontos de entrada do Suporte & IA.
+/// Ícone de chat/ajuda dos pontos de entrada do Suporte & IA. Desenhado
+/// em código (2026-10-25: a ilustração PNG de 800 KB foi removida).
 class ChatIconButton extends StatelessWidget {
   final VoidCallback? onTap;
   final double size;
@@ -19,14 +20,29 @@ class ChatIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SnappyTap(
       onTap: onTap,
-      child: ClipOval(
-        child: Image.asset(
-          'assets/images/chat_icon.png',
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-        ),
+      child: ChatIconBadge(size: size),
+    );
+  }
+}
+
+/// Círculo verde-oliva com o balão de conversa.
+class ChatIconBadge extends StatelessWidget {
+  final double size;
+
+  const ChatIconBadge({super.key, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: AppTheme.accentOliveDark,
+        shape: BoxShape.circle,
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 10, offset: const Offset(0, 3))],
       ),
+      alignment: Alignment.center,
+      child: Icon(Icons.chat_bubble_rounded, color: Colors.white, size: size * 0.46),
     );
   }
 }
@@ -135,14 +151,7 @@ class _DraggableChatBubbleState extends State<DraggableChatBubble> {
                   width: _bubbleSize,
                   height: _bubbleSize,
                   decoration: const BoxDecoration(shape: BoxShape.circle),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/images/chat_icon.png',
-                      width: _bubbleSize,
-                      height: _bubbleSize,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                  child: const ChatIconBadge(size: _bubbleSize),
                 ),
               ),
             ),

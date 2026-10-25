@@ -21,6 +21,7 @@ import '../../../shared/money.dart';
 import '../../../core/partners/category_figure.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 
 class PartnerDetailScreen extends ConsumerStatefulWidget {
@@ -357,7 +358,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                   borderRadius: BorderRadius.circular(14),
                                   child: Container(
                                     color: colorForCategorySlug(partner.primaryCategorySlug),
-                                    child: Image.network(url,
+                                    child: SizedNetworkImage(url,
                                         fit: BoxFit.cover,
                                         errorBuilder: (context, error, stackTrace) => const SizedBox.shrink()),
                                   ),
@@ -578,7 +579,7 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
             PageView.builder(
               itemCount: photos.length,
               onPageChanged: (i) => setState(() => _page = i),
-              itemBuilder: (context, i) => Image.network(
+              itemBuilder: (context, i) => SizedNetworkImage(
                 photos[i],
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),

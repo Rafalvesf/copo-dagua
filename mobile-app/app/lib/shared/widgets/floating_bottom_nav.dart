@@ -24,11 +24,7 @@ const double kNavRadius = 35;
 /// Chat / Perfil), "Os noivos" ao centro (pedido explícito: "coloca o
 /// botão os noivos ao centrado na navbar"), Galeria à esquerda (pedido
 /// explícito: "adiciona na navbar, no lado esquerdo, um botão de
-/// galeria"). O separador ativo fica a verde-oliva; o ícone de "Os
-/// noivos" usa a ilustração escolhida pelo utilizador em
-/// [weddingNavIconProvider] (carrossel movido para o ecrã de
-/// Definições) em vez de um ícone Material fixo — por defeito os
-/// ursinhos, que já correspondem ao glifo do mockup.
+/// galeria"). O separador ativo fica a verde-oliva.
 class FloatingBottomNav extends ConsumerWidget {
   final AppTab current;
 

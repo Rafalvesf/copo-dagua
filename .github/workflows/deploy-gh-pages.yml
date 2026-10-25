@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
 
 concurrency:
   group: deploy-gh-pages
@@ -77,6 +78,8 @@ jobs:
           grep -o 'flutter_bootstrap.js?v=[a-z0-9]*' build/web/index.html
 
       - name: Keep previous version as backup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           OLD="$GITHUB_WORKSPACE/published"
           DEST=build/web/backup
@@ -96,8 +99,13 @@ jobs:
               [ -f "$f" ] && sed -i 's#<base href="/copo-dagua/">#<base href="/copo-dagua/backup/">#' "$f"
             done
           fi
-          # Previews de PRs continuam publicados.
-          for d in "$OLD"/pr-*; do [ -d "$d" ] && cp -a "$d" build/web/; done
+          # Só os previews de PRs ainda abertos continuam publicados (os
+          # dos fechados ocupavam 4 GB, acima do limite de 1 GB do Pages).
+          OPEN=" $(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 200 --json number --jq '.[].number' | tr '\n' ' ') "
+          for d in "$OLD"/pr-*; do
+            n="${d##*/pr-}"
+            if [ -d "$d" ] && [[ "$OPEN" == *" $n "* ]]; then cp -a "$d" build/web/; fi
+          done
           cat "$DEST/version.txt" 2>/dev/null || echo "backup sem version.txt (anterior a esta mudança)"
 
       - name: Deploy to gh-pages
@@ -106,5 +114,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: mobile-app/app/build/web
-          force_orphan: false
+          # Sem histórico: cada publicação substitui o ramo, para os 4 GB
+          # de previews antigos não continuarem a pesar no repositório.
+          force_orphan: true
           enable_jekyll: false
