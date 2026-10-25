@@ -99,6 +99,18 @@
        (e passaram pelo menos 3,2 s) o verde fecha em círculo e rebenta em
        confetti. */
     html.tt-opening, html.tt-opening body { background: #4F6B4A; }
+    /* A app começa por baixo da barra do telemóvel (horas, bateria):
+       no iPhone, como app no ecrã principal, a página ocupa o ecrã todo e
+       o topo da app ficava por baixo das horas (2026-10-25). A faixa da
+       barra mostra o fundo da página, que acompanha a cor do topo do ecrã
+       visível (tchinSetThemeColor). Sem barra (computador), não muda nada. */
+    #app-host {
+      position: fixed;
+      top: env(safe-area-inset-top, 0px);
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
     @font-face { font-family: TT; src: url('assets/assets/fonts/louis_george_cafe/LouisGeorgeCafe-Bold.ttf'); font-weight: 700; }
     #tt-splash { position: fixed; inset: 0; background: #4F6B4A; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 18px; z-index: 10; font-family: TT, Roboto, sans-serif; color: #fff;
@@ -491,6 +503,7 @@
       };
     })();
   </script>
+  <div id="app-host"></div>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
