@@ -16,9 +16,9 @@
 -- quem a fez (`notifications.profile_id`, migração 114).
 -- Requer as migrações 114 e 115.
 
-alter table public.bookings add column if not exists private_owner uuid references public.profiles(id) on delete set null;
-alter table public.conversations add column if not exists private_owner uuid references public.profiles(id) on delete set null;
-alter table public.wedding_tasks add column if not exists private_owner uuid references public.profiles(id) on delete set null;
+alter table public.bookings add column if not exists private_owner uuid;
+alter table public.conversations add column if not exists private_owner uuid;
+alter table public.wedding_tasks add column if not exists private_owner uuid;
 
 -- ---------- Visibilidade ----------
 drop policy if exists "Members can view own conversations" on public.conversations;
