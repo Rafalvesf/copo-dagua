@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import 'guest_offer_widgets.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// Separador "Convidados" das Reservas do organizador: alojamento e
 /// transporte combinados com parceiros, que os convidados reservam e
@@ -185,7 +186,7 @@ class _ReservationRow extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: r.guestAvatarUrl != null
-          ? Image.network(r.guestAvatarUrl!, fit: BoxFit.cover, width: 36, height: 36,
+          ? SizedNetworkImage(r.guestAvatarUrl!, fit: BoxFit.cover, width: 36, height: 36,
               errorBuilder: (_, __, ___) => Text(initials, style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)))
           : Text(initials, style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
     );

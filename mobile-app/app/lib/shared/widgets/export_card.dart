@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/exports/export_files.dart' deferred as files;
 import '../../core/exports/exports.dart';
 import '../../core/theme/app_theme.dart';
 import 'v2_kit.dart';
@@ -24,7 +25,8 @@ class _ExportCardState extends State<ExportCard> {
     if (_busy != null) return;
     setState(() => _busy = key);
     try {
-      final data = await widget.load();
+      // PDF/Excel só descarregados agora (carregamento diferido).
+      final (data, _) = await (widget.load(), files.loadLibrary()).wait;
       await make(data);
     } catch (_) {
       if (mounted) {
@@ -49,7 +51,7 @@ class _ExportCardState extends State<ExportCard> {
           title: '${widget.reportLabel} · PDF',
           subtitle: 'Resumo, reservas e pagamentos',
           busy: _busy == 'pdf',
-          onTap: () => _run('pdf', (r) async => deliverFile(await reportPdf(r, partnerSide: side), reportFileName(r, 'pdf'), pdfMime)),
+          onTap: () => _run('pdf', (r) async => files.deliverFile(await files.reportPdf(r, partnerSide: side), files.reportFileName(r, 'pdf'), files.pdfMime)),
         ),
         const Divider(height: 18),
         _Row(
@@ -57,7 +59,7 @@ class _ExportCardState extends State<ExportCard> {
           title: '${widget.reportLabel} · Excel',
           subtitle: 'Uma folha por tabela, pronta a filtrar',
           busy: _busy == 'xlsx',
-          onTap: () => _run('xlsx', (r) async => deliverFile(reportXlsx(r, partnerSide: side), reportFileName(r, 'xlsx'), xlsxMime)),
+          onTap: () => _run('xlsx', (r) async => files.deliverFile(files.reportXlsx(r, partnerSide: side), files.reportFileName(r, 'xlsx'), files.xlsxMime)),
         ),
         const Divider(height: 18),
         _Row(
@@ -67,7 +69,7 @@ class _ExportCardState extends State<ExportCard> {
           busy: _busy == 'rec',
           onTap: () => _run('rec', (r) async {
             final copy = ReportData(title: 'Comprovativos', owner: r.owner, bookings: r.bookings, payments: r.payments);
-            await deliverFile(await receiptsPdf(r, receiptForPartner: side), reportFileName(copy, 'pdf'), pdfMime);
+            await files.deliverFile(await files.receiptsPdf(r, receiptForPartner: side), files.reportFileName(copy, 'pdf'), files.pdfMime);
           }),
         ),
       ]),

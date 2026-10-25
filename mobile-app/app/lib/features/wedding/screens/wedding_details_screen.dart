@@ -30,6 +30,7 @@ import '../../../core/guests/guest_controller.dart';
 import '../../../core/seating/seating_controller.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 
 /// Cor escolhida pelo organizador (verde-eucalipto por defeito, 098) e
@@ -542,7 +543,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                           fit: StackFit.expand,
                           children: [
                             if (wedding.coverPhotoUrlCacheBusted != null)
-                              Image.network(
+                              SizedNetworkImage(
                                 wedding.coverPhotoUrlCacheBusted!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
@@ -1615,7 +1616,7 @@ class _CoverPhoto extends ConsumerWidget {
           height: height,
           width: double.infinity,
           child: url != null
-              ? Image.network(url, fit: BoxFit.cover, errorBuilder: (c, e, s) => Container(color: look.tint))
+              ? SizedNetworkImage(url, fit: BoxFit.cover, errorBuilder: (c, e, s) => Container(color: look.tint))
               : Container(
                   color: look.tint,
                   alignment: Alignment.center,

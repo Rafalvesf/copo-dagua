@@ -4,7 +4,8 @@ name: Mobile app PR preview
 # https://rafalvesf.github.io/copo-dagua/pr-<número>/ (subpasta do gh-pages),
 # para se poder ver as alterações antes do merge. O site principal
 # continua a ser publicado só por deploy-gh-pages.yml a partir do master
-# (que, ao publicar, limpa estas pastas de preview).
+# (que, ao publicar, só mantém os previews de PRs abertos). Ao fechar o
+# PR, mobile-preview-cleanup.yml apaga a pasta.
 on:
   pull_request:
     types: [opened, synchronize, reopened]

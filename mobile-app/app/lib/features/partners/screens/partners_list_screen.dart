@@ -23,6 +23,7 @@ import '../../../shared/widgets/feedback.dart';
 import '../../../shared/money.dart';
 import '../../../core/partner_profile/partner_location.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 class PartnersListScreen extends ConsumerStatefulWidget {
   final String? categorySlug;
@@ -598,7 +599,7 @@ class _PartnerPhoto extends StatelessWidget {
           if (partner.imageUrl == null)
             Center(child: Icon(iconForCategorySlug(partner.primaryCategorySlug), color: Colors.white, size: 26))
           else
-            Image.network(
+            SizedNetworkImage(
               partner.imageUrl!,
               fit: BoxFit.cover,
               loadingBuilder: (context, child, progress) => progress == null ? child : const SizedBox.shrink(),

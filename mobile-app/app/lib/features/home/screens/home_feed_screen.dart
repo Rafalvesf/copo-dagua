@@ -19,6 +19,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/push_opt_in.dart';
 import '../../../shared/widgets/first_run_tour.dart' show TourAnchor;
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// Perfil — conta de quem está com sessão iniciada. Pedido explícito do
 /// utilizador (redesign 2026-10): "o perfil fica apenas de quem criou a
@@ -661,7 +662,7 @@ class _ProfileHeader extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     if (avatarUrl != null)
-                      Image.network(
+                      SizedNetworkImage(
                         avatarUrl!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => initials,

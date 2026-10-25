@@ -18,6 +18,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// Galeria como uma rede social (pedido 2026-10-17): grelha de
 /// quadrados (como no design) → toque abre as publicações com quem
@@ -66,7 +67,7 @@ class GallerySocialGrid extends ConsumerWidget {
               fit: StackFit.expand,
               children: [
                 ColoredBox(color: galleryTint(index)),
-                Image.network(
+                SizedNetworkImage(
                   photo.imageUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stack) => const SizedBox.shrink(),
@@ -332,7 +333,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                   fit: StackFit.expand,
                   children: [
                     ColoredBox(color: widget.tint),
-                    Image.network(
+                    SizedNetworkImage(
                       widget.photo.imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stack) => const SizedBox.shrink(),

@@ -12,6 +12,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'guest_mode_screen.dart' show showGuestModeSheet;
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// "Os teus eventos" (canvas "Convidado · Os teus eventos") — todos os
 /// eventos para onde a conta foi convidada, com o estado da resposta.
@@ -138,7 +139,7 @@ class _EventCard extends ConsumerWidget {
                   }, turns: StickerIcon.tilt(wedding.weddingId.hashCode))
                 : ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.network(wedding.coverPhotoUrlCacheBusted!, width: 44, height: 44, fit: BoxFit.cover),
+                    child: SizedNetworkImage(wedding.coverPhotoUrlCacheBusted!, width: 44, height: 44, fit: BoxFit.cover),
                   ),
             const SizedBox(width: 14),
             Expanded(

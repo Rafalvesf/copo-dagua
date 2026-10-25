@@ -10,10 +10,8 @@ import '../../../core/partner_profile/partner_location.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
-import '../../../core/wedding/wedding_nav_icon.dart';
 import '../../../shared/public_link.dart';
 import '../../../shared/widgets/buttons.dart';
-import '../../../shared/widgets/cover_flow_picker.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -255,27 +253,6 @@ class _CoupleSettings extends ConsumerWidget {
       await Clipboard.setData(ClipboardData(text: link));
       messenger.showSnackBar(const SnackBar(content: Text('Link copiado.')));
     }
-  }
-
-  void _pickNavIcon(BuildContext context) {
-    showIslandSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (context) => const SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(20, 20, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Ícone da barra', style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              SizedBox(height: 16),
-              _NavIconPicker(),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   List<Widget> _sections(BuildContext context, WidgetRef ref, Wedding wedding, {bool help = true, bool signOut = true}) {
@@ -685,74 +662,6 @@ class _GuestSettings extends StatelessWidget {
     );
   }
 }
-
-/// Seleção do ícone da navbar através do carrossel "cover flow"
-/// partilhado ([CoverFlowPicker]) — `null` representa o botão "+" de
-/// desbloquear mais bonecos. Movido de "Os noivos" para aqui.
-class _NavIconPicker extends ConsumerWidget {
-  const _NavIconPicker();
-
-  static const _maxExtent = 92.0;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(weddingNavIconProvider);
-    return CoverFlowPicker<WeddingNavIcon?>(
-      // Sem o "+" de "em breve" (era um botão sem saída — revisão
-      // 2026-10-17).
-      options: const [...WeddingNavIcon.values],
-      selected: selected,
-      itemExtent: _maxExtent,
-      itemBuilder: (context, option, isSelected) => option == null
-          ? const _MoreNavIconTile()
-          : _NavIconOptionTile(option: option),
-      onChanged: (option) {
-        if (option == null) return;
-        ref.read(weddingNavIconProvider.notifier).select(option);
-      },
-    );
-  }
-}
-
-class _NavIconOptionTile extends StatelessWidget {
-  final WeddingNavIcon option;
-
-  const _NavIconOptionTile({required this.option});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: Transform.scale(
-        scale: option.zoom,
-        child: Image.asset(
-          option.assetPath,
-          width: _NavIconPicker._maxExtent,
-          height: _NavIconPicker._maxExtent,
-          fit: BoxFit.cover,
-        ),
-      ),
-    );
-  }
-}
-
-class _MoreNavIconTile extends StatelessWidget {
-  const _MoreNavIconTile();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _NavIconPicker._maxExtent,
-      height: _NavIconPicker._maxExtent,
-      decoration: BoxDecoration(
-        color: AppColors.muted,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: const Icon(Icons.add, color: AppTheme.inkMuted, size: 28),
-    );
-  }
-}
-
 
 /// "Conta" — nome, email e alterar password. Igual para todos os tipos
 /// de conta.

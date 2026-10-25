@@ -11,6 +11,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// Portefólio real — liga-se a `partner_portfolio_items`
 /// (`database/migrations/023_portfolio_storage.sql`). Mín. 3 imagens
@@ -246,7 +247,7 @@ class _PortfolioTile extends StatelessWidget {
               child: const Icon(Icons.play_circle_outline, color: Colors.white, size: 40),
             )
           else
-            Image.network(
+            SizedNetworkImage(
               item.mediaUrl,
               fit: BoxFit.cover,
               loadingBuilder: (context, child, progress) =>

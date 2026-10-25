@@ -20,6 +20,7 @@ import '../../settings/screens/settings_screen.dart' show GuestAccountSections;
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// "O meu perfil" — pedido explícito do utilizador (mockup de
 /// referência): o próprio convidado a ver/editar a sua presença
@@ -681,7 +682,7 @@ class _GuestHeader extends StatelessWidget {
               child: ClipOval(
                 child: avatarUrl == null
                     ? initials
-                    : Image.network(avatarUrl!, fit: BoxFit.cover, errorBuilder: (context, error, stack) => initials),
+                    : SizedNetworkImage(avatarUrl!, fit: BoxFit.cover, errorBuilder: (context, error, stack) => initials),
               ),
             ),
             Positioned(

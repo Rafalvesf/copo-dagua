@@ -4,6 +4,7 @@ library;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:copo_dagua_app/core/exports/export_files.dart';
 import 'package:copo_dagua_app/core/exports/exports.dart';
 
 /// Gera os relatórios com dados de exemplo e guarda-os ao lado das

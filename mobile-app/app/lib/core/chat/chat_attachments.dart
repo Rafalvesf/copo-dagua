@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../shared/widgets/island_sheet.dart';
 import '../supabase/supabase_config.dart';
 import '../theme/app_theme.dart';
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// Anexos do chat (pedido do utilizador, 2026-10-20): fotos, ficheiros,
 /// stickers e GIFs, nas conversas com parceiros e nos grupos do evento.
@@ -262,7 +263,7 @@ class _GifPickerState extends State<_GifPicker> {
                           onTap: () => Navigator.of(context).pop(_gifs[i].$2),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(10),
-                            child: Image.network(_gifs[i].$1, fit: BoxFit.cover),
+                            child: SizedNetworkImage(_gifs[i].$1, fit: BoxFit.cover),
                           ),
                         ),
                       ),
@@ -305,7 +306,7 @@ class ChatAttachmentView extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxW, maxHeight: 320),
-            child: Image.network(
+            child: SizedNetworkImage(
               url,
               fit: BoxFit.cover,
               loadingBuilder: (c, child, p) => p == null
