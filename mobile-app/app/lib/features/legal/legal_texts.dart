@@ -117,10 +117,10 @@ const privacyDoc = LegalDoc(
       'Autoridades, quando a lei o exigir.',
     ]),
     LegalSection('6. Durante quanto tempo', [
-      'Enquanto a tua conta estiver ativa. Se pedires a eliminação da conta, apagamos os teus dados no prazo de 30 dias, exceto os que a lei nos obriga a guardar (por exemplo, registos de pagamentos, durante 10 anos).',
+      'Enquanto a tua conta estiver ativa. Podes apagá-la a qualquer momento em Definições → Conta → Apagar conta: os teus dados pessoais são apagados de imediato, exceto os que a lei nos obriga a guardar (por exemplo, registos de pagamentos, durante 10 anos, sem o teu nome). Se tiveres reservas ativas, tens de as cancelar ou esperar que o evento passe.',
     ]),
     LegalSection('7. Os teus direitos', [
-      'Podes pedir acesso aos teus dados, a sua correção, eliminação ou portabilidade, opor-te a um tratamento ou pedir a sua limitação, e retirar um consentimento dado. Para isso, usa "Falar com a equipa À Nossa!" nas Definições ou escreve para ${LegalEntity.email}. Respondemos no prazo de um mês.',
+      'Podes apagar a tua conta diretamente nas Definições. Podes também pedir acesso aos teus dados, a sua correção, eliminação ou portabilidade, opor-te a um tratamento ou pedir a sua limitação, e retirar um consentimento dado. Para isso, usa "Falar com a equipa À Nossa!" nas Definições ou escreve para ${LegalEntity.email}. Respondemos no prazo de um mês.',
       'Tens também o direito de apresentar reclamação à Comissão Nacional de Proteção de Dados (www.cnpd.pt).',
     ]),
     LegalSection('8. Segurança', [

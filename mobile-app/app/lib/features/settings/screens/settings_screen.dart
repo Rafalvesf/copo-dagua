@@ -19,6 +19,8 @@ import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/first_run_tour.dart' show FirstRunTour, TourRole;
 import '../../../shared/widgets/v2_kit.dart';
+import '../../../core/supabase/supabase_config.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 
 /// Definições — uma por tipo de conta (organizadores, parceiros,
 /// convidados). Redesign 2026-10-17 (canvas "Organizadores · Definições",
@@ -728,8 +730,71 @@ class _AccountSection extends ConsumerWidget {
           label: 'Mudar password',
           onTap: () => _resetPassword(context, ref, profile.email),
         ),
+        // Direito ao apagamento (RGPD, 2026-10-25).
+        _Row(
+          icon: Icons.delete_outline_rounded,
+          label: 'Apagar conta',
+          color: const Color(0xFFA3412E),
+          onTap: () => _deleteAccount(context, ref),
+        ),
       ],
     );
+  }
+
+  Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController();
+    final ok = await showIslandDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => IslandAlert(
+          title: const Text('Apagar a conta?'),
+          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text(
+              'Apagamos o teu perfil, os teus eventos (convidados, tarefas, galeria, mesas e orçamento), as tuas fotos, '
+              'mensagens de grupo e notificações. Não dá para voltar atrás.\n\n'
+              'Por lei, guardamos o registo dos pagamentos já feitos, sem o teu nome. '
+              'Se tiveres reservas ativas, tens de as cancelar ou esperar que o evento passe.',
+              style: TextStyle(fontSize: AppFontSize.md, height: 1.45, color: AppTheme.ink),
+            ),
+            const SizedBox(height: 14),
+            const Text('Escreve APAGAR para confirmar.', style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 6),
+            TextField(
+              controller: controller,
+              autocorrect: false,
+              textCapitalization: TextCapitalization.characters,
+              onChanged: (_) => setState(() {}),
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFA3412E)),
+              onPressed: controller.text.trim().toUpperCase() == 'APAGAR' ? () => Navigator.of(context).pop(true) : null,
+              child: const Text('Apagar conta'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await supabase.functions.invoke('delete-account', body: {'confirm': true});
+      messenger.showSnackBar(const SnackBar(content: Text('A tua conta foi apagada.')));
+      await ref.read(authControllerProvider.notifier).logout();
+    } on FunctionException catch (e) {
+      final d = e.details;
+      final code = d is Map ? d['error'] : null;
+      final count = d is Map ? d['count'] : null;
+      messenger.showSnackBar(SnackBar(
+        content: Text(code == 'active_bookings'
+            ? 'Tens ${count ?? 'algumas'} reservas ativas. Cancela-as ou espera que o evento passe para apagares a conta.'
+            : 'Não foi possível apagar a conta. Tenta outra vez ou fala com a equipa.'),
+      ));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível apagar a conta. Verifica a ligação.')));
+    }
   }
 }
 
