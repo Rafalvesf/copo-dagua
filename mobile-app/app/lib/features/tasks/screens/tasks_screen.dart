@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -198,14 +199,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                   ),
                                 )
                               else if (state.systemActive.isEmpty)
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(18),
-                                  decoration: whiteLineCard(radius: 20),
-                                  child: const Text(
-                                    'Sem tarefas recomendadas por agora — bom trabalho! 🎉',
-                                  ),
-                                )
+                                const InfoNote('Sem tarefas recomendadas por agora — bom trabalho!', icon: Icons.check_circle_outline_rounded)
                               else
                                 for (final (i, task) in state.systemActive.indexed) ...[
                                   _TaskRow(

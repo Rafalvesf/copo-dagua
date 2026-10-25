@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/review_tile.dart';
 import '../../../core/page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -907,13 +908,13 @@ class _ComingSoonSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        color: kInfoNoteColor,
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Text(
         message,
         textAlign: TextAlign.center,
-        style: TextStyle(color: AppTheme.inkMuted),
+        style: const TextStyle(color: AppTheme.ink, height: 1.4),
       ),
     );
   }

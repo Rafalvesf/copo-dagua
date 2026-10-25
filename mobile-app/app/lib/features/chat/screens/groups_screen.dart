@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -202,8 +203,9 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
               data: (list) {
                 final others = list.where((p) => p.id != me).toList();
                 if (others.isEmpty) {
-                  return const Center(
-                    child: Text('Ainda não há convidados com conta neste evento.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.inkMuted)),
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: InfoNote('Ainda não há convidados com conta neste evento.', icon: Icons.info_outline_rounded),
                   );
                 }
                 return ListView(children: [

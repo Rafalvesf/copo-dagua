@@ -140,8 +140,9 @@ class _EmptyState extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 16),
-          const Text(
+          const InfoNote(
             'Ainda não tens nenhum casamento associado a esta conta. Pede aos noivos o código do casal e junta-te nas Definições.',
+            icon: Icons.info_outline_rounded,
           ),
           const SizedBox(height: 24),
           Center(

@@ -121,6 +121,35 @@ class AsyncErrorView extends StatelessWidget {
 /// mesmo ritmo visual que [AsyncErrorView]. Para caixas de altura fixa
 /// (ex: uma secção pequena dentro de um card) continua a usar-se só um
 /// `Text`, que é o que cabe.
+/// Fundo das mensagens informativas ("Ainda não há…", listas vazias):
+/// cinzento claro (pedido 2026-10-25).
+const kInfoNoteColor = Color(0xFFE9E8E4);
+
+/// Mensagem informativa curta num cartão cinzento claro.
+class InfoNote extends StatelessWidget {
+  final String text;
+  final IconData? icon;
+  const InfoNote(this.text, {super.key, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: kInfoNoteColor, borderRadius: BorderRadius.circular(18)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 18, color: AppTheme.inkMuted),
+            const SizedBox(width: 10),
+          ],
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: AppTheme.ink, height: 1.4))),
+        ],
+      ),
+    );
+  }
+}
+
 class EmptyStateView extends StatelessWidget {
   final String message;
   final IconData icon;
@@ -139,20 +168,25 @@ class EmptyStateView extends StatelessWidget {
           horizontal: AppTheme.screenMargin,
           vertical: 32,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        // Mensagens informativas num fundo cinzento claro (2026-10-25).
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+          decoration: BoxDecoration(color: kInfoNoteColor, borderRadius: BorderRadius.circular(18)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             Icon(icon, size: 32, color: AppTheme.navIconMuted),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: AppFontSize.base,
-                color: AppTheme.inkMuted,
+              const SizedBox(height: 12),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: AppFontSize.base,
+                  color: AppTheme.inkMuted,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
