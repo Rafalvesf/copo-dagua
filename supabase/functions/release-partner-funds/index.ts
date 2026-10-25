@@ -53,6 +53,14 @@ Deno.serve(async (req) => {
         await admin.rpc("mark_payment_released", { p_payment_id: r.payment_id, p_transfer_id: "nothing_to_release" });
         continue;
       }
+      // Parceiro que ainda não ativou os pagamentos: o dinheiro fica retido
+      // e tenta-se outra vez no dia seguinte. Avisa-o no máximo 1x/semana.
+      const acc = await stripe.accounts.retrieve(r.partner_account);
+      if (acc.capabilities?.transfers !== "active") {
+        await nudgePartner(admin, r);
+        failed.push(r.payment_id);
+        continue;
+      }
       const transfer = await stripe.transfers.create(
         {
           amount: cents,
@@ -82,3 +90,22 @@ Deno.serve(async (req) => {
   }
   return Response.json({ released, failed });
 });
+
+// deno-lint-ignore no-explicit-any
+async function nudgePartner(admin: any, r: { partner_id: string; booking_number: string }) {
+  const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+  const { count } = await admin
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("partner_id", r.partner_id)
+    .eq("type", "funds_waiting")
+    .gte("created_at", since);
+  if ((count ?? 0) > 0) return;
+  await admin.from("notifications").insert({
+    partner_id: r.partner_id,
+    type: "funds_waiting",
+    title: "Tens dinheiro à tua espera",
+    body: `O pagamento da reserva ${r.booking_number} está pronto. Ativa os pagamentos para o receberes.`,
+    link: "/partner-payments",
+  }).then(({ error }: { error: unknown }) => error && console.error("nudge failed", error));
+}

@@ -79,28 +79,16 @@ Deno.serve(async (req) => {
     stripe_charges_enabled: boolean;
     business_name: string;
   } | null;
-  if (!partner?.stripe_account_id) return json({ error: "partner_not_onboarded" }, 409);
+  if (!partner) return json({ error: "not_found" }, 404);
+  // O organizador pode pagar mesmo que o parceiro ainda não tenha ativado
+  // os pagamentos (2026-10-25): o dinheiro fica na À Nossa! até 3 dias
+  // depois do evento e só é transferido quando a conta dele estiver ativa.
 
   const stripe = stripeClient();
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-
-  if (!partner.stripe_charges_enabled) {
-    try {
-      const account = await stripe.accounts.retrieve(partner.stripe_account_id);
-      await admin.rpc("sync_stripe_account_status", {
-        p_account_id: account.id,
-        p_charges_enabled: account.charges_enabled,
-        p_payouts_enabled: account.payouts_enabled,
-      });
-      if (!account.charges_enabled) return json({ error: "partner_not_onboarded" }, 409);
-    } catch (e) {
-      console.error("stripe account refresh failed", e);
-      return json({ error: "partner_not_onboarded" }, 409);
-    }
-  }
 
   // Tentativa anterior: se já foi paga, confirma e recusa nova; senão
   // anula-a para não haver duas cobranças possíveis.
@@ -171,7 +159,7 @@ Deno.serve(async (req) => {
         payment_id: payment.id,
         booking_id: payment.booking_id,
         kind: "booking_payment",
-        partner_account: partner.stripe_account_id,
+        partner_account: partner.stripe_account_id ?? "",
         partner_amount_cents: String(partnerAmountCents),
         commission_cents: String(applicationFeeCents),
       },
