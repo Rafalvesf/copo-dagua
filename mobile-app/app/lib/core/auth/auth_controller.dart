@@ -628,7 +628,24 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> requestPasswordReset(String email) async {
-    await supabase.auth.resetPasswordForEmail(email);
+    await supabase.auth.resetPasswordForEmail(
+      email,
+      redirectTo: kIsWeb ? '${Uri.base.origin}${Uri.base.path}' : null,
+    );
+  }
+
+  /// Recuperar a password dentro da app (2026-10-25): o código de 6
+  /// dígitos do email confirma que a conta é tua, a password nova fica
+  /// gravada e entras logo. A app nunca guarda a password.
+  Future<void> resetPasswordWithCode({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    await supabase.auth.verifyOTP(email: email, token: code, type: OtpType.recovery);
+    await supabase.auth.updateUser(UserAttributes(password: newPassword));
+    await supabase.auth.signOut();
+    await login(email: email, password: newPassword, keepSignedIn: false);
   }
 
   /// Partilhado por casal (fim do wizard, depois de `create()` em
