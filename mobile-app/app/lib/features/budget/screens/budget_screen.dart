@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -747,10 +748,7 @@ class _CategorySheet extends ConsumerWidget {
             if (expenses.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  'Ainda não há despesas nesta categoria.',
-                  style: TextStyle(color: AppTheme.inkMuted),
-                ),
+                child: InfoNote('Ainda não há despesas nesta categoria.', icon: Icons.info_outline_rounded),
               )
             else
               for (final e in expenses)

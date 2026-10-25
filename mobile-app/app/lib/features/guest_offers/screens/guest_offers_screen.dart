@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../../../shared/widgets/feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -73,8 +74,7 @@ class GuestOffersScreen extends ConsumerWidget {
                       ],
                       const SizedBox(height: 20),
                       if (offers.isEmpty)
-                        Text('Ainda não há opções de alojamento ou transporte.',
-                            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.base))
+                        const InfoNote('Ainda não há opções de alojamento ou transporte.', icon: Icons.info_outline_rounded)
                       else
                         for (final kind in GuestOfferKind.values)
                           if (offers.any((o) => o.kind == kind)) ...[

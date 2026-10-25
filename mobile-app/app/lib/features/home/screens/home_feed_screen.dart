@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/feedback.dart';
 import '../../settings/screens/settings_screen.dart' show CoupleAccountSections;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -415,10 +416,7 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
                     ? const Center(
                         child: Padding(
                           padding: EdgeInsets.all(24),
-                          child: Text(
-                            'Sem notificações por agora.',
-                            style: TextStyle(color: AppTheme.inkMuted),
-                          ),
+                          child: InfoNote('Sem notificações por agora.', icon: Icons.notifications_none_rounded),
                         ),
                       )
                     : ListView(

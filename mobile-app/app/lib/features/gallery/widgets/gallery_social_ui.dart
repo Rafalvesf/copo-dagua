@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -659,8 +660,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                 data: (list) => list.isEmpty
                     ? const Padding(
                         padding: EdgeInsets.symmetric(vertical: 28),
-                        child: Text('Ainda sem comentários. Sê o primeiro!',
-                            style: TextStyle(color: AppTheme.inkMuted)),
+                        child: InfoNote('Ainda sem comentários. Sê o primeiro!', icon: Icons.chat_bubble_outline_rounded),
                       )
                     : ListView(
                         shrinkWrap: true,
@@ -863,7 +863,7 @@ class _MemberSheet extends ConsumerWidget {
                   ),
                   const SizedBox(height: 18),
                   if (theirs.isEmpty)
-                    const Text('Ainda sem fotos publicadas.', style: TextStyle(color: AppTheme.inkMuted))
+                    const InfoNote('Ainda sem fotos publicadas.', icon: Icons.photo_outlined)
                   else
                     GallerySocialGrid(weddingId: weddingId, photos: theirs),
                 ],

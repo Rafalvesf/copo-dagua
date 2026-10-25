@@ -412,13 +412,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             if (noneNear && !widget.selectionMode)
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 14),
-                                child: Container(
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(color: const Color(0xFFF3EBDD), borderRadius: BorderRadius.circular(18)),
-                                  child: Text(
-                                    'Ainda não há parceiros em $effectiveLocation. Mostramos todos os parceiros.',
-                                    style: const TextStyle(fontSize: 13, color: AppTheme.ink, height: 1.4),
-                                  ),
+                                child: InfoNote(
+                                  'Ainda não há parceiros em $effectiveLocation. Mostramos todos os parceiros.',
+                                  icon: Icons.info_outline_rounded,
                                 ),
                               ),
                             if (!widget.selectionMode && query.isEmpty && _filter == null && partners.isNotEmpty) ...[
