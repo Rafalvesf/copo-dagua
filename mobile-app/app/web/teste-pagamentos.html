@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>À Nossa! · Teste de pagamentos</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <!--
+    Página de TESTE (2026-10-25): o ecrã "Ativar pagamentos" da app do
+    parceiro, sem login, para experimentar o formulário embutido da Stripe.
+    Só funciona com a Stripe em modo de teste e só para contas de teste
+    (email ".test") — a Edge Function `test-partner-onboarding` recusa o
+    resto. Parceiro por omissão: Casa Tília; outro com ?p=<id>.
+  -->
+  <style>
+    :root { --green: #4F6B4A; --ink: #171713; --muted: #57534E; --tint: #DDE5D3; --line: #E6E0D2; --surface: #F2F0EB; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #EAE3D1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--ink); }
+    .phone { max-width: 480px; min-height: 100vh; margin: 0 auto; background: #fff; display: flex; flex-direction: column; }
+    header { padding: max(20px, env(safe-area-inset-top)) 20px 12px; display: flex; align-items: center; gap: 12px; }
+    .back { width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--line); background: #fff; display: flex; align-items: center; justify-content: center; }
+    h1 { margin: 0; font-size: 22px; font-weight: 700; }
+    .badge { margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--green); background: var(--tint); padding: 6px 10px; border-radius: 999px; }
+    .intro { margin: 0 20px 14px; padding: 16px; border-radius: 18px; background: var(--surface); display: flex; gap: 12px; }
+    .intro .ico { width: 40px; height: 40px; flex-shrink: 0; border-radius: 20px; background: var(--tint); color: var(--green); display: flex; align-items: center; justify-content: center; }
+    .intro b { display: block; font-size: 15px; margin-bottom: 2px; }
+    .intro span { font-size: 13px; color: var(--muted); line-height: 1.4; }
+    .status { margin: 0 20px 12px; font-size: 13px; color: var(--muted); }
+    .status.ok { color: var(--green); font-weight: 600; }
+    #host { padding: 0 20px 28px; flex: 1; }
+    .hint { margin: 0 20px 24px; padding: 14px 16px; border: 1px dashed var(--line); border-radius: 14px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .hint code { background: var(--surface); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+    .err { margin: 0 20px 16px; padding: 14px 16px; border-radius: 14px; background: #F7EDEB; color: #7A2E24; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <header>
+      <a class="back" href="./" aria-label="Voltar à app">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      </a>
+      <h1>Ativar pagamentos</h1>
+      <span class="badge">Teste</span>
+    </header>
+    <div class="intro">
+      <div class="ico" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>
+      </div>
+      <div>
+        <b id="who">A carregar…</b>
+        <span>Os dados vão diretamente para a Stripe. Quando terminares, já podes receber sinais na app.</span>
+      </div>
+    </div>
+    <p class="status" id="status"></p>
+    <div id="error" class="err" hidden></div>
+    <div id="host"></div>
+    <div class="hint">
+      Modo de teste da Stripe: telefone <code>000 000 0000</code>, código SMS <code>000000</code>,
+      data de nascimento <code>01/01/1901</code>, morada linha 1 <code>address_full_match</code>,
+      IBAN <code>PT50000201231234567890154</code>.
+    </div>
+  </div>
+  <script>
+    (function () {
+      var FN = 'https://yknbtsmcmjxzzhijyiav.supabase.co/functions/v1/test-partner-onboarding';
+      var KEY = 'sb_publishable_TkmeAQOlKuN4kUii5i70Rg_Qiz8D7cc';
+      var partnerId = new URLSearchParams(location.search).get('p') || 'c1fd9373-b755-42aa-b4cd-bf0ada59647e';
+      var who = document.getElementById('who'), status = document.getElementById('status'), err = document.getElementById('error');
+
+      function session() {
+        return fetch(FN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': KEY },
+          body: JSON.stringify({ partner_id: partnerId })
+        }).then(function (r) { return r.json(); });
+      }
+      function fail(msg) { err.textContent = msg; err.hidden = false; who.textContent = 'Não foi possível abrir'; }
+      function showStatus(d) {
+        if (d.charges_enabled) { status.textContent = 'Pagamentos ativos ✓'; status.className = 'status ok'; }
+        else { status.textContent = 'Pagamentos por ativar'; status.className = 'status'; }
+      }
+      function loadConnect() {
+        return new Promise(function (res, rej) {
+          if (window.StripeConnect && window.StripeConnect.init) return res();
+          var s = document.createElement('script');
+          s.src = 'https://connect-js.stripe.com/v1.0/connect.js';
+          s.onload = function () {
+            if (window.StripeConnect && window.StripeConnect.init) return res();
+            window.StripeConnect = window.StripeConnect || {};
+            window.StripeConnect.onLoad = function () { res(); };
+          };
+          s.onerror = function () { rej(new Error('connect_js')); };
+          document.head.appendChild(s);
+        });
+      }
+
+      session().then(function (first) {
+        if (!first || !first.client_secret) {
+          var m = { test_mode_only: 'A Stripe não está em modo de teste.', test_accounts_only: 'Só funciona com contas de teste.', not_found: 'Parceiro não encontrado.' }[first && first.error];
+          return fail(m || 'Não foi possível abrir o formulário da Stripe.');
+        }
+        who.textContent = first.business_name || 'Parceiro';
+        showStatus(first);
+        return loadConnect().then(function () {
+          var used = false;
+          var instance = window.StripeConnect.init({
+            publishableKey: first.publishable_key,
+            locale: 'pt-PT',
+            fetchClientSecret: function () {
+              if (!used) { used = true; return Promise.resolve(first.client_secret); }
+              return session().then(function (j) { return j.client_secret; });
+            },
+            appearance: {
+              overlays: 'dialog',
+              variables: {
+                colorPrimary: '#4F6B4A', colorText: '#171713', colorSecondaryText: '#57534E',
+                colorBackground: '#FFFFFF', colorBorder: '#E6E0D2', colorDanger: '#B3261E',
+                borderRadius: '14px', buttonBorderRadius: '999px', formBorderRadius: '14px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontSizeBase: '15px', spacingUnit: '10px',
+                buttonPrimaryColorBackground: '#4F6B4A', buttonPrimaryColorText: '#FFFFFF'
+              }
+            }
+          });
+          var el = instance.create('account-onboarding');
+          try { el.setCollectionOptions({ fields: 'eventually_due', futureRequirements: 'include' }); } catch (e) {}
+          el.setOnExit(function () { session().then(showStatus); });
+          document.getElementById('host').appendChild(el);
+        });
+      }).catch(function () { fail('Sem ligação. Tenta outra vez.'); });
+    })();
+  </script>
+</body>
+</html>
