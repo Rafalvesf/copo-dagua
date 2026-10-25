@@ -163,9 +163,18 @@ Deno.serve(async (req) => {
         : { payment_method_types: [method] }),
       description: `${label} — reserva ${bookingNumber} · ${partner.business_name}`.trim(),
       receipt_email: user.email ?? undefined,
-      application_fee_amount: applicationFeeCents,
-      transfer_data: { destination: partner.stripe_account_id },
-      metadata: { payment_id: payment.id, booking_id: payment.booking_id, kind: "booking_payment" },
+      // Pagamento antecipado (2026-10-25, migração 119): o dinheiro fica na
+      // À Nossa! e só é transferido ao parceiro 3 dias depois do evento,
+      // sem disputa (`release-partner-funds`). Antes ia logo para o parceiro.
+      transfer_group: payment.booking_id as string,
+      metadata: {
+        payment_id: payment.id,
+        booking_id: payment.booking_id,
+        kind: "booking_payment",
+        partner_account: partner.stripe_account_id,
+        partner_amount_cents: String(partnerAmountCents),
+        commission_cents: String(applicationFeeCents),
+      },
     });
   } catch (err) {
     console.error("paymentIntents.create failed", err);

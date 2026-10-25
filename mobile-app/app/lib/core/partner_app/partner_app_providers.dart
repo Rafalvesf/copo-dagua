@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
+import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions, PostgrestException;
 
 import '../auth/auth_controller.dart';
 import '../home/home_providers.dart' show mapRealBookingStatus;
@@ -491,10 +491,15 @@ class PartnerBalanceData {
   final double pendingDeposits;
   final double uncollectedBalance;
 
+  /// Pago pelos organizadores mas ainda retido pela À Nossa! — é libertado
+  /// 3 dias depois do evento, sem disputa (migração 119).
+  final double held;
+
   const PartnerBalanceData({
     required this.received,
     required this.pendingDeposits,
     required this.uncollectedBalance,
+    this.held = 0,
   });
 }
 
@@ -505,22 +510,34 @@ final partnerBalanceProvider = FutureProvider<PartnerBalanceData>((ref) async {
   // total − sinal mesmo depois de o restante estar pago. Agora, por
   // reserva ativa: recebido = pagamentos pagos (sinal + restante),
   // sinais a aguardar = sinais pendentes, por cobrar = o que sobra.
-  final rows = await supabase
-      .from('bookings')
-      .select('total_amount, status, payments(type, status, amount)')
-      .eq('partner_id', partnerId)
-      .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
+  List<dynamic> rows;
+  try {
+    rows = await supabase
+        .from('bookings')
+        .select('total_amount, status, payments(type, status, amount, released_at)')
+        .eq('partner_id', partnerId)
+        .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
+  } on PostgrestException {
+    // Migração 119 ainda por correr.
+    rows = await supabase
+        .from('bookings')
+        .select('total_amount, status, payments(type, status, amount)')
+        .eq('partner_id', partnerId)
+        .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
+  }
 
   double received = 0;
   double pendingDeposits = 0;
   double uncollectedBalance = 0;
-  for (final row in rows) {
+  double held = 0;
+  for (final row in rows.cast<Map<String, dynamic>>()) {
     final total = (row['total_amount'] as num).toDouble();
     double paid = 0;
     double pendingDeposit = 0;
     for (final p in ((row['payments'] as List?) ?? const []).cast<Map<String, dynamic>>()) {
       final amount = (p['amount'] as num).toDouble();
       if (p['status'] == 'paid') paid += amount;
+      if (p['status'] == 'paid' && p.containsKey('released_at') && p['released_at'] == null) held += amount;
       if (p['status'] == 'pending' && p['type'] == 'deposit') pendingDeposit += amount;
     }
     received += paid;
@@ -533,6 +550,7 @@ final partnerBalanceProvider = FutureProvider<PartnerBalanceData>((ref) async {
     received: received,
     pendingDeposits: pendingDeposits,
     uncollectedBalance: uncollectedBalance,
+    held: held,
   );
 });
 

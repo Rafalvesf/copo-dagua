@@ -128,6 +128,7 @@ Deno.serve(async (req) => {
         },
         { idempotencyKey: `refund-${p.id}` },
       );
+      await reverseReleasedShare(stripe, admin, p.id as string, intent.amount, intent.amount);
       const { error } = await admin
         .from("payments")
         .update({ status: "refunded", refunded_amount: intent.amount / 100, updated_at: new Date().toISOString() })
@@ -189,4 +190,27 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+// Se o dinheiro já tinha sido libertado ao parceiro (migração 119),
+// recupera a parte dele na mesma proporção do reembolso.
+async function reverseReleasedShare(
+  stripe: ReturnType<typeof stripeClient>,
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  paymentId: string,
+  refundedCents: number,
+  chargeCents: number,
+): Promise<void> {
+  const { data } = await admin.from("payments").select("transfer_id, amount").eq("id", paymentId).maybeSingle();
+  const transferId = (data as { transfer_id?: string | null } | null)?.transfer_id;
+  if (!transferId || !transferId.startsWith("tr_") || chargeCents <= 0) return;
+  const partnerCents = Math.round(Number((data as { amount: number }).amount) * 100);
+  const share = Math.min(partnerCents, Math.round((refundedCents * partnerCents) / chargeCents));
+  if (share <= 0) return;
+  try {
+    await stripe.transfers.createReversal(transferId, { amount: share }, { idempotencyKey: `reverse-${paymentId}-${refundedCents}` });
+  } catch (e) {
+    console.error("transfer reversal failed", paymentId, (e as Error).message);
+  }
 }
