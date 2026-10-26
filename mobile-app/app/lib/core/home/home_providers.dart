@@ -322,25 +322,66 @@ final platformCommissionPercentageProvider = FutureProvider<double>((
   return (row['platform_commission_percentage'] as num).toDouble();
 });
 
-/// Taxa descontada ao parceiro quando o dinheiro é libertado
-/// (`platform_settings.partner_fee_percentage`, migração 123, IVA
-/// incluído). 0 enquanto a migração não tiver corrido.
-final partnerFeePercentageProvider = FutureProvider<double>((ref) async {
+/// Taxa do parceiro (migrações 123/126), IVA incluído: escalões marginais
+/// sobre o valor total da reserva (8% até 2 000 €, 6% até 10 000 €, 4%
+/// acima, editáveis no admin) ou, sem escalões, uma percentagem fixa.
+/// Mesma conta que `supabase/functions/_shared/fees.ts`.
+class PartnerFeeConfig {
+  final List<({double? upTo, double pct})> tiers;
+  final double flatPct;
+  const PartnerFeeConfig({this.tiers = const [], this.flatPct = 0});
+
+  bool get isZero => tiers.isEmpty && flatPct <= 0;
+
+  /// Taxa sobre o valor total de uma reserva.
+  double feeFor(double total) {
+    final cents = (total * 100).round();
+    if (tiers.isEmpty) return (cents * flatPct / 100).round() / 100;
+    var fee = 0.0;
+    var prev = 0;
+    for (final t in tiers) {
+      // Sem `1 << 62`: na web os inteiros são de 53 bits e `<<` é de 32.
+      final cap = t.upTo == null ? 9007199254740991 : (t.upTo! * 100).round();
+      final portion = (cents < cap ? cents : cap) - prev;
+      if (portion <= 0) break;
+      fee += portion * t.pct / 100;
+      prev = cap;
+    }
+    return fee.round() / 100;
+  }
+
+  /// Parte da taxa de um pagamento (sinal/restante) de uma reserva.
+  double feeForPayment(double payment, double bookingTotal) {
+    if (tiers.isEmpty) return ((payment * 100).round() * flatPct / 100).round() / 100;
+    if (bookingTotal <= 0) return 0;
+    final f = (feeFor(bookingTotal) * 100 * payment / bookingTotal).round() / 100;
+    return f > payment ? payment : f;
+  }
+
+  /// "8% até 2 000 €, 6% até 10 000 €, 4% acima"
+  String describe(String Function(num) money) {
+    String pct(double p) => p % 1 == 0 ? p.toStringAsFixed(0) : p.toStringAsFixed(1);
+    if (tiers.isEmpty) return '${pct(flatPct)}%';
+    return [
+      for (final t in tiers) t.upTo == null ? '${pct(t.pct)}% acima' : '${pct(t.pct)}% até ${money(t.upTo!)}',
+    ].join(', ');
+  }
+}
+
+final partnerFeeConfigProvider = FutureProvider<PartnerFeeConfig>((ref) async {
   try {
     final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
-    return (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0;
+    final raw = row['partner_fee_tiers'];
+    final tiers = <({double? upTo, double pct})>[
+      if (raw is List)
+        for (final t in raw.cast<Map>())
+          (upTo: (t['up_to'] as num?)?.toDouble(), pct: (t['pct'] as num).toDouble()),
+    ];
+    return PartnerFeeConfig(tiers: tiers, flatPct: (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0);
   } catch (_) {
-    return 0;
+    return const PartnerFeeConfig();
   }
 });
-
-/// O que o parceiro recebe depois da taxa (mesma conta em cêntimos que
-/// `release-partner-funds`).
-double partnerNet(double partnerAmount, double feePercentage) {
-  final cents = (partnerAmount * 100).round();
-  final fee = (cents * feePercentage / 100).round();
-  return (cents - fee) / 100;
-}
 
 /// `platform_settings.deposit_percentage` (`062_deposit_and_cancellation_rules.sql`)
 /// — o sinal deixou de ser um valor livre que o parceiro escrevia

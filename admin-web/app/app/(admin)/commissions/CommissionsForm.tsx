@@ -23,25 +23,42 @@ export function CommissionsForm({ settings }: { settings: PlatformSettings }) {
       <NumberField
         name="platform_commission_percentage"
         label="Comissão paga pelo organizador"
-        hint="Somada ao valor do parceiro em cada pagamento (sinal e restante). IVA incluído."
+        hint="Proteção de pagamento, somada ao valor do parceiro em cada pagamento (sinal e restante). IVA incluído."
         suffix="%"
         defaultValue={settings.platform_commission_percentage}
         min={0}
         max={100}
         step={0.1}
       />
-      {(settings as unknown as { partner_fee_percentage?: number }).partner_fee_percentage !== undefined && (
-        <NumberField
-          name="partner_fee_percentage"
-          label="Taxa descontada ao parceiro"
-          hint="Descontada ao valor do parceiro quando o dinheiro é libertado (3 dias depois do evento). IVA incluído. Só vale para pagamentos feitos depois de a alterares."
-          suffix="%"
-          defaultValue={(settings as unknown as { partner_fee_percentage: number }).partner_fee_percentage}
-          min={0}
-          max={49}
-          step={0.1}
-        />
-      )}
+      {(() => {
+        const tiers = (settings as unknown as { partner_fee_tiers?: { up_to: number | null; pct: number }[] }).partner_fee_tiers;
+        if (!Array.isArray(tiers)) return null;
+        const t = [0, 1, 2].map((i) => tiers[i] ?? { up_to: null, pct: 0 });
+        return (
+          <fieldset className="field" style={{ border: 0, padding: 0, margin: 0 }}>
+            <span className="field-label">Taxa descontada ao parceiro (por escalões)</span>
+            <span className="field-hint" style={{ maxWidth: "62ch" }}>
+              Sobre o valor total da reserva, como os escalões do IRS: cada percentagem aplica-se só à parte dentro do escalão. IVA incluído. Só vale para pagamentos feitos depois de a alterares.
+            </span>
+            <div className="row" style={{ gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+              <input name="tier1_pct" type="number" step={0.1} min={0} max={49} defaultValue={t[0].pct} className="input tnum" style={{ width: 80 }} required />
+              <span className="muted" style={{ fontSize: 13 }}>% até</span>
+              <input name="tier1_up_to" type="number" step={1} min={1} defaultValue={t[0].up_to ?? 2000} className="input tnum" style={{ width: 100 }} required />
+              <span className="muted" style={{ fontSize: 13 }}>€</span>
+            </div>
+            <div className="row" style={{ gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+              <input name="tier2_pct" type="number" step={0.1} min={0} max={49} defaultValue={t[1].pct} className="input tnum" style={{ width: 80 }} required />
+              <span className="muted" style={{ fontSize: 13 }}>% até</span>
+              <input name="tier2_up_to" type="number" step={1} min={1} defaultValue={t[1].up_to ?? 10000} className="input tnum" style={{ width: 100 }} required />
+              <span className="muted" style={{ fontSize: 13 }}>€</span>
+            </div>
+            <div className="row" style={{ gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+              <input name="tier3_pct" type="number" step={0.1} min={0} max={49} defaultValue={t[2].pct} className="input tnum" style={{ width: 80 }} required />
+              <span className="muted" style={{ fontSize: 13 }}>% acima disso</span>
+            </div>
+          </fieldset>
+        );
+      })()}
       <NumberField
         name="deposit_percentage"
         label="Percentagem do sinal"

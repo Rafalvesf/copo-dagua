@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/home/home_providers.dart' show partnerFeePercentageProvider;
+import '../../../core/home/home_providers.dart' show PartnerFeeConfig, partnerFeeConfigProvider;
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/payments/partner_connect.dart';
 import '../../../core/theme/app_theme.dart';
@@ -304,7 +304,7 @@ class _ToReceive extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final b = ref.watch(partnerBalanceProvider).value;
-    final feePct = ref.watch(partnerFeePercentageProvider).value ?? 0;
+    final feeCfg = ref.watch(partnerFeeConfigProvider).value ?? const PartnerFeeConfig();
     Widget tile(String label, double v, Color c) => Expanded(
           child: Container(
             padding: const EdgeInsets.all(14),
@@ -333,7 +333,7 @@ class _ToReceive extends ConsumerWidget {
       const SizedBox(height: 8),
       Text(
         'O sinal é libertado 48 h depois de o cliente o pagar; o restante, 3 dias depois do evento.'
-        '${feePct > 0 ? ' Valores antes da taxa de ${feePct % 1 == 0 ? feePct.toStringAsFixed(0) : feePct.toStringAsFixed(1)}% da À Nossa! (IVA incluído), descontada nessa altura.' : ''}',
+        '${feeCfg.isZero ? '' : ' Valores antes da taxa da À Nossa! (${feeCfg.describe((v) => euros(v))} do valor da reserva, IVA incluído), descontada nessa altura.'}',
         style: const TextStyle(fontSize: AppFontSize.sm, height: 1.35, color: AppTheme.inkMuted),
       ),
     ]);

@@ -1,6 +1,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
+import { parseTiers, paymentFeeCents } from "../_shared/fees.ts";
 
 // Pagamento DENTRO da app (pedido 2026-10-19: "não quero que a app abra o
 // browser"). Em vez de uma Checkout Session hospedada, cria um
@@ -79,7 +80,7 @@ Deno.serve(async (req) => {
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
     .select(
-      "id, booking_id, payer_id, amount, type, status, provider_payment_id, bookings(booking_number), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name)",
+      "id, booking_id, payer_id, amount, type, status, provider_payment_id, bookings(booking_number, total_amount), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name)",
     )
     .eq("id", paymentId)
     .single();
@@ -158,7 +159,17 @@ Deno.serve(async (req) => {
   const partnerAmountCents = Math.round((payment.amount as number) * 100);
   const applicationFeeCents = Math.round((partnerAmountCents * commissionPct) / 100);
   const totalChargeCents = partnerAmountCents + applicationFeeCents;
-  const partnerFeeCents = Math.round((partnerAmountCents * partnerFeePct) / 100);
+  // Escalões sobre o valor total da reserva (migração 126); cada pagamento
+  // leva a parte proporcional. Sem escalões, a percentagem fixa (123).
+  const bookingTotalCents = Math.round(
+    Number((payment.bookings as unknown as { total_amount?: number } | null)?.total_amount ?? payment.amount) * 100,
+  );
+  const partnerFeeCents = paymentFeeCents(
+    partnerAmountCents,
+    Math.max(bookingTotalCents, partnerAmountCents),
+    parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers),
+    partnerFeePct,
+  );
   const bookingNumber = (payment.bookings as unknown as { booking_number: string } | null)?.booking_number ?? "";
   const label = payment.type === "deposit" ? "Sinal" : "Pagamento final";
 

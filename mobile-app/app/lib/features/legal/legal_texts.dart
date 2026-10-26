@@ -48,7 +48,7 @@ const termsDoc = LegalDoc(
     LegalSection('4. Propostas, reservas e pagamentos', [
       'O organizador pede um orçamento, o parceiro envia uma proposta e, se o organizador a aceitar, a reserva fica a aguardar o pagamento do sinal. A reserva só fica confirmada quando o sinal é pago.',
       'O sinal corresponde à percentagem indicada na proposta (por defeito, 20%). O restante tem de ser pago até 30 dias antes do evento (ou no prazo indicado na app, se o evento for mais cedo).',
-      'Sobre o valor do parceiro, a À Nossa! cobra ao organizador uma comissão de serviço (atualmente 5%, IVA incluído), mostrada antes de pagar. Ao parceiro é descontada uma taxa de serviço (atualmente 2%, IVA incluído) sobre o valor que recebe, no momento em que o dinheiro é libertado. A À Nossa! emite fatura de ambas.',
+      'Sobre o valor do parceiro, a À Nossa! cobra ao organizador uma taxa de proteção de pagamento (atualmente 2,5%, IVA incluído), mostrada antes de pagar. Ao parceiro é descontada uma taxa de serviço sobre o valor total da reserva, por escalões (atualmente 8% até 2 000 €, 6% de 2 000 € a 10 000 € e 4% acima, IVA incluído), no momento em que o dinheiro é libertado. A À Nossa! emite fatura de ambas.',
       'Os pagamentos são processados pela Stripe (cartão, Apple Pay, Google Pay, MB WAY ou Multibanco). A À Nossa! nunca vê nem guarda os dados do teu cartão.',
       'O dinheiro pago fica retido pela À Nossa! e é transferido ao parceiro assim: o sinal, 48 horas depois de ser pago (quando deixa de poder ser recuperado pelo organizador); o restante, 3 dias depois da data do evento, desde que não tenha sido reportado nenhum problema nesse período.',
     ]),

@@ -28,16 +28,28 @@ export async function updateCommissionSettings(
   // Migração 112: só vem no formulário depois de a coluna existir.
   const windowRaw = formData.get("deposit_refund_window_hours");
   const windowHours = windowRaw == null ? null : Number(windowRaw);
-  // Migração 123.
-  const partnerFeeRaw = formData.get("partner_fee_percentage");
-  const partnerFee = partnerFeeRaw == null ? null : Number(partnerFeeRaw);
+  // Escalões da taxa do parceiro (migração 126).
+  const hasTiers = formData.get("tier1_pct") != null;
+  const n = (k: string) => Number(formData.get(k));
+  const tiers = hasTiers
+    ? [
+        { up_to: n("tier1_up_to"), pct: n("tier1_pct") },
+        { up_to: n("tier2_up_to"), pct: n("tier2_pct") },
+        { up_to: null, pct: n("tier3_pct") },
+      ]
+    : null;
+  const tiersOk = tiers == null || (
+    tiers.every((t) => Number.isFinite(t.pct) && t.pct >= 0 && t.pct < 50) &&
+    Number.isFinite(tiers[0].up_to!) && Number.isFinite(tiers[1].up_to!) &&
+    tiers[0].up_to! > 0 && tiers[1].up_to! > tiers[0].up_to!
+  );
 
   if (
     !Number.isFinite(commission) || commission < 0 || commission > 100 ||
     !Number.isFinite(depositPct) || depositPct <= 0 || depositPct > 100 ||
     !Number.isFinite(penaltyDays) || penaltyDays < 0 ||
     (windowHours != null && (!Number.isInteger(windowHours) || windowHours < 0 || windowHours > 720)) ||
-    (partnerFee != null && (!Number.isFinite(partnerFee) || partnerFee < 0 || partnerFee >= 50))
+    !tiersOk
   ) {
     return { error: "Valores inválidos — confirma os números introduzidos." };
   }
@@ -49,7 +61,7 @@ export async function updateCommissionSettings(
       deposit_percentage: depositPct,
       cancellation_penalty_days: penaltyDays,
       ...(windowHours != null ? { deposit_refund_window_hours: windowHours } : {}),
-      ...(partnerFee != null ? { partner_fee_percentage: partnerFee } : {}),
+      ...(tiers != null ? { partner_fee_tiers: tiers } : {}),
       updated_at: new Date().toISOString(),
       updated_by: userId,
     })
