@@ -50,7 +50,7 @@ const termsDoc = LegalDoc(
       'O sinal corresponde à percentagem indicada na proposta (por defeito, 20%). O restante tem de ser pago até 30 dias antes do evento (ou no prazo indicado na app, se o evento for mais cedo).',
       'Sobre o valor do parceiro, a À Nossa! cobra ao organizador uma comissão de serviço (atualmente 5%, IVA incluído), mostrada antes de pagar. Ao parceiro é descontada uma taxa de serviço (atualmente 2%, IVA incluído) sobre o valor que recebe, no momento em que o dinheiro é libertado. A À Nossa! emite fatura de ambas.',
       'Os pagamentos são processados pela Stripe (cartão, Apple Pay, Google Pay, MB WAY ou Multibanco). A À Nossa! nunca vê nem guarda os dados do teu cartão.',
-      'O dinheiro pago fica retido pela À Nossa! e só é transferido ao parceiro 3 dias depois da data do evento, desde que não tenha sido reportado nenhum problema nesse período.',
+      'O dinheiro pago fica retido pela À Nossa! e é transferido ao parceiro assim: o sinal, 48 horas depois de ser pago (quando deixa de poder ser recuperado pelo organizador); o restante, 3 dias depois da data do evento, desde que não tenha sido reportado nenhum problema nesse período.',
     ]),
     LegalSection('5. Cancelamentos e reembolsos', [
       'Se o organizador cancelar a reserva: o sinal só é devolvido se o cancelamento for feito nas 48 horas seguintes ao seu pagamento e se a proposta do parceiro o permitir; o restante é devolvido se o cancelamento for feito com pelo menos 30 dias de antecedência do evento.',
