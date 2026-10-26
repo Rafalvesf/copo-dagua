@@ -324,18 +324,18 @@ class _ToReceive extends ConsumerWidget {
         tile('Restante por cobrar', b?.uncollectedBalance ?? 0, AppTheme.accentTint),
       ]),
       // Pagamentos antecipados (2026-10-25): o que já foi pago fica retido
-      // até 3 dias depois do evento e só então passa para o teu saldo.
+      // — o sinal 48 h depois de pago (migração 124), o restante até 3 dias
+      // depois do evento — e só então passa para o teu saldo.
       if ((b?.held ?? 0) > 0.009) ...[
         const SizedBox(height: 10),
-        Row(children: [tile('Pago, liberta 3 dias após o evento', b!.held, const Color(0xFFE9E8E4))]),
+        Row(children: [tile('Pago, por libertar', b!.held, const Color(0xFFE9E8E4))]),
       ],
-      if (feePct > 0) ...[
-        const SizedBox(height: 8),
-        Text(
-          'Valores antes da taxa de ${feePct % 1 == 0 ? feePct.toStringAsFixed(0) : feePct.toStringAsFixed(1)}% da À Nossa! (IVA incluído), descontada quando o dinheiro é libertado.',
-          style: const TextStyle(fontSize: AppFontSize.sm, height: 1.35, color: AppTheme.inkMuted),
-        ),
-      ],
+      const SizedBox(height: 8),
+      Text(
+        'O sinal é libertado 48 h depois de o cliente o pagar; o restante, 3 dias depois do evento.'
+        '${feePct > 0 ? ' Valores antes da taxa de ${feePct % 1 == 0 ? feePct.toStringAsFixed(0) : feePct.toStringAsFixed(1)}% da À Nossa! (IVA incluído), descontada nessa altura.' : ''}',
+        style: const TextStyle(fontSize: AppFontSize.sm, height: 1.35, color: AppTheme.inkMuted),
+      ),
     ]);
   }
 }

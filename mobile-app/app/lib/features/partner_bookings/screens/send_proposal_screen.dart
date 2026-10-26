@@ -327,7 +327,7 @@ class _DepositPreview extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             partnerFeePct > 0
-                ? 'O cliente paga a comissão de $pct% por cima do teu valor. A À Nossa! desconta $feePct% ao que recebes, quando o dinheiro é libertado (3 dias depois do evento). Valores com IVA incluído.'
+                ? 'O cliente paga a comissão de $pct% por cima do teu valor. A À Nossa! desconta $feePct% ao que recebes. Recebes o sinal 48 h depois de o cliente o pagar e o restante 3 dias depois do evento. Valores com IVA incluído.'
                 : 'A comissão é paga pelo cliente, por cima do teu valor — recebes o valor por inteiro.',
             style: const TextStyle(fontSize: AppFontSize.sm, height: 1.35, color: AppTheme.inkMuted),
           ),

@@ -491,8 +491,9 @@ class PartnerBalanceData {
   final double pendingDeposits;
   final double uncollectedBalance;
 
-  /// Pago pelos organizadores mas ainda retido pela À Nossa! — é libertado
-  /// 3 dias depois do evento, sem disputa (migração 119).
+  /// Pago pelos organizadores mas ainda retido pela À Nossa! — o sinal é
+  /// libertado 48 h depois de pago (migração 124), o restante 3 dias depois
+  /// do evento, sem disputa (migração 119).
   final double held;
 
   const PartnerBalanceData({
