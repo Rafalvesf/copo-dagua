@@ -11,6 +11,29 @@ Deno.serve(async (req) => {
   if (!secret || req.headers.get("x-push-secret") !== secret) return new Response("forbidden", { status: 403 });
   const body = await req.json().catch(() => ({})) as { id?: string; validate?: boolean; methods?: boolean };
   const stripe = stripeClient();
+  // Teste (só modo de teste): cria e cancela logo um pagamento de 1 € com
+  // cada método, para saber se a conta o aceita.
+  if ((body as { probe?: boolean }).probe) {
+    const out: Record<string, string> = {};
+    for (const t of ["card", "mb_way", "multibanco", "revolut_pay"]) {
+      try {
+        const pi = await stripe.paymentIntents.create(
+          { amount: 100, currency: "eur", payment_method_types: [t], description: "teste de método (cancelado)" },
+          t === "mb_way" ? { apiVersion: "2025-09-30.clover" as never } : undefined,
+        );
+        if (pi.livemode) {
+          await stripe.paymentIntents.cancel(pi.id);
+          out[t] = "ok (live)";
+        } else {
+          await stripe.paymentIntents.cancel(pi.id);
+          out[t] = "ok";
+        }
+      } catch (e) {
+        out[t] = "erro: " + (e as Error).message;
+      }
+    }
+    return Response.json(out);
+  }
   // Métodos de pagamento ativos na conta (capabilities da plataforma).
   if (body.methods) {
     try {
