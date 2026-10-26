@@ -23,7 +23,12 @@ Deno.serve(async (req) => {
         ["card", "apple_pay", "google_pay", "link", "mb_way", "multibanco", "revolut_pay", "paypal", "klarna"]
           .map((k) => [k, { available: pick(k)?.available ?? null, preference: pick(k)?.display_preference?.value ?? null }]),
       );
-      return Response.json({ capabilities: caps, config: view, livemode: def?.livemode ?? null });
+      const all = cfgs.data.map((c) => {
+        const r = c as unknown as Record<string, unknown> & { id: string; name?: string; is_default?: boolean; active?: boolean; parent?: string | null; application?: string | null };
+        const pv = (k: string) => (r[k] as { display_preference?: { value?: string } } | undefined)?.display_preference?.value ?? null;
+        return { id: r.id, name: r.name, is_default: r.is_default, active: r.active, parent: r.parent ?? null, google_pay: pv("google_pay"), multibanco: pv("multibanco"), revolut_pay: pv("revolut_pay") };
+      });
+      return Response.json({ capabilities: caps, config: view, livemode: def?.livemode ?? null, all });
     } catch (e) {
       return Response.json({ error: (e as Error).message }, { status: 502 });
     }
