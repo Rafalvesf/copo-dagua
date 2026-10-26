@@ -322,6 +322,26 @@ final platformCommissionPercentageProvider = FutureProvider<double>((
   return (row['platform_commission_percentage'] as num).toDouble();
 });
 
+/// Taxa descontada ao parceiro quando o dinheiro é libertado
+/// (`platform_settings.partner_fee_percentage`, migração 123, IVA
+/// incluído). 0 enquanto a migração não tiver corrido.
+final partnerFeePercentageProvider = FutureProvider<double>((ref) async {
+  try {
+    final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
+    return (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0;
+  } catch (_) {
+    return 0;
+  }
+});
+
+/// O que o parceiro recebe depois da taxa (mesma conta em cêntimos que
+/// `release-partner-funds`).
+double partnerNet(double partnerAmount, double feePercentage) {
+  final cents = (partnerAmount * 100).round();
+  final fee = (cents * feePercentage / 100).round();
+  return (cents - fee) / 100;
+}
+
 /// `platform_settings.deposit_percentage` (`062_deposit_and_cancellation_rules.sql`)
 /// — o sinal deixou de ser um valor livre que o parceiro escrevia
 /// (`send_proposal_screen.dart` antigo); passou a ser sempre calculado a

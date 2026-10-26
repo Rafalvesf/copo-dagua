@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/home/home_providers.dart' show partnerFeePercentageProvider;
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/payments/partner_connect.dart';
 import '../../../core/theme/app_theme.dart';
@@ -303,6 +304,7 @@ class _ToReceive extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final b = ref.watch(partnerBalanceProvider).value;
+    final feePct = ref.watch(partnerFeePercentageProvider).value ?? 0;
     Widget tile(String label, double v, Color c) => Expanded(
           child: Container(
             padding: const EdgeInsets.all(14),
@@ -326,6 +328,13 @@ class _ToReceive extends ConsumerWidget {
       if ((b?.held ?? 0) > 0.009) ...[
         const SizedBox(height: 10),
         Row(children: [tile('Pago, liberta 3 dias após o evento', b!.held, const Color(0xFFE9E8E4))]),
+      ],
+      if (feePct > 0) ...[
+        const SizedBox(height: 8),
+        Text(
+          'Valores antes da taxa de ${feePct % 1 == 0 ? feePct.toStringAsFixed(0) : feePct.toStringAsFixed(1)}% da À Nossa! (IVA incluído), descontada quando o dinheiro é libertado.',
+          style: const TextStyle(fontSize: AppFontSize.sm, height: 1.35, color: AppTheme.inkMuted),
+        ),
       ],
     ]);
   }

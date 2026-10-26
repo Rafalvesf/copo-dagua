@@ -43,14 +43,18 @@ Deno.serve(async (req) => {
         failed.push(r.payment_id);
         continue;
       }
-      // Parte do parceiro = valor da reserva (sem comissão), reduzida na
-      // proporção de algum reembolso parcial.
-      let cents = Math.round(Number(r.amount) * 100);
-      if (charge.amount_refunded > 0) {
-        cents = Math.floor(cents * (1 - charge.amount_refunded / charge.amount));
-      }
+      // Parte do parceiro = valor da reserva (sem a comissão do organizador)
+      // menos a taxa do parceiro gravada no pagamento (migração 123; os
+      // pagamentos anteriores não têm taxa), tudo reduzido na proporção de
+      // algum reembolso parcial.
+      const gross = Math.round(Number(r.amount) * 100);
+      const feeMeta = Number(intent.metadata?.partner_fee_cents ?? 0);
+      const fee = Number.isFinite(feeMeta) && feeMeta > 0 ? Math.min(feeMeta, gross) : 0;
+      const keep = charge.amount_refunded > 0 ? 1 - charge.amount_refunded / charge.amount : 1;
+      const feeCents = Math.round(fee * keep);
+      const cents = Math.floor(gross * keep) - feeCents;
       if (cents <= 0) {
-        await admin.rpc("mark_payment_released", { p_payment_id: r.payment_id, p_transfer_id: "nothing_to_release" });
+        await markReleased(admin, r.payment_id, "nothing_to_release", feeCents / 100, 0);
         continue;
       }
       // Parceiro que ainda não ativou os pagamentos: o dinheiro fica retido
@@ -69,11 +73,11 @@ Deno.serve(async (req) => {
           source_transaction: charge.id,
           transfer_group: r.booking_id,
           description: `Reserva ${r.booking_number}`,
-          metadata: { payment_id: r.payment_id, booking_id: r.booking_id },
+          metadata: { payment_id: r.payment_id, booking_id: r.booking_id, partner_fee_cents: String(feeCents) },
         },
         { idempotencyKey: `release-${r.payment_id}` },
       );
-      await admin.rpc("mark_payment_released", { p_payment_id: r.payment_id, p_transfer_id: transfer.id });
+      await markReleased(admin, r.payment_id, transfer.id, feeCents / 100, cents / 100);
       const euros = (cents / 100).toFixed(2).replace(".", ",");
       await admin.from("notifications").insert({
         partner_id: r.partner_id,
@@ -108,4 +112,16 @@ async function nudgePartner(admin: any, r: { partner_id: string; booking_number:
     body: `O pagamento da reserva ${r.booking_number} está pronto. Ativa os pagamentos para o receberes.`,
     link: "/partner-payments",
   }).then(({ error }: { error: unknown }) => error && console.error("nudge failed", error));
+}
+
+// Grava a libertação. Antes da migração 123 a função só tinha 2 argumentos.
+// deno-lint-ignore no-explicit-any
+async function markReleased(admin: any, id: string, transferId: string, fee: number, transferred: number) {
+  const { error } = await admin.rpc("mark_payment_released", {
+    p_payment_id: id, p_transfer_id: transferId, p_partner_fee: fee, p_transferred: transferred,
+  });
+  if (error) {
+    const { error: e2 } = await admin.rpc("mark_payment_released", { p_payment_id: id, p_transfer_id: transferId });
+    if (e2) console.error("mark_payment_released failed", id, e2);
+  }
 }
