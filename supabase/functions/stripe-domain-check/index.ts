@@ -9,9 +9,26 @@ Deno.serve(async (req) => {
   const { data: cfg } = await admin.rpc("push_config");
   const secret = (cfg as Record<string, string> | null)?.push_secret;
   if (!secret || req.headers.get("x-push-secret") !== secret) return new Response("forbidden", { status: 403 });
-  const body = await req.json().catch(() => ({})) as { id?: string; validate?: boolean };
-  if (!body.id?.startsWith("pmd_")) return Response.json({ error: "validation_error" }, { status: 400 });
+  const body = await req.json().catch(() => ({})) as { id?: string; validate?: boolean; methods?: boolean };
   const stripe = stripeClient();
+  // Métodos de pagamento ativos na conta (capabilities da plataforma).
+  if (body.methods) {
+    try {
+      const acc = await stripe.accounts.retrieve();
+      const caps = (acc as unknown as { capabilities?: Record<string, string> }).capabilities ?? {};
+      const cfgs = await stripe.paymentMethodConfigurations.list({ limit: 10 });
+      const def = cfgs.data.find((c) => (c as unknown as { is_default?: boolean }).is_default) ?? cfgs.data[0];
+      const pick = (k: string) => (def as unknown as Record<string, { available?: boolean; display_preference?: { value?: string } }>)?.[k];
+      const view = Object.fromEntries(
+        ["card", "apple_pay", "google_pay", "link", "mb_way", "multibanco", "revolut_pay", "paypal", "klarna"]
+          .map((k) => [k, { available: pick(k)?.available ?? null, preference: pick(k)?.display_preference?.value ?? null }]),
+      );
+      return Response.json({ capabilities: caps, config: view, livemode: def?.livemode ?? null });
+    } catch (e) {
+      return Response.json({ error: (e as Error).message }, { status: 502 });
+    }
+  }
+  if (!body.id?.startsWith("pmd_")) return Response.json({ error: "validation_error" }, { status: 400 });
   try {
     const d = body.validate
       ? await stripe.paymentMethodDomains.validate(body.id)
