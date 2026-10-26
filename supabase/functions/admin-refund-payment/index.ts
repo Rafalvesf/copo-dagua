@@ -154,7 +154,8 @@ function json(body: unknown, status = 200): Response {
 }
 
 // Se o dinheiro já tinha sido libertado ao parceiro (migração 119),
-// recupera a parte dele na mesma proporção do reembolso.
+// recupera a parte dele na mesma proporção do reembolso. Usa o valor que
+// foi mesmo transferido (já sem a taxa do parceiro, migração 123).
 async function reverseReleasedShare(
   stripe: ReturnType<typeof stripeClient>,
   // deno-lint-ignore no-explicit-any
@@ -163,13 +164,14 @@ async function reverseReleasedShare(
   refundedCents: number,
   chargeCents: number,
 ): Promise<void> {
-  const { data } = await admin.from("payments").select("transfer_id, amount").eq("id", paymentId).maybeSingle();
+  const { data } = await admin.from("payments").select("transfer_id").eq("id", paymentId).maybeSingle();
   const transferId = (data as { transfer_id?: string | null } | null)?.transfer_id;
   if (!transferId || !transferId.startsWith("tr_") || chargeCents <= 0) return;
-  const partnerCents = Math.round(Number((data as { amount: number }).amount) * 100);
-  const share = Math.min(partnerCents, Math.round((refundedCents * partnerCents) / chargeCents));
-  if (share <= 0) return;
   try {
+    const tr = await stripe.transfers.retrieve(transferId);
+    const left = tr.amount - tr.amount_reversed;
+    const share = Math.min(left, Math.round((refundedCents * tr.amount) / chargeCents));
+    if (share <= 0) return;
     await stripe.transfers.createReversal(transferId, { amount: share }, { idempotencyKey: `reverse-${paymentId}-${refundedCents}` });
   } catch (e) {
     console.error("transfer reversal failed", paymentId, (e as Error).message);

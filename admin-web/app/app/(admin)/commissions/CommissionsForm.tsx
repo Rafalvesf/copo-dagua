@@ -22,14 +22,26 @@ export function CommissionsForm({ settings }: { settings: PlatformSettings }) {
     >
       <NumberField
         name="platform_commission_percentage"
-        label="Comissão da plataforma"
-        hint="Cobrada sobre o sinal e o pagamento final via Stripe Connect (application_fee_amount)."
+        label="Comissão paga pelo organizador"
+        hint="Somada ao valor do parceiro em cada pagamento (sinal e restante). IVA incluído."
         suffix="%"
         defaultValue={settings.platform_commission_percentage}
         min={0}
         max={100}
         step={0.1}
       />
+      {(settings as unknown as { partner_fee_percentage?: number }).partner_fee_percentage !== undefined && (
+        <NumberField
+          name="partner_fee_percentage"
+          label="Taxa descontada ao parceiro"
+          hint="Descontada ao valor do parceiro quando o dinheiro é libertado (3 dias depois do evento). IVA incluído. Só vale para pagamentos feitos depois de a alterares."
+          suffix="%"
+          defaultValue={(settings as unknown as { partner_fee_percentage: number }).partner_fee_percentage}
+          min={0}
+          max={49}
+          step={0.1}
+        />
+      )}
       <NumberField
         name="deposit_percentage"
         label="Percentagem do sinal"

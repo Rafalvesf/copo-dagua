@@ -30,7 +30,8 @@ export default async function SettingsPage() {
         ) : (
           <DetailList
             items={[
-              { label: "Comissão da plataforma", value: `${settings.platform_commission_percentage}%` },
+              { label: "Comissão paga pelo organizador", value: `${settings.platform_commission_percentage}% (IVA incl.)` },
+              { label: "Taxa descontada ao parceiro", value: `${(settings as { partner_fee_percentage?: number }).partner_fee_percentage ?? 0}% (IVA incl.)` },
               { label: "Sinal", value: `${settings.deposit_percentage}% do total` },
               { label: "Sinal reembolsável", value: `${(settings as { deposit_refund_window_hours?: number }).deposit_refund_window_hours ?? 48} h depois de pagar` },
               { label: "Restante reembolsável", value: `até ${settings.cancellation_penalty_days} dias antes` },

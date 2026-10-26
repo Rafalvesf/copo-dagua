@@ -24,6 +24,9 @@ double vatAmount(double gross) => double.parse((gross - vatBase(gross)).toString
 /// cobrada ao cliente por cima do valor do parceiro — mesma conta em
 /// cêntimos que `amountWithCommission()` e o checkout da Stripe.
 double exportCommissionPct = 0;
+
+/// Taxa descontada ao parceiro (migração 123), IVA incluído.
+double exportPartnerFeePct = 0;
 double commissionOf(double partnerAmount) {
   final cents = (partnerAmount * 100).round();
   return (cents * exportCommissionPct / 100).round() / 100;
@@ -34,8 +37,9 @@ String get exportPctLabel => '${exportCommissionPct.toStringAsFixed(exportCommis
 
 Future<void> _loadCommission() async {
   try {
-    final row = await supabase.from('platform_settings').select('platform_commission_percentage').eq('id', 1).single();
+    final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
     exportCommissionPct = (row['platform_commission_percentage'] as num).toDouble();
+    exportPartnerFeePct = (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0;
   } catch (_) {}
 }
 

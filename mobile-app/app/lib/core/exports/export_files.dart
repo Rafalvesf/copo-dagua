@@ -139,8 +139,10 @@ Future<Uint8List> reportPdf(ReportData r, {required bool partnerSide}) async {
         padding: const pw.EdgeInsets.only(top: 4),
         child: pw.Text(
           partnerSide
-              ? '* Comissão da À Nossa! ($exportPctLabel) paga pelo cliente por cima do teu valor — não é descontada ao que recebes.'
-              : 'Comissão da À Nossa! ($exportPctLabel) sobre o valor do parceiro. ${partnerSide ? '' : 'Totais da tabela de reservas já com comissão.'}',
+              ? (exportPartnerFeePct > 0
+                  ? '* Comissão da À Nossa! ($exportPctLabel, IVA incluído) paga pelo cliente por cima do teu valor. Ao que recebes é descontada a taxa de ${exportPartnerFeePct.toStringAsFixed(exportPartnerFeePct % 1 == 0 ? 0 : 1)}% (IVA incluído) quando o dinheiro é libertado.'
+                  : '* Comissão da À Nossa! ($exportPctLabel) paga pelo cliente por cima do teu valor — não é descontada ao que recebes.')
+              : 'Comissão da À Nossa! ($exportPctLabel, IVA incluído) sobre o valor do parceiro. ${partnerSide ? '' : 'Totais da tabela de reservas já com comissão.'}',
           style: const pw.TextStyle(color: _muted, fontSize: 8),
         ),
       ),

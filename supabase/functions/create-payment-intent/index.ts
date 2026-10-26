@@ -149,13 +149,16 @@ Deno.serve(async (req) => {
 
   const { data: settings } = await supabase
     .from("platform_settings")
-    .select("platform_commission_percentage")
+    .select("*")
     .eq("id", 1)
     .single();
-  const commissionPct = (settings?.platform_commission_percentage as number | undefined) ?? 0;
+  const commissionPct = Number((settings as Record<string, unknown> | null)?.platform_commission_percentage ?? 0);
+  // Taxa do parceiro (migração 123): gravada aqui, descontada na libertação.
+  const partnerFeePct = Number((settings as Record<string, unknown> | null)?.partner_fee_percentage ?? 0);
   const partnerAmountCents = Math.round((payment.amount as number) * 100);
   const applicationFeeCents = Math.round((partnerAmountCents * commissionPct) / 100);
   const totalChargeCents = partnerAmountCents + applicationFeeCents;
+  const partnerFeeCents = Math.round((partnerAmountCents * partnerFeePct) / 100);
   const bookingNumber = (payment.bookings as unknown as { booking_number: string } | null)?.booking_number ?? "";
   const label = payment.type === "deposit" ? "Sinal" : "Pagamento final";
 
@@ -187,6 +190,7 @@ Deno.serve(async (req) => {
         partner_account: partner.stripe_account_id ?? "",
         partner_amount_cents: String(partnerAmountCents),
         commission_cents: String(applicationFeeCents),
+        partner_fee_cents: String(partnerFeeCents),
       },
     }, method === "mb_way" ? { apiVersion: "2025-09-30.clover" as never } : undefined);
   } catch (err) {
