@@ -8,6 +8,8 @@ import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/payments/refunds.dart';
 import '../../../core/supabase/supabase_config.dart';
+import '../../../shared/money.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -45,6 +47,36 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
       }
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Quanto o parceiro já recebeu desta reserva e ainda não devolveu
+  /// (`partner-return-funds`, só consulta). 0 se falhar.
+  Future<double> _releasedAmount(String bookingId) async {
+    try {
+      final res = await supabase.functions.invoke('partner-return-funds', body: {'booking_id': bookingId, 'dry_run': true});
+      final d = res.data;
+      return d is Map ? ((d['amount'] as num?) ?? 0).toDouble() : 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// Devolve o que já recebeu. `null` se correu bem; senão a mensagem.
+  Future<String?> _returnFunds(String bookingId) async {
+    try {
+      await supabase.functions.invoke('partner-return-funds', body: {'booking_id': bookingId});
+      return null;
+    } on FunctionException catch (e) {
+      final d = e.details;
+      if (d is Map && d['error'] == 'insufficient_balance') {
+        final amount = (d['amount'] as num?)?.toDouble() ?? 0;
+        return 'Não tens saldo suficiente na tua conta À Nossa! para devolver ${euros(amount, cents: true)} '
+            '(o dinheiro já foi levantado para o teu banco). Fala com a equipa À Nossa! para o devolveres e poderes cancelar.';
+      }
+      return 'Não foi possível devolver o valor. Tenta outra vez ou fala com a equipa À Nossa!.';
+    } catch (_) {
+      return 'Não foi possível devolver o valor. Verifica a ligação e tenta outra vez.';
     }
   }
 
@@ -249,13 +281,21 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                               : (booking.status == BookingStatus.aceite ||
                                     booking.status == BookingStatus.confirmado)
                               ? () async {
+                                  // Já recebeu dinheiro desta reserva (sinal
+                                  // libertado 48 h depois de pago)? Para
+                                  // cancelar tem de o devolver (migração 125).
+                                  final owed = await _releasedAmount(booking.id);
+                                  if (!context.mounted) return;
                                   final confirmed = await showIslandDialog<bool>(
                                     context: context,
                                     builder: (context) => IslandAlert(
                                       title: const Text('Cancelar reserva'),
                                       content: Text(
-                                        'Cancelar a reserva com ${booking.clientName}? Esta ação não pode ser desfeita.'
-                                        '${booking.status == BookingStatus.confirmado ? '\n\nO casal recebe de volta tudo o que pagou, de forma automática — a tua parte do sinal é descontada da tua conta Stripe.' : ''}',
+                                        owed > 0
+                                            ? 'Já recebeste ${euros(owed, cents: true)} desta reserva. Para cancelar, tens de devolver esse valor: '
+                                                'é retirado do teu saldo À Nossa! e o cliente recebe de volta tudo o que pagou.\n\nEsta ação não pode ser desfeita.'
+                                            : 'Cancelar a reserva com ${booking.clientName}? Esta ação não pode ser desfeita.'
+                                                '${booking.status == BookingStatus.confirmado ? '\n\nO cliente recebe de volta tudo o que pagou, de forma automática.' : ''}',
                                       ),
                                       actions: [
                                         TextButton(
@@ -266,12 +306,33 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                                         FilledButton(
                                           onPressed: () =>
                                               Navigator.of(context).pop(true),
-                                          child: const Text('Cancelar reserva'),
+                                          child: Text(owed > 0 ? 'Devolver ${euros(owed, cents: true)} e cancelar' : 'Cancelar reserva'),
                                         ),
                                       ],
                                     ),
                                   );
                                   if (confirmed != true) return;
+                                  if (owed > 0) {
+                                    final problem = await _returnFunds(booking.id);
+                                    if (problem != null) {
+                                      if (context.mounted) {
+                                        await showIslandDialog<void>(
+                                          context: context,
+                                          builder: (context) => IslandAlert(
+                                            title: const Text('Não foi possível devolver'),
+                                            content: Text(problem),
+                                            actions: [
+                                              FilledButton(
+                                                onPressed: () => Navigator.of(context).pop(),
+                                                child: const Text('Ok'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
+                                      return;
+                                    }
+                                  }
                                   await _run(() async {
                                     await supabase.rpc(
                                       'cancel_booking_by_partner',
