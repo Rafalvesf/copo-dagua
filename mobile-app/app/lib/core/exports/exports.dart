@@ -1,3 +1,4 @@
+import '../../shared/money.dart';
 import '../supabase/supabase_config.dart';
 
 /// Relatórios para descarregar (pedido do utilizador, 2026-10-20):
@@ -25,8 +26,9 @@ double vatAmount(double gross) => double.parse((gross - vatBase(gross)).toString
 /// cêntimos que `amountWithCommission()` e o checkout da Stripe.
 double exportCommissionPct = 0;
 
-/// Taxa descontada ao parceiro (migração 123), IVA incluído.
-double exportPartnerFeePct = 0;
+/// Taxa descontada ao parceiro (migrações 123/126), IVA incluído, já em
+/// texto ("8% até 2 000 €, 6% até 10 000 €, 4% acima"). Vazio = sem taxa.
+String exportPartnerFeeText = '';
 double commissionOf(double partnerAmount) {
   final cents = (partnerAmount * 100).round();
   return (cents * exportCommissionPct / 100).round() / 100;
@@ -39,7 +41,17 @@ Future<void> _loadCommission() async {
   try {
     final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
     exportCommissionPct = (row['platform_commission_percentage'] as num).toDouble();
-    exportPartnerFeePct = (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0;
+    final raw = row['partner_fee_tiers'];
+    String pct(num p) => p % 1 == 0 ? p.toStringAsFixed(0) : p.toStringAsFixed(1);
+    if (raw is List && raw.isNotEmpty) {
+      exportPartnerFeeText = [
+        for (final t in raw.cast<Map>())
+          t['up_to'] == null ? '${pct(t['pct'] as num)}% acima' : '${pct(t['pct'] as num)}% até ${euros(t['up_to'] as num)}',
+      ].join(', ');
+    } else {
+      final flat = (row['partner_fee_percentage'] as num?) ?? 0;
+      exportPartnerFeeText = flat > 0 ? '${pct(flat)}%' : '';
+    }
   } catch (_) {}
 }
 

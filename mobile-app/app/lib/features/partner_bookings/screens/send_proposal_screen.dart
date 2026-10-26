@@ -267,7 +267,7 @@ class _DepositPreview extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final depositPct = ref.watch(platformDepositPercentageProvider).value;
     final commissionPct = ref.watch(platformCommissionPercentageProvider).value;
-    final partnerFeePct = ref.watch(partnerFeePercentageProvider).value ?? 0;
+    final feeCfg = ref.watch(partnerFeeConfigProvider).value ?? const PartnerFeeConfig();
     if (depositPct == null || commissionPct == null) return const SizedBox.shrink();
     final price = double.tryParse(priceText.trim().replaceAll(' ', '').replaceAll(',', '.'));
     String money(double? v) => v == null ? '—' : euros(v, cents: true);
@@ -276,10 +276,11 @@ class _DepositPreview extends ConsumerWidget {
     final deposit = price == null ? null : price * depositPct / 100;
     final depositTotal = deposit == null ? null : amountWithCommission(deposit, commissionPct);
     final pct = commissionPct % 1 == 0 ? commissionPct.toStringAsFixed(0) : commissionPct.toStringAsFixed(1);
-    final feePct = partnerFeePct % 1 == 0 ? partnerFeePct.toStringAsFixed(0) : partnerFeePct.toStringAsFixed(1);
-    final partnerFee = price == null ? null : price - partnerNet(price, partnerFeePct);
-    final net = price == null ? null : partnerNet(price, partnerFeePct);
-    final depositNet = deposit == null ? null : partnerNet(deposit, partnerFeePct);
+    final partnerFee = price == null ? null : feeCfg.feeFor(price);
+    final net = price == null ? null : price - partnerFee!;
+    final depositNet = deposit == null || price == null ? null : deposit - feeCfg.feeForPayment(deposit, price);
+    final effPct = price == null || price <= 0 || partnerFee == null ? null : partnerFee / price * 100;
+    final feeLabel = effPct == null ? '' : ' (${effPct.toStringAsFixed(effPct % 1 == 0 ? 0 : 1).replaceAll('.', ',')}%)';
 
     Widget line(String label, String value, {bool strong = false, bool muted = false}) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 3),
@@ -317,17 +318,17 @@ class _DepositPreview extends ConsumerWidget {
           line('Comissão À Nossa! ($pct%)', fee == null ? '—' : '+ ${money(fee)}', muted: true),
           line('Total para o cliente', money(total), strong: true),
           const Divider(height: 16, color: AppTheme.borderMuted),
-          if (partnerFeePct > 0) ...[
-            line('Taxa À Nossa! ($feePct%)', partnerFee == null ? '—' : '− ${money(partnerFee)}', muted: true),
+          if (!feeCfg.isZero) ...[
+            line('Taxa À Nossa!$feeLabel', partnerFee == null ? '—' : '− ${money(partnerFee)}', muted: true),
             line('Recebes no total', money(net), strong: true),
           ],
           const Divider(height: 16, color: AppTheme.borderMuted),
           line('Sinal (${depositPct.toStringAsFixed(0)}%) para o cliente', money(depositTotal), strong: true),
-          line('Recebes de sinal', money(partnerFeePct > 0 ? depositNet : deposit), muted: true),
+          line('Recebes de sinal', money(feeCfg.isZero ? deposit : depositNet), muted: true),
           const SizedBox(height: 4),
           Text(
-            partnerFeePct > 0
-                ? 'O cliente paga a comissão de $pct% por cima do teu valor. A À Nossa! desconta $feePct% ao que recebes. Recebes o sinal 48 h depois de o cliente o pagar e o restante 3 dias depois do evento. Valores com IVA incluído.'
+            !feeCfg.isZero
+                ? 'O cliente paga $pct% por cima do teu valor. A taxa À Nossa! é de ${feeCfg.describe((v) => euros(v))} do valor da reserva. Recebes o sinal 48 h depois de o cliente o pagar e o restante 3 dias depois do evento. Valores com IVA incluído.'
                 : 'A comissão é paga pelo cliente, por cima do teu valor — recebes o valor por inteiro.',
             style: const TextStyle(fontSize: AppFontSize.sm, height: 1.35, color: AppTheme.inkMuted),
           ),
