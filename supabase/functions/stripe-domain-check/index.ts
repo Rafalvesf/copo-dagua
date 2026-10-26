@@ -34,6 +34,38 @@ Deno.serve(async (req) => {
     }
     return Response.json(out);
   }
+  // Auditoria só de leitura: webhook, pagamentos, transferências, saldo e
+  // contas dos parceiros (body.pis = ids de PaymentIntent, body.accounts).
+  const ab = body as { audit?: boolean; pis?: string[]; accounts?: string[] };
+  if (ab.audit) {
+    const safe = async <T>(f: () => Promise<T>) => { try { return await f(); } catch (e) { return { error: (e as Error).message }; } };
+    const hooks = await safe(async () => (await stripe.webhookEndpoints.list({ limit: 10 })).data.map((w) => ({ url: w.url, status: w.status, events: w.enabled_events, api: w.api_version })));
+    const pis = await Promise.all((ab.pis ?? []).slice(0, 10).map((id) => safe(async () => {
+      const pi = await stripe.paymentIntents.retrieve(id, { expand: ["latest_charge.balance_transaction", "payment_method"] });
+      const ch = pi.latest_charge as unknown as { id?: string; amount_refunded?: number; transfer?: string | null; balance_transaction?: { fee?: number; net?: number; status?: string; available_on?: number } } | null;
+      return {
+        id: pi.id, status: pi.status, amount: pi.amount, livemode: pi.livemode,
+        method: (pi.payment_method as unknown as { type?: string } | null)?.type ?? pi.payment_method_types,
+        transfer_data: pi.transfer_data, application_fee_amount: pi.application_fee_amount, transfer_group: pi.transfer_group,
+        metadata: pi.metadata, charge: ch?.id, refunded: ch?.amount_refunded, charge_transfer: ch?.transfer ?? null,
+        fee: ch?.balance_transaction?.fee, net: ch?.balance_transaction?.net, bt_status: ch?.balance_transaction?.status,
+        available_on: ch?.balance_transaction?.available_on,
+      };
+    })));
+    const transfers = await safe(async () => (await stripe.transfers.list({ limit: 10 })).data.map((t) => ({ id: t.id, amount: t.amount, dest: t.destination, group: t.transfer_group, src: t.source_transaction, reversed: t.amount_reversed, created: t.created })));
+    const balance = await safe(async () => { const b = await stripe.balance.retrieve(); return { available: b.available, pending: b.pending }; });
+    const accounts = await Promise.all((ab.accounts ?? []).slice(0, 10).map((id) => safe(async () => {
+      const a = await stripe.accounts.retrieve(id);
+      const bal = await stripe.balance.retrieve({ stripeAccount: id });
+      return {
+        id: a.id, charges: a.charges_enabled, payouts: a.payouts_enabled,
+        transfers_cap: a.capabilities?.transfers, card_cap: a.capabilities?.card_payments,
+        payout_schedule: a.settings?.payouts?.schedule, due: a.requirements?.currently_due,
+        balance_available: bal.available, balance_pending: bal.pending,
+      };
+    })));
+    return Response.json({ hooks, pis, transfers, balance, accounts });
+  }
   // Métodos de pagamento ativos na conta (capabilities da plataforma).
   if (body.methods) {
     try {
