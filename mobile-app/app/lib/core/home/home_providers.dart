@@ -328,14 +328,30 @@ final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
   ref.watch(authControllerProvider.select((s) => s.profile?.id));
   try {
     final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
-    // Parceiros novos sem taxa durante os primeiros meses (migração 127).
+    // Parceiros novos: sem taxa no 1.º mês, e mais 1 mês se nesse período
+    // não tiverem nenhuma venda paga (migrações 127/128). Mesma regra que
+    // `create-payment-intent`.
     DateTime? freeUntil;
     final months = (row['partner_free_months'] as num?)?.toInt() ?? 0;
+    final extra = (row['partner_free_extra_months'] as num?)?.toInt() ?? 0;
     final uid = supabase.auth.currentUser?.id;
     if (months > 0 && uid != null) {
       final me = await supabase.from('partner_profiles').select('created_at').eq('id', uid).maybeSingle();
-      final created = DateTime.tryParse('${me?['created_at'] ?? ''}');
-      if (created != null) freeUntil = DateTime(created.year, created.month + months, created.day);
+      final created = DateTime.tryParse('${me?['created_at'] ?? ''}')?.toLocal();
+      if (created != null) {
+        final base = DateTime(created.year, created.month + months, created.day);
+        freeUntil = base;
+        if (extra > 0 && !DateTime.now().isBefore(base)) {
+          final sales = await supabase
+              .from('payments')
+              .select('id')
+              .eq('partner_id', uid)
+              .eq('status', 'paid')
+              .lt('paid_at', base.toUtc().toIso8601String())
+              .limit(1);
+          if ((sales as List).isEmpty) freeUntil = DateTime(created.year, created.month + months + extra, created.day);
+        }
+      }
     }
     return FeeConfig.parse(row['partner_fee_tiers'],
         flatPct: (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0, freeUntil: freeUntil);

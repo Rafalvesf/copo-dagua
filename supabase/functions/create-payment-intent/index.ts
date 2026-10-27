@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
     .select(
-      "id, booking_id, payer_id, amount, type, status, provider_payment_id, bookings(booking_number, total_amount), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name, created_at)",
+      "id, booking_id, payer_id, partner_id, amount, type, status, provider_payment_id, bookings(booking_number, total_amount), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name, created_at)",
     )
     .eq("id", paymentId)
     .single();
@@ -173,11 +173,9 @@ Deno.serve(async (req) => {
   const totalChargeCents = partnerAmountCents + applicationFeeCents;
   // Escalões sobre o valor total da reserva (migração 126); cada pagamento
   // leva a parte proporcional. Sem escalões, a percentagem fixa (123).
-  // Parceiros novos: sem taxa nos primeiros meses (migração 127).
-  const freeMonths = Number(sett.partner_free_months ?? 0);
-  const createdAt = partner.created_at ? new Date(partner.created_at) : null;
-  const freeUntil = createdAt ? new Date(createdAt.getFullYear(), createdAt.getMonth() + freeMonths, createdAt.getDate()) : null;
-  const partnerFree = freeMonths > 0 && freeUntil != null && Date.now() < freeUntil.getTime();
+  // Parceiros novos: sem taxa no 1.º mês, e mais 1 mês se nesse período
+  // não tiverem nenhuma venda paga (migrações 127/128).
+  const partnerFree = await partnerIsFree(admin, payment.partner_id as string, partner.created_at, sett);
   const partnerFeeCents = partnerFree ? 0 : paymentFeeCents(
     partnerAmountCents,
     Math.max(bookingTotalCents, partnerAmountCents),
@@ -259,4 +257,26 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+// Oferta de lançamento do parceiro (migrações 127/128).
+// deno-lint-ignore no-explicit-any
+async function partnerIsFree(admin: any, partnerId: string, createdAtRaw: string | undefined, sett: Record<string, unknown>) {
+  const months = Number(sett.partner_free_months ?? 0);
+  const extra = Number(sett.partner_free_extra_months ?? 0);
+  if (!createdAtRaw || months <= 0) return false;
+  const c = new Date(createdAtRaw);
+  const base = new Date(c.getFullYear(), c.getMonth() + months, c.getDate());
+  const now = Date.now();
+  if (now < base.getTime()) return true;
+  if (extra <= 0) return false;
+  const ext = new Date(c.getFullYear(), c.getMonth() + months + extra, c.getDate());
+  if (now >= ext.getTime()) return false;
+  const { count } = await admin
+    .from("payments")
+    .select("id", { count: "exact", head: true })
+    .eq("partner_id", partnerId)
+    .eq("status", "paid")
+    .lt("paid_at", base.toISOString());
+  return (count ?? 0) === 0;
 }

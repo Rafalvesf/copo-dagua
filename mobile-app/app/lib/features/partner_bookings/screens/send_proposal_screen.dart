@@ -329,7 +329,7 @@ class _DepositPreview extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             feeCfg.isFree
-                ? 'O cliente paga $pct% por cima do teu valor. Oferta de lançamento: não pagas taxa À Nossa! até ${_d(feeCfg.freeUntil!)}. Depois: ${feeCfg.describe((v) => euros(v))} do valor da reserva (IVA incluído).'
+                ? 'O cliente paga $pct% por cima do teu valor. Oferta de lançamento: não pagas taxa À Nossa! até ${_d(feeCfg.freeUntil!)} (se não venderes no primeiro mês, a oferta continua mais um mês). Depois: ${feeCfg.describe((v) => euros(v))} do valor da reserva (IVA incluído).'
                 : !feeCfg.isZero
                 ? 'O cliente paga $pct% por cima do teu valor. A taxa À Nossa! é de ${feeCfg.describe((v) => euros(v))} do valor da reserva. Recebes o sinal 48 h depois de o cliente o pagar e o restante 3 dias depois do evento. Valores com IVA incluído.'
                 : 'A comissão é paga pelo cliente, por cima do teu valor — recebes o valor por inteiro.',

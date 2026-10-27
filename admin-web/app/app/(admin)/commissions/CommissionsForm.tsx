@@ -59,6 +59,17 @@ export function CommissionsForm({ settings }: { settings: PlatformSettings }) {
           max={36}
         />
       )}
+      {(settings as unknown as { partner_free_extra_months?: number }).partner_free_extra_months !== undefined && (
+        <NumberField
+          name="partner_free_extra_months"
+          label="Mais, se não vender nesse período"
+          hint="Se o parceiro não tiver nenhuma venda paga no período acima, a oferta continua mais estes meses. 0 = sem prolongamento."
+          suffix="meses"
+          defaultValue={(settings as unknown as { partner_free_extra_months: number }).partner_free_extra_months}
+          min={0}
+          max={12}
+        />
+      )}
       <NumberField
         name="deposit_percentage"
         label="Percentagem do sinal"
