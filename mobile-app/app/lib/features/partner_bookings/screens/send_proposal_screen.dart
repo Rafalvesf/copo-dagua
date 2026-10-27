@@ -266,10 +266,11 @@ class _DepositPreview extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final depositPct = ref.watch(platformDepositPercentageProvider).value;
-    final commissionPct = ref.watch(platformCommissionPercentageProvider).value;
+    final orgFee = ref.watch(organizerFeeConfigProvider).value;
     final feeCfg = ref.watch(partnerFeeConfigProvider).value ?? const PartnerFeeConfig();
-    if (depositPct == null || commissionPct == null) return const SizedBox.shrink();
+    if (depositPct == null || orgFee == null) return const SizedBox.shrink();
     final price = double.tryParse(priceText.trim().replaceAll(' ', '').replaceAll(',', '.'));
+    final commissionPct = orgFee.effectivePct(price ?? 0);
     String money(double? v) => v == null ? '—' : euros(v, cents: true);
     final fee = price == null ? null : amountWithCommission(price, commissionPct) - price;
     final total = price == null ? null : amountWithCommission(price, commissionPct);
@@ -327,7 +328,9 @@ class _DepositPreview extends ConsumerWidget {
           line('Recebes de sinal', money(feeCfg.isZero ? deposit : depositNet), muted: true),
           const SizedBox(height: 4),
           Text(
-            !feeCfg.isZero
+            feeCfg.isFree
+                ? 'O cliente paga $pct% por cima do teu valor. Oferta de lançamento: não pagas taxa À Nossa! até ${_d(feeCfg.freeUntil!)}. Depois: ${feeCfg.describe((v) => euros(v))} do valor da reserva (IVA incluído).'
+                : !feeCfg.isZero
                 ? 'O cliente paga $pct% por cima do teu valor. A taxa À Nossa! é de ${feeCfg.describe((v) => euros(v))} do valor da reserva. Recebes o sinal 48 h depois de o cliente o pagar e o restante 3 dias depois do evento. Valores com IVA incluído.'
                 : 'A comissão é paga pelo cliente, por cima do teu valor — recebes o valor por inteiro.',
             style: const TextStyle(fontSize: AppFontSize.sm, height: 1.35, color: AppTheme.inkMuted),
@@ -337,3 +340,5 @@ class _DepositPreview extends ConsumerWidget {
     );
   }
 }
+
+String _d(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';

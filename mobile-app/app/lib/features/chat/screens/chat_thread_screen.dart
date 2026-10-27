@@ -228,7 +228,10 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
         content: const Text('Proposta aceite! Paga o sinal para confirmar.'),
         action: SnackBarAction(
           label: 'Pagar',
-          onPressed: () => _openPay(ref.read(platformCommissionPercentageProvider).value ?? 0),
+          onPressed: () => _openPay(
+            (ref.read(organizerFeeConfigProvider).value ?? const FeeConfig())
+                .effectivePct(widget.message.proposalPrice ?? 0),
+          ),
         ),
       ),
     );
@@ -331,7 +334,8 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
     final heading = date == null
         ? null
         : '${wedding!.eventType.label} · ${date.day} ${months[date.month - 1]} ${date.year}';
-    final pct = ref.watch(platformCommissionPercentageProvider).value ?? 0;
+    final pct = (ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig())
+        .effectivePct(message.proposalPrice ?? 0);
     double withFee(double v) => amountWithCommission(v, pct);
     return ChatProposalCard(
       title: heading ?? message.proposalTitle ?? 'Proposta',
