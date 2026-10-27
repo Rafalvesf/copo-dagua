@@ -1,3 +1,4 @@
+export '../payments/fee_config.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, FunctionResponse, PostgrestException;
@@ -8,6 +9,7 @@ import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import '../payments/refunds.dart';
 import '../../shared/public_link.dart';
+import '../payments/fee_config.dart';
 
 /// Providers para o painel do casal (`home_feed_screen.dart`) — mesmo
 /// padrão de `core/partner_app/partner_app_providers.dart`, num ficheiro
@@ -322,64 +324,35 @@ final platformCommissionPercentageProvider = FutureProvider<double>((
   return (row['platform_commission_percentage'] as num).toDouble();
 });
 
-/// Taxa do parceiro (migrações 123/126), IVA incluído: escalões marginais
-/// sobre o valor total da reserva (8% até 2 000 €, 6% até 10 000 €, 4%
-/// acima, editáveis no admin) ou, sem escalões, uma percentagem fixa.
-/// Mesma conta que `supabase/functions/_shared/fees.ts`.
-class PartnerFeeConfig {
-  final List<({double? upTo, double pct})> tiers;
-  final double flatPct;
-  const PartnerFeeConfig({this.tiers = const [], this.flatPct = 0});
-
-  bool get isZero => tiers.isEmpty && flatPct <= 0;
-
-  /// Taxa sobre o valor total de uma reserva.
-  double feeFor(double total) {
-    final cents = (total * 100).round();
-    if (tiers.isEmpty) return (cents * flatPct / 100).round() / 100;
-    var fee = 0.0;
-    var prev = 0;
-    for (final t in tiers) {
-      // Sem `1 << 62`: na web os inteiros são de 53 bits e `<<` é de 32.
-      final cap = t.upTo == null ? 9007199254740991 : (t.upTo! * 100).round();
-      final portion = (cents < cap ? cents : cap) - prev;
-      if (portion <= 0) break;
-      fee += portion * t.pct / 100;
-      prev = cap;
-    }
-    return fee.round() / 100;
-  }
-
-  /// Parte da taxa de um pagamento (sinal/restante) de uma reserva.
-  double feeForPayment(double payment, double bookingTotal) {
-    if (tiers.isEmpty) return ((payment * 100).round() * flatPct / 100).round() / 100;
-    if (bookingTotal <= 0) return 0;
-    final f = (feeFor(bookingTotal) * 100 * payment / bookingTotal).round() / 100;
-    return f > payment ? payment : f;
-  }
-
-  /// "8% até 2 000 €, 6% até 10 000 €, 4% acima"
-  String describe(String Function(num) money) {
-    String pct(double p) => p % 1 == 0 ? p.toStringAsFixed(0) : p.toStringAsFixed(1);
-    if (tiers.isEmpty) return '${pct(flatPct)}%';
-    return [
-      for (final t in tiers) t.upTo == null ? '${pct(t.pct)}% acima' : '${pct(t.pct)}% até ${money(t.upTo!)}',
-    ].join(', ');
-  }
-}
-
-final partnerFeeConfigProvider = FutureProvider<PartnerFeeConfig>((ref) async {
+final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
+  ref.watch(authControllerProvider.select((s) => s.profile?.id));
   try {
     final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
-    final raw = row['partner_fee_tiers'];
-    final tiers = <({double? upTo, double pct})>[
-      if (raw is List)
-        for (final t in raw.cast<Map>())
-          (upTo: (t['up_to'] as num?)?.toDouble(), pct: (t['pct'] as num).toDouble()),
-    ];
-    return PartnerFeeConfig(tiers: tiers, flatPct: (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0);
+    // Parceiros novos sem taxa durante os primeiros meses (migração 127).
+    DateTime? freeUntil;
+    final months = (row['partner_free_months'] as num?)?.toInt() ?? 0;
+    final uid = supabase.auth.currentUser?.id;
+    if (months > 0 && uid != null) {
+      final me = await supabase.from('partner_profiles').select('created_at').eq('id', uid).maybeSingle();
+      final created = DateTime.tryParse('${me?['created_at'] ?? ''}');
+      if (created != null) freeUntil = DateTime(created.year, created.month + months, created.day);
+    }
+    return FeeConfig.parse(row['partner_fee_tiers'],
+        flatPct: (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0, freeUntil: freeUntil);
   } catch (_) {
-    return const PartnerFeeConfig();
+    return const FeeConfig();
+  }
+});
+
+/// Taxa do organizador (migração 127): escalões sobre o total da reserva;
+/// sem escalões, `platform_commission_percentage`.
+final organizerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
+  try {
+    final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
+    return FeeConfig.parse(row['organizer_fee_tiers'],
+        flatPct: (row['platform_commission_percentage'] as num?)?.toDouble() ?? 0);
+  } catch (_) {
+    return const FeeConfig();
   }
 });
 

@@ -15,7 +15,7 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
   try {
     row = await supabase
         .from('payments')
-        .select('id, type, status, amount, partner_profiles(business_name)')
+        .select('id, type, status, amount, bookings(total_amount), partner_profiles(business_name)')
         .eq('id', paymentId)
         .maybeSingle();
   } catch (_) {}
@@ -31,9 +31,11 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
     );
     return;
   }
+  // Percentagem efetiva da reserva (escalões do organizador, migração 127).
   double pct = 0;
   try {
-    pct = await ref.read(platformCommissionPercentageProvider.future);
+    final total = ((row['bookings'] as Map?)?['total_amount'] as num?)?.toDouble() ?? (row['amount'] as num).toDouble();
+    pct = (await ref.read(organizerFeeConfigProvider.future)).effectivePct(total);
   } catch (_) {}
   if (!context.mounted) return;
   final partner = (row['partner_profiles'] as Map?)?['business_name'] as String? ?? 'Parceiro';

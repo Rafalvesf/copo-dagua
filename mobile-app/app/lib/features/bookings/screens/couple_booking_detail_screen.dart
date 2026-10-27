@@ -30,7 +30,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fee = ref.watch(platformCommissionPercentageProvider).value ?? 0;
+    final fee = (ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig()).effectivePct(booking.amount);
     final date = booking.serviceDate;
     final dateLabel =
         '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';

@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
     .select(
-      "id, booking_id, payer_id, amount, type, status, provider_payment_id, bookings(booking_number, total_amount), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name)",
+      "id, booking_id, payer_id, amount, type, status, provider_payment_id, bookings(booking_number, total_amount), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name, created_at)",
     )
     .eq("id", paymentId)
     .single();
@@ -97,6 +97,7 @@ Deno.serve(async (req) => {
     stripe_account_id: string | null;
     stripe_charges_enabled: boolean;
     business_name: string;
+    created_at?: string;
   } | null;
   if (!partner) return json({ error: "not_found" }, 404);
   // O organizador pode pagar mesmo que o parceiro ainda não tenha ativado
@@ -157,14 +158,27 @@ Deno.serve(async (req) => {
   // Taxa do parceiro (migração 123): gravada aqui, descontada na libertação.
   const partnerFeePct = Number((settings as Record<string, unknown> | null)?.partner_fee_percentage ?? 0);
   const partnerAmountCents = Math.round((payment.amount as number) * 100);
-  const applicationFeeCents = Math.round((partnerAmountCents * commissionPct) / 100);
-  const totalChargeCents = partnerAmountCents + applicationFeeCents;
-  // Escalões sobre o valor total da reserva (migração 126); cada pagamento
-  // leva a parte proporcional. Sem escalões, a percentagem fixa (123).
   const bookingTotalCents = Math.round(
     Number((payment.bookings as unknown as { total_amount?: number } | null)?.total_amount ?? payment.amount) * 100,
   );
-  const partnerFeeCents = paymentFeeCents(
+  const sett = (settings as Record<string, unknown> | null) ?? {};
+  // Taxa do organizador por escalões (migração 127), parte proporcional
+  // deste pagamento; sem escalões, a percentagem fixa.
+  const applicationFeeCents = paymentFeeCents(
+    partnerAmountCents,
+    Math.max(bookingTotalCents, partnerAmountCents),
+    parseTiers(sett.organizer_fee_tiers),
+    commissionPct,
+  );
+  const totalChargeCents = partnerAmountCents + applicationFeeCents;
+  // Escalões sobre o valor total da reserva (migração 126); cada pagamento
+  // leva a parte proporcional. Sem escalões, a percentagem fixa (123).
+  // Parceiros novos: sem taxa nos primeiros meses (migração 127).
+  const freeMonths = Number(sett.partner_free_months ?? 0);
+  const createdAt = partner.created_at ? new Date(partner.created_at) : null;
+  const freeUntil = createdAt ? new Date(createdAt.getFullYear(), createdAt.getMonth() + freeMonths, createdAt.getDate()) : null;
+  const partnerFree = freeMonths > 0 && freeUntil != null && Date.now() < freeUntil.getTime();
+  const partnerFeeCents = partnerFree ? 0 : paymentFeeCents(
     partnerAmountCents,
     Math.max(bookingTotalCents, partnerAmountCents),
     parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers),

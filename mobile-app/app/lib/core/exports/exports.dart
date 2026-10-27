@@ -1,3 +1,4 @@
+import '../payments/fee_config.dart';
 import '../../shared/money.dart';
 import '../supabase/supabase_config.dart';
 
@@ -29,18 +30,25 @@ double exportCommissionPct = 0;
 /// Taxa descontada ao parceiro (migrações 123/126), IVA incluído, já em
 /// texto ("8% até 2 000 €, 6% até 10 000 €, 4% acima"). Vazio = sem taxa.
 String exportPartnerFeeText = '';
-double commissionOf(double partnerAmount) {
+/// Escalões do organizador (migração 127). [total] = valor total da
+/// reserva (define a percentagem efetiva); sem ele, o próprio valor.
+FeeConfig exportOrgFee = const FeeConfig();
+double commissionOf(double partnerAmount, [double? total]) {
   final cents = (partnerAmount * 100).round();
-  return (cents * exportCommissionPct / 100).round() / 100;
+  final pct = exportOrgFee.tiers.isEmpty ? exportCommissionPct : exportOrgFee.effectivePct(total ?? partnerAmount);
+  return (cents * pct / 100).round() / 100;
 }
 
-double withCommission(double partnerAmount) => partnerAmount + commissionOf(partnerAmount);
-String get exportPctLabel => '${exportCommissionPct.toStringAsFixed(exportCommissionPct % 1 == 0 ? 0 : 1)}%';
+double withCommission(double partnerAmount, [double? total]) => partnerAmount + commissionOf(partnerAmount, total);
+String get exportPctLabel => exportOrgFee.tiers.isEmpty
+    ? '${exportCommissionPct.toStringAsFixed(exportCommissionPct % 1 == 0 ? 0 : 1)}%'
+    : exportOrgFee.describe((v) => euros(v));
 
 Future<void> _loadCommission() async {
   try {
     final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
     exportCommissionPct = (row['platform_commission_percentage'] as num).toDouble();
+    exportOrgFee = FeeConfig.parse(row['organizer_fee_tiers'], flatPct: exportCommissionPct);
     final raw = row['partner_fee_tiers'];
     String pct(num p) => p % 1 == 0 ? p.toStringAsFixed(0) : p.toStringAsFixed(1);
     if (raw is List && raw.isNotEmpty) {
@@ -88,6 +96,9 @@ class ReportPayment {
   final DateTime? dueAt;
   final String provider;
   final String service;
+
+  /// Valor total da reserva (define a percentagem da taxa do organizador).
+  final double bookingTotal;
   const ReportPayment({
     required this.bookingNumber,
     required this.payer,
@@ -99,8 +110,10 @@ class ReportPayment {
     required this.dueAt,
     required this.provider,
     required this.service,
+    this.bookingTotal = 0,
   });
   bool get isPaid => status == 'Pago';
+  double get total => bookingTotal > 0 ? bookingTotal : amount;
 }
 
 class ReportExpense {
@@ -138,6 +151,11 @@ class ReportData {
 
   double get paidTotal => payments.where((p) => p.isPaid).fold(0.0, (a, p) => a + p.amount);
   double get dueTotal => bookings.fold(0.0, (a, b) => a + b.due);
+
+  /// Com a taxa do organizador, reserva a reserva (escalões).
+  double get paidTotalWithFee => payments.where((p) => p.isPaid).fold(0.0, (a, p) => a + withCommission(p.amount, p.total));
+  double get dueTotalWithFee => bookings.fold(0.0, (a, b) => a + withCommission(b.due, b.total));
+  double get paidFee => payments.where((p) => p.isPaid).fold(0.0, (a, p) => a + commissionOf(p.amount, p.total));
   double get expensesTotal => expenses.fold(0.0, (a, e) => a + e.amount);
 }
 
@@ -276,6 +294,7 @@ ReportData _assemble(String owner, String title, List<Map<String, dynamic>> rows
           dueAt: _date(p['due_at']),
           provider: (p['provider'] ?? '').toString(),
           service: service(r),
+          bookingTotal: _num(r?['total_amount']),
         );
       }(),
   ];

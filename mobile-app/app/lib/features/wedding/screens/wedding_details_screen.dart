@@ -1316,7 +1316,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
     final pending = ref.watch(expenseControllerProvider).pending;
     // Também os sinais/restantes das reservas, com o valor que o casal paga
     // (com comissão), e um toque abre logo o pagamento — 2026-10-19.
-    final pct = ref.watch(platformCommissionPercentageProvider).value ?? 0;
+    final orgFee = ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig();
     final bookings = ref.watch(coupleBookingsProvider).asData?.value ?? const <CoupleBooking>[];
     final bookingDue = <(Expense, String)>[
       for (final b in bookings.where((b) => b.status != BookingStatus.recusado)) ...[
@@ -1326,7 +1326,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
               id: 'booking:${b.id}:deposit',
               weddingId: b.weddingId,
               title: 'Sinal · ${b.partnerName}',
-              amount: amountWithCommission(b.depositAmount ?? 0, pct),
+              amount: amountWithCommission(b.depositAmount ?? 0, orgFee.effectivePct(b.amount)),
               dueDate: b.pendingDepositDueAt ?? DateTime.now(),
             ),
             b.pendingDepositPaymentId!,
@@ -1337,7 +1337,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
               id: 'booking:${b.id}:final',
               weddingId: b.weddingId,
               title: 'Restante · ${b.partnerName}',
-              amount: amountWithCommission(b.finalPaymentAmount ?? 0, pct),
+              amount: amountWithCommission(b.finalPaymentAmount ?? 0, orgFee.effectivePct(b.amount)),
               dueDate: b.serviceDate,
             ),
             b.pendingFinalPaymentId!,

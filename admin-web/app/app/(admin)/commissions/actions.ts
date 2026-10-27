@@ -28,21 +28,28 @@ export async function updateCommissionSettings(
   // Migração 112: só vem no formulário depois de a coluna existir.
   const windowRaw = formData.get("deposit_refund_window_hours");
   const windowHours = windowRaw == null ? null : Number(windowRaw);
-  // Escalões da taxa do parceiro (migração 126).
-  const hasTiers = formData.get("tier1_pct") != null;
+  // Escalões (migrações 126/127): parceiro (`tier…`) e organizador (`org…`).
   const n = (k: string) => Number(formData.get(k));
-  const tiers = hasTiers
-    ? [
-        { up_to: n("tier1_up_to"), pct: n("tier1_pct") },
-        { up_to: n("tier2_up_to"), pct: n("tier2_pct") },
-        { up_to: null, pct: n("tier3_pct") },
-      ]
-    : null;
-  const tiersOk = tiers == null || (
-    tiers.every((t) => Number.isFinite(t.pct) && t.pct >= 0 && t.pct < 50) &&
-    Number.isFinite(tiers[0].up_to!) && Number.isFinite(tiers[1].up_to!) &&
-    tiers[0].up_to! > 0 && tiers[1].up_to! > tiers[0].up_to!
-  );
+  const readTiers = (prefix: string) =>
+    formData.get(`${prefix}1_pct`) == null
+      ? null
+      : [
+          { up_to: n(`${prefix}1_up_to`), pct: n(`${prefix}1_pct`) },
+          { up_to: n(`${prefix}2_up_to`), pct: n(`${prefix}2_pct`) },
+          { up_to: null, pct: n(`${prefix}3_pct`) },
+        ];
+  const validTiers = (t: { up_to: number | null; pct: number }[] | null) =>
+    t == null || (
+      t.every((x) => Number.isFinite(x.pct) && x.pct >= 0 && x.pct < 50) &&
+      Number.isFinite(t[0].up_to!) && Number.isFinite(t[1].up_to!) &&
+      t[0].up_to! > 0 && t[1].up_to! > t[0].up_to!
+    );
+  const tiers = readTiers("tier");
+  const orgTiers = readTiers("org");
+  const freeRaw = formData.get("partner_free_months");
+  const freeMonths = freeRaw == null ? null : Number(freeRaw);
+  const tiersOk = validTiers(tiers) && validTiers(orgTiers) &&
+    (freeMonths == null || (Number.isInteger(freeMonths) && freeMonths >= 0 && freeMonths <= 36));
 
   if (
     !Number.isFinite(commission) || commission < 0 || commission > 100 ||
@@ -62,6 +69,8 @@ export async function updateCommissionSettings(
       cancellation_penalty_days: penaltyDays,
       ...(windowHours != null ? { deposit_refund_window_hours: windowHours } : {}),
       ...(tiers != null ? { partner_fee_tiers: tiers } : {}),
+      ...(orgTiers != null ? { organizer_fee_tiers: orgTiers } : {}),
+      ...(freeMonths != null ? { partner_free_months: freeMonths } : {}),
       updated_at: new Date().toISOString(),
       updated_by: userId,
     })

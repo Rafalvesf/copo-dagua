@@ -265,9 +265,9 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
     // ver `amountWithCommission`) — nunca mostrar só o valor do parceiro
     // aqui, para o botão nunca prometer um valor diferente do checkout
     // a seguir.
-    final commissionPct = ref
-        .watch(platformCommissionPercentageProvider)
-        .maybeWhen(data: (pct) => pct, orElse: () => 0.0);
+    // Escalões do organizador (migração 127): a percentagem efetiva desta
+    // reserva vale para o sinal e para o restante.
+    final commissionPct = (ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig()).effectivePct(booking.amount);
 
     return SnappyTap(
       onTap: () => context.push(
@@ -539,7 +539,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
     final dateLabel = proposal.eventDate == null
         ? null
         : '${proposal.eventDate!.day.toString().padLeft(2, '0')}/${proposal.eventDate!.month.toString().padLeft(2, '0')}/${proposal.eventDate!.year}';
-    final fee = ref.watch(platformCommissionPercentageProvider).value ?? 0;
+    final fee = (ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig()).effectivePct(proposal.price);
 
     return Container(
       padding: const EdgeInsets.all(14),

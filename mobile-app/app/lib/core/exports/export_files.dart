@@ -89,13 +89,13 @@ List<List<String>> _bookingRows(ReportData r, {required bool partnerSide}) => [
       for (final b in r.bookings)
         partnerSide
             ? [b.number, b.counterpart, b.service, _d(b.eventDate), b.status, _e(b.total), _e(b.paid), _e(b.due)]
-            : [b.number, b.counterpart, b.service, _d(b.eventDate), b.status, _e(withCommission(b.total)), _e(withCommission(b.paid)), _e(withCommission(b.due))],
+            : [b.number, b.counterpart, b.service, _d(b.eventDate), b.status, _e(withCommission(b.total, b.total)), _e(withCommission(b.paid, b.total)), _e(withCommission(b.due, b.total))],
     ];
 List<List<String>> _paymentRows(ReportData r, {required bool partnerSide}) => [
       for (final p in r.payments)
         partnerSide
-            ? [_d(p.paidAt ?? p.dueAt), p.bookingNumber, p.payer, p.type, p.status, _e(p.amount), _e(commissionOf(p.amount)), _e(withCommission(p.amount))]
-            : [_d(p.paidAt ?? p.dueAt), p.bookingNumber, p.payee, p.type, p.status, _e(p.amount), _e(commissionOf(p.amount)), _e(withCommission(p.amount))],
+            ? [_d(p.paidAt ?? p.dueAt), p.bookingNumber, p.payer, p.type, p.status, _e(p.amount), _e(commissionOf(p.amount, p.total)), _e(withCommission(p.amount, p.total))]
+            : [_d(p.paidAt ?? p.dueAt), p.bookingNumber, p.payee, p.type, p.status, _e(p.amount), _e(commissionOf(p.amount, p.total)), _e(withCommission(p.amount, p.total))],
     ];
 
 /// PDF do relatório (parceiro ou organizador).
@@ -121,8 +121,8 @@ Future<Uint8List> reportPdf(ReportData r, {required bool partnerSide}) async {
       else
         _stats([
           ('Orçamento', r.budgetTotal == null ? '—' : _e(r.budgetTotal!)),
-          ('Pago (com comissão)', _e(withCommission(r.paidTotal))),
-          ('Por pagar', _e(withCommission(r.dueTotal))),
+          ('Pago (com comissão)', _e(r.paidTotalWithFee)),
+          ('Por pagar', _e(r.dueTotalWithFee)),
           ('Outros gastos', _e(r.expensesTotal)),
         ]),
       _section(partnerSide ? 'Clientes e reservas' : 'Parceiros e reservas'),
@@ -204,15 +204,15 @@ Future<Uint8List> receiptsPdf(ReportData r, {bool receiptForPartner = false}) as
             pw.Divider(color: const PdfColor.fromInt(0xFFDDE5D3)),
             // Valor do parceiro + comissão da À Nossa! = total pago.
             row('Valor do serviço', _e(p.amount)),
-            row('Comissão À Nossa! ($exportPctLabel)', _e(commissionOf(p.amount))),
+            row('Comissão À Nossa!', _e(commissionOf(p.amount, p.total))),
             pw.Divider(color: const PdfColor.fromInt(0xFFDDE5D3)),
             // Detalhe do IVA (pedido do utilizador, 2026-10-20).
-            row('Total sem IVA', _e(vatBase(withCommission(p.amount)))),
-            row('IVA (${(vatRate * 100).round()}%)', _e(vatAmount(withCommission(p.amount)))),
+            row('Total sem IVA', _e(vatBase(withCommission(p.amount, p.total)))),
+            row('IVA (${(vatRate * 100).round()}%)', _e(vatAmount(withCommission(p.amount, p.total)))),
             pw.Divider(color: const PdfColor.fromInt(0xFFDDE5D3)),
             pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
               pw.Text('Total pago (IVA incluído)', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
-              pw.Text(_e(withCommission(p.amount)), style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: _green)),
+              pw.Text(_e(withCommission(p.amount, p.total)), style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: _green)),
             ]),
             if (receiptForPartner) ...[
               pw.SizedBox(height: 6),
@@ -270,16 +270,16 @@ Uint8List reportXlsx(ReportData r, {required bool partnerSide}) {
         ]
       : [
           ['Orçamento', r.budgetTotal ?? 0],
-          ['Pago (com comissão)', withCommission(r.paidTotal)],
-          ['Por pagar (com comissão)', withCommission(r.dueTotal)],
-          ['Comissão À Nossa! ($exportPctLabel)', commissionOf(r.paidTotal)],
+          ['Pago (com comissão)', r.paidTotalWithFee],
+          ['Por pagar (com comissão)', r.dueTotalWithFee],
+          ['Comissão À Nossa! ($exportPctLabel)', r.paidFee],
           ['Outros gastos', r.expensesTotal],
         ]);
   sheet(partnerSide ? 'Clientes' : 'Parceiros', ['Reserva', who, 'Serviço', 'Data do evento', 'Local', 'Estado', 'Total (€)', 'Pago (€)', 'Em falta (€)'], [
     for (final b in r.bookings)
       partnerSide
           ? [b.number, b.counterpart, b.service, b.eventDate, b.location, b.status, b.total, b.paid, b.due]
-          : [b.number, b.counterpart, b.service, b.eventDate, b.location, b.status, withCommission(b.total), withCommission(b.paid), withCommission(b.due)],
+          : [b.number, b.counterpart, b.service, b.eventDate, b.location, b.status, withCommission(b.total, b.total), withCommission(b.paid, b.total), withCommission(b.due, b.total)],
   ]);
   sheet('Pagamentos', [
     'Data', 'Reserva', who, 'Tipo', 'Estado',
@@ -291,9 +291,9 @@ Uint8List reportXlsx(ReportData r, {required bool partnerSide}) {
     for (final p in r.payments)
       [
         p.paidAt ?? p.dueAt, p.bookingNumber, partnerSide ? p.payer : p.payee, p.type, p.status,
-        p.amount, commissionOf(p.amount), withCommission(p.amount),
-        vatBase(partnerSide ? p.amount : withCommission(p.amount)),
-        vatAmount(partnerSide ? p.amount : withCommission(p.amount)),
+        p.amount, commissionOf(p.amount, p.total), withCommission(p.amount, p.total),
+        vatBase(partnerSide ? p.amount : withCommission(p.amount, p.total)),
+        vatAmount(partnerSide ? p.amount : withCommission(p.amount, p.total)),
       ],
   ]);
   if (!partnerSide) {

@@ -30,13 +30,19 @@ export default async function SettingsPage() {
         ) : (
           <DetailList
             items={[
-              { label: "Comissão paga pelo organizador", value: `${settings.platform_commission_percentage}% (IVA incl.)` },
+              {
+                label: "Taxa do organizador",
+                value: (((settings as { organizer_fee_tiers?: { up_to: number | null; pct: number }[] }).organizer_fee_tiers) ?? [])
+                  .map((t) => (t.up_to == null ? `${t.pct}% acima` : `${t.pct}% até ${t.up_to} €`))
+                  .join(", ") || `${settings.platform_commission_percentage}%`,
+              },
               {
                 label: "Taxa descontada ao parceiro",
                 value: (((settings as { partner_fee_tiers?: { up_to: number | null; pct: number }[] }).partner_fee_tiers) ?? [])
                   .map((t) => (t.up_to == null ? `${t.pct}% acima` : `${t.pct}% até ${t.up_to} €`))
                   .join(", ") + " (IVA incl.)",
               },
+              { label: "Parceiros novos sem taxa", value: `${(settings as { partner_free_months?: number }).partner_free_months ?? 0} meses` },
               { label: "Sinal", value: `${settings.deposit_percentage}% do total` },
               { label: "Sinal reembolsável", value: `${(settings as { deposit_refund_window_hours?: number }).deposit_refund_window_hours ?? 48} h depois de pagar` },
               { label: "Restante reembolsável", value: `até ${settings.cancellation_penalty_days} dias antes` },

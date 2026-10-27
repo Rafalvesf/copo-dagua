@@ -90,13 +90,13 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     final active = bookings.where((b) => b.status != BookingStatus.recusado);
     // Valores com a comissão: é o que o casal paga de facto (igual às
     // Reservas e ao ecrã de pagamento) — 2026-10-19.
-    final pct = ref.watch(platformCommissionPercentageProvider).value ?? 0;
-    double fee(double v) => amountWithCommission(v, pct);
+    final orgFee = ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig();
+    double fee(double v, [double? total]) => amountWithCommission(v, orgFee.effectivePct(total ?? v));
     final paid = [
       ...expenseState.paid,
       for (final b in active)
         if (b.paidAmount > 0)
-          Expense(id: 'booking:${b.id}:paid', weddingId: b.weddingId, title: 'Pago · ${b.partnerName}', amount: fee(b.paidAmount), paid: true),
+          Expense(id: 'booking:${b.id}:paid', weddingId: b.weddingId, title: 'Pago · ${b.partnerName}', amount: fee(b.paidAmount, b.amount), paid: true),
     ];
     final pending = [
       ...expenseState.pending,
@@ -106,7 +106,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             id: 'booking:${b.id}:pay:${b.pendingDepositPaymentId}',
             weddingId: b.weddingId,
             title: 'Sinal · ${b.partnerName}',
-            amount: fee(b.depositAmount ?? 0),
+            amount: fee(b.depositAmount ?? 0, b.amount),
             dueDate: b.pendingDepositDueAt,
           ),
         if (b.pendingFinalPaymentId != null)
@@ -114,7 +114,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             id: 'booking:${b.id}:pay:${b.pendingFinalPaymentId}',
             weddingId: b.weddingId,
             title: 'Restante · ${b.partnerName}',
-            amount: fee(b.finalPaymentAmount ?? 0),
+            amount: fee(b.finalPaymentAmount ?? 0, b.amount),
           ),
       ],
     ];
