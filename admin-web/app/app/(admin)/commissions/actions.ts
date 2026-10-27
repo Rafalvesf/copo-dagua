@@ -48,8 +48,11 @@ export async function updateCommissionSettings(
   const orgTiers = readTiers("org");
   const freeRaw = formData.get("partner_free_months");
   const freeMonths = freeRaw == null ? null : Number(freeRaw);
+  const extraRaw = formData.get("partner_free_extra_months");
+  const extraMonths = extraRaw == null ? null : Number(extraRaw);
   const tiersOk = validTiers(tiers) && validTiers(orgTiers) &&
-    (freeMonths == null || (Number.isInteger(freeMonths) && freeMonths >= 0 && freeMonths <= 36));
+    (freeMonths == null || (Number.isInteger(freeMonths) && freeMonths >= 0 && freeMonths <= 36)) &&
+    (extraMonths == null || (Number.isInteger(extraMonths) && extraMonths >= 0 && extraMonths <= 12));
 
   if (
     !Number.isFinite(commission) || commission < 0 || commission > 100 ||
@@ -71,6 +74,7 @@ export async function updateCommissionSettings(
       ...(tiers != null ? { partner_fee_tiers: tiers } : {}),
       ...(orgTiers != null ? { organizer_fee_tiers: orgTiers } : {}),
       ...(freeMonths != null ? { partner_free_months: freeMonths } : {}),
+      ...(extraMonths != null ? { partner_free_extra_months: extraMonths } : {}),
       updated_at: new Date().toISOString(),
       updated_by: userId,
     })
