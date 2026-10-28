@@ -237,20 +237,7 @@ class AuthController extends Notifier<AuthState> {
   /// [_restoreSession]. [role] e [weddingCode] vêm do ecrã de registo e
   /// são aplicados à conta nova logo a seguir.
   Future<void> signInWithProvider(OAuthProvider provider, {UserRole? role, String? weddingCode}) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_keepKey, true);
-      if (role != null) {
-        await prefs.setString(_pendingRoleKey, role.name);
-      } else {
-        await prefs.remove(_pendingRoleKey);
-      }
-      if (weddingCode != null && weddingCode.trim().isNotEmpty) {
-        await prefs.setString(_pendingCodeKey, weddingCode.trim());
-      } else {
-        await prefs.remove(_pendingCodeKey);
-      }
-    } catch (_) {}
+    await _storePendingSocial(role, weddingCode);
     // Sem o fornecedor ativo no Supabase, o browser abria uma página de
     // erro em JSON ("provider is not enabled") — avisa aqui em vez disso.
     if (!await _providerEnabled(provider)) {
@@ -290,6 +277,42 @@ class AuthController extends Notifier<AuthState> {
     } catch (_) {
       return true; // na dúvida, tenta
     }
+  }
+
+  Future<void> _storePendingSocial(UserRole? role, String? weddingCode) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keepKey, true);
+      if (role != null) {
+        await prefs.setString(_pendingRoleKey, role.name);
+      } else {
+        await prefs.remove(_pendingRoleKey);
+      }
+      if (weddingCode != null && weddingCode.trim().isNotEmpty) {
+        await prefs.setString(_pendingCodeKey, weddingCode.trim());
+      } else {
+        await prefs.remove(_pendingCodeKey);
+      }
+    } catch (_) {}
+  }
+
+  /// Google na web (2026-10-28): o botão oficial do Google devolve um ID
+  /// token, que o Supabase valida com o [nonce]. Não sai da app (antes
+  /// abria a página de login com o endereço supabase.co).
+  Future<void> signInWithGoogleIdToken(String idToken, String nonce, {UserRole? role, String? weddingCode}) async {
+    await _storePendingSocial(role, weddingCode);
+    state = state.copyWith(status: AuthStatus.authenticating, errorMessage: null);
+    try {
+      await supabase.auth.signInWithIdToken(provider: OAuthProvider.google, idToken: idToken, nonce: nonce);
+    } catch (_) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: 'Não foi possível entrar com o Google. Tenta novamente.',
+      );
+      return;
+    }
+    state = const AuthState.unauthenticated();
+    await _restoreSession();
   }
 
   /// Papel e código escolhidos antes de ir ao Google/Apple.
