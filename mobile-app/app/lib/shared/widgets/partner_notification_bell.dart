@@ -102,6 +102,7 @@ class _PartnerNotificationsSheet extends ConsumerWidget {
                             switch (n.type) {
                               'new_message' => n.read ? Icons.chat_bubble_outline_rounded : Icons.chat_bubble_rounded,
                               'support_reply' => Icons.support_agent_rounded,
+                              'admin_message' => Icons.campaign_outlined,
                               _ => n.read ? Icons.notifications_none_rounded : Icons.notifications_active_rounded,
                             },
                             color: n.read ? AppTheme.inkMuted : AppTheme.accentOliveDark,
