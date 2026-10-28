@@ -95,7 +95,7 @@ export function SendMessageForm({ people, preselect }: { people: Person[]; prese
         </button>
       </div>
       <p className="field-hint">
-        Aparece nas notificações da app e chega ao telemóvel de quem tem as notificações ativas. Os convidados só a recebem no telemóvel.
+        Aparece nas notificações da app e chega ao telemóvel de quem tem as notificações ativas. Ao tocar, a pessoa vê a mensagem completa e pode responder: a resposta abre um pedido em Suporte.
       </p>
     </form>
   );

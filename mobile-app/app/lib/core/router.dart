@@ -77,6 +77,7 @@ import 'models/models.dart';
 import 'partners/partner_providers.dart';
 import 'platform/maintenance_controller.dart';
 import '../features/legal/legal_screen.dart';
+import '../features/messages/admin_message_screen.dart';
 import '../features/legal/legal_texts.dart';
 
 const _authRoutes = {
@@ -269,6 +270,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             GuestHomeScreen(weddingId: state.pathParameters['weddingId']),
       ),
+      // Mensagem da equipa (admin, migrações 133/134), com resposta.
+      GoRoute(path: '/mensagem/:id', builder: (context, state) => AdminMessageScreen(id: state.pathParameters['id']!)),
       GoRoute(path: '/termos', builder: (context, state) => const LegalScreen(doc: termsDoc)),
       GoRoute(path: '/privacidade', builder: (context, state) => const LegalScreen(doc: privacyDoc)),
       // Pública (Google Play): como pedir para apagar a conta.

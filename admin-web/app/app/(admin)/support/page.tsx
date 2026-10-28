@@ -23,7 +23,7 @@ const CATEGORY_LABEL: Record<SupportTicketCategory, string> = {
   dispute_delay: "Disputa / atraso",
 };
 
-type TicketRow = SupportTicket & { profiles: Pick<Profile, "full_name" | "role"> | null };
+type TicketRow = SupportTicket & { profiles: Pick<Profile, "full_name" | "role"> | null; admin_message_id?: string | null };
 
 export default async function SupportPage({ searchParams }: PageProps<"/support">) {
   await requireAdmin();
@@ -43,6 +43,13 @@ export default async function SupportPage({ searchParams }: PageProps<"/support"
   const { data: tickets, error } = await query;
 
   const rows = (tickets ?? []) as TicketRow[];
+  // Respostas a mensagens da equipa (migração 134): título da mensagem original.
+  const msgIds = [...new Set(rows.map((t) => t.admin_message_id).filter((x): x is string => Boolean(x)))];
+  const msgTitles = new Map<string, string>();
+  if (msgIds.length > 0) {
+    const { data: msgs } = await supabase.from("admin_messages").select("id, title").in("id", msgIds);
+    for (const m of (msgs ?? []) as { id: string; title: string }[]) msgTitles.set(m.id, m.title);
+  }
 
   return (
     <div className="page">
@@ -72,7 +79,7 @@ export default async function SupportPage({ searchParams }: PageProps<"/support"
                   <div style={{ minWidth: 0 }}>
                     <p className="strong" style={{ fontSize: 15 }}>{t.subject}</p>
                     <p className="list-sub">
-                      {t.profiles?.full_name ?? "Utilizador"} · {t.profiles?.role === "partner" ? "Parceiro" : "Organizador"} · {fmtDateTime(t.created_at)}
+                      {t.profiles?.full_name ?? "Utilizador"} · {t.profiles?.role === "partner" ? "Parceiro" : t.profiles?.role === "guest" ? "Convidado" : "Organizador"} · {fmtDateTime(t.created_at)}
                     </p>
                   </div>
                   <div className="row" style={{ gap: 6 }}>
@@ -80,6 +87,9 @@ export default async function SupportPage({ searchParams }: PageProps<"/support"
                     <Badge tone={t.status === "resolved" ? "success" : t.status === "pending" ? "info" : "warning"}>{STATUS_LABEL[t.status]}</Badge>
                   </div>
                 </div>
+                {t.admin_message_id && (
+                  <p className="field-hint">Resposta à mensagem «{msgTitles.get(t.admin_message_id) ?? "da equipa"}»</p>
+                )}
                 {t.description && <p style={{ whiteSpace: "pre-wrap", maxWidth: "75ch" }}>{t.description}</p>}
                 {t.resolution_note ? (
                   <div style={{ padding: "10px 12px", borderRadius: 10, background: "var(--surface-2)", boxShadow: "inset 2px 0 0 var(--accent)" }}>
