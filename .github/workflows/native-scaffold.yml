@@ -1,0 +1,46 @@
+name: Native scaffold (one-off)
+
+# Gera as pastas android/ e ios/ da app (flutter create) e faz commit no
+# próprio ramo. Só corre em ramos native/*. Depois de usado pode apagar-se.
+on:
+  push:
+    branches:
+      - 'native/**'
+    paths:
+      - '.github/workflows/native-scaffold.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  scaffold:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile-app/app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: flutter create
+        run: |
+          if [ -d android ] && [ -d ios ]; then echo "já existe"; exit 0; fi
+          cp test/widget_test.dart /tmp/widget_test.dart
+          flutter create --org pt.anossa --project-name copo_dagua_app --platforms android,ios .
+          cp /tmp/widget_test.dart test/widget_test.dart
+          # Identificador final: pt.anossa.app
+          f=android/app/build.gradle.kts; [ -f $f ] || f=android/app/build.gradle
+          sed -i -E 's/applicationId = "[^"]+"/applicationId = "pt.anossa.app"/; s/applicationId "[^"]+"/applicationId "pt.anossa.app"/' $f
+          sed -i -E 's/PRODUCT_BUNDLE_IDENTIFIER = pt\.anossa\.copoDaguaApp/PRODUCT_BUNDLE_IDENTIFIER = pt.anossa.app/g' ios/Runner.xcodeproj/project.pbxproj
+          grep -n applicationId $f
+          grep -n PRODUCT_BUNDLE_IDENTIFIER ios/Runner.xcodeproj/project.pbxproj
+          flutter --version > native_flutter_version.txt
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898315+github-actions[bot]@users.noreply.github.com"
+          git add -A android ios native_flutter_version.txt .metadata 2>/dev/null || git add -A android ios native_flutter_version.txt
+          git commit -m "Gera projetos Android e iOS (flutter create, pt.anossa.app)" || echo "nada a fazer"
+          git push
