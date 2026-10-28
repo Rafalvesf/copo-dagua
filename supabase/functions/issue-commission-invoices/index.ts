@@ -34,7 +34,11 @@ Deno.serve(async (req) => {
 
   const account = Deno.env.get("INVOICEXPRESS_ACCOUNT");
   const apiKey = Deno.env.get("INVOICEXPRESS_API_KEY");
-  if (!account || !apiKey) return Response.json({ skipped: "not_configured" });
+  if (!account || !apiKey) {
+    // Diagnóstico: só os NOMES dos segredos parecidos (nunca os valores).
+    const similar = Object.keys(Deno.env.toObject()).filter((k) => /invoice|fcm/i.test(k));
+    return Response.json({ skipped: "not_configured", has_account: Boolean(account), has_key: Boolean(apiKey), similar });
+  }
   const ix = new InvoiceXpress(account, apiKey, Deno.env.get("INVOICEXPRESS_TAX_NAME") || "IVA23");
   const allowTest = Deno.env.get("INVOICEXPRESS_ALLOW_TEST") === "1";
   const stripe = stripeClient();
