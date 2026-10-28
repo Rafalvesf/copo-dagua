@@ -10,3 +10,7 @@ desktop.ini
 
 # Supabase CLI local cache (project ref, pooler URL, tool versions)
 supabase/.temp/
+
+# Configuração Firebase: nunca no repositório (é público)
+**/google-services.json
+**/GoogleService-Info.plist

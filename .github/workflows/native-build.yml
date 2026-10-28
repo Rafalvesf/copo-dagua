@@ -44,9 +44,12 @@ jobs:
             exit 1
           }
       - name: Build APK
+        env:
+          # Chave Firebase vem dos segredos do repositório (nunca no código).
+          FIREBASE_ANDROID_API_KEY: ${{ secrets.FIREBASE_ANDROID_API_KEY }}
         run: |
           set -o pipefail
-          flutter build apk --debug 2>&1 | tee build.txt || {
+          flutter build apk --debug --dart-define=FIREBASE_ANDROID_API_KEY="$FIREBASE_ANDROID_API_KEY" 2>&1 | tee build.txt || {
             grep -iE "error|exception|failed|what went wrong|because|incompatible|requires|symbol|location:|plugin" build.txt | grep -v "^\s*at " | tail -40 | while read -r line; do echo "::error::$line"; done
             exit 1
           }
@@ -75,9 +78,11 @@ jobs:
             exit 1
           }
       - name: Build iOS (sem assinatura)
+        env:
+          FIREBASE_IOS_API_KEY: ${{ secrets.FIREBASE_IOS_API_KEY }}
         run: |
           set -o pipefail
-          flutter build ios --debug --no-codesign 2>&1 | tee build.txt || {
+          flutter build ios --debug --no-codesign --dart-define=FIREBASE_IOS_API_KEY="$FIREBASE_IOS_API_KEY" 2>&1 | tee build.txt || {
             grep -iE "error|exception|failed|what went wrong|because|incompatible|requires|symbol|location:|plugin" build.txt | grep -v "^\s*at " | tail -40 | while read -r line; do echo "::error::$line"; done
             exit 1
           }

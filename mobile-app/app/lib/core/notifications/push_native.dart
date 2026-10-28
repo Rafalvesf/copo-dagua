@@ -10,10 +10,15 @@ import 'package:flutter/foundation.dart';
 /// `push_subscriptions` como `endpoint = 'fcm:<token>'` e a Edge Function
 /// `send-push` envia pelo FCM. Na web continua o Web Push (`push_web.dart`).
 
-// Projeto Firebase "a-nossa" (valores públicos do google-services.json /
-// GoogleService-Info.plist — não são segredos).
+// Projeto Firebase "a-nossa". As chaves não ficam no código (o repositório
+// é público): entram no build com --dart-define, a partir dos segredos do
+// GitHub (FIREBASE_ANDROID_API_KEY, FIREBASE_IOS_API_KEY). Sem elas, as
+// notificações no telemóvel ficam desligadas.
+const _androidKey = String.fromEnvironment('FIREBASE_ANDROID_API_KEY');
+const _iosKey = String.fromEnvironment('FIREBASE_IOS_API_KEY');
+
 const _android = FirebaseOptions(
-  apiKey: 'AIzaSyBij8AJH4PK6EIchL_n1pmwQxxS_ZwTWFg',
+  apiKey: _androidKey,
   appId: '1:891202657443:android:0e19bcb0be6e47193a7316',
   messagingSenderId: '891202657443',
   projectId: 'a-nossa',
@@ -21,7 +26,7 @@ const _android = FirebaseOptions(
 );
 
 const _ios = FirebaseOptions(
-  apiKey: 'AIzaSyBvxTwmHRiMw8IkejFlRV-q2lDYpTAO14o',
+  apiKey: _iosKey,
   appId: '1:891202657443:ios:0235a6c511eadacb3a7316',
   messagingSenderId: '891202657443',
   projectId: 'a-nossa',
@@ -30,8 +35,8 @@ const _ios = FirebaseOptions(
 );
 
 FirebaseOptions? get _options => switch (defaultTargetPlatform) {
-      TargetPlatform.android => _android,
-      TargetPlatform.iOS => _ios,
+      TargetPlatform.android when _androidKey.isNotEmpty => _android,
+      TargetPlatform.iOS when _iosKey.isNotEmpty => _ios,
       _ => null,
     };
 
