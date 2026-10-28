@@ -61,8 +61,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       setState(() => _error = 'Escreve o código de 6 dígitos que recebeste por email.');
       return;
     }
-    if (_password.text.length < 8) {
-      setState(() => _error = 'A password nova tem de ter pelo menos 8 caracteres.');
+    if (!RegExp(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$').hasMatch(_password.text)) {
+      setState(() => _error = 'A password nova precisa de pelo menos 8 caracteres, com letras e números.');
       return;
     }
     if (_password.text != _confirm.text) {
