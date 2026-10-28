@@ -48,6 +48,9 @@ dependencies:
   excel: ^4.0.6
   # Anexos no chat (core/chat/chat_attachments.dart).
   file_picker: '>=8.0.0 <12.0.0'
+  # Pagamentos nativos em Android/iOS (2026-10-28). Na web continua o
+  # Stripe.js (`web/index.html`).
+  flutter_stripe: ^11.1.0
   # Registo de erros (só ativo com SENTRY_DSN, ver core/monitoring).
   sentry_flutter: '>=8.0.0 <10.0.0'
 

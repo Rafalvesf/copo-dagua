@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import 'stripe_element_stub.dart' if (dart.library.js_interop) 'stripe_element_web.dart' as impl;
+import 'stripe_element_native.dart' if (dart.library.js_interop) 'stripe_element_web.dart' as impl;
 
 /// O que o ecrã de pagamento precisa da Stripe (2026-10-25, "quero tudo
 /// feito na app"). O ecrã é todo desenhado pela app; daqui só vêm:
@@ -8,7 +8,8 @@ import 'stripe_element_stub.dart' if (dart.library.js_interop) 'stripe_element_w
 ///   letra e as cores da app (o número do cartão nunca passa pela app,
 ///   regras PCI);
 /// - Apple Pay / Google Pay — a janela de pagamento do próprio telemóvel.
-/// Implementação web: `tchinPay` em `web/index.html`.
+/// Implementação web: `tchinPay` em `web/index.html`; Android/iOS:
+/// `stripe_element_native.dart` (flutter_stripe).
 enum CardPart { number, expiry, cvc }
 
 class CardFieldsState {
@@ -18,8 +19,12 @@ class CardFieldsState {
 }
 
 abstract class StripePay {
-  /// `false` fora da web (sem Stripe.js).
+  /// `false` se não houver Stripe neste dispositivo.
   bool get supported;
+
+  /// Web: 3 campos separados (número, validade, CVC). Android/iOS: um só
+  /// campo nativo, devolvido por `cardPart(CardPart.number)`.
+  bool get splitFields;
 
   /// Um dos campos do cartão (altura dada por quem o usa, ~24 px).
   Widget cardPart(CardPart part);

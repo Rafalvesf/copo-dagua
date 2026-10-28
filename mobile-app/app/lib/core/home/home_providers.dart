@@ -270,7 +270,7 @@ BookingStatus mapRealBookingStatus(String status) => switch (status) {
 /// (`supabase/functions/create-deposit-checkout/`, ver
 /// `mobile-app/payments/stripe-connect.md`) e devolve o URL a abrir no
 /// browser. `success_url`/`cancel_url` usam um esquema próprio
-/// (`copodagua://`) para o caso de vir a existir deep linking — ainda
+/// (`anossa://`) para o caso de vir a existir deep linking — ainda
 /// não está registado em nenhuma plataforma, por isso o retorno à app
 /// não é automático ainda; o pagamento em si e a confirmação via webhook
 /// não dependem disso.
@@ -282,9 +282,9 @@ class CheckoutUnavailable implements Exception {
 
 Future<String> createDepositCheckoutUrl(String paymentId) async {
   // Na web volta às Reservas da app depois de pagar (antes era um
-  // esquema `copodagua://` que o browser não sabe abrir).
-  final success = kIsWeb ? publicLink('/bookings') : 'copodagua://payment-success';
-  final cancel = kIsWeb ? publicLink('/bookings') : 'copodagua://payment-cancelled';
+  // esquema `anossa://` que o browser não sabe abrir).
+  final success = kIsWeb ? publicLink('/bookings') : 'anossa://payment-success';
+  final cancel = kIsWeb ? publicLink('/bookings') : 'anossa://payment-cancelled';
   final FunctionResponse response;
   try {
     response = await supabase.functions.invoke(

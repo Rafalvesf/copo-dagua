@@ -1,5 +1,6 @@
 package pt.anossa.copo_dagua_app
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// FlutterFragmentActivity: exigido pelo SDK da Stripe (flutter_stripe).
+class MainActivity : FlutterFragmentActivity()

@@ -42,6 +42,9 @@ class _WebStripePay implements StripePay {
   }
 
   @override
+  bool get splitFields => true;
+
+  @override
   bool get supported => _pay != null;
 
   @override
