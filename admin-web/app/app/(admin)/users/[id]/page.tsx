@@ -53,6 +53,9 @@ export default async function UserDetailPage(props: PageProps<"/users/[id]">) {
           <DetailList
             items={[
               { label: "Tipo de conta", value: roleLabel },
+              ...(u.role !== "admin"
+                ? [{ label: "Mensagem", value: <Link href={`/messages?to=${u.id}`} className="link">Enviar mensagem</Link> }]
+                : []),
               { label: "Telefone", value: u.phone ?? "—" },
               { label: "Email verificado", value: u.email_verified_at ? fmtDateTime(u.email_verified_at) : "Não" },
               { label: "Configuração inicial", value: u.onboarding_completed ? "Concluída" : "Por concluir" },
