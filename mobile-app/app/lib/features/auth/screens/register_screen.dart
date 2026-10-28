@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/auth/google_web_button.dart';
 import '../../../core/models/models.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
@@ -211,29 +212,45 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   /// Google/Apple: o convidado precisa de um código válido antes (como
   /// no registo com email); o papel escolhido segue para a conta nova.
   Future<void> _social(OAuthProvider provider) async {
+    if (!await _guestCodeOk()) return;
+    await ref.read(authControllerProvider.notifier).signInWithProvider(
+          provider,
+          role: widget.role,
+          weddingCode: widget.role == UserRole.guest ? _weddingCode.text.trim() : null,
+        );
+  }
+
+  /// Google na web: o botão oficial já devolveu o ID token.
+  Future<void> _googleCredential(String idToken, String nonce) async {
+    if (!await _guestCodeOk()) return;
+    await ref.read(authControllerProvider.notifier).signInWithGoogleIdToken(
+          idToken,
+          nonce,
+          role: widget.role,
+          weddingCode: widget.role == UserRole.guest ? _weddingCode.text.trim() : null,
+        );
+  }
+
+  Future<bool> _guestCodeOk() async {
     if (widget.role == UserRole.guest) {
       final code = _weddingCode.text.trim();
       if (code.isEmpty) {
         setState(() => _weddingCodeError = 'Indica o código do casal');
-        return;
+        return false;
       }
       setState(() => _checkingCode = true);
       List rows = const [];
       try {
         rows = await supabase.rpc('lookup_wedding_by_guest_code', params: {'p_code': code}) as List;
       } catch (_) {}
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() => _checkingCode = false);
       if (rows.isEmpty) {
         setState(() => _weddingCodeError = 'Código inválido — confirma com o casal.');
-        return;
+        return false;
       }
     }
-    await ref.read(authControllerProvider.notifier).signInWithProvider(
-          provider,
-          role: widget.role,
-          weddingCode: widget.role == UserRole.guest ? _weddingCode.text.trim() : null,
-        );
+    return true;
   }
 
   @override
@@ -347,11 +364,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       footer: [
         AuthPrimaryButton(label: 'Criar conta', loading: loading || _checkingCode, onPressed: _submit),
         const AuthOrDivider(),
-        AuthSocialButton(
-          label: 'Continuar com Google',
-          badge: const Text('G', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          onPressed: () => _social(OAuthProvider.google),
-        ),
+        googleWebButton(onCredential: _googleCredential) ??
+            AuthSocialButton(
+              label: 'Continuar com Google',
+              badge: const Text('G', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              onPressed: () => _social(OAuthProvider.google),
+            ),
         AuthSocialButton(
           label: 'Continuar com Apple',
           badge: const Icon(Icons.apple, size: 14, color: AppTheme.ink),

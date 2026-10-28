@@ -15,6 +15,11 @@ class SupabaseConfig {
   static const url = 'https://yknbtsmcmjxzzhijyiav.supabase.co';
   static const publishableKey = 'sb_publishable_TkmeAQOlKuN4kUii5i70Rg_Qiz8D7cc';
 
+  /// Cliente OAuth "Web application" do Google (público, não é segredo).
+  /// Na web o botão do próprio Google devolve um ID token que o Supabase
+  /// valida (`signInWithIdToken`), sem sair da app.
+  static const googleWebClientId = '47371479876-mne87gvt6sg2io70tog3evibsp5jkvkh.apps.googleusercontent.com';
+
   static Future<void> initialize() {
     return Supabase.initialize(url: url, publishableKey: publishableKey);
   }
