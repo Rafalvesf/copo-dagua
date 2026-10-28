@@ -175,7 +175,10 @@ function buildGroups(pendingPartners: number, openDisputes: number, openTickets:
     },
     {
       title: "Ajuda",
-      items: [{ href: "/support", label: "Suporte", icon: icons.headset, badge: openTickets }],
+      items: [
+        { href: "/support", label: "Suporte", icon: icons.headset, badge: openTickets },
+        { href: "/messages", label: "Mensagens", icon: icons.users },
+      ],
     },
   ];
 }
