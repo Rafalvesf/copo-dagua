@@ -32,11 +32,14 @@ Deno.serve(async (req) => {
   const secret = (cfg as Record<string, string> | null)?.push_secret;
   if (!secret || req.headers.get("x-push-secret") !== secret) return new Response("forbidden", { status: 403 });
 
-  const account = Deno.env.get("INVOICEXPRESS_ACCOUNT");
-  const apiKey = Deno.env.get("INVOICEXPRESS_API_KEY");
+  // Aceita também os nomes alternativos usados no painel.
+  const env = (...names: string[]) => names.map((n) => Deno.env.get(n)?.trim()).find((v) => v);
+  const account = env("INVOICEXPRESS_ACCOUNT", "INVOICEXPRESS_API_ACCOUNT")
+    ?.replace(/^https?:\/\//, "").replace(/\.app\.invoicexpress\.com.*$/, "");
+  const apiKey = env("INVOICEXPRESS_API_KEY", "INVOICEXPRESS_KEY", "IVOICEXPRESS_API_KEY");
   if (!account || !apiKey) {
     // Diagnóstico: só os NOMES dos segredos parecidos (nunca os valores).
-    const similar = Object.keys(Deno.env.toObject()).filter((k) => /invoice|fcm/i.test(k));
+    const similar = Object.keys(Deno.env.toObject()).filter((k) => /voice|express|fcm/i.test(k));
     return Response.json({ skipped: "not_configured", has_account: Boolean(account), has_key: Boolean(apiKey), similar });
   }
   const ix = new InvoiceXpress(account, apiKey, Deno.env.get("INVOICEXPRESS_TAX_NAME") || "IVA23");
