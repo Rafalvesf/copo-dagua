@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/public_state.dart';
@@ -93,7 +94,7 @@ class _InviteTokenScreenState extends ConsumerState<InviteTokenScreen> {
                     title: 'Foste convidado!',
                     message: 'Este convite é só para ti. Instala a app e cria conta com o mesmo email ou telemóvel — o convite fica logo ligado a ti.',
                     actions: [
-                      PrimaryButton(label: 'Instalar a app', onPressed: () => showInstallAppSheet(context)),
+                      if (kIsWeb) PrimaryButton(label: 'Instalar a app', onPressed: () => showInstallAppSheet(context)),
                       TextButton(
                         onPressed: () {
                           ref.read(pendingInviteTokenProvider.notifier).set(widget.token);

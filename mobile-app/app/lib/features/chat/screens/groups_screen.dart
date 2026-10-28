@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/chat/chat_attachments.dart';
 import '../../../core/chat/group_chat.dart';
+import '../../../core/moderation/moderation.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
@@ -339,7 +340,8 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
     final thread = ref.watch(groupThreadControllerProvider(widget.group.id));
     final people = ref.watch(groupPeopleProvider(widget.group.id)).value ?? const <String, EventPerson>{};
     final me = currentUserId();
-    final msgs = thread.messages.reversed.toList();
+    final blocked = ref.watch(blockedProfilesProvider).value ?? const <String>{};
+    final msgs = thread.messages.reversed.where((m) => !blocked.contains(m.senderId)).toList();
     return GradientScaffold(
       background: AppBackground.subtle,
       body: Column(children: [
@@ -365,9 +367,17 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                     // Nome/foto só na primeira de uma sequência do mesmo autor.
                     final older = i + 1 < msgs.length ? msgs[i + 1] : null;
                     final firstOfRun = older == null || older.senderId != m.senderId;
-                    final content = m.attachmentUrl != null
+                    final bubble = m.attachmentUrl != null
                         ? ChatAttachmentView(url: m.attachmentUrl!, type: m.attachmentType ?? 'file', name: m.attachmentName, isMe: mine)
                         : ChatBubble(text: m.body ?? '', isMe: mine);
+                    // Toque longo numa mensagem de outra pessoa: denunciar / bloquear.
+                    final content = mine
+                        ? bubble
+                        : GestureDetector(
+                            onLongPress: () => showModerationSheet(context, ref,
+                                kind: ReportKind.groupMessage, targetId: m.id, authorId: m.senderId, authorName: sender?.name),
+                            child: bubble,
+                          );
                     return Padding(
                       padding: EdgeInsets.only(top: firstOfRun ? 10 : 3),
                       child: Row(

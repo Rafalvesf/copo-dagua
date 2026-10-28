@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../core/moderation/moderation.dart';
 import '../../../core/partner_profile/partner_location.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
@@ -730,6 +731,14 @@ class _AccountSection extends ConsumerWidget {
           label: 'Mudar password',
           onTap: () => _resetPassword(context, ref, profile.email),
         ),
+        // Pessoas bloqueadas (migração 130, exigência das lojas).
+        if ((ref.watch(blockedProfilesProvider).value ?? const <String>{}).isNotEmpty)
+          _Row(
+            icon: Icons.block,
+            label: 'Pessoas bloqueadas',
+            value: '${ref.watch(blockedProfilesProvider).value!.length}',
+            onTap: () => _blockedList(context, ref),
+          ),
         // Direito ao apagamento (RGPD, 2026-10-25).
         _Row(
           icon: Icons.delete_outline_rounded,
@@ -738,6 +747,45 @@ class _AccountSection extends ConsumerWidget {
           onTap: () => _deleteAccount(context, ref),
         ),
       ],
+    );
+  }
+
+  Future<void> _blockedList(BuildContext context, WidgetRef ref) async {
+    final ids = (ref.read(blockedProfilesProvider).value ?? const <String>{}).toList();
+    final names = <String, String>{};
+    try {
+      final rows = await supabase.from('profiles').select('id, full_name').inFilter('id', ids) as List;
+      for (final r in rows) {
+        names[(r as Map)['id'] as String] = (r['full_name'] as String?) ?? '';
+      }
+    } catch (_) {}
+    if (!context.mounted) return;
+    await showIslandSheet<void>(
+      context: context,
+      builder: (ctx) => Consumer(builder: (ctx, ref, _) {
+        final current = ref.watch(blockedProfilesProvider).value ?? const <String>{};
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 4, 20, 8),
+                child: Text('Pessoas bloqueadas', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+              ),
+              if (current.isEmpty)
+                const Padding(padding: EdgeInsets.all(20), child: Text('Não tens ninguém bloqueado.')),
+              for (final id in current)
+                ListTile(
+                  title: Text((names[id] ?? '').isEmpty ? 'Pessoa bloqueada' : names[id]!),
+                  trailing: TextButton(
+                    onPressed: () => unblockProfile(ref, id),
+                    child: const Text('Desbloquear'),
+                  ),
+                ),
+            ]),
+          ),
+        );
+      }),
     );
   }
 

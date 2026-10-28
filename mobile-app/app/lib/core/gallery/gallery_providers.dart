@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 
+import '../moderation/moderation.dart';
 import '../supabase/supabase_config.dart';
 
 /// Galeria de fotos do casamento, moderada pelo casal
@@ -43,6 +44,8 @@ class GalleryPhoto {
 /// `getPublicUrl()` porque o bucket é privado.
 final weddingGalleryPhotosProvider =
     FutureProvider.family<List<GalleryPhoto>, String>((ref, weddingId) async {
+      // Pessoas bloqueadas (migração 130): as fotografias delas não aparecem.
+      final blocked = await ref.watch(blockedProfilesProvider.future);
       final rows = await supabase
           .from('wedding_gallery_photos')
           .select()
@@ -51,6 +54,7 @@ final weddingGalleryPhotosProvider =
 
       final photos = <GalleryPhoto>[];
       for (final row in (rows as List).cast<Map<String, dynamic>>()) {
+        if (blocked.contains(row['uploaded_by'])) continue;
         final path = row['storage_path'] as String;
         final signedUrl = await supabase.storage
             .from('wedding-gallery')

@@ -9,6 +9,7 @@ import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/gallery/gallery_social.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
+import '../../../core/moderation/moderation.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/gallery_placeholder.dart';
@@ -319,6 +320,13 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                         ],
                       ),
                     ),
+                    if (widget.photo.uploadedBy != ref.watch(authControllerProvider).profile?.id)
+                      IconButton(
+                        tooltip: 'Denunciar ou bloquear',
+                        icon: const Icon(Icons.more_horiz, color: AppTheme.inkMuted),
+                        onPressed: () => showModerationSheet(context, ref,
+                            kind: ReportKind.galleryPhoto, targetId: widget.photo.id, authorId: widget.photo.uploadedBy, authorName: name),
+                      ),
                   ],
                 ),
               ),
@@ -669,7 +677,10 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                         children: [
                           for (final c in list)
                             GestureDetector(
-                              onLongPress: c.profileId == me ? () => _delete(c) : null,
+                              onLongPress: c.profileId == me
+                                  ? () => _delete(c)
+                                  : () => showModerationSheet(context, ref,
+                                      kind: ReportKind.galleryComment, targetId: c.id, authorId: c.profileId, authorName: c.authorName),
                               child: Padding(
                                 padding: const EdgeInsets.only(bottom: 14),
                                 child: Row(

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../moderation/moderation.dart';
 import '../supabase/supabase_config.dart';
 
 /// Galeria social (`078_gallery_social.sql`): gostos, comentários e
@@ -92,9 +93,11 @@ class GalleryComment {
 
 final galleryCommentsProvider =
     FutureProvider.family<List<GalleryComment>, String>((ref, photoId) async {
+  final blocked = await ref.watch(blockedProfilesProvider.future);
   final rows = await supabase.rpc('get_gallery_comments', params: {'p_photo_id': photoId}) as List;
   return [
     for (final r in rows.cast<Map<String, dynamic>>())
+      if (!blocked.contains(r['profile_id']))
       GalleryComment(
         id: r['comment_id'] as String,
         profileId: r['profile_id'] as String,
