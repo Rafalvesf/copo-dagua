@@ -251,7 +251,7 @@ class AuthController extends Notifier<AuthState> {
       await supabase.auth.signInWithOAuth(
         provider,
         // Volta para a própria app (ex.: https://…/copo-dagua/).
-        redirectTo: kIsWeb ? '${Uri.base.origin}${Uri.base.path}' : null,
+        redirectTo: kIsWeb ? '${Uri.base.origin}${Uri.base.path}' : 'anossa://login-callback',
       );
     } catch (_) {
       state = state.copyWith(
@@ -653,7 +653,7 @@ class AuthController extends Notifier<AuthState> {
   Future<void> requestPasswordReset(String email) async {
     await supabase.auth.resetPasswordForEmail(
       email,
-      redirectTo: kIsWeb ? '${Uri.base.origin}${Uri.base.path}' : null,
+      redirectTo: kIsWeb ? '${Uri.base.origin}${Uri.base.path}' : 'anossa://login-callback',
     );
   }
 

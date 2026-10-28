@@ -373,6 +373,18 @@ class _PayScreenState extends ConsumerState<PayScreen> {
             padding: const EdgeInsets.all(16),
             decoration: whiteLineCard(),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              if (!_stripe.splitFields) ...[
+                const _FieldLabel('Dados do cartão'),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.borderMuted),
+                  ),
+                  child: _stripe.cardPart(CardPart.number),
+                ),
+              ] else ...[
               const _FieldLabel('Número do cartão'),
               _CardBox(child: _stripe.cardPart(CardPart.number)),
               const SizedBox(height: 12),
@@ -391,6 +403,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                   ]),
                 ),
               ]),
+              ],
               if (_card.error.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(_card.error, style: const TextStyle(fontSize: AppFontSize.sm, color: Color(0xFFB3261E))),

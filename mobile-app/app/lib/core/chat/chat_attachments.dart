@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -101,9 +101,12 @@ Future<ChatAttachment?> pickChatAttachment(BuildContext context) async {
       final type = name.toLowerCase().endsWith('.gif') ? 'gif' : 'image';
       return ChatAttachment(await _upload(bytes, name, _mimeFor(name)), type, name);
     case 'file':
-      final res = await FilePicker.pickFiles(withData: true);
-      final f = res?.files.single;
-      if (f == null || f.bytes == null) return null;
+      // file_selector (equipa Flutter): compila com o Kotlin embutido do
+      // Android, ao contrário do file_picker.
+      final x = await openFile();
+      if (x == null) return null;
+      final bytes = await x.readAsBytes();
+      final f = (name: x.name.isEmpty ? 'ficheiro' : x.name, size: bytes.length, bytes: bytes);
       if (f.size > 15 * 1024 * 1024) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('O ficheiro tem de ter até 15 MB.')));
@@ -113,7 +116,7 @@ Future<ChatAttachment?> pickChatAttachment(BuildContext context) async {
       final lower = f.name.toLowerCase();
       final isImage = ['.jpg', '.jpeg', '.png', '.webp', '.heic'].any(lower.endsWith);
       final type = lower.endsWith('.gif') ? 'gif' : isImage ? 'image' : 'file';
-      return ChatAttachment(await _upload(f.bytes!, f.name, _mimeFor(f.name)), type, f.name);
+      return ChatAttachment(await _upload(f.bytes, f.name, _mimeFor(f.name)), type, f.name);
     case 'sticker':
       final s = await showIslandSheet<String>(context: context, builder: (_) => const _StickerPicker());
       return s == null ? null : ChatAttachment('asset:$s', 'sticker');

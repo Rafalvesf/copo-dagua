@@ -4,6 +4,9 @@ import 'stripe_element.dart';
 
 class _Unsupported implements StripePay {
   @override
+  bool get splitFields => true;
+
+  @override
   bool get supported => false;
 
   @override

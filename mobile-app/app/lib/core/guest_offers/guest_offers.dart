@@ -255,7 +255,7 @@ Future<String> createGuestReservationCheckoutUrl({
   required int quantity,
   int nights = 1,
 }) async {
-  final back = kIsWeb ? publicLink('/guest-stay/$weddingId') : 'copodagua://payment-success';
+  final back = kIsWeb ? publicLink('/guest-stay/$weddingId') : 'anossa://payment-success';
   final FunctionResponse response;
   try {
     response = await supabase.functions.invoke(
