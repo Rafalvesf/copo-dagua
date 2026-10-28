@@ -52,7 +52,7 @@ dependencies:
   # Stripe.js (`web/index.html`).
   flutter_stripe: ^11.1.0
   # Registo de erros (só ativo com SENTRY_DSN, ver core/monitoring).
-  sentry_flutter: '>=8.0.0 <10.0.0'
+  sentry_flutter: '>=9.0.0 <12.0.0'
 
 dev_dependencies:
   flutter_test:
