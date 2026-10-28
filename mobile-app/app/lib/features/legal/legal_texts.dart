@@ -137,3 +137,27 @@ const privacyDoc = LegalDoc(
     ]),
   ],
 );
+
+/// Página pública para pedir a eliminação da conta (2026-10-28) — a
+/// Google Play exige um endereço web para isto, sem ter de instalar a app.
+const deleteAccountDoc = LegalDoc(
+  'Apagar a tua conta',
+  'Podes apagar a tua conta da À Nossa! e os dados associados a qualquer momento, sem custos.',
+  [
+    LegalSection('Na app (o mais rápido)', [
+      '1. Entra na tua conta na app ou em rafalvesf.github.io/copo-dagua.',
+      '2. Abre Definições → Conta → Apagar conta.',
+      '3. Escreve APAGAR para confirmar. A conta é apagada de imediato.',
+    ]),
+    LegalSection('Sem acesso à app', [
+      'Envia um email para ${LegalEntity.email} a partir do endereço da conta, com o assunto "Apagar conta". Apagamos a conta em até 30 dias e confirmamos por email.',
+    ]),
+    LegalSection('O que é apagado', [
+      'Nome, email, telefone, fotografia de perfil, mensagens, fotografias e comentários na galeria, convidados e listas, e o perfil de parceiro (deixa de aparecer na pesquisa).',
+    ]),
+    LegalSection('O que guardamos e durante quanto tempo', [
+      'Registos de pagamentos e faturas, sem o teu nome, durante 10 anos, porque a lei fiscal portuguesa o obriga. Eventos partilhados com outras pessoas passam para o outro organizador.',
+      'Se tiveres reservas ativas, tens de as cancelar ou esperar que o evento passe antes de apagar a conta.',
+    ]),
+  ],
+);

@@ -125,7 +125,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (location.startsWith('/juntar/')) return null;
 
       // Termos e Política de Privacidade — públicos (abrem do registo).
-      if (location == '/termos' || location == '/privacidade') return null;
+      if (location == '/termos' || location == '/privacidade' || location == '/apagar-conta') return null;
 
       // `/register` sem uma role válida na URL (ver role_selection_screen.dart
       // e a nota na rota `/register` abaixo) volta sempre a `/role` em vez
@@ -271,6 +271,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/termos', builder: (context, state) => const LegalScreen(doc: termsDoc)),
       GoRoute(path: '/privacidade', builder: (context, state) => const LegalScreen(doc: privacyDoc)),
+      // Pública (Google Play): como pedir para apagar a conta.
+      GoRoute(path: '/apagar-conta', builder: (context, state) => const LegalScreen(doc: deleteAccountDoc)),
       GoRoute(
         path: '/juntar/:token',
         builder: (context, state) => JoinWeddingScreen(token: state.pathParameters['token']!),

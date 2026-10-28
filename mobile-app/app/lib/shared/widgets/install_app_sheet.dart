@@ -9,6 +9,8 @@ import 'island_sheet.dart';
 /// levado a instalar a app em vez de criar conta no browser. A app é
 /// instalada a partir do site (ecrã principal do telemóvel).
 Future<void> showInstallAppSheet(BuildContext context, {String? code}) {
+  // Na app instalada (Android/iOS) não há nada a instalar.
+  if (!kIsWeb) return Future.value();
   final ios = defaultTargetPlatform == TargetPlatform.iOS;
   Widget step(int n, String text) => Padding(
         padding: const EdgeInsets.only(bottom: 10),

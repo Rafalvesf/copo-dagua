@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/moderation/moderation.dart';
 import '../../../core/chat/chat_attachments.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -119,7 +120,14 @@ class _PartnerChatThreadScreenState
                               price: message.proposalPrice,
                               deposit: message.proposalDepositAmount,
                             )
-                          : ChatBubble(text: message.text ?? '', isMe: isMe),
+                          : isMe
+                          ? ChatBubble(text: message.text ?? '', isMe: isMe)
+                          : GestureDetector(
+                              // Toque longo: denunciar a mensagem.
+                              onLongPress: () => showModerationSheet(context, ref,
+                                  kind: ReportKind.message, targetId: message.id, allowBlock: false),
+                              child: ChatBubble(text: message.text ?? '', isMe: isMe),
+                            ),
                     ).reversed.toList(),
                   ),
           ),

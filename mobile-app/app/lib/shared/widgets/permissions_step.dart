@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -291,7 +292,7 @@ class _PermRow extends StatelessWidget {
             Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base + 1, color: AppTheme.ink)),
             const SizedBox(height: 2),
             Text(
-              state == _State.denied ? 'Podes permitir nas definições do browser ou do telemóvel' : sub,
+              state == _State.denied ? (kIsWeb ? 'Podes permitir nas definições do browser ou do telemóvel' : 'Podes permitir nas definições do telemóvel') : sub,
               style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted, height: 1.35),
             ),
           ]),
@@ -459,7 +460,9 @@ class _SinglePermissionSheetState extends State<_SinglePermissionSheet> {
           const SizedBox(height: 8),
           Text(
             _blocked
-                ? 'Esta permissão foi recusada antes. Para a ativar, abre as definições do site no browser (o cadeado ao lado do endereço) ou do telemóvel e permite-a.'
+                ? (kIsWeb
+                    ? 'Esta permissão foi recusada antes. Para a ativar, abre as definições do site no browser (o cadeado ao lado do endereço) ou do telemóvel e permite-a.'
+                    : 'Esta permissão foi recusada antes. Para a ativar, abre as Definições do telemóvel → À Nossa! e permite-a.')
                 : (widget.reason ?? c.body),
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted, height: 1.45),

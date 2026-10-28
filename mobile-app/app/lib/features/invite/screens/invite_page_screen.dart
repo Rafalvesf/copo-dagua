@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/mascot.dart';
@@ -173,7 +174,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                   const SizedBox(height: 24),
                   // Pedido 2026-10-17: quem tem o link é levado a instalar
                   // a app, em vez de criar conta no browser.
-                  PrimaryButton(
+                  if (kIsWeb) PrimaryButton(
                     label: 'Instalar a app',
                     onPressed: () => showInstallAppSheet(context, code: wedding.guestCode),
                   ),

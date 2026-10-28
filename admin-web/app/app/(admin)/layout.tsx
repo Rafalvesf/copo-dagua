@@ -17,7 +17,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const { fullName } = await requireAdmin();
 
   const supabase = await createClient();
-  const [pendingQ, disputesQ, ticketsQ, settingsQ, flaggedQ, refundsQ] = await Promise.all([
+  const [pendingQ, disputesQ, ticketsQ, settingsQ, flaggedQ, refundsQ, reportsQ] = await Promise.all([
     supabase.from("partner_profiles").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
     // Disputas por decidir (migração 109) — 0 se a tabela ainda não existir.
     supabase.from("disputes").select("id", { count: "exact", head: true }).eq("status", "open"),
@@ -29,14 +29,18 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       .select("id, bookings!inner(status)", { count: "exact", head: true })
       .eq("status", "paid")
       .in("bookings.status", ["cancelled_by_couple", "cancelled_by_partner"]),
+    // Denúncias por decidir (migração 130) — 0 se a tabela ainda não existir.
+    supabase.from("content_reports").select("id", { count: "exact", head: true }).eq("status", "open"),
   ]);
   const pending = pendingQ.count ?? 0;
   const openDisputes = disputesQ.count ?? 0;
   const openTickets = ticketsQ.count ?? 0;
   const overdue = flaggedQ.count ?? 0;
   const refunds = refundsQ.count ?? 0;
+  const openReports = reportsQ.count ?? 0;
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
   const alerts: AdminAlert[] = [
+    ...(openReports > 0 ? [{ key: "rep", href: "/reports", title: plural(openReports, "denúncia por decidir", "denúncias por decidir"), detail: "Decidir em menos de 24 horas" }] : []),
     ...(openDisputes > 0 ? [{ key: "disp", href: "/disputes", title: plural(openDisputes, "disputa por decidir", "disputas por decidir"), detail: "A reserva fica parada até decidires" }] : []),
     ...(overdue > 0 ? [{ key: "over", href: "/bookings?status=problems", title: plural(overdue, "reserva com pagamento em atraso", "reservas com pagamento em atraso"), detail: "Ver reservas" }] : []),
     ...(refunds > 0 ? [{ key: "ref", href: "/refunds", title: plural(refunds, "reembolso por confirmar", "reembolsos por confirmar"), detail: "Pagamentos de reservas canceladas" }] : []),
@@ -58,6 +62,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           pendingCount={pending}
           openDisputes={openDisputes}
           openTickets={openTickets}
+          openReports={openReports}
           maintenance={maintenance}
         />
         <main className="admin-main">
