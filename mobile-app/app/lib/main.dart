@@ -36,6 +36,7 @@ Future<void> main() async {
   // `web/index.html` mostra um aviso para rodar de volta.
   SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]).catchError((_) {});
   await SupabaseConfig.initialize();
+  await PushNotifications.init();
   installBrowserBackDetection();
   await runWithErrorReporting(() => runApp(const ProviderScope(child: CopoDaguaApp())));
 }
@@ -46,6 +47,8 @@ class CopoDaguaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    // Toque numa notificação no telemóvel: abre o ecrã dela.
+    PushNotifications.onOpen((link) => router.go(link));
     // Notificações com a app fechada: ao entrar numa conta, este
     // dispositivo (se já autorizou) fica ligado a ela.
     ref.listen(authControllerProvider.select((s) => s.profile?.id), (prev, next) {

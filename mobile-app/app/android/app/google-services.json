@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "891202657443",
+    "project_id": "a-nossa",
+    "storage_bucket": "a-nossa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:891202657443:android:0e19bcb0be6e47193a7316",
+        "android_client_info": {
+          "package_name": "pt.anossa.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBij8AJH4PK6EIchL_n1pmwQxxS_ZwTWFg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

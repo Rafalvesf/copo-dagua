@@ -35,3 +35,7 @@ Future<String> pushUnsubscribe() async {
   if (p == null) return '';
   return (await p.unsubscribe().toDart).toDart;
 }
+
+// O Web Push trata do arranque e dos toques no service worker (push_sw.js).
+Future<void> pushInit() async {}
+void pushOnOpen(void Function(String link) cb) {}

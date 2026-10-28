@@ -48,6 +48,9 @@ dependencies:
   excel: ^4.0.6
   # Anexos no chat (core/chat/chat_attachments.dart).
   file_selector: ^1.0.3
+  # Notificações em Android/iOS (Firebase Cloud Messaging, 2026-10-28).
+  firebase_core: '>=3.6.0 <6.0.0'
+  firebase_messaging: '>=15.1.0 <18.0.0'
   # Pagamentos nativos em Android/iOS (2026-10-28). Na web continua o
   # Stripe.js (`web/index.html`).
   flutter_stripe: ^11.1.0
