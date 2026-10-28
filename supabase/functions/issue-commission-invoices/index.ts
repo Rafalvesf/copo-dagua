@@ -46,16 +46,25 @@ Deno.serve(async (req) => {
   const allowTest = Deno.env.get("INVOICEXPRESS_ALLOW_TEST") === "1";
   const stripe = stripeClient();
 
-  const { data: done } = await admin.from("commission_invoices").select("payment_id, kind, status, attempts");
-  const issued = new Map<string, { status: string; attempts: number }>();
-  for (const d of (done ?? []) as { payment_id: string; kind: string; status: string; attempts: number }[]) {
-    issued.set(`${d.payment_id}:${d.kind}`, { status: d.status, attempts: d.attempts });
-  }
-  // Volta a tentar as que falharam, no máximo 5 vezes.
+  const { data: done, error: doneError } = await admin
+    .from("commission_invoices")
+    .select("payment_id, kind, status, attempts, amount, seq, provider_id");
+  // Sem o histórico não se fatura nada (evita faturar duas vezes).
+  if (doneError) return Response.json({ error: "db_error", detail: doneError.message }, { status: 500 });
+  type Doc = { payment_id: string; kind: Kind; status: string; attempts: number; amount: number; seq: number; provider_id: number | null };
+  const docs = (done ?? []) as Doc[];
+  const docsOf = (id: string, kind: Kind) => docs.filter((d) => d.payment_id === id && d.kind === kind);
+  // Documento principal (fatura) por emitir? Volta a tentar as que
+  // falharam, no máximo 5 vezes.
   const pending = (id: string, kind: Kind) => {
-    const r = issued.get(`${id}:${kind}`);
+    const r = docsOf(id, kind)[0];
     return !r || (r.status === "failed" && r.attempts < 5);
   };
+  // Notas de crédito: quanto falta creditar (reembolsos parciais sucessivos).
+  const credited = (id: string, kind: Kind) =>
+    docsOf(id, kind).filter((d) => d.status === "issued").reduce((a, d) => a + Number(d.amount), 0);
+  const failedCredit = (id: string, kind: Kind) =>
+    docsOf(id, kind).find((d) => d.status === "failed" && d.attempts < 5);
 
   const { data: rows } = await admin
     .from("payments")
@@ -73,33 +82,46 @@ Deno.serve(async (req) => {
     const sid = p.provider_payment_id ?? "";
     if (!sid.startsWith("pi_")) continue;
     const booking = (Array.isArray(p.bookings) ? p.bookings[0] : p.bookings)?.booking_number ?? "";
+    const fullyRefunded = p.status === "refunded";
+    const anyRefund = fullyRefunded || Number(p.refunded_amount ?? 0) > 0;
 
+    const orgDoc = docsOf(p.id, "organizer_fee")[0];
+    const parDoc = docsOf(p.id, "partner_fee")[0];
     const needOrg = pending(p.id, "organizer_fee");
     const needPartner = p.released_at != null && Number(p.partner_fee_amount ?? 0) > 0 && pending(p.id, "partner_fee");
-    const fullyRefunded = p.status === "refunded";
-    const needCreditOrg = fullyRefunded && issued.get(`${p.id}:organizer_fee`)?.status === "issued" && pending(p.id, "credit_organizer");
-    const needCreditPartner = fullyRefunded && issued.get(`${p.id}:partner_fee`)?.status === "issued" && pending(p.id, "credit_partner");
-    if (!needOrg && !needPartner && !needCreditOrg && !needCreditPartner) continue;
-    work++;
+    const mayCreditOrg = anyRefund && orgDoc?.status === "issued";
+    const mayCreditPartner = anyRefund && parDoc?.status === "issued";
+    if (!needOrg && !needPartner && !mayCreditOrg && !mayCreditPartner) continue;
 
     let intent;
     try {
-      intent = await stripe.paymentIntents.retrieve(sid);
+      intent = await stripe.paymentIntents.retrieve(sid, { expand: ["latest_charge"] });
     } catch (e) {
       console.error("stripe retrieve failed", p.id, (e as Error).message);
       continue;
     }
     if (!intent.livemode && !allowTest) continue;
     const commission = Number(intent.metadata?.commission_cents ?? 0) / 100;
+    const charge = typeof intent.latest_charge === "object" ? intent.latest_charge : null;
+    // Parte reembolsada do pagamento (0..1); reembolso total = 1.
+    const refundedShare = fullyRefunded ? 1 : charge && charge.amount > 0 ? Math.min(1, charge.amount_refunded / charge.amount) : 0;
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+
+    const creditOrgDue = mayCreditOrg ? round2(Number(orgDoc!.amount) * refundedShare) - credited(p.id, "credit_organizer") : 0;
+    const creditParDue = mayCreditPartner ? round2(Number(parDoc!.amount) * refundedShare) - credited(p.id, "credit_partner") : 0;
+    const retryOrg = failedCredit(p.id, "credit_organizer");
+    const retryPar = failedCredit(p.id, "credit_partner");
+    if (!needOrg && !needPartner && creditOrgDue < 0.01 && creditParDue < 0.01) continue;
+    work++;
 
     // Organizador: taxa de serviço. Reembolsado antes de faturar → não fatura.
     if (needOrg) {
       if (commission <= 0 || fullyRefunded) {
-        await record(admin, p.id, "organizer_fee", 0, "skipped");
+        await record(admin, p.id, "organizer_fee", 1, 0, "skipped");
         out.skipped.push(`${p.id}:organizer_fee`);
       } else {
         const client = await organizerClient(admin, p.payer_id);
-        await issue(admin, ix, out, p.id, "organizer_fee", commission, client, {
+        await issue(admin, ix, out, p.id, "organizer_fee", 1, commission, client, {
           item: "Taxa de serviço À Nossa!",
           description: `Taxa de serviço da reserva ${booking} (proteção de pagamento)`,
         });
@@ -109,31 +131,31 @@ Deno.serve(async (req) => {
     if (needPartner) {
       const fee = Number(p.partner_fee_amount);
       const client = await partnerClient(admin, p.partner_id);
-      await issue(admin, ix, out, p.id, "partner_fee", fee, client, {
+      await issue(admin, ix, out, p.id, "partner_fee", 1, fee, client, {
         item: "Taxa de parceiro À Nossa!",
         description: `Taxa À Nossa! sobre a reserva ${booking}`,
       });
     }
 
-    if (needCreditOrg) {
-      const { amount, providerId } = await issuedDoc(admin, p.id, "organizer_fee");
+    if (creditOrgDue >= 0.01) {
+      const seq = retryOrg?.seq ?? docsOf(p.id, "credit_organizer").length + 1;
       const client = await organizerClient(admin, p.payer_id);
-      await issue(admin, ix, out, p.id, "credit_organizer", amount, client, {
+      await issue(admin, ix, out, p.id, "credit_organizer", seq, round2(creditOrgDue), client, {
         item: "Taxa de serviço À Nossa!",
-        description: `Devolução da taxa de serviço da reserva ${booking} (reembolso)`,
+        description: `Devolução da taxa de serviço da reserva ${booking} (reembolso${refundedShare < 1 ? " parcial" : ""})`,
         credit: true,
-        ownerId: providerId,
+        ownerId: orgDoc!.provider_id,
       });
     }
 
-    if (needCreditPartner) {
-      const { amount, providerId } = await issuedDoc(admin, p.id, "partner_fee");
+    if (creditParDue >= 0.01) {
+      const seq = retryPar?.seq ?? docsOf(p.id, "credit_partner").length + 1;
       const client = await partnerClient(admin, p.partner_id);
-      await issue(admin, ix, out, p.id, "credit_partner", amount, client, {
+      await issue(admin, ix, out, p.id, "credit_partner", seq, round2(creditParDue), client, {
         item: "Taxa de parceiro À Nossa!",
-        description: `Devolução da taxa À Nossa! da reserva ${booking} (reembolso)`,
+        description: `Devolução da taxa À Nossa! da reserva ${booking} (reembolso${refundedShare < 1 ? " parcial" : ""})`,
         credit: true,
-        ownerId: providerId,
+        ownerId: parDoc!.provider_id,
       });
     }
   }
@@ -162,11 +184,12 @@ async function issue(
   out: Record<string, string[]>,
   paymentId: string,
   kind: Kind,
+  seq: number,
   amount: number,
   client: Client,
   doc: { item: string; description: string; credit?: boolean; ownerId?: number | null },
 ) {
-  const key = `${paymentId}:${kind}`;
+  const key = `${paymentId}:${kind}:${seq}`;
   try {
     const res = await ix.issue({
       type: doc.credit ? "credit_notes" : "invoice_receipts",
@@ -177,12 +200,12 @@ async function issue(
       grossAmount: amount,
       ownerId: doc.ownerId ?? null,
     });
-    await record(admin, paymentId, kind, amount, "issued", res);
+    await record(admin, paymentId, kind, seq, amount, "issued", res);
     out.issued.push(key);
   } catch (e) {
     const msg = (e as Error).message.slice(0, 500);
     console.error("invoice failed", key, msg);
-    await record(admin, paymentId, kind, amount, "failed", undefined, msg);
+    await record(admin, paymentId, kind, seq, amount, "failed", undefined, msg);
     out.failed.push(key);
   }
 }
@@ -191,16 +214,18 @@ async function record(
   admin: Admin,
   paymentId: string,
   kind: Kind,
+  seq: number,
   amount: number,
   status: "issued" | "failed" | "skipped",
   res?: { id: number; sequence_number: string | null; permalink: string | null },
   error?: string,
 ) {
-  const { data: prev } = await admin.from("commission_invoices").select("attempts").eq("payment_id", paymentId).eq("kind", kind).maybeSingle();
+  const { data: prev } = await admin.from("commission_invoices").select("attempts").eq("payment_id", paymentId).eq("kind", kind).eq("seq", seq).maybeSingle();
   const attempts = ((prev as { attempts?: number } | null)?.attempts ?? 0) + (status === "failed" ? 1 : 0);
   await admin.from("commission_invoices").upsert({
     payment_id: paymentId,
     kind,
+    seq,
     amount,
     status,
     provider_id: res?.id ?? null,
@@ -209,28 +234,32 @@ async function record(
     error: error ?? null,
     attempts: Math.max(attempts, 1),
     updated_at: new Date().toISOString(),
-  }, { onConflict: "payment_id,kind" });
+  }, { onConflict: "payment_id,kind,seq" }).then(({ error }: { error: { message: string } | null }) => {
+    if (error) console.error("commission_invoices upsert failed", paymentId, kind, error.message);
+  });
 }
 
-async function issuedDoc(admin: Admin, paymentId: string, kind: Kind): Promise<{ amount: number; providerId: number | null }> {
-  const { data } = await admin.from("commission_invoices").select("amount, provider_id").eq("payment_id", paymentId).eq("kind", kind).maybeSingle();
-  const d = (data ?? {}) as { amount?: number; provider_id?: number | null };
-  return { amount: Number(d.amount ?? 0), providerId: d.provider_id ?? null };
-}
-
-// Organizador: particular, sem NIF guardado → "Consumidor final".
+// Organizador: NIF e nome opcionais (migração 132, Definições → Dados de
+// faturação); sem NIF → "Consumidor final" (999999990).
 async function organizerClient(admin: Admin, profileId: string | null): Promise<Client> {
   let name = "Consumidor final";
   let email: string | null = null;
+  let nif = "999999990";
   if (profileId) {
     const { data: prof } = await admin.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
     name = (prof as { full_name?: string } | null)?.full_name?.trim() || name;
+    const { data: bill } = await admin.from("billing_details").select("nif, name").eq("profile_id", profileId).maybeSingle();
+    const b = (bill ?? {}) as { nif?: string | null; name?: string | null };
+    if (b.nif && /^[0-9]{9}$/.test(b.nif)) nif = b.nif;
+    if (b.name?.trim()) name = b.name.trim();
     try {
       const { data } = await admin.auth.admin.getUserById(profileId);
       email = data.user?.email ?? null;
     } catch (_) { /* sem email: emite na mesma, não envia */ }
   }
-  return { name, code: `org-${profileId ?? "anon"}`, email, fiscal_id: "999999990" };
+  // Código por NIF: o InvoiceXpress guarda o cliente pelo código, e o NIF
+  // não pode mudar num cliente já faturado.
+  return { name, code: `org-${profileId ?? "anon"}-${nif}`, email, fiscal_id: nif };
 }
 
 // Parceiro: empresa/profissional com NIF (partner_verification.tax_id).

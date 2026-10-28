@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/billing/billing_details.dart';
 import '../../../core/models/models.dart';
 import '../../../core/moderation/moderation.dart';
 import '../../../core/partner_profile/partner_location.dart';
@@ -731,6 +732,14 @@ class _AccountSection extends ConsumerWidget {
           label: 'Mudar password',
           onTap: () => _resetPassword(context, ref, profile.email),
         ),
+        // NIF opcional nas faturas da taxa de serviço (migração 132).
+        if (profile.role == UserRole.couple)
+          _Row(
+            icon: Icons.receipt_long_outlined,
+            label: 'Dados de faturação',
+            value: ref.watch(billingDetailsProvider).value?.nif ?? 'Consumidor final',
+            onTap: () => _editBilling(context, ref),
+          ),
         // Pessoas bloqueadas (migração 130, exigência das lojas).
         if ((ref.watch(blockedProfilesProvider).value ?? const <String>{}).isNotEmpty)
           _Row(
@@ -748,6 +757,57 @@ class _AccountSection extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _editBilling(BuildContext context, WidgetRef ref) async {
+    final current = ref.read(billingDetailsProvider).value ?? const BillingDetails();
+    final nif = TextEditingController(text: current.nif ?? '');
+    final name = TextEditingController(text: current.name ?? '');
+    String? error;
+    final ok = await showIslandDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => IslandAlert(
+          title: const Text('Dados de faturação'),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Text(
+              'Opcional. Aparecem nas faturas da taxa de serviço. Sem NIF, a fatura sai como consumidor final.',
+              style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.35),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: nif,
+              keyboardType: TextInputType.number,
+              maxLength: 9,
+              decoration: InputDecoration(labelText: 'NIF', errorText: error, counterText: ''),
+            ),
+            TextField(controller: name, decoration: const InputDecoration(labelText: 'Nome na fatura (opcional)')),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
+            FilledButton(
+              onPressed: () {
+                final v = nif.text.trim();
+                if (v.isNotEmpty && !isValidNif(v)) {
+                  setState(() => error = 'NIF inválido');
+                  return;
+                }
+                Navigator.of(ctx).pop(true);
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await saveBillingDetails(ref, nif: nif.text, name: name.text);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar.')));
+      }
+    }
   }
 
   Future<void> _blockedList(BuildContext context, WidgetRef ref) async {
