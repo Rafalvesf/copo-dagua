@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/auth/google_web_button.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/auth_ui.dart';
 import '../../../shared/widgets/feedback.dart';
@@ -119,11 +120,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           },
         ),
         const AuthOrDivider(),
-        AuthSocialButton(
-          label: 'Continuar com Google',
-          badge: const Text('G', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          onPressed: () => ref.read(authControllerProvider.notifier).signInWithProvider(OAuthProvider.google),
-        ),
+        googleWebButton(
+              onCredential: (token, nonce) => ref.read(authControllerProvider.notifier).signInWithGoogleIdToken(token, nonce),
+            ) ??
+            AuthSocialButton(
+              label: 'Continuar com Google',
+              badge: const Text('G', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              onPressed: () => ref.read(authControllerProvider.notifier).signInWithProvider(OAuthProvider.google),
+            ),
         AuthSocialButton(
           label: 'Continuar com Apple',
           badge: const Icon(Icons.apple, size: 14, color: AppTheme.ink),
