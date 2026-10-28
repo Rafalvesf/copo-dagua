@@ -1,0 +1,158 @@
+
+::group::✅ Passing tests
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/exports_files_test.dart: gera relatórios
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 00 boas-vindas
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 01 login
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 02 tipo de conta
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 03 registo
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 04 onboarding
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 04 onboarding passo 2
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 04 onboarding passo 3
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 04 onboarding passo 4
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 04 onboarding passo 5
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 04 onboarding passo 6
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 04 onboarding passo 7
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 10_casal_perfil
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 11_casal_casamento
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 12_casal_tarefas
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 13_casal_checklist
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 14_casal_orcamento
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 15_casal_convidados
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 16_casal_convidado
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 17_casal_lugares
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 18_casal_parceiros
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 19_casal_chat
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 21_casal_galeria
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 22_casal_calendario
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 23_casal_reservas
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 24_casal_definicoes
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 25_casal_suporte
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 26_casal_servicos
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 28_casal_para_convidados
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 20_casal_conversa
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 27_casal_parceiro_folha
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 30_parceiro_painel
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 31_parceiro_pedidos
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 33_parceiro_mensagens
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 35_parceiro_calendario
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 36_parceiro_perfil
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 37_parceiro_pagamentos
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 37b_parceiro_dados_stripe
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 38_parceiro_contratos
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 39_parceiro_resultados
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 40_parceiro_avaliacoes
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 41_parceiro_precos
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 42_parceiro_portefolio
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 43_parceiro_negocio
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 44_parceiro_mesas
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 47_parceiro_disponibilidade
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 48_parceiro_localizacao
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 32_parceiro_pedido
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 34_parceiro_conversa
+::endgroup::
+::group::✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 45_parceiro_proposta
+[45_parceiro_proposta] 1 erro(s) de layout/render:
+ListTile background color or ink splashes may be invisible.
+The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those effects.
+To fix this, wrap the ListTile in its own Material widget, or remove the background color from the intermediate DecoratedBox.
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 50_convidado_inicio
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 51_convidado_galeria
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 52_convidado_perfil
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 53_convidado_presentes
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 56_convidado_eventos
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 55 convidado onboarding 1
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 55 convidado onboarding 2
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 55 convidado onboarding 3
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 55 convidado onboarding 4
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 55 convidado onboarding 5
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 55 convidado onboarding 6
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 1
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 2
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 3
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 4
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 5
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 6
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 7
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 8
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 9
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 10
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 11
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 46 parceiro onboarding 12
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 54_convidado_detalhes
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 60_sub_editar_evento
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 61_sub_novo_convidado
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 62_sub_nova_despesa
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 63_sub_categoria
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 64_sub_nova_tarefa
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 65_sub_checklist_nova
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 66_sub_mesa
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 67_sub_reserva
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 68_sub_suporte_novo
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 69_sub_partilhar
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 70_sub_modo_convidado
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 71_sub_editar_convidado
+::endgroup::
+::group::✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 72_sub_pacote
+[72_sub_pacote] 1 erro(s) de layout/render:
+ListTile background color or ink splashes may be invisible.
+The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those effects.
+To fix this, wrap the ListTile in its own Material widget, or remove the background color from the intermediate DecoratedBox.
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 73_sub_negocio_editar
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 74_sub_bloquear_data
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 75_sub_mesa_local
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 76_sub_avaliacao
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 77_sub_tua_mesa
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 78_sub_editar_eu
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 79_sub_icone_barra
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 80_sub_nome
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 81_sub_pedir_orcamento
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 83_verificar_email
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 84_rsvp_publico
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 84b_rsvp_percurso
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 84c_rsvp_instalar_app
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 85_convite_publico
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 86_convite_individual
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 87_juntar_par
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 11b_menu_autocolantes
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 11c_menu_mural
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 11f_menu_classico_pastel
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 11d_menu_estendal
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_classic_eucalyptus
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_classic_pink
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_classic_blue
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_classic_gold
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_stickers_eucalyptus
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_stickers_pink
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_stickers_blue
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_stickers_gold
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_mural_eucalyptus
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_mural_pink
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_mural_blue
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_mural_gold
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_clothesline_eucalyptus
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_clothesline_pink
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_clothesline_blue
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 90_menu_clothesline_gold
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 95_menu_tipo_wedding
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 95_menu_tipo_baptism
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 95_menu_tipo_birthday
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 95_menu_tipo_communion
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 95_menu_tipo_engagement
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 95_menu_tipo_vowRenewal
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 95_menu_tipo_graduation
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 95_menu_tipo_corporate
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 95_menu_tipo_babyShower
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 95_menu_tipo_other
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 91_publicacoes
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 88_manutencao
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 57_convidado_acompanhante
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 93_transicao_navbar
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 94_transicao_botao
+✅ /home/runner/work/copo-dagua/copo-dagua/mobile-app/app/test/screenshots/app_screens_test.dart: 82_esqueci_password
+::endgroup::
+
+🎉 139 tests passed.
