@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../core/notifications/push.dart';
@@ -41,7 +42,9 @@ class _PushOptInCardState extends State<PushOptInCard> {
         ),
       PushStatus.denied => (
           'Notificações bloqueadas',
-          'Bloqueaste as notificações neste browser. Para as receber, permite-as nas definições do site.',
+          kIsWeb
+              ? 'Bloqueaste as notificações neste browser. Para as receber, permite-as nas definições do site.'
+              : 'Bloqueaste as notificações. Para as receber, abre as Definições do telemóvel → À Nossa! → Notificações.',
           false,
         ),
       PushStatus.iosInstall => (

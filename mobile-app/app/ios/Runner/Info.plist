@@ -19,6 +19,10 @@
 	<string>Para escolheres fotografias e vídeos para o evento e o teu perfil.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Para mostrar parceiros perto de ti e a localização do teu negócio.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>FlutterDeepLinkingEnabled</key>
 	<false/>
 	<key>ITSAppUsesNonExemptEncryption</key>
