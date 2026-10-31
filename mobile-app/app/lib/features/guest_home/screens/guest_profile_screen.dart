@@ -497,7 +497,7 @@ class _Segmented extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return V2Segment(
-      options: [going ? 'Vou ✓' : 'Vou', going ? 'Não vou' : 'Não vou ✓'],
+      options: const ['Vou', 'Não vou'],
       selected: going ? 0 : 1,
       onChanged: (i) => onChanged(i == 0),
     );

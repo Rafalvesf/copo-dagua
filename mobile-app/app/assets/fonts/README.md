@@ -1,6 +1,8 @@
-# Fonte — Aeonik (trial)
+# Fontes
 
-Os ficheiros `.otf` nesta pasta são a versão **trial** da fonte Aeonik (CoType Foundry), usada só para prototipagem/teste local desta app.
+- **Louis George Café** (`louis_george_cafe/`): fonte principal da app. Grátis para uso pessoal e comercial (ver `LICENSE.txt`).
+- **Roboto** (`roboto/`): fallback para os caracteres que a Louis George Café não tem (o Bold não tem travessão nem reticências, por exemplo).
 
-- Licença trial: normalmente cobre apenas avaliação/uso pessoal, não produção comercial. Ver `CoType-EULA-Trial.pdf` na pasta de download original (`Downloads/aeonik-trial/`) para os termos exatos.
-- Antes de qualquer lançamento público ou uso comercial da app, é preciso comprar a licença de produção correta (e confirmar se se pretende "Aeonik" ou especificamente "Aeonik Soft" — são cortes diferentes; só o primeiro está aqui).
+Nenhuma das duas tem `✓` nem `→`: nos textos da app usa-se um ícone (`Icons.check`, `Icons.arrow_forward`) em vez destes caracteres.
+
+As fontes Aeonik (trial, sem licença comercial) foram retiradas em 2026-10-31.

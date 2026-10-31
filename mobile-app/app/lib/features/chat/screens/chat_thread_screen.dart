@@ -222,10 +222,10 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
 
   /// Texto do botão depois de aceite, conforme o pagamento da reserva.
   String get _acceptedLabel => switch (_bookingState) {
-        'deposit_paid' => 'Sinal pago ✓',
+        'deposit_paid' => 'Sinal pago',
         'final_due' => 'Pagar restante',
-        'paid' => 'Tudo pago ✓',
-        'completed' => 'Concluído ✓',
+        'paid' => 'Tudo pago',
+        'completed' => 'Concluído',
         'cancelled' => 'Reserva cancelada',
         _ => 'Aceite · pagar sinal',
       };

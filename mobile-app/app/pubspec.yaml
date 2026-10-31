@@ -96,7 +96,6 @@ flutter:
   # Ficheiros gerados a partir do Roboto variável de google/fonts
   # (OFL, ver assets/fonts/roboto/OFL.txt), instanciados por peso e
   # reduzidos a Latin + Latin-1 + Latin Extended-A + pontuação/€.
-  # Os ficheiros Aeonik trial em assets/fonts/ continuam por usar.
   fonts:
     # Fonte principal da app (redesign 2026-10): Louis George Café,
     # grátis para uso pessoal e comercial (assets/fonts/louis_george_cafe/

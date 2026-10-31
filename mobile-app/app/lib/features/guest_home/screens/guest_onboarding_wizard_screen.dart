@@ -1153,7 +1153,7 @@ class _ConfirmedView extends StatelessWidget {
                     delay: const Duration(milliseconds: 1200),
                     child: ShineSweep(
                       delay: const Duration(milliseconds: 1600),
-                      child: AuthPrimaryButton(label: rsvp ? 'Instalar a app' : 'Ver o evento →', onPressed: onContinue),
+                      child: AuthPrimaryButton(label: rsvp ? 'Instalar a app' : 'Ver o evento', onPressed: onContinue),
                     ),
                   ),
                 ],
