@@ -112,8 +112,8 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
           progress: s.groupsDone / total,
           doodles: const [Icons.verified_user_outlined, Icons.euro_rounded, Icons.auto_awesome_outlined],
           footer: Wrap(spacing: 6, runSpacing: 6, children: [
-            HeroPill(s.chargesEnabled ? 'Recebe pagamentos ✓' : 'Recebe pagamentos', solid: s.chargesEnabled),
-            HeroPill(s.payoutsEnabled ? 'Levantamentos ✓' : 'Levantamentos', solid: s.payoutsEnabled),
+            HeroPill(s.chargesEnabled ? 'Recebe pagamentos · ativo' : 'Recebe pagamentos', solid: s.chargesEnabled),
+            HeroPill(s.payoutsEnabled ? 'Levantamentos · ativo' : 'Levantamentos', solid: s.payoutsEnabled),
           ]),
         ),
         const SizedBox(height: 16),

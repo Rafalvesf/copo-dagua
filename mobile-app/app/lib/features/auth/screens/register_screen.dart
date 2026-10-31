@@ -296,7 +296,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Text(
-                '✓ Vais juntar-te ao evento de $_foundWeddingNames',
+                'Vais juntar-te ao evento de $_foundWeddingNames',
                 style: const TextStyle(color: AppStatusColors.confirmed, fontSize: 12, fontWeight: FontWeight.w700),
               ),
             ),

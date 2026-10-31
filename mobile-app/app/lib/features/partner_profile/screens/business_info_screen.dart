@@ -152,7 +152,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
             // Mesmo cabeçalho centrado das outras páginas do parceiro
             // (revisão 2026-10-17).
             const PageHeader(
-              title: 'Informações do negócio',
+              title: 'O teu negócio',
               subtitle: 'O que os casais veem sobre ti.',
               centered: true,
             ),

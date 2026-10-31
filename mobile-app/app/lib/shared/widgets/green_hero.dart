@@ -40,7 +40,7 @@ class GreenHero extends StatelessWidget {
           if (doodles.isNotEmpty)
             Positioned(right: 18, top: 16, child: Transform.rotate(angle: 0.24, child: Icon(doodles[0], size: 26, color: faded))),
           if (doodles.length > 1)
-            Positioned(right: 70, bottom: 18, child: Transform.rotate(angle: -0.2, child: Icon(doodles[1], size: 22, color: faded))),
+            Positioned(right: 64, top: 22, child: Transform.rotate(angle: -0.2, child: Icon(doodles[1], size: 20, color: faded))),
           if (doodles.length > 2)
             Positioned(right: 150, top: 12, child: Transform.rotate(angle: 0.14, child: Icon(doodles[2], size: 16, color: faded))),
           Padding(

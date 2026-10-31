@@ -302,7 +302,8 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             InitialsAvatar(
               name: guest.name,
               radius: 36,
-              background: AppTheme.surface,
+              // Branco (como nas listas): na cor do fundo o círculo não se via.
+              background: Colors.white,
               foreground: AppTheme.ink,
             ),
             const SizedBox(width: 16),
