@@ -112,10 +112,10 @@ class _BugReportFormState extends ConsumerState<_BugReportForm> {
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-          const Row(children: [
+          Row(children: [
             Icon(Icons.bug_report_outlined, color: AppTheme.accentOliveDark),
-            SizedBox(width: 10),
-            Text('Reportar um erro', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(width: 10),
+            const Text('Reportar um erro', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ]),
           const SizedBox(height: 6),
           const Text('Conta-nos o que correu mal. Juntamos o ecrã onde estavas para o encontrarmos mais depressa.',
@@ -282,7 +282,7 @@ class _RatingFormState extends State<_RatingForm> {
           ]),
           SizedBox(
             height: 22,
-            child: Text(_labels[_stars], style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+            child: Text(_labels[_stars], style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
           ),
           if (_stars > 0) ...[
             const SizedBox(height: 10),
