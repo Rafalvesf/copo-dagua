@@ -203,7 +203,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                   const V2RowCard(
                     lead: StickerIcon(Icons.inbox_outlined),
                     title: 'Sem pedidos novos por agora',
-                    sub: 'Avisamos-te assim que um casal te contactar.',
+                    sub: 'Avisamos-te assim que um cliente te contactar.',
                   )
                 else
                   for (final booking in newRequests.take(3)) ...[

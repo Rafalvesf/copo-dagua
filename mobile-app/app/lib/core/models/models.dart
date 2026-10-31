@@ -62,6 +62,22 @@ enum EventType {
   /// Valores que a base de dados aceita antes da migração 081.
   bool get legacy => this == EventType.wedding || this == EventType.baptism || this == EventType.birthday || this == EventType.other;
 
+  /// Quem pede/contrata, visto pelo parceiro: "o casal" num casamento,
+  /// "a família" num batizado, "a empresa" num evento de empresa…
+  /// (2026-10-31: a app não é só para casamentos).
+  String get client => switch (this) {
+        EventType.wedding || EventType.engagement || EventType.vowRenewal => 'o casal',
+        EventType.baptism || EventType.communion || EventType.babyShower => 'a família',
+        EventType.corporate => 'a empresa',
+        _ => 'o cliente',
+      };
+
+  /// "do casal", "da família", "da empresa", "do cliente".
+  String get ofClient => client.startsWith('a ') ? 'da ${client.substring(2)}' : 'do ${client.substring(2)}';
+
+  /// "O casal", "A família"… (início de frase).
+  String get clientCap => '${client[0].toUpperCase()}${client.substring(1)}';
+
   static EventType fromDb(String? value) => EventType.values.firstWhere(
         (t) => t.dbValue == value,
         orElse: () => EventType.wedding,
@@ -831,6 +847,10 @@ class Booking {
   final BookingStatus status;
   final String? messageFromCouple;
 
+  /// Tipo de evento do pedido (`weddings.event_type`) — muda os textos do
+  /// lado do parceiro ("O casal…", "A família…").
+  final EventType eventType;
+
   /// Foto do casal (`weddings.profile_photo_url`, senão a capa) — PFP
   /// em toda a app (2026-10-20).
   final String? clientAvatarUrl;
@@ -865,9 +885,11 @@ class Booking {
     this.fromQuoteRequest = false,
     this.proposalSent = false,
     this.clientAvatarUrl,
+    this.eventType = EventType.wedding,
   });
 
   Booking copyWith({BookingStatus? status}) => Booking(
+    eventType: eventType,
     clientAvatarUrl: clientAvatarUrl,
     id: id,
     partnerId: partnerId,

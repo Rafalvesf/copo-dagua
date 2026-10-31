@@ -154,7 +154,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
             ? 'Este pedido já teve uma proposta enviada ou já não está disponível.'
             // `P0008` = `already_booked_with_partner` (migração 102).
             : e.code == 'P0008'
-                ? 'Este casal já tem uma reserva contigo. Só podes enviar outra proposta se essa for cancelada sem o sinal pago.'
+                ? 'Este cliente já tem uma reserva contigo. Só podes enviar outra proposta se essa for cancelada sem o sinal pago.'
                 : 'Não foi possível enviar a proposta.';
       });
     } catch (_) {

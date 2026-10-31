@@ -153,7 +153,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
             // (revisão 2026-10-17).
             const PageHeader(
               title: 'O teu negócio',
-              subtitle: 'O que os casais veem sobre ti.',
+              subtitle: 'O que os clientes veem sobre ti.',
               centered: true,
             ),
             Expanded(

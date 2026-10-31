@@ -94,7 +94,7 @@ class PartnerReviewsScreen extends ConsumerWidget {
           children: [
             PageHeader(
               title: 'Avaliações',
-              subtitle: 'O que os casais dizem sobre ti.',
+              subtitle: 'O que os clientes dizem sobre ti.',
               trailing: const AccountSwitcherBadge(),
             ),
             const SizedBox(height: 12),
@@ -113,7 +113,7 @@ class PartnerReviewsScreen extends ConsumerWidget {
                       const Padding(
                         padding: EdgeInsets.all(24),
                         child: InfoNote(
-                          'Ainda não tens avaliações — aparecem aqui assim que um casal avaliar uma reserva concluída.',
+                          'Ainda não tens avaliações — aparecem aqui assim que um cliente avaliar uma reserva concluída.',
                           icon: Icons.star_outline_rounded,
                         ),
                       )
@@ -122,7 +122,7 @@ class PartnerReviewsScreen extends ConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12, left: 4),
                           child: Text(
-                            '${reviews.where((r) => r.response == null).length} por responder — responder mostra aos casais que te importas.',
+                            '${reviews.where((r) => r.response == null).length} por responder — responder mostra aos clientes que te importas.',
                             style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
                           ),
                         ),

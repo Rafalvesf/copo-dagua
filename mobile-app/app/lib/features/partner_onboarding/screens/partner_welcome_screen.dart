@@ -635,7 +635,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
       case _Step.businessName:
         return _StepScaffold(
           question: 'Como se chama o vosso negócio?',
-          subtitle: 'É o nome que os casais vão ver.',
+          subtitle: 'É o nome que os clientes vão ver.',
           child: AuthTextField(
             label: 'Nome do negócio',
             controller: _businessName,
@@ -739,7 +739,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
       case _Step.logo:
         return _StepScaffold(
           question: 'Logótipo do negócio',
-          subtitle: 'Obrigatório — é assim que os casais te reconhecem na plataforma.',
+          subtitle: 'Obrigatório — é assim que os clientes te reconhecem na plataforma.',
           child: Center(
             child: Column(
               children: [
@@ -797,7 +797,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
           question: 'Mostrem o vosso trabalho',
           subtitle: images.length >= _minPortfolioImages
               ? 'Já têm as $_minPortfolioImages fotos. Podem juntar mais.'
-              : 'Pelo menos $_minPortfolioImages fotos. São a primeira coisa que os casais veem.',
+              : 'Pelo menos $_minPortfolioImages fotos. São a primeira coisa que os clientes veem.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -1000,7 +1000,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
       case _Step.yearsExperience:
         return _StepScaffold(
           question: 'Há quantos anos trabalhas nisto?',
-          subtitle: 'Opcional, mas ajuda os casais a confiar em ti.',
+          subtitle: 'Opcional, mas ajuda os clientes a confiar em ti.',
           child: AuthTextField(
             label: 'Anos de experiência',
             controller: _yearsExperience,
@@ -1011,7 +1011,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
       case _Step.instagram:
         return _StepScaffold(
           question: 'Tens Instagram do negócio?',
-          subtitle: 'Opcional, mas ajuda os casais a ver o teu trabalho.',
+          subtitle: 'Opcional, mas ajuda os clientes a ver o teu trabalho.',
           child: AuthTextField(
             label: 'Instagram',
             controller: _instagram,
@@ -1054,7 +1054,7 @@ class _IntroView extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Faltam só alguns passos rápidos para os casais te '
+                        'Faltam só alguns passos rápidos para os clientes te '
                         'poderem encontrar — nome do negócio, categoria, '
                         'logótipo, portefólio de fotos, descrição, área '
                         'de serviço, NIF e preços, mais dois passos '
@@ -1353,7 +1353,7 @@ class _SentViewState extends State<_SentView> {
                   const UpIn(
                     delay: Duration(milliseconds: 1450),
                     child: Text(
-                      'A equipa revê o perfil e fica visível aos casais assim que estiver aprovado.',
+                      'A equipa revê o perfil e fica visível aos clientes assim que estiver aprovado.',
                       style: TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
                     ),
                   ),

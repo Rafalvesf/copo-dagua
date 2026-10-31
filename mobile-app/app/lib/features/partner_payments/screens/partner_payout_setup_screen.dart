@@ -59,7 +59,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
             if (!s.active)
               (Icons.hourglass_top_rounded, 'A verificação costuma demorar minutos, às vezes 1–2 dias úteis.'),
             if (s.bankLast4 != null) (Icons.account_balance_outlined, 'IBAN terminado em ${s.bankLast4}'),
-            (Icons.payments_outlined, 'Os sinais pagos pelos casais ficam no teu saldo para levantares.'),
+            (Icons.payments_outlined, 'Os sinais pagos pelos clientes ficam no teu saldo para levantares.'),
           ],
           primaryLabel: 'Ver pagamentos',
           primaryRoute: '/partner-payments',

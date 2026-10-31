@@ -77,7 +77,7 @@ final partnerContractsProvider = FutureProvider<List<PartnerContract>>((ref) asy
           number: r['booking_number'] == null
               ? null
               : bookingRef(r['booking_number'], ((r['partner_profiles'] as Map?)?['business_name'] ?? '').toString()),
-          couple: n1.isEmpty ? 'Casal' : (n2.isEmpty ? n1 : '$n1 & $n2'),
+          couple: n1.isEmpty ? 'Cliente' : (n2.isEmpty ? n1 : '$n1 & $n2'),
           coupleAvatarUrl: (w?['profile_photo_url'] as String?) ?? (w?['cover_photo_url'] as String?),
           date: r['event_date'] == null ? null : DateTime.parse(r['event_date'] as String),
           place: (w?['venue'] as String?)?.isNotEmpty == true ? w!['venue'] as String : w?['location'] as String?,
@@ -238,7 +238,7 @@ class _ContractCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(height: 14),
-                row('Casal', c.couple),
+                row('Cliente', c.couple),
                 row('Serviço', c.title),
                 if (c.date != null) row('Data', formatWeddingDateCaps(c.date!)),
                 if (c.place?.isNotEmpty == true) row('Local', c.place!),
@@ -254,7 +254,7 @@ class _ContractCard extends StatelessWidget {
                     context.go('/partner-messages');
                   },
                   icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                  label: const Text('Falar com o casal'),
+                  label: const Text('Falar com o cliente'),
                 ),
               ],
             ),
@@ -285,7 +285,7 @@ class _Empty extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Quando um casal aceitar uma proposta tua, o contrato aparece aqui com o valor, as condições e os pagamentos.',
+              'Quando um cliente aceitar uma proposta tua, o contrato aparece aqui com o valor, as condições e os pagamentos.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: AppFontSize.base, height: 1.5, color: AppTheme.inkMuted),
             ),
