@@ -123,8 +123,8 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                         ? Wrap(spacing: 8, runSpacing: 8, children: [
                             HeroPill(booking.proposalSent ? 'Proposta enviada' : 'Por responder', solid: true),
                             HeroPill(booking.proposalSent
-                                ? 'A aguardar resposta ${booking.eventType.ofClient}'
-                                : '${booking.eventType.clientCap} espera a tua proposta'),
+                                ? 'A aguardar resposta do cliente'
+                                : 'O cliente espera a tua proposta'),
                           ])
                         : null,
                   ),
@@ -150,8 +150,8 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                         Row(children: [
                           StickerIcon(Icons.chat_bubble_outline, size: 36, turns: StickerIcon.tilt(2)),
                           const SizedBox(width: 10),
-                          Text('Mensagem ${booking.eventType.ofClient}',
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          const Text('Mensagem do cliente',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                         ]),
                         const SizedBox(height: 8),
                         Text('“${booking.messageFromCouple!.trim()}”',
