@@ -246,6 +246,9 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
           Expanded(
             child: PageView.builder(
               controller: _layoutPager,
+              // Sem cortar: a página ao lado (e o contorno) aparecem
+              // inteiros nas margens em vez de terminarem num risco.
+              clipBehavior: Clip.none,
               itemCount: MenuLayout.values.length,
               onPageChanged: (i) {
                 HapticFeedback.selectionClick();
@@ -257,20 +260,25 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                   final pager = _layoutPager!;
                   final page = pager.hasClients && pager.position.haveDimensions ? (pager.page ?? _layout.toDouble()) : _layout.toDouble();
                   final d = (page - i).abs().clamp(0.0, 1.0);
-                  return Transform.scale(scale: 1 - d * 0.08, child: Opacity(opacity: 1 - d * 0.35, child: child));
+                  return Transform.scale(scale: 1 - d * 0.08, child: Opacity(opacity: 1 - d * 0.45, child: child));
                 },
                 // A página real, encolhida e sem toques (só se desliza).
+                // Sem sombra (2026-10-31: ficava cortada e suja nas
+                // margens): só um contorno fino, como um ecrã de telemóvel.
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(34),
-                      boxShadow: const [BoxShadow(color: Color(0x2E171713), blurRadius: 30, offset: Offset(0, 12))],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(34),
-                      child: ColoredBox(
-                        color: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: DecoratedBox(
+                      // O mesmo fundo da página do evento.
+                      decoration: const BoxDecoration(gradient: AppGradients.feed),
+                      position: DecorationPosition.background,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: i == _layout ? color.accent.withValues(alpha: 0.55) : AppTheme.borderMuted, width: i == _layout ? 2 : 1),
+                        ),
+                        position: DecorationPosition.foreground,
                         child: IgnorePointer(
                           child: FittedBox(
                             fit: BoxFit.fitWidth,
@@ -282,9 +290,9 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                                 alignment: Alignment.topCenter,
                                 maxHeight: double.infinity,
                                 child: _StylePreview(
-                                style: EventMenuStyle(MenuLayout.values[i], color),
-                                child: _PageBody(wedding: wedding, layout: MenuLayout.values[i], scrollable: false),
-                              ),
+                                  style: EventMenuStyle(MenuLayout.values[i], color),
+                                  child: _PageBody(wedding: wedding, layout: MenuLayout.values[i], scrollable: false),
+                                ),
                               ),
                             ),
                           ),
@@ -332,24 +340,22 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                         ? _finish(save: true)
                         : _colorPager!.animateToPage(i, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic),
                     child: Center(
+                      // Sem sombras (2026-10-31): a escolhida tem um anel na
+                      // cor de destaque, as outras um contorno fino.
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         curve: Curves.easeOutBack,
-                        width: selected ? 60 : 40,
-                        height: selected ? 60 : 40,
+                        width: selected ? 58 : 40,
+                        height: selected ? 58 : 40,
+                        padding: EdgeInsets.all(selected ? 4 : 0),
                         decoration: BoxDecoration(
-                          color: c.color,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: selected ? c.accent : const Color(0x22171713),
-                              spreadRadius: selected ? 2 : 0,
-                              blurRadius: selected ? 0 : 8,
-                            ),
-                          ],
+                          border: Border.all(color: selected ? c.accent : AppTheme.borderMuted, width: selected ? 2.5 : 1),
                         ),
-                        child: selected ? Icon(Icons.check, color: c.on, size: 22) : null,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(color: c.color, shape: BoxShape.circle),
+                          child: selected ? Center(child: Icon(Icons.check, color: c.on, size: 22)) : null,
+                        ),
                       ),
                     ),
                   ),
