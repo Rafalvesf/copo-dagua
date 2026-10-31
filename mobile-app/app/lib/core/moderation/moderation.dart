@@ -151,3 +151,68 @@ Future<void> unblockProfile(WidgetRef ref, String profileId) async {
   await supabase.from('user_blocks').delete().eq('blocker_id', me).eq('blocked_id', profileId);
   ref.invalidate(blockedProfilesProvider);
 }
+
+
+/// Uma mensagem de outra pessoa que se pode denunciar a partir do
+/// cabeçalho da conversa.
+class ReportableMessage {
+  final String id;
+  final String text;
+  final String? authorId;
+  final String? authorName;
+  const ReportableMessage({required this.id, required this.text, this.authorId, this.authorName});
+}
+
+/// Botão "Denunciar" do cabeçalho das conversas: mostra as mensagens
+/// recentes da outra parte para escolher qual denunciar (mais recente
+/// primeiro). Sem mensagens da outra parte, explica que não há o que
+/// denunciar.
+Future<void> showReportPicker(
+  BuildContext context,
+  WidgetRef ref, {
+  required ReportKind kind,
+  required List<ReportableMessage> recentFirst,
+  bool allowBlock = true,
+}) async {
+  if (recentFirst.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Ainda não há mensagens da outra pessoa para denunciar.')),
+    );
+    return;
+  }
+  final items = recentFirst.take(12).toList();
+  final picked = await showIslandSheet<ReportableMessage>(
+    context: context,
+    isScrollControlled: true,
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Que mensagem queres denunciar?',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 4),
+          const Text('Também podes tocar sem largar numa mensagem.',
+              style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          const SizedBox(height: 8),
+          Flexible(
+            child: ListView(shrinkWrap: true, children: [
+              for (final m in items)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.chat_bubble_outline, color: AppTheme.inkMuted),
+                  title: Text(m.text.trim().isEmpty ? 'Anexo' : m.text.trim(),
+                      maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.ink)),
+                  subtitle: m.authorName == null ? null : Text(m.authorName!),
+                  trailing: const Icon(Icons.flag_outlined, color: Color(0xFFB3261E)),
+                  onTap: () => Navigator.of(ctx).pop(m),
+                ),
+            ]),
+          ),
+        ]),
+      ),
+    ),
+  );
+  if (picked == null || !context.mounted) return;
+  await showModerationSheet(context, ref,
+      kind: kind, targetId: picked.id, authorId: picked.authorId, authorName: picked.authorName, allowBlock: allowBlock);
+}

@@ -710,6 +710,16 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                                         ],
                                       ),
                                     ),
+                                    // Visível (antes só com toque longo).
+                                    if (c.profileId != me)
+                                      IconButton(
+                                        tooltip: 'Denunciar ou bloquear',
+                                        visualDensity: VisualDensity.compact,
+                                        iconSize: 18,
+                                        icon: const Icon(Icons.more_horiz, color: AppTheme.inkMuted),
+                                        onPressed: () => showModerationSheet(context, ref,
+                                            kind: ReportKind.galleryComment, targetId: c.id, authorId: c.profileId, authorName: c.authorName),
+                                      ),
                                   ],
                                 ),
                               ),
