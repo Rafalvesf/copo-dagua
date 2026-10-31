@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/billing/billing_details.dart';
+import '../../../core/feedback/app_feedback.dart';
 import '../../../core/models/models.dart';
 import '../../../core/moderation/moderation.dart';
 import '../../../core/partner_profile/partner_location.dart';
@@ -224,6 +225,16 @@ class _HelpGroup extends ConsumerWidget {
           icon: Icons.support_agent_outlined,
           label: 'Falar com a equipa À Nossa!',
           onTap: () => context.push('/support'),
+        ),
+        _Row(
+          icon: Icons.bug_report_outlined,
+          label: 'Reportar um erro',
+          onTap: () => showBugReportSheet(context, ref),
+        ),
+        _Row(
+          icon: Icons.star_outline_rounded,
+          label: 'Classificar a app',
+          onTap: () => RatingPrompt.show(context, ref),
         ),
         _Row(icon: Icons.description_outlined, label: 'Termos e Condições', onTap: () => context.push('/termos')),
         _Row(icon: Icons.privacy_tip_outlined, label: 'Política de Privacidade', onTap: () => context.push('/privacidade')),

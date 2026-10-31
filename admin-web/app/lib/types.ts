@@ -359,7 +359,7 @@ export type Review = {
 // resolve-se nesta mesma aba — pedido explícito do utilizador, nunca um
 // módulo `admin-web/disputes/` separado.
 export type SupportTicketStatus = "open" | "pending" | "resolved";
-export type SupportTicketCategory = "general" | "dispute_delay";
+export type SupportTicketCategory = "general" | "dispute_delay" | "bug";
 
 export type SupportTicket = {
   id: string;

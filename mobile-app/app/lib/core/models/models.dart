@@ -1094,21 +1094,24 @@ extension SupportTicketStatusLabel on SupportTicketStatus {
   };
 }
 
-enum SupportTicketCategory { general, disputeDelay }
+enum SupportTicketCategory { general, disputeDelay, bug }
 
 extension SupportTicketCategoryLabel on SupportTicketCategory {
   String get label => switch (this) {
     SupportTicketCategory.general => 'Geral',
     SupportTicketCategory.disputeDelay => 'Disputa / atraso',
+    SupportTicketCategory.bug => 'Erro na app',
   };
 
   String toDb() => switch (this) {
     SupportTicketCategory.general => 'general',
     SupportTicketCategory.disputeDelay => 'dispute_delay',
+    SupportTicketCategory.bug => 'bug',
   };
 
   static SupportTicketCategory fromDb(String value) => switch (value) {
     'dispute_delay' => SupportTicketCategory.disputeDelay,
+    'bug' => SupportTicketCategory.bug,
     _ => SupportTicketCategory.general,
   };
 }

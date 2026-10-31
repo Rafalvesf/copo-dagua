@@ -277,6 +277,14 @@ class _NewTicketSheetState extends ConsumerState<_NewTicketSheet> {
                   onTap: () => setState(() => _category = SupportTicketCategory.disputeDelay),
                 ),
               ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _CategoryChip(
+                  label: 'Erro na app',
+                  selected: _category == SupportTicketCategory.bug,
+                  onTap: () => setState(() => _category = SupportTicketCategory.bug),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
