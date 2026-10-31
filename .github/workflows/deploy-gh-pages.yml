@@ -108,6 +108,14 @@ jobs:
           done
           cat "$DEST/version.txt" 2>/dev/null || echo "backup sem version.txt (anterior a esta mudança)"
 
+      # O Vercel (admin, pasta admin-web/app) tenta compilar todos os ramos;
+      # neste ramo não há admin e cada publicação dava "deployment failed"
+      # por email. Este vercel.json diz-lhe para saltar.
+      - name: Skip Vercel on gh-pages
+        run: |
+          mkdir -p build/web/admin-web/app
+          echo '{"ignoreCommand":"exit 0","git":{"deploymentEnabled":false}}' > build/web/admin-web/app/vercel.json
+
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:

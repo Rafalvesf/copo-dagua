@@ -61,6 +61,9 @@ jobs:
           mkdir -p "$out/files" && cp test/screenshots/goldens/*.pdf test/screenshots/goldens/*.xlsx "$out/files/" 2>/dev/null || true
           cp screenshots.log "$out/" 2>/dev/null || true
           cp tests.log "$out/" 2>/dev/null || true
+          # Sem isto o Vercel tentava compilar o admin neste ramo e falhava.
+          mkdir -p "$out/admin-web/app"
+          echo '{"ignoreCommand":"exit 0","git":{"deploymentEnabled":false}}' > "$out/admin-web/app/vercel.json"
           cd "$out"
           git init -q -b screenshots
           git config user.name "github-actions[bot]"
