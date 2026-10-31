@@ -906,6 +906,13 @@ void main() {
       }
     });
   }
+  // Escolher o estilo do menu (Definições → Aparência do menu).
+  testWidgets('11e_menu_aparencia', (t) => _shoot(t, '11e_menu_aparencia', couple, '/wedding?aparencia=1',
+      after: (t) async {
+        for (var i = 0; i < 10; i++) {
+          await t.pump(const Duration(milliseconds: 80));
+        }
+      }));
   // Os 4 estilos do menu em 4 cores (para o vídeo de apresentação).
   for (final layout in [MenuLayout.classic, MenuLayout.stickers, MenuLayout.mural, MenuLayout.clothesline]) {
     for (final color in ['eucalyptus', 'pink', 'blue', 'gold']) {
