@@ -323,7 +323,7 @@ class _RsvpCard extends StatelessWidget {
       RsvpStatus.pending => ('Ainda não respondeste', 'Diz aos anfitriões se vais', Icons.help_outline_rounded, false),
     };
     return SnappyTap(
-      onTap: () => context.go('/guest-profile/$weddingId'),
+      onTap: () => context.push('/guest-presenca/$weddingId'),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: softCard(),

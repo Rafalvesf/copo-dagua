@@ -11,9 +11,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/initials_avatar.dart';
-import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import 'guest_table_screen.dart';
 import '../../settings/screens/settings_screen.dart' show GuestAccountSections;
@@ -74,12 +72,6 @@ class GuestProfileScreen extends ConsumerWidget {
                 ),
               ],
             ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: GuestBottomNav(current: GuestTab.profile, weddingId: weddingId),
           ),
         ],
       ),
@@ -241,13 +233,20 @@ class _GuestProfileBody extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 140),
           children: [
             // Redesign 2026-10-19 (canvas "Convidado — perfil (redesign)").
-            const SizedBox(
+            SizedBox(
               height: 46,
-              child: Center(
-                child: Text(
-                  'Perfil',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: CircleBackButton(onTap: () => context.canPop() ? context.pop() : context.go('/eventos')),
+                  ),
+                  const Text(
+                    'A tua presença',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 18),
@@ -277,16 +276,8 @@ class _GuestProfileBody extends ConsumerWidget {
                           ),
                           const SizedBox(height: 6),
                           const Text(
-                            'Como organizas este evento, não tens resposta, menu nem mesa aqui.',
+                            'Como organizas este evento, não tens resposta, menu nem mesa aqui. Para voltar a organizar, usa o separador Eventos.',
                             style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-                          ),
-                          const SizedBox(height: 16),
-                          PrimaryButton(
-                            label: 'Voltar ao modo organizador',
-                            onPressed: () async {
-                              await ref.read(weddingControllerProvider.notifier).select(weddingId);
-                              if (context.mounted) context.go('/wedding');
-                            },
                           ),
                         ],
                       )

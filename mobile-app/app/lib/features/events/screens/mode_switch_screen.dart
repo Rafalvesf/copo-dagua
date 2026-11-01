@@ -18,6 +18,7 @@ class AppModeTracker {
     '/guest-gallery/',
     '/guest-gifts/',
     '/guest-profile/',
+    '/guest-presenca/',
     '/guest-onboarding/',
     '/guest-wedding-details',
   ];

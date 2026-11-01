@@ -344,13 +344,20 @@ final routerProvider = Provider<GoRouter>((ref) {
             GuestGiftsScreen(weddingId: state.pathParameters['weddingId']),
       ),
       tabRoute(
+        // Perfil igual ao do organizador (2026-11), com a barra de convidado.
         path: '/guest-profile',
-        builder: (context, state) => const GuestProfileScreen(),
+        builder: (context, state) => const HomeFeedScreen(guestMode: true),
       ),
       tabRoute(
         path: '/guest-profile/:weddingId',
         builder: (context, state) =>
-            GuestProfileScreen(weddingId: state.pathParameters['weddingId']),
+            HomeFeedScreen(guestMode: true, guestWeddingId: state.pathParameters['weddingId']),
+      ),
+      // Resposta, menu, acompanhantes e mesa de um evento (antigo perfil
+      // do convidado).
+      GoRoute(
+        path: '/guest-presenca/:weddingId',
+        builder: (context, state) => GuestProfileScreen(weddingId: state.pathParameters['weddingId']),
       ),
       GoRoute(
         // Alojamento e transporte para os convidados (099_guest_offers.sql).

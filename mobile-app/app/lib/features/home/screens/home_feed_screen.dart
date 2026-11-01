@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/feedback.dart';
-import '../../settings/screens/settings_screen.dart' show CoupleAccountSections;
+import '../../settings/screens/settings_screen.dart' show CoupleAccountSections, GuestAccountSections;
+import '../../../core/guest_home/guest_home_providers.dart';
+import '../../../shared/widgets/guest_bottom_nav.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,8 +28,17 @@ import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 /// conta". Foto/avatar, nome, email, atalhos para definições,
 /// notificações, galeria, suporte e terminar sessão. Os dados do
 /// casamento vivem no separador Casamento e em Definições.
+///
+/// Mesmo Perfil em modo organizador e em modo convidado (pedido
+/// 2026-11): só muda a barra de baixo e, como convidado, o atalho para
+/// a resposta/menu/mesa desse evento.
 class HomeFeedScreen extends ConsumerStatefulWidget {
-  const HomeFeedScreen({super.key});
+  /// Modo convidado: o evento que se está a ver (`null` numa conta só
+  /// de utilizador = o primeiro evento a que tem acesso).
+  final String? guestWeddingId;
+  final bool guestMode;
+
+  const HomeFeedScreen({super.key, this.guestWeddingId, this.guestMode = false});
 
   @override
   ConsumerState<HomeFeedScreen> createState() => _HomeFeedScreenState();
@@ -76,13 +87,17 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     final profile = ref.watch(
       authControllerProvider.select((s) => s.profile),
     );
+    final organizer = profile?.role == UserRole.couple;
+    final guestMode = widget.guestMode || !organizer;
+    final invited = guestMode ? (ref.watch(guestWeddingsProvider).value ?? const <GuestWedding>[]) : const <GuestWedding>[];
+    final presenceId = widget.guestWeddingId ?? invited.firstOrNull?.weddingId;
     final unreadNotifications = ref.watch(
       taskEngineControllerProvider.select((s) => s.unreadNotificationCount),
     );
 
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: wedding == null
+      body: profile == null || (organizer && wedding == null)
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
@@ -114,7 +129,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                             ),
                             // Sino no canto direito em vez da linha
                             // "Notificações" na lista (pedido 2026-10-17).
-                            Stack(
+                            if (wedding != null) Stack(
                               clipBehavior: Clip.none,
                               children: [
                                 TourAnchor(
@@ -148,16 +163,23 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                           email: profile?.email,
                           avatarUrl: profile?.avatarUrl,
                           createdWedding: profile != null &&
-                              wedding.ownerId == profile.id,
+                              wedding?.ownerId == profile.id,
                           uploading: _uploadingProfilePhoto,
                           onChangePhoto: _uploadingProfilePhoto
                               ? null
                               : _pickProfilePhoto,
                         ),
                         const SizedBox(height: 24),
+                        if (guestMode && presenceId != null) ...[
+                          _PresenceCard(onTap: () => context.push('/guest-presenca/$presenceId')),
+                          const SizedBox(height: 16),
+                        ],
                         const _SupportSummaryCard(),
                         // Definições da conta dentro do Perfil (2026-10-17).
-                        const CoupleAccountSections(help: false, signOut: false),
+                        if (organizer)
+                          const CoupleAccountSections(help: false, signOut: false)
+                        else
+                          const GuestAccountSections(help: false, signOut: false),
                         const SizedBox(height: 28),
                         const Text(
                           'Como podemos ajudar?',
@@ -241,14 +263,56 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                     ),
                   ),
                 ),
-                const Positioned(
+                Positioned(
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: FloatingBottomNav(current: AppTab.home),
+                  child: guestMode
+                      ? GuestBottomNav(current: GuestTab.profile, weddingId: widget.guestWeddingId)
+                      : const FloatingBottomNav(current: AppTab.home),
                 ),
               ],
             ),
+    );
+  }
+}
+
+/// Modo convidado: a resposta, o menu e a mesa desse evento.
+class _PresenceCard extends StatelessWidget {
+  final VoidCallback onTap;
+  const _PresenceCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SnappyTap(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.lg)),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: AppTheme.accentTint,
+              child: Icon(Icons.how_to_reg_outlined, color: AppTheme.accentOliveDark),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('A tua presença',
+                      style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  SizedBox(height: 2),
+                  Text('Resposta, menu, acompanhantes e mesa',
+                      style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: AppTheme.ink),
+          ],
+        ),
+      ),
     );
   }
 }
