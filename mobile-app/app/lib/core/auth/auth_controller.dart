@@ -129,8 +129,33 @@ class AuthController extends Notifier<AuthState> {
       state = const AuthState.unauthenticated();
       return;
     }
+    // Utilizador que tocou em "Criar um evento" e desistiu: volta a ser
+    // só utilizador (migração 141) em vez de sair da conta.
+    if (state.profile?.role == UserRole.couple) {
+      try {
+        await supabase.rpc('stop_organizing');
+        await reloadProfile();
+        if (state.profile?.role == UserRole.guest) return;
+      } catch (_) {}
+    }
     // Conta antiga a meio do onboarding (ex.: Google/Apple): só sai.
     await logout();
+  }
+
+  /// Volta a ler o perfil (ex.: depois de `become_organizer`) — o router
+  /// segue o novo estado (onboarding do evento ou área de utilizador).
+  Future<void> reloadProfile() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    final profile = await _loadProfile(user);
+    state = AuthState(status: AuthState.statusFor(profile), profile: profile);
+  }
+
+  /// "Criar um evento" de uma conta de utilizador: passa a organizar e
+  /// abre o assistente de criação (migração 141).
+  Future<void> becomeOrganizer() async {
+    await supabase.rpc('become_organizer');
+    await reloadProfile();
   }
 
   /// Cria a conta de verdade — chamado no último passo do onboarding,

@@ -11,7 +11,7 @@ import '../../core/wedding/menu_style.dart';
 import '../../core/wedding/wedding_controller.dart';
 import '../../core/models/models.dart';
 
-enum AppTab { home, partners, chat, wedding }
+enum AppTab { home, partners, chat, wedding, events }
 
 /// Raio dos cantos das navbars = raio do círculo do separador ativo mais
 /// a margem à volta (10 + 4 + 21), para os cantos ficarem concêntricos
@@ -87,6 +87,19 @@ class FloatingBottomNav extends ConsumerWidget {
                     accent: menuColor.color,
                     onAccent: menuColor.on,
                     onTap: () => context.go('/partners'),
+                  ),
+                ),
+              ),
+              // Eventos (2026-11): os meus eventos + eventos públicos.
+              Expanded(
+                child: Center(
+                  child: _NavIcon(
+                    icon: Icons.explore_outlined,
+                    activeIcon: Icons.explore_rounded,
+                    active: current == AppTab.events,
+                    accent: menuColor.color,
+                    onAccent: menuColor.on,
+                    onTap: () => context.go('/eventos'),
                   ),
                 ),
               ),

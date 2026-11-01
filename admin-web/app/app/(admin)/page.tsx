@@ -229,7 +229,7 @@ export default async function DashboardPage() {
   const kpis = [
     {
       icon: <UsersIcon />,
-      label: "Organizadores",
+      label: "Utilizadores com evento",
       value: (couples.count ?? 0).toLocaleString("pt-PT"),
       deltaPct: deltaPct(couplesNew30, couplesNewPrev30),
       trend: bucketize(couplesRows60, 8, PERIOD_DAYS * 2, since60),

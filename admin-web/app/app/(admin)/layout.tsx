@@ -52,9 +52,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   ];
   const s = (settingsQ.data ?? {}) as Record<string, unknown>;
   const maintenance = [
-    s.maintenance_mode_couple ? "Organizadores" : null,
+    s.maintenance_mode_couple ? "Utilizadores (organizar)" : null,
     s.maintenance_mode_partner ? "Parceiros" : null,
-    s.maintenance_mode_guest ? "Convidados" : null,
+    s.maintenance_mode_guest ? "Utilizadores (sem evento)" : null,
   ].filter(Boolean) as string[];
 
   return (

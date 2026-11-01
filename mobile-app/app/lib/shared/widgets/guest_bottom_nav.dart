@@ -7,7 +7,7 @@ import 'first_run_tour.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
 import 'floating_bottom_nav.dart' show NavBubble, kNavRadius;
 
-enum GuestTab { home, gifts, gallery, profile }
+enum GuestTab { home, gifts, gallery, profile, events }
 
 /// Ilha flutuante da app do convidado — mesma linguagem visual de
 /// [FloatingBottomNav] (couple/parceiro), mas com os separadores
@@ -62,6 +62,16 @@ class GuestBottomNav extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
             children: [
+              Expanded(
+                child: Center(
+                  child: _GuestNavIcon(
+                    icon: Icons.explore_outlined,
+                    activeIcon: Icons.explore_rounded,
+                    active: current == GuestTab.events,
+                    onTap: () => context.go('/eventos'),
+                  ),
+                ),
+              ),
               Expanded(
                 child: Center(
                   child: _GuestNavIcon(

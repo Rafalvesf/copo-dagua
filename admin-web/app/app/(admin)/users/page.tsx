@@ -7,9 +7,9 @@ import { Badge, Card, Empty, FilterTabs, PageHeader } from "@/components/ui";
 import { fmtDate, initials } from "@/lib/format";
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  couple: "Organizador",
+  couple: "Utilizador · organiza",
   partner: "Parceiro",
-  guest: "Convidado",
+  guest: "Utilizador",
   admin: "Admin",
 };
 
@@ -21,11 +21,11 @@ const ADMIN_ROLE_LABELS: Record<string, string> = {
   moderator: "Moderador",
 };
 
-const ROLE_FILTERS: { value: UserRole | "all"; label: string }[] = [
+// Conta única "Utilizador" (2026-11): organizadores e convidados juntos.
+const ROLE_FILTERS: { value: UserRole | "all" | "user"; label: string }[] = [
   { value: "all", label: "Todos" },
-  { value: "couple", label: "Organizadores" },
+  { value: "user", label: "Utilizadores" },
   { value: "partner", label: "Parceiros" },
-  { value: "guest", label: "Convidados" },
   { value: "admin", label: "Admins" },
 ];
 
@@ -40,7 +40,9 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
     .select("id, role, admin_role, full_name, email_verified_at, status, created_at")
     .order("created_at", { ascending: false });
 
-  if (role !== "all") {
+  if (role === "user") {
+    query = query.in("role", ["couple", "guest"]);
+  } else if (role !== "all") {
     query = query.eq("role", role);
   }
 
@@ -52,7 +54,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
     <div className="page">
       <PageHeader
         title="Utilizadores"
-        subtitle="Todas as contas: organizadores, parceiros, convidados e equipa À Nossa!."
+        subtitle="Todas as contas: utilizadores, parceiros e equipa À Nossa!."
         actions={
           <Link href="/users/new" className="btn btn-primary">
             + Novo utilizador

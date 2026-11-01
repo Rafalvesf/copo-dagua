@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/events/events_providers.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -245,6 +246,52 @@ class _HelpGroup extends ConsumerWidget {
 
 // ───────────────────────── Organizadores ─────────────────────────
 
+/// "Evento público" (migração 141): aparece a todos no separador
+/// Eventos e qualquer utilizador pode entrar.
+class _PublicEventRow extends ConsumerWidget {
+  final String weddingId;
+  const _PublicEventRow({required this.weddingId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final value = ref.watch(eventIsPublicProvider(weddingId)).value ?? false;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          StickerIcon(Icons.public_rounded, size: 36, turns: StickerIcon.tilt(7)),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Evento público', style: TextStyle(fontSize: AppFontSize.base + 1, color: AppTheme.ink)),
+                Text('Aparece a todos em Eventos e qualquer pessoa pode entrar',
+                    style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: (v) async {
+              final messenger = ScaffoldMessenger.of(context);
+              try {
+                await setEventPublic(weddingId, v);
+                ref.invalidate(eventIsPublicProvider(weddingId));
+                messenger.showSnackBar(SnackBar(
+                  content: Text(v ? 'O evento está aberto a todos.' : 'O evento voltou a ser só para convidados.'),
+                ));
+              } catch (_) {
+                messenger.showSnackBar(const SnackBar(content: Text('Não foi possível alterar. Tenta outra vez.')));
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _CoupleSettings extends ConsumerWidget {
   final bool fromGuestMode;
   const _CoupleSettings({required this.fromGuestMode});
@@ -295,6 +342,7 @@ class _CoupleSettings extends ConsumerWidget {
             label: 'Aparência do menu',
             onTap: () => context.go('/wedding?aparencia=1'),
           ),
+          _PublicEventRow(weddingId: wedding.id),
         ],
       ),
       // "Para os convidados" saiu do perfil para um tile próprio na
@@ -450,7 +498,7 @@ class GuestAccountSections extends StatelessWidget {
         const _SectionTitle('Eventos'),
         _Group(
           children: [
-            _Row(icon: Icons.celebration_outlined, label: 'Os teus eventos', onTap: () => context.push('/guest-events')),
+            _Row(icon: Icons.celebration_outlined, label: 'Os teus eventos', onTap: () => context.go('/eventos')),
             _Row(icon: Icons.key_outlined, label: 'Juntar-me a outro evento', onTap: () => showGuestModeSheet(context)),
           ],
         ),
@@ -668,7 +716,7 @@ class _GuestSettings extends StatelessWidget {
         const _SectionTitle('Eventos'),
         _Group(
           children: [
-            _Row(icon: Icons.celebration_outlined, label: 'Os teus eventos', onTap: () => context.push('/guest-events')),
+            _Row(icon: Icons.celebration_outlined, label: 'Os teus eventos', onTap: () => context.go('/eventos')),
             _Row(icon: Icons.key_outlined, label: 'Juntar-me a outro evento', onTap: () => showGuestModeSheet(context)),
           ],
         ),

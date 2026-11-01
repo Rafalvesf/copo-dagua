@@ -193,7 +193,7 @@ class _GuestHomeBody extends ConsumerWidget {
           V2RoundButton(
             icon: Icons.format_list_bulleted_rounded,
             tooltip: eventCount > 1 ? 'Os teus eventos ($eventCount)' : 'Os teus eventos',
-            onTap: () => context.push('/guest-events'),
+            onTap: () => context.go('/eventos'),
           ),
         ]),
         const SizedBox(height: 18),

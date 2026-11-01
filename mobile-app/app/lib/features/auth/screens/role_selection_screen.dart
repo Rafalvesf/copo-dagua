@@ -15,18 +15,20 @@ class RoleSelectionScreen extends StatefulWidget {
 }
 
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
-  UserRole? _selected = UserRole.couple;
+  UserRole? _selected = UserRole.guest;
 
   @override
   Widget build(BuildContext context) {
     return AuthPage(
       children: [
-        const AuthHeading(title: 'Como vais usar a app?', subtitle: 'Podes ter mais do que um papel mais tarde.'),
+        const AuthHeading(title: 'Como vais usar a app?', subtitle: 'Escolhe o tipo de conta.'),
         const SizedBox(height: 24),
         for (final (role, icon, title, subtitle) in const [
-          (UserRole.couple, Icons.celebration_outlined, 'Vou organizar um evento', 'Casamento, batizado, aniversário…'),
-          (UserRole.partner, Icons.storefront_outlined, 'Sou parceiro', 'Espaços, catering, fotografia e outros serviços'),
-          (UserRole.guest, Icons.mail_outline, 'Fui convidado', 'Tenho um código ou um link de convite'),
+          // Conta única (2026-11): o mesmo utilizador organiza os seus
+          // eventos e junta-se aos dos outros (internamente `guest` até
+          // criar um evento — ver `become_organizer`, migração 141).
+          (UserRole.guest, Icons.celebration_outlined, 'Utilizador', 'Organiza os teus eventos e junta-te aos dos outros'),
+          (UserRole.partner, Icons.storefront_outlined, 'Parceiro', 'Espaços, catering, fotografia e outros serviços'),
         ])
           Padding(
             padding: const EdgeInsets.only(bottom: 12),

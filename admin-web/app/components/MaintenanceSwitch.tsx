@@ -36,9 +36,9 @@ export function MaintenanceSwitch({
   }
 
   const sides: { side: Side; label: string; hint: string }[] = [
-    { side: "couple", label: "Organizadores", hint: "Quem planeia o evento" },
+    { side: "couple", label: "Utilizadores · organizar", hint: "Quem criou o seu evento" },
     { side: "partner", label: "Parceiros", hint: "Fornecedores e espaços" },
-    ...(guestAvailable ? [{ side: "guest" as Side, label: "Convidados", hint: "Página e app dos convidados" }] : []),
+    ...(guestAvailable ? [{ side: "guest" as Side, label: "Utilizadores · sem evento", hint: "Contas que só entram em eventos de outros" }] : []),
   ];
 
   return (

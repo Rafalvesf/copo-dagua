@@ -103,7 +103,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 }
 
 function roleLabel(role: string) {
-  return role === "couple" ? "Organizador" : role === "partner" ? "Parceiro" : role === "guest" ? "Convidado" : "Admin";
+  return role === "couple" ? "Utilizador · organiza" : role === "partner" ? "Parceiro" : role === "guest" ? "Utilizador" : "Admin";
 }
 function statusLabel(s: string) {
   return (
