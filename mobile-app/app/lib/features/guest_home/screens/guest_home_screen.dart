@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../shared/widgets/buttons.dart';
 
 import '../../../core/guest_offers/guest_offers.dart';
 import '../../../core/auth/auth_controller.dart';
@@ -141,9 +142,11 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           const InfoNote(
-            'Ainda não tens nenhum casamento associado a esta conta. Pede aos noivos o código do casal e junta-te nas Definições.',
+            'Ainda não entraste em nenhum evento. Vê os eventos públicos ou entra com o código que o organizador te deu.',
             icon: Icons.info_outline_rounded,
           ),
+          const SizedBox(height: 16),
+          PrimaryButton(label: 'Ver eventos', onPressed: () => context.go('/eventos')),
           const SizedBox(height: 24),
           Center(
             child: TextButton.icon(
