@@ -112,6 +112,7 @@ const privacyDoc = LegalDoc(
     ]),
     LegalSection('5. Com quem partilhamos', [
       'Dentro da app: com as pessoas do mesmo evento ou conversa, na medida necessária (por exemplo, o parceiro vê os dados da reserva e o nome do organizador).',
+      'Depois de pago o sinal de uma reserva, o parceiro contratado vê, para preparar o serviço, o número de convidados confirmados, os nomes, os menus escolhidos, as alergias e restrições alimentares indicadas e a distribuição pelas mesas. Não vê emails nem telefones dos convidados.',
       'Prestadores de serviços que tratam dados por nossa conta: Supabase (base de dados e autenticação, servidores na UE, em Frankfurt), Stripe (pagamentos), GitHub e Vercel (alojamento da app e do painel de administração), Sentry (registo de erros) e Giphy (pesquisa de GIFs no chat, só o termo pesquisado).',
       'Alguns destes prestadores podem tratar dados fora da UE; nesse caso, existem as garantias exigidas pelo RGPD, como as cláusulas contratuais-tipo da Comissão Europeia.',
       'Autoridades, quando a lei o exigir.',

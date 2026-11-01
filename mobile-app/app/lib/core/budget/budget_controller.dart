@@ -118,32 +118,42 @@ class BudgetController extends Notifier<BudgetState> {
         _ => null,
       };
 
-  /// Total pago na app por categoria do parceiro: `(slug, rótulo) → €`.
+  /// Valor das reservas da app por categoria do parceiro: `(slug, rótulo) → €`.
+  /// Reserva ativa (proposta aceite, paga ou concluída) conta pelo valor
+  /// contratado; cancelada conta só pelo que chegou a ser pago
+  /// (2026-11-01: "o orçamento não atualiza quando foi contratada na app").
   Future<Map<(String, String), double>> _appPaymentsByCategory(String weddingId) async {
     final bookingRows = await supabase
         .from('bookings')
-        .select('id, partner_profiles(partner_profile_categories(partner_categories(slug, label_pt)))')
+        .select('id, status, total_amount, partner_profiles(partner_profile_categories(partner_categories(slug, label_pt)))')
         .eq('wedding_id', weddingId);
+    const active = {'awaiting_deposit', 'confirmed', 'payment_overdue', 'disputed', 'completed'};
     final categoryOf = <String, (String, String)>{};
+    final totals = <(String, String), double>{};
+    final cancelled = <String>[];
     for (final r in (bookingRows as List).cast<Map<String, dynamic>>()) {
       final links = ((r['partner_profiles'] as Map<String, dynamic>?)?['partner_profile_categories'] as List?) ?? const [];
       final first = links.isEmpty ? null : (links.first as Map<String, dynamic>)['partner_categories'] as Map<String, dynamic>?;
-      categoryOf[r['id'] as String] = (
-        (first?['slug'] as String?) ?? 'other',
-        (first?['label_pt'] as String?) ?? 'Outros',
-      );
+      final key = ((first?['slug'] as String?) ?? 'other', (first?['label_pt'] as String?) ?? 'Outros');
+      final id = r['id'] as String;
+      categoryOf[id] = key;
+      if (active.contains(r['status'])) {
+        totals[key] = (totals[key] ?? 0) + ((r['total_amount'] as num?)?.toDouble() ?? 0);
+      } else {
+        cancelled.add(id);
+      }
     }
-    if (categoryOf.isEmpty) return const {};
+    if (cancelled.isEmpty) return totals;
     final paymentRows = await supabase
         .from('payments')
-        .select('booking_id, amount, status')
-        .inFilter('booking_id', categoryOf.keys.toList())
-        .eq('status', 'paid');
-    final totals = <(String, String), double>{};
+        .select('booking_id, amount, refunded_amount, status')
+        .inFilter('booking_id', cancelled)
+        .inFilter('status', ['paid', 'refunded']);
     for (final p in (paymentRows as List).cast<Map<String, dynamic>>()) {
       final key = categoryOf[p['booking_id'] as String];
       if (key == null) continue;
-      totals[key] = (totals[key] ?? 0) + (p['amount'] as num).toDouble();
+      final kept = (p['amount'] as num).toDouble() - ((p['refunded_amount'] as num?)?.toDouble() ?? 0);
+      if (kept > 0) totals[key] = (totals[key] ?? 0) + kept;
     }
     return totals;
   }
