@@ -235,7 +235,7 @@ class _OnboardingWizardScreenState
         // silêncio enquanto as colunas não existirem.
         try {
           await supabase.from('weddings').update({
-            'is_public': _isPublic,
+            'is_public': _isPublic && _eventType.canBePublic,
             'is_paid': _isPaid,
             'entry_price': _isPaid ? _priceValue : null,
           }).eq('id', wedding.id);
@@ -570,12 +570,26 @@ class _OnboardingWizardScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _ChoicePair(
-                left: ('Privado', Icons.lock_outline_rounded, 'Só quem convidares'),
-                right: ('Público', Icons.public_rounded, 'Aparece a todos em Eventos'),
-                rightSelected: _isPublic,
-                onChanged: (v) => setState(() => _isPublic = v),
-              ),
+              if (_eventType.canBePublic)
+                _ChoicePair(
+                  left: ('Privado', Icons.lock_outline_rounded, 'Só quem convidares'),
+                  right: ('Público', Icons.public_rounded, 'Aparece a todos em Descobrir'),
+                  rightSelected: _isPublic,
+                  onChanged: (v) => setState(() => _isPublic = v),
+                )
+              else
+                Row(
+                  children: [
+                    const Icon(Icons.lock_outline_rounded, size: 18, color: AppTheme.inkMuted),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${_eventType.label} é sempre privado: só entra quem convidares. Públicos só festas, discotecas, concertos, festivais e eventos de empresa.',
+                        style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
+                      ),
+                    ),
+                  ],
+                ),
               const SizedBox(height: 22),
               const Text('Entrada',
                   style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -946,7 +960,11 @@ class _EventTypeTile extends StatelessWidget {
         EventType.graduation => Icons.school_outlined,
         EventType.corporate => Icons.business_center_outlined,
         EventType.babyShower => Icons.child_friendly_outlined,
-        EventType.other => Icons.celebration_outlined,
+        EventType.party => Icons.celebration_outlined,
+        EventType.nightlife => Icons.nightlife_outlined,
+        EventType.concert => Icons.mic_external_on_outlined,
+        EventType.festival => Icons.festival_outlined,
+        EventType.other => Icons.auto_awesome_outlined,
       };
 
   @override

@@ -22,6 +22,9 @@ class PublicEvent {
   final bool isPaid;
   final double? entryPrice;
 
+  /// Evento que eu organizo (aparece também em Descobrir).
+  final bool mine;
+
   const PublicEvent({
     required this.weddingId,
     required this.eventType,
@@ -36,6 +39,7 @@ class PublicEvent {
     this.joined = false,
     this.isPaid = false,
     this.entryPrice,
+    this.mine = false,
   });
 
   /// "Grátis" ou "25 € por pessoa".
@@ -68,11 +72,12 @@ class PublicEvent {
       joined: r['joined'] == true,
       isPaid: r['is_paid'] == true,
       entryPrice: (r['entry_price'] as num?)?.toDouble(),
+      mine: r['mine'] == true,
     );
   }
 }
 
-/// Eventos públicos de outros organizadores (os meus ficam de fora).
+/// Eventos públicos, incluindo os meus (marcados com `mine`).
 /// Vazio enquanto a migração 141 não correu.
 final publicEventsProvider = FutureProvider<List<PublicEvent>>((ref) async {
   final userId = ref.watch(authControllerProvider.select((s) => s.profile?.id));

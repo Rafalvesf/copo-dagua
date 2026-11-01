@@ -35,6 +35,11 @@ enum EventType {
   graduation('Festa de curso', 'festa de curso'),
   corporate('Evento de empresa', 'evento de empresa'),
   babyShower('Chá de bebé', 'chá de bebé'),
+  // Eventos abertos ao público (2026-11, migração 144).
+  party('Festa', 'evento'),
+  nightlife('Discoteca / noite', 'evento'),
+  concert('Concerto', 'concerto'),
+  festival('Festival', 'festival'),
   other('Outro', 'evento');
 
   const EventType(this.label, this.noun);
@@ -56,8 +61,24 @@ enum EventType {
         EventType.graduation => 'graduation',
         EventType.corporate => 'corporate',
         EventType.babyShower => 'baby_shower',
+        EventType.party => 'party',
+        EventType.nightlife => 'nightlife',
+        EventType.concert => 'concert',
+        EventType.festival => 'festival',
         EventType.other => 'other',
       };
+
+  /// Só estes podem ser públicos (pedido 2026-11): festas, discotecas,
+  /// concertos, festivais, eventos de empresa e "Outro". Casamentos,
+  /// batizados, aniversários, etc. são sempre privados.
+  bool get canBePublic => const {
+        EventType.corporate,
+        EventType.party,
+        EventType.nightlife,
+        EventType.concert,
+        EventType.festival,
+        EventType.other,
+      }.contains(this);
 
   /// Valores que a base de dados aceita antes da migração 081.
   bool get legacy => this == EventType.wedding || this == EventType.baptism || this == EventType.birthday || this == EventType.other;

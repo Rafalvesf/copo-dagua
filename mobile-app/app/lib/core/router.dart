@@ -324,7 +324,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       tabRoute(
         path: '/eventos',
-        builder: (context, state) => const EventosScreen(),
+        builder: (context, state) =>
+            EventosScreen(initialTab: state.uri.queryParameters['tab'] == 'meus' ? 1 : null),
       ),
       // Caminho antigo de "Os teus eventos" — agora é o separador Eventos.
       GoRoute(path: '/guest-events', redirect: (context, state) => '/eventos'),
