@@ -298,38 +298,51 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                 if (!widget.selectionMode)
                   categoryOptionsAsync.maybeWhen(
                     data: (options) {
-                      final all = <PartnerCategoryOption?>[null, ...options];
+                      Widget pill(PartnerCategoryOption? o) {
+                        final on = o?.slug == _filter;
+                        return SnappyTap(
+                          onTap: () => setState(() => _filter = o?.slug),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            alignment: Alignment.center,
+                            // Sem sombra: a lista horizontal cortava-a e
+                            // ficava uma linha por baixo das pílulas.
+                            decoration: BoxDecoration(
+                              color: on ? AppTheme.accentOliveDark : const Color(0xFFF2F0EB),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(o?.label ?? 'Todos',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: on ? Colors.white : v2Muted)),
+                          ),
+                        );
+                      }
+
+                      // "Todos" fica preso à esquerda (pedido 2026-11); só
+                      // as categorias deslizam.
                       return SizedBox(
                         height: 52,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          clipBehavior: Clip.none,
-                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 6),
-                          itemCount: all.length,
-                          separatorBuilder: (context, i) => const SizedBox(width: 8),
-                          itemBuilder: (context, i) {
-                            final o = all[i];
-                            final on = o?.slug == _filter;
-                            return SnappyTap(
-                              onTap: () => setState(() => _filter = o?.slug),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                padding: const EdgeInsets.symmetric(horizontal: 14),
-                                alignment: Alignment.center,
-                                // Sem sombra: a lista horizontal cortava-a e
-                                // ficava uma linha por baixo das pílulas.
-                                decoration: BoxDecoration(
-                                  color: on ? AppTheme.accentOliveDark : const Color(0xFFF2F0EB),
-                                  borderRadius: BorderRadius.circular(999),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 12, bottom: 6),
+                          child: Row(
+                            children: [
+                              const SizedBox(width: AppTheme.screenMargin),
+                              pill(null),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.only(right: AppTheme.screenMargin),
+                                  itemCount: options.length,
+                                  separatorBuilder: (context, i) => const SizedBox(width: 8),
+                                  itemBuilder: (context, i) => pill(options[i]),
                                 ),
-                                child: Text(o?.label ?? 'Todos',
-                                    style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: on ? Colors.white : v2Muted)),
                               ),
-                            );
-                          },
+                            ],
+                          ),
                         ),
                       );
                     },
