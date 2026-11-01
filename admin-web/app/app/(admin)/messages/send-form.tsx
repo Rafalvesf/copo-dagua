@@ -10,9 +10,9 @@ const ROLE: Record<string, string> = { couple: "Organizador", partner: "Parceiro
 const AUDIENCES = [
   { value: "user", label: "Uma pessoa" },
   { value: "all", label: "Todos" },
-  { value: "couple", label: "Todos os organizadores" },
+  { value: "couple", label: "Utilizadores com evento" },
   { value: "partner", label: "Todos os parceiros" },
-  { value: "guest", label: "Todos os convidados" },
+  { value: "guest", label: "Utilizadores sem evento" },
 ];
 
 // Ecrã que abre ao tocar na notificação (rotas da app).

@@ -82,9 +82,9 @@ export default async function SettingsPage() {
         ) : (
           <DetailList
             items={[
-              { label: "Organizadores", value: yes(settings.maintenance_mode_couple) },
+              { label: "Utilizadores · organizar", value: yes(settings.maintenance_mode_couple) },
               { label: "Parceiros", value: yes(settings.maintenance_mode_partner) },
-              { label: "Convidados", value: yes(settings.maintenance_mode_guest) },
+              { label: "Utilizadores · sem evento", value: yes(settings.maintenance_mode_guest) },
             ]}
           />
         )}

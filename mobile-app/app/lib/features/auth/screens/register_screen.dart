@@ -135,11 +135,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _termsError = _acceptedTerms
           ? null
           : 'Precisas de aceitar os termos para continuar';
-      if (widget.role == UserRole.guest) {
-        _weddingCodeError = _weddingCode.text.trim().isEmpty
-            ? 'Indica o código do casal que te convidou'
-            : null;
-      }
+      // Conta única "Utilizador" (2026-11): o código é opcional — quem
+      // não foi convidado entra e vê os eventos públicos.
+      if (widget.role == UserRole.guest) _weddingCodeError = null;
     });
     return _nameError == null &&
         _emailError == null &&
@@ -157,7 +155,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   /// `AuthController.register()`, já autenticado.
   Future<void> _submit() async {
     if (!_validate()) return;
-    if (widget.role == UserRole.guest) {
+    if (widget.role == UserRole.guest && _weddingCode.text.trim().isNotEmpty) {
       setState(() => _checkingCode = true);
       final List rows;
       try {
@@ -203,9 +201,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           phone: _phone.text.trim(),
           password: _password.text,
           role: widget.role,
-          weddingCode: widget.role == UserRole.guest
-              ? _weddingCode.text.trim()
-              : null,
+          weddingCode: _codeOrNull,
         );
   }
 
@@ -216,7 +212,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     await ref.read(authControllerProvider.notifier).signInWithProvider(
           provider,
           role: widget.role,
-          weddingCode: widget.role == UserRole.guest ? _weddingCode.text.trim() : null,
+          weddingCode: _codeOrNull,
         );
   }
 
@@ -227,17 +223,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           idToken,
           nonce,
           role: widget.role,
-          weddingCode: widget.role == UserRole.guest ? _weddingCode.text.trim() : null,
+          weddingCode: _codeOrNull,
         );
   }
 
+  String? get _codeOrNull {
+    final c = _weddingCode.text.trim();
+    return widget.role == UserRole.guest && c.isNotEmpty ? c : null;
+  }
+
   Future<bool> _guestCodeOk() async {
-    if (widget.role == UserRole.guest) {
+    if (widget.role == UserRole.guest && _weddingCode.text.trim().isNotEmpty) {
       final code = _weddingCode.text.trim();
-      if (code.isEmpty) {
-        setState(() => _weddingCodeError = 'Indica o código do casal');
-        return false;
-      }
       setState(() => _checkingCode = true);
       List rows = const [];
       try {
@@ -270,8 +267,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           title: 'Cria a tua conta',
           subtitle: switch (widget.role) {
             UserRole.partner => 'Parceiro',
-            UserRole.guest => 'Convidado',
-            _ => 'Organizar um evento',
+            UserRole.guest => 'Utilizador',
+            _ => 'Utilizador · organizar um evento',
           },
         ),
         if (auth.status == AuthStatus.error && auth.errorMessage != null) ...[
@@ -281,7 +278,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         AuthField(label: 'Nome', controller: _name, hint: 'Nome e apelido', errorText: _nameError, topGap: 20),
         if (widget.role == UserRole.guest) ...[
           AuthField(
-            label: 'Código do evento',
+            label: 'Código de um evento (opcional)',
             controller: _weddingCode,
             hint: 'Ex.: INES-TOMAS-24',
             errorText: _weddingCodeError,

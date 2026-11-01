@@ -29,7 +29,7 @@ import '../features/chat/screens/chat_thread_screen.dart';
 import '../features/checklist/screens/checklist_screen.dart';
 import '../features/tasks/screens/service_preferences_screen.dart';
 import '../features/tasks/screens/tasks_screen.dart';
-import '../features/guest_home/screens/guest_events_screen.dart';
+import '../features/events/screens/eventos_screen.dart';
 import '../features/guest_home/screens/guest_gallery_screen.dart';
 import '../features/guest_home/screens/guest_gifts_screen.dart';
 import '../features/guest_home/screens/guest_home_screen.dart';
@@ -155,7 +155,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return auth.status == AuthStatus.active
               ? switch (role) {
                   UserRole.partner => '/partner-home',
-                  UserRole.guest => '/guest-home',
+                  UserRole.guest => '/eventos',
                   UserRole.couple => '/home',
                 }
               : '/welcome';
@@ -179,9 +179,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (location == '/onboarding') return null;
           return '/onboarding';
         case AuthStatus.active:
+          // Conta "Utilizador" (2026-11, internamente `guest` até criar
+          // um evento) começa no separador Eventos.
           final homeForRole = switch (auth.profile?.role) {
             UserRole.partner => '/partner-home',
-            UserRole.guest => '/guest-home',
+            UserRole.guest => '/eventos',
             _ => '/home',
           };
           // Regresso de um pagamento (página recarregou): direto à confirmação.
@@ -195,9 +197,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           }
           // Mantém o utilizador na área certa mesmo que a role mude a
           // meio da sessão (troca rápida de conta de demonstração).
-          for (final home in const ['/home', '/partner-home', '/guest-home']) {
-            if (location == home && homeForRole != home) return homeForRole;
-          }
+          if (location == '/home' && role != UserRole.couple) return homeForRole;
+          if (location == '/partner-home' && role != UserRole.partner) return homeForRole;
+          if (location == '/guest-home' && role != UserRole.guest) return homeForRole;
+          if (location == '/eventos' && role == UserRole.partner) return homeForRole;
           return null;
       }
     },
@@ -300,10 +303,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      GoRoute(
-        path: '/guest-events',
-        builder: (context, state) => const GuestEventsScreen(),
+      tabRoute(
+        path: '/eventos',
+        builder: (context, state) => const EventosScreen(),
       ),
+      // Caminho antigo de "Os teus eventos" — agora é o separador Eventos.
+      GoRoute(path: '/guest-events', redirect: (context, state) => '/eventos'),
       GoRoute(
         path: '/guest-wedding-details',
         builder: (context, state) => state.extra is GuestWedding

@@ -46,7 +46,7 @@ class GuestEventsScreen extends ConsumerWidget {
               for (final w in weddings)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 10),
-                  child: _EventCard(wedding: w),
+                  child: GuestEventCard(wedding: w),
                 ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
@@ -55,7 +55,7 @@ class GuestEventsScreen extends ConsumerWidget {
                 onTap: () => showGuestModeSheet(context),
                 // Canvas "Convidado — eventos (redesign)": botão tracejado.
                 child: CustomPaint(
-                  painter: _DashedBorder(),
+                  painter: DashedBorderPainter(),
                   child: SizedBox(
                     height: 56,
                     child: Row(
@@ -85,7 +85,7 @@ class GuestEventsScreen extends ConsumerWidget {
   }
 }
 
-class _DashedBorder extends CustomPainter {
+class DashedBorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -104,12 +104,12 @@ class _DashedBorder extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DashedBorder old) => false;
+  bool shouldRepaint(DashedBorderPainter old) => false;
 }
 
-class _EventCard extends ConsumerWidget {
+class GuestEventCard extends ConsumerWidget {
   final GuestWedding wedding;
-  const _EventCard({required this.wedding});
+  const GuestEventCard({super.key, required this.wedding});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

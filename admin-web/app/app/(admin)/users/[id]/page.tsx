@@ -30,7 +30,7 @@ export default async function UserDetailPage(props: PageProps<"/users/[id]">) {
 
   const isSelf = id === viewerId;
 
-  const roleLabel = u.role === "couple" ? "Organizador" : u.role === "partner" ? "Parceiro" : u.role === "guest" ? "Convidado" : "Equipa À Nossa!";
+  const roleLabel = u.role === "couple" ? "Utilizador · organiza um evento" : u.role === "partner" ? "Parceiro" : u.role === "guest" ? "Utilizador" : "Equipa À Nossa!";
 
   return (
     <div className="page">

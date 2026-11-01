@@ -17,9 +17,9 @@ type Sent = {
 
 const AUDIENCE: Record<string, string> = {
   all: "Todos",
-  couple: "Organizadores",
+  couple: "Utilizadores com evento",
   partner: "Parceiros",
-  guest: "Convidados",
+  guest: "Utilizadores sem evento",
 };
 
 export default async function MessagesPage({ searchParams }: PageProps<"/messages">) {
