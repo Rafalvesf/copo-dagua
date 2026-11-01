@@ -17,7 +17,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const { fullName } = await requireAdmin();
 
   const supabase = await createClient();
-  const [pendingQ, disputesQ, ticketsQ, settingsQ, flaggedQ, refundsQ, reportsQ] = await Promise.all([
+  const [pendingQ, disputesQ, ticketsQ, settingsQ, flaggedQ, refundsQ, reportsQ, tasksQ] = await Promise.all([
     supabase.from("partner_profiles").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
     // Disputas por decidir (migração 109) — 0 se a tabela ainda não existir.
     supabase.from("disputes").select("id", { count: "exact", head: true }).eq("status", "open"),
@@ -31,6 +31,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       .in("bookings.status", ["cancelled_by_couple", "cancelled_by_partner"]),
     // Denúncias por decidir (migração 130) — 0 se a tabela ainda não existir.
     supabase.from("content_reports").select("id", { count: "exact", head: true }).eq("status", "open"),
+    // Pendentes por fazer (migração 137) — 0 se a tabela ainda não existir.
+    supabase.from("admin_tasks").select("id", { count: "exact", head: true }).eq("done", false),
   ]);
   const pending = pendingQ.count ?? 0;
   const openDisputes = disputesQ.count ?? 0;
@@ -38,6 +40,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const overdue = flaggedQ.count ?? 0;
   const refunds = refundsQ.count ?? 0;
   const openReports = reportsQ.count ?? 0;
+  const openTasks = tasksQ.count ?? 0;
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
   const alerts: AdminAlert[] = [
     ...(openReports > 0 ? [{ key: "rep", href: "/reports", title: plural(openReports, "denúncia por decidir", "denúncias por decidir"), detail: "Decidir em menos de 24 horas" }] : []),
@@ -63,6 +66,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           openDisputes={openDisputes}
           openTickets={openTickets}
           openReports={openReports}
+          openTasks={openTasks}
           maintenance={maintenance}
         />
         <main className="admin-main">
