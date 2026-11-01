@@ -44,6 +44,13 @@ export default async function SupportPage({ searchParams }: PageProps<"/support"
   const { data: tickets, error } = await query;
 
   const rows = (tickets ?? []) as TicketRow[];
+  // Fotografias (migração 145): links temporários de 1 hora (bucket privado).
+  const paths = rows.flatMap((t) => t.attachments ?? []);
+  const signed = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: urls } = await supabase.storage.from("support-attachments").createSignedUrls(paths, 3600);
+    for (const u of urls ?? []) if (u.path && u.signedUrl) signed.set(u.path, u.signedUrl);
+  }
   // Respostas a mensagens da equipa (migração 134): título da mensagem original.
   const msgIds = [...new Set(rows.map((t) => t.admin_message_id).filter((x): x is string => Boolean(x)))];
   const msgTitles = new Map<string, string>();
@@ -103,7 +110,7 @@ export default async function SupportPage({ searchParams }: PageProps<"/support"
                   <div style={{ minWidth: 0 }}>
                     <p className="strong" style={{ fontSize: 15 }}>{t.subject}</p>
                     <p className="list-sub">
-                      {t.profiles?.full_name ?? "Utilizador"} · {t.profiles?.role === "partner" ? "Parceiro" : t.profiles?.role === "guest" ? "Convidado" : "Organizador"} · {fmtDateTime(t.created_at)}
+                      {t.profiles?.full_name ?? "Utilizador"} · {t.profiles?.role === "partner" ? "Parceiro" : "Utilizador"} · {fmtDateTime(t.created_at)}
                     </p>
                   </div>
                   <div className="row" style={{ gap: 6 }}>
@@ -115,7 +122,19 @@ export default async function SupportPage({ searchParams }: PageProps<"/support"
                 {t.admin_message_id && (
                   <p className="field-hint">Resposta à mensagem «{msgTitles.get(t.admin_message_id) ?? "da equipa"}»</p>
                 )}
-                {t.description && <p style={{ whiteSpace: "pre-wrap", maxWidth: "75ch" }}>{t.description}</p>}
+                {t.description && <p style={{ whiteSpace: "pre-wrap", maxWidth: "75ch", overflowWrap: "anywhere" }}>{t.description}</p>}
+                {(t.attachments?.length ?? 0) > 0 && (
+                  <div className="attach-grid">
+                    {t.attachments!.map((path) =>
+                      signed.get(path) ? (
+                        <a key={path} href={signed.get(path)} target="_blank" rel="noopener noreferrer" title="Abrir fotografia">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={signed.get(path)} alt="Fotografia do erro" loading="lazy" />
+                        </a>
+                      ) : null,
+                    )}
+                  </div>
+                )}
                 {t.resolution_note ? (
                   <div style={{ padding: "10px 12px", borderRadius: 10, background: "var(--surface-2)", boxShadow: "inset 2px 0 0 var(--accent)" }}>
                     <p className="field-hint strong">Resposta enviada</p>

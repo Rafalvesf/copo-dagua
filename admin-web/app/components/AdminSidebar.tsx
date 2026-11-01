@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { NotificationsMenu, type AdminAlert } from "@/components/NotificationsMenu";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -197,6 +198,7 @@ export function AdminSidebar({
   openReports = 0,
   openTasks = 0,
   maintenance = [],
+  alerts: alertItems = [],
 }: {
   fullName: string;
   pendingCount: number;
@@ -205,6 +207,7 @@ export function AdminSidebar({
   openReports?: number;
   openTasks?: number;
   maintenance?: string[];
+  alerts?: AdminAlert[];
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -247,6 +250,8 @@ export function AdminSidebar({
           </Link>
         )}
         <ThemeToggle />
+        {/* No telemóvel a barra de topo some: o sino passa para aqui. */}
+        <NotificationsMenu alerts={alertItems} />
         <Link href="/search" className="icon-btn" aria-label="Pesquisar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
             <circle cx="11" cy="11" r="7" />

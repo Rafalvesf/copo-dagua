@@ -68,6 +68,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           openReports={openReports}
           openTasks={openTasks}
           maintenance={maintenance}
+          alerts={alerts}
         />
         <main className="admin-main">
           <div className="admin-topbar">

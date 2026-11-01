@@ -1,4 +1,9 @@
+import 'dart:math';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,6 +73,38 @@ class _BugReportFormState extends ConsumerState<_BugReportForm> {
   bool _sending = false;
   String? _error;
 
+  /// Fotografias/capturas de ecrã (até 3), migração 145.
+  final List<(Uint8List, String)> _photos = [];
+  static const _maxPhotos = 3;
+
+  Future<void> _addPhotos() async {
+    try {
+      final files = await ImagePicker().pickMultiImage(imageQuality: 80, maxWidth: 1600);
+      for (final f in files.take(_maxPhotos - _photos.length)) {
+        final bytes = await f.readAsBytes();
+        final ext = f.name.contains('.') ? f.name.split('.').last.toLowerCase() : 'jpg';
+        _photos.add((bytes, ext));
+      }
+      if (mounted) setState(() {});
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Não foi possível abrir as fotografias.');
+    }
+  }
+
+  Future<List<String>> _uploadPhotos() async {
+    final uid = supabase.auth.currentUser!.id;
+    final r = Random.secure();
+    final paths = <String>[];
+    for (final (bytes, ext) in _photos) {
+      final id = List.generate(12, (_) => r.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+      final path = '$uid/$id.$ext';
+      final mime = switch (ext) { 'png' => 'image/png', 'webp' => 'image/webp', 'heic' => 'image/heic', 'gif' => 'image/gif', _ => 'image/jpeg' };
+      await supabase.storage.from('support-attachments').uploadBinary(path, bytes, fileOptions: FileOptions(contentType: mime));
+      paths.add(path);
+    }
+    return paths;
+  }
+
   @override
   void dispose() {
     _what.dispose();
@@ -93,8 +130,9 @@ class _BugReportFormState extends ConsumerState<_BugReportForm> {
       '\n— Ecrã: ${widget.where.isEmpty ? '?' : widget.where} · Plataforma: ${_platform()}',
     ].join('\n');
     try {
+      final attachments = _photos.isEmpty ? const <String>[] : await _uploadPhotos();
       await createSupportTicket(ref,
-          subject: 'Erro: $subject', description: description, category: SupportTicketCategory.bug);
+          subject: 'Erro: $subject', description: description, category: SupportTicketCategory.bug, attachments: attachments);
       if (mounted) Navigator.of(context).pop(true);
     } catch (_) {
       if (mounted) {
@@ -139,8 +177,56 @@ class _BugReportFormState extends ConsumerState<_BugReportForm> {
             textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(labelText: 'O que estavas a fazer? (opcional)', alignLabelWithHint: true),
           ),
+          const SizedBox(height: 4),
+          // Fotografias (pedido 2026-11).
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var i = 0; i < _photos.length; i++)
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.memory(_photos[i].$1, width: 72, height: 72, fit: BoxFit.cover),
+                    ),
+                    Positioned(
+                      right: -6,
+                      top: -6,
+                      child: Semantics(
+                        button: true,
+                        label: 'Tirar fotografia',
+                        child: GestureDetector(
+                          onTap: _sending ? null : () => setState(() => _photos.removeAt(i)),
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                            child: const Icon(Icons.close_rounded, size: 14, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              if (_photos.length < _maxPhotos)
+                OutlinedButton.icon(
+                  onPressed: _sending ? null : _addPhotos,
+                  icon: const Icon(Icons.add_photo_alternate_outlined, size: 20),
+                  label: Text(_photos.isEmpty ? 'Anexar fotografias' : 'Mais uma'),
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
+                ),
+            ],
+          ),
+          if (_photos.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 6),
+              child: Text('Uma captura de ecrã ajuda muito (até 3).',
+                  style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+            ),
           if (_error != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13)),
           ],
           const SizedBox(height: 12),
