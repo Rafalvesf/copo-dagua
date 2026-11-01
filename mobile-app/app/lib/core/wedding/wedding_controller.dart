@@ -5,23 +5,37 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     show FileOptions, PostgrestException;
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../auth/auth_controller.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 
 class WeddingState {
   final bool loading;
+
+  /// Evento ativo — o que os separadores do organizador mostram.
   final Wedding? wedding;
 
-  const WeddingState({this.loading = false, this.wedding});
+  /// Todos os eventos que a conta organiza (dono ou co-organizador),
+  /// do mais recente para o mais antigo (vários por conta, 2026-11).
+  final List<Wedding> events;
 
-  WeddingState copyWith({bool? loading, Wedding? wedding}) {
+  const WeddingState({this.loading = false, this.wedding, this.events = const []});
+
+  WeddingState copyWith({bool? loading, Wedding? wedding, List<Wedding>? events}) {
     return WeddingState(
       loading: loading ?? this.loading,
       wedding: wedding ?? this.wedding,
+      events: events ?? (wedding == null ? this.events : _replace(this.events, wedding)),
     );
   }
+
+  static List<Wedding> _replace(List<Wedding> list, Wedding w) =>
+      [for (final e in list) e.id == w.id ? w : e];
 }
+
+const _activeEventKey = 'active_event_id';
 
 /// Liga-se à tabela `weddings` real (`database/migrations/002_onboarding.sql`,
 /// `003_wedding.sql`, `012_wedding_quote.sql`) — substitui
@@ -38,25 +52,56 @@ class WeddingController extends Notifier<WeddingState> {
     return const WeddingState();
   }
 
-  Future<void> load(String ownerId) async {
+  Future<String?> _savedActiveId() async {
+    try {
+      return (await SharedPreferences.getInstance()).getString(_activeEventKey);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveActiveId(String id) async {
+    try {
+      await (await SharedPreferences.getInstance()).setString(_activeEventKey, id);
+    } catch (_) {}
+  }
+
+  Future<void> load(String ownerId, {String? activeId}) async {
     state = state.copyWith(loading: true);
-    var row = await supabase.from('weddings').select().eq('owner_id', ownerId).maybeSingle();
+    final owned = (await supabase
+            .from('weddings')
+            .select()
+            .eq('owner_id', ownerId)
+            .order('created_at', ascending: false))
+        .cast<Map<String, dynamic>>();
     // O par que entrou pelo link de convite (079) não é dono — é
     // colaborador ativo do casamento do outro.
-    if (row == null) {
-      final link = await supabase
-          .from('wedding_collaborators')
-          .select('wedding_id')
-          .eq('user_id', ownerId)
-          .eq('status', 'active')
-          .limit(1)
-          .maybeSingle();
-      final weddingId = link?['wedding_id'] as String?;
-      if (weddingId != null) {
-        row = await supabase.from('weddings').select().eq('id', weddingId).maybeSingle();
-      }
-    }
-    state = WeddingState(loading: false, wedding: row == null ? null : _fromRow(row));
+    final links = (await supabase
+            .from('wedding_collaborators')
+            .select('wedding_id')
+            .eq('user_id', ownerId)
+            .eq('status', 'active'))
+        .cast<Map<String, dynamic>>();
+    final ownedIds = owned.map((r) => r['id']).toSet();
+    final collabIds = [
+      for (final l in links)
+        if (!ownedIds.contains(l['wedding_id'])) l['wedding_id'] as String,
+    ];
+    final collab = collabIds.isEmpty
+        ? const <Map<String, dynamic>>[]
+        : (await supabase.from('weddings').select().inFilter('id', collabIds)).cast<Map<String, dynamic>>();
+    final events = [for (final r in [...owned, ...collab]) _fromRow(r)];
+    final wanted = activeId ?? state.wedding?.id ?? await _savedActiveId();
+    final active = events.where((e) => e.id == wanted).firstOrNull ?? events.firstOrNull;
+    state = WeddingState(loading: false, wedding: active, events: events);
+  }
+
+  /// Muda o evento ativo (separador Eventos → "Os meus eventos").
+  Future<void> select(String weddingId) async {
+    final w = state.events.where((e) => e.id == weddingId).firstOrNull;
+    if (w == null) return;
+    await _saveActiveId(weddingId);
+    state = WeddingState(loading: false, wedding: w, events: state.events);
   }
 
   /// Dados do onboarding v2 (081): tipos de evento escolhidos (até 2),
@@ -141,9 +186,21 @@ class WeddingController extends Notifier<WeddingState> {
         await supabase.from('weddings').insert(values);
       }
     }
-    final row = await supabase.from('weddings').select().eq('owner_id', ownerId).single();
+    // Vários eventos por conta (2026-11): o novo é o mais recente.
+    final row = await supabase
+        .from('weddings')
+        .select()
+        .eq('owner_id', ownerId)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .single();
     final wedding = _fromRow(row);
-    state = WeddingState(loading: false, wedding: wedding);
+    await _saveActiveId(wedding.id);
+    state = WeddingState(
+      loading: false,
+      wedding: wedding,
+      events: [wedding, ...state.events.where((e) => e.id != wedding.id)],
+    );
     return wedding;
   }
 
@@ -213,7 +270,7 @@ class WeddingController extends Notifier<WeddingState> {
         .eq('id', wedding.id)
         .select()
         .single();
-    state = WeddingState(loading: false, wedding: _fromRow(row));
+    state = state.copyWith(loading: false, wedding: _fromRow(row));
   }
 
   /// Upload da foto de perfil do ecrã "Os noivos" — mesmo bucket
@@ -245,7 +302,7 @@ class WeddingController extends Notifier<WeddingState> {
         .eq('id', wedding.id)
         .select()
         .single();
-    state = WeddingState(loading: false, wedding: _fromRow(row));
+    state = state.copyWith(loading: false, wedding: _fromRow(row));
   }
 
   /// Link para o par se juntar a este casamento (`create_partner_invite`,

@@ -142,6 +142,33 @@ class AuthController extends Notifier<AuthState> {
     await logout();
   }
 
+  /// "Criar um evento mais tarde" no início do onboarding (pedido
+  /// 2026-11): cria a conta como utilizador, sem evento, e segue para o
+  /// separador Eventos.
+  Future<void> skipEventCreation() async {
+    final p = _pendingSignup;
+    if (p != null) {
+      _pendingSignup = PendingSignup(
+        fullName: p.fullName,
+        email: p.email,
+        phone: p.phone,
+        password: p.password,
+        role: UserRole.guest,
+      );
+      await commitSignup();
+      final profile = state.profile;
+      if (profile != null) state = AuthState(status: AuthState.statusFor(profile), profile: profile);
+      return;
+    }
+    // Conta já criada (ex.: Google/Apple) a meio do onboarding.
+    await supabase.rpc('stop_organizing');
+    final user = supabase.auth.currentUser;
+    if (user != null) {
+      await supabase.from('profiles').update({'onboarding_completed': true}).eq('id', user.id);
+    }
+    await reloadProfile();
+  }
+
   /// Volta a ler o perfil (ex.: depois de `become_organizer`) — o router
   /// segue o novo estado (onboarding do evento ou área de utilizador).
   Future<void> reloadProfile() async {

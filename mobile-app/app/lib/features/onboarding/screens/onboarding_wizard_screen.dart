@@ -26,12 +26,13 @@ import '../../../shared/widgets/onboarding_exit.dart';
 /// aprovado (redesign 2026-10): tipo de evento, nome (+ par num
 /// casamento), data, região, convidados, orçamento e o que já está
 /// tratado; no fim, um resumo com os próximos passos.
-enum _WizardStep { event, names, date, region, guests, budget, booked }
+enum _WizardStep { event, names, date, region, access, guests, budget, booked }
 
 /// Passos que se podem saltar (o tipo de evento e o nome são precisos).
 const _skippable = {
   _WizardStep.date,
   _WizardStep.region,
+  _WizardStep.access,
   _WizardStep.guests,
   _WizardStep.budget,
   _WizardStep.booked,
@@ -58,7 +59,12 @@ class OnboardingWizardScreen extends ConsumerStatefulWidget {
   /// Só para as capturas de ecrã (`?step=N`).
   final int initialStep;
 
-  const OnboardingWizardScreen({super.key, this.initialStep = 0});
+  /// `true` = criar mais um evento a partir do separador Eventos
+  /// (`/novo-evento`, vários eventos por conta, 2026-11) — sem pergunta
+  /// inicial, sem permissões e sem marcar o onboarding.
+  final bool newEvent;
+
+  const OnboardingWizardScreen({super.key, this.initialStep = 0, this.newEvent = false});
 
   @override
   ConsumerState<OnboardingWizardScreen> createState() =>
@@ -75,6 +81,15 @@ class _OnboardingWizardScreenState
   /// Permissões pedidas no último passo, antes do ecrã de sucesso (2026-10-25).
   bool _permsDone = false;
   final Set<String> _alreadyBookedSlugs = {};
+
+  /// Pergunta inicial do onboarding: criar o evento já ou mais tarde
+  /// (pedido 2026-11 — não obrigar logo a criar um evento).
+  late bool _startAnswered = widget.newEvent || widget.initialStep > 0;
+
+  /// Acesso (2026-11): público ("Aberto a todos") ou privado; grátis ou pago.
+  bool _isPublic = false;
+  bool _isPaid = false;
+  final _price = TextEditingController();
 
   final _ownName = TextEditingController();
   final _partnerName = TextEditingController();
@@ -97,7 +112,7 @@ class _OnboardingWizardScreenState
   @override
   void initState() {
     super.initState();
-    for (final c in [_ownName, _partnerName, _location, _budget, _otherLabel, _ownPhone, _partnerPhone]) {
+    for (final c in [_ownName, _partnerName, _location, _budget, _otherLabel, _ownPhone, _partnerPhone, _price]) {
       c.addListener(() => setState(() {}));
     }
   }
@@ -111,6 +126,7 @@ class _OnboardingWizardScreenState
     _otherLabel.dispose();
     _ownPhone.dispose();
     _partnerPhone.dispose();
+    _price.dispose();
     super.dispose();
   }
 
@@ -130,8 +146,26 @@ class _OnboardingWizardScreenState
         // "o nome do par não é opcional" (2026-10-17) — num casamento.
         _WizardStep.names => _ownName.text.trim().isNotEmpty &&
             (!_isWedding || _partnerName.text.trim().isNotEmpty),
+        _WizardStep.access => !_isPaid || (_priceValue ?? 0) > 0,
         _ => true,
       };
+
+  double? get _priceValue =>
+      double.tryParse(_price.text.trim().replaceAll(' ', '').replaceAll('€', '').replaceAll(',', '.'));
+
+  /// "Mais tarde": a conta fica criada sem evento e vai para Eventos.
+  Future<void> _later() async {
+    setState(() => _saving = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(authControllerProvider.notifier).skipEventCreation();
+    } on SignupFailed catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível continuar. Tenta novamente.')));
+    }
+    if (mounted) setState(() => _saving = false);
+  }
 
   void _toggleType(EventType type) {
     setState(() {
@@ -170,7 +204,7 @@ class _OnboardingWizardScreenState
         }
         if (!mounted) return;
       }
-      final existing = ref.read(weddingControllerProvider).wedding;
+      final existing = widget.newEvent ? null : ref.read(weddingControllerProvider).wedding;
       final wedding = existing ??
           await ref.read(weddingControllerProvider.notifier).create(
                 partnerName1: _firstName(profile),
@@ -195,6 +229,21 @@ class _OnboardingWizardScreenState
               phone1: _ownPhone.text.trim().isEmpty ? null : _ownPhone.text.trim(),
               phone2: _partnerPhone.text.trim().isEmpty ? null : _partnerPhone.text.trim(),
             );
+      }
+      if (existing == null) {
+        // Público/privado e grátis/pago (migrações 141/142) — ignora em
+        // silêncio enquanto as colunas não existirem.
+        try {
+          await supabase.from('weddings').update({
+            'is_public': _isPublic,
+            'is_paid': _isPaid,
+            'entry_price': _isPaid ? _priceValue : null,
+          }).eq('id', wedding.id);
+        } catch (_) {}
+        // Utilizador que cria o primeiro evento passa a organizar.
+        if (ref.read(authControllerProvider).profile?.role == UserRole.guest) {
+          await ref.read(authControllerProvider.notifier).becomeOrganizer();
+        }
       }
       if (_alreadyBookedSlugs.isNotEmpty) {
         await supabase.from('wedding_service_preferences').upsert([
@@ -231,6 +280,10 @@ class _OnboardingWizardScreenState
 
   /// Marca o onboarding como feito e segue para [route].
   Future<void> _finish(String route, {Object? extra}) async {
+    if (widget.newEvent) {
+      context.go(route, extra: extra);
+      return;
+    }
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -286,8 +339,18 @@ class _OnboardingWizardScreenState
       _ownNamePrefilled = true;
     }
 
+    if (!_startAnswered) {
+      return _StartChoice(
+        name: _firstName(profile),
+        saving: _saving,
+        onNow: () => setState(() => _startAnswered = true),
+        onLater: _later,
+        onExit: () => exitOnboarding(context, ref),
+      );
+    }
+
     final created = _createdWedding;
-    if (created != null && !_permsDone) {
+    if (created != null && !_permsDone && !widget.newEvent) {
       return PermissionsStep(role: TourRole.organizer, onDone: () => setState(() => _permsDone = true));
     }
     if (created != null) {
@@ -318,7 +381,13 @@ class _OnboardingWizardScreenState
                   children: [
                     // Seta sempre visível: volta um passo, ou sai do
                     // registo no primeiro (sem gravar nada).
-                    CircleBackButton(onTap: _step > 0 ? _back : () => exitOnboarding(context, ref)),
+                    CircleBackButton(
+                      onTap: _step > 0
+                          ? _back
+                          : widget.newEvent
+                              ? () => context.go('/eventos')
+                              : () => setState(() => _startAnswered = false),
+                    ),
                     const Spacer(),
                     if (_skippable.contains(_current))
                       TextButton(
@@ -494,6 +563,43 @@ class _OnboardingWizardScreenState
           subtitle: 'Mostramos primeiro os parceiros desta zona.',
           child: _RegionStep(controller: _location),
         );
+      case _WizardStep.access:
+        return _StepScaffold(
+          question: 'Quem pode entrar?',
+          subtitle: 'Podes mudar isto depois nas Definições do evento.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _ChoicePair(
+                left: ('Privado', Icons.lock_outline_rounded, 'Só quem convidares'),
+                right: ('Público', Icons.public_rounded, 'Aparece a todos em Eventos'),
+                rightSelected: _isPublic,
+                onChanged: (v) => setState(() => _isPublic = v),
+              ),
+              const SizedBox(height: 22),
+              const Text('Entrada',
+                  style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 10),
+              _ChoicePair(
+                left: ('Grátis', Icons.celebration_outlined, 'Sem custo para quem vai'),
+                right: ('Pago', Icons.confirmation_number_outlined, 'Com preço por pessoa'),
+                rightSelected: _isPaid,
+                onChanged: (v) => setState(() => _isPaid = v),
+              ),
+              if (_isPaid) ...[
+                const SizedBox(height: 16),
+                _LabeledField(
+                  label: 'Preço por pessoa',
+                  controller: _price,
+                  hint: 'Ex.: 25',
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  suffix: '€',
+                  autofocus: true,
+                ),
+              ],
+            ],
+          ),
+        );
       case _WizardStep.guests:
         return _StepScaffold(
           question: 'Quantos convidados, mais ou menos?',
@@ -534,6 +640,114 @@ class _OnboardingWizardScreenState
 }
 
 // ───────────────────────── peças partilhadas ─────────────────────────
+
+/// Primeiro ecrã do onboarding depois dos dados da conta: criar já o
+/// evento ou mais tarde (pedido 2026-11).
+class _StartChoice extends StatelessWidget {
+  final String name;
+  final bool saving;
+  final VoidCallback onNow;
+  final VoidCallback onLater;
+  final VoidCallback onExit;
+
+  const _StartChoice({
+    required this.name,
+    required this.saving,
+    required this.onNow,
+    required this.onLater,
+    required this.onExit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GradientScaffold(
+      background: AppBackground.subtle,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 44, child: Row(children: [CircleBackButton(onTap: onExit)])),
+              const SizedBox(height: 32),
+              Text(
+                'Olá, $name! Queres criar um evento já?',
+                style: const TextStyle(fontSize: AppFontSize.h1, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Podes criar agora ou entrar primeiro e ver os eventos públicos. Crias um evento quando quiseres no separador Eventos.',
+                style: TextStyle(fontSize: AppFontSize.base, height: 1.4, color: AppTheme.inkMuted),
+              ),
+              const Spacer(),
+              _BigButton(label: 'Criar um evento agora', onPressed: saving ? null : onNow),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: saving ? null : onLater,
+                child: saving
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Mais tarde', style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Duas opções lado a lado (Privado/Público, Grátis/Pago).
+class _ChoicePair extends StatelessWidget {
+  final (String, IconData, String) left;
+  final (String, IconData, String) right;
+  final bool rightSelected;
+  final ValueChanged<bool> onChanged;
+
+  const _ChoicePair({required this.left, required this.right, required this.rightSelected, required this.onChanged});
+
+  Widget _tile((String, IconData, String) o, bool selected, VoidCallback onTap) {
+    final (label, icon, hint) = o;
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        child: SnappyTap(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 22, color: selected ? Colors.white : AppTheme.accentOliveDark),
+                const SizedBox(height: 8),
+                Text(label,
+                    style: TextStyle(
+                        fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
+                const SizedBox(height: 2),
+                Text(hint,
+                    style: TextStyle(fontSize: AppFontSize.sm, color: selected ? Colors.white70 : AppTheme.inkMuted)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Row(
+        children: [
+          _tile(left, !rightSelected, () => onChanged(false)),
+          const SizedBox(width: 10),
+          _tile(right, rightSelected, () => onChanged(true)),
+        ],
+      );
+}
 
 class _StepScaffold extends StatelessWidget {
   final String question;

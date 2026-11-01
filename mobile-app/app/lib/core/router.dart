@@ -303,6 +303,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      // Criar mais um evento (vários por conta, 2026-11).
+      GoRoute(
+        path: '/novo-evento',
+        builder: (context, state) => const OnboardingWizardScreen(newEvent: true),
+      ),
       tabRoute(
         path: '/eventos',
         builder: (context, state) => const EventosScreen(),

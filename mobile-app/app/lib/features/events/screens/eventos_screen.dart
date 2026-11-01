@@ -36,7 +36,9 @@ class EventosScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final role = ref.watch(authControllerProvider.select((s) => s.profile?.role));
     final organizer = role == UserRole.couple;
-    final myWedding = organizer ? ref.watch(weddingControllerProvider.select((s) => s.wedding)) : null;
+    final weddingState = ref.watch(weddingControllerProvider);
+    final myEvents = organizer ? weddingState.events : const <Wedding>[];
+    final activeId = weddingState.wedding?.id;
     final invited = ref.watch(guestWeddingsProvider).value ?? const <GuestWedding>[];
     final publicAsync = ref.watch(publicEventsProvider);
     final joinedIds = invited.map((w) => w.weddingId).toSet();
@@ -59,12 +61,12 @@ class EventosScreen extends ConsumerWidget {
                   const _Lead('Os teus eventos e os eventos abertos a todos.'),
                   const SizedBox(height: 18),
                   const _Section('Os meus eventos'),
-                  if (myWedding != null)
-                    _Pad(_OwnEventCard(wedding: myWedding)),
+                  for (final w in myEvents)
+                    _Pad(_OwnEventCard(wedding: w, active: myEvents.length > 1 && w.id == activeId)),
                   for (final w in invited) _Pad(GuestEventCard(wedding: w)),
-                  if (myWedding == null && invited.isEmpty)
+                  if (myEvents.isEmpty && invited.isEmpty)
                     const _Pad(_EmptyNote('Ainda não tens eventos. Cria o teu ou entra num público.')),
-                  if (!organizer) _Pad(_CreateEventButton()),
+                  _Pad(_CreateEventButton()),
                   _Pad(_CodeButton()),
                   const SizedBox(height: 14),
                   const _Section('Eventos públicos'),
@@ -227,12 +229,13 @@ class _Badge extends StatelessWidget {
       );
 }
 
-class _OwnEventCard extends StatelessWidget {
+class _OwnEventCard extends ConsumerWidget {
   final Wedding wedding;
-  const _OwnEventCard({required this.wedding});
+  final bool active;
+  const _OwnEventCard({required this.wedding, this.active = false});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final place = wedding.venue?.isNotEmpty == true
         ? wedding.venue
         : (wedding.location?.isNotEmpty == true ? wedding.location : null);
@@ -242,8 +245,11 @@ class _OwnEventCard extends StatelessWidget {
       names: wedding.displayNames,
       meta: _meta(wedding.weddingDate, place),
       photo: wedding.coverPhotoUrl,
-      trailing: _Badge('Organizas', bg: AppTheme.accentOliveDark, fg: Colors.white),
-      onTap: () => context.go('/wedding'),
+      trailing: _Badge(active ? 'Aberto' : 'Organizas', bg: AppTheme.accentOliveDark, fg: Colors.white),
+      onTap: () async {
+        await ref.read(weddingControllerProvider.notifier).select(wedding.id);
+        if (context.mounted) context.go('/wedding');
+      },
     );
   }
 }
@@ -271,6 +277,7 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
         title: Text('Entrar em ${e.displayNames}?'),
         content: Text([
           'É um evento aberto a todos. Ficas na lista de convidados e vês o programa, a galeria e as novidades.',
+          if (e.isPaid) '\n\nEntrada: ${e.priceLabel}, paga diretamente ao organizador.',
           if (e.welcomeMessage?.isNotEmpty == true) '\n"${e.welcomeMessage}"',
         ].join()),
         actions: [
@@ -301,7 +308,7 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
       id: e.weddingId,
       type: e.eventType,
       names: e.displayNames,
-      meta: _meta(e.date, e.place),
+      meta: [_meta(e.date, e.place), e.priceLabel].where((x) => x.isNotEmpty).join(' · '),
       photo: e.coverPhotoUrl,
       trailing: _busy
           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
@@ -311,43 +318,22 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
   }
 }
 
-class _CreateEventButton extends ConsumerStatefulWidget {
-  @override
-  ConsumerState<_CreateEventButton> createState() => _CreateEventButtonState();
-}
-
-class _CreateEventButtonState extends ConsumerState<_CreateEventButton> {
-  bool _busy = false;
-
-  Future<void> _create() async {
-    setState(() => _busy = true);
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      // O router leva ao assistente de criação do evento.
-      await ref.read(authControllerProvider.notifier).becomeOrganizer();
-    } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível começar o evento. Tenta outra vez.')));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
+/// Abre o assistente de criação (vários eventos por conta, 2026-11):
+/// tipo de evento, público ou privado, grátis ou pago.
+class _CreateEventButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SnappyTap(
-      onTap: _busy ? () {} : _create,
+      onTap: () => context.push('/novo-evento'),
       child: Container(
         height: 56,
         decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(18)),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (_busy)
-              const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-            else
-              const Icon(Icons.add_rounded, size: 22, color: Colors.white),
-            const SizedBox(width: 10),
-            const Text('Criar um evento', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+            Icon(Icons.add_rounded, size: 22, color: Colors.white),
+            SizedBox(width: 10),
+            Text('Criar um evento', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
           ],
         ),
       ),
