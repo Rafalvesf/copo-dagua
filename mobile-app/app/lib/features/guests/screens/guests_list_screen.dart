@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/join_requests_card.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -118,6 +119,11 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                           onFilter: (f) => ref.read(guestsControllerProvider.notifier).setFilter(f),
                         ),
                       ),
+                      if (wedding != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
+                          child: JoinRequestsCard(weddingId: wedding.id),
+                        ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(
                           AppTheme.screenMargin,

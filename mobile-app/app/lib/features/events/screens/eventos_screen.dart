@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/floating_filter_bar.dart' show FilterChipsRow, FilterBarItem;
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -105,6 +106,14 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             _Pad(_CodeButton()),
           ];
 
+    final tabs = FilterChipsRow(
+      items: const [FilterBarItem('Descobrir'), FilterBarItem('Os meus eventos')],
+      selected: tab,
+      infinite: false,
+      visible: 2,
+      onSelected: (i) => setState(() => _tab = i),
+    );
+
     return GradientScaffold(
       background: AppBackground.subtle,
       body: Stack(
@@ -114,18 +123,10 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             child: RefreshIndicator(
               onRefresh: _refresh,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 130),
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 190),
                 children: [
                   const PageHeader(title: 'Eventos', showBack: false, centered: true),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                    child: _Segmented(
-                      labels: const ['Descobrir', 'Os meus'],
-                      index: tab,
-                      onChanged: (i) => setState(() => _tab = i),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
                   ...content,
                 ],
               ),
@@ -135,56 +136,12 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             left: 0,
             right: 0,
             bottom: 0,
+            // "Descobrir" / "Os meus eventos" por cima da navbar (pedido
+            // 2026-11), na mesma ilha — como os filtros da Galeria.
             child: organizer
-                ? const FloatingBottomNav(current: AppTab.events)
-                : const GuestBottomNav(current: GuestTab.events),
+                ? FloatingBottomNav(current: AppTab.events, top: tabs)
+                : GuestBottomNav(current: GuestTab.events, top: tabs),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Segmented extends StatelessWidget {
-  final List<String> labels;
-  final int index;
-  final ValueChanged<int> onChanged;
-  const _Segmented({required this.labels, required this.index, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999), boxShadow: AppTheme.navBarShadow),
-      child: Row(
-        children: [
-          for (var i = 0; i < labels.length; i++)
-            Expanded(
-              child: Semantics(
-                button: true,
-                selected: i == index,
-                child: SnappyTap(
-                  onTap: () => onChanged(i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: i == index ? AppTheme.accentOliveDark : Colors.transparent,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      labels[i],
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: i == index ? Colors.white : AppTheme.inkMuted,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );

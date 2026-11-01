@@ -114,48 +114,6 @@ Future<void> _pickAndUploadAvatar(BuildContext context, WidgetRef ref) async {
   }
 }
 
-/// "Abrir link de convite" no estado vazio — aceita tanto um link
-/// completo (`.../i/{token}`) como só o token, e liga a conta a essa
-/// linha específica de `guests` via `joinWeddingByInviteToken()`
-/// (`071_guest_join_mode_and_invite_token.sql`), sem nunca criar uma
-/// linha nova (um token só existe para uma que o casal já criou).
-Future<void> _openInviteLinkDialog(BuildContext context, WidgetRef ref) async {
-  final controller = TextEditingController();
-  final input = await showIslandDialog<String>(
-    context: context,
-    builder: (context) => IslandAlert(
-      title: const Text('Link de convite'),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        decoration: const InputDecoration(hintText: 'Cola aqui o link ou código do convite'),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-          child: const Text('Associar'),
-        ),
-      ],
-    ),
-  );
-  if (input == null || input.isEmpty) return;
-
-  final token = input.contains('/') ? input.split('/').last : input;
-  try {
-    final result = await joinWeddingByInviteToken(token);
-    ref.invalidate(guestWeddingsProvider);
-    ref.invalidate(myGuestRowProvider(result.weddingId));
-  } catch (e) {
-    if (!context.mounted) return;
-    final message = e is PostgrestException && e.code == 'P0002'
-        ? 'Link inválido — confirma com os noivos.'
-        : e is PostgrestException && e.code == 'P0007'
-        ? 'Este convite já está associado a outra conta.'
-        : 'Não foi possível associar o convite. Tenta novamente.';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
-}
 
 class _GuestProfileBody extends ConsumerWidget {
   final String weddingId;
@@ -285,19 +243,13 @@ class _GuestProfileBody extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const Text(
-                            'Ainda não estás na lista de convidados deste evento.',
+                            'À espera que o organizador confirme a tua entrada.',
                             style: TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
                           ),
                           const SizedBox(height: 6),
                           const Text(
-                            'Este evento é só por convite. Assim que o organizador te puser na lista, podes responder, escolher o menu e ver a tua mesa.',
+                            'Já podes ver o programa, a galeria e as novidades. Assim que o organizador confirmar, respondes, escolhes o menu e vês a tua mesa.',
                             style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-                          ),
-                          const SizedBox(height: 10),
-                          TextButton(
-                            onPressed: () => _openInviteLinkDialog(context, ref),
-                            child: Text('Recebi um link de convite',
-                                style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700)),
                           ),
                         ],
                       ),
