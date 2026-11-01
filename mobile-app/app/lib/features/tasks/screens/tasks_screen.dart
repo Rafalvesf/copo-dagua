@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../payments/open_payment.dart';
-import '../../../core/chat/chat_helpers.dart';
+import '../task_actions.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/tasks/task_models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/green_hero.dart';
@@ -52,23 +49,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     Future.microtask(() => ref.read(taskEngineControllerProvider.notifier).recompute());
   }
 
-  static IconData _iconForCategory(String? category) => switch (category) {
-    'orcamento' => Icons.savings_outlined,
-    'convidados' => Icons.people_outline,
-    'lugares' => Icons.event_seat_outlined,
-    'parceiros' => Icons.storefront_outlined,
-    _ => Icons.task_alt_outlined,
-  };
-
-  static String? _routeForCategory(String? category) => switch (category) {
-    'orcamento' => '/budget',
-    'convidados' => '/guests',
-    'lugares' => '/seating',
-    'parceiros' => '/partners',
-    'pagamentos' => '/bookings',
-    _ => null,
-  };
-
   static Color _priorityColor(TaskPriority priority) => switch (priority) {
     TaskPriority.urgent => AppStatusColors.declined,
     TaskPriority.high => AppTheme.accentOliveDark,
@@ -76,52 +56,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     TaskPriority.low => AppTheme.inkMuted,
   };
 
-  Future<void> _openTask(WeddingTask task) async {
-    final notifier = ref.read(taskEngineControllerProvider.notifier);
-    if (!task.seen) notifier.markTaskSeen(task.id);
-    // Uma sugestão (`cta_opened`) conclui-se no primeiro clique válido
-    // no CTA — nunca uma tarefa `action_completed`/`manual`, essas só
-    // ficam "Feito" quando os dados reais confirmarem a ação, ou o
-    // casal a marcar manualmente. Ver `task_models.dart`.
-    if (task.completionBehavior == TaskCompletionBehavior.ctaOpened) {
-      notifier.completeCtaTask(task.id);
-    }
-
-    // "Rever proposta — {parceiro}" (task_engine_controller.dart) é a
-    // única tarefa de categoria 'parceiros' que representa uma resposta
-    // concreta de um parceiro específico — leva à conversa real com ele
-    // em vez do Marketplace genérico (bug real reportado pelo
-    // utilizador, 2026-09-05).
-    if (task.category == 'parceiros' &&
-        task.title.startsWith('Rever proposta') &&
-        task.sourceEntityId != null) {
-      final weddingId = ref.read(weddingControllerProvider).wedding?.id;
-      if (weddingId != null) {
-        try {
-          final conversation = await resolveProposalConversation(
-            weddingId: weddingId,
-            proposalId: task.sourceEntityId!,
-          );
-          if (mounted) {
-            context.push('/chat/${conversation.id}', extra: conversation);
-          }
-          return;
-        } catch (_) {
-          // Cai no comportamento antigo abaixo se não conseguir resolver
-          // a conversa (ex: proposta entretanto apagada).
-        }
-      }
-    }
-
-    // "Pagar sinal — …" abre logo o pagamento desse sinal (2026-10-19).
-    if (isPaymentTask(task.category, task.sourceEntityId)) {
-      if (mounted) await openPaymentFlow(context, ref, task.sourceEntityId!);
-      return;
-    }
-
-    final route = _routeForCategory(task.category);
-    if (route != null && mounted) context.push(route);
-  }
+  Future<void> _openTask(WeddingTask task) => openTask(context, ref, task);
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +140,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                   _TaskRow(
                                     task: task,
                                     index: i,
-                                    icon: _iconForCategory(task.category),
+                                    icon: taskIcon(task.category),
                                     color: _priorityColor(task.priority),
                                     onTap: () => _openTask(task),
                                   ),
@@ -269,7 +204,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                 for (final task in doneItems) ...[
                                   _DoneTaskRow(
                                     task: task,
-                                    icon: _iconForCategory(task.category),
+                                    icon: taskIcon(task.category),
                                   ),
                                   const SizedBox(height: 10),
                                 ],
