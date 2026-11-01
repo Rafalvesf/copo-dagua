@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html class="tt-opening">
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/copo-dagua/">
+
+  <meta charset="UTF-8">
+  <!-- Regresso de um pagamento que precisou de sair da app (2026-10-21):
+       guarda o id, limpa o endereço e salta a abertura e o brinde —
+       a app abre logo na confirmação do pagamento. -->
+  <script>
+    (function () {
+      try {
+        var q = new URLSearchParams(location.search);
+        var id = q.get('pay_return');
+        if (!id) return;
+        window.tchinPayReturn = id;
+        window.tchinSkipOpening = true;
+        history.replaceState(null, '', location.pathname + '#/pay/return');
+        document.documentElement.classList.remove('tt-opening');
+      } catch (e) {}
+    })();
+  </script>
+  <!-- Versões novas chegam logo (2026-10-17): o service worker antigo do
+       Flutter guardava a app em cache e o telemóvel continuava com a
+       versão anterior. Remove-o (e as caches dele) uma vez e recarrega. -->
+  <script>
+    (function () {
+      try {
+        if (!('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          // Só o service worker antigo do Flutter (cache). O das
+          // notificações (push_sw.js) fica — 2026-10-21.
+          regs = regs.filter(function (r) {
+            var sw = r.active || r.waiting || r.installing;
+            return !(sw && /push_sw\.js/.test(sw.scriptURL));
+          });
+          if (!regs.length) return;
+          Promise.all(regs.map(function (r) { return r.unregister(); }))
+            .then(function () {
+              return window.caches ? caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+              }) : null;
+            })
+            .then(function () {
+              try {
+                if (sessionStorage.getItem('tt-sw-reset')) return;
+                sessionStorage.setItem('tt-sw-reset', '1');
+              } catch (e) {}
+              location.reload();
+            });
+        });
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="À Nossa! — o teu evento, num só lugar.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="theme-color" content="#4F6B4A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="À Nossa!">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>À Nossa!</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      /* Igual ao fundo da app — antes era #D1D4DA (cinzento-azulado),
+         que aparecia como uma barra azulada no topo no telemóvel. */
+      background: #FFFFFF;
+    }
+    /* Início 1 · Abertura — igual ao canvas, feita pela própria página
+       para correr logo ao abrir, mesmo enquanto a app ainda carrega.
+       As palavras brindam (1,6 s), fica a frase; quando a app está pronta
+       (e passaram pelo menos 3,2 s) o verde fecha em círculo e rebenta em
+       confetti. */
+    html.tt-opening, html.tt-opening body { background: #4F6B4A; }
+    /* A app começa por baixo da barra do telemóvel (horas, bateria):
+       no iPhone, como app no ecrã principal, a página ocupa o ecrã todo e
+       o topo da app ficava por baixo das horas (2026-10-25). A faixa da
+       barra mostra o fundo da página, que acompanha a cor do topo do ecrã
+       visível (tchinSetThemeColor). Sem barra (computador), não muda nada. */
+    #app-host {
+      position: fixed;
+      top: env(safe-area-inset-top, 0px);
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+    @font-face { font-family: TT; src: url('assets/assets/fonts/louis_george_cafe/LouisGeorgeCafe-Bold.ttf'); font-weight: 700; }
+    #tt-splash { position: fixed; inset: 0; background: #4F6B4A; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px; z-index: 10; font-family: TT, Roboto, sans-serif; color: #fff;
+      clip-path: circle(75% at 50% 50%); }
+    #tt-splash .wrap { position: relative; display: inline-block; font-size: 56px; line-height: 52px; font-weight: 700; letter-spacing: -0.5px; text-align: center; }
+    #tt-splash .w { display: block; }
+    #tt-splash .a { animation: ttA 1.6s cubic-bezier(.2,.8,.2,1) both; }
+    #tt-splash .b { animation: ttB 1.6s cubic-bezier(.2,.8,.2,1) both; }
+    #tt-splash .sp { position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px; border-radius: 9px; background: #F2D98D;
+      opacity: 0; animation: ttSpark 1.05s ease-out 1.05s both; }
+    #tt-splash .star { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; margin: -13px; opacity: 0; animation: ttStar .85s ease-out 1.05s both; }
+    #tt-splash .t { font-size: 15px; color: #DDE5D3; animation: ttT .5s ease-out 1.6s both; }
+    #tt-splash .prep { position: absolute; bottom: 48px; font-size: 13px; color: #DDE5D3; animation: ttT .5s ease-out 1.6s both; }
+    @keyframes ttA { 0% { transform: translateX(-170px) rotate(-12deg); opacity: 0 } 69% { transform: translateX(8px) rotate(4deg); opacity: 1 } 84% { transform: translateX(-3px) rotate(-1deg) } 100% { transform: none; opacity: 1 } }
+    @keyframes ttB { 0% { transform: translateX(170px) rotate(12deg); opacity: 0 } 69% { transform: translateX(-8px) rotate(-4deg); opacity: 1 } 84% { transform: translateX(3px) rotate(1deg) } 100% { transform: none; opacity: 1 } }
+    @keyframes ttSpark { 0% { transform: translate(0,0) scale(0); opacity: 0 } 19% { transform: translate(0,0) scale(1); opacity: 1 } 100% { transform: translate(var(--dx),var(--dy)) scale(.3); opacity: 0 } }
+    @keyframes ttStar { 0% { transform: scale(0) rotate(0); opacity: 0 } 29% { transform: scale(1.25) rotate(45deg); opacity: 1 } 100% { transform: scale(0) rotate(90deg); opacity: 0 } }
+    @keyframes ttT { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+    #tt-splash .prep b { font-weight: inherit; opacity: 0; animation: ttDot 1.2s steps(1) infinite; }
+    #tt-splash .prep .d2 { animation-name: ttDot2; }
+    #tt-splash .prep .d3 { animation-name: ttDot3; }
+    @keyframes ttDot { 0% { opacity: 0 } 25%, 100% { opacity: 1 } }
+    @keyframes ttDot2 { 0%, 25% { opacity: 0 } 50%, 100% { opacity: 1 } }
+    @keyframes ttDot3 { 0%, 50% { opacity: 0 } 75%, 100% { opacity: 1 } }
+    /* saída */
+    #tt-splash.go { animation: ttExit .7s cubic-bezier(.7,0,.3,1) both; }
+    #tt-splash.go .wrap, #tt-splash.go .t, #tt-splash.go .prep { animation: ttLift .5s ease-in both; }
+    @keyframes ttExit { from { clip-path: circle(75% at 50% 50%) } to { clip-path: circle(0% at 50% 50%) } }
+    @keyframes ttLift { from { opacity: 1; transform: none } to { opacity: 0; transform: translateY(-40px) } }
+    #tt-cf { position: fixed; inset: 0; pointer-events: none; z-index: 11; }
+    #tt-cf i { position: absolute; left: 50%; top: 50%; width: 8px; height: 13px; border-radius: 2px; opacity: 0; }
+    #tt-cf.go i { animation: ttBurst 1.15s cubic-bezier(.15,.7,.3,1) .65s both; }
+    @keyframes ttBurst { 0% { transform: translate(-50%,-50%) scale(0); opacity: 0 } 9% { transform: translate(-50%,-50%) scale(1); opacity: 1 }
+      52% { transform: translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--r)); opacity: 1 }
+      100% { transform: translate(calc(-50% + var(--dx)*1.1),calc(-50% + var(--dy) + 90px)) rotate(calc(var(--r)*1.6)); opacity: 0 } }
+    /* Ecrã sempre na vertical (2026-10-19): o iPhone não deixa a web
+       travar a rotação, por isso num telemóvel deitado aparece este aviso
+       por cima da app até voltar à vertical. */
+    #tt-rotate { display: none; }
+    @media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+      #tt-rotate { display: flex; position: fixed; inset: 0; z-index: 20; background: #4F6B4A; color: #fff;
+        flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center;
+        font-family: TT, Roboto, sans-serif; padding: 24px; }
+      #tt-rotate svg { animation: ttRot 1.8s ease-in-out infinite; }
+      #tt-rotate b { font-size: 22px; }
+      #tt-rotate span { font-size: 14px; color: #DDE5D3; }
+    }
+    @keyframes ttRot { 0%, 20% { transform: rotate(-90deg) } 60%, 100% { transform: rotate(0deg) } }
+  </style>
+</head>
+<body>
+  <div id="tt-splash" role="img" aria-label="À Nossa!">
+    <span class="wrap"><span class="w a">À</span><span class="w b">Nossa!</span><i class="sp" style="--dx:-70px;--dy:-46px"></i><i class="sp" style="--dx:70px;--dy:-46px;background:#fff"></i><i class="sp" style="--dx:-90px;--dy:8px"></i><i class="sp" style="--dx:90px;--dy:8px;background:#fff"></i><i class="sp" style="--dx:-52px;--dy:54px"></i><i class="sp" style="--dx:52px;--dy:54px;background:#fff"></i><i class="sp" style="--dx:0px;--dy:-70px"></i><i class="sp" style="--dx:0px;--dy:72px;background:#fff"></i><svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z" fill="#FFFFFF"/></svg></span>
+    <span class="t">Para todas as festas</span>
+    <span class="prep">A preparar o brinde<b class="d1">.</b><b class="d2">.</b><b class="d3">.</b></span>
+  </div>
+  <div id="tt-rotate" role="alert">
+    <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18.5h2"/></svg>
+    <b>Roda o telemóvel</b>
+    <span>A app funciona na vertical.</span>
+  </div>
+  <div id="tt-cf" aria-hidden="true"></div>
+  <script>
+    // Android/PWA instalada: tenta travar mesmo a rotação (o iPhone não
+    // deixa — aí fica o aviso acima).
+    (function () {
+      function lock() {
+        try {
+          if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('portrait').catch(function () {});
+          }
+        } catch (e) {}
+      }
+      lock();
+      window.addEventListener('pointerdown', lock, { once: true });
+    })();
+    // A app muda a cor da barra do topo conforme o fundo da página.
+    // Enquanto a abertura verde cobre o ecrã, a app pode pedir outra cor
+    // (o primeiro ecrã desenha-se por baixo): guarda-a e só a aplica
+    // quando o círculo verde deixa de cobrir o topo (2026-10-19 — antes o
+    // topo ficava branco por cima do verde).
+    window.tchinOpening = true;
+    window.tchinPendingBar = null;
+    window.tchinSetThemeColor = function (c) {
+      if (window.tchinOpening) { window.tchinPendingBar = c; return; }
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute('content', c);
+      // Safari 26 (iOS) já não usa o theme-color: pinta a barra do topo
+      // com o fundo da página. Por isso o fundo do html/body acompanha a
+      // cor (verde no brinde, branco no resto) — 2026-10-18.
+      document.documentElement.style.background = c;
+      document.body.style.background = c;
+    };
+    (function () {
+      if (window.tchinSkipOpening) {
+        window.tchinOpening = false;
+        var sp0 = document.getElementById('tt-splash'); if (sp0) sp0.remove();
+        var cf0 = document.getElementById('tt-cf'); if (cf0) cf0.remove();
+        return;
+      }
+      var colors = ['#4F6B4A', '#F2D98D', '#F3C9CF', '#A9BC8F', '#E8B44C', '#DDE5D3', '#F3B9C1'];
+      var cf = document.getElementById('tt-cf');
+      for (var i = 0; i < 30; i++) {
+        var a = i / 30 * Math.PI * 2, d = 110 + (i * 37 % 100);
+        var el = document.createElement('i');
+        el.style.setProperty('--dx', Math.round(Math.cos(a) * d) + 'px');
+        el.style.setProperty('--dy', Math.round(Math.sin(a) * d) + 'px');
+        el.style.setProperty('--r', ((i % 2 ? -1 : 1) * (180 + i * 17)) + 'deg');
+        el.style.background = colors[i % colors.length];
+        if (i % 4 === 0) { el.style.width = '8px'; el.style.height = '8px'; el.style.borderRadius = '9px'; }
+        cf.appendChild(el);
+      }
+      var t0 = Date.now(), ready = false, gone = false;
+      function exit() {
+        if (gone || !ready || Date.now() - t0 < 3200) return;
+        gone = true;
+        var sp = document.getElementById('tt-splash');
+        sp.classList.add('go');
+        cf.classList.add('go');
+        // Instante exato em que o círculo (75% → 0, cubic-bezier(.7,0,.3,1),
+        // 0,7 s) deixa de cobrir o topo do ecrã.
+        var w = innerWidth, h = innerHeight, R = Math.sqrt(w * w + h * h) / Math.SQRT2;
+        var target = Math.min(1, Math.max(0, 1 - h / (1.5 * R)));
+        function bz(t, a, b) { var u = 1 - t; return 3 * u * u * t * a + 3 * u * t * t * b + t * t * t; }
+        var lo = 0, hi = 1;
+        for (var k = 0; k < 30; k++) { var mid = (lo + hi) / 2; if (bz(mid, 0, 1) < target) lo = mid; else hi = mid; }
+        var px = bz(lo, 0.7, 0.3);
+        setTimeout(function () {
+          window.tchinOpening = false;
+          document.documentElement.classList.remove('tt-opening');
+          window.tchinSetThemeColor(window.tchinPendingBar || '#FFFFFF');
+        }, Math.round(700 * px));
+        setTimeout(function () { sp.remove(); }, 750);
+        setTimeout(function () { cf.remove(); }, 2000);
+      }
+      window.addEventListener('flutter-first-frame', function () {
+        // um instante para o primeiro ecrã ficar desenhado por baixo
+        setTimeout(function () { ready = true; exit(); }, 250);
+      });
+      setTimeout(exit, 3200);
+      // segurança: nunca fica preso na abertura
+      setTimeout(function () { ready = true; exit(); }, 12000);
+    })();
+  </script>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script>
+    // Pagamento dentro da app. 2026-10-25 ("quero tudo feito na app"): o
+    // ecrã é todo desenhado pelo Flutter. Daqui só vem o que não pode
+    // passar pela app:
+    // - os 3 campos do cartão (número, validade, CVC) — iframes mínimos da
+    //   Stripe com a letra e as cores da app, sem nada da Stripe à vista
+    //   (regras PCI: o número do cartão nunca toca na app);
+    // - Apple Pay / Google Pay — a janela de pagamento do próprio telemóvel.
+    // MB WAY e Multibanco já não usam nada daqui (confirmados no servidor).
+    // Entrar com Google na web (2026-10-28): botão oficial do Google
+    // (Google Identity Services). Devolve um ID token, validado pelo
+    // Supabase com o nonce; não há redirecionamento para supabase.co.
+    window.tchinGoogle = (function () {
+      var ready = null;
+      function load() {
+        if (!ready) {
+          ready = new Promise(function (res, rej) {
+            var s = document.createElement('script');
+            s.src = 'https://accounts.google.com/gsi/client';
+            s.async = true;
+            s.onload = res;
+            s.onerror = rej;
+            document.head.appendChild(s);
+          });
+        }
+        return ready;
+      }
+      async function sha256(t) {
+        var b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
+        return Array.from(new Uint8Array(b)).map(function (x) { return x.toString(16).padStart(2, '0'); }).join('');
+      }
+      var handler = null;
+      return {
+        createHost: function () {
+          var d = document.createElement('div');
+          d.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
+          return d;
+        },
+        render: async function (host, clientId, width, onCred) {
+          await load();
+          var raw = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random())) + Date.now();
+          var hashed = await sha256(raw);
+          handler = function (r) { onCred(r.credential, raw); };
+          google.accounts.id.initialize({
+            client_id: clientId,
+            nonce: hashed,
+            callback: function (r) { if (handler) handler(r); },
+            ux_mode: 'popup',
+            use_fedcm_for_button: true,
+            itp_support: true,
+          });
+          host.innerHTML = '';
+          google.accounts.id.renderButton(host, {
+            type: 'standard', theme: 'outline', size: 'large', text: 'continue_with',
+            shape: 'pill', width: Math.max(200, Math.min(400, Math.round(width))),
+            locale: 'pt-PT', logo_alignment: 'center',
+          });
+        },
+      };
+    })();
+
+    window.tchinPay = (function () {
+      var stripe = null, key = null, elements = null, parts = {}, pr = null, prKey = '';
+      var FONT = 'LouisGeorgeCafe';
+      function load() {
+        return new Promise(function (res, rej) {
+          if (window.Stripe) return res();
+          var s = document.createElement('script');
+          s.src = 'https://js.stripe.com/v3/';
+          s.onload = function () { res(); };
+          s.onerror = function () { rej(new Error('stripe_js')); };
+          document.head.appendChild(s);
+        });
+      }
+      function init(pk) {
+        return load().then(function () {
+          if (!stripe || key !== pk) { stripe = window.Stripe(pk, { locale: 'pt' }); key = pk; elements = null; pr = null; prKey = ''; }
+        });
+      }
+      function base() {
+        var b = document.querySelector('base');
+        return new URL((b && b.getAttribute('href')) || '/', location.href).href;
+      }
+      function destroyCard() {
+        Object.keys(parts).forEach(function (k) { try { parts[k].destroy(); } catch (e) {} });
+        parts = {};
+      }
+      function result(res) {
+        if (res.error) return JSON.stringify({ error: res.error.message || 'Pagamento recusado.', code: res.error.code || null });
+        var pi = res.paymentIntent || {};
+        return JSON.stringify({ status: pi.status || null });
+      }
+      return {
+        createHost: function () {
+          var d = document.createElement('div');
+          d.style.width = '100%'; d.style.height = '100%';
+          d.style.display = 'flex'; d.style.alignItems = 'center';
+          return d;
+        },
+        // Campos do cartão: number | expiry | cvc, cada um no seu host.
+        mountCard: function (pk, hosts, onChange) {
+          return init(pk).then(function () {
+            destroyCard();
+            elements = stripe.elements({
+              locale: 'pt',
+              fonts: [{ family: FONT, src: 'url(' + base() + 'assets/assets/fonts/louis_george_cafe/LouisGeorgeCafe-Regular.ttf)', weight: '400' }]
+            });
+            var style = {
+              base: {
+                color: '#171713', fontFamily: FONT + ', Roboto, -apple-system, sans-serif', fontSize: '16px',
+                '::placeholder': { color: '#9A958C' }, iconColor: '#4F6B4A'
+              },
+              invalid: { color: '#B3261E', iconColor: '#B3261E' }
+            };
+            var state = { number: false, expiry: false, cvc: false }, brand = '', err = '';
+            var map = { number: 'cardNumber', expiry: 'cardExpiry', cvc: 'cardCvc' };
+            Object.keys(map).forEach(function (k) {
+              var opts = { style: style };
+              if (k === 'number') { opts.showIcon = true; opts.placeholder = '1234 1234 1234 1234'; }
+              if (k === 'expiry') opts.placeholder = 'MM / AA';
+              if (k === 'cvc') opts.placeholder = 'CVC';
+              var el = elements.create(map[k], opts);
+              var host = hosts[k];
+              host.innerHTML = '';
+              var inner = document.createElement('div');
+              inner.style.width = '100%';
+              host.appendChild(inner);
+              el.mount(inner);
+              el.on('change', function (e) {
+                state[k] = !!e.complete;
+                if (k === 'number' && e.brand) brand = e.brand;
+                err = e.error ? e.error.message : '';
+                onChange(JSON.stringify({ complete: state.number && state.expiry && state.cvc, error: err, brand: brand }));
+              });
+              parts[k] = el;
+            });
+            return 'ok';
+          });
+        },
+        payCard: function (secret, email) {
+          if (!stripe || !parts.number) return Promise.resolve(JSON.stringify({ error: 'Os campos do cartão não carregaram.' }));
+          return stripe.confirmCardPayment(secret, {
+            payment_method: { card: parts.number, billing_details: { email: email || undefined } }
+          }).then(result).catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'Pagamento falhou.' }); });
+        },
+        // Apple Pay / Google Pay disponível neste telemóvel? '' se não.
+        wallet: function (pk, cents, label) {
+          return init(pk).then(function () {
+            var k = cents + '|' + label;
+            if (!pr || prKey !== k) {
+              pr = stripe.paymentRequest({ country: 'PT', currency: 'eur', total: { label: label, amount: cents } });
+              prKey = k;
+            }
+            return pr.canMakePayment().then(function (r) {
+              if (!r) return '';
+              return r.applePay ? 'apple_pay' : (r.googlePay ? 'google_pay' : '');
+            });
+          }).catch(function () { return ''; });
+        },
+        // Abre a janela do telemóvel (tem de ser chamado no toque). O
+        // client secret só é pedido depois de a pessoa escolher o cartão.
+        payWallet: function (getSecret) {
+          if (!pr) return Promise.resolve(JSON.stringify({ error: 'Indisponível neste dispositivo.' }));
+          return new Promise(function (resolve) {
+            var done = false;
+            function finish(v) { if (!done) { done = true; resolve(v); } }
+            pr.off && pr.off('paymentmethod'); pr.off && pr.off('cancel');
+            pr.on('cancel', function () { finish(JSON.stringify({ cancelled: true })); });
+            pr.on('paymentmethod', function (ev) {
+              Promise.resolve(getSecret()).then(function (secret) {
+                if (!secret) { ev.complete('fail'); return finish(JSON.stringify({ error: 'Não foi possível iniciar o pagamento.' })); }
+                return stripe.confirmCardPayment(secret, { payment_method: ev.paymentMethod.id }, { handleActions: false })
+                  .then(function (r) {
+                    if (r.error) { ev.complete('fail'); return finish(result(r)); }
+                    ev.complete('success');
+                    if (r.paymentIntent && r.paymentIntent.status === 'requires_action') {
+                      return stripe.confirmCardPayment(secret).then(function (r2) { finish(result(r2)); });
+                    }
+                    finish(result(r));
+                  });
+              }).catch(function (e) { try { ev.complete('fail'); } catch (x) {} finish(JSON.stringify({ error: (e && e.message) || 'Pagamento falhou.' })); });
+            });
+            try { pr.show(); } catch (e) { finish(JSON.stringify({ error: 'Não foi possível abrir a janela de pagamento.' })); }
+          });
+        },
+        unmount: destroyCard
+      };
+    })();
+  </script>
+  <script>
+    // Notificações com a app fechada (Web Push, 2026-10-21). O pedido de
+    // permissão tem de vir de um toque do utilizador (botão na app).
+    // Câmara (passo de permissões do registo, 2026-10-25): pede e fecha
+    // logo a câmara, só para ficar autorizada.
+    window.tchinCamera = {
+      status: function () {
+        if (!navigator.permissions || !navigator.permissions.query) return Promise.resolve('prompt');
+        return navigator.permissions.query({ name: 'camera' })
+          .then(function (r) { return r.state; })
+          .catch(function () { return 'prompt'; });
+      },
+      request: function () {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Promise.resolve('unsupported');
+        return navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); return 'granted'; })
+          .catch(function (e) { return (e && e.name === 'NotFoundError') ? 'unsupported' : 'denied'; });
+      }
+    };
+    window.tchinPush = (function () {
+      function b64ToBytes(b64) {
+        var pad = '='.repeat((4 - b64.length % 4) % 4);
+        var raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+        var out = new Uint8Array(raw.length);
+        for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+        return out;
+      }
+      function supported() {
+        return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+      }
+      function standalone() {
+        return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+      }
+      function ios() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+      function reg() { return navigator.serviceWorker.register('push_sw.js'); }
+      return {
+        status: function () {
+          if (!supported()) return ios() && !standalone() ? 'ios_install' : 'unsupported';
+          return Notification.permission; // granted | denied | default
+        },
+        subscribe: function (publicKey) {
+          if (!supported()) return Promise.resolve(JSON.stringify({ error: 'unsupported' }));
+          return Notification.requestPermission().then(function (perm) {
+            if (perm !== 'granted') return JSON.stringify({ error: perm });
+            return reg().then(function (r) { return navigator.serviceWorker.ready.then(function () { return r; }); })
+              .then(function (r) {
+                return r.pushManager.getSubscription().then(function (sub) {
+                  return sub || r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(publicKey) });
+                });
+              })
+              .then(function (sub) { return JSON.stringify(sub.toJSON()); });
+          }).catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'failed' }); });
+        },
+        current: function () {
+          if (!supported() || Notification.permission !== 'granted') return Promise.resolve('');
+          return reg().then(function (r) { return r.pushManager.getSubscription(); })
+            .then(function (sub) { return sub ? JSON.stringify(sub.toJSON()) : ''; })
+            .catch(function () { return ''; });
+        },
+        unsubscribe: function () {
+          if (!supported()) return Promise.resolve('');
+          return navigator.serviceWorker.getRegistration().then(function (r) {
+            return r ? r.pushManager.getSubscription() : null;
+          }).then(function (sub) {
+            if (!sub) return '';
+            var ep = sub.endpoint;
+            return sub.unsubscribe().then(function () { return ep; });
+          }).catch(function () { return ''; });
+        }
+      };
+    })();
+  </script>
+  <script>
+    // Conta Stripe do parceiro dentro da app (2026-10-19): componente
+    // embutido de onboarding do Stripe Connect num platform view. O
+    // formulário (identidade, morada, IBAN) é da Stripe; os dados vão
+    // diretamente para a Stripe.
+    window.tchinConnect = (function () {
+      var el = null, ro = null;
+      function load() {
+        return new Promise(function (res, rej) {
+          if (window.StripeConnect && window.StripeConnect.init) return res();
+          var s = document.createElement('script');
+          s.src = 'https://connect-js.stripe.com/v1.0/connect.js';
+          s.onload = function () {
+            if (window.StripeConnect && window.StripeConnect.init) return res();
+            window.StripeConnect = window.StripeConnect || {};
+            window.StripeConnect.onLoad = function () { res(); };
+          };
+          s.onerror = function () { rej(new Error('connect_js')); };
+          document.head.appendChild(s);
+        });
+      }
+      function clean() {
+        if (ro) { ro.disconnect(); ro = null; }
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+        el = null;
+      }
+      return {
+        createHost: function () {
+          var d = document.createElement('div');
+          d.style.width = '100%'; d.style.height = '100%'; d.style.overflow = 'auto';
+          return d;
+        },
+        mountOnboarding: function (host, pk, firstSecret, fnUrl, anon, token, onHeight, onEvent) {
+          return load().then(function () {
+            clean();
+            var used = false;
+            var instance = window.StripeConnect.init({
+              publishableKey: pk,
+              locale: 'pt-PT',
+              fetchClientSecret: function () {
+                if (!used) { used = true; return Promise.resolve(firstSecret); }
+                return fetch(fnUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': anon },
+                  body: JSON.stringify({ action: 'session' })
+                }).then(function (r) { return r.json(); }).then(function (j) { return j.client_secret; });
+              },
+              appearance: {
+                overlays: 'dialog',
+                variables: {
+                  colorPrimary: '#4F6B4A', colorText: '#171713', colorSecondaryText: '#57534E',
+                  colorBackground: '#FFFFFF', colorBorder: '#E6E0D2', colorDanger: '#B3261E',
+                  borderRadius: '14px', buttonBorderRadius: '999px', formBorderRadius: '14px',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  fontSizeBase: '15px', spacingUnit: '10px',
+                  buttonPrimaryColorBackground: '#4F6B4A', buttonPrimaryColorText: '#FFFFFF'
+                }
+              }
+            });
+            el = instance.create('account-onboarding');
+            try { el.setCollectionOptions({ fields: 'eventually_due', futureRequirements: 'include' }); } catch (e) {}
+            el.setOnExit(function () { onEvent('exit'); });
+            try { el.setOnLoadError(function () { onEvent('loaderror'); }); } catch (e) {}
+            try { el.setOnLoaderStart(function () { onEvent('ready'); }); } catch (e) { onEvent('ready'); }
+            host.innerHTML = '';
+            host.appendChild(el);
+            ro = new ResizeObserver(function () { onHeight(Math.ceil(el.getBoundingClientRect().height)); });
+            ro.observe(el);
+            return 'ok';
+          });
+        },
+        unmount: clean
+      };
+    })();
+  </script>
+  <div id="app-host"></div>
+  <script src="flutter_bootstrap.js?v=df60aec" async></script>
+</body>
+</html>
