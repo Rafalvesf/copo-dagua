@@ -345,16 +345,6 @@ class _CoupleSettings extends ConsumerWidget {
           _PublicEventRow(weddingId: wedding.id),
         ],
       ),
-      // "Para os convidados" saiu do perfil para um tile próprio na
-      // página do evento (/guest-page, pedido 2026-10-17). Fica só o
-      // atalho para voltar ao modo organizador quando se está a ver como
-      // convidado.
-      if (fromGuestMode)
-        _Group(
-          children: [
-            _Row(icon: Icons.swap_horiz, label: 'Ver em modo organizador', onTap: () => context.go('/home')),
-          ],
-        ),
       const _SectionTitle('Conta'),
       const _AccountSection(),
       if (help) ...[
@@ -486,7 +476,9 @@ class PartnerAccountSections extends ConsumerWidget {
 
 /// Conteúdo das Definições do convidado para o Perfil.
 class GuestAccountSections extends StatelessWidget {
-  const GuestAccountSections({super.key});
+  final bool help;
+  final bool signOut;
+  const GuestAccountSections({super.key, this.help = true, this.signOut = true});
 
   @override
   Widget build(BuildContext context) {
@@ -502,9 +494,11 @@ class GuestAccountSections extends StatelessWidget {
             _Row(icon: Icons.key_outlined, label: 'Juntar-me a outro evento', onTap: () => showGuestModeSheet(context)),
           ],
         ),
-        const _SectionTitle('Ajuda'),
-        const _HelpGroup(),
-        const _SignOut(),
+        if (help) ...[
+          const _SectionTitle('Ajuda'),
+          const _HelpGroup(),
+        ],
+        if (signOut) const _SignOut(),
       ],
     );
   }

@@ -8,13 +8,11 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/initials_avatar.dart';
-import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import 'guest_mode_screen.dart' show showGuestModeSheet;
 import 'guest_table_screen.dart';
 import '../../settings/screens/settings_screen.dart' show GuestAccountSections;
 import '../../../shared/widgets/feedback.dart';
@@ -74,12 +72,6 @@ class GuestProfileScreen extends ConsumerWidget {
                 ),
               ],
             ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: GuestBottomNav(current: GuestTab.profile, weddingId: weddingId),
           ),
         ],
       ),
@@ -214,6 +206,7 @@ class _GuestProfileBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Canvas "Convidado · A tua presença".
     final guestAsync = ref.watch(myGuestRowProvider(weddingId));
+    final isOrganizer = ref.watch(weddingControllerProvider.select((s) => s.events.any((w) => w.id == weddingId)));
     final tableAsync = ref.watch(mySeatingTableProvider(weddingId));
 
     return guestAsync.when(
@@ -240,13 +233,20 @@ class _GuestProfileBody extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 140),
           children: [
             // Redesign 2026-10-19 (canvas "Convidado — perfil (redesign)").
-            const SizedBox(
+            SizedBox(
               height: 46,
-              child: Center(
-                child: Text(
-                  'Perfil',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: CircleBackButton(onTap: () => context.canPop() ? context.pop() : context.go('/eventos')),
+                  ),
+                  const Text(
+                    'A tua presença',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 18),
@@ -258,32 +258,49 @@ class _GuestProfileBody extends ConsumerWidget {
               onChangePhoto: () => _pickAndUploadAvatar(context, ref),
             ),
             const SizedBox(height: 18),
+            // Sem linha na lista de convidados (pedido 2026-11: a
+            // mensagem antiga aparecia a quem organiza o próprio evento e
+            // a quem já tinha entrado com o código).
             if (guest == null)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: softCard(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      'Ainda não encontrámos a tua entrada na lista de convidados.',
-                      style: TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Se recebeste um link ou código deste evento, usa-o para associares a tua conta.',
-                      style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-                    ),
-                    const SizedBox(height: 16),
-                    PrimaryButton(label: 'Introduzir código do evento', onPressed: () => showGuestModeSheet(context)),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: () => _openInviteLinkDialog(context, ref),
-                      child: Text('Abrir link de convite', style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700)),
-                    ),
-                  ],
-                ),
+                child: isOrganizer
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'Estás a ver o teu evento como os convidados o veem.',
+                            style: TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Como organizas este evento, não tens resposta, menu nem mesa aqui. Para voltar a organizar, usa o separador Eventos.',
+                            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'Ainda não estás na lista de convidados deste evento.',
+                            style: TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Este evento é só por convite. Assim que o organizador te puser na lista, podes responder, escolher o menu e ver a tua mesa.',
+                            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
+                          ),
+                          const SizedBox(height: 10),
+                          TextButton(
+                            onPressed: () => _openInviteLinkDialog(context, ref),
+                            child: Text('Recebi um link de convite',
+                                style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ),
               )
             else ...[
               const _Caps('A tua resposta'),

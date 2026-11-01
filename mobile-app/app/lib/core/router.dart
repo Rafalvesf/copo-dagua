@@ -30,6 +30,7 @@ import '../features/checklist/screens/checklist_screen.dart';
 import '../features/tasks/screens/service_preferences_screen.dart';
 import '../features/tasks/screens/tasks_screen.dart';
 import '../features/events/screens/eventos_screen.dart';
+import '../features/events/screens/mode_switch_screen.dart';
 import '../features/guest_home/screens/guest_gallery_screen.dart';
 import '../features/guest_home/screens/guest_gifts_screen.dart';
 import '../features/guest_home/screens/guest_home_screen.dart';
@@ -201,6 +202,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (location == '/partner-home' && role != UserRole.partner) return homeForRole;
           if (location == '/guest-home' && role != UserRole.guest) return homeForRole;
           if (location == '/eventos' && role == UserRole.partner) return homeForRole;
+          // Conta que organiza a saltar entre o seu evento e o de outra
+          // pessoa como convidado: ecrã de transição pelo meio (2026-11).
+          if (role == UserRole.couple && location != '/modo') {
+            return AppModeTracker.interceptFor(location, state.uri.toString());
+          }
+          if (role != UserRole.couple) AppModeTracker.current = null;
           return null;
       }
     },
@@ -303,6 +310,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      GoRoute(
+        path: '/modo',
+        builder: (context, state) => ModeSwitchScreen(
+          mode: state.uri.queryParameters['m'] == 'guest' ? AppMode.guest : AppMode.organizer,
+          to: state.uri.queryParameters['to'] ?? '/eventos',
+        ),
+      ),
       // Criar mais um evento (vários por conta, 2026-11).
       GoRoute(
         path: '/novo-evento',
@@ -330,13 +344,20 @@ final routerProvider = Provider<GoRouter>((ref) {
             GuestGiftsScreen(weddingId: state.pathParameters['weddingId']),
       ),
       tabRoute(
+        // Perfil igual ao do organizador (2026-11), com a barra de convidado.
         path: '/guest-profile',
-        builder: (context, state) => const GuestProfileScreen(),
+        builder: (context, state) => const HomeFeedScreen(guestMode: true),
       ),
       tabRoute(
         path: '/guest-profile/:weddingId',
         builder: (context, state) =>
-            GuestProfileScreen(weddingId: state.pathParameters['weddingId']),
+            HomeFeedScreen(guestMode: true, guestWeddingId: state.pathParameters['weddingId']),
+      ),
+      // Resposta, menu, acompanhantes e mesa de um evento (antigo perfil
+      // do convidado).
+      GoRoute(
+        path: '/guest-presenca/:weddingId',
+        builder: (context, state) => GuestProfileScreen(weddingId: state.pathParameters['weddingId']),
       ),
       GoRoute(
         // Alojamento e transporte para os convidados (099_guest_offers.sql).
