@@ -139,12 +139,13 @@ const icons = {
 // Menu (redesenho 2026-10-20): menos grupos e nomes do dia a dia.
 // Comissões e manutenção vivem agora dentro de Definições; Analytics de
 // tarefas é um separador de Tarefas.
-function buildGroups(pendingPartners: number, openDisputes: number, openTickets: number, openReports: number): NavGroup[] {
+function buildGroups(pendingPartners: number, openDisputes: number, openTickets: number, openReports: number, openTasks: number): NavGroup[] {
   return [
     {
       items: [
         { href: "/", label: "Início", icon: icons.home },
         { href: "/analytics", label: "Analytics", icon: icons.chart },
+        { href: "/pending", label: "Pendentes", icon: icons.list, badge: openTasks },
       ],
     },
     {
@@ -194,6 +195,7 @@ export function AdminSidebar({
   openDisputes = 0,
   openTickets = 0,
   openReports = 0,
+  openTasks = 0,
   maintenance = [],
 }: {
   fullName: string;
@@ -201,6 +203,7 @@ export function AdminSidebar({
   openDisputes?: number;
   openTickets?: number;
   openReports?: number;
+  openTasks?: number;
   maintenance?: string[];
 }) {
   const pathname = usePathname();
@@ -212,7 +215,7 @@ export function AdminSidebar({
     router.push("/login");
   }
 
-  const groups = buildGroups(pendingCount, openDisputes, openTickets, openReports);
+  const groups = buildGroups(pendingCount, openDisputes, openTickets, openReports, openTasks);
   const settingsItem: NavItem = { href: "/settings", label: "Definições", icon: icons.settings, also: ["/commissions"] };
   // Telemóvel: o menu é uma gaveta que fecha sozinha ao mudar de página.
   const [open, setOpen] = useState(false);
