@@ -99,7 +99,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
           children: [
             PageHeader(
               title: 'Serviços e preços',
-              subtitle: 'Escolhe como os casais veem os teus preços.',
+              subtitle: 'Escolhe como os clientes veem os teus preços.',
               trailing: const AccountSwitcherBadge(),
             ),
             const SizedBox(height: 16),
@@ -148,7 +148,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Os casais vão pedir-te um orçamento à medida — sem pacotes fixos com preço.',
+                                'Os clientes vão pedir-te um orçamento à medida — sem pacotes fixos com preço.',
                                 style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md, height: 1.4),
                               ),
                               const SizedBox(height: 16),

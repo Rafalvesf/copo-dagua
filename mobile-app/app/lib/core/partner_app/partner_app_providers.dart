@@ -47,7 +47,7 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
   final quoteRows = await supabase
       .from('quote_requests')
       .select(
-        'id, partner_id, wedding_id, couple_id, event_date, location, message, status, profiles(full_name, avatar_url), weddings(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url)',
+        'id, partner_id, wedding_id, couple_id, event_date, location, message, status, profiles(full_name, avatar_url), weddings(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
       )
       .eq('partner_id', partnerId)
       .neq('status', 'accepted')
@@ -56,7 +56,7 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
   final bookingRows = await supabase
       .from('bookings')
       .select(
-        'id, partner_id, wedding_id, couple_id, event_date, status, profiles(full_name, avatar_url), proposals(title), weddings(location, partner_name_1, partner_name_2, profile_photo_url, cover_photo_url)',
+        'id, partner_id, wedding_id, couple_id, event_date, status, profiles(full_name, avatar_url), proposals(title), weddings(location, partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
       )
       .eq('partner_id', partnerId)
       .order('event_date', ascending: false);
@@ -94,7 +94,7 @@ String _clientDisplayName(
     return (name2 == null || name2.isEmpty) ? name1 : '$name1 & $name2';
   }
   final fullName = profile?['full_name'] as String?;
-  return (fullName != null && fullName.isNotEmpty) ? fullName : 'Casal';
+  return (fullName != null && fullName.isNotEmpty) ? fullName : 'Cliente';
 }
 
 Booking _bookingFromQuoteRequestRow(
@@ -121,6 +121,7 @@ Booking _bookingFromQuoteRequestRow(
     packageLabel: 'Pedido de orçamento',
     status: _mapQuoteRequestStatus(row['status'] as String),
     messageFromCouple: row['message'] as String?,
+    eventType: EventType.fromDb(wedding?['event_type'] as String?),
     clientAvatarUrl: _clientAvatar(wedding, couple),
     fromQuoteRequest: true,
     proposalSent: row['status'] == 'proposal_sent',
@@ -143,6 +144,7 @@ Booking _bookingFromBookingRow(Map<String, dynamic> row, String? category) {
     category: category,
     packageLabel: (proposal?['title'] as String?) ?? 'Serviço contratado',
     status: mapRealBookingStatus(row['status'] as String),
+    eventType: EventType.fromDb(wedding?['event_type'] as String?),
     clientAvatarUrl: _clientAvatar(wedding, couple),
     fromQuoteRequest: false,
   );
@@ -317,7 +319,7 @@ final partnerConversationsProvider = FutureProvider<List<ChatConversation>>((
     final name1 = wedding?['partner_name_1'] as String?;
     final name2 = wedding?['partner_name_2'] as String?;
     final name = (name1 == null || name1.isEmpty)
-        ? 'Casal'
+        ? 'Cliente'
         : (name2 == null || name2.isEmpty)
         ? name1
         : '$name1 & $name2';

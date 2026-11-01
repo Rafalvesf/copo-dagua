@@ -831,6 +831,10 @@ class Booking {
   final BookingStatus status;
   final String? messageFromCouple;
 
+  /// Tipo de evento do pedido (`weddings.event_type`) — muda os textos do
+  /// lado do parceiro ("O casal…", "A família…").
+  final EventType eventType;
+
   /// Foto do casal (`weddings.profile_photo_url`, senão a capa) — PFP
   /// em toda a app (2026-10-20).
   final String? clientAvatarUrl;
@@ -865,9 +869,11 @@ class Booking {
     this.fromQuoteRequest = false,
     this.proposalSent = false,
     this.clientAvatarUrl,
+    this.eventType = EventType.wedding,
   });
 
   Booking copyWith({BookingStatus? status}) => Booking(
+    eventType: eventType,
     clientAvatarUrl: clientAvatarUrl,
     id: id,
     partnerId: partnerId,

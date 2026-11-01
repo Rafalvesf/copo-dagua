@@ -719,7 +719,7 @@ class _ReviewsSection extends ConsumerWidget {
         if (reviews.isEmpty) {
           return const _ComingSoonSection(
             message:
-                'Ainda sem avaliações — sê o primeiro casal a partilhar a vossa experiência.',
+                'Ainda sem avaliações — sê o primeiro a partilhar a tua experiência.',
           );
         }
         return Column(

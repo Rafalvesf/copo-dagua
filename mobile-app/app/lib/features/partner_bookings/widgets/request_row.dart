@@ -151,9 +151,7 @@ class RequestRow extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            booking.packageLabel.isEmpty
-                                ? (booking.category ?? 'Serviço')
-                                : booking.packageLabel,
+                            '${booking.eventType.label} · ${booking.packageLabel.isEmpty ? (booking.category ?? 'Serviço') : booking.packageLabel}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(

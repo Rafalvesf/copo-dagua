@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/models/models.dart';
+import '../../../core/wedding/menu_style.dart' show EventDecor;
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/payments/refunds.dart';
 import '../../../core/supabase/supabase_config.dart';
@@ -110,20 +111,20 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                   const SizedBox(height: 18),
                   GreenHero(
                     label: switch (booking.status) {
-                      BookingStatus.novo || BookingStatus.emAnalise => 'PEDIDO RECEBIDO',
+                      BookingStatus.novo || BookingStatus.emAnalise => 'PEDIDO RECEBIDO · ${booking.eventType.label.toUpperCase()}',
                       BookingStatus.aceite => 'À ESPERA DO SINAL',
                       BookingStatus.confirmado => 'RESERVA CONFIRMADA',
                       BookingStatus.concluido => 'CONCLUÍDO',
                       BookingStatus.recusado => 'RECUSADO',
                     },
                     value: booking.clientName,
-                    doodles: const [Icons.favorite_border, Icons.auto_awesome_outlined, Icons.celebration_outlined],
+                    doodles: EventDecor.of(booking.eventType).doodles.take(3).toList(),
                     footer: booking.fromQuoteRequest
                         ? Wrap(spacing: 8, runSpacing: 8, children: [
                             HeroPill(booking.proposalSent ? 'Proposta enviada' : 'Por responder', solid: true),
                             HeroPill(booking.proposalSent
-                                ? 'A aguardar resposta do casal'
-                                : 'O casal espera a tua proposta'),
+                                ? 'A aguardar resposta do cliente'
+                                : 'O cliente espera a tua proposta'),
                           ])
                         : null,
                   ),
@@ -149,7 +150,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                         Row(children: [
                           StickerIcon(Icons.chat_bubble_outline, size: 36, turns: StickerIcon.tilt(2)),
                           const SizedBox(width: 10),
-                          const Text('Mensagem do casal',
+                          const Text('Mensagem do cliente',
                               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                         ]),
                         const SizedBox(height: 8),

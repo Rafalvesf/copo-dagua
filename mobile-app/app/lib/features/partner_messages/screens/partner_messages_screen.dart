@@ -80,7 +80,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                           imageSize: 180,
                           title: 'Ainda sem conversas',
                           message:
-                              'Quando um casal te pedir um orçamento, a conversa aparece aqui.',
+                              'Quando um cliente te pedir um orçamento, a conversa aparece aqui.',
                         );
                       }
                       if (conversations.isEmpty) {

@@ -52,7 +52,7 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
             PageHeader(
               title: 'Mesas do local',
               centered: true,
-              subtitle: 'Tipos de mesa disponíveis para os casais.',
+              subtitle: 'Tipos de mesa disponíveis para os clientes.',
               trailing: AddActionButton(onTap: () => _add(context, ref)),
             ),
             const SizedBox(height: 16),
@@ -77,7 +77,7 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
                           child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 32),
                             child: Text(
-                              'Ainda não configuraste nenhum tipo de mesa. Os casais só veem um número real de mesas depois de adicionares pelo menos um tipo.',
+                              'Ainda não configuraste nenhum tipo de mesa. Os clientes só veem um número real de mesas depois de adicionares pelo menos um tipo.',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                             ),

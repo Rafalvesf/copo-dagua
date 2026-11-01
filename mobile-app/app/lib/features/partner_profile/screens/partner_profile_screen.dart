@@ -183,7 +183,7 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
         ],
         if (published) ...[
           const SizedBox(height: 8),
-          const V2Chip('Publicado — visível aos casais'),
+          const V2Chip('Publicado — visível aos clientes'),
         ],
       ],
     );
@@ -222,7 +222,7 @@ class _ReviewStatusCard extends StatelessWidget {
           null,
           Colors.orange,
         ),
-      'published' => ('Publicado — visível aos casais', null, AppTheme.accentOliveDark),
+      'published' => ('Publicado — visível aos clientes', null, AppTheme.accentOliveDark),
       'rejected' => ('Candidatura recusada', null, Colors.red),
       'suspended' => ('Suspenso', null, Colors.red),
       _ => (status, null, AppTheme.inkMuted),

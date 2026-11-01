@@ -192,7 +192,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
         const _Step(i: 0, icon: Icons.fact_check_outlined, title: 'Confirma os teus dados',
             text: 'Identidade, morada e IBAN — pedidos pela Stripe, cerca de 5 minutos.'),
         const SizedBox(height: 10),
-        const _Step(i: 1, icon: Icons.favorite_border, title: 'Os casais pagam na app',
+        const _Step(i: 1, icon: Icons.favorite_border, title: 'Os clientes pagam na app',
             text: 'O sinal e o restante entram no teu saldo, sem comissão descontada.'),
         const SizedBox(height: 10),
         const _Step(i: 2, icon: Icons.account_balance_outlined, title: 'Levantas para o IBAN',
