@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/feedback/app_feedback.dart';
 import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/tasks/task_engine_controller.dart';
@@ -190,6 +191,14 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
+                        // "Reportar um erro" logo debaixo do título (pedido 2026-11).
+                        _HelpCard(
+                          icon: Icons.bug_report_outlined,
+                          title: 'Reportar um erro',
+                          subtitle: 'Diz-nos o que não funcionou',
+                          onTap: () => showBugReportSheet(context, ref),
+                        ),
+                        const SizedBox(height: 12),
                         SnappyTap(
                           onTap: () => context.push('/support'),
                           child: Container(
@@ -306,6 +315,42 @@ class _PresenceCard extends StatelessWidget {
                   SizedBox(height: 2),
                   Text('Resposta, menu, acompanhantes e mesa',
                       style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: AppTheme.ink),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HelpCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  const _HelpCard({required this.icon, required this.title, required this.subtitle, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SnappyTap(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(AppRadius.lg)),
+        child: Row(
+          children: [
+            CircleAvatar(radius: 22, backgroundColor: Colors.white, child: Icon(icon, color: AppTheme.accentOliveDark)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
                 ],
               ),
             ),
