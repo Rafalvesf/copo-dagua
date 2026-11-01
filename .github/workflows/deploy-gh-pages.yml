@@ -6,6 +6,9 @@ on:
       - master
     paths:
       - 'mobile-app/app/**'
+      - 'marketing/site/a-nossa-site.html'
+      - 'marketing/site/a-nossa.mp4'
+      - 'marketing/site/poster.jpg'
       - '.github/workflows/deploy-gh-pages.yml'
   workflow_dispatch:
     inputs:
@@ -107,6 +110,14 @@ jobs:
             if [ -d "$d" ] && [[ "$OPEN" == *" $n "* ]]; then cp -a "$d" build/web/; fi
           done
           cat "$DEST/version.txt" 2>/dev/null || echo "backup sem version.txt (anterior a esta mudança)"
+
+      # Site de apresentação, separado da app (pedido 2026-11):
+      # https://rafalvesf.github.io/copo-dagua/site/
+      - name: Add presentation site
+        run: |
+          mkdir -p build/web/site
+          cp ../../marketing/site/a-nossa-site.html build/web/site/index.html
+          cp ../../marketing/site/a-nossa.mp4 ../../marketing/site/poster.jpg build/web/site/
 
       # O Vercel (admin, pasta admin-web/app) tenta compilar todos os ramos;
       # neste ramo não há admin e cada publicação dava "deployment failed"
