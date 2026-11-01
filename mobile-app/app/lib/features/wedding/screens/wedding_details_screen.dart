@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../payments/open_payment.dart';
+import '../../tasks/task_actions.dart';
 import '../../../core/budget/budget_controller.dart';
 import '../../../core/budget/expense_controller.dart';
 import '../../../core/home/home_providers.dart';
@@ -1094,24 +1095,6 @@ class _ShareWeddingButton extends StatelessWidget {
 class _UpcomingTasksSection extends ConsumerWidget {
   const _UpcomingTasksSection();
 
-  static IconData _iconForCategory(String? category) => switch (category) {
-    'orcamento' => Icons.savings_outlined,
-    'convidados' => Icons.people_outline,
-    'lugares' => Icons.event_seat_outlined,
-    'parceiros' => Icons.storefront_outlined,
-    'pagamentos' => Icons.euro_rounded,
-    _ => Icons.task_alt_outlined,
-  };
-
-  static String? _routeForCategory(String? category) => switch (category) {
-    'orcamento' => '/budget',
-    'convidados' => '/guests',
-    'lugares' => '/seating',
-    'parceiros' => '/partners',
-    'pagamentos' => '/bookings',
-    _ => null,
-  };
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(taskEngineControllerProvider);
@@ -1137,20 +1120,10 @@ class _UpcomingTasksSection extends ConsumerWidget {
             title: task.title,
             // Menos texto (design): só a primeira frase.
             description: task.description?.split(RegExp(r'(?<=[.!?])\s')).first.trim(),
-            icon: _iconForCategory(task.category),
+            icon: taskIcon(task.category),
             accent: accent,
             index: index,
-            onTap: () {
-              if (!task.seen) {
-                ref.read(taskEngineControllerProvider.notifier).markTaskSeen(task.id);
-              }
-              if (isPaymentTask(task.category, task.sourceEntityId)) {
-                openPaymentFlow(context, ref, task.sourceEntityId!);
-                return;
-              }
-              final route = _routeForCategory(task.category);
-              context.push(route ?? '/tasks');
-            },
+            onTap: () => openTask(context, ref, task),
           ),
           if (index != top.length - 1) const SizedBox(height: 10),
         ],
