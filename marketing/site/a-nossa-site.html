@@ -133,7 +133,9 @@ footer { background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pad
 
 /* Ajuda a fazer scroll (2026-11): mão animada no início e botão "Seguinte" sempre à vista. */
 .cue { z-index: 20; bottom: 96px; text-transform: none; letter-spacing: 0; font-size: 17px; font-weight: 700; opacity: 1; text-align: center;
-  background: rgba(23,23,19,.78); padding: 16px 22px 14px; border-radius: 24px; white-space: nowrap; pointer-events: none; }
+  background: #fff; color: var(--euc); padding: 14px 22px 12px; border-radius: 24px; white-space: nowrap; pointer-events: none;
+  box-shadow: 0 18px 40px -12px rgba(23,23,19,.35); }
+.cue small { color: var(--muted); }
 .cue::after { display: none; }
 .cue .hand { display: block; width: 64px; height: 64px; margin: 0 auto 8px; animation: swipe 1.8s ease-in-out infinite; }
 .cue small { display: block; font-weight: 400; font-size: 14px; opacity: .85; margin-top: 4px; }
@@ -182,7 +184,7 @@ footer { background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pad
       <p>O teu evento, num só lugar.</p>
     </div>
     <div class="cue" id="cue">
-      <svg class="hand" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M26 34V12a5 5 0 0 1 10 0v18"/><path d="M36 26a5 5 0 0 1 10 0v6"/><path d="M46 30a5 5 0 0 1 10 0v10c0 11-8 20-18 20h-4c-7 0-11-4-15-10l-7-11a4.5 4.5 0 0 1 7-5l7 8"/></svg>
+      <svg class="hand" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M26 34V12a5 5 0 0 1 10 0v18"/><path d="M36 26a5 5 0 0 1 10 0v6"/><path d="M46 30a5 5 0 0 1 10 0v10c0 11-8 20-18 20h-4c-7 0-11-4-15-10l-7-11a4.5 4.5 0 0 1 7-5l7 8"/></svg>
       <span id="cueTxt">Arrasta o dedo para cima</span>
       <small>ou carrega em «Seguinte»</small>
     </div>
