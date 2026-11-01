@@ -286,8 +286,7 @@ function frame() {
   }
   const shift = x * (wide ? Math.min(vw * .22, 330) : vw * .11) * (1 - rise);
   const fin = ss(15.4, 16.1, p);
-  const tilt = -x * 6 * (1 - fin);
-  $('ph').style.transform = `translate(${shift}px, ${rise * heroY + fin * vh * (wide ? .13 : .14)}px) rotate(${tilt * .35 * (1 - rise)}deg) scale(${1 + (heroS - 1) * rise - .14 * fin})`;
+  $('ph').style.transform = `translate(${shift}px, ${rise * heroY + fin * vh * (wide ? .13 : .14)}px) scale(${1 + (heroS - 1) * rise - .14 * fin})`;
   // ecrãs: empurrados da direita, como na app
   const LY = D.layers;
   LY.forEach((s, i) => {
@@ -303,7 +302,7 @@ function frame() {
   [['sideA', -1], ['sideB', 1]].forEach(([id, d]) => {
     const e = $(id);
     e.style.opacity = fin;
-    e.style.transform = `translate(${d * spread * fin}px, ${vh * (wide ? .16 : .16) * fin}px) rotate(${d * (wide ? 7 : 5) * fin}deg) scale(${wide ? .8 : .7})`;
+    e.style.transform = `translate(${d * spread * fin}px, ${vh * (wide ? .16 : .16) * fin}px) scale(${wide ? .8 : .7})`;
   });
   $('fin').style.opacity = ss(15.7, 16.1, p);
   $('fin').style.transform = `translateY(${20 * (1 - ss(15.7, 16.1, p))}px)`;
