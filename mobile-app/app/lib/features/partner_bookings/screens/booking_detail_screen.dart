@@ -14,6 +14,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../widgets/event_brief.dart';
 import '../widgets/request_row.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
@@ -158,6 +159,15 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                             style: const TextStyle(fontSize: 14, height: 1.5, fontStyle: FontStyle.italic, color: AppTheme.ink)),
                       ]),
                     ),
+                  ],
+                  // Convidados, menus, alergias e mesas do evento (migração 140).
+                  if (!booking.fromQuoteRequest) ...[
+                    const SizedBox(height: 18),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 4, bottom: 8),
+                      child: Text('Informação do evento', style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    ),
+                    PartnerEventBrief(bookingId: booking.id),
                   ],
                   // Faturas/comprovativos e resumo desta reserva (2026-10-20).
                   if (!booking.fromQuoteRequest) ...[
