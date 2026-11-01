@@ -374,4 +374,6 @@ export type SupportTicket = {
   resolved_by: string | null;
   created_at: string;
   updated_at: string;
+  /** Fotografias no bucket privado `support-attachments` (migração 145). */
+  attachments?: string[] | null;
 };

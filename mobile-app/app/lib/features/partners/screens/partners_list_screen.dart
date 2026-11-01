@@ -309,8 +309,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             // Sem sombra: a lista horizontal cortava-a e
                             // ficava uma linha por baixo das pílulas.
                             decoration: BoxDecoration(
-                              color: on ? AppTheme.accentOliveDark : const Color(0xFFF2F0EB),
+                              color: on ? AppTheme.accentOliveDark : Colors.white,
                               borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: on ? AppTheme.accentOliveDark : const Color(0xFFE4E1D8)),
                             ),
                             child: Text(o?.label ?? 'Todos',
                                 style: TextStyle(
@@ -336,11 +337,11 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                   blendMode: BlendMode.dstIn,
                                   shaderCallback: (r) => LinearGradient(
                                     colors: const [Colors.transparent, Colors.transparent, Colors.black],
-                                    stops: [0, (fadeStart - 4) / r.width, (fadeStart + 22) / r.width],
+                                    stops: [0, (fadeStart + 6) / r.width, (fadeStart + 34) / r.width],
                                   ).createShader(r),
                                   child: ListView.separated(
                                     scrollDirection: Axis.horizontal,
-                                    padding: const EdgeInsets.only(left: fadeStart + 8, right: AppTheme.screenMargin),
+                                    padding: const EdgeInsets.only(left: fadeStart + 18, right: AppTheme.screenMargin),
                                     itemCount: options.length,
                                     separatorBuilder: (context, i) => const SizedBox(width: 8),
                                     itemBuilder: (context, i) => pill(options[i]),
@@ -353,6 +354,13 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 bottom: 0,
                                 width: todosW,
                                 child: pill(null),
+                              ),
+                              // Separador fino entre "Todos" e as categorias.
+                              Positioned(
+                                left: fadeStart + 8,
+                                top: 8,
+                                bottom: 8,
+                                child: Container(width: 1, color: const Color(0xFFDCD8CE)),
                               ),
                             ],
                           ),

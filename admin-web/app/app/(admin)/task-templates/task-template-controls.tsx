@@ -267,7 +267,7 @@ function TaskTemplateForm({
       }}
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
+        gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))",
         gap: 12,
         padding: 0,
       }}

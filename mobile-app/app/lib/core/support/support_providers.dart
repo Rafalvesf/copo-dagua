@@ -18,10 +18,12 @@ Future<void> createSupportTicket(
   required String description,
   SupportTicketCategory category = SupportTicketCategory.general,
   String? bookingId,
+  List<String> attachments = const [],
 }) async {
   final userId = supabase.auth.currentUser?.id;
   if (userId == null) return;
   await supabase.from('support_tickets').insert({
+    if (attachments.isNotEmpty) 'attachments': attachments,
     'user_id': userId,
     'subject': subject,
     'description': description,
