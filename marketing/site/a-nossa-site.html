@@ -185,7 +185,6 @@ footer { background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pad
     <div class="cue" id="cue">
       <svg class="hand" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M26 34V12a5 5 0 0 1 10 0v18"/><path d="M36 26a5 5 0 0 1 10 0v6"/><path d="M46 30a5 5 0 0 1 10 0v10c0 11-8 20-18 20h-4c-7 0-11-4-15-10l-7-11a4.5 4.5 0 0 1 7-5l7 8"/></svg>
       <span id="cueTxt">Arrasta o dedo para cima</span>
-      <small>ou carrega em «Seguinte»</small>
     </div>
     <div class="fin" id="fin"><h2>Todos à <span>mesma mesa.</span></h2>
       <p>Quem organiza, quem vai e quem faz a festa, na mesma app.</p></div>
@@ -382,7 +381,9 @@ nextBtn.addEventListener('click', () => {
 });
 function updateNext() {
   const endY = document.body.scrollHeight - innerHeight - 40;
-  nextBtn.classList.toggle('hide', scrollY >= endY);
+  // No início só a mão animada; o botão aparece depois do primeiro ecrã.
+  const inHero = scrollY < story.offsetTop + unitPx() * .5;
+  nextBtn.classList.toggle('hide', inHero || scrollY >= endY);
 }
 addEventListener('scroll', updateNext, { passive: true });
 updateNext();
