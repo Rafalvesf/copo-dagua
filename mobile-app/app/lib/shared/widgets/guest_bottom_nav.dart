@@ -65,16 +65,6 @@ class GuestBottomNav extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: _GuestNavIcon(
-                    icon: Icons.explore_outlined,
-                    activeIcon: Icons.explore_rounded,
-                    active: current == GuestTab.events,
-                    onTap: () => context.go('/eventos'),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: _GuestNavIcon(
                     icon: Icons.home_outlined,
                     activeIcon: Icons.home_rounded,
                     active: current == GuestTab.home,

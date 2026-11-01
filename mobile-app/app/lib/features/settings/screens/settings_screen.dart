@@ -342,7 +342,7 @@ class _CoupleSettings extends ConsumerWidget {
             label: 'Aparência do menu',
             onTap: () => context.go('/wedding?aparencia=1'),
           ),
-          _PublicEventRow(weddingId: wedding.id),
+          if (wedding.eventType.canBePublic) _PublicEventRow(weddingId: wedding.id),
         ],
       ),
       const _SectionTitle('Conta'),

@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
+import '../../../shared/widgets/floating_filter_bar.dart' show FilterChipsRow, FilterBarItem;
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -24,7 +25,9 @@ import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 /// organizo e aqueles a que já tenho acesso — e os eventos públicos
 /// ("Aberto a todos", migração 141), onde qualquer utilizador entra.
 class EventosScreen extends ConsumerStatefulWidget {
-  const EventosScreen({super.key});
+  /// 1 = abrir em "Os meus eventos" (vindo do modo convidado).
+  final int? initialTab;
+  const EventosScreen({super.key, this.initialTab});
 
   @override
   ConsumerState<EventosScreen> createState() => _EventosScreenState();
@@ -34,8 +37,7 @@ class EventosScreen extends ConsumerStatefulWidget {
 /// públicos em cartaz (ao estilo da Shotgun) e "Os meus" com os eventos
 /// que organizo e aqueles a que já tenho acesso.
 class _EventosScreenState extends ConsumerState<EventosScreen> {
-  int? _tab; // 0 = Descobrir, 1 = Os meus
-  EventType? _typeFilter;
+  late int? _tab = widget.initialTab; // 0 = Descobrir, 1 = Os meus
 
   Future<void> _refresh() async {
     ref.invalidate(guestWeddingsProvider);
@@ -56,25 +58,11 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
     final allPublic = (publicAsync.value ?? const <PublicEvent>[])
         .where((e) => !joinedIds.contains(e.weddingId))
         .toList();
-    final types = {for (final e in allPublic) e.eventType}.toList();
-    final publicEvents = _typeFilter == null ? allPublic : allPublic.where((e) => e.eventType == _typeFilter).toList();
+    final publicEvents = allPublic;
     final tab = _tab ?? (myEvents.isNotEmpty || invited.isNotEmpty ? 1 : 0);
 
     final List<Widget> content = tab == 0
         ? [
-            if (types.length > 1)
-              SizedBox(
-                height: 40,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                  children: [
-                    _TypeChip(label: 'Todos', selected: _typeFilter == null, onTap: () => setState(() => _typeFilter = null)),
-                    for (final t in types)
-                      _TypeChip(label: t.label, selected: _typeFilter == t, onTap: () => setState(() => _typeFilter = t)),
-                  ],
-                ),
-              ),
             const SizedBox(height: 14),
             if (publicAsync.isLoading && publicAsync.value == null)
               const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()))
@@ -105,6 +93,14 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             _Pad(_CodeButton()),
           ];
 
+    final tabs = FilterChipsRow(
+      items: const [FilterBarItem('Descobrir'), FilterBarItem('Os meus eventos')],
+      selected: tab,
+      infinite: false,
+      visible: 2,
+      onSelected: (i) => setState(() => _tab = i),
+    );
+
     return GradientScaffold(
       background: AppBackground.subtle,
       body: Stack(
@@ -114,18 +110,10 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             child: RefreshIndicator(
               onRefresh: _refresh,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 130),
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 190),
                 children: [
                   const PageHeader(title: 'Eventos', showBack: false, centered: true),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                    child: _Segmented(
-                      labels: const ['Descobrir', 'Os meus'],
-                      index: tab,
-                      onChanged: (i) => setState(() => _tab = i),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
                   ...content,
                 ],
               ),
@@ -135,86 +123,16 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             left: 0,
             right: 0,
             bottom: 0,
+            // "Descobrir" / "Os meus eventos" por cima da navbar (pedido
+            // 2026-11), na mesma ilha — como os filtros da Galeria.
             child: organizer
-                ? const FloatingBottomNav(current: AppTab.events)
-                : const GuestBottomNav(current: GuestTab.events),
+                ? FloatingBottomNav(current: AppTab.events, top: tabs)
+                : GuestBottomNav(current: GuestTab.events, top: tabs),
           ),
         ],
       ),
     );
   }
-}
-
-class _Segmented extends StatelessWidget {
-  final List<String> labels;
-  final int index;
-  final ValueChanged<int> onChanged;
-  const _Segmented({required this.labels, required this.index, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999), boxShadow: AppTheme.navBarShadow),
-      child: Row(
-        children: [
-          for (var i = 0; i < labels.length; i++)
-            Expanded(
-              child: Semantics(
-                button: true,
-                selected: i == index,
-                child: SnappyTap(
-                  onTap: () => onChanged(i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: i == index ? AppTheme.accentOliveDark : Colors.transparent,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      labels[i],
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: i == index ? Colors.white : AppTheme.inkMuted,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TypeChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _TypeChip({required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: SnappyTap(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: selected ? AppTheme.ink : Colors.white,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: selected ? AppTheme.ink : AppTheme.borderMuted),
-            ),
-            child: Text(label,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
-          ),
-        ),
-      );
 }
 
 class _Pad extends StatelessWidget {
@@ -376,6 +294,11 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
 
   Future<void> _join() async {
     final e = widget.event;
+    if (e.mine) {
+      await ref.read(weddingControllerProvider.notifier).select(e.weddingId);
+      if (mounted) context.go('/wedding');
+      return;
+    }
     if (e.joined) {
       context.go('/guest-home/${e.weddingId}');
       return;
@@ -487,17 +410,17 @@ class _PosterCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: e.isPaid ? Colors.white : AppTheme.accentOliveDark,
+                        color: e.isPaid || e.mine ? Colors.white : AppTheme.accentOliveDark,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: busy
                           ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                           : Text(
-                              e.joined ? 'Abrir' : (e.isPaid ? e.priceLabel.replaceAll(' por pessoa', '') : 'Grátis'),
+                              e.mine ? 'O teu evento' : e.joined ? 'Abrir' : (e.isPaid ? e.priceLabel.replaceAll(' por pessoa', '') : 'Grátis'),
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: e.isPaid ? AppTheme.ink : Colors.white,
+                                color: e.isPaid || e.mine ? AppTheme.ink : Colors.white,
                               ),
                             ),
                     ),
