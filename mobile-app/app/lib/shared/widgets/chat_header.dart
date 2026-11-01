@@ -14,12 +14,17 @@ class ChatHeader extends StatelessWidget {
   final String? subtitle;
   final VoidCallback? onOpenProfile;
 
+  /// Botão "Denunciar" visível no cabeçalho (exigência das lojas: o toque
+  /// longo nas mensagens continua, mas ninguém o descobria — 2026-10-31).
+  final VoidCallback? onReport;
+
   const ChatHeader({
     super.key,
     required this.name,
     this.avatarUrl,
     this.subtitle,
     this.onOpenProfile,
+    this.onReport,
   });
 
   @override
@@ -77,6 +82,12 @@ class ChatHeader extends StatelessWidget {
                 ? info
                 : SnappyTap(onTap: onOpenProfile, child: info),
           ),
+          if (onReport != null)
+            IconButton(
+              tooltip: 'Denunciar',
+              onPressed: onReport,
+              icon: const Icon(Icons.flag_outlined, color: AppTheme.inkMuted),
+            ),
         ],
       ),
     );

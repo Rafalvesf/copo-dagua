@@ -97,7 +97,17 @@ class _PartnerChatThreadScreenState
         children: [
           SafeArea(
             bottom: false,
-            child: ChatHeader(name: widget.conversation.name, avatarUrl: widget.conversation.avatarUrl),
+            child: ChatHeader(
+              name: widget.conversation.name,
+              avatarUrl: widget.conversation.avatarUrl,
+              onReport: () => showReportPicker(context, ref,
+                  kind: ReportKind.message,
+                  allowBlock: false,
+                  recentFirst: [
+                    for (final m in chat.messages.reversed)
+                      if (!m.fromPartner && !m.isProposal && !m.isQuoteRequestNotice) ReportableMessage(id: m.id, text: m.text ?? m.attachmentName ?? ''),
+                  ]),
+            ),
           ),
           Expanded(
             child: chat.loading && chat.messages.isEmpty

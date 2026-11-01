@@ -351,6 +351,14 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
             name: widget.group.name,
             subtitle: people.isEmpty ? 'Grupo' : '${people.length} membros · ver',
             onOpenProfile: _menu,
+            onReport: () => showReportPicker(context, ref,
+                kind: ReportKind.groupMessage,
+                recentFirst: [
+                  for (final m in msgs)
+                    if (m.senderId != me)
+                      ReportableMessage(
+                          id: m.id, text: m.body ?? m.attachmentName ?? '', authorId: m.senderId, authorName: people[m.senderId]?.name),
+                ]),
           ),
         ),
         Expanded(

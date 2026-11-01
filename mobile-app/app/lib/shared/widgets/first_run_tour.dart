@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/feedback/app_feedback.dart';
 import '../../core/notifications/push.dart';
 import '../../core/supabase/supabase_config.dart';
 import '../../core/theme/app_theme.dart';
@@ -57,22 +59,24 @@ class _TourAnchorState extends State<TourAnchor> {
 
 /// Envolve a barra de baixo de cada perfil: regista-a como ponto do guia
 /// e, na primeira vez, abre o guia.
-class TourHost extends StatefulWidget {
+class TourHost extends ConsumerStatefulWidget {
   final TourRole role;
   final String? guestWeddingId;
   final Widget child;
   const TourHost({super.key, required this.role, this.guestWeddingId, required this.child});
 
   @override
-  State<TourHost> createState() => _TourHostState();
+  ConsumerState<TourHost> createState() => _TourHostState();
 }
 
-class _TourHostState extends State<TourHost> {
+class _TourHostState extends ConsumerState<TourHost> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) FirstRunTour.maybeShow(context, widget.role, guestWeddingId: widget.guestWeddingId);
+      // Pop-up de classificação (só depois de alguns dias de uso).
+      if (mounted) RatingPrompt.maybeAsk(context, ref);
     });
   }
 

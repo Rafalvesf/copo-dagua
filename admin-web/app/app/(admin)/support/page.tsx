@@ -21,6 +21,7 @@ const STATUS_LABEL: Record<SupportTicketStatus, string> = {
 const CATEGORY_LABEL: Record<SupportTicketCategory, string> = {
   general: "Geral",
   dispute_delay: "Disputa / atraso",
+  bug: "Erro na app",
 };
 
 type TicketRow = SupportTicket & { profiles: Pick<Profile, "full_name" | "role"> | null; admin_message_id?: string | null };
@@ -51,12 +52,35 @@ export default async function SupportPage({ searchParams }: PageProps<"/support"
     for (const m of (msgs ?? []) as { id: string; title: string }[]) msgTitles.set(m.id, m.title);
   }
 
+  // Classificações da app (migração 136): média e últimos comentários.
+  const { data: ratingRows } = await supabase
+    .from("app_ratings")
+    .select("stars, comment, platform, created_at")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  const ratings = (ratingRows ?? []) as { stars: number; comment: string | null; platform: string | null; created_at: string }[];
+  const avg = ratings.length ? ratings.reduce((a, r) => a + r.stars, 0) / ratings.length : 0;
+  const recentComments = ratings.filter((r) => r.comment).slice(0, 5);
+
   return (
     <div className="page">
       <PageHeader
         title="Suporte"
         subtitle="Pedidos de ajuda enviados a partir da app. Problemas com uma reserva concreta tratam-se em Disputas."
       />
+
+      {ratings.length > 0 && (
+        <Card>
+          <p className="strong" style={{ fontSize: 15 }}>
+            Classificação da app: {avg.toFixed(1).replace(".", ",")} / 5 · {ratings.length} {ratings.length === 1 ? "nota" : "notas"}
+          </p>
+          {recentComments.map((r, i) => (
+            <p key={i} className="list-sub" style={{ marginTop: 6 }}>
+              {"★".repeat(r.stars)}{"☆".repeat(5 - r.stars)} · {r.comment} · {fmtDateTime(r.created_at)}
+            </p>
+          ))}
+        </Card>
+      )}
 
       <div className="toolbar">
         <FilterTabs current={status} items={FILTERS.map((f) => ({ ...f, href: `/support?status=${f.value}` }))} />
@@ -84,6 +108,7 @@ export default async function SupportPage({ searchParams }: PageProps<"/support"
                   </div>
                   <div className="row" style={{ gap: 6 }}>
                     {t.category === "dispute_delay" && <Badge tone="danger" plain>{CATEGORY_LABEL[t.category]}</Badge>}
+                    {t.category === "bug" && <Badge tone="info" plain>{CATEGORY_LABEL[t.category]}</Badge>}
                     <Badge tone={t.status === "resolved" ? "success" : t.status === "pending" ? "info" : "warning"}>{STATUS_LABEL[t.status]}</Badge>
                   </div>
                 </div>

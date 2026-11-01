@@ -328,8 +328,9 @@ final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
   ref.watch(authControllerProvider.select((s) => s.profile?.id));
   try {
     final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
-    // Parceiros novos: sem taxa no 1.º mês, e mais 1 mês se nesse período
-    // não tiverem nenhuma venda paga (migrações 127/128). Mesma regra que
+    // Parceiros novos: sem taxa nos primeiros `partner_free_months` meses
+    // (2 desde a migração 135; o mês extra para quem não vende,
+    // `partner_free_extra_months`, ficou a 0). Mesma regra que
     // `create-payment-intent`.
     DateTime? freeUntil;
     final months = (row['partner_free_months'] as num?)?.toInt() ?? 0;

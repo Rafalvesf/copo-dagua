@@ -173,8 +173,9 @@ Deno.serve(async (req) => {
   const totalChargeCents = partnerAmountCents + applicationFeeCents;
   // Escalões sobre o valor total da reserva (migração 126); cada pagamento
   // leva a parte proporcional. Sem escalões, a percentagem fixa (123).
-  // Parceiros novos: sem taxa no 1.º mês, e mais 1 mês se nesse período
-  // não tiverem nenhuma venda paga (migrações 127/128).
+  // Parceiros novos: sem taxa nos primeiros `partner_free_months` meses
+  // (2 desde a migração 135; o mês extra para quem não vende,
+  // `partner_free_extra_months`, ficou a 0 — migrações 127/128).
   const partnerFree = await partnerIsFree(admin, payment.partner_id as string, partner.created_at, sett);
   const partnerFeeCents = partnerFree ? 0 : paymentFeeCents(
     partnerAmountCents,

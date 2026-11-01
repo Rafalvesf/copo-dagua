@@ -129,6 +129,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               onOpenProfile: widget.conversation.partnerId == null
                   ? null
                   : _openPartnerProfile,
+              onReport: () => showReportPicker(context, ref,
+                  kind: ReportKind.message,
+                  allowBlock: false,
+                  recentFirst: [
+                    for (final m in chat.messages.reversed)
+                      if (m.fromPartner && !m.isProposal && !m.isQuoteRequestNotice) ReportableMessage(id: m.id, text: m.text ?? m.attachmentName ?? ''),
+                  ]),
             ),
           ),
           Expanded(
