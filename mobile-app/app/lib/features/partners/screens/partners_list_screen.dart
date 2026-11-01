@@ -321,25 +321,38 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         );
                       }
 
-                      // "Todos" fica preso à esquerda (pedido 2026-11); só
-                      // as categorias deslizam.
+                      // "Todos" fica preso à esquerda (pedido 2026-11) e as
+                      // categorias deslizam e desaparecem por baixo dele.
+                      const todosW = 72.0;
+                      const fadeStart = AppTheme.screenMargin + todosW;
                       return SizedBox(
                         height: 52,
                         child: Padding(
                           padding: const EdgeInsets.only(top: 12, bottom: 6),
-                          child: Row(
+                          child: Stack(
                             children: [
-                              const SizedBox(width: AppTheme.screenMargin),
-                              pill(null),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  padding: const EdgeInsets.only(right: AppTheme.screenMargin),
-                                  itemCount: options.length,
-                                  separatorBuilder: (context, i) => const SizedBox(width: 8),
-                                  itemBuilder: (context, i) => pill(options[i]),
+                              Positioned.fill(
+                                child: ShaderMask(
+                                  blendMode: BlendMode.dstIn,
+                                  shaderCallback: (r) => LinearGradient(
+                                    colors: const [Colors.transparent, Colors.transparent, Colors.black],
+                                    stops: [0, (fadeStart - 4) / r.width, (fadeStart + 22) / r.width],
+                                  ).createShader(r),
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    padding: const EdgeInsets.only(left: fadeStart + 8, right: AppTheme.screenMargin),
+                                    itemCount: options.length,
+                                    separatorBuilder: (context, i) => const SizedBox(width: 8),
+                                    itemBuilder: (context, i) => pill(options[i]),
+                                  ),
                                 ),
+                              ),
+                              Positioned(
+                                left: AppTheme.screenMargin,
+                                top: 0,
+                                bottom: 0,
+                                width: todosW,
+                                child: pill(null),
                               ),
                             ],
                           ),
