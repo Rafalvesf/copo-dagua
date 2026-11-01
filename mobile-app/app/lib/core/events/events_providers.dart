@@ -19,6 +19,8 @@ class PublicEvent {
   final String? coverPhotoUrl;
   final String? welcomeMessage;
   final bool joined;
+  final bool isPaid;
+  final double? entryPrice;
 
   const PublicEvent({
     required this.weddingId,
@@ -32,7 +34,18 @@ class PublicEvent {
     this.coverPhotoUrl,
     this.welcomeMessage,
     this.joined = false,
+    this.isPaid = false,
+    this.entryPrice,
   });
+
+  /// "Grátis" ou "25 € por pessoa".
+  String get priceLabel {
+    if (!isPaid) return 'Grátis';
+    final p = entryPrice;
+    if (p == null) return 'Pago';
+    final txt = p == p.roundToDouble() ? p.toStringAsFixed(0) : p.toStringAsFixed(2).replaceAll('.', ',');
+    return '$txt € por pessoa';
+  }
 
   String get displayNames =>
       partnerName2 == null || partnerName2!.isEmpty ? partnerName1 : '$partnerName1 & $partnerName2';
@@ -53,6 +66,8 @@ class PublicEvent {
       coverPhotoUrl: r['cover_photo_url'] as String?,
       welcomeMessage: r['welcome_message'] as String?,
       joined: r['joined'] == true,
+      isPaid: r['is_paid'] == true,
+      entryPrice: (r['entry_price'] as num?)?.toDouble(),
     );
   }
 }

@@ -183,13 +183,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!mounted) return;
     // Organizadores e parceiros: a conta só é criada no fim do
     // onboarding (no "Pronto") — até lá os dados ficam em memória.
-    if (widget.role != UserRole.guest) {
+    // Utilizador sem código: segue para o onboarding, que pergunta se
+    // quer criar já um evento ou mais tarde (pedido 2026-11).
+    if (widget.role != UserRole.guest || _codeOrNull == null) {
       ref.read(authControllerProvider.notifier).startSignup(
             fullName: _name.text.trim(),
             email: _email.text.trim(),
             phone: _phone.text.trim(),
             password: _password.text,
-            role: widget.role,
+            role: _signupRole,
           );
       return;
     }
@@ -200,7 +202,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           email: _email.text.trim(),
           phone: _phone.text.trim(),
           password: _password.text,
-          role: widget.role,
+          role: _signupRole,
           weddingCode: _codeOrNull,
         );
   }
@@ -211,7 +213,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!await _guestCodeOk()) return;
     await ref.read(authControllerProvider.notifier).signInWithProvider(
           provider,
-          role: widget.role,
+          role: _signupRole,
           weddingCode: _codeOrNull,
         );
   }
@@ -222,10 +224,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     await ref.read(authControllerProvider.notifier).signInWithGoogleIdToken(
           idToken,
           nonce,
-          role: widget.role,
+          role: _signupRole,
           weddingCode: _codeOrNull,
         );
   }
+
+  /// Com código, entra direto nesse evento; sem código, passa pelo
+  /// onboarding (internamente `couple` até decidir — "Mais tarde" volta
+  /// a utilizador sem evento).
+  UserRole get _signupRole =>
+      widget.role == UserRole.guest && _codeOrNull == null ? UserRole.couple : widget.role;
 
   String? get _codeOrNull {
     final c = _weddingCode.text.trim();
