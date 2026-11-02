@@ -13,6 +13,7 @@ import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_bookings/widgets/request_row.dart';
+import '../widgets/partner_invite_card.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/v2_kit.dart';
 
@@ -133,6 +134,9 @@ class PartnerHomeScreen extends ConsumerWidget {
                     ]),
                   ),
                 ),
+                const SizedBox(height: 14),
+                // Convite de clientes e selo de fundador (migração 151).
+                const PartnerInviteCard(),
                 const SizedBox(height: 14),
                 V2Grid([
                   V2Tile(

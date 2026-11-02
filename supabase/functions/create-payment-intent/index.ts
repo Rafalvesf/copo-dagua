@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
     .select(
-      "id, booking_id, payer_id, partner_id, amount, type, status, provider_payment_id, bookings(booking_number, total_amount), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name, created_at)",
+      "id, booking_id, payer_id, partner_id, amount, type, status, provider_payment_id, bookings(booking_number, total_amount, couple_id), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name, created_at)",
     )
     .eq("id", paymentId)
     .single();
@@ -176,7 +176,14 @@ Deno.serve(async (req) => {
   // Parceiros novos: sem taxa nos primeiros `partner_free_months` meses
   // (2 desde a migração 135; o mês extra para quem não vende,
   // `partner_free_extra_months`, ficou a 0 — migrações 127/128).
-  const partnerFree = await partnerIsFree(admin, payment.partner_id as string, partner.created_at, sett);
+  // Migração 151: fundadores têm `founder_free_months`; clientes trazidos
+  // pelo próprio parceiro (link /p/CODIGO, antes de qualquer pedido) não
+  // pagam comissão do parceiro.
+  const coupleId = (payment.bookings as unknown as { couple_id?: string } | null)?.couple_id ?? null;
+  const partnerFree =
+    (await partnerIsFree(admin, payment.partner_id as string, partner.created_at, sett,
+      await founderNumber(admin, payment.partner_id as string))) ||
+    (await isReferredClient(admin, payment.partner_id as string, coupleId, sett));
   const partnerFeeCents = partnerFree ? 0 : paymentFeeCents(
     partnerAmountCents,
     Math.max(bookingTotalCents, partnerAmountCents),
@@ -262,8 +269,15 @@ function json(body: unknown, status = 200): Response {
 
 // Oferta de lançamento do parceiro (migrações 127/128).
 // deno-lint-ignore no-explicit-any
-async function partnerIsFree(admin: any, partnerId: string, createdAtRaw: string | undefined, sett: Record<string, unknown>) {
-  const months = Number(sett.partner_free_months ?? 0);
+async function partnerIsFree(
+  admin: any,
+  partnerId: string,
+  createdAtRaw: string | undefined,
+  sett: Record<string, unknown>,
+  founderNo: number | null = null,
+) {
+  const baseMonths = Number(sett.partner_free_months ?? 0);
+  const months = founderNo != null ? Math.max(baseMonths, Number(sett.founder_free_months ?? 0)) : baseMonths;
   const extra = Number(sett.partner_free_extra_months ?? 0);
   if (!createdAtRaw || months <= 0) return false;
   const c = new Date(createdAtRaw);
@@ -280,4 +294,25 @@ async function partnerIsFree(admin: any, partnerId: string, createdAtRaw: string
     .eq("status", "paid")
     .lt("paid_at", base.toISOString());
   return (count ?? 0) === 0;
+}
+
+// Cliente trazido pelo próprio parceiro (migração 151).
+// deno-lint-ignore no-explicit-any
+async function isReferredClient(admin: any, partnerId: string, coupleId: string | null, sett: Record<string, unknown>) {
+  if (!coupleId || sett.referral_zero_fee === false) return false;
+  const { data } = await admin
+    .from("partner_referrals")
+    .select("valid")
+    .eq("partner_id", partnerId)
+    .eq("profile_id", coupleId)
+    .maybeSingle();
+  return data?.valid === true;
+}
+
+// N.º de fundador (migração 151); sem a migração, null.
+// deno-lint-ignore no-explicit-any
+async function founderNumber(admin: any, partnerId: string): Promise<number | null> {
+  const { data, error } = await admin.from("partner_profiles").select("founder_number").eq("id", partnerId).maybeSingle();
+  if (error) return null;
+  return (data?.founder_number as number | null | undefined) ?? null;
 }
