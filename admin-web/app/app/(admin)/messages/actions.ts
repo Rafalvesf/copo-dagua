@@ -17,6 +17,10 @@ export async function sendAdminMessage(_prev: SendState, formData: FormData): Pr
   const link = String(formData.get("link") ?? "").trim();
   const style = String(formData.get("style") ?? "notification");
   const until = String(formData.get("expires") ?? "").trim();
+  const imageUrl = String(formData.get("image_url") ?? "").trim();
+  if (imageUrl && !/^https:\/\/[a-z0-9.-]+\/storage\/v1\/object\/public\/team-media\//.test(imageUrl)) {
+    return { error: "Imagem inválida.", sent: null };
+  }
   if (!["notification", "banner", "direct"].includes(style)) return { error: "Formato inválido.", sent: null };
   // Banner: fica até ao fim do dia escolhido (hora de Lisboa ≈ UTC).
   const expiresAt = style === "banner" && /^\d{4}-\d{2}-\d{2}$/.test(until) ? `${until}T23:59:59Z` : null;
@@ -35,11 +39,12 @@ export async function sendAdminMessage(_prev: SendState, formData: FormData): Pr
     p_link: link || null,
     p_style: style,
     p_expires_at: expiresAt,
+    p_image_url: imageUrl || null,
   });
   if (error) {
     return {
       error: error.message.includes("admin_send_message") || error.code === "PGRST202"
-        ? "Falta aplicar a migração 146."
+        ? "Falta aplicar a migração 147."
         : "Não foi possível enviar a mensagem.",
       sent: null,
     };
