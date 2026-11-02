@@ -8,8 +8,9 @@ import '../supabase/supabase_config.dart';
 
 /// Convites de clientes pelo parceiro e Parceiros Fundadores (migração
 /// 151, pedido 2026-11-02): dos clientes que entram pelo link
-/// `/p/CODIGO` de um parceiro (antes de qualquer pedido com ele), a cada
-/// 5 o 5.º fica sem comissão do parceiro nas reservas com ele.
+/// `/p/CODIGO` de um parceiro (antes de qualquer pedido com ele), contam
+/// os que pagam a 1.ª reserva com ele (≥ mínimo, 500 €); a cada 5 que
+/// contam, o 5.º fica sem comissão do parceiro nas reservas com ele.
 
 const _pendingKey = 'pending_partner_referral';
 
@@ -19,8 +20,7 @@ class PartnerReferralResult {
   final String partnerId;
   final String businessName;
   final bool valid;
-  final bool free;
-  const PartnerReferralResult(this.partnerId, this.businessName, this.valid, {this.free = false});
+  const PartnerReferralResult(this.partnerId, this.businessName, this.valid);
 }
 
 class PartnerReferralError implements Exception {
@@ -38,8 +38,7 @@ Future<PartnerReferralResult> claimPartnerReferral(String code) async {
   try {
     final rows = await supabase.rpc('claim_partner_referral', params: {'p_code': code.trim()}) as List;
     final r = (rows.first as Map).cast<String, dynamic>();
-    return PartnerReferralResult(r['partner_id'] as String, r['business_name'] as String? ?? 'Parceiro', r['valid'] == true,
-        free: r['free'] == true);
+    return PartnerReferralResult(r['partner_id'] as String, r['business_name'] as String? ?? 'Parceiro', r['valid'] == true);
   } on PostgrestException catch (e) {
     throw PartnerReferralError(e.code == 'P0002' ? 'not_found' : e.message.contains('own_code') ? 'own_code' : 'unknown');
   }
@@ -68,23 +67,30 @@ class PartnerReferralStats {
   final int? founderNumber;
   final DateTime? featuredUntil;
   final int clients;
-  final int validClients;
+  /// Clientes que já contam (pagaram a 1.ª reserva contigo, ≥ mínimo).
+  final int countedClients;
+  /// Entraram pelo link mas ainda não pagaram nenhuma reserva.
+  final int pendingClients;
   /// A cada quantos clientes um fica sem comissão (5).
   final int freeEvery;
+  /// Valor mínimo da reserva para o cliente contar.
+  final double minBooking;
   const PartnerReferralStats({
     this.code,
     this.founderNumber,
     this.featuredUntil,
     this.clients = 0,
-    this.validClients = 0,
+    this.countedClients = 0,
+    this.pendingClients = 0,
     this.freeEvery = 5,
+    this.minBooking = 500,
   });
 
   /// Clientes que ficaram sem comissão até agora.
-  int get freeClients => validClients ~/ freeEvery;
+  int get freeClients => countedClients ~/ freeEvery;
 
   /// Quantos faltam para o próximo cliente sem comissão (o próprio conta).
-  int get untilNextFree => freeEvery - (validClients % freeEvery);
+  int get untilNextFree => freeEvery - (countedClients % freeEvery);
 
   bool get isFounder => founderNumber != null;
   bool get featuredActive => featuredUntil != null && featuredUntil!.isAfter(DateTime.now());
@@ -101,8 +107,10 @@ final myPartnerReferralStatsProvider = FutureProvider<PartnerReferralStats>((ref
       founderNumber: (r['founder_number'] as num?)?.toInt(),
       featuredUntil: DateTime.tryParse('${r['featured_until'] ?? ''}')?.toLocal(),
       clients: (r['clients'] as num?)?.toInt() ?? 0,
-      validClients: (r['valid_clients'] as num?)?.toInt() ?? 0,
+      countedClients: (r['counted_clients'] as num?)?.toInt() ?? 0,
+      pendingClients: (r['pending_clients'] as num?)?.toInt() ?? 0,
       freeEvery: (r['free_every'] as num?)?.toInt() ?? 5,
+      minBooking: (r['min_booking'] as num?)?.toDouble() ?? 500,
     );
   } catch (_) {
     // Antes da migração 151.
