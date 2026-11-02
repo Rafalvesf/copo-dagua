@@ -49,7 +49,11 @@ Deno.serve(async (req) => {
       // algum reembolso parcial.
       const gross = Math.round(Number(r.amount) * 100);
       const feeMeta = Number(intent.metadata?.partner_fee_cents ?? 0);
-      const fee = Number.isFinite(feeMeta) && feeMeta > 0 ? Math.min(feeMeta, gross) : 0;
+      // Migração 151: o N.º cliente trazido pelo parceiro (a cada 5) não paga
+      // comissão do parceiro. O sinal que o fez contar foi cobrado com taxa
+      // (a posição só existe depois de pago) — acerta-se aqui.
+      const referralFree = await isFreeReferralBooking(admin, r.booking_id);
+      const fee = !referralFree && Number.isFinite(feeMeta) && feeMeta > 0 ? Math.min(feeMeta, gross) : 0;
       const keep = charge.amount_refunded > 0 ? 1 - charge.amount_refunded / charge.amount : 1;
       const feeCents = Math.round(fee * keep);
       const cents = Math.floor(gross * keep) - feeCents;
@@ -123,5 +127,29 @@ async function markReleased(admin: any, id: string, transferId: string, fee: num
   if (error) {
     const { error: e2 } = await admin.rpc("mark_payment_released", { p_payment_id: id, p_transfer_id: transferId });
     if (e2) console.error("mark_payment_released failed", id, e2);
+  }
+}
+
+// Reserva de um cliente trazido pelo parceiro que calhou na posição sem
+// comissão (seq % referral_free_every = 0). Sem a migração 151, false.
+// deno-lint-ignore no-explicit-any
+async function isFreeReferralBooking(admin: any, bookingId: string): Promise<boolean> {
+  try {
+    const { data: b } = await admin.from("bookings").select("couple_id, partner_id").eq("id", bookingId).maybeSingle();
+    if (!b?.couple_id) return false;
+    const { data: s } = await admin.from("platform_settings").select("*").eq("id", 1).maybeSingle();
+    if (s?.referral_zero_fee === false) return false;
+    const every = Math.max(1, Number(s?.referral_free_every ?? 5) || 5);
+    const { data: ref, error } = await admin
+      .from("partner_referrals")
+      .select("valid, seq")
+      .eq("partner_id", b.partner_id)
+      .eq("profile_id", b.couple_id)
+      .maybeSingle();
+    if (error || !ref) return false;
+    const seq = Number(ref.seq ?? 0);
+    return ref.valid === true && seq > 0 && seq % every === 0;
+  } catch {
+    return false;
   }
 }

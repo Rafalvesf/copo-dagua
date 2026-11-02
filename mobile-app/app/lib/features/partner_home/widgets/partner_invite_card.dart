@@ -8,7 +8,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/v2_kit.dart';
 
 /// Painel do parceiro (migração 151): selo "Parceiro Fundador" e o link
-/// para convidar os próprios clientes — a cada 5, o 5.º sem comissão.
+/// para convidar os próprios clientes — a cada 5 que pagam a 1.ª reserva,
+/// o 5.º fica sem comissão.
 class PartnerInviteCard extends ConsumerWidget {
   const PartnerInviteCard({super.key});
 
@@ -63,7 +64,9 @@ class PartnerInviteCard extends ConsumerWidget {
         const SizedBox(height: 4),
         Text(
           'A cada ${stats.freeEvery} clientes que trazes pelo teu link, o ${stats.freeEvery}.º fica '
-          'sem comissão nas reservas contigo. Os outros pagam a comissão normal.',
+          'sem comissão nas reservas contigo. Conta quem paga a primeira reserva contigo'
+          '${stats.minBooking > 0 ? ' (mín. ${stats.minBooking.toStringAsFixed(0)} €)' : ''}. '
+          'Os outros pagam a comissão normal.',
           style: const TextStyle(fontSize: AppFontSize.sm + 1, height: 1.4, color: AppTheme.inkMuted),
         ),
         const SizedBox(height: 12),
@@ -115,10 +118,11 @@ class PartnerInviteCard extends ConsumerWidget {
         const SizedBox(height: 10),
         Text(
           [
-            stats.validClients == 0
+            stats.countedClients == 0 && stats.pendingClients == 0
                 ? 'Ainda nenhum cliente entrou pelo teu link.'
-                : '${stats.validClients} ${stats.validClients == 1 ? 'cliente entrou' : 'clientes entraram'} pelo teu link'
-                    '${stats.freeClients > 0 ? ' (${stats.freeClients} sem comissão)' : ''}.',
+                : '${stats.countedClients} ${stats.countedClients == 1 ? 'cliente conta' : 'clientes contam'}'
+                    '${stats.freeClients > 0 ? ' (${stats.freeClients} sem comissão)' : ''}'
+                    '${stats.pendingClients > 0 ? ', ${stats.pendingClients} à espera da primeira reserva' : ''}.',
             stats.untilNextFree == 1
                 ? 'O próximo cliente fica sem comissão.'
                 : 'Faltam ${stats.untilNextFree} para o próximo sem comissão.',
