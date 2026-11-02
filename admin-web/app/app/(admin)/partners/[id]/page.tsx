@@ -63,8 +63,8 @@ export default async function PartnerDetailPage(
     supabase.from("partner_service_packages").select("*").eq("partner_id", id).order("position"),
   ]);
   // Migração 151: clientes trazidos pelo link do parceiro (sem a migração, vazio).
-  const { data: referralRows } = await supabase.from("partner_referrals").select("valid").eq("partner_id", id);
-  const referrals = (referralRows ?? []) as { valid: boolean }[];
+  const { data: referralRows } = await supabase.from("partner_referrals").select("valid, seq").eq("partner_id", id);
+  const referrals = (referralRows ?? []) as { valid: boolean; seq: number | null }[];
 
   if (!profile) {
     notFound();
@@ -226,7 +226,7 @@ export default async function PartnerDetailPage(
                 ...((profile as Record<string, unknown>).referral_code
                   ? [{
                       label: "Clientes pelo link",
-                      value: `${referrals.filter((x) => x.valid).length} (0% de comissão) · código ${(profile as Record<string, unknown>).referral_code}`,
+                      value: `${referrals.filter((x) => x.valid).length} válidos · ${referrals.filter((x) => x.valid && (x.seq ?? 0) > 0 && (x.seq ?? 0) % 5 === 0).length} sem comissão (a cada 5) · código ${(profile as Record<string, unknown>).referral_code}`,
                     }]
                   : []),
               ]}

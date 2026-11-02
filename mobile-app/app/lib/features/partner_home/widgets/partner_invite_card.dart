@@ -8,7 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/v2_kit.dart';
 
 /// Painel do parceiro (migração 151): selo "Parceiro Fundador" e o link
-/// para convidar os próprios clientes — sem comissão nesses clientes.
+/// para convidar os próprios clientes — a cada 5, o 5.º sem comissão.
 class PartnerInviteCard extends ConsumerWidget {
   const PartnerInviteCard({super.key});
 
@@ -61,11 +61,27 @@ class PartnerInviteCard extends ConsumerWidget {
         const Text('Convida os teus clientes',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         const SizedBox(height: 4),
-        const Text(
-          '0% de comissão nas reservas dos clientes que trazes pelo teu link. '
-          'Só pagas comissão nos clientes que a À Nossa! te traz.',
-          style: TextStyle(fontSize: AppFontSize.sm + 1, height: 1.4, color: AppTheme.inkMuted),
+        Text(
+          'A cada ${stats.freeEvery} clientes que trazes pelo teu link, o ${stats.freeEvery}.º fica '
+          'sem comissão nas reservas contigo. Os outros pagam a comissão normal.',
+          style: const TextStyle(fontSize: AppFontSize.sm + 1, height: 1.4, color: AppTheme.inkMuted),
         ),
+        const SizedBox(height: 12),
+        // Progresso até ao próximo cliente sem comissão.
+        Row(children: [
+          for (var i = 1; i <= stats.freeEvery; i++) ...[
+            if (i > 1) const SizedBox(width: 6),
+            Expanded(
+              child: Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  color: i <= stats.freeEvery - stats.untilNextFree ? green : AppTheme.accentTint,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ],
+        ]),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
@@ -98,9 +114,15 @@ class PartnerInviteCard extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          stats.validClients == 0
-              ? 'Ainda nenhum cliente entrou pelo teu link.'
-              : '${stats.validClients} ${stats.validClients == 1 ? 'cliente entrou' : 'clientes entraram'} pelo teu link.',
+          [
+            stats.validClients == 0
+                ? 'Ainda nenhum cliente entrou pelo teu link.'
+                : '${stats.validClients} ${stats.validClients == 1 ? 'cliente entrou' : 'clientes entraram'} pelo teu link'
+                    '${stats.freeClients > 0 ? ' (${stats.freeClients} sem comissão)' : ''}.',
+            stats.untilNextFree == 1
+                ? 'O próximo cliente fica sem comissão.'
+                : 'Faltam ${stats.untilNextFree} para o próximo sem comissão.',
+          ].join(' '),
           style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
         ),
       ]),
