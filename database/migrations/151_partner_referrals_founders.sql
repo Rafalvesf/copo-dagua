@@ -186,7 +186,7 @@ begin
            and not exists (select 1 from public.bookings b where b.partner_id = v_partner and b.couple_id = v_uid);
     if v_valid then
       perform pg_advisory_xact_lock(hashtext('partner_referral_seq:' || v_partner::text));
-      select count(*)::int + 1 into v_seq from public.partner_referrals where partner_id = v_partner and valid;
+      select count(*)::int + 1 into v_seq from public.partner_referrals pr where pr.partner_id = v_partner and pr.valid;
     end if;
     insert into public.partner_referrals (partner_id, profile_id, valid, seq) values (v_partner, v_uid, v_valid, v_seq)
     on conflict on constraint partner_referrals_pkey do nothing;
