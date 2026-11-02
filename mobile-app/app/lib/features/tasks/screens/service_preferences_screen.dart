@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/booked_partner_badge.dart';
 import 'package:copo_dagua_app/core/budget/booked_partners.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -245,17 +246,8 @@ class _CategoryPreferenceCard extends StatelessWidget {
               Text(label, style: const TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               if (partners.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Row(children: [
-                    Icon(Icons.storefront_outlined, size: 14, color: AppTheme.accentOliveDark),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(partners.join(', '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w600, color: AppTheme.accentOliveDark)),
-                    ),
-                  ]),
+                  padding: const EdgeInsets.only(top: 6),
+                  child: BookedPartnerBadge(partners),
                 ),
             ]),
           ),
