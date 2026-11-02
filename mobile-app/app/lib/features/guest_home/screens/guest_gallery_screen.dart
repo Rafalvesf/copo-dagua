@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -129,6 +130,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
             bottom: false,
             child: Column(
               children: [
+                const GuestEventsPillRow(),
                 // Canvas "Convidado · Galeria": título ao centro e "+" verde.
                 // Redesign 2026-10-19: "+" verde redondo como no canvas.
                 PageHeader(

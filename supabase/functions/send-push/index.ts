@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
   } catch { /* vazio */ }
   if (!id) return new Response("bad request", { status: 400 });
 
-  const { data: n } = await admin.from("notifications").select("id, title, body, link, type").eq("id", id).maybeSingle();
+  const { data: n } = await admin.from("notifications").select("*").eq("id", id).maybeSingle();
   if (!n) return Response.json({ skipped: "not_found" });
   const { data: ids } = await admin.rpc("notification_recipient_ids", { p_id: id });
   const recipients = ((ids ?? []) as unknown[]).map((r) => (typeof r === "string" ? r : (r as Record<string, string>).notification_recipient_ids)).filter(Boolean);
@@ -38,7 +38,9 @@ Deno.serve(async (req) => {
 
   const link = n.link ?? "/";
   const tag = `${n.type}:${n.link ?? n.id}`;
-  const payload = JSON.stringify({ title: n.title, body: n.body ?? "", url: link, tag });
+  // Imagem da mensagem da equipa (migração 148), quando existe.
+  const image = typeof n.image_url === "string" && n.image_url.startsWith("https://") ? n.image_url : undefined;
+  const payload = JSON.stringify({ title: n.title, body: n.body ?? "", url: link, tag, image });
   const hasVapid = Boolean(config.vapid_public && config.vapid_private);
   if (hasVapid) webpush.setVapidDetails("mailto:ola@anossa.app", config.vapid_public, config.vapid_private);
   const fcm = await fcmClient();
@@ -48,7 +50,7 @@ Deno.serve(async (req) => {
     try {
       if (s.endpoint.startsWith("fcm:")) {
         if (!fcm) continue;
-        const r = await fcm.send(s.endpoint.slice(4), { title: n.title, body: n.body ?? "", url: link, tag });
+        const r = await fcm.send(s.endpoint.slice(4), { title: n.title, body: n.body ?? "", url: link, tag, image });
         if (r === "gone") {
           await admin.from("push_subscriptions").delete().eq("id", s.id);
         } else if (r === "ok") {
@@ -101,17 +103,22 @@ async function fcmClient() {
     return null;
   }
   return {
-    async send(deviceToken: string, m: { title: string; body: string; url: string; tag: string }): Promise<"ok" | "gone" | "error"> {
+    async send(deviceToken: string, m: { title: string; body: string; url: string; tag: string; image?: string }): Promise<"ok" | "gone" | "error"> {
       const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           message: {
             token: deviceToken,
-            notification: { title: m.title, body: m.body },
+            notification: { title: m.title, body: m.body, ...(m.image ? { image: m.image } : {}) },
             data: { url: m.url, tag: m.tag },
-            android: { priority: "high", notification: { tag: m.tag } },
-            apns: { headers: { "apns-collapse-id": m.tag.slice(0, 64) }, payload: { aps: { sound: "default" } } },
+            android: { priority: "high", notification: { tag: m.tag, ...(m.image ? { image: m.image } : {}) } },
+            apns: {
+              headers: { "apns-collapse-id": m.tag.slice(0, 64) },
+              // mutable-content deixa o iOS juntar a imagem à notificação.
+              payload: { aps: { sound: "default", ...(m.image ? { "mutable-content": 1 } : {}) } },
+              ...(m.image ? { fcm_options: { image: m.image } } : {}),
+            },
           },
         }),
       });

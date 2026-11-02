@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../settings/screens/settings_screen.dart' show CoupleAccountSections, GuestAccountSections;
 import '../../../core/guest_home/guest_home_providers.dart';
@@ -115,6 +116,10 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                         140,
                       ),
                       children: [
+                        if (guestMode) ...[
+                          const Align(alignment: Alignment.centerLeft, child: GuestEventsPill()),
+                          const SizedBox(height: 12),
+                        ],
                         Row(
                           children: [
                             const Expanded(

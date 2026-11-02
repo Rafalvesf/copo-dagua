@@ -162,3 +162,17 @@ final myJoinRequestPendingProvider = FutureProvider.family<bool, String>((ref, w
 Future<void> reviewJoinRequest(String requestId, {required bool approve}) async {
   await supabase.rpc('review_join_request', params: {'p_request': requestId, 'p_approve': approve});
 }
+
+/// Entrada do evento que organizo: grátis ou preço por pessoa (142).
+final eventEntryProvider = FutureProvider.family<({bool paid, double? price}), String>((ref, weddingId) async {
+  try {
+    final row = await supabase.from('weddings').select('is_paid, entry_price').eq('id', weddingId).maybeSingle();
+    return (paid: row?['is_paid'] == true, price: (row?['entry_price'] as num?)?.toDouble());
+  } on PostgrestException {
+    return (paid: false, price: null);
+  }
+});
+
+Future<void> setEventEntry(String weddingId, {required bool paid, double? price}) async {
+  await supabase.from('weddings').update({'is_paid': paid, 'entry_price': paid ? price : null}).eq('id', weddingId);
+}

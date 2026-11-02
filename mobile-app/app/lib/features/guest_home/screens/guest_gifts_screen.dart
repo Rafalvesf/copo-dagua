@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -115,6 +116,7 @@ class GuestGiftsScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.only(bottom: 140),
               children: [
+                const GuestEventsPillRow(),
                 const PageHeader(title: 'Presentes', showBack: false, centered: true),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, AppTheme.screenMargin, 0),

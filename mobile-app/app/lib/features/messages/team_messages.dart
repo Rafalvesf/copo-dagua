@@ -54,6 +54,11 @@ class TeamBannerCard extends ConsumerWidget {
   const TeamBannerCard({super.key, this.padding = const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 14)});
 
   Future<void> _dismiss(WidgetRef ref, String id) async {
+    // Fecha em todos os aparelhos (migração 148); a cópia local fica para
+    // esconder logo e para quando a migração ainda não correu.
+    try {
+      await supabase.rpc('dismiss_banner', params: {'p_id': id});
+    } catch (_) {}
     try {
       final prefs = await SharedPreferences.getInstance();
       final list = prefs.getStringList(_dismissedKey) ?? <String>[];
@@ -165,6 +170,32 @@ final teamThreadProvider = FutureProvider<List<TeamItem>>((ref) async {
 
 /// Entrada fixa "Equipa À Nossa!" nas listas de conversas — só aparece
 /// quando a equipa já enviou uma mensagem direta.
+const _teamReadKey = 'team_thread_read_at_v1';
+
+/// Última vez que a conversa com a equipa foi aberta neste aparelho.
+class TeamReadAt extends Notifier<DateTime?> {
+  @override
+  DateTime? build() {
+    Future.microtask(() async {
+      try {
+        final ms = (await SharedPreferences.getInstance()).getInt(_teamReadKey);
+        if (ms != null) state = DateTime.fromMillisecondsSinceEpoch(ms);
+      } catch (_) {}
+    });
+    return null;
+  }
+
+  Future<void> markRead() async {
+    final now = DateTime.now();
+    state = now;
+    try {
+      await (await SharedPreferences.getInstance()).setInt(_teamReadKey, now.millisecondsSinceEpoch);
+    } catch (_) {}
+  }
+}
+
+final teamReadAtProvider = NotifierProvider<TeamReadAt, DateTime?>(TeamReadAt.new);
+
 class TeamThreadEntry extends ConsumerWidget {
   final EdgeInsetsGeometry padding;
   const TeamThreadEntry({super.key, this.padding = const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0)});
@@ -174,6 +205,9 @@ class TeamThreadEntry extends ConsumerWidget {
     final items = ref.watch(teamThreadProvider).value ?? const <TeamItem>[];
     if (!items.any((i) => i.fromTeam)) return const SizedBox.shrink();
     final last = items.last;
+    final readAt = ref.watch(teamReadAtProvider);
+    final lastTeam = items.lastWhere((i) => i.fromTeam);
+    final unread = readAt == null || lastTeam.at.isAfter(readAt);
     return Padding(
       padding: padding,
       child: InkWell(
@@ -181,20 +215,51 @@ class TeamThreadEntry extends ConsumerWidget {
         onTap: () => context.push('/equipa'),
         child: Container(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: const [
-            BoxShadow(color: Color(0x14171713), blurRadius: 18, offset: Offset(0, 6)),
-          ]),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            // Conversa fixa: contorno verde (mockup 2026-11).
+            border: Border.all(color: AppTheme.accentOliveDark, width: 1.5),
+            boxShadow: const [BoxShadow(color: Color(0x14171713), blurRadius: 18, offset: Offset(0, 6))],
+          ),
           child: Row(children: [
             ClipOval(child: Image.asset('assets/mascot/duo_clink.png', width: 40, height: 40, fit: BoxFit.cover)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Equipa À Nossa!', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Row(children: [
+                  const Flexible(
+                    child: Text('Equipa À Nossa!',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(999)),
+                    child: const Text('FIXA',
+                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: Colors.white)),
+                  ),
+                ]),
                 Text(last.fromTeam ? last.body : 'Tu: ${last.body}',
-                    maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+                        color: unread ? AppTheme.ink : AppTheme.inkMuted)),
               ]),
             ),
-            const Icon(Icons.push_pin_outlined, size: 16, color: AppTheme.inkMuted),
+            if (unread)
+              Semantics(
+                label: 'Mensagem por ler',
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle),
+                ),
+              ),
           ]),
         ),
       ),
@@ -211,6 +276,12 @@ class TeamThreadScreen extends ConsumerStatefulWidget {
 class _TeamThreadScreenState extends ConsumerState<TeamThreadScreen> {
   final _reply = TextEditingController();
   bool _sending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(teamReadAtProvider.notifier).markRead());
+  }
 
   @override
   void dispose() {

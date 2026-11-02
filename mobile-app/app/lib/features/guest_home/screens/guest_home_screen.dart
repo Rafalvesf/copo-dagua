@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:copo_dagua_app/features/messages/team_messages.dart';
+import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -190,30 +190,11 @@ class _GuestHomeBody extends ConsumerWidget {
         // Única saída do modo convidado (pedido 2026-11): no topo, com
         // as três linhas e a dizer para onde se volta.
         Row(children: [
-          SnappyTap(
-            onTap: () => context.go('/eventos?tab=meus'),
-            child: Container(
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999), boxShadow: softShadow),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.menu_rounded, size: 20, color: AppTheme.ink),
-                  const SizedBox(width: 8),
-                  Text(
-                    eventCount > 1 ? 'Os meus eventos ($eventCount)' : 'Os meus eventos',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          const GuestEventsPill(),
           const Spacer(),
           const PartnerNotificationBell(),
         ]),
         const SizedBox(height: 14),
-        const TeamBannerCard(padding: EdgeInsets.only(bottom: 14)),
         const Text('O teu evento',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),

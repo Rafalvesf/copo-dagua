@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -402,8 +401,6 @@ class _PageBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final look = _look(context, ref);
     final children = <Widget>[
-        // Novidade da Equipa À Nossa! (migração 146).
-        if (scrollable) const TeamBannerCard(padding: EdgeInsets.only(bottom: 16)),
         // Aparência escolhida (098): o clássico por defeito, ou uma das
         // três opções.
         ...switch (layout) {

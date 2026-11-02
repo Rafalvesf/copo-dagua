@@ -292,6 +292,87 @@ class _PublicEventRow extends ConsumerWidget {
   }
 }
 
+/// "Entrada": grátis ou paga, e o preço por pessoa — muda-se depois de
+/// criar o evento (pedido 2026-11).
+class _EntryRow extends ConsumerWidget {
+  final String weddingId;
+  const _EntryRow({required this.weddingId});
+
+  Future<void> _edit(BuildContext context, WidgetRef ref, bool paid, double? price) async {
+    final ctrl = TextEditingController(text: price == null ? '' : (price == price.roundToDouble() ? price.toStringAsFixed(0) : price.toStringAsFixed(2).replaceAll('.', ',')));
+    var isPaid = paid;
+    final result = await showIslandDialog<({bool paid, double? price})>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) {
+          final value = double.tryParse(ctrl.text.trim().replaceAll(' ', '').replaceAll('€', '').replaceAll(',', '.'));
+          final valid = !isPaid || (value != null && value > 0 && value <= 100000);
+          return IslandAlert(
+            title: const Text('Entrada'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(value: false, label: Text('Grátis')),
+                    ButtonSegment(value: true, label: Text('Pago')),
+                  ],
+                  selected: {isPaid},
+                  onSelectionChanged: (v) => setLocal(() => isPaid = v.first),
+                ),
+                if (isPaid) ...[
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: ctrl,
+                    autofocus: true,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Preço por pessoa', suffixText: '€'),
+                    onChanged: (_) => setLocal(() {}),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+              FilledButton(
+                onPressed: valid ? () => Navigator.pop(ctx, (paid: isPaid, price: isPaid ? value : null)) : null,
+                child: const Text('Guardar'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    if (result == null || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await setEventEntry(weddingId, paid: result.paid, price: result.price);
+      ref.invalidate(eventEntryProvider(weddingId));
+      ref.invalidate(publicEventsProvider);
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entry = ref.watch(eventEntryProvider(weddingId)).value ?? (paid: false, price: null);
+    final p = entry.price;
+    final label = !entry.paid
+        ? 'Grátis'
+        : p == null
+            ? 'Pago'
+            : '${p == p.roundToDouble() ? p.toStringAsFixed(0) : p.toStringAsFixed(2).replaceAll('.', ',')} € por pessoa';
+    return _Row(
+      icon: Icons.confirmation_number_outlined,
+      label: 'Entrada',
+      value: label,
+      onTap: () => _edit(context, ref, entry.paid, entry.price),
+    );
+  }
+}
+
 class _CoupleSettings extends ConsumerWidget {
   final bool fromGuestMode;
   const _CoupleSettings({required this.fromGuestMode});
@@ -343,6 +424,7 @@ class _CoupleSettings extends ConsumerWidget {
             onTap: () => context.go('/wedding?aparencia=1'),
           ),
           if (wedding.eventType.canBePublic) _PublicEventRow(weddingId: wedding.id),
+          _EntryRow(weddingId: wedding.id),
         ],
       ),
       const _SectionTitle('Conta'),
