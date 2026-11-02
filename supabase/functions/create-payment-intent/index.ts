@@ -176,9 +176,9 @@ Deno.serve(async (req) => {
   // Parceiros novos: sem taxa nos primeiros `partner_free_months` meses
   // (2 desde a migração 135; o mês extra para quem não vende,
   // `partner_free_extra_months`, ficou a 0 — migrações 127/128).
-  // Migração 151: fundadores têm `founder_free_months`; clientes trazidos
-  // pelo próprio parceiro (link /p/CODIGO, antes de qualquer pedido) não
-  // pagam comissão do parceiro.
+  // Migração 151: fundadores têm `founder_free_months`; dos clientes
+  // trazidos pelo próprio parceiro (link /p/CODIGO, antes de qualquer
+  // pedido), a cada `referral_free_every` (5) um fica sem comissão do parceiro.
   const coupleId = (payment.bookings as unknown as { couple_id?: string } | null)?.couple_id ?? null;
   const partnerFree =
     (await partnerIsFree(admin, payment.partner_id as string, partner.created_at, sett,
@@ -296,17 +296,20 @@ async function partnerIsFree(
   return (count ?? 0) === 0;
 }
 
-// Cliente trazido pelo próprio parceiro (migração 151).
+// Cliente trazido pelo próprio parceiro (migração 151): a cada N (5)
+// clientes válidos, o N.º fica sem comissão do parceiro.
 // deno-lint-ignore no-explicit-any
 async function isReferredClient(admin: any, partnerId: string, coupleId: string | null, sett: Record<string, unknown>) {
   if (!coupleId || sett.referral_zero_fee === false) return false;
+  const every = Math.max(1, Number(sett.referral_free_every ?? 5) || 5);
   const { data } = await admin
     .from("partner_referrals")
-    .select("valid")
+    .select("valid, seq")
     .eq("partner_id", partnerId)
     .eq("profile_id", coupleId)
     .maybeSingle();
-  return data?.valid === true;
+  const seq = Number(data?.seq ?? 0);
+  return data?.valid === true && seq > 0 && seq % every === 0;
 }
 
 // N.º de fundador (migração 151); sem a migração, null.

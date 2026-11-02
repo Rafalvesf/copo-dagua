@@ -2,9 +2,11 @@
 -- 151 — Convite de clientes pelo parceiro (0%) e Parceiros Fundadores
 -- ============================================================
 -- Pedido do utilizador (2026-11-02, "sim aplica"):
---   1. 0% de comissão do parceiro nos clientes que ELE traz para a app,
---      por link próprio (/p/CODIGO). A comissão só se aplica aos casais
---      que a À Nossa! lhe traz.
+--   1. Clientes que o parceiro traz para a app pelo link próprio
+--      (/p/CODIGO): A CADA 5 clientes, o 5.º fica sem comissão do parceiro
+--      (5.º, 10.º, 15.º…); os outros pagam a comissão normal
+--      ("a comissão só fica gratuita no quinto convidado e depois volta ao
+--      normal" — a cada 5).
 --   2. Primeiros 100 parceiros publicados: selo "Parceiro Fundador" e
 --      3 meses sem comissão (em vez dos meses normais).
 --   3. Primeiros 50 fundadores: destaque grátis 6 meses.
@@ -22,7 +24,8 @@ alter table public.platform_settings
   add column if not exists founder_free_months integer not null default 3 check (founder_free_months between 0 and 36),
   add column if not exists founder_featured_slots integer not null default 50 check (founder_featured_slots between 0 and 10000),
   add column if not exists founder_featured_months integer not null default 6 check (founder_featured_months between 0 and 36),
-  add column if not exists referral_zero_fee boolean not null default true;
+  add column if not exists referral_zero_fee boolean not null default true,
+  add column if not exists referral_free_every integer not null default 5 check (referral_free_every between 1 and 100);
 
 -- ---------- Parceiro: código de convite, n.º de fundador, destaque até ----------
 alter table public.partner_profiles
@@ -133,6 +136,9 @@ create table if not exists public.partner_referrals (
   partner_id uuid not null references public.partner_profiles(id) on delete cascade,
   profile_id uuid not null references public.profiles(id) on delete cascade,
   valid boolean not null,
+  -- Posição entre os convites válidos deste parceiro (1, 2, 3…).
+  -- Sem comissão quando seq % referral_free_every = 0.
+  seq integer,
   created_at timestamptz not null default now(),
   primary key (partner_id, profile_id)
 );
@@ -147,12 +153,14 @@ create policy "Partner or client reads referrals" on public.partner_referrals fo
 -- Abrir o link /p/CODIGO (com sessão iniciada). Devolve o parceiro e se
 -- o convite conta para os 0%.
 create or replace function public.claim_partner_referral(p_code text)
-returns table (partner_id uuid, business_name text, valid boolean)
+returns table (partner_id uuid, business_name text, valid boolean, free boolean)
 language plpgsql security definer set search_path = public, pg_temp as $$
 declare
   v_partner uuid;
   v_name text;
   v_valid boolean;
+  v_seq integer;
+  v_every integer;
   v_uid uuid := auth.uid();
 begin
   if v_uid is null then
@@ -168,24 +176,33 @@ begin
     raise exception 'own_code' using errcode = 'P0001';
   end if;
 
+  select greatest(coalesce(referral_free_every, 5), 1) into v_every from public.platform_settings where id = 1;
+
   -- Já registado: devolve o que estava (não muda depois de existir).
-  select r.valid into v_valid from public.partner_referrals r
+  select r.valid, r.seq into v_valid, v_seq from public.partner_referrals r
   where r.partner_id = v_partner and r.profile_id = v_uid;
   if v_valid is null then
     v_valid := not exists (select 1 from public.quote_requests q where q.partner_id = v_partner and q.couple_id = v_uid)
            and not exists (select 1 from public.bookings b where b.partner_id = v_partner and b.couple_id = v_uid);
-    insert into public.partner_referrals (partner_id, profile_id, valid) values (v_partner, v_uid, v_valid)
+    if v_valid then
+      perform pg_advisory_xact_lock(hashtext('partner_referral_seq:' || v_partner::text));
+      select count(*)::int + 1 into v_seq from public.partner_referrals where partner_id = v_partner and valid;
+    end if;
+    insert into public.partner_referrals (partner_id, profile_id, valid, seq) values (v_partner, v_uid, v_valid, v_seq)
     on conflict on constraint partner_referrals_pkey do nothing;
     if v_valid then
       insert into public.notifications (profile_id, type, title, body, link)
       values (v_partner, 'partner_referral', 'Novo cliente pelo teu convite',
               coalesce((select full_name from public.profiles where id = v_uid), 'Um cliente') ||
-              ' entrou na À Nossa! pelo teu link. Sem comissão nas reservas contigo.',
+              ' entrou na À Nossa! pelo teu link (' || v_seq || '.º). ' ||
+              case when v_seq % v_every = 0
+                   then 'Este fica sem comissão nas reservas contigo.'
+                   else 'Faltam ' || (v_every - v_seq % v_every) || ' para o próximo cliente sem comissão.' end,
               '/partner-home');
     end if;
   end if;
 
-  return query select v_partner, v_name, v_valid;
+  return query select v_partner, v_name, v_valid, coalesce(v_valid and v_seq % v_every = 0, false);
 end;
 $$;
 revoke execute on function public.claim_partner_referral(text) from public, anon;
@@ -193,11 +210,12 @@ grant execute on function public.claim_partner_referral(text) to authenticated;
 
 -- Para o parceiro: quantos clientes trouxe.
 create or replace function public.my_partner_referral_stats()
-returns table (referral_code text, founder_number integer, featured_until timestamptz, clients integer, valid_clients integer)
+returns table (referral_code text, founder_number integer, featured_until timestamptz, clients integer, valid_clients integer, free_every integer)
 language sql stable security definer set search_path = public, pg_temp as $$
   select p.referral_code, p.founder_number, p.featured_until,
          (select count(*)::int from public.partner_referrals r where r.partner_id = p.id),
-         (select count(*)::int from public.partner_referrals r where r.partner_id = p.id and r.valid)
+         (select count(*)::int from public.partner_referrals r where r.partner_id = p.id and r.valid),
+         (select greatest(coalesce(referral_free_every, 5), 1) from public.platform_settings where id = 1)
   from public.partner_profiles p where p.id = (select auth.uid());
 $$;
 revoke execute on function public.my_partner_referral_stats() from public, anon;
@@ -206,5 +224,5 @@ grant execute on function public.my_partner_referral_stats() to authenticated;
 commit;
 
 -- Verificação:
--- select founder_slots, founder_free_months, founder_featured_slots, founder_featured_months, referral_zero_fee from platform_settings;
+-- select founder_slots, founder_free_months, founder_featured_slots, founder_featured_months, referral_zero_fee, referral_free_every from platform_settings;
 -- select business_name, referral_code, founder_number, featured_until from partner_profiles order by founder_number nulls last;
