@@ -82,6 +82,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   Future<void> _showFilters() async {
     final result = await showIslandSheet<_AdvancedFilters>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
@@ -920,8 +921,13 @@ class _FiltersSheetState extends State<_FiltersSheet> {
             label: Text(label(v)),
             selected: v == selected,
             showCheckmark: false,
+            // Compactos (2026-11): a folha cortava os botões no fim.
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             selectedColor: AppTheme.accentOliveDark,
             labelStyle: TextStyle(
+              fontSize: AppFontSize.sm + 2,
               color: v == selected ? Colors.white : AppTheme.ink,
               fontWeight: FontWeight.w600,
             ),
@@ -933,66 +939,87 @@ class _FiltersSheetState extends State<_FiltersSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final title = Theme.of(context).textTheme.titleMedium;
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    final title = Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700);
+    // Opções roláveis e botões sempre visíveis no fundo (antes ficavam
+    // cortados quando a folha não cabia).
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: AppTheme.borderMuted, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 14),
             Text('Filtros', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 18),
-            Text('Preço até', style: title),
-            const SizedBox(height: 8),
-            _chips<double?>(_prices, _maxPrice, (v) => v == null ? 'Qualquer' : euros(v), (v) => _maxPrice = v),
-            const SizedBox(height: 18),
-            Text('Avaliação', style: title),
-            const SizedBox(height: 8),
-            _chips<double?>(
-              _ratings,
-              _minRating,
-              (v) => v == null ? 'Qualquer' : '${v.toString().replaceAll('.', ',')}+',
-              (v) => _minRating = v,
-            ),
-            const SizedBox(height: 18),
-            Text('Ordenar por', style: title),
-            const SizedBox(height: 8),
-            _chips<_PartnerSort>(
-              _PartnerSort.values,
-              _sort,
-              (v) => switch (v) {
-                _PartnerSort.relevance => 'Relevância',
-                _PartnerSort.priceAsc => 'Preço mais baixo',
-                _PartnerSort.rating => 'Melhor avaliação',
-              },
-              (v) => _sort = v,
-            ),
-            const SizedBox(height: 24),
-            Row(
+          ]),
+        ),
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 14, 22, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(
-                      const _AdvancedFilters(null, null, _PartnerSort.relevance),
-                    ),
-                    child: const Text('Limpar'),
-                  ),
+                Text('Preço até', style: title),
+                const SizedBox(height: 8),
+                _chips<double?>(_prices, _maxPrice, (v) => v == null ? 'Qualquer' : euros(v), (v) => _maxPrice = v),
+                const SizedBox(height: 16),
+                Text('Avaliação', style: title),
+                const SizedBox(height: 8),
+                _chips<double?>(
+                  _ratings,
+                  _minRating,
+                  (v) => v == null ? 'Qualquer' : '${v.toString().replaceAll('.', ',')}+',
+                  (v) => _minRating = v,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(
-                      _AdvancedFilters(_maxPrice, _minRating, _sort),
-                    ),
-                    child: const Text('Aplicar'),
-                  ),
+                const SizedBox(height: 16),
+                Text('Ordenar por', style: title),
+                const SizedBox(height: 8),
+                _chips<_PartnerSort>(
+                  _PartnerSort.values,
+                  _sort,
+                  (v) => switch (v) {
+                    _PartnerSort.relevance => 'Relevância',
+                    _PartnerSort.priceAsc => 'Preço mais baixo',
+                    _PartnerSort.rating => 'Melhor avaliação',
+                  },
+                  (v) => _sort = v,
                 ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(22, 8, 22, 18),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(
+                    const _AdvancedFilters(null, null, _PartnerSort.relevance),
+                  ),
+                  child: const Text('Limpar'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(
+                    _AdvancedFilters(_maxPrice, _minRating, _sort),
+                  ),
+                  child: const Text('Aplicar'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
