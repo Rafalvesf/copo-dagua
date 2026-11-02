@@ -337,11 +337,11 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                   blendMode: BlendMode.dstIn,
                                   shaderCallback: (r) => LinearGradient(
                                     colors: const [Colors.transparent, Colors.transparent, Colors.black],
-                                    stops: [0, (fadeStart + 6) / r.width, (fadeStart + 34) / r.width],
+                                    stops: [0, (fadeStart + 2) / r.width, (fadeStart + 16) / r.width],
                                   ).createShader(r),
                                   child: ListView.separated(
                                     scrollDirection: Axis.horizontal,
-                                    padding: const EdgeInsets.only(left: fadeStart + 18, right: AppTheme.screenMargin),
+                                    padding: const EdgeInsets.only(left: fadeStart + 17, right: AppTheme.screenMargin),
                                     itemCount: options.length,
                                     separatorBuilder: (context, i) => const SizedBox(width: 8),
                                     itemBuilder: (context, i) => pill(options[i]),
