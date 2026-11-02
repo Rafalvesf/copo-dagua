@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/search_pill.dart';
 import '../../../shared/public_link.dart';
@@ -409,6 +410,11 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
     }
     if (e.joined) {
       context.go('/guest-home/${e.weddingId}');
+      return;
+    }
+    // Evento pago: entra-se comprando bilhete (migração 149).
+    if (e.isPaid) {
+      await showBuyTicketSheet(context, e);
       return;
     }
     final ok = await showDialog<bool>(

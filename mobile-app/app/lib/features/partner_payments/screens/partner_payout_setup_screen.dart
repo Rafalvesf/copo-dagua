@@ -17,7 +17,9 @@ import '../widgets/payout_details_form.dart';
 /// grupo, e depois pede os dados com os formulários da própria app
 /// (2026-10-25 — nada de links nem caixas da Stripe).
 class PartnerPayoutSetupScreen extends ConsumerStatefulWidget {
-  const PartnerPayoutSetupScreen({super.key});
+  /// Organizador a ativar a receção de bilhetes (migração 149).
+  final bool organizer;
+  const PartnerPayoutSetupScreen({super.key, this.organizer = false});
 
   @override
   ConsumerState<PartnerPayoutSetupScreen> createState() => _SetupState();
@@ -25,6 +27,19 @@ class PartnerPayoutSetupScreen extends ConsumerStatefulWidget {
 
 class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
   bool _agreed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    connectAsOrganizer = widget.organizer;
+  }
+
+  @override
+  void dispose() {
+    if (widget.organizer) connectAsOrganizer = false;
+    super.dispose();
+  }
+
   bool _form = false;
   final bool _loading = false;
   String? _error;
@@ -44,6 +59,13 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
     ref.invalidate(partnerStripeStatusProvider);
     final s = await ref.read(partnerConnectStatusProvider.future);
     if (!mounted) return;
+    if (s.detailsSubmitted && !s.needsData && widget.organizer) {
+      context.pop();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(s.active ? 'Pagamentos ativos! Já podes vender bilhetes.' : 'Dados enviados. A Stripe está a verificar.'),
+      ));
+      return;
+    }
     if (s.detailsSubmitted && !s.needsData) {
       context.pushReplacement(
         '/pay/done',

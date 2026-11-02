@@ -364,12 +364,23 @@ class _EntryRow extends ConsumerWidget {
         : p == null
             ? 'Pago'
             : '${p == p.roundToDouble() ? p.toStringAsFixed(0) : p.toStringAsFixed(2).replaceAll('.', ',')} € por pessoa';
-    return _Row(
+    final row = _Row(
       icon: Icons.confirmation_number_outlined,
       label: 'Entrada',
       value: label,
       onTap: () => _edit(context, ref, entry.paid, entry.price),
     );
+    if (!entry.paid) return row;
+    // Evento pago: vendas, conta para receber e levantamentos (149).
+    return Column(children: [
+      row,
+      const Divider(height: 1, thickness: 1, color: Color(0xFFEEF2EC)),
+      _Row(
+        icon: Icons.account_balance_wallet_outlined,
+        label: 'Bilhetes e pagamentos',
+        onTap: () => context.push('/bilhetes'),
+      ),
+    ]);
   }
 }
 

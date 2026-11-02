@@ -154,9 +154,14 @@ class ConnectError implements Exception {
   const ConnectError(this.code, [this.message]);
 }
 
+/// `true` enquanto um organizador está nos ecrãs de receber bilhetes
+/// (migração 149): a conta Stripe é a do organizador, não a de parceiro.
+bool connectAsOrganizer = false;
+
 Future<Map<String, dynamic>> _call(Map<String, dynamic> body) async {
   try {
-    final res = await supabase.functions.invoke('connect-account', body: body);
+    final res = await supabase.functions.invoke('connect-account',
+        body: {...body, if (connectAsOrganizer) 'scope': 'organizer'});
     return (res.data as Map).cast<String, dynamic>();
   } on FunctionException catch (e) {
     final d = e.details;
