@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/search_pill.dart';
+import '../../../shared/public_link.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:flutter/services.dart';
 import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -40,6 +45,73 @@ class EventosScreen extends ConsumerStatefulWidget {
 class _EventosScreenState extends ConsumerState<EventosScreen> {
   late int? _tab = widget.initialTab; // 0 = Descobrir, 1 = Os meus
 
+  // Descobrir: procurar por nome ou zona e filtrar por data (2026-11).
+  final _search = TextEditingController();
+  _When _when = _When.any;
+
+  @override
+  void initState() {
+    super.initState();
+    _search.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  bool _matches(PublicEvent e) {
+    final q = _search.text.trim().toLowerCase();
+    if (q.isNotEmpty) {
+      final hay = [e.displayNames, e.venue ?? '', e.location ?? '', e.eventType.label].join(' ').toLowerCase();
+      if (!q.split(RegExp(r'\s+')).every(hay.contains)) return false;
+    }
+    final d = e.date;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    switch (_when) {
+      case _When.any:
+        return true;
+      case _When.week:
+        // Até ao próximo domingo (inclusive).
+        final end = today.add(Duration(days: 7 - today.weekday));
+        return d != null && !d.isBefore(today) && !d.isAfter(end);
+      case _When.month:
+        return d != null && d.year == now.year && d.month == now.month && !d.isBefore(today);
+      case _When.next30:
+        return d != null && !d.isBefore(today) && d.isBefore(today.add(const Duration(days: 30)));
+    }
+  }
+
+  Future<void> _pickWhen() async {
+    final picked = await showIslandSheet<_When>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 18, 20, 6),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Quando', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ),
+            ),
+            for (final w in _When.values)
+              ListTile(
+                title: Text(w.label),
+                trailing: w == _when ? Icon(Icons.check_rounded, color: AppTheme.accentOliveDark) : null,
+                onTap: () => Navigator.pop(ctx, w),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (picked != null) setState(() => _when = picked);
+  }
+
   Future<void> _refresh() async {
     ref.invalidate(guestWeddingsProvider);
     ref.invalidate(publicEventsProvider);
@@ -59,16 +131,48 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
     final allPublic = (publicAsync.value ?? const <PublicEvent>[])
         .where((e) => !joinedIds.contains(e.weddingId))
         .toList();
-    final publicEvents = allPublic;
+    final publicEvents = allPublic.where(_matches).toList();
+    final filtering = _search.text.trim().isNotEmpty || _when != _When.any;
     final tab = _tab ?? (myEvents.isNotEmpty || invited.isNotEmpty ? 1 : 0);
 
     final List<Widget> content = tab == 0
         ? [
-            const SizedBox(height: 14),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 0),
+              child: Row(children: [
+                Expanded(child: SearchPill(controller: _search, hint: 'Procurar por nome ou zona')),
+                const SizedBox(width: 10),
+                SnappyTap(
+                  onTap: _pickWhen,
+                  child: Container(
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: _when == _When.any ? Colors.white : AppTheme.accentOliveDark,
+                      borderRadius: BorderRadius.circular(999),
+                      boxShadow: const [BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6))],
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.calendar_today_outlined,
+                          size: 18, color: _when == _When.any ? AppTheme.ink : Colors.white),
+                      const SizedBox(width: 6),
+                      Text(_when.short,
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: _when == _When.any ? AppTheme.ink : Colors.white)),
+                    ]),
+                  ),
+                ),
+              ]),
+            ),
+            const SizedBox(height: 18),
             if (publicAsync.isLoading && publicAsync.value == null)
               const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()))
             else if (publicEvents.isEmpty)
-              const _Pad(_EmptyNote('Ainda não há eventos públicos. Quando um organizador abrir o seu evento a todos, aparece aqui.'))
+              _Pad(_EmptyNote(filtering
+                  ? 'Nenhum evento público com estes filtros.'
+                  : 'Ainda não há eventos públicos. Quando um organizador abrir o seu evento a todos, aparece aqui.'))
             else
               for (final e in publicEvents)
                 Padding(
@@ -389,6 +493,20 @@ class _PosterCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // Partilhar o evento por link (2026-11).
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      child: IconButton(
+                        tooltip: 'Partilhar',
+                        icon: const Icon(Icons.ios_share_rounded, size: 20, color: AppTheme.ink),
+                        onPressed: () => sharePublicEvent(context, e),
+                      ),
+                    ),
+                  ),
                   if (date != null)
                     Positioned(
                       left: 12,
@@ -515,6 +633,76 @@ class _CodeButton extends StatelessWidget {
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+
+enum _When {
+  any('Qualquer data', 'Data'),
+  week('Esta semana', 'Esta semana'),
+  month('Este mês', 'Este mês'),
+  next30('Próximos 30 dias', '30 dias');
+
+  const _When(this.label, this.short);
+  final String label;
+  final String short;
+}
+
+/// Partilha o link de um evento público (abre /evento/<id> na app).
+Future<void> sharePublicEvent(BuildContext context, PublicEvent e) async {
+  final link = publicLink('/evento/${e.weddingId}');
+  final messenger = ScaffoldMessenger.of(context);
+  var shared = false;
+  try {
+    final r = await SharePlus.instance.share(ShareParams(text: '${e.displayNames} na À Nossa!: $link', subject: e.displayNames));
+    shared = r.status != ShareResultStatus.unavailable;
+  } catch (_) {}
+  if (!shared) {
+    await Clipboard.setData(ClipboardData(text: link));
+    messenger.showSnackBar(const SnackBar(content: Text('Link copiado.')));
+  }
+}
+
+/// Página de um evento público aberta por link partilhado.
+class PublicEventScreen extends ConsumerWidget {
+  final String id;
+  const PublicEventScreen({super.key, required this.id});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(publicEventsProvider);
+    final e = async.value?.where((x) => x.weddingId == id).firstOrNull;
+    return GradientScaffold(
+      background: AppBackground.subtle,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 40),
+          children: [
+            const PageHeader(title: 'Evento', centered: true),
+            if (async.isLoading && e == null)
+              const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator()))
+            else if (e == null)
+              const _Pad(_EmptyNote('Este evento já não está disponível ou deixou de ser público.'))
+            else ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 16),
+                child: _PublicEventCard(event: e),
+              ),
+              if (e.welcomeMessage?.isNotEmpty == true)
+                _Pad(Text(e.welcomeMessage!, style: const TextStyle(fontSize: 15, height: 1.5, color: AppTheme.ink))),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 0),
+                child: TextButton.icon(
+                  onPressed: () => context.go('/eventos'),
+                  icon: const Icon(Icons.explore_outlined),
+                  label: const Text('Ver mais eventos'),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

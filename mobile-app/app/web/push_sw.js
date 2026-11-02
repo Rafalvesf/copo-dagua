@@ -12,6 +12,7 @@ self.addEventListener('push', function (event) {
     icon: 'icons/Icon-192.png',
     badge: 'icons/Icon-maskable-192.png',
     tag: data.tag || undefined,
+    image: data.image || undefined,
     renotify: !!data.tag,
     data: { url: data.url || '/' }
   }));

@@ -320,6 +320,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           to: state.uri.queryParameters['to'] ?? '/eventos',
         ),
       ),
+      // Evento público aberto por link partilhado (2026-11).
+      GoRoute(path: '/evento/:id', builder: (context, state) => PublicEventScreen(id: state.pathParameters['id']!)),
       // Criar mais um evento (vários por conta, 2026-11).
       GoRoute(
         path: '/novo-evento',
