@@ -39,6 +39,8 @@ export async function ensureAccount(
   email: string | null,
   businessName: string | null,
   current: string | null,
+  // Organizadores (bilhetes, migração 149) guardam a conta em `profiles`.
+  table: "partner_profiles" | "profiles" = "partner_profiles",
 ): Promise<string> {
   if (current) {
     try {
@@ -60,10 +62,10 @@ export async function ensureAccount(
     business_profile: { name: businessName || undefined, mcc: "7299" },
     capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
     settings: { payouts: { schedule: { interval: "manual" } } },
-    metadata: { partner_id: partnerId },
+    metadata: table === "profiles" ? { organizer_id: partnerId } : { partner_id: partnerId },
   } as never);
   await admin
-    .from("partner_profiles")
+    .from(table)
     .update({ stripe_account_id: account.id, stripe_charges_enabled: false, stripe_payouts_enabled: false })
     .eq("id", partnerId);
   return account.id;

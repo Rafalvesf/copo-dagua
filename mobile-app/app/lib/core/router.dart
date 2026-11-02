@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../features/events/screens/tickets_screens.dart';
 import '../features/messages/team_messages.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -320,6 +321,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           to: state.uri.queryParameters['to'] ?? '/eventos',
         ),
       ),
+      // Bilhetes (migração 149).
+      GoRoute(path: '/bilhete/:id', builder: (context, state) => TicketReturnScreen(ticketId: state.pathParameters['id']!)),
+      GoRoute(path: '/bilhetes', builder: (context, state) => const OrganizerTicketsScreen()),
+      GoRoute(path: '/bilhetes/ativar', builder: (context, state) => const PartnerPayoutSetupScreen(organizer: true)),
       // Evento público aberto por link partilhado (2026-11).
       GoRoute(path: '/evento/:id', builder: (context, state) => PublicEventScreen(id: state.pathParameters['id']!)),
       // Criar mais um evento (vários por conta, 2026-11).

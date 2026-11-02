@@ -38,12 +38,26 @@ Deno.serve(async (req) => {
   } catch { /* vazio */ }
   const action = typeof body.action === "string" ? body.action : "status";
 
-  const { data: profile, error: profileError } = await supabase
-    .from("partner_profiles")
-    .select("id, stripe_account_id, contact_email, business_name, phone")
-    .eq("id", user.id)
-    .single();
+  // Organizadores que vendem bilhetes (migração 149): conta em `profiles`.
+  const organizer = body.scope === "organizer";
+  const table = organizer ? "profiles" as const : "partner_profiles" as const;
+  const { data: profile, error: profileError } = organizer
+    ? await supabase
+      .from("profiles")
+      .select("id, stripe_account_id, full_name, phone, role")
+      .eq("id", user.id)
+      .single()
+    : await supabase
+      .from("partner_profiles")
+      .select("id, stripe_account_id, contact_email, business_name, phone")
+      .eq("id", user.id)
+      .single();
   if (profileError || !profile) return json({ error: "not_found" }, 404);
+  if (organizer && (profile as Record<string, unknown>).role !== "couple") return json({ error: "forbidden" }, 403);
+  const contactEmail = organizer ? user.email ?? null : ((profile as Record<string, unknown>).contact_email as string | null) ?? user.email ?? null;
+  const displayName = organizer
+    ? ((profile as Record<string, unknown>).full_name as string | null) ?? null
+    : ((profile as Record<string, unknown>).business_name as string | null) ?? null;
 
   const stripe = stripeClient();
   const admin = createClient(
@@ -69,9 +83,10 @@ Deno.serve(async (req) => {
         stripe,
         admin,
         user.id,
-        (profile.contact_email as string | null) ?? user.email ?? null,
-        (profile.business_name as string | null) ?? null,
+        contactEmail,
+        displayName,
         accountId,
+        table,
       );
       const session = await stripe.accountSessions.create({
         account: accountId,
@@ -100,9 +115,10 @@ Deno.serve(async (req) => {
         stripe,
         admin,
         user.id,
-        (profile.contact_email as string | null) ?? user.email ?? null,
-        (profile.business_name as string | null) ?? null,
+        contactEmail,
+        displayName,
         accountId,
+        table,
       );
       try {
         await applyDetails(stripe, accountId, d, {
@@ -159,7 +175,7 @@ Deno.serve(async (req) => {
           amount: requested,
           currency: "eur",
           description: "Levantamento À Nossa!",
-          metadata: { partner_id: user.id },
+          metadata: organizer ? { organizer_id: user.id } : { partner_id: user.id },
         },
         { stripeAccount: accountId, idempotencyKey: `payout-${accountId}-${requested}-${new Date().toISOString().slice(0, 16)}` },
       );
