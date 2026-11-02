@@ -56,5 +56,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Ícones e manifest ficam de fora: o telemóvel pede-os sem sessão ao
+  // adicionar ao ecrã principal.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icon|apple-icon|logo.png).*)"],
 };

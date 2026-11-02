@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Roboto, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 
@@ -19,6 +19,21 @@ const serif = Source_Serif_4({
 export const metadata: Metadata = {
   title: "À Nossa! — Admin",
   description: "Painel de administração da À Nossa!.",
+  applicationName: "À Nossa! Admin",
+  // iPhone/iPad: "Adicionar ao ecrã principal" abre em ecrã inteiro, como app.
+  appleWebApp: { capable: true, title: "Admin", statusBarStyle: "default" },
+  formatDetection: { telephone: false },
+  other: { "mobile-web-app-capable": "yes" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf9f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#262624" },
+  ],
 };
 
 // Aplica o tema escolhido (claro/escuro/sistema) antes de pintar, para não
