@@ -9,6 +9,7 @@ import '../../core/supabase/supabase_config.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/gradient_scaffold.dart';
 import '../../shared/widgets/page_header.dart';
+import '../../shared/widgets/sized_network_image.dart';
 
 /// Mensagens da Equipa À Nossa! (migração 146): banners de novidade e a
 /// conversa "Equipa À Nossa!" com as mensagens diretas.
@@ -20,7 +21,8 @@ class TeamBanner {
   final String title;
   final String body;
   final String? link;
-  const TeamBanner(this.id, this.title, this.body, this.link);
+  final String? imageUrl;
+  const TeamBanner(this.id, this.title, this.body, this.link, [this.imageUrl]);
 }
 
 const _dismissedKey = 'team_banners_dismissed_v1';
@@ -41,7 +43,8 @@ final teamBannersProvider = FutureProvider<List<TeamBanner>>((ref) async {
   return [
     for (final r in rows.cast<Map<String, dynamic>>())
       if (!dismissed.contains(r['id']))
-        TeamBanner(r['id'] as String, r['title'] as String, r['body'] as String, r['link'] as String?),
+        TeamBanner(r['id'] as String, r['title'] as String, r['body'] as String, r['link'] as String?,
+            r['image_url'] as String?),
   ];
 });
 
@@ -67,12 +70,23 @@ class TeamBannerCard extends ConsumerWidget {
     return Padding(
       padding: padding,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: AppTheme.accentOliveDark,
           borderRadius: BorderRadius.circular(22),
           boxShadow: const [BoxShadow(color: Color(0x264F6B4A), blurRadius: 18, offset: Offset(0, 8))],
         ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Imagem já otimizada no admin para 1200×500 (12:5).
+            if (b.imageUrl != null)
+              AspectRatio(
+                aspectRatio: 12 / 5,
+                child: SizedNetworkImage(b.imageUrl!, fit: BoxFit.cover),
+              ),
+            Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -112,6 +126,9 @@ class TeamBannerCard extends ConsumerWidget {
             ),
           ],
         ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -126,7 +143,8 @@ class TeamItem {
   final String body;
   final String? link;
   final DateTime at;
-  const TeamItem(this.id, this.fromTeam, this.title, this.body, this.link, this.at);
+  final String? imageUrl;
+  const TeamItem(this.id, this.fromTeam, this.title, this.body, this.link, this.at, [this.imageUrl]);
 }
 
 final teamThreadProvider = FutureProvider<List<TeamItem>>((ref) async {
@@ -138,7 +156,7 @@ final teamThreadProvider = FutureProvider<List<TeamItem>>((ref) async {
       for (final r in rows.cast<Map<String, dynamic>>())
         if ((r['body'] as String?)?.isNotEmpty == true)
           TeamItem(r['id'] as String, r['from_team'] == true, r['title'] as String?, r['body'] as String,
-              r['link'] as String?, DateTime.parse(r['created_at'] as String).toLocal()),
+              r['link'] as String?, DateTime.parse(r['created_at'] as String).toLocal(), r['image_url'] as String?),
     ];
   } on PostgrestException {
     return const [];
@@ -271,6 +289,14 @@ class _TeamThreadScreenState extends ConsumerState<TeamThreadScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
+                                      if (m.imageUrl != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 8),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: SizedNetworkImage(m.imageUrl!, fit: BoxFit.cover),
+                                          ),
+                                        ),
                                       if (m.title != null)
                                         Padding(
                                           padding: const EdgeInsets.only(bottom: 4),

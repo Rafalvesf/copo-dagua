@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/buttons.dart';
 import '../../shared/widgets/gradient_scaffold.dart';
 import '../../shared/widgets/page_header.dart';
+import '../../shared/widgets/sized_network_image.dart';
 import '../../shared/widgets/sticker_icon.dart';
 
 /// Mensagem da equipa À Nossa! (migrações 133/134): abre ao tocar na
@@ -109,6 +110,13 @@ class _AdminMessageScreenState extends State<AdminMessageScreen> {
                             padding: const EdgeInsets.all(18),
                             decoration: whiteLineCard(radius: 20, line: AppTheme.borderMuted),
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              if ((m['image_url'] as String?)?.isNotEmpty == true) ...[
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: SizedNetworkImage(m['image_url'] as String, fit: BoxFit.cover),
+                                ),
+                                const SizedBox(height: 14),
+                              ],
                               Text(m['title'] as String? ?? '',
                                   style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                               const SizedBox(height: 4),

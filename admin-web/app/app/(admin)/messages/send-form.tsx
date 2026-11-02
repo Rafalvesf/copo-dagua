@@ -2,6 +2,7 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { sendAdminMessage, type SendState } from "./actions";
+import { ImageField } from "./image-field";
 
 type Person = { id: string; full_name: string | null; role: string };
 
@@ -96,6 +97,7 @@ export function SendMessageForm({ people, preselect }: { people: Person[]; prese
         <span className="field-label">Mensagem</span>
         <textarea name="body" className="textarea" rows={5} maxLength={1000} required />
       </label>
+      <ImageField style={style} />
       {style === "banner" && (
         <label className="field">
           <span className="field-label">Mostrar até (opcional)</span>

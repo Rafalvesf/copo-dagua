@@ -12,6 +12,7 @@ type Sent = {
   body: string;
   recipients: number;
   style?: string | null;
+  image_url?: string | null;
   expires_at?: string | null;
   created_at: string;
   recipient: { full_name: string | null } | null;
@@ -42,7 +43,7 @@ export default async function MessagesPage({ searchParams }: PageProps<"/message
       .limit(2000),
     supabase
       .from("admin_messages")
-      .select("id, audience, title, body, recipients, created_at, style, expires_at, recipient:profiles!admin_messages_recipient_id_fkey(full_name)")
+      .select("id, audience, title, body, recipients, created_at, style, expires_at, image_url, recipient:profiles!admin_messages_recipient_id_fkey(full_name)")
       .order("created_at", { ascending: false })
       .limit(30),
   ]);
@@ -78,6 +79,10 @@ export default async function MessagesPage({ searchParams }: PageProps<"/message
                     {" · "}
                     {m.recipients} {m.recipients === 1 ? "pessoa" : "pessoas"} · {fmtDateTime(m.created_at)}
                   </div>
+                  {m.image_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.image_url} alt="" loading="lazy" style={{ width: 160, maxWidth: "100%", borderRadius: 10 }} />
+                  )}
                   <div style={{ whiteSpace: "pre-wrap" }}>{m.body}</div>
                 </li>
               ))}
