@@ -257,16 +257,15 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         SnappyTap(
                           onTap: _showFavoritesSheet,
                           child: Container(
-                            width: 46,
-                            height: 46,
+                            width: 48,
+                            height: 48,
                             alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AppTheme.surface,
-                              shape: BoxShape.circle,
-                            ),
+                            // Branco com a sombra da pesquisa: o círculo vê-se e
+                            // a margem direita fica alinhada (2026-11).
+                            decoration: softCard(radius: 999),
                             child: const Icon(
                               Icons.favorite_border,
-                              size: 18,
+                              size: 20,
                               color: AppTheme.ink,
                             ),
                           ),
@@ -276,16 +275,13 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       SnappyTap(
                         onTap: _showFilters,
                         child: Container(
-                          width: 46,
-                          height: 46,
+                          width: 48,
+                          height: 48,
                           alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: AppTheme.surface,
-                            shape: BoxShape.circle,
-                          ),
+                          decoration: softCard(radius: 999),
                           child: const Icon(
                             Icons.tune,
-                            size: 18,
+                            size: 20,
                             color: AppTheme.ink,
                           ),
                         ),
