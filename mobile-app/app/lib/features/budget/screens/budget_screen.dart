@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/core/wedding/wedding_controller.dart';
+import 'package:copo_dagua_app/core/budget/booked_partners.dart';
 import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -314,15 +316,19 @@ class _CategoriesSection extends StatelessWidget {
   }
 }
 
-class _CategoryRow extends StatelessWidget {
+class _CategoryRow extends ConsumerWidget {
   final EffectiveBudgetCategory category;
   final int index;
 
   const _CategoryRow({required this.category, required this.index});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final allocated = category.allocated;
+    // Empresa contratada na app para esta categoria (pedido 2026-11).
+    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+    final booked = weddingId == null ? const <String, List<String>>{} : (ref.watch(bookedPartnersBySlugProvider(weddingId)).value ?? const {});
+    final partners = [for (final slug in slugsForBudgetCategory(category.base.partnerCategory)) ...?booked[slug]];
     final ratio = allocated == 0 ? 0.0 : category.amount / allocated;
     final icon = category.base.partnerCategory == null
         ? Icons.receipt_long_outlined
@@ -344,6 +350,7 @@ class _CategoryRow extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: whiteLineCard(),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             StickerIcon(icon, turns: StickerIcon.tilt(index)),
             const SizedBox(width: 12),
@@ -368,6 +375,10 @@ class _CategoryRow extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (partners.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    _PartnerLine(partners),
+                  ],
                   const SizedBox(height: 8),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -388,6 +399,24 @@ class _CategoryRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Contratado na app": nome da empresa por baixo da categoria.
+class _PartnerLine extends StatelessWidget {
+  final List<String> names;
+  const _PartnerLine(this.names);
+
+  @override
+  Widget build(BuildContext context) => Row(children: [
+        Icon(Icons.storefront_outlined, size: 14, color: AppTheme.accentOliveDark),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(names.join(', '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w600, color: AppTheme.accentOliveDark)),
+        ),
+      ]);
 }
 
 class _ExpenseList extends ConsumerWidget {
