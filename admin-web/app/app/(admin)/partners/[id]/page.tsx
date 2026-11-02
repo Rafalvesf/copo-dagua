@@ -62,6 +62,9 @@ export default async function PartnerDetailPage(
       .order("position"),
     supabase.from("partner_service_packages").select("*").eq("partner_id", id).order("position"),
   ]);
+  // Migração 151: clientes trazidos pelo link do parceiro (sem a migração, vazio).
+  const { data: referralRows } = await supabase.from("partner_referrals").select("valid").eq("partner_id", id);
+  const referrals = (referralRows ?? []) as { valid: boolean }[];
 
   if (!profile) {
     notFound();
@@ -214,6 +217,18 @@ export default async function PartnerDetailPage(
                 { label: "Enviado para revisão", value: fmtDateTime(p.submitted_at) },
                 ...(v ? [{ label: "NIF (só admin)", value: v.tax_id || "—" }, { label: "Morada de faturação", value: v.billing_address || "—" }] : []),
                 ...(p.rejection_reason ? [{ label: "Último motivo", value: p.rejection_reason }] : []),
+                ...((profile as Record<string, unknown>).founder_number != null
+                  ? [{ label: "Parceiro Fundador", value: `#${(profile as Record<string, unknown>).founder_number}` }]
+                  : []),
+                ...((profile as Record<string, unknown>).featured_until
+                  ? [{ label: "Destaque grátis até", value: fmtDateTime((profile as Record<string, unknown>).featured_until as string) }]
+                  : []),
+                ...((profile as Record<string, unknown>).referral_code
+                  ? [{
+                      label: "Clientes pelo link",
+                      value: `${referrals.filter((x) => x.valid).length} (0% de comissão) · código ${(profile as Record<string, unknown>).referral_code}`,
+                    }]
+                  : []),
               ]}
             />
           </Card>

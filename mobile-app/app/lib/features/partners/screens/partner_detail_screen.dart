@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/review_tile.dart';
 import '../../../core/page_transitions.dart';
@@ -283,6 +284,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                       color: AppTheme.ink,
                                     ),
                                   ),
+                                  FounderBadge(partner.id, long: true),
                                   const SizedBox(height: 3),
                                   Text(
                                     [

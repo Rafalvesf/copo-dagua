@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -739,10 +740,16 @@ class _PartnerCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(partner.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink)),
+                  Row(children: [
+                    Flexible(
+                      child: Text(partner.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink)),
+                    ),
+                    const SizedBox(width: 6),
+                    FounderBadge(partner.id),
+                  ]),
                   const SizedBox(height: 2),
                   Text.rich(
                     TextSpan(children: [

@@ -333,9 +333,17 @@ final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
     // `partner_free_extra_months`, ficou a 0). Mesma regra que
     // `create-payment-intent`.
     DateTime? freeUntil;
-    final months = (row['partner_free_months'] as num?)?.toInt() ?? 0;
+    var months = (row['partner_free_months'] as num?)?.toInt() ?? 0;
     final extra = (row['partner_free_extra_months'] as num?)?.toInt() ?? 0;
     final uid = supabase.auth.currentUser?.id;
+    // Parceiros Fundadores (migração 151): `founder_free_months`.
+    if (uid != null) {
+      try {
+        final f = await supabase.from('partner_profiles').select('founder_number').eq('id', uid).maybeSingle();
+        final founderMonths = (row['founder_free_months'] as num?)?.toInt() ?? 0;
+        if (f?['founder_number'] != null && founderMonths > months) months = founderMonths;
+      } catch (_) {}
+    }
     if (months > 0 && uid != null) {
       final me = await supabase.from('partner_profiles').select('created_at').eq('id', uid).maybeSingle();
       final created = DateTime.tryParse('${me?['created_at'] ?? ''}')?.toLocal();
