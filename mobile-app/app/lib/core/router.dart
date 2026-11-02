@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../features/messages/team_messages.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -282,6 +283,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // Mensagem da equipa (admin, migrações 133/134), com resposta.
       GoRoute(path: '/mensagem/:id', builder: (context, state) => AdminMessageScreen(id: state.pathParameters['id']!)),
+      // Conversa com a Equipa À Nossa! (mensagens diretas, migração 146).
+      GoRoute(path: '/equipa', builder: (context, state) => const TeamThreadScreen()),
       GoRoute(path: '/termos', builder: (context, state) => const LegalScreen(doc: termsDoc)),
       GoRoute(path: '/privacidade', builder: (context, state) => const LegalScreen(doc: privacyDoc)),
       // Pública (Google Play): como pedir para apagar a conta.

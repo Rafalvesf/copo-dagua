@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -114,6 +115,9 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
                 children: [
                   const PageHeader(title: 'Eventos', showBack: false, centered: true),
                   const SizedBox(height: 14),
+                  const TeamBannerCard(),
+                  // Quem não tem Chat vê aqui a conversa com a equipa.
+                  if (!organizer) const TeamThreadEntry(padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 14)),
                   ...content,
                 ],
               ),

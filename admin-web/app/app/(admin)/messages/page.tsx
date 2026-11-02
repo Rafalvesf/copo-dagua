@@ -11,9 +11,13 @@ type Sent = {
   title: string;
   body: string;
   recipients: number;
+  style?: string | null;
+  expires_at?: string | null;
   created_at: string;
   recipient: { full_name: string | null } | null;
 };
+
+const STYLE_LABEL: Record<string, string> = { notification: "Notificação", banner: "Banner", direct: "Direta" };
 
 const AUDIENCE: Record<string, string> = {
   all: "Todos",
@@ -38,7 +42,7 @@ export default async function MessagesPage({ searchParams }: PageProps<"/message
       .limit(2000),
     supabase
       .from("admin_messages")
-      .select("id, audience, title, body, recipients, created_at, recipient:profiles!admin_messages_recipient_id_fkey(full_name)")
+      .select("id, audience, title, body, recipients, created_at, style, expires_at, recipient:profiles!admin_messages_recipient_id_fkey(full_name)")
       .order("created_at", { ascending: false })
       .limit(30),
   ]);
@@ -47,7 +51,7 @@ export default async function MessagesPage({ searchParams }: PageProps<"/message
     <div className="page">
       <PageHeader
         title="Mensagens"
-        subtitle="Envia uma mensagem a uma pessoa ou a um grupo. Chega como notificação na app e no telemóvel."
+        subtitle="Envia uma mensagem da Equipa À Nossa! a uma pessoa ou a um grupo: notificação, banner de novidade ou mensagem direta no Chat."
       />
       <div className="grid grid-main-side">
         <Card title="Nova mensagem">
@@ -65,7 +69,10 @@ export default async function MessagesPage({ searchParams }: PageProps<"/message
             <ul className="list">
               {((sent ?? []) as unknown as Sent[]).map((m) => (
                 <li key={m.id} className="stack-sm" style={{ gap: 4 }}>
-                  <strong>{m.title}</strong>
+                  <div className="row" style={{ gap: 6 }}>
+                    <strong>{m.title}</strong>
+                    <span className="badge">{STYLE_LABEL[m.style ?? "notification"] ?? "Notificação"}</span>
+                  </div>
                   <div className="muted">
                     {m.audience === "user" ? m.recipient?.full_name || "Pessoa" : AUDIENCE[m.audience] ?? m.audience}
                     {" · "}

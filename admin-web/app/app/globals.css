@@ -1807,3 +1807,34 @@ a.list-row:hover .list-title,
   height: 100%;
   object-fit: cover;
 }
+
+/* Formato da mensagem da equipa (2026-11). */
+.style-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 8px;
+}
+.style-choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: var(--surface);
+}
+.style-choice[data-on="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.style-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.style-choice:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

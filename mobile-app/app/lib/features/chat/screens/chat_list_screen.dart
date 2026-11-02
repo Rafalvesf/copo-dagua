@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -131,6 +132,8 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                     padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
                     child: _GroupsEntry(onTap: () => context.push('/groups/$weddingId')),
                   ),
+                // Mensagens diretas da equipa (migração 146).
+                const TeamThreadEntry(),
                 Expanded(
                   child: state.loading && state.conversations.isEmpty
                       ? const Center(child: CircularProgressIndicator())
