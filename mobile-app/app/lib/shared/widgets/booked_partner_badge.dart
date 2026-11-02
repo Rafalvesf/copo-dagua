@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'snappy_tap.dart';
 
-/// Selo "Contratado na app" com o nome da empresa (2026-11): bem visível
-/// por baixo da categoria no Orçamento e em Serviços tratados.
+/// Empresa contratada na app, por baixo da categoria no Orçamento e em
+/// Serviços tratados (2026-11). Só ícone pequeno + nome, para não cortar;
+/// cada empresa é uma pílula que abre as Reservas.
 class BookedPartnerBadge extends StatelessWidget {
   final List<String> names;
   const BookedPartnerBadge(this.names, {super.key});
@@ -11,24 +14,35 @@ class BookedPartnerBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final green = AppTheme.accentOliveDark;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(6, 4, 10, 4),
-      decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(999)),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(Icons.check_circle_rounded, size: 16, color: green),
-        const SizedBox(width: 5),
-        Flexible(
-          child: Text.rich(
-            TextSpan(children: [
-              TextSpan(text: 'Contratado na app · ', style: TextStyle(fontWeight: FontWeight.w600, color: green)),
-              TextSpan(text: names.join(', '), style: TextStyle(fontWeight: FontWeight.w800, color: green)),
-            ]),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: AppFontSize.sm + 1),
+    return Wrap(spacing: 6, runSpacing: 6, children: [
+      for (final n in names)
+        Semantics(
+          button: true,
+          label: 'Contratado na app: $n. Abrir reservas',
+          child: SnappyTap(
+            onTap: () => context.push('/bookings'),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 32),
+              padding: const EdgeInsets.fromLTRB(8, 5, 6, 5),
+              decoration: BoxDecoration(
+                color: AppTheme.accentTint,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: green.withValues(alpha: 0.25)),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.check_circle_rounded, size: 13, color: green),
+                const SizedBox(width: 5),
+                Flexible(
+                  child: Text(n,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: AppFontSize.sm + 2, fontWeight: FontWeight.w800, color: green)),
+                ),
+                Icon(Icons.chevron_right_rounded, size: 16, color: green),
+              ]),
+            ),
           ),
         ),
-      ]),
-    );
+    ]);
   }
 }
