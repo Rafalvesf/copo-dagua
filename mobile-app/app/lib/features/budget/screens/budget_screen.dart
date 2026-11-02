@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/booked_partner_badge.dart';
 import 'package:copo_dagua_app/core/wedding/wedding_controller.dart';
 import 'package:copo_dagua_app/core/budget/booked_partners.dart';
 import '../../../shared/widgets/feedback.dart';
@@ -376,8 +377,8 @@ class _CategoryRow extends ConsumerWidget {
                     ],
                   ),
                   if (partners.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    _PartnerLine(partners),
+                    const SizedBox(height: 6),
+                    Align(alignment: Alignment.centerLeft, child: BookedPartnerBadge(partners)),
                   ],
                   const SizedBox(height: 8),
                   ClipRRect(
@@ -401,22 +402,68 @@ class _CategoryRow extends ConsumerWidget {
   }
 }
 
-/// "Contratado na app": nome da empresa por baixo da categoria.
-class _PartnerLine extends StatelessWidget {
-  final List<String> names;
-  const _PartnerLine(this.names);
+/// Empresa contratada na app, na folha da categoria do Orçamento.
+class _BookedPartnerCard extends StatelessWidget {
+  final BookedPartner partner;
+  const _BookedPartnerCard(this.partner);
 
   @override
-  Widget build(BuildContext context) => Row(children: [
-        Icon(Icons.storefront_outlined, size: 14, color: AppTheme.accentOliveDark),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(names.join(', '),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w600, color: AppTheme.accentOliveDark)),
+  Widget build(BuildContext context) {
+    final green = AppTheme.accentOliveDark;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: SnappyTap(
+        onTap: () {
+          Navigator.of(context).pop();
+          context.push('/bookings');
+        },
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.accentTint.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: green.withValues(alpha: 0.35)),
+          ),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: partner.photoUrl == null
+                    ? ColoredBox(color: Colors.white, child: Icon(Icons.storefront_rounded, color: green))
+                    : Image.network(partner.photoUrl!, fit: BoxFit.cover, cacheWidth: 144,
+                        errorBuilder: (_, __, ___) => ColoredBox(color: Colors.white, child: Icon(Icons.storefront_rounded, color: green))),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(partner.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                const SizedBox(height: 3),
+                Row(children: [
+                  Icon(Icons.check_circle_rounded, size: 14, color: green),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      partner.total > 0 ? '${partner.statusLabel} · ${euros(partner.total)}' : partner.statusLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: AppFontSize.sm + 1, fontWeight: FontWeight.w600, color: green),
+                    ),
+                  ),
+                ]),
+              ]),
+            ),
+            Icon(Icons.chevron_right_rounded, color: green),
+          ]),
         ),
-      ]);
+      ),
+    );
+  }
 }
 
 class _ExpenseList extends ConsumerWidget {
@@ -735,6 +782,14 @@ class _CategorySheet extends ConsumerWidget {
         .where((e) => e.category == category.partnerCategory)
         .toList()
       ..sort((a, b) => (a.dueDate ?? DateTime(2100)).compareTo(b.dueDate ?? DateTime(2100)));
+    // Empresas contratadas na app nesta categoria (2026-11).
+    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+    final slugs = slugsForBudgetCategory(category.partnerCategory);
+    final booked = weddingId == null
+        ? const <BookedPartner>[]
+        : (ref.watch(bookedPartnersProvider(weddingId)).value ?? const <BookedPartner>[])
+            .where((b) => slugs.contains(b.slug))
+            .toList();
 
     return SafeArea(
       child: ConstrainedBox(
@@ -771,6 +826,12 @@ class _CategorySheet extends ConsumerWidget {
                 ),
               ],
             ),
+            if (booked.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Text('Contratado na app', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              for (final b in booked) _BookedPartnerCard(b),
+            ],
             const SizedBox(height: 20),
             Text('Despesas', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
