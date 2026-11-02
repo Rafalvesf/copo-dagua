@@ -1838,3 +1838,16 @@ a.list-row:hover .list-title,
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* Plano de crescimento (2026-11-02) */
+.growth-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.growth-bar > div {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
