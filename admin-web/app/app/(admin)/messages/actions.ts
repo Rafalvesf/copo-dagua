@@ -15,6 +15,11 @@ export async function sendAdminMessage(_prev: SendState, formData: FormData): Pr
   const title = String(formData.get("title") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
   const link = String(formData.get("link") ?? "").trim();
+  const style = String(formData.get("style") ?? "notification");
+  const until = String(formData.get("expires") ?? "").trim();
+  if (!["notification", "banner", "direct"].includes(style)) return { error: "Formato inválido.", sent: null };
+  // Banner: fica até ao fim do dia escolhido (hora de Lisboa ≈ UTC).
+  const expiresAt = style === "banner" && /^\d{4}-\d{2}-\d{2}$/.test(until) ? `${until}T23:59:59Z` : null;
 
   if (!["user", "all", "couple", "partner", "guest"].includes(audience)) return { error: "Destinatário inválido.", sent: null };
   if (audience === "user" && !recipient) return { error: "Escolhe a pessoa.", sent: null };
@@ -28,11 +33,13 @@ export async function sendAdminMessage(_prev: SendState, formData: FormData): Pr
     p_body: body,
     p_recipient: audience === "user" ? recipient : null,
     p_link: link || null,
+    p_style: style,
+    p_expires_at: expiresAt,
   });
   if (error) {
     return {
       error: error.message.includes("admin_send_message") || error.code === "PGRST202"
-        ? "Falta aplicar a migração 133."
+        ? "Falta aplicar a migração 146."
         : "Não foi possível enviar a mensagem.",
       sent: null,
     };

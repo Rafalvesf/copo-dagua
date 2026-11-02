@@ -5,7 +5,14 @@ import { sendAdminMessage, type SendState } from "./actions";
 
 type Person = { id: string; full_name: string | null; role: string };
 
-const ROLE: Record<string, string> = { couple: "Organizador", partner: "Parceiro", guest: "Convidado" };
+const ROLE: Record<string, string> = { couple: "Utilizador", partner: "Parceiro", guest: "Utilizador" };
+
+// Como a mensagem aparece na app (migração 146).
+const STYLES = [
+  { value: "notification", label: "Notificação", hint: "Chega ao telemóvel e às notificações da app. Ao tocar, abre a mensagem." },
+  { value: "banner", label: "Banner de novidade", hint: "Cartão no topo da app, como uma notícia, até a pessoa o fechar. Sem notificação." },
+  { value: "direct", label: "Mensagem direta", hint: "Aparece no Chat, na conversa «Equipa À Nossa!», e a pessoa responde lá. Também notifica." },
+];
 
 const AUDIENCES = [
   { value: "user", label: "Uma pessoa" },
@@ -31,6 +38,7 @@ export function SendMessageForm({ people, preselect }: { people: Person[]; prese
   const [audience, setAudience] = useState("user");
   const [query, setQuery] = useState("");
   const [recipient, setRecipient] = useState(preselect ?? "");
+  const [style, setStyle] = useState("notification");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -43,6 +51,18 @@ export function SendMessageForm({ people, preselect }: { people: Person[]; prese
 
   return (
     <form action={formAction} className="stack">
+      <fieldset className="field" style={{ border: 0, padding: 0, margin: 0 }}>
+        <legend className="field-label" style={{ marginBottom: 6 }}>Como aparece</legend>
+        <div className="style-choices">
+          {STYLES.map((s) => (
+            <label key={s.value} className="style-choice" data-on={style === s.value}>
+              <input type="radio" name="style" value={s.value} checked={style === s.value} onChange={() => setStyle(s.value)} />
+              <span className="strong">{s.label}</span>
+              <span className="field-hint">{s.hint}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
       <label className="field">
         <span className="field-label">Para</span>
         <select name="audience" className="select" value={audience} onChange={(e) => setAudience(e.target.value)}>
@@ -76,8 +96,15 @@ export function SendMessageForm({ people, preselect }: { people: Person[]; prese
         <span className="field-label">Mensagem</span>
         <textarea name="body" className="textarea" rows={5} maxLength={1000} required />
       </label>
+      {style === "banner" && (
+        <label className="field">
+          <span className="field-label">Mostrar até (opcional)</span>
+          <input type="date" name="expires" className="input" />
+          <span className="field-hint">Sem data, fica até cada pessoa o fechar (no máximo 60 dias).</span>
+        </label>
+      )}
       <label className="field">
-        <span className="field-label">Ao tocar, abre</span>
+        <span className="field-label">{style === "banner" ? "Botão do banner abre" : "Ao tocar, abre"}</span>
         <select name="link" className="select" defaultValue="">
           {LINKS.map((l) => (
             <option key={l.value} value={l.value}>{l.label}</option>
@@ -95,7 +122,7 @@ export function SendMessageForm({ people, preselect }: { people: Person[]; prese
         </button>
       </div>
       <p className="field-hint">
-        Aparece nas notificações da app e chega ao telemóvel de quem tem as notificações ativas. Ao tocar, a pessoa vê a mensagem completa e pode responder: a resposta abre um pedido em Suporte.
+        Em todos os formatos a pessoa pode responder: a resposta abre um pedido em Suporte, e a tua resposta lá volta para ela.
       </p>
     </form>
   );

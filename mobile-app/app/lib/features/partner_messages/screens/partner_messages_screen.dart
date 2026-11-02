@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -61,6 +62,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                   ),
                   child: SearchPill(controller: _search, hint: 'Pesquisar conversas'),
                 ),
+                const TeamThreadEntry(),
                 Expanded(
                   child: conversationsAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),

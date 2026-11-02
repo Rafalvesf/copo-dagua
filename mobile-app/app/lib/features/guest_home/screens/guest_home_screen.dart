@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -212,6 +213,7 @@ class _GuestHomeBody extends ConsumerWidget {
           const PartnerNotificationBell(),
         ]),
         const SizedBox(height: 14),
+        const TeamBannerCard(padding: EdgeInsets.only(bottom: 14)),
         const Text('O teu evento',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),

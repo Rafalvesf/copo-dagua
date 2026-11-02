@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -113,6 +114,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
+                const TeamBannerCard(padding: EdgeInsets.only(bottom: 16)),
                 Text(
                   firstName.isEmpty ? 'Olá! O que precisas hoje?' : 'Olá, $firstName! O que precisas hoje?',
                   style: const TextStyle(fontSize: 26, height: 32 / 26, fontWeight: FontWeight.w700, color: AppTheme.ink),
