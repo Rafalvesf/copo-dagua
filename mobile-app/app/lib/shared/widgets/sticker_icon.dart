@@ -26,6 +26,7 @@ class StickerIcon extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
+        alignment: Alignment.center,
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(size * 0.35), boxShadow: shadow),
         child: Icon(icon, size: size * 0.55, color: color ?? AppTheme.accentOliveDark),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/core/budget/booked_partners.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/partners/partner_providers.dart';
@@ -108,6 +109,8 @@ class _ServicePreferencesScreenState extends ConsumerState<ServicePreferencesScr
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(partnerCategoryOptionsProvider);
+    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+    final booked = weddingId == null ? const <String, List<String>>{} : (ref.watch(bookedPartnersBySlugProvider(weddingId)).value ?? const {});
 
     return GradientScaffold(
       background: AppBackground.subtle,
@@ -157,8 +160,10 @@ class _ServicePreferencesScreenState extends ConsumerState<ServicePreferencesScr
                             slug: category.slug,
                             label: category.label,
                             preference: _preferences[category.slug] ?? 'needed',
+                            partners: booked[category.slug] ?? const [],
                             onChanged: (pref) => _setPreference(category.slug, pref),
-                            nameField: _preferences[category.slug] == 'already_booked'
+                            // Contratado na app: o nome já aparece, não se pede.
+                            nameField: _preferences[category.slug] == 'already_booked' && (booked[category.slug] ?? const []).isEmpty
                                 ? TextField(
                                     controller: _externalNameControllers.putIfAbsent(category.slug, () => TextEditingController()),
                                     onEditingComplete: () => _saveExternalName(category.slug),
@@ -194,6 +199,9 @@ class _CategoryPreferenceCard extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final Widget? nameField;
 
+  /// Empresas contratadas na app nesta categoria (2026-11).
+  final List<String> partners;
+
   const _CategoryPreferenceCard({
     required this.index,
     required this.slug,
@@ -201,6 +209,7 @@ class _CategoryPreferenceCard extends StatelessWidget {
     required this.preference,
     required this.onChanged,
     this.nameField,
+    this.partners = const [],
   });
 
   @override
@@ -219,19 +228,36 @@ class _CategoryPreferenceCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: softCard(radius: 22),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
           Transform.rotate(
             angle: StickerIcon.tilt(index) * 6.283,
             child: Container(
               width: 42,
               height: 42,
+              alignment: Alignment.center,
               decoration: BoxDecoration(color: colorForCategorySlug(slug), borderRadius: BorderRadius.circular(14), boxShadow: StickerIcon.shadow),
               child: Icon(iconForCategorySlug(slug), color: AppTheme.accentOliveDark, size: 21),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(label, style: const TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Text(label, style: const TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              if (partners.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Row(children: [
+                    Icon(Icons.storefront_outlined, size: 14, color: AppTheme.accentOliveDark),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(partners.join(', '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w600, color: AppTheme.accentOliveDark)),
+                    ),
+                  ]),
+                ),
+            ]),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
