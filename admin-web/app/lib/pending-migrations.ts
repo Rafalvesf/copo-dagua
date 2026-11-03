@@ -97,6 +97,12 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "151",
     check: { kind: "table", table: "partner_promotions" },
   },
+  {
+    file: "156_gift_envelopes.sql",
+    title: "Envelope digital",
+    what: "Convidados oferecem por transferência direta para o IBAN; os anfitriões veem quem, quanto e a mensagem.",
+    check: { kind: "table", table: "gift_envelopes" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

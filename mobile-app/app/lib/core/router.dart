@@ -41,6 +41,7 @@ import '../features/guest_home/screens/guest_onboarding_wizard_screen.dart';
 import '../features/guest_home/screens/guest_profile_screen.dart';
 import '../features/guest_home/screens/invite_token_screen.dart';
 import '../features/partners/screens/partner_invite_screen.dart';
+import '../features/gifts/screens/envelopes_screen.dart';
 import '../features/guest_home/screens/guest_wedding_details_screen.dart';
 import '../features/gallery/screens/gallery_screen.dart';
 import '../features/guests/screens/guest_detail_screen.dart';
@@ -347,6 +348,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/bilhetes', builder: (context, state) => const OrganizerTicketsScreen()),
       GoRoute(path: '/bilhetes/ativar', builder: (context, state) => const PartnerPayoutSetupScreen(organizer: true)),
       // Evento público aberto por link partilhado (2026-11).
+      // Envelopes recebidos (migração 156).
+      GoRoute(path: '/envelopes', builder: (context, state) => const EnvelopesScreen()),
       GoRoute(path: '/p/:code', builder: (context, state) => PartnerInviteScreen(code: state.pathParameters['code']!)),
       GoRoute(path: '/evento/:id', builder: (context, state) => PublicEventScreen(id: state.pathParameters['id']!)),
       // Criar mais um evento (vários por conta, 2026-11).

@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/gifts/envelopes.dart';
+import '../widgets/envelope_sheet.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
@@ -177,15 +179,33 @@ class GuestGiftsScreen extends ConsumerWidget {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  const Text('Contribuir com um valor',
+                                  const Text('Envelope digital',
                                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                                  if (iban?.isNotEmpty == true)
-                                    Text('IBAN · ${wedding?.partnerName1 ?? ''}',
-                                        style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                                  Text(
+                                      iban?.isNotEmpty == true
+                                          ? 'Transferência direta para os anfitriões'
+                                          : 'Os anfitriões ainda não indicaram um IBAN',
+                                      style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                                 ]),
                               ),
                             ]),
                             const SizedBox(height: 12),
+                            // Envelope digital (migração 156): valor + mensagem,
+                            // transferência direta e confirmação para os anfitriões.
+                            if (iban?.isNotEmpty == true && wedding != null) ...[
+                              FilledButton.icon(
+                                onPressed: () => showEnvelopeSheet(context, wedding!),
+                                icon: const Icon(Icons.mail_outline_rounded, size: 18),
+                                label: const Text('Oferecer um envelope'),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppTheme.accentOliveDark,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size.fromHeight(48),
+                                  shape: const StadiumBorder(),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                            ],
                             if (iban?.isNotEmpty == true)
                               SnappyTap(
                                 onTap: () async {
@@ -216,9 +236,10 @@ class GuestGiftsScreen extends ConsumerWidget {
                               const Text('Os anfitriões ainda não indicaram um IBAN.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                             const SizedBox(height: 10),
                             const Text(
-                              'Na descrição, escreve o teu nome para saberem de quem é.',
+                              'O dinheiro vai diretamente para a conta dos anfitriões — a À Nossa! não fica com nada.',
                               style: TextStyle(fontSize: 12, color: Color(0xFF8F8B84)),
                             ),
+                            if (wedding != null) _MyEnvelopes(weddingId: wedding.weddingId),
                           ],
                         ),
                       ),
@@ -236,6 +257,40 @@ class GuestGiftsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Os envelopes que este convidado já ofereceu.
+class _MyEnvelopes extends ConsumerWidget {
+  final String weddingId;
+  const _MyEnvelopes({required this.weddingId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final list = ref.watch(myEnvelopesProvider(weddingId)).value ?? const <GiftEnvelope>[];
+    if (list.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Os teus envelopes', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 4),
+        for (final e in list)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            child: Row(children: [
+              Icon(e.received ? Icons.check_circle_rounded : Icons.schedule_rounded,
+                  size: 16, color: e.received ? AppTheme.accentOliveDark : AppTheme.inkMuted),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  '${envelopeEuros(e.amount)} · ${e.received ? 'recebido pelos anfitriões' : 'enviado'}',
+                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                ),
+              ),
+            ]),
+          ),
+      ]),
     );
   }
 }
