@@ -705,6 +705,30 @@ class _InviteLinkCard extends ConsumerWidget {
         Text('LINK DE CONVITE',
             style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentTint)),
         const SizedBox(height: 6),
+        // Regras primeiro (pedido 2026-11-03), depois o link.
+        for (final rule in [
+          (Icons.public_rounded, code?.isNotEmpty == true
+              ? 'Evento público: quem abre o link (ou escreve o código na app) entra logo.'
+              : 'Evento público: quem abre o link entra logo.'),
+          (Icons.lock_outline_rounded, 'Evento privado: a pessoa pede para entrar e tu aceitas em Convidados → Pedidos para entrar.'),
+          (Icons.confirmation_number_outlined, 'Evento pago: só entra depois de pagar o bilhete.'),
+        ])
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Icon(rule.$1, size: 16, color: AppTheme.accentTint),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(rule.$2, style: const TextStyle(fontSize: 13.5, height: 1.35, color: Colors.white)),
+              ),
+            ]),
+          ),
+        const SizedBox(height: 14),
+        Container(height: 1, color: Colors.white.withValues(alpha: 0.18)),
+        const SizedBox(height: 12),
         Text(link,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -777,13 +801,6 @@ class _InviteLinkCard extends ConsumerWidget {
             ),
           ),
         ]),
-        const SizedBox(height: 10),
-        Text(
-          code?.isNotEmpty == true
-              ? 'Quem abre o link, ou escreve o código na app, entra no evento. Se o evento for privado, pede para entrar e tu aceitas na app (Convidados → Pedidos para entrar).'
-              : 'Quem abre o link entra no evento. Se o evento for privado, pede para entrar e tu aceitas na app (Convidados → Pedidos para entrar).',
-          style: TextStyle(fontSize: 12.5, height: 1.4, color: Colors.white.withValues(alpha: 0.85)),
-        ),
       ]),
     );
   }
