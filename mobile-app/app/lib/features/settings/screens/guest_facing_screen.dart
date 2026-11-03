@@ -228,12 +228,12 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
     );
   }
 
-  Future<void> _shareCode(String code) async {
+  Future<void> _shareLink(String link) async {
     try {
-      await SharePlus.instance.share(ShareParams(text: 'Entra no meu evento na app À Nossa! com o código $code'));
+      await SharePlus.instance.share(ShareParams(text: 'Estás convidado para ${widget.wedding.displayNames} na À Nossa!: $link'));
     } catch (_) {
-      await Clipboard.setData(ClipboardData(text: code));
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
+      await Clipboard.setData(ClipboardData(text: link));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
     }
   }
 
@@ -284,7 +284,6 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final code = widget.wedding.guestCode;
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
@@ -298,13 +297,15 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 40),
                       children: [
-                        if (code?.isNotEmpty == true) _CodeCard(code: code!, onShare: () => _shareCode(code)),
+                        // Convite só por link (pedido 2026-11-03): quem abre o link
+                        // entra; num evento privado o organizador aceita na app.
+                        if (widget.wedding.inviteUrl != null)
+                          _InviteLinkCard(link: widget.wedding.inviteUrl!, onShare: () => _shareLink(widget.wedding.inviteUrl!)),
                         const SizedBox(height: 12),
                         _PreviewButton(onTap: _preview),
                         const SizedBox(height: 18),
                         // Público/privado e pago/grátis também aqui (pedido 2026-11-03).
                         _AccessCard(wedding: widget.wedding),
-                        if (_joinMode != null) ..._joinSection(),
                         _CompanionsSection(weddingId: widget.wedding.id),
                         // Redesign 2026-10-20: cada parte num cartão com
                         // ícone, título e o que os convidados vão ver.
@@ -382,29 +383,6 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
         ),
       ),
     );
-  }
-
-  List<Widget> _joinSection() {
-    const options = [
-      ('code_open', 'Qualquer pessoa com o código', 'Mais simples. Tu decides depois quem fica.'),
-      ('code_with_match', 'Só quem está na lista', 'O email ou telemóvel tem de estar nos convidados.'),
-      ('invite_only', 'Só com convite individual', 'Cada pessoa recebe o seu link.'),
-    ];
-    return [
-      const _Caps('Quem pode entrar'),
-      for (var i = 0; i < options.length; i++) ...[
-        if (i > 0) const Divider(height: 1, thickness: 1, color: _line),
-        _RadioLine(
-          title: options[i].$2,
-          subtitle: options[i].$3,
-          selected: _joinMode == options[i].$1,
-          onTap: () => setState(() {
-            _joinMode = options[i].$1;
-            _dirty = true;
-          }),
-        ),
-      ],
-    ];
   }
 
   List<Widget> _programSection() {
@@ -701,53 +679,66 @@ class _Field extends StatelessWidget {
   }
 }
 
-class _CodeCard extends StatelessWidget {
-  final String code;
+/// Link de convite (o único convite do evento, 2026-11-03).
+class _InviteLinkCard extends ConsumerWidget {
+  final String link;
   final VoidCallback onShare;
-  const _CodeCard({required this.code, required this.onShare});
+  const _InviteLinkCard({required this.link, required this.onShare});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(AppRadius.lg)),
-      child: Row(
-        children: [
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text('LINK DE CONVITE',
+            style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentTint)),
+        const SizedBox(height: 6),
+        Text(link,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+        const SizedBox(height: 12),
+        Row(children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('CÓDIGO DO EVENTO', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentTint)),
-                const SizedBox(height: 2),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(code, maxLines: 1, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
-                ),
-              ],
+            child: TextButton.icon(
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: link));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
+                }
+              },
+              icon: const Icon(Icons.copy_rounded, size: 18),
+              label: const Text('Copiar'),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.18),
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(44),
+                shape: const StadiumBorder(),
+              ),
             ),
           ),
-          IconButton(
-            tooltip: 'Copiar',
-            onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: code));
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
-              }
-            },
-            icon: const Icon(Icons.copy_rounded, color: Colors.white, size: 20),
-          ),
-          TextButton(
-            onPressed: onShare,
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.18),
-              foregroundColor: Colors.white,
-              textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontWeight: FontWeight.w700),
+          const SizedBox(width: 10),
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: onShare,
+              icon: const Icon(Icons.ios_share_rounded, size: 18),
+              label: const Text('Partilhar'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppTheme.accentOliveDark,
+                minimumSize: const Size.fromHeight(44),
+                shape: const StadiumBorder(),
+              ),
             ),
-            child: const Text('Partilhar'),
           ),
-        ],
-      ),
+        ]),
+        const SizedBox(height: 10),
+        Text(
+          'Quem abre o link entra no evento. Se o evento for privado, pede para entrar e tu aceitas na app (Convidados → Pedidos para entrar).',
+          style: TextStyle(fontSize: 12.5, height: 1.4, color: Colors.white.withValues(alpha: 0.85)),
+        ),
+      ]),
     );
   }
 }
@@ -785,53 +776,6 @@ class _PreviewButton extends StatelessWidget {
               ),
             ),
             const Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RadioLine extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _RadioLine({required this.title, required this.subtitle, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: selected ? FontWeight.w700 : FontWeight.w400, color: AppTheme.ink)),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFFCFC8B8), width: 2),
-              ),
-              alignment: Alignment.center,
-              child: selected
-                  ? Container(width: 11, height: 11, decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))
-                  : null,
-            ),
           ],
         ),
       ),

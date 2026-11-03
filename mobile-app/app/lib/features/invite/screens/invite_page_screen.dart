@@ -5,6 +5,9 @@ import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/public_state.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/events/tickets.dart';
+import '../../../core/guest_home/guest_home_providers.dart';
+import '../../events/screens/tickets_screens.dart' show openTicketPurchase;
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
@@ -29,6 +32,35 @@ class InvitePageScreen extends StatefulWidget {
 
 class _InvitePageScreenState extends State<InvitePageScreen> {
   late Future<Wedding?> _weddingFuture;
+  bool _joining = false;
+  String? _joinMessage;
+
+  /// Com sessão iniciada: entra pelo link (2026-11-03). Público entra logo;
+  /// privado fica a aguardar que o organizador aceite; pago abre a compra.
+  Future<void> _join(String code) async {
+    setState(() {
+      _joining = true;
+      _joinMessage = null;
+    });
+    try {
+      final r = await joinWeddingByCode(code);
+      if (!mounted) return;
+      if (r.guestMatched) {
+        context.go('/guest-home/${r.weddingId}');
+      } else {
+        setState(() => _joinMessage = 'Pedido enviado. O organizador vai aceitar na app e avisamos-te.');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      if (isTicketRequired(e)) {
+        await openTicketPurchase(context, code: code);
+      } else {
+        setState(() => _joinMessage = 'Não foi possível entrar. Tenta outra vez.');
+      }
+    } finally {
+      if (mounted) setState(() => _joining = false);
+    }
+  }
 
   @override
   void initState() {
@@ -172,6 +204,20 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  // Já com conta: entra pelo link (público) ou pede para entrar
+                  // (privado — o organizador aceita na app).
+                  if (supabase.auth.currentSession != null && wedding.guestCode != null) ...[
+                    PrimaryButton(
+                      label: 'Entrar no evento',
+                      loading: _joining,
+                      onPressed: _joining ? null : () => _join(wedding.guestCode!),
+                    ),
+                    if (_joinMessage != null) ...[
+                      const SizedBox(height: 10),
+                      Text(_joinMessage!, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm)),
+                    ],
+                    const SizedBox(height: 16),
+                  ] else
                   // Pedido 2026-10-17: quem tem o link é levado a instalar
                   // a app, em vez de criar conta no browser.
                   if (kIsWeb) PrimaryButton(
@@ -179,13 +225,12 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                     onPressed: () => showInstallAppSheet(context, code: wedding.guestCode),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Na app crias conta e confirmas a presença'
-                    '${wedding.guestCode != null ? ' com o código ${wedding.guestCode}' : ''}.',
+                  if (supabase.auth.currentSession == null) Text(
+                    'Na app crias conta e entras no evento. Se for privado, o organizador aceita o teu pedido.',
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
                   ),
-                  TextButton(
+                  if (supabase.auth.currentSession == null) TextButton(
                     onPressed: () => context.push(
                       '/register?role=guest'
                       '${wedding.guestCode != null ? '&code=${wedding.guestCode}' : ''}',
