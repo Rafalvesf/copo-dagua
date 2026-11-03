@@ -14,8 +14,11 @@ export const dynamic = "force-dynamic";
 async function applied(db: ReturnType<typeof createAdminClient>, c: MigrationCheck): Promise<boolean> {
   try {
     if (c.kind === "table") {
-      const { error } = await db.from(c.table).select("*", { head: true, count: "exact" }).limit(1);
-      return !error;
+      // GET normal (não HEAD): num HEAD o erro de "tabela não existe" vem
+      // sem corpo e o supabase-js não o devolve — a migração saía da lista
+      // sem ter corrido (aconteceu com a 148 e a 149).
+      const { error, status } = await db.from(c.table).select("*").limit(1);
+      return !error && status >= 200 && status < 300;
     }
     if (c.kind === "column") {
       const { error } = await db.from(c.table).select(c.column).limit(1);
