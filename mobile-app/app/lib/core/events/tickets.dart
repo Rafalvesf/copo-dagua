@@ -55,7 +55,21 @@ class TicketSummary {
   final double platformFee;
   final double stripeFee;
   final double net;
-  const TicketSummary({this.sold = 0, this.gross = 0, this.platformFee = 0, this.stripeFee = 0, this.net = 0});
+  /// Reembolsos (migração 152): bilhetes, valor devolvido e taxas que o
+  /// organizador pagou por eles.
+  final int refunded;
+  final double refundedAmount;
+  final double refundedFees;
+  const TicketSummary({
+    this.sold = 0,
+    this.gross = 0,
+    this.platformFee = 0,
+    this.stripeFee = 0,
+    this.net = 0,
+    this.refunded = 0,
+    this.refundedAmount = 0,
+    this.refundedFees = 0,
+  });
 }
 
 final ticketSummaryProvider = FutureProvider.family<TicketSummary, String>((ref, weddingId) async {
@@ -70,6 +84,9 @@ final ticketSummaryProvider = FutureProvider.family<TicketSummary, String>((ref,
       platformFee: n('platform_fee'),
       stripeFee: n('stripe_fee'),
       net: n('net'),
+      refunded: (r['refunded'] as num?)?.toInt() ?? 0,
+      refundedAmount: n('refunded_amount'),
+      refundedFees: n('refunded_fees'),
     );
   } on PostgrestException {
     return const TicketSummary();
@@ -89,3 +106,67 @@ String euroLabel(double v) {
   final s = v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2).replaceAll('.', ',');
   return '$s €';
 }
+
+// ---------- Reembolsos e cancelamento (migração 152) ----------
+
+class EventTicketRow {
+  final String id;
+  final String buyerName;
+  final int quantity;
+  final double amount;
+  final bool refunded;
+  final DateTime? paidAt;
+  const EventTicketRow({
+    required this.id,
+    required this.buyerName,
+    required this.quantity,
+    required this.amount,
+    required this.refunded,
+    this.paidAt,
+  });
+}
+
+final eventTicketListProvider = FutureProvider.family<List<EventTicketRow>, String>((ref, weddingId) async {
+  try {
+    final rows = await supabase.rpc('event_ticket_list', params: {'p_wedding': weddingId}) as List;
+    return [
+      for (final r in rows.cast<Map<String, dynamic>>())
+        EventTicketRow(
+          id: r['id'] as String,
+          buyerName: r['buyer_name'] as String? ?? 'Convidado',
+          quantity: (r['quantity'] as num?)?.toInt() ?? 1,
+          amount: (r['amount'] as num?)?.toDouble() ?? 0,
+          refunded: r['status'] == 'refunded',
+          paidAt: DateTime.tryParse('${r['paid_at'] ?? ''}')?.toLocal(),
+        ),
+    ];
+  } catch (_) {
+    // Antes da migração 152.
+    return const [];
+  }
+});
+
+class RefundResult {
+  final int refunded;
+  final int failed;
+  const RefundResult(this.refunded, this.failed);
+}
+
+Future<RefundResult> _refundCall(Map<String, dynamic> body) async {
+  try {
+    final res = await supabase.functions.invoke('refund-event-tickets', body: body);
+    final m = (res.data as Map?)?.cast<String, dynamic>() ?? const {};
+    return RefundResult((m['refunded'] as num?)?.toInt() ?? 0, (m['failed'] as num?)?.toInt() ?? 0);
+  } on FunctionException catch (e) {
+    final d = e.details;
+    throw TicketError(d is Map ? (d['error'] as String? ?? 'unknown') : 'unknown');
+  }
+}
+
+/// Reembolsa um bilhete (valor total a quem comprou; as taxas ficam com o organizador).
+Future<RefundResult> refundTicket(String ticketId, {String? reason}) =>
+    _refundCall({'action': 'refund_ticket', 'ticket_id': ticketId, if (reason != null) 'reason': reason});
+
+/// Cancela o evento pago: sai do Descobrir e reembolsa todos os bilhetes.
+Future<RefundResult> cancelPaidEvent(String weddingId, {String? reason}) =>
+    _refundCall({'action': 'cancel_event', 'wedding_id': weddingId, if (reason != null) 'reason': reason});

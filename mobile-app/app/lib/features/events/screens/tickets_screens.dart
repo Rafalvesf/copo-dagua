@@ -225,6 +225,7 @@ class OrganizerTicketsScreen extends ConsumerStatefulWidget {
 
 class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen> {
   bool _paying = false;
+  bool _cancelling = false;
 
   @override
   void initState() {
@@ -257,6 +258,77 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
     } finally {
       if (mounted) setState(() => _paying = false);
     }
+  }
+
+  /// Confirmação com motivo opcional. Devolve o motivo ('' sem motivo) ou null se cancelou.
+  Future<String?> _confirm({required String title, required String message, required String action}) {
+    final reason = TextEditingController();
+    return showIslandDialog<String>(
+      context: context,
+      builder: (ctx) => IslandAlert(
+        title: Text(title),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(message),
+          const SizedBox(height: 12),
+          TextField(
+            controller: reason,
+            maxLength: 300,
+            decoration: const InputDecoration(labelText: 'Motivo (opcional, quem comprou vê)'),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Voltar')),
+          FilledButton(onPressed: () => Navigator.of(ctx).pop(reason.text.trim()), child: Text(action)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _refundOne(String weddingId, EventTicketRow t) async {
+    final reason = await _confirm(
+      title: 'Reembolsar ${t.buyerName}?',
+      message: '${t.buyerName} recebe ${euroLabel(t.amount)} de volta e sai do evento. '
+          'A comissão e a taxa da Stripe deste bilhete não são devolvidas.',
+      action: 'Reembolsar',
+    );
+    if (reason == null || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await refundTicket(t.id, reason: reason.isEmpty ? null : reason);
+      messenger.showSnackBar(SnackBar(content: Text('Reembolso de ${euroLabel(t.amount)} feito. Chega ao cartão em 5 a 10 dias.')));
+    } on TicketError {
+      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível reembolsar. Tenta outra vez.')));
+    }
+    ref.invalidate(eventTicketListProvider(weddingId));
+    ref.invalidate(ticketSummaryProvider(weddingId));
+  }
+
+  Future<void> _cancelEvent(String weddingId, TicketSummary summary) async {
+    final reason = await _confirm(
+      title: 'Cancelar o evento?',
+      message: 'O evento sai do Descobrir e deixa de vender bilhetes. '
+          '${summary.sold == 0 ? 'Ainda não há bilhetes vendidos.' : 'Os ${summary.sold} bilhetes vendidos são reembolsados (${euroLabel(summary.gross)}); a comissão e as taxas da Stripe não são devolvidas.'} '
+          'Não dá para desfazer.',
+      action: 'Cancelar evento',
+    );
+    if (reason == null || !mounted) return;
+    setState(() => _cancelling = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final res = await cancelPaidEvent(weddingId, reason: reason.isEmpty ? null : reason);
+      messenger.showSnackBar(SnackBar(
+        content: Text(res.failed == 0
+            ? 'Evento cancelado. ${res.refunded} ${res.refunded == 1 ? 'bilhete reembolsado' : 'bilhetes reembolsados'}.'
+            : 'Evento cancelado, mas ${res.failed} reembolsos falharam. Toca outra vez em Cancelar para repetir.'),
+      ));
+      ref.invalidate(eventIsPublicProvider(weddingId));
+    } on TicketError {
+      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível cancelar. Tenta outra vez.')));
+    } finally {
+      if (mounted) setState(() => _cancelling = false);
+    }
+    ref.invalidate(eventTicketListProvider(weddingId));
+    ref.invalidate(ticketSummaryProvider(weddingId));
   }
 
   Widget _line(String label, String value, {bool strong = false}) => Padding(
@@ -325,10 +397,16 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                   _line('Total pago pelos convidados', euroLabel(summary.gross)),
                   _line('Comissão À Nossa! (4%)', '− ${euroLabel(summary.platformFee)}'),
                   _line('Taxa da Stripe', '− ${euroLabel(summary.stripeFee)}'),
+                  if (summary.refunded > 0)
+                    _line('Reembolsados (${summary.refunded})', '${euroLabel(summary.refundedAmount)} devolvidos'),
                   const Divider(height: 18),
                   _line('Recebes', euroLabel(summary.net), strong: true),
                 ]),
               ),
+            if (wedding != null) ...[
+              const SizedBox(height: 14),
+              _TicketList(weddingId: wedding.id, onRefund: (t) => _refundOne(wedding.id, t)),
+            ],
             const SizedBox(height: 14),
             if (s != null && s.hasAccount)
               Container(
@@ -351,12 +429,74 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
               ),
             const SizedBox(height: 16),
             const Text(
-              'Quem compra paga só o preço do bilhete. Do que recebes descontamos a comissão da À Nossa! (4%) e a taxa da Stripe de cada pagamento.',
+              'Quem compra paga só o preço do bilhete. Do que recebes descontamos a comissão da À Nossa! (4%) e a taxa da Stripe de cada pagamento. '
+              'Se reembolsares um bilhete ou cancelares o evento, quem comprou recebe tudo de volta e essas taxas não são devolvidas.',
               style: TextStyle(fontSize: 12.5, height: 1.45, color: AppTheme.inkMuted),
             ),
+            // Visível também depois de cancelar, enquanto houver bilhetes por reembolsar (repetir falhas).
+            if (wedding != null && summary != null && ((ref.watch(eventIsPublicProvider(wedding.id)).value ?? false) || summary.sold > 0)) ...[
+              const SizedBox(height: 18),
+              OutlinedButton.icon(
+                onPressed: _cancelling ? null : () => _cancelEvent(wedding.id, summary),
+                icon: _cancelling
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.event_busy_outlined),
+                label: const Text('Cancelar evento e reembolsar'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFB4432E),
+                  side: const BorderSide(color: Color(0xFFE5B9AE)),
+                  minimumSize: const Size.fromHeight(48),
+                  shape: const StadiumBorder(),
+                ),
+              ),
+            ],
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Bilhetes vendidos, com reembolso individual (migração 152).
+class _TicketList extends ConsumerWidget {
+  final String weddingId;
+  final void Function(EventTicketRow) onRefund;
+  const _TicketList({required this.weddingId, required this.onRefund});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final rows = ref.watch(eventTicketListProvider(weddingId)).value ?? const <EventTicketRow>[];
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
+      decoration: softCard(),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        const Text('BILHETES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
+        const SizedBox(height: 4),
+        for (final t in rows)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(children: [
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(t.buyerName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: t.refunded ? AppTheme.inkMuted : AppTheme.ink,
+                        decoration: t.refunded ? TextDecoration.lineThrough : null,
+                      )),
+                  Text('${t.quantity} × · ${euroLabel(t.amount)}${t.refunded ? ' · reembolsado' : ''}',
+                      style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+                ]),
+              ),
+              if (!t.refunded)
+                TextButton(onPressed: () => onRefund(t), child: const Text('Reembolsar')),
+            ]),
+          ),
+      ]),
     );
   }
 }
