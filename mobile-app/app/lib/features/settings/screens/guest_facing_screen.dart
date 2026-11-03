@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:go_router/go_router.dart';
+
+import '../../../core/events/events_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/supabase/supabase_config.dart';
@@ -298,6 +301,9 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                         if (code?.isNotEmpty == true) _CodeCard(code: code!, onShare: () => _shareCode(code)),
                         const SizedBox(height: 12),
                         _PreviewButton(onTap: _preview),
+                        const SizedBox(height: 18),
+                        // Público/privado e pago/grátis também aqui (pedido 2026-11-03).
+                        _AccessCard(wedding: widget.wedding),
                         if (_joinMode != null) ..._joinSection(),
                         _CompanionsSection(weddingId: widget.wedding.id),
                         // Redesign 2026-10-20: cada parte num cartão com
@@ -1164,4 +1170,228 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
       ],
     );
   }
+}
+
+/// "Acesso e entrada": evento público ou privado, grátis ou pago (com
+/// preço). Guarda logo ao mudar — o mesmo que em Definições → Organização.
+class _AccessCard extends ConsumerStatefulWidget {
+  final Wedding wedding;
+  const _AccessCard({required this.wedding});
+
+  @override
+  ConsumerState<_AccessCard> createState() => _AccessCardState();
+}
+
+class _AccessCardState extends ConsumerState<_AccessCard> {
+  final _price = TextEditingController();
+  bool _priceLoaded = false;
+  bool _savingPrice = false;
+  bool? _paidLocal;
+
+  @override
+  void dispose() {
+    _price.dispose();
+    super.dispose();
+  }
+
+  String get _id => widget.wedding.id;
+
+  double? get _priceValue =>
+      double.tryParse(_price.text.trim().replaceAll(' ', '').replaceAll('€', '').replaceAll(',', '.'));
+
+  void _toast(String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+  Future<void> _setPublic(bool v) async {
+    try {
+      await setEventPublic(_id, v);
+      ref.invalidate(eventIsPublicProvider(_id));
+      ref.invalidate(publicEventsProvider);
+      _toast(v ? 'O evento está aberto a todos em Eventos.' : 'O evento é só para convidados.');
+    } catch (_) {
+      _toast('Não foi possível alterar. Tenta outra vez.');
+    }
+  }
+
+  Future<void> _setPaid(bool paid) async {
+    if (paid) {
+      // Fica "Pago" quando houver preço.
+      setState(() => _paidLocal = true);
+      final v = _priceValue;
+      if (v != null && v > 0) await _savePrice();
+      return;
+    }
+    setState(() => _paidLocal = false);
+    try {
+      await setEventEntry(_id, paid: false);
+      ref.invalidate(eventEntryProvider(_id));
+      ref.invalidate(publicEventsProvider);
+      _toast('Entrada grátis.');
+    } catch (_) {
+      _toast('Não foi possível guardar. Tenta outra vez.');
+    }
+  }
+
+  Future<void> _savePrice() async {
+    final v = _priceValue;
+    if (v == null || v <= 0 || v > 100000) {
+      _toast('Escreve um preço válido (ex.: 15).');
+      return;
+    }
+    setState(() => _savingPrice = true);
+    try {
+      await setEventEntry(_id, paid: true, price: v);
+      ref.invalidate(eventEntryProvider(_id));
+      ref.invalidate(publicEventsProvider);
+      FocusScope.of(context).unfocus();
+      _toast('Entrada paga: ${_fmt(v)} € por pessoa.');
+    } catch (_) {
+      _toast('Não foi possível guardar. Tenta outra vez.');
+    } finally {
+      if (mounted) setState(() => _savingPrice = false);
+    }
+  }
+
+  static String _fmt(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2).replaceAll('.', ',');
+
+  Widget _choice({required String label, required String hint, required bool selected, required VoidCallback onTap}) {
+    final green = AppTheme.accentOliveDark;
+    return Expanded(
+      child: SnappyTap(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? AppTheme.accentTint : const Color(0xFFF7F6F2),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: selected ? green : const Color(0xFFE8E6DC), width: selected ? 1.5 : 1),
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(
+                child: Text(label,
+                    style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w800, color: selected ? green : AppTheme.ink)),
+              ),
+              if (selected) Icon(Icons.check_circle_rounded, size: 18, color: green),
+            ]),
+            const SizedBox(height: 2),
+            Text(hint, style: const TextStyle(fontSize: AppFontSize.sm, height: 1.3, color: AppTheme.inkMuted)),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canBePublic = widget.wedding.eventType.canBePublic;
+    final isPublic = ref.watch(eventIsPublicProvider(_id)).value ?? false;
+    final entryAsync = ref.watch(eventEntryProvider(_id));
+    final entry = entryAsync.value ?? (paid: false, price: null);
+    if (!_priceLoaded && entryAsync.hasValue) {
+      _priceLoaded = true;
+      if (entry.price != null) _price.text = _fmt(entry.price!);
+    }
+    final paid = _paidLocal ?? entry.paid;
+
+    return _SectionCard(
+      icon: Icons.tune_rounded,
+      title: 'Acesso e entrada',
+      subtitle: 'Quem pode ver o evento e se a entrada é paga.',
+      children: [
+        const _Label('Quem vê o evento'),
+        if (canBePublic)
+          Row(children: [
+            _choice(
+              label: 'Privado',
+              hint: 'Só convidados, com código ou convite.',
+              selected: !isPublic,
+              onTap: () => isPublic ? _setPublic(false) : null,
+            ),
+            const SizedBox(width: 10),
+            _choice(
+              label: 'Público',
+              hint: 'Aparece a todos em Eventos.',
+              selected: isPublic,
+              onTap: () => isPublic ? null : _setPublic(true),
+            ),
+          ])
+        else
+          const Text(
+            'Privado — só convidados. Casamentos, batizados e aniversários não podem ser públicos.',
+            style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
+          ),
+        const SizedBox(height: 16),
+        const _Label('Entrada'),
+        Row(children: [
+          _choice(
+            label: 'Grátis',
+            hint: 'Sem pagamento para entrar.',
+            selected: !paid,
+            onTap: () => paid ? _setPaid(false) : null,
+          ),
+          const SizedBox(width: 10),
+          _choice(
+            label: 'Pago',
+            hint: 'Bilhete pago na app.',
+            selected: paid,
+            onTap: () => paid ? null : _setPaid(true),
+          ),
+        ]),
+        if (paid) ...[
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(
+              child: TextField(
+                controller: _price,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _savePrice(),
+                decoration: const InputDecoration(labelText: 'Preço por pessoa', suffixText: '€', isDense: true),
+              ),
+            ),
+            const SizedBox(width: 10),
+            FilledButton(
+              onPressed: _savingPrice ? null : _savePrice,
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, shape: const StadiumBorder()),
+              child: _savingPrice
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('Guardar'),
+            ),
+          ]),
+          if (entry.paid) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => context.push('/bilhetes'),
+                icon: const Icon(Icons.account_balance_wallet_outlined, size: 18),
+                label: const Text('Bilhetes e pagamentos'),
+              ),
+            ),
+          ],
+          if (!isPublic)
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                'Os bilhetes vendem-se em Eventos: torna o evento público para começar a vender.',
+                style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+}
+
+class _Label extends StatelessWidget {
+  final String text;
+  const _Label(this.text);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(text.toUpperCase(),
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
+      );
 }
