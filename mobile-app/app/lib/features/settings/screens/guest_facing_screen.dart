@@ -231,7 +231,9 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
 
   Future<void> _shareLink(String link) async {
     try {
-      await SharePlus.instance.share(ShareParams(text: 'Estás convidado para ${widget.wedding.displayNames} na À Nossa!: $link'));
+      final code = widget.wedding.guestCode;
+      final codeLine = code?.isNotEmpty == true ? '\nOu entra na app com o código $code' : '';
+      await SharePlus.instance.share(ShareParams(text: 'Estás convidado para ${widget.wedding.displayNames} na À Nossa!: $link$codeLine'));
     } catch (_) {
       await Clipboard.setData(ClipboardData(text: link));
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
@@ -301,7 +303,11 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                         // Convite só por link (pedido 2026-11-03): quem abre o link
                         // entra; num evento privado o organizador aceita na app.
                         if (widget.wedding.inviteUrl != null)
-                          _InviteLinkCard(link: widget.wedding.inviteUrl!, onShare: () => _shareLink(widget.wedding.inviteUrl!)),
+                          _InviteLinkCard(
+                            link: widget.wedding.inviteUrl!,
+                            code: widget.wedding.guestCode,
+                            onShare: () => _shareLink(widget.wedding.inviteUrl!),
+                          ),
                         const SizedBox(height: 12),
                         _PreviewButton(onTap: _preview),
                         const SizedBox(height: 18),
@@ -686,8 +692,9 @@ class _Field extends StatelessWidget {
 /// Link de convite (o único convite do evento, 2026-11-03).
 class _InviteLinkCard extends ConsumerWidget {
   final String link;
+  final String? code;
   final VoidCallback onShare;
-  const _InviteLinkCard({required this.link, required this.onShare});
+  const _InviteLinkCard({required this.link, required this.onShare, this.code});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -698,10 +705,67 @@ class _InviteLinkCard extends ConsumerWidget {
         Text('LINK DE CONVITE',
             style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentTint)),
         const SizedBox(height: 6),
+        // Regras primeiro (pedido 2026-11-03), depois o link.
+        for (final rule in [
+          (Icons.public_rounded, code?.isNotEmpty == true
+              ? 'Evento público: quem abre o link (ou escreve o código na app) entra logo.'
+              : 'Evento público: quem abre o link entra logo.'),
+          (Icons.lock_outline_rounded, 'Evento privado: a pessoa pede para entrar e tu aceitas em Convidados → Pedidos para entrar.'),
+          (Icons.confirmation_number_outlined, 'Evento pago: paga o bilhete e entra logo, mesmo sendo privado.'),
+        ])
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Icon(rule.$1, size: 16, color: AppTheme.accentTint),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(rule.$2, style: const TextStyle(fontSize: 13.5, height: 1.35, color: Colors.white)),
+              ),
+            ]),
+          ),
+        const SizedBox(height: 14),
+        Container(height: 1, color: Colors.white.withValues(alpha: 0.18)),
+        const SizedBox(height: 12),
         Text(link,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+        // Código do evento (pedido 2026-11-03): quem já o tem continua a
+        // poder entrar com ele na app.
+        if (code?.isNotEmpty == true) ...[
+          const SizedBox(height: 12),
+          Material(
+            color: Colors.white.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: code!));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+                child: Row(children: [
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('CÓDIGO DO EVENTO',
+                          style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentTint)),
+                      const SizedBox(height: 2),
+                      Text(code!,
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
+                    ]),
+                  ),
+                  const Icon(Icons.copy_rounded, size: 18, color: Colors.white, semanticLabel: 'Copiar código'),
+                ]),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         Row(children: [
           Expanded(
@@ -737,11 +801,6 @@ class _InviteLinkCard extends ConsumerWidget {
             ),
           ),
         ]),
-        const SizedBox(height: 10),
-        Text(
-          'Quem abre o link entra no evento. Se o evento for privado, pede para entrar e tu aceitas na app (Convidados → Pedidos para entrar).',
-          style: TextStyle(fontSize: 12.5, height: 1.4, color: Colors.white.withValues(alpha: 0.85)),
-        ),
       ]),
     );
   }
