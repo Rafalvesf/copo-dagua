@@ -244,146 +244,6 @@ class _HelpGroup extends ConsumerWidget {
   }
 }
 
-// ───────────────────────── Organizadores ─────────────────────────
-
-/// "Evento público" (migração 141): aparece a todos no separador
-/// Eventos e qualquer utilizador pode entrar.
-class _PublicEventRow extends ConsumerWidget {
-  final String weddingId;
-  const _PublicEventRow({required this.weddingId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final value = ref.watch(eventIsPublicProvider(weddingId)).value ?? false;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          StickerIcon(Icons.public_rounded, size: 36, turns: StickerIcon.tilt(7)),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Evento público', style: TextStyle(fontSize: AppFontSize.base + 1, color: AppTheme.ink)),
-                Text('Aparece a todos em Eventos e qualquer pessoa pode entrar',
-                    style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-              ],
-            ),
-          ),
-          Switch(
-            value: value,
-            onChanged: (v) async {
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                await setEventPublic(weddingId, v);
-                ref.invalidate(eventIsPublicProvider(weddingId));
-                messenger.showSnackBar(SnackBar(
-                  content: Text(v ? 'O evento está aberto a todos.' : 'O evento voltou a ser só para convidados.'),
-                ));
-              } catch (_) {
-                messenger.showSnackBar(const SnackBar(content: Text('Não foi possível alterar. Tenta outra vez.')));
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// "Entrada": grátis ou paga, e o preço por pessoa — muda-se depois de
-/// criar o evento (pedido 2026-11).
-class _EntryRow extends ConsumerWidget {
-  final String weddingId;
-  const _EntryRow({required this.weddingId});
-
-  Future<void> _edit(BuildContext context, WidgetRef ref, bool paid, double? price) async {
-    final ctrl = TextEditingController(text: price == null ? '' : (price == price.roundToDouble() ? price.toStringAsFixed(0) : price.toStringAsFixed(2).replaceAll('.', ',')));
-    var isPaid = paid;
-    final result = await showIslandDialog<({bool paid, double? price})>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocal) {
-          final value = double.tryParse(ctrl.text.trim().replaceAll(' ', '').replaceAll('€', '').replaceAll(',', '.'));
-          final valid = !isPaid || (value != null && value > 0 && value <= 100000);
-          return IslandAlert(
-            title: const Text('Entrada'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment(value: false, label: Text('Grátis')),
-                    ButtonSegment(value: true, label: Text('Pago')),
-                  ],
-                  selected: {isPaid},
-                  onSelectionChanged: (v) => setLocal(() => isPaid = v.first),
-                ),
-                if (isPaid) ...[
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: ctrl,
-                    autofocus: true,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Preço por pessoa', suffixText: '€'),
-                    onChanged: (_) => setLocal(() {}),
-                  ),
-                ],
-              ],
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
-              FilledButton(
-                onPressed: valid ? () => Navigator.pop(ctx, (paid: isPaid, price: isPaid ? value : null)) : null,
-                child: const Text('Guardar'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-    if (result == null || !context.mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      await setEventEntry(weddingId, paid: result.paid, price: result.price);
-      ref.invalidate(eventEntryProvider(weddingId));
-      ref.invalidate(publicEventsProvider);
-    } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final entry = ref.watch(eventEntryProvider(weddingId)).value ?? (paid: false, price: null);
-    final p = entry.price;
-    final label = !entry.paid
-        ? 'Grátis'
-        : p == null
-            ? 'Pago'
-            : '${p == p.roundToDouble() ? p.toStringAsFixed(0) : p.toStringAsFixed(2).replaceAll('.', ',')} € por pessoa';
-    final row = _Row(
-      icon: Icons.confirmation_number_outlined,
-      label: 'Entrada',
-      value: label,
-      onTap: () => _edit(context, ref, entry.paid, entry.price),
-    );
-    if (!entry.paid) return row;
-    // Evento pago: vendas, conta para receber e levantamentos (149).
-    return Column(children: [
-      row,
-      const Divider(height: 1, thickness: 1, color: Color(0xFFEEF2EC)),
-      _Row(
-        icon: Icons.account_balance_wallet_outlined,
-        label: 'Bilhetes e pagamentos',
-        onTap: () => context.push('/bilhetes'),
-      ),
-    ]);
-  }
-}
-
 class _CoupleSettings extends ConsumerWidget {
   final bool fromGuestMode;
   const _CoupleSettings({required this.fromGuestMode});
@@ -434,8 +294,13 @@ class _CoupleSettings extends ConsumerWidget {
             label: 'Aparência do menu',
             onTap: () => context.go('/wedding?aparencia=1'),
           ),
-          if (wedding.eventType.canBePublic) _PublicEventRow(weddingId: wedding.id),
-          _EntryRow(weddingId: wedding.id),
+          // Público/privado e entrada passaram para "Para os convidados" (2026-11-03).
+          _Row(
+            icon: Icons.confirmation_number_outlined,
+            label: 'Acesso e entrada',
+            value: 'Para os convidados',
+            onTap: () => context.push('/guest-page'),
+          ),
         ],
       ),
       const _SectionTitle('Conta'),
