@@ -197,12 +197,10 @@ begin
     insert into public.partner_referrals (partner_id, profile_id, valid) values (v_partner, v_uid, v_valid)
     on conflict on constraint partner_referrals_pkey do nothing;
     if v_valid then
-      select coalesce(referral_min_booking, 0) into v_min from public.platform_settings where id = 1;
       insert into public.notifications (profile_id, type, title, body, link)
       values (v_partner, 'partner_referral', 'Novo cliente pelo teu convite',
               coalesce((select full_name from public.profiles where id = v_uid), 'Um cliente') ||
-              ' entrou na À Nossa! pelo teu link. Conta para o teu próximo cliente sem comissão quando pagar a '
-              || 'primeira reserva contigo' || case when v_min > 0 then ' (mín. ' || to_char(v_min, 'FM999G990') || ' €)' else '' end || '.',
+              ' entrou na À Nossa! pelo teu link. Conta para o teu próximo cliente sem comissão quando pagar a primeira reserva contigo.',
               '/partner-home');
     end if;
   end if;
@@ -250,10 +248,9 @@ begin
   insert into public.notifications (profile_id, type, title, body, link)
   values (v_b.partner_id, 'partner_referral', 'Cliente do teu convite conta',
           coalesce((select full_name from public.profiles where id = v_b.couple_id), 'Um cliente') ||
-          ' pagou a primeira reserva contigo (' || v_seq || '.º cliente pelo teu link). ' ||
-          case when v_seq % v_every = 0
-               then 'As reservas deste cliente contigo ficam sem comissão.'
-               else 'Faltam ' || (v_every - v_seq % v_every) || ' para o próximo cliente sem comissão.' end,
+          ' pagou a primeira reserva contigo.' ||
+          case when v_seq % v_every = 0 then ''
+               else ' Faltam ' || (v_every - v_seq % v_every) || ' para o próximo cliente sem comissão.' end,
           '/partner-home');
   return new;
 end;

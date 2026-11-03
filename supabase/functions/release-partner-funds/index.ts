@@ -1,6 +1,14 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { stripeClient } from "../_shared/stripe.ts";
 
+// Valores como nas notificações da base de dados (migração 157): "4 500 €".
+const fmtEur = (v: number) => {
+  const r = Math.round(v * 100) / 100;
+  const int = Math.trunc(r).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
+  const c = Math.round((r - Math.trunc(r)) * 100);
+  return `${int}${c ? "," + String(c).padStart(2, "0") : ""}\u00a0€`;
+};
+
 // Liberta ao parceiro o dinheiro retido (2026-10-25, migração 119): 3 dias
 // depois do evento, sem disputa aberta, transfere a parte do parceiro (o
 // valor da reserva, sem a comissão da À Nossa!) para a conta Stripe dele.
@@ -82,12 +90,11 @@ Deno.serve(async (req) => {
         { idempotencyKey: `release-${r.payment_id}` },
       );
       await markReleased(admin, r.payment_id, transfer.id, feeCents / 100, cents / 100);
-      const euros = (cents / 100).toFixed(2).replace(".", ",");
       await admin.from("notifications").insert({
         partner_id: r.partner_id,
         type: "funds_released",
         title: "Pagamento libertado",
-        body: `${euros} € da reserva ${r.booking_number} já estão no teu saldo.`,
+        body: `${fmtEur(cents / 100)} já estão no teu saldo.`,
         link: "/partner-payments",
       }).then(({ error }) => error && console.error("notification failed", error));
       released.push(r.payment_id);
@@ -113,7 +120,7 @@ async function nudgePartner(admin: any, r: { partner_id: string; booking_number:
     partner_id: r.partner_id,
     type: "funds_waiting",
     title: "Tens dinheiro à tua espera",
-    body: `O pagamento da reserva ${r.booking_number} está pronto. Ativa os pagamentos para o receberes.`,
+    body: "Tens um pagamento pronto. Ativa os pagamentos para o receberes.",
     link: "/partner-payments",
   }).then(({ error }: { error: unknown }) => error && console.error("nudge failed", error));
 }

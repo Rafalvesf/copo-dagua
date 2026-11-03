@@ -40,7 +40,11 @@ Deno.serve(async (req) => {
   const tag = `${n.type}:${n.link ?? n.id}`;
   // Imagem da mensagem da equipa (migração 148), quando existe.
   const image = typeof n.image_url === "string" && n.image_url.startsWith("https://") ? n.image_url : undefined;
-  const payload = JSON.stringify({ title: n.title, body: n.body ?? "", url: link, tag, image });
+  // Subtítulo (migração 157): no iPhone vai como subtítulo; na web e no
+  // Android (que não têm subtítulo) vai na primeira linha do texto.
+  const subtitle = typeof n.subtitle === "string" && n.subtitle.trim() ? n.subtitle.trim() : undefined;
+  const flatBody = subtitle ? `${subtitle}\n${n.body ?? ""}`.trim() : (n.body ?? "");
+  const payload = JSON.stringify({ title: n.title, body: flatBody, url: link, tag, image });
   const hasVapid = Boolean(config.vapid_public && config.vapid_private);
   if (hasVapid) webpush.setVapidDetails("mailto:ola@anossa.app", config.vapid_public, config.vapid_private);
   const fcm = await fcmClient();
@@ -50,7 +54,7 @@ Deno.serve(async (req) => {
     try {
       if (s.endpoint.startsWith("fcm:")) {
         if (!fcm) continue;
-        const r = await fcm.send(s.endpoint.slice(4), { title: n.title, body: n.body ?? "", url: link, tag, image });
+        const r = await fcm.send(s.endpoint.slice(4), { title: n.title, subtitle, body: n.body ?? "", flatBody, url: link, tag, image });
         if (r === "gone") {
           await admin.from("push_subscriptions").delete().eq("id", s.id);
         } else if (r === "ok") {
@@ -103,20 +107,26 @@ async function fcmClient() {
     return null;
   }
   return {
-    async send(deviceToken: string, m: { title: string; body: string; url: string; tag: string; image?: string }): Promise<"ok" | "gone" | "error"> {
+    async send(deviceToken: string, m: { title: string; subtitle?: string; body: string; flatBody: string; url: string; tag: string; image?: string }): Promise<"ok" | "gone" | "error"> {
       const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           message: {
             token: deviceToken,
-            notification: { title: m.title, body: m.body, ...(m.image ? { image: m.image } : {}) },
+            notification: { title: m.title, body: m.flatBody, ...(m.image ? { image: m.image } : {}) },
             data: { url: m.url, tag: m.tag },
             android: { priority: "high", notification: { tag: m.tag, ...(m.image ? { image: m.image } : {}) } },
             apns: {
               headers: { "apns-collapse-id": m.tag.slice(0, 64) },
               // mutable-content deixa o iOS juntar a imagem à notificação.
-              payload: { aps: { sound: "default", ...(m.image ? { "mutable-content": 1 } : {}) } },
+              payload: {
+                aps: {
+                  sound: "default",
+                  ...(m.subtitle ? { alert: { title: m.title, subtitle: m.subtitle, body: m.body } } : {}),
+                  ...(m.image ? { "mutable-content": 1 } : {}),
+                },
+              },
               ...(m.image ? { fcm_options: { image: m.image } } : {}),
             },
           },

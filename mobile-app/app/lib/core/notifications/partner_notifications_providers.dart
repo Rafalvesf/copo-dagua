@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_controller.dart';
 import '../supabase/supabase_config.dart';
+import '../tasks/task_models.dart' show joinNotificationSubtitle;
 
 /// Notificações reais para o parceiro (`notifications.partner_id`,
 /// `063_cancellation_notifications.sql`) — antes desta migração
@@ -45,7 +46,7 @@ final partnerNotificationsProvider = FutureProvider<List<PartnerNotification>>((
   try {
     rows = await supabase
         .from('notifications')
-        .select('id, type, title, body, link, read, created_at')
+        .select() // inclui `subtitle` (migração 157) quando já existe
         .or('partner_id.eq.$partnerId,profile_id.eq.$partnerId')
         .order('created_at', ascending: false)
         .limit(50);
@@ -65,7 +66,7 @@ final partnerNotificationsProvider = FutureProvider<List<PartnerNotification>>((
           id: r['id'] as String,
           type: r['type'] as String? ?? '',
           title: r['title'] as String,
-          body: r['body'] as String?,
+          body: joinNotificationSubtitle(r['subtitle'] as String?, r['body'] as String?),
           link: r['link'] as String?,
           read: r['read'] as bool? ?? false,
           createdAt: DateTime.parse(r['created_at'] as String),

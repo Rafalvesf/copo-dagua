@@ -2,6 +2,14 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
 
+// Valores como nas notificações da base de dados (migração 157): "4 500 €".
+const fmtEur = (v: number) => {
+  const r = Math.round(v * 100) / 100;
+  const int = Math.trunc(r).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
+  const c = Math.round((r - Math.trunc(r)) * 100);
+  return `${int}${c ? "," + String(c).padStart(2, "0") : ""}\u00a0€`;
+};
+
 // Reembolso automático (regras de 2026-10-21, migração 112):
 // - organizador cancela nas primeiras 48 h depois de pagar o sinal → o
 //   sinal é devolvido (se o parceiro o marcou como reembolsável);
@@ -158,7 +166,6 @@ Deno.serve(async (req) => {
 
   if (refunded.length > 0) {
     const total = refundedCents / 100;
-    const euros = total.toFixed(2).replace(".", ",");
     const pp = (booking as { partner_profiles?: { business_name?: string } | { business_name?: string }[] | null }).partner_profiles;
     const partnerName = (Array.isArray(pp) ? pp[0] : pp)?.business_name ?? "parceiro";
     await admin.from("booking_events").insert({
@@ -178,7 +185,7 @@ Deno.serve(async (req) => {
       ...(owner ? { profile_id: owner } : {}),
       type: "booking_refunded",
       title: "Reembolso enviado",
-      body: `Reembolsámos ${euros} € da reserva ${booking.booking_number} · ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`,
+      body: `${fmtEur(total)} de ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`,
     }).then(({ error }) => error && console.error("notification insert failed", error));
   }
 
