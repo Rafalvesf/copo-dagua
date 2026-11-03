@@ -105,8 +105,9 @@ export const MIGRATIONS: PendingMigration[] = [
   },
   {
     file: "157_notifications_no_booking_number.sql",
-    title: "Notificações sem número de reserva",
-    what: "As notificações dizem o nome do parceiro ou do organizador em vez de R-2026-0142.",
+    title: "Notificações mais bonitas",
+    what: "Título curto + subtítulo com quem + o essencial (versão B); sem número de reserva; valores como 4 500 € e datas como 10 nov., às 18:00.",
+    after: "156",
     check: { kind: "column", table: "platform_settings", column: "notification_copy_version" },
   },
 ];

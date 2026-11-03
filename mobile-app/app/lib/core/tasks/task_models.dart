@@ -225,10 +225,20 @@ class AppNotification {
     weddingId: row['wedding_id'] as String? ?? '',
     type: row['type'] as String,
     title: row['title'] as String,
-    body: row['body'] as String?,
+    body: joinNotificationSubtitle(row['subtitle'] as String?, row['body'] as String?),
     weddingTaskId: row['wedding_task_id'] as String?,
     link: row['link'] as String?,
     read: row['read'] as bool? ?? false,
     createdAt: DateTime.parse(row['created_at'] as String),
   );
+}
+
+/// Notificações com subtítulo (migração 157): na lista da app mostra
+/// "Quinta da Ribafria · Espaço + Catering · 15 000 €".
+String? joinNotificationSubtitle(String? subtitle, String? body) {
+  final s = subtitle?.trim() ?? '';
+  final b = body?.trim() ?? '';
+  if (s.isEmpty) return body;
+  if (b.isEmpty) return s;
+  return '$s · $b';
 }

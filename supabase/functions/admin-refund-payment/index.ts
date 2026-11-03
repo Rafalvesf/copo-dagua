@@ -2,6 +2,14 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
 
+// Valores como nas notificações da base de dados (migração 157): "4 500 €".
+const fmtEur = (v: number) => {
+  const r = Math.round(v * 100) / 100;
+  const int = Math.trunc(r).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
+  const c = Math.round((r - Math.trunc(r)) * 100);
+  return `${int}${c ? "," + String(c).padStart(2, "0") : ""}\u00a0€`;
+};
+
 // Reembolso feito pelo admin (2026-10-20): secção Reembolsos e decisões de
 // Disputas. Só admins. Total (sem `amount`) ou parcial (`amount` em euros do
 // que o casal pagou, comissão incluída). A comissão e a parte do parceiro
@@ -112,7 +120,6 @@ Deno.serve(async (req) => {
     partner_profiles: { business_name: string } | { business_name: string }[] | null;
   } | null;
   const partnerName = (Array.isArray(b?.partner_profiles) ? b?.partner_profiles[0] : b?.partner_profiles)?.business_name ?? "parceiro";
-  const euros = (cents / 100).toFixed(2).replace(".", ",");
   await admin.from("booking_events").insert({
     booking_id: p.booking_id,
     event_type: "refunded",
@@ -132,7 +139,7 @@ Deno.serve(async (req) => {
       ...(owner ? { profile_id: owner } : {}),
       type: "booking_refunded",
       title: "Reembolso enviado",
-      body: `Reembolsámos ${euros} € da reserva ${b.booking_number} · ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`,
+      body: `${fmtEur(cents / 100)} de ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`,
     }).then(({ error }) => error && console.error("notification insert failed", error));
   }
   await admin.from("audit_logs").insert({
