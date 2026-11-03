@@ -17,18 +17,29 @@ import '../../../shared/widgets/v2_kit.dart';
 
 // ───────────────────────── Comprar ─────────────────────────
 
-/// Folha para comprar bilhetes de um evento público pago (migração 149).
-Future<void> showBuyTicketSheet(BuildContext context, PublicEvent e) {
+/// Folha para comprar bilhetes de um evento pago (migração 149). Num evento
+/// privado vai com o [code] ou o [inviteToken] com que a pessoa entrou (153).
+Future<void> showBuyTicketSheet(BuildContext context, PublicEvent e, {String? code, String? inviteToken}) {
   return showIslandSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => _BuyTicketSheet(event: e),
+    builder: (_) => _BuyTicketSheet(event: e, code: code, inviteToken: inviteToken),
   );
+}
+
+/// Entrada num evento pago sem bilhete: abre a compra (código, link ou id).
+Future<bool> openTicketPurchase(BuildContext context, {String? weddingId, String? code, String? inviteToken}) async {
+  final e = await ticketEventPreview(weddingId: weddingId, code: code, inviteToken: inviteToken);
+  if (e == null || !context.mounted) return false;
+  await showBuyTicketSheet(context, e, code: code, inviteToken: inviteToken);
+  return true;
 }
 
 class _BuyTicketSheet extends StatefulWidget {
   final PublicEvent event;
-  const _BuyTicketSheet({required this.event});
+  final String? code;
+  final String? inviteToken;
+  const _BuyTicketSheet({required this.event, this.code, this.inviteToken});
   @override
   State<_BuyTicketSheet> createState() => _BuyTicketSheetState();
 }
@@ -44,7 +55,12 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
       _error = null;
     });
     try {
-      final url = await createTicketCheckoutUrl(weddingId: widget.event.weddingId, quantity: _qty);
+      final url = await createTicketCheckoutUrl(
+        weddingId: widget.event.weddingId,
+        quantity: _qty,
+        code: widget.code,
+        inviteToken: widget.inviteToken,
+      );
       final ok = await launchUrl(
         Uri.parse(url),
         mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,

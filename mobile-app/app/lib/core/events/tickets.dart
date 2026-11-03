@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, 
 
 import '../../shared/public_link.dart';
 import '../supabase/supabase_config.dart';
+import 'events_providers.dart';
 
 /// Bilhetes para eventos públicos pagos (migração 149). Quem compra paga
 /// o preço anunciado; o organizador recebe-o menos a comissão de 4% e a
@@ -17,12 +18,15 @@ class TicketError implements Exception {
         'organizer_not_onboarded' => 'O organizador ainda não ativou a venda de bilhetes. Tenta mais tarde.',
         'not_paid_event' => 'Este evento é grátis.',
         'own_event' => 'É o teu evento.',
+        'already_linked' => 'Este convite já está associado a outra conta.',
         'not_found' => 'Este evento já não está disponível.',
         _ => 'Não foi possível abrir o pagamento. Tenta novamente.',
       };
 }
 
-Future<String> createTicketCheckoutUrl({required String weddingId, required int quantity}) async {
+/// [code] / [inviteToken]: evento privado e pago (migração 153) — só se
+/// compra com o código do evento ou o link individual.
+Future<String> createTicketCheckoutUrl({required String weddingId, required int quantity, String? code, String? inviteToken}) async {
   final success = kIsWeb ? publicLink('/bilhete/{TICKET_ID}') : 'anossa://bilhete/{TICKET_ID}';
   final cancel = kIsWeb ? publicLink('/evento/$weddingId') : 'anossa://payment-cancel';
   try {
@@ -32,6 +36,8 @@ Future<String> createTicketCheckoutUrl({required String weddingId, required int 
       'quantity': quantity,
       'success_url': success,
       'cancel_url': cancel,
+      if (code != null) 'code': code,
+      if (inviteToken != null) 'invite_token': inviteToken,
     });
     final url = (res.data as Map?)?['url'] as String?;
     if (url == null) throw const TicketError('unknown');
@@ -170,3 +176,23 @@ Future<RefundResult> refundTicket(String ticketId, {String? reason}) =>
 /// Cancela o evento pago: sai do Descobrir e reembolsa todos os bilhetes.
 Future<RefundResult> cancelPaidEvent(String weddingId, {String? reason}) =>
     _refundCall({'action': 'cancel_event', 'wedding_id': weddingId, if (reason != null) 'reason': reason});
+
+// ---------- Eventos pagos com código ou link (migração 153) ----------
+
+/// O servidor recusou a entrada num evento pago sem bilhete.
+bool isTicketRequired(Object e) => e is PostgrestException && e.message.contains('ticket_required');
+
+/// Dados do evento para a folha de compra (por id, código ou link individual).
+Future<PublicEvent?> ticketEventPreview({String? weddingId, String? code, String? inviteToken}) async {
+  try {
+    final rows = await supabase.rpc('ticket_event_preview', params: {
+      'p_wedding': weddingId,
+      'p_code': code,
+      'p_token': inviteToken,
+    }) as List;
+    if (rows.isEmpty) return null;
+    return PublicEvent.fromRow((rows.first as Map).cast<String, dynamic>());
+  } on PostgrestException {
+    return null;
+  }
+}

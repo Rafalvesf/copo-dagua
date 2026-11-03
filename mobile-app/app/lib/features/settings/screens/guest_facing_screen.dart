@@ -1374,7 +1374,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
             const Padding(
               padding: EdgeInsets.only(top: 4),
               child: Text(
-                'Os bilhetes vendem-se em Eventos: torna o evento público para começar a vender.',
+                'Privado e pago: quem tem o código ou o link de convite paga o bilhete na app e entra logo.',
                 style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
               ),
             ),
