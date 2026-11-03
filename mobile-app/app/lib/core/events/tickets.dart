@@ -122,6 +122,8 @@ class EventTicketRow {
   final double amount;
   final bool refunded;
   final DateTime? paidAt;
+  /// Entrada registada pelo QR (migração 158).
+  final DateTime? checkedInAt;
   const EventTicketRow({
     required this.id,
     required this.buyerName,
@@ -129,6 +131,7 @@ class EventTicketRow {
     required this.amount,
     required this.refunded,
     this.paidAt,
+    this.checkedInAt,
   });
 }
 
@@ -144,6 +147,7 @@ final eventTicketListProvider = FutureProvider.family<List<EventTicketRow>, Stri
           amount: (r['amount'] as num?)?.toDouble() ?? 0,
           refunded: r['status'] == 'refunded',
           paidAt: DateTime.tryParse('${r['paid_at'] ?? ''}')?.toLocal(),
+          checkedInAt: DateTime.tryParse('${r['checked_in_at'] ?? ''}')?.toLocal(),
         ),
     ];
   } catch (_) {

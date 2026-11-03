@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/events/event_pass.dart';
 import '../../../core/events/events_providers.dart';
 import '../../../core/events/tickets.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
@@ -15,6 +16,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'ticket_pass_screens.dart' show TicketPassCard;
 
 // ───────────────────────── Comprar ─────────────────────────
 
@@ -170,6 +172,7 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
         if (r.status == 'paid') {
           ref.invalidate(guestWeddingsProvider);
           ref.invalidate(publicEventsProvider);
+          if (r.weddingId != null) ref.invalidate(myEventPassProvider(r.weddingId!));
           if (mounted) setState(() => _status = 'paid');
           return;
         }
@@ -182,6 +185,8 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
   @override
   Widget build(BuildContext context) {
     final paid = _status == 'paid';
+    // O bilhete com o QR logo a seguir ao pagamento (migração 158).
+    final ticket = paid && _weddingId != null ? ref.watch(myEventPassProvider(_weddingId!)).value?.ticket : null;
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
@@ -207,13 +212,19 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
               const SizedBox(height: 8),
               Text(
                 paid
-                    ? 'Já estás no evento. Vês o programa, a galeria e as novidades.'
+                    ? (ticket != null
+                        ? 'Já estás no evento. Mostra este QR à entrada; também o encontras no início do evento.'
+                        : 'Já estás no evento. Vês o programa, a galeria e as novidades.')
                     : _status == 'pending'
                         ? 'Se pagaste com Multibanco ou MB WAY, pode demorar uns minutos. Avisamos quando ficar confirmado.'
                         : '',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 15, height: 1.4, color: AppTheme.inkMuted),
               ),
+              if (ticket != null) ...[
+                const SizedBox(height: 18),
+                TicketPassCard(ticket: ticket, eventName: 'O teu evento'),
+              ],
               const SizedBox(height: 24),
               if (_status != 'checking')
                 FilledButton(
@@ -506,7 +517,7 @@ class _TicketList extends ConsumerWidget {
                         color: t.refunded ? AppTheme.inkMuted : AppTheme.ink,
                         decoration: t.refunded ? TextDecoration.lineThrough : null,
                       )),
-                  Text('${t.quantity} × · ${euroLabel(t.amount)}${t.refunded ? ' · reembolsado' : ''}',
+                  Text('${t.quantity} × · ${euroLabel(t.amount)}${t.refunded ? ' · reembolsado' : ''}${t.checkedInAt != null ? ' · entrou às ${t.checkedInAt!.hour.toString().padLeft(2, '0')}:${t.checkedInAt!.minute.toString().padLeft(2, '0')}' : ''}',
                       style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
                 ]),
               ),

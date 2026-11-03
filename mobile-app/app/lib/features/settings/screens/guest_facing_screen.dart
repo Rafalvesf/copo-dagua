@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:go_router/go_router.dart';
 
+import '../../../core/events/event_pass.dart';
 import '../../../core/events/events_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/guests/guest_controller.dart';
@@ -306,6 +307,9 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                         const SizedBox(height: 18),
                         // Público/privado e pago/grátis também aqui (pedido 2026-11-03).
                         _AccessCard(wedding: widget.wedding),
+                        // O que os convidados veem (migração 158).
+                        const SizedBox(height: 18),
+                        _GuestSectionsCard(weddingId: widget.wedding.id),
                         _CompanionsSection(weddingId: widget.wedding.id),
                         // Redesign 2026-10-20: cada parte num cartão com
                         // ícone, título e o que os convidados vão ver.
@@ -1346,4 +1350,94 @@ class _Label extends StatelessWidget {
         child: Text(text.toUpperCase(),
             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
       );
+}
+
+
+/// O que os convidados veem (migração 158): o organizador liga e desliga
+/// cada parte. Tudo desligado = só o bilhete (num evento pago).
+class _GuestSectionsCard extends ConsumerStatefulWidget {
+  final String weddingId;
+  const _GuestSectionsCard({required this.weddingId});
+
+  @override
+  ConsumerState<_GuestSectionsCard> createState() => _GuestSectionsCardState();
+}
+
+class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
+  GuestSections? _local;
+  bool _saving = false;
+
+  Future<void> _set(GuestSections next) async {
+    final before = _local;
+    setState(() {
+      _local = next;
+      _saving = true;
+    });
+    try {
+      await saveGuestSections(widget.weddingId, next);
+      ref.invalidate(guestSectionsProvider(widget.weddingId));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _local = before);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final async = ref.watch(guestSectionsProvider(widget.weddingId));
+    final loaded = async.value;
+    if (async.isLoading && _local == null) return const SizedBox.shrink();
+    // Antes da migração 158 não há onde guardar: não mostra o cartão.
+    if (loaded == null && _local == null) return const SizedBox.shrink();
+    final sections = _local ?? loaded!;
+    final green = AppTheme.accentOliveDark;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.lg)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          Icon(Icons.tune_rounded, size: 20, color: green),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text('O que os convidados veem',
+                style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+          if (_saving) const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+        ]),
+        const SizedBox(height: 4),
+        const Text(
+          'Escolhe o que aparece na página do evento. Quem pagou bilhete vê sempre o bilhete com o código QR.',
+          style: TextStyle(fontSize: 12.5, height: 1.4, color: AppTheme.inkMuted),
+        ),
+        const SizedBox(height: 10),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          ChoiceChip(
+            label: const Text('Tudo'),
+            selected: GuestSection.values.every(sections.shows),
+            showCheckmark: false,
+            onSelected: _saving ? null : (_) => _set(sections.all(true)),
+          ),
+          ChoiceChip(
+            label: const Text('Só o bilhete'),
+            selected: sections.onlyTicket,
+            showCheckmark: false,
+            onSelected: _saving ? null : (_) => _set(sections.all(false)),
+          ),
+        ]),
+        const SizedBox(height: 4),
+        for (final sec in GuestSection.values)
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            secondary: Icon(sec.icon, color: sections.shows(sec) ? green : AppTheme.inkMuted),
+            title: Text(sec.label, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            subtitle: Text(sec.description, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+            value: sections.shows(sec),
+            onChanged: _saving ? null : (v) => _set(sections.withSection(sec, v)),
+          ),
+      ]),
+    );
+  }
 }

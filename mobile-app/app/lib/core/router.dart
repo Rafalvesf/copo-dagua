@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'pending_deep_link.dart';
 import '../features/events/screens/tickets_screens.dart';
+import '../features/events/screens/ticket_pass_screens.dart' show CheckInScreen;
 import '../features/messages/team_messages.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -346,6 +347,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Bilhetes (migração 149).
       GoRoute(path: '/bilhete/:id', builder: (context, state) => TicketReturnScreen(ticketId: state.pathParameters['id']!)),
       GoRoute(path: '/bilhetes', builder: (context, state) => const OrganizerTicketsScreen()),
+      // O organizador leu o QR de um bilhete (migração 158).
+      GoRoute(path: '/entrada/:code', builder: (context, state) => CheckInScreen(code: state.pathParameters['code']!)),
       GoRoute(path: '/bilhetes/ativar', builder: (context, state) => const PartnerPayoutSetupScreen(organizer: true)),
       // Evento público aberto por link partilhado (2026-11).
       // Envelopes recebidos (migração 156).
