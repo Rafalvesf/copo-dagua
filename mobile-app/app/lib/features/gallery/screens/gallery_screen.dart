@@ -354,6 +354,7 @@ class _PendingPhotoCard extends ConsumerWidget {
             ),
           ),
           IconButton(
+            tooltip: 'Aprovar foto',
             icon: const Icon(Icons.check_circle_outline, color: AppStatusColors.confirmed),
             onPressed: () async {
               await moderateGalleryPhoto(photo.id, true);
@@ -361,6 +362,7 @@ class _PendingPhotoCard extends ConsumerWidget {
             },
           ),
           IconButton(
+            tooltip: 'Recusar foto',
             icon: const Icon(Icons.cancel_outlined, color: AppStatusColors.declined),
             onPressed: () async {
               await moderateGalleryPhoto(photo.id, false);

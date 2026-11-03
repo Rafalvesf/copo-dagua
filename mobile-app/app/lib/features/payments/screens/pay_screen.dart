@@ -691,6 +691,7 @@ class _RefRow extends StatelessWidget {
       if (copy != null) ...[
         const SizedBox(width: 6),
         IconButton(
+          tooltip: 'Copiar',
           visualDensity: VisualDensity.compact,
           icon: Icon(Icons.copy_rounded, size: 18, color: AppTheme.accentOliveDark),
           onPressed: () async {

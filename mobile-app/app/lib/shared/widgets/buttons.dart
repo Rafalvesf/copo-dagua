@@ -77,9 +77,13 @@ class CircleIconButton extends StatelessWidget {
   final Color foreground;
   final bool shadow;
 
+  /// Nome para leitores de ecrã (acessibilidade, 2026-11-03).
+  final String? semanticLabel;
+
   const CircleIconButton({
     super.key,
     required this.icon,
+    this.semanticLabel,
     this.onTap,
     this.size = 36,
     this.background = Colors.white,
@@ -91,6 +95,7 @@ class CircleIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SnappyTap(
       onTap: onTap,
+      semanticLabel: semanticLabel,
       child: Container(
         width: size,
         height: size,

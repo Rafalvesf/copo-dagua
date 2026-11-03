@@ -61,6 +61,7 @@ class PartnerBottomNav extends ConsumerWidget {
                     activeIcon: Icons.home_rounded,
                     active: current == PartnerTab.home,
                     onTap: () => context.go('/partner-home'),
+                    label: 'Início',
                   ),
                 ),
               ),
@@ -71,6 +72,7 @@ class PartnerBottomNav extends ConsumerWidget {
                     activeIcon: Icons.inbox_rounded,
                     active: current == PartnerTab.requests,
                     onTap: () => context.go('/partner-requests'),
+                    label: 'Pedidos',
                   ),
                 ),
               ),
@@ -82,6 +84,7 @@ class PartnerBottomNav extends ConsumerWidget {
                     active: current == PartnerTab.chat,
                     badgeCount: unreadCount,
                     onTap: () => context.go('/partner-messages'),
+                    label: 'Mensagens',
                   ),
                 ),
               ),
@@ -92,6 +95,7 @@ class PartnerBottomNav extends ConsumerWidget {
                     activeIcon: Icons.person_rounded,
                     active: current == PartnerTab.profile,
                     onTap: () => context.go('/partner-profile'),
+                    label: 'Perfil',
                   ),
                 ),
               ),
@@ -112,7 +116,11 @@ class _NavIcon extends StatelessWidget {
   final VoidCallback onTap;
   final int badgeCount;
 
+  /// Nome do separador para leitores de ecrã (acessibilidade, 2026-11-03).
+  final String label;
+
   const _NavIcon({
+    this.label = '',
     required this.icon,
     required this.activeIcon,
     required this.active,
@@ -125,7 +133,16 @@ class _NavIcon extends StatelessWidget {
     // Redesign 2026-10 ("botão quando selecionado deve ser bolha
     // verde"): o ativo fica numa bolha verde com o ícone a branco.
     final color = active ? Colors.white : AppTheme.navIconMuted;
-    return InkWell(
+    return Semantics(
+      button: true,
+      selected: active,
+      label: label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Tooltip(
+        message: label,
+        excludeFromSemantics: true,
+        child: InkWell(
       borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
@@ -161,7 +178,7 @@ class _NavIcon extends StatelessWidget {
           ],
         ),
       ),
-    );
+    )));
   }
 }
 
