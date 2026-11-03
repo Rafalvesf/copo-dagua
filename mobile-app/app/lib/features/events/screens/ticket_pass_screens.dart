@@ -190,7 +190,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
                   Icons.lock_outline_rounded,
                   AppTheme.inkMuted,
                   'Só o organizador',
-                  'Só quem organiza o evento pode validar entradas. Entra com a conta do organizador.',
+                  'Só quem organiza o evento, com a permissão de bilhetes e entradas, pode validar. Entra com essa conta.',
                 ),
               CheckInResult.error => (Icons.wifi_off_rounded, AppTheme.inkMuted, 'Não foi possível validar', 'Verifica a ligação e tenta outra vez.'),
             };

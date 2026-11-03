@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'pending_deep_link.dart';
 import '../features/events/screens/tickets_screens.dart';
 import '../features/events/screens/ticket_pass_screens.dart' show CheckInScreen;
+import '../features/settings/screens/organizers_screen.dart' show OrganizersScreen, PermissionGate;
+import 'wedding/organizers.dart' show OrganizerPerm;
 import '../features/messages/team_messages.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -346,8 +348,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // Bilhetes (migração 149).
       GoRoute(path: '/bilhete/:id', builder: (context, state) => TicketReturnScreen(ticketId: state.pathParameters['id']!)),
-      GoRoute(path: '/bilhetes', builder: (context, state) => const OrganizerTicketsScreen()),
+      GoRoute(path: '/bilhetes', builder: (context, state) => const PermissionGate(perm: OrganizerPerm.bilhetes, child: OrganizerTicketsScreen())),
       // O organizador leu o QR de um bilhete (migração 158).
+      // Organizadores do evento e o que cada um pode (migração 159).
+      GoRoute(path: '/organizadores', builder: (context, state) => const OrganizersScreen()),
       GoRoute(path: '/entrada/:code', builder: (context, state) => CheckInScreen(code: state.pathParameters['code']!)),
       GoRoute(path: '/bilhetes/ativar', builder: (context, state) => const PartnerPayoutSetupScreen(organizer: true)),
       // Evento público aberto por link partilhado (2026-11).
@@ -522,36 +526,36 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/guests',
-        builder: (context, state) => const GuestsListScreen(),
+        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.convidados, child: GuestsListScreen()),
       ),
       GoRoute(
         path: '/guests/:id',
         builder: (context, state) =>
-            GuestDetailScreen(guestId: state.pathParameters['id']!),
+            PermissionGate(perm: OrganizerPerm.convidados, child: GuestDetailScreen(guestId: state.pathParameters['id']!)),
       ),
       GoRoute(
         path: '/checklist',
-        builder: (context, state) => const ChecklistScreen(),
+        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.tarefas, child: ChecklistScreen()),
       ),
       GoRoute(
         path: '/tasks',
-        builder: (context, state) => const TasksScreen(),
+        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.tarefas, child: TasksScreen()),
       ),
       GoRoute(
         path: '/service-preferences',
-        builder: (context, state) => const ServicePreferencesScreen(),
+        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.orcamento, child: ServicePreferencesScreen()),
       ),
       GoRoute(
         path: '/guest-page',
-        builder: (context, state) => const GuestPageRoute(),
+        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.evento, child: GuestPageRoute()),
       ),
       GoRoute(
         path: '/budget',
-        builder: (context, state) => const BudgetScreen(),
+        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.orcamento, child: BudgetScreen()),
       ),
       GoRoute(
         path: '/seating',
-        builder: (context, state) => const SeatingScreen(),
+        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.convidados, child: SeatingScreen()),
       ),
       GoRoute(
         path: '/bookings',
@@ -603,12 +607,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       tabRoute(
         path: '/chat',
-        builder: (context, state) => const ChatListScreen(),
+        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.conversas, child: ChatListScreen()),
       ),
       GoRoute(
         path: '/chat/:conversationId',
         builder: (context, state) => state.extra is ChatConversation
-            ? ChatThreadScreen(conversation: state.extra as ChatConversation)
+            ? PermissionGate(perm: OrganizerPerm.conversas, child: ChatThreadScreen(conversation: state.extra as ChatConversation))
             : const _LostRoute('/chat'),
       ),
       GoRoute(
