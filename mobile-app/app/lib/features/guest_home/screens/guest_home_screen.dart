@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart' show openTicketPurchase;
 import 'package:copo_dagua_app/core/events/tickets.dart';
+import 'package:copo_dagua_app/core/events/event_pass.dart';
+import 'package:copo_dagua_app/features/events/screens/ticket_pass_screens.dart' show TicketPassCard;
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -184,6 +186,9 @@ class _GuestHomeBody extends ConsumerWidget {
     final guestAsync = ref.watch(myGuestRowProvider(wedding.weddingId));
     final tableAsync = ref.watch(mySeatingTableProvider(wedding.weddingId));
     final table = tableAsync.maybeWhen(data: (t) => t, orElse: () => null);
+    // O que o organizador deixa ver e o meu bilhete (migração 158).
+    final pass = ref.watch(myEventPassProvider(wedding.weddingId)).value ?? const EventPass();
+    final show = pass.sections.shows;
     final place = [
       if (wedding.venue?.isNotEmpty == true) wedding.venue!,
       if (wedding.location?.isNotEmpty == true) wedding.location!,
@@ -228,51 +233,61 @@ class _GuestHomeBody extends ConsumerWidget {
           data: (guest) => guest == null ? const SizedBox.shrink() : _RsvpCard(guest: guest, weddingId: wedding.weddingId),
           orElse: () => const SizedBox.shrink(),
         ),
+        if (pass.ticket != null) ...[
+          const SizedBox(height: 14),
+          TicketPassCard(ticket: pass.ticket!, eventName: wedding.displayNames),
+        ],
         const SizedBox(height: 14),
         V2Grid([
-          V2Tile(
-            icon: Icons.schedule_outlined,
-            label: 'Programa',
-            sub: wedding.ceremonyTime?.isNotEmpty == true ? 'Começa às ${wedding.ceremonyTime}' : 'Horários e local',
-            index: 0,
-            onTap: () => context.push('/guest-wedding-details', extra: wedding),
-          ),
-          V2Tile(
-            icon: Icons.table_restaurant_outlined,
-            label: 'A tua mesa',
-            sub: table == null ? 'Ainda não atribuída' : 'Mesa $table',
-            index: 1,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => GuestTableScreen(weddingId: wedding.weddingId, tableNumber: table),
+          if (show(GuestSection.programa))
+            V2Tile(
+              icon: Icons.schedule_outlined,
+              label: 'Programa',
+              sub: wedding.ceremonyTime?.isNotEmpty == true ? 'Começa às ${wedding.ceremonyTime}' : 'Horários e local',
+              index: 0,
+              onTap: () => context.push('/guest-wedding-details', extra: wedding),
+            ),
+          if (show(GuestSection.mesa))
+            V2Tile(
+              icon: Icons.table_restaurant_outlined,
+              label: 'A tua mesa',
+              sub: table == null ? 'Ainda não atribuída' : 'Mesa $table',
+              index: 1,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => GuestTableScreen(weddingId: wedding.weddingId, tableNumber: table),
+                ),
               ),
             ),
-          ),
-          V2Tile(
-            icon: Icons.card_giftcard_outlined,
-            label: 'Presentes',
-            sub: 'Lista e contribuições',
-            index: 2,
-            onTap: () => context.go('/guest-gifts/${wedding.weddingId}'),
-          ),
-          V2Tile(
-            icon: isToday ? Icons.photo_camera_outlined : Icons.photo_library_outlined,
-            label: isToday ? 'Partilhar fotos' : 'Galeria',
-            sub: isToday ? 'Vão para a galeria' : 'Fotos do evento',
-            index: 3,
-            onTap: () => context.go('/guest-gallery/${wedding.weddingId}'),
-          ),
+          if (show(GuestSection.presentes))
+            V2Tile(
+              icon: Icons.card_giftcard_outlined,
+              label: 'Presentes',
+              sub: 'Lista e contribuições',
+              index: 2,
+              onTap: () => context.go('/guest-gifts/${wedding.weddingId}'),
+            ),
+          if (show(GuestSection.galeria))
+            V2Tile(
+              icon: isToday ? Icons.photo_camera_outlined : Icons.photo_library_outlined,
+              label: isToday ? 'Partilhar fotos' : 'Galeria',
+              sub: isToday ? 'Vão para a galeria' : 'Fotos do evento',
+              index: 3,
+              onTap: () => context.go('/guest-gallery/${wedding.weddingId}'),
+            ),
         ]),
-        const SizedBox(height: 12),
         // Grupos com as pessoas do evento (2026-10-20).
-        V2Tile(
-          icon: Icons.groups_outlined,
-          label: 'Grupos',
-          sub: 'Conversa com os outros convidados',
-          index: 4,
-          onTap: () => context.push('/groups/${wedding.weddingId}'),
-        ),
-        _StayCard(weddingId: wedding.weddingId),
+        if (show(GuestSection.grupos)) ...[
+          const SizedBox(height: 12),
+          V2Tile(
+            icon: Icons.groups_outlined,
+            label: 'Grupos',
+            sub: 'Conversa com os outros convidados',
+            index: 4,
+            onTap: () => context.push('/groups/${wedding.weddingId}'),
+          ),
+        ],
+        if (show(GuestSection.estadia)) _StayCard(weddingId: wedding.weddingId),
       ],
     );
   }

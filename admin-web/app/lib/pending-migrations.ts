@@ -110,6 +110,13 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "156",
     check: { kind: "column", table: "platform_settings", column: "notification_copy_version" },
   },
+  {
+    file: "158_ticket_qr_guest_sections.sql",
+    title: "Bilhete com QR + o que os convidados veem",
+    what: "Código de entrada em cada bilhete (o organizador lê o QR à porta) e o organizador escolhe que partes do evento os convidados veem.",
+    after: "152",
+    check: { kind: "column", table: "event_tickets", column: "check_in_code" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

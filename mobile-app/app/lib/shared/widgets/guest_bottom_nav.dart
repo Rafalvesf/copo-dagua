@@ -1,6 +1,10 @@
 import '../../core/page_transitions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../core/events/event_pass.dart';
+import '../../core/guest_home/guest_home_providers.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'first_run_tour.dart';
@@ -16,7 +20,7 @@ enum GuestTab { home, gifts, gallery, profile, events }
 /// parte de [FloatingBottomNav] em vez de reaproveitar o mesmo enum —
 /// os separadores e destinos são completamente diferentes (um
 /// convidado não tem Parceiros/Chat).
-class GuestBottomNav extends StatelessWidget {
+class GuestBottomNav extends ConsumerWidget {
   final GuestTab current;
 
   /// Presente só quando uma conta de casal está a acompanhar OUTRO
@@ -40,11 +44,17 @@ class GuestBottomNav extends StatelessWidget {
   String _path(String base) => weddingId == null ? base : '$base/$weddingId';
 
   @override
-  Widget build(BuildContext context) =>
-      // Fica fixa por cima enquanto a página anima (page_transitions.dart).
-      StayOverNav(child: TourHost(role: TourRole.guest, guestWeddingId: weddingId, child: _buildNav(context)));
+  Widget build(BuildContext context, WidgetRef ref) {
+    // O organizador pode esconder a Galeria e os Presentes (migração 158).
+    final id = weddingId ?? ref.watch(guestWeddingsProvider).value?.firstOrNull?.weddingId;
+    final sections = id == null ? const GuestSections() : (ref.watch(myEventPassProvider(id)).value?.sections ?? const GuestSections());
+    // Fica fixa por cima enquanto a página anima (page_transitions.dart).
+    return StayOverNav(
+      child: TourHost(role: TourRole.guest, guestWeddingId: weddingId, child: _buildNav(context, sections)),
+    );
+  }
 
-  Widget _buildNav(BuildContext context) {
+  Widget _buildNav(BuildContext context, GuestSections sections) {
     return SafeArea(
       top: false,
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),
@@ -73,6 +83,7 @@ class GuestBottomNav extends StatelessWidget {
                   ),
                 ),
               ),
+              if (sections.shows(GuestSection.galeria) || current == GuestTab.gallery)
               Expanded(
                 child: Center(
                   child: _GuestNavIcon(
@@ -84,6 +95,7 @@ class GuestBottomNav extends StatelessWidget {
                   ),
                 ),
               ),
+              if (sections.shows(GuestSection.presentes) || current == GuestTab.gifts)
               Expanded(
                 child: Center(
                   child: _GuestNavIcon(
