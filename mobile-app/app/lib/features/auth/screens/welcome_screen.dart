@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -44,6 +45,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
+    Funnel.track('welcome_view');
     if (TchinSplash.farewellPending) {
       TchinSplash.farewellPending = false;
       _farewell = true;

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
@@ -61,6 +62,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void initState() {
     super.initState();
+    Funnel.track('signup_start', ref: widget.role.name);
     if (widget.initialWeddingCode != null) {
       _weddingCode.text = widget.initialWeddingCode!;
       _onWeddingCodeChanged(widget.initialWeddingCode!);

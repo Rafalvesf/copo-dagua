@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/review_tile.dart';
@@ -70,6 +71,12 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   bool _openingChat = false;
   bool _requestingQuote = false;
 
+  @override
+  void initState() {
+    super.initState();
+    Funnel.track('partner_view', ref: widget.partner.id);
+  }
+
   void _comingSoon(String message) {
     ScaffoldMessenger.of(
       context,
@@ -123,6 +130,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     if (result == null || !mounted) return;
 
     setState(() => _requestingQuote = true);
+    Funnel.track('quote_request_start', ref: widget.partner.id);
     try {
       await supabase.rpc(
         'request_quote',
