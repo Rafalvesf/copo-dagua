@@ -351,6 +351,14 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                               _Field(controller: _iban, label: 'IBAN para contribuições', hint: 'PT50 …'),
                               const SizedBox(height: 10),
                               _Field(controller: _giftMessage, label: 'Mensagem', hint: 'Ex: A vossa presença é o melhor presente.', maxLines: 2),
+                              const SizedBox(height: 10),
+                              // Envelope digital (migração 156).
+                              _PreviewButton(
+                                onTap: () => context.push('/envelopes'),
+                                icon: Icons.mail_outline_rounded,
+                                title: 'Envelopes recebidos',
+                                subtitle: 'Quem ofereceu, quanto e a mensagem. O dinheiro vai direto para o IBAN.',
+                              ),
                             ],
                           ),
                         _SectionCard(
