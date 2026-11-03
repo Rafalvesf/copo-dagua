@@ -146,6 +146,25 @@ begin
 end;
 $do$;
 
+-- Convidar organizadores passa a ser só do dono.
+do $do$
+declare
+  f record;
+  v_def text;
+begin
+  for f in
+    select p.oid from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'create_partner_invite'
+  loop
+    v_def := pg_get_functiondef(f.oid);
+    if v_def ~ '(public\.)?is_wedding_member\(([^()]+)\)' then
+      execute regexp_replace(v_def, '(public\.)?is_wedding_member\(([^()]+)\)',
+        '(exists (select 1 from public.weddings ow where ow.id = \2 and ow.owner_id = auth.uid()))', 'g');
+    end if;
+  end loop;
+end;
+$do$;
+
 -- ---------- Organizadores do evento ----------
 create or replace function public.wedding_organizers(p_wedding uuid)
 returns table (collaborator_id uuid, user_id uuid, name text, email text, status text, is_owner boolean, permissions jsonb)

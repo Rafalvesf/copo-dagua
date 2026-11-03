@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/wedding/organizers.dart' show myWeddingPermsProvider;
 import '../../../core/events/events_providers.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -276,11 +277,13 @@ class _CoupleSettings extends ConsumerWidget {
       const _SectionTitle('Organização'),
       _Group(
         children: [
-          // "Convidar o teu par" num casamento; noutro evento, outro
-          // organizador (pedido 2026-10-17 — antes havia as duas linhas).
+          // Um link por pessoa: o par, um wedding planner, a família…
+          // (pedido 2026-11-03: "convidar um organizador não aparece").
+          // Só o organizador principal convida (migração 159).
+          if (ref.watch(myWeddingPermsProvider).value?.isOwner ?? true)
           _Row(
             icon: Icons.person_add_alt_outlined,
-            label: wedding.eventType == EventType.wedding ? 'Convidar o teu par' : 'Convidar outro organizador',
+            label: wedding.eventType == EventType.wedding ? 'Convidar o teu par ou outro organizador' : 'Convidar outro organizador',
             value: 'Link',
             onTap: () => _invite(context, ref, wedding),
           ),
