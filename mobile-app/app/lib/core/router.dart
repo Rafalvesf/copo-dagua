@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'pending_deep_link.dart';
 import '../features/events/screens/tickets_screens.dart';
 import '../features/messages/team_messages.dart';
 import 'package:flutter/foundation.dart';
@@ -83,6 +84,15 @@ import 'platform/maintenance_controller.dart';
 import '../features/legal/legal_screen.dart';
 import '../features/messages/admin_message_screen.dart';
 import '../features/legal/legal_texts.dart';
+
+/// Rotas que vale a pena guardar para depois do login (não o início).
+bool _deepLinkWorthKeeping(String location) =>
+    location != '/' &&
+    location != '/home' &&
+    location != '/maintenance' &&
+    location != '/verify-email' &&
+    location != '/onboarding' &&
+    !_authRoutes.contains(location);
 
 const _authRoutes = {
   '/welcome',
@@ -173,11 +183,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         case AuthStatus.unauthenticated:
         case AuthStatus.error:
           if (_authRoutes.contains(location)) return null;
+          // Link partilhado aberto sem sessão: volta lá depois de entrar.
+          if (_deepLinkWorthKeeping(location)) PendingDeepLink.save(state.uri.toString());
           return '/welcome';
         case AuthStatus.authenticating:
           if (_authRoutes.contains(location) || location == '/verify-email') {
             return null;
           }
+          // A sessão ainda está a ser recuperada: não perder o link aberto.
+          if (_deepLinkWorthKeeping(location)) PendingDeepLink.save(state.uri.toString());
           return '/welcome';
         case AuthStatus.emailUnverified:
           if (location == '/verify-email') return null;
@@ -198,6 +212,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (_authRoutes.contains(location) ||
               location == '/verify-email' ||
               location == '/onboarding') {
+            // Link que a pessoa abriu antes de entrar (2026-11-03).
+            final pending = PendingDeepLink.take();
+            if (pending != null) return pending;
             // Pedido do utilizador (2026-10-17): quem organiza entra
             // sempre na aba Parceiros.
             return homeForRole == '/home' ? '/partners' : homeForRole;
