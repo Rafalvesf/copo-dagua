@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart' show openTicketPurchase;
+import 'package:copo_dagua_app/core/events/tickets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
@@ -72,6 +74,11 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
       _open(result.weddingId);
     } catch (e) {
       if (!mounted) return;
+      // Evento pago (153): com o código compra-se o bilhete e entra-se logo.
+      if (isTicketRequired(e)) {
+        final opened = await openTicketPurchase(context, code: code);
+        if (opened || !mounted) return;
+      }
       setState(() {
         _codeError = e is PostgrestException && e.code == 'P0002'
             ? 'Código inválido — confirma com quem te convidou.'

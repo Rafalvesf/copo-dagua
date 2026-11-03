@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart' show openTicketPurchase;
+import 'package:copo_dagua_app/core/events/tickets.dart';
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,7 +61,12 @@ class GuestHomeScreen extends ConsumerWidget {
           final result = await joinWeddingByInviteToken(pendingToken);
           ref.invalidate(guestWeddingsProvider);
           ref.invalidate(myGuestRowProvider(result.weddingId));
-        } catch (_) {}
+        } catch (e) {
+          // Evento pago (153): abre a compra do bilhete com o link.
+          if (isTicketRequired(e) && context.mounted) {
+            await openTicketPurchase(context, inviteToken: pendingToken);
+          }
+        }
       });
     }
 

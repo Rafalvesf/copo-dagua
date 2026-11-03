@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart' show openTicketPurchase;
+import 'package:copo_dagua_app/core/events/tickets.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/public_state.dart';
@@ -57,6 +59,16 @@ class _InviteTokenScreenState extends ConsumerState<InviteTokenScreen> {
       context.go('/guest-home/${result.weddingId}');
     } catch (e) {
       if (!mounted) return;
+      // Evento pago (153): com o link individual compra-se o bilhete e entra-se logo.
+      if (isTicketRequired(e)) {
+        setState(() => _joining = false);
+        final opened = await openTicketPurchase(context, inviteToken: widget.token);
+        if (!mounted) return;
+        if (opened) {
+          context.go('/eventos');
+          return;
+        }
+      }
       setState(() {
         _joining = false;
         _error = e is PostgrestException && e.code == 'P0002'

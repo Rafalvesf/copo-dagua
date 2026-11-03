@@ -5,9 +5,11 @@ import { confirmTicket, reserveCents } from "../_shared/tickets.ts";
 
 // Bilhetes para eventos públicos pagos (migração 149).
 //
-// { action: "checkout", wedding_id, quantity, success_url, cancel_url }
+// { action: "checkout", wedding_id, quantity, success_url, cancel_url, code?, invite_token? }
 //   → Checkout Session com o pagamento para a conta Stripe do organizador
 //     (destination charge). Quem compra paga só o preço anunciado.
+//     Evento privado e pago (migração 153): só com o código do evento ou um
+//     link individual desse evento; ao pagar, entra logo.
 // { action: "sync", ticket_id }
 //   → ao voltar da Stripe: confirma o bilhete se já estiver pago (plano B
 //     do webhook) e acerta a taxa.
@@ -57,12 +59,24 @@ Deno.serve(async (req) => {
     return json({ error: "validation_error" }, 400);
   }
 
-  const { data: w } = await admin
-    .from("weddings")
-    .select("id, owner_id, is_public, is_paid, entry_price, partner_name_1, partner_name_2, wedding_date, pending_deletion_at")
-    .eq("id", weddingId)
-    .maybeSingle();
-  if (!w || !w.is_public || w.pending_deletion_at) return json({ error: "not_found" }, 404);
+  // `*`: funciona antes e depois das migrações 152/153 (cancelled_at, guest_code).
+  const { data: w } = await admin.from("weddings").select("*").eq("id", weddingId).maybeSingle();
+  if (!w || w.pending_deletion_at || w.cancelled_at) return json({ error: "not_found" }, 404);
+  // Privado: precisa do código do evento ou de um link individual dele.
+  let inviteGuestId: string | null = null;
+  if (typeof body.invite_token === "string" && body.invite_token) {
+    const { data: g } = await admin
+      .from("guests")
+      .select("id, wedding_id, linked_profile_id")
+      .eq("rsvp_token", body.invite_token)
+      .maybeSingle();
+    if (!g || g.wedding_id !== w.id) return json({ error: "not_found" }, 404);
+    if (g.linked_profile_id && g.linked_profile_id !== user.id) return json({ error: "already_linked" }, 409);
+    inviteGuestId = g.id as string;
+  }
+  const codeOk = typeof body.code === "string" && !!w.guest_code &&
+    body.code.trim().toUpperCase() === String(w.guest_code).toUpperCase();
+  if (!w.is_public && !codeOk && !inviteGuestId) return json({ error: "not_found" }, 404);
   if (!w.is_paid || !w.entry_price || Number(w.entry_price) <= 0) return json({ error: "not_paid_event" }, 409);
   if (w.owner_id === user.id) return json({ error: "own_event" }, 409);
 
@@ -102,6 +116,7 @@ Deno.serve(async (req) => {
       amount: amountCents / 100,
       platform_fee: platformCents / 100,
       destination_account: account,
+      ...(inviteGuestId ? { invite_guest_id: inviteGuestId } : {}),
     })
     .select("id")
     .single();
