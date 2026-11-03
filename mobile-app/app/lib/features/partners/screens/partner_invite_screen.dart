@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +37,7 @@ class _PartnerInviteScreenState extends ConsumerState<PartnerInviteScreen> {
   }
 
   Future<void> _handle() async {
+    Funnel.track('partner_invite_open', ref: widget.code.toUpperCase());
     final auth = ref.read(authControllerProvider);
     if (auth.status != AuthStatus.active) {
       await savePendingPartnerReferral(widget.code);

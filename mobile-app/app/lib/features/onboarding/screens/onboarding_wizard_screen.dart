@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
 import '../../../shared/widgets/first_run_tour.dart' show TourRole;
 import 'package:flutter/services.dart';
@@ -112,6 +113,7 @@ class _OnboardingWizardScreenState
   @override
   void initState() {
     super.initState();
+    Funnel.track(widget.newEvent ? 'event_create_start' : 'onboarding_start');
     for (final c in [_ownName, _partnerName, _location, _budget, _otherLabel, _ownPhone, _partnerPhone, _price]) {
       c.addListener(() => setState(() {}));
     }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -65,6 +66,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   @override
   void initState() {
     super.initState();
+    Funnel.track('checkout_open');
     _phone.text = ref.read(authControllerProvider).profile?.phone ?? '';
     _checkExisting();
     _prepare();

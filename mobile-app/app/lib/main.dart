@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'core/pending_deep_link.dart';
 import 'core/page_transitions.dart';
 import 'package:flutter/services.dart';
@@ -39,6 +40,7 @@ Future<void> main() async {
   SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]).catchError((_) {});
   await SupabaseConfig.initialize();
   await PendingDeepLink.load();
+  Funnel.track('app_open');
   await PushNotifications.init();
   installBrowserBackDetection();
   await runWithErrorReporting(() => runApp(const ProviderScope(child: CopoDaguaApp())));
@@ -59,6 +61,7 @@ class CopoDaguaApp extends ConsumerWidget {
         PushNotifications.resync();
         // Convite de parceiro aberto antes de ter conta (migração 151).
         claimPendingPartnerReferral();
+        Funnel.linkAccount();
       }
       if (next != prev) setErrorReportingUser(next);
     });

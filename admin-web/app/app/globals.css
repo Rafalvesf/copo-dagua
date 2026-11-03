@@ -1851,3 +1851,17 @@ a.list-row:hover .list-title,
   border-radius: 999px;
   background: var(--accent);
 }
+
+/* Funil (2026-11-03) */
+.funnel { display: grid; gap: 12px; }
+.funnel-row { display: grid; grid-template-columns: minmax(140px, 1.2fr) 2fr minmax(90px, auto); gap: 12px; align-items: center; }
+.funnel-label { display: flex; flex-direction: column; min-width: 0; }
+.funnel-label .muted { font-size: 12px; }
+.funnel-bar { height: 12px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.funnel-bar > div { height: 100%; border-radius: 999px; background: var(--accent); }
+.funnel-num { display: flex; flex-direction: column; align-items: flex-end; text-align: right; }
+.funnel-num .muted { font-size: 12px; }
+@media (max-width: 640px) {
+  .funnel-row { grid-template-columns: 1fr auto; }
+  .funnel-bar { grid-column: 1 / -1; order: 3; }
+}

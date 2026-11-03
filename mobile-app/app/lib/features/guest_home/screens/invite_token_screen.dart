@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart' show openTicketPurchase;
 import 'package:copo_dagua_app/core/events/tickets.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +43,7 @@ class _InviteTokenScreenState extends ConsumerState<InviteTokenScreen> {
   }
 
   Future<void> _handle() async {
+    Funnel.track('invite_open');
     final auth = ref.read(authControllerProvider);
     if (auth.status != AuthStatus.active) {
       // Sem sessão ainda — guarda o token e deixa `GuestHomeScreen`
