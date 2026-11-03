@@ -367,8 +367,10 @@ class V2RoundButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
+      excludeFromSemantics: true,
       child: SnappyTap(
         onTap: onTap,
+        semanticLabel: tooltip,
         child: Container(
           width: 44,
           height: 44,

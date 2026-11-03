@@ -15,11 +15,16 @@ class SnappyTap extends StatefulWidget {
   final VoidCallback? onTap;
   final double darkenAmount;
 
+  /// Nome para leitores de ecrã quando o conteúdo é só um ícone
+  /// (acessibilidade, 2026-11-03). Sem ele, lê-se o texto que estiver lá dentro.
+  final String? semanticLabel;
+
   const SnappyTap({
     super.key,
     required this.child,
     this.onTap,
     this.darkenAmount = 0.1,
+    this.semanticLabel,
   }) : builder = null;
 
   const SnappyTap.builder({
@@ -27,6 +32,7 @@ class SnappyTap extends StatefulWidget {
     required this.builder,
     this.onTap,
     this.darkenAmount = 0.1,
+    this.semanticLabel,
   }) : child = null;
 
   @override
@@ -57,7 +63,12 @@ class _SnappyTapState extends State<SnappyTap> {
     final content = widget.builder != null
         ? widget.builder!(context, _hovered)
         : widget.child!;
-    return MouseRegion(
+    // Anunciado como botão aos leitores de ecrã (acessibilidade, 2026-11-03).
+    return Semantics(
+      button: widget.onTap != null,
+      enabled: widget.onTap != null,
+      label: widget.semanticLabel,
+      child: MouseRegion(
       cursor: widget.onTap == null
           ? MouseCursor.defer
           : SystemMouseCursors.click,
@@ -91,6 +102,6 @@ class _SnappyTapState extends State<SnappyTap> {
         ),
         ),
       ),
-    );
+    ));
   }
 }

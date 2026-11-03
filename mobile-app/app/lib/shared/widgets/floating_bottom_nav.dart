@@ -87,6 +87,7 @@ class FloatingBottomNav extends ConsumerWidget {
                     accent: menuColor.color,
                     onAccent: menuColor.on,
                     onTap: () => context.go('/partners'),
+                    label: 'Parceiros',
                   ),
                 ),
               ),
@@ -100,6 +101,7 @@ class FloatingBottomNav extends ConsumerWidget {
                     accent: menuColor.color,
                     onAccent: menuColor.on,
                     onTap: () => context.go('/eventos'),
+                    label: 'Eventos',
                   ),
                 ),
               ),
@@ -112,6 +114,7 @@ class FloatingBottomNav extends ConsumerWidget {
                     accent: menuColor.color,
                     onAccent: menuColor.on,
                     onTap: () => context.go('/wedding'),
+                    label: 'O meu evento',
                   ),
                 ),
               ),
@@ -125,6 +128,7 @@ class FloatingBottomNav extends ConsumerWidget {
                     onAccent: menuColor.on,
                     badgeCount: unreadCount,
                     onTap: () => context.go('/chat'),
+                    label: 'Mensagens',
                   ),
                 ),
               ),
@@ -137,6 +141,7 @@ class FloatingBottomNav extends ConsumerWidget {
                     accent: menuColor.color,
                     onAccent: menuColor.on,
                     onTap: () => context.go('/home'),
+                    label: 'Perfil',
                   ),
                 ),
               ),
@@ -163,7 +168,11 @@ class _NavIcon extends StatelessWidget {
   /// no futuro. `0`/negativo não mostra nada.
   final int badgeCount;
 
+  /// Nome do separador para leitores de ecrã (acessibilidade, 2026-11-03).
+  final String label;
+
   const _NavIcon({
+    this.label = '',
     required this.icon,
     required this.activeIcon,
     required this.active,
@@ -178,7 +187,16 @@ class _NavIcon extends StatelessWidget {
     // Redesign 2026-10 ("botão quando selecionado deve ser bolha
     // verde"): o ativo fica numa bolha verde com o ícone a branco.
     final color = active ? onAccent : AppTheme.navIconMuted;
-    return InkWell(
+    return Semantics(
+      button: true,
+      selected: active,
+      label: label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Tooltip(
+        message: label,
+        excludeFromSemantics: true,
+        child: InkWell(
       borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
@@ -219,7 +237,7 @@ class _NavIcon extends StatelessWidget {
           ],
         ),
       ),
-    );
+    )));
   }
 }
 

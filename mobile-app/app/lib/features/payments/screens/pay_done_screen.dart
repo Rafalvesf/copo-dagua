@@ -78,6 +78,7 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProvider
                 Align(
                   alignment: Alignment.centerRight,
                   child: IconButton(
+                    tooltip: 'Fechar',
                     onPressed: () => context.go(a.primaryRoute),
                     icon: const Icon(Icons.close_rounded, color: Colors.white),
                   ),

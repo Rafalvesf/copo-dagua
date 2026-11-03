@@ -22,6 +22,7 @@ class PartnerNotificationBell extends ConsumerWidget {
       clipBehavior: Clip.none,
       children: [
         IconButton(
+          tooltip: 'Notificações',
           icon: const Icon(Icons.notifications_none_rounded, color: AppTheme.ink),
           onPressed: () => showIslandSheet(
             context: context,

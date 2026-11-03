@@ -67,6 +67,7 @@ class _PhotoAdjustScreenState extends State<_PhotoAdjustScreen> {
               child: Row(
                 children: [
                   IconButton(
+                    tooltip: 'Fechar',
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close, color: Colors.white),
                   ),

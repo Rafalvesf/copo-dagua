@@ -163,6 +163,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                             if (wedding != null) ...[
                               const SizedBox(width: 10),
                               CircleIconButton(
+                                semanticLabel: 'Partilhar',
                                 icon: Icons.ios_share,
                                 background: Colors.white,
                                 size: 46,

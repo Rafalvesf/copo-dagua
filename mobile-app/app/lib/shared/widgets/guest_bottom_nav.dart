@@ -69,6 +69,7 @@ class GuestBottomNav extends StatelessWidget {
                     activeIcon: Icons.home_rounded,
                     active: current == GuestTab.home,
                     onTap: () => context.go(_path('/guest-home')),
+                    label: 'Início',
                   ),
                 ),
               ),
@@ -79,6 +80,7 @@ class GuestBottomNav extends StatelessWidget {
                     activeIcon: Icons.photo_library_rounded,
                     active: current == GuestTab.gallery,
                     onTap: () => context.go(_path('/guest-gallery')),
+                    label: 'Galeria',
                   ),
                 ),
               ),
@@ -89,6 +91,7 @@ class GuestBottomNav extends StatelessWidget {
                     activeIcon: Icons.card_giftcard_rounded,
                     active: current == GuestTab.gifts,
                     onTap: () => context.go(_path('/guest-gifts')),
+                    label: 'Presentes',
                   ),
                 ),
               ),
@@ -99,6 +102,7 @@ class GuestBottomNav extends StatelessWidget {
                     activeIcon: Icons.person_rounded,
                     active: current == GuestTab.profile,
                     onTap: () => context.go(_path('/guest-profile')),
+                    label: 'Perfil',
                   ),
                 ),
               ),
@@ -118,7 +122,11 @@ class _GuestNavIcon extends StatelessWidget {
   final bool active;
   final VoidCallback onTap;
 
+  /// Nome do separador para leitores de ecrã (acessibilidade, 2026-11-03).
+  final String label;
+
   const _GuestNavIcon({
+    this.label = '',
     required this.icon,
     required this.activeIcon,
     required this.active,
@@ -130,7 +138,16 @@ class _GuestNavIcon extends StatelessWidget {
     // Redesign 2026-10 ("botão quando selecionado deve ser bolha
     // verde"): o ativo fica numa bolha verde com o ícone a branco.
     final color = active ? Colors.white : AppTheme.navIconMuted;
-    return InkWell(
+    return Semantics(
+      button: true,
+      selected: active,
+      label: label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Tooltip(
+        message: label,
+        excludeFromSemantics: true,
+        child: InkWell(
       borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
       child: Padding(
@@ -150,6 +167,6 @@ class _GuestNavIcon extends StatelessWidget {
           ),
         ),
       ),
-    );
+    )));
   }
 }
