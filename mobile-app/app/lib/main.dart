@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'core/pending_deep_link.dart';
 import 'core/page_transitions.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,6 +38,7 @@ Future<void> main() async {
   // `web/index.html` mostra um aviso para rodar de volta.
   SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]).catchError((_) {});
   await SupabaseConfig.initialize();
+  await PendingDeepLink.load();
   await PushNotifications.init();
   installBrowserBackDetection();
   await runWithErrorReporting(() => runApp(const ProviderScope(child: CopoDaguaApp())));
