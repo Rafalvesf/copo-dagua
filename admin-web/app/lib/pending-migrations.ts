@@ -103,6 +103,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Convidados oferecem por transferência direta para o IBAN; os anfitriões veem quem, quanto e a mensagem.",
     check: { kind: "table", table: "gift_envelopes" },
   },
+  {
+    file: "157_notifications_no_booking_number.sql",
+    title: "Notificações sem número de reserva",
+    what: "As notificações dizem o nome do parceiro ou do organizador em vez de R-2026-0142.",
+    check: { kind: "column", table: "platform_settings", column: "notification_copy_version" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
