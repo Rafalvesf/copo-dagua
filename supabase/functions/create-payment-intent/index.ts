@@ -184,11 +184,16 @@ Deno.serve(async (req) => {
     (await partnerIsFree(admin, payment.partner_id as string, partner.created_at, sett,
       await founderNumber(admin, payment.partner_id as string))) ||
     (await isReferredClient(admin, payment.partner_id as string, coupleId, sett));
-  const partnerFeeCents = partnerFree ? 0 : paymentFeeCents(
+  // Migração 155: reserva que veio do destaque pago do parceiro → +6%.
+  const promoExtraPct = partnerFree ? 0 : await promotionExtraPct(admin, payment.booking_id as string);
+  const partnerFeeCents = partnerFree ? 0 : Math.min(
     partnerAmountCents,
-    Math.max(bookingTotalCents, partnerAmountCents),
-    parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers),
-    partnerFeePct,
+    paymentFeeCents(
+      partnerAmountCents,
+      Math.max(bookingTotalCents, partnerAmountCents),
+      parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers),
+      partnerFeePct,
+    ) + Math.round((partnerAmountCents * promoExtraPct) / 100),
   );
   const bookingNumber = (payment.bookings as unknown as { booking_number: string } | null)?.booking_number ?? "";
   const label = payment.type === "deposit" ? "Sinal" : "Pagamento final";
@@ -318,4 +323,18 @@ async function founderNumber(admin: any, partnerId: string): Promise<number | nu
   const { data, error } = await admin.from("partner_profiles").select("founder_number").eq("id", partnerId).maybeSingle();
   if (error) return null;
   return (data?.founder_number as number | null | undefined) ?? null;
+}
+
+// +% de uma reserva que veio do destaque pago (migração 155); sem a
+// migração, 0.
+// deno-lint-ignore no-explicit-any
+async function promotionExtraPct(admin: any, bookingId: string): Promise<number> {
+  try {
+    const { data, error } = await admin.rpc("booking_promotion_extra", { p_booking: bookingId });
+    if (error) return 0;
+    const v = Number(data ?? 0);
+    return Number.isFinite(v) && v > 0 ? v : 0;
+  } catch {
+    return 0;
+  }
 }

@@ -90,6 +90,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Registo anónimo dos passos da app para a página Funil.",
     check: { kind: "table", table: "funnel_events" },
   },
+  {
+    file: "155_partner_promotions.sql",
+    title: "Destaque pago e destaques personalizados",
+    what: "Parceiros em destaque (+6% nas reservas do destaque, máx. 6 por categoria e zona) e destaques/sugestões à medida de cada cliente.",
+    after: "151",
+    check: { kind: "table", table: "partner_promotions" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

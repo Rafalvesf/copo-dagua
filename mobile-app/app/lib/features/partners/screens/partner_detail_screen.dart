@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/core/partners/promotions.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
 import '../../../shared/widgets/feedback.dart';
@@ -75,6 +76,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   void initState() {
     super.initState();
     Funnel.track('partner_view', ref: widget.partner.id);
+    // Destaques personalizados (155): ver um parceiro = interesse na categoria.
+    for (final slug in widget.partner.categorySlugs) {
+      trackInterest(slug, 'view', partnerId: widget.partner.id);
+    }
   }
 
   void _comingSoon(String message) {
@@ -131,6 +136,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
 
     setState(() => _requestingQuote = true);
     Funnel.track('quote_request_start', ref: widget.partner.id);
+    for (final slug in widget.partner.categorySlugs) {
+      trackInterest(slug, 'quote', partnerId: widget.partner.id);
+    }
     try {
       await supabase.rpc(
         'request_quote',
@@ -262,9 +270,14 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     fallbackColor: colorForCategorySlug(partner.primaryCategorySlug),
                     fallbackIcon: iconForCategorySlug(partner.primaryCategorySlug),
                     favorited: favorited,
-                    onFavorite: () => ref
-                        .read(favoritePartnersControllerProvider.notifier)
-                        .toggle(partner.id),
+                    onFavorite: () {
+                      if (!favorited) {
+                        for (final slug in partner.categorySlugs) {
+                          trackInterest(slug, 'favorite', partnerId: partner.id);
+                        }
+                      }
+                      ref.read(favoritePartnersControllerProvider.notifier).toggle(partner.id);
+                    },
                   ),
                   Container(
                     transform: Matrix4.translationValues(0, -24, 0),

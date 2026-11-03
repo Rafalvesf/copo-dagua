@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/core/partners/promotions.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -62,13 +63,31 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   @override
   void initState() {
     super.initState();
-    _search.addListener(() => setState(() {}));
+    _search.addListener(() {
+      setState(() {});
+      _trackSearch();
+    });
+    // Veio de uma tarefa ("Pedir orçamento a fotógrafos"): conta como interesse.
+    if (widget.categorySlug != null) trackInterest(widget.categorySlug, 'task');
   }
 
   @override
   void dispose() {
     _search.dispose();
     super.dispose();
+  }
+
+  /// Pesquisa que bate com uma categoria ("dj", "flores"…) conta como interesse.
+  void _trackSearch() {
+    final q = _search.text.trim().toLowerCase();
+    if (q.length < 3) return;
+    final options = ref.read(partnerCategoryOptionsProvider).value ?? const <PartnerCategoryOption>[];
+    for (final o in options) {
+      if (o.label.toLowerCase().contains(q) || o.slug.contains(q)) {
+        trackInterest(o.slug, 'search');
+        return;
+      }
+    }
   }
 
   void _showFavoritesSheet() {
@@ -299,7 +318,10 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       Widget pill(PartnerCategoryOption? o) {
                         final on = o?.slug == _filter;
                         return SnappyTap(
-                          onTap: () => setState(() => _filter = o?.slug),
+                          onTap: () {
+                            setState(() => _filter = o?.slug);
+                            trackInterest(o?.slug, 'filter');
+                          },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
                             padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -417,6 +439,18 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                   (s) => s.name.toLowerCase().contains(query),
                                 )
                                 .toList());
+                      // Destaques para esta pessoa (migração 155): pagos e
+                      // grátis, das categorias que anda a procurar, a rodar.
+                      // Sem a migração: o carrossel antigo.
+                      final picks = widget.selectionMode
+                          ? null
+                          : ref.watch(featuredForMeProvider((location: effectiveLocation, category: _filter, limit: 6))).value;
+                      final byId = {for (final p in allPartners) p.id: p};
+                      final picked = picks == null
+                          ? const <Partner>[]
+                          : [for (final k in picks) if (byId[k.partnerId] != null) byId[k.partnerId]!];
+                      final featuredList = picked.isNotEmpty ? picked : featured(partners);
+                      final paidIds = {for (final k in picks ?? const <FeaturedPick>[]) if (k.paid) k.partnerId};
                       if (partners.isEmpty) {
                         return Center(
                           child: Text(
@@ -450,9 +484,13 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                   icon: Icons.info_outline_rounded,
                                 ),
                               ),
-                            if (!widget.selectionMode && query.isEmpty && _filter == null && partners.isNotEmpty) ...[
+                            if (!widget.selectionMode && query.isEmpty && partners.isNotEmpty && featuredList.isNotEmpty) ...[
                               _SectionHeader(
-                                title: effectiveLocation.isEmpty || noneNear ? 'Em destaque' : 'Em destaque perto de ti',
+                                title: _filter != null && selectedLabel != null
+                                    ? 'Em destaque · $selectedLabel'
+                                    : effectiveLocation.isEmpty || noneNear
+                                        ? 'Em destaque'
+                                        : 'Em destaque perto de ti',
                                 strong: true,
                               ),
                               SizedBox(
@@ -461,11 +499,18 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                   scrollDirection: Axis.horizontal,
                                   clipBehavior: Clip.none,
                                   padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                                  itemCount: featured(partners).length,
+                                  itemCount: featuredList.length,
                                   separatorBuilder: (context, i) => const SizedBox(width: 10),
                                   itemBuilder: (context, i) {
-                                    final p = featured(partners)[i];
-                                    return _FeaturedCard(partner: p, onTap: () => _openDetails(context, p));
+                                    final p = featuredList[i];
+                                    return _FeaturedCard(
+                                      partner: p,
+                                      onTap: () {
+                                        // Destaque pago: a reserva que vier daqui paga +6%.
+                                        if (paidIds.contains(p.id)) trackPromotionClick(p.id);
+                                        _openDetails(context, p);
+                                      },
+                                    );
                                   },
                                 ),
                               ),
@@ -779,7 +824,14 @@ class _PartnerCard extends ConsumerWidget {
             Tooltip(
               message: favorited ? 'Tirar dos favoritos' : 'Guardar nos favoritos',
               child: SnappyTap(
-                onTap: () => ref.read(favoritePartnersControllerProvider.notifier).toggle(partner.id),
+                onTap: () {
+                  if (!favorited) {
+                    for (final slug in partner.categorySlugs) {
+                      trackInterest(slug, 'favorite', partnerId: partner.id);
+                    }
+                  }
+                  ref.read(favoritePartnersControllerProvider.notifier).toggle(partner.id);
+                },
                 child: Container(
                   width: 38,
                   height: 38,
