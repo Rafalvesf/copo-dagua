@@ -284,6 +284,12 @@ class _CoupleSettings extends ConsumerWidget {
             value: 'Link',
             onTap: () => _invite(context, ref, wedding),
           ),
+          // Quem organiza e o que pode fazer (migração 159).
+          _Row(
+            icon: Icons.admin_panel_settings_outlined,
+            label: 'Organizadores',
+            onTap: () => context.push('/organizadores'),
+          ),
           _Row(
             icon: Icons.calendar_today_outlined,
             label: 'Detalhes do evento',

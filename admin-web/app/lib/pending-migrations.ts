@@ -117,6 +117,13 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "152",
     check: { kind: "column", table: "event_tickets", column: "check_in_code" },
   },
+  {
+    file: "159_organizer_permissions.sql",
+    title: "O que cada co-organizador pode fazer",
+    what: "O organizador principal liga e desliga as permissões de cada co-organizador (evento, convidados, tarefas, conversas, bilhetes, orçamento) ou retira-o.",
+    after: "158",
+    check: { kind: "column", table: "wedding_collaborators", column: "permissions" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
