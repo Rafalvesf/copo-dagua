@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/features/partners/screens/partner_detail_screen.dart';
+import 'package:copo_dagua_app/core/wedding/wedding_controller.dart';
+import 'package:copo_dagua_app/core/partners/partner_providers.dart';
+import 'package:copo_dagua_app/core/partners/promotions.dart';
 import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -114,6 +119,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                       );
                     }),
                   ),
+                  // Sugestões do que tem andado a procurar (migração 155).
+                  const _PartnerSuggestions(),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppTheme.screenMargin,
@@ -573,6 +580,85 @@ class _NewUserTaskSheetState extends State<_NewUserTaskSheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Para ti": parceiros (em destaque) das categorias que a pessoa tem
+/// andado a procurar — ou do que o evento ainda precisa (2026-11-03).
+class _PartnerSuggestions extends ConsumerWidget {
+  const _PartnerSuggestions();
+
+  Future<void> _open(BuildContext context, WidgetRef ref, FeaturedPick k) async {
+    if (k.paid) trackPromotionClick(k.partnerId);
+    final p = await ref.read(partnerByIdProvider(k.partnerId).future);
+    if (p == null || !context.mounted) return;
+    await PartnerDetailScreen.show(context, p);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final location = ref.watch(weddingControllerProvider.select((s) => s.wedding?.location));
+    final picks = ref.watch(featuredForMeProvider((location: location, category: null, limit: 4))).value;
+    if (picks == null || picks.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+          child: Text('Sugestões para ti',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 2, AppTheme.screenMargin, 10),
+          child: Text('Com base no que tens procurado.', style: TextStyle(fontSize: AppFontSize.sm + 1, color: AppTheme.inkMuted)),
+        ),
+        SizedBox(
+          height: 150,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+            itemCount: picks.length,
+            separatorBuilder: (context, i) => const SizedBox(width: 10),
+            itemBuilder: (context, i) {
+              final k = picks[i];
+              return SnappyTap(
+                onTap: () => _open(context, ref, k),
+                semanticLabel: '${k.name}, ${k.categoryLabel ?? ''}',
+                child: Container(
+                  width: 140,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: softCard(radius: 18),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    SizedBox(
+                      height: 82,
+                      child: k.coverPhotoUrl == null
+                          ? Container(color: AppTheme.accentTint, child: Icon(Icons.storefront_rounded, color: AppTheme.accentOliveDark))
+                          : Image.network(k.coverPhotoUrl!, fit: BoxFit.cover, cacheWidth: 420,
+                              errorBuilder: (context, error, stack) => Container(color: AppTheme.accentTint)),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+                      child: Text(k.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 1, 10, 0),
+                      child: Text(k.categoryLabel ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                    ),
+                  ]),
+                ),
+              );
+            },
+          ),
+        ),
+      ]),
     );
   }
 }
