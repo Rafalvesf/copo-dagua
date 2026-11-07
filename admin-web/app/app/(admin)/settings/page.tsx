@@ -76,13 +76,13 @@ export default async function SettingsPage() {
         )}
       </Card>
 
-      <Card id="fundadores" title="Fundadores, convites e Pro" subtitle="Incentivos para os parceiros: vagas de fundador, clientes sem comissão pelos convites e o plano Pro.">
+      <Card id="fundadores" title="Fundadores, convites e Verificado" subtitle="Incentivos para os parceiros: vagas de fundador, clientes sem comissão pelos convites e o plano Verificado.">
         {sum && (
           <DetailList
             items={[
               { label: "Fundadores", value: `${sum.founders} de ${g.founder_slots ?? 100} (${sum.founders_featured} com destaque grátis)` },
               { label: "Clientes trazidos por convite", value: `${sum.referrals} (${sum.referrals_counted} já pagaram)` },
-              { label: "Parceiros Pro", value: `${sum.pro_active} (${sum.pro_paying} a pagar)` },
+              { label: "Parceiros verificados", value: `${sum.pro_active} (${sum.pro_paying} a pagar)` },
             ]}
           />
         )}
@@ -97,11 +97,11 @@ export default async function SettingsPage() {
             items={[
               { label: "Vagas de fundador", value: `${g.founder_slots}` },
               { label: "Sem comissão a cada", value: `${g.referral_free_every} clientes (mín. ${g.referral_min_booking} €)` },
-              { label: "Pro", value: `${g.pro_price_monthly} €/mês · ${g.pro_price_yearly} €/ano · −${g.pro_fee_discount} ponto(s) de comissão · cliente grátis a cada ${g.pro_referral_free_every} · destaque +${g.pro_promotion_extra_pct}%` },
+              { label: "Verificado", value: `${g.pro_price_monthly} €/mês · ${g.pro_price_yearly} €/ano · −${g.pro_fee_discount} ponto(s) de comissão · cliente grátis a cada ${g.pro_referral_free_every} · destaque +${g.pro_promotion_extra_pct}%` },
             ]}
           />
         )}
-        <p className="field-hint" style={{ marginTop: 12 }}>Para dar ou tirar o selo de fundador ou o Pro a um parceiro, abre o parceiro em Parceiros.</p>
+        <p className="field-hint" style={{ marginTop: 12 }}>Para dar ou tirar o selo de fundador ou o Verificado a um parceiro, abre o parceiro em Parceiros.</p>
       </Card>
 
       <Card id="manutencao" title="Modo de manutenção" subtitle="Bloqueia a app para um tipo de utilizador enquanto fazes alterações. O admin continua a funcionar.">

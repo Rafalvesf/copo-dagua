@@ -293,8 +293,8 @@ class PartnerHomeScreen extends ConsumerWidget {
                       style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted),
                       child: Text(
                         pro.until == null
-                            ? 'Pro ativo · Gerir subscrição'
-                            : 'Pro ativo até ${_shortDate(pro.until!)} · Gerir subscrição',
+                            ? 'Verificado ativo · Gerir subscrição'
+                            : 'Verificado até ${_shortDate(pro.until!)} · Gerir subscrição',
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),
@@ -380,9 +380,16 @@ class _ProBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        padding: const EdgeInsets.fromLTRB(5, 3, 8, 3),
         decoration: BoxDecoration(color: _gold, borderRadius: BorderRadius.circular(999)),
-        child: const Text('PRO', style: TextStyle(fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.w700, color: _proInk)),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.verified_rounded, size: 12, color: _proInk),
+            SizedBox(width: 3),
+            Text('VERIFICADO', style: TextStyle(fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.w700, color: _proInk)),
+          ],
+        ),
       );
 }
 
@@ -510,7 +517,7 @@ class _ProSavingsCard extends StatelessWidget {
               children: [
                 Icon(Icons.workspace_premium_outlined, size: 20, color: _goldInk),
                 SizedBox(width: 8),
-                Text('O PRO ESTE MÊS', style: TextStyle(fontSize: 12, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: _goldInk)),
+                Text('O VERIFICADO ESTE MÊS', style: TextStyle(fontSize: 12, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: _goldInk)),
               ],
             ),
             const SizedBox(height: 10),
@@ -521,7 +528,7 @@ class _ProSavingsCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    gift ? 'poupados · Pro oferecido' : 'poupados · o Pro custa ${euros(price)}/mês',
+                    gift ? 'poupados · Verificado oferecido' : 'poupados · o Verificado custa ${euros(price)}/mês',
                     style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
                   ),
                 ),
@@ -656,7 +663,7 @@ class _ProUpsellCard extends StatelessWidget {
                 foregroundColor: _proInk,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
-              child: const Text('Ver o Pro', style: TextStyle(fontWeight: FontWeight.w700)),
+              child: const Text('Ser Verificado', style: TextStyle(fontWeight: FontWeight.w700)),
             ),
           ),
         ],

@@ -313,7 +313,7 @@ export default async function PartnerDetailPage(
 
           {/* Fundador e Pro (migração 161). */}
           {"pro_until" in p && (
-            <Card title="Fundador e Pro">
+            <Card title="Fundador e Verificado">
               {(() => {
                 const x = p as unknown as { founder_number: number | null; pro_until: string | null; pro_interval: string | null; pro_subscription_id: string | null };
                 const pro = x.pro_until && new Date(x.pro_until) > new Date();
@@ -322,18 +322,18 @@ export default async function PartnerDetailPage(
                     <p className="muted" style={{ margin: 0, fontSize: 13 }}>
                       {x.founder_number ? `Parceiro Fundador #${x.founder_number}.` : "Não é fundador."}{" "}
                       {pro
-                        ? `Pro até ${fmtDateTime(x.pro_until!)}${x.pro_subscription_id ? " (subscrição paga)" : x.pro_interval === "gift" ? " (oferta)" : ""}.`
-                        : "Sem Pro."}
+                        ? `Verificado até ${fmtDateTime(x.pro_until!)}${x.pro_subscription_id ? " (subscrição paga)" : x.pro_interval === "gift" ? " (oferta)" : ""}.`
+                        : "Sem Verificado."}
                     </p>
                     {x.founder_number ? (
                       <SimpleActionButton id={p.id} label="Tirar fundador" action={removeFounder} variant="secondary" block />
                     ) : (
                       <SimpleActionButton id={p.id} label="Tornar fundador" action={makeFounder} variant="secondary" block />
                     )}
-                    <SimpleActionButton id={p.id} label="Oferecer 3 meses de Pro" action={giftPro3} variant="secondary" block />
-                    <SimpleActionButton id={p.id} label="Oferecer 12 meses de Pro" action={giftPro12} variant="secondary" block />
+                    <SimpleActionButton id={p.id} label="Oferecer 3 meses de Verificado" action={giftPro3} variant="secondary" block />
+                    <SimpleActionButton id={p.id} label="Oferecer 12 meses de Verificado" action={giftPro12} variant="secondary" block />
                     {pro && !x.pro_subscription_id && (
-                      <SimpleActionButton id={p.id} label="Tirar Pro" action={removePro} variant="secondary" block />
+                      <SimpleActionButton id={p.id} label="Tirar Verificado" action={removePro} variant="secondary" block />
                     )}
                   </div>
                 );
