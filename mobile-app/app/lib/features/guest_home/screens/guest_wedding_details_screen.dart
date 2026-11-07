@@ -11,6 +11,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import '../widgets/guest_home_sections.dart';
 
 /// "Detalhes do casamento" do lado do convidado — pedido explícito do
 /// utilizador (mockup de referência), aberto a partir do cartão de
@@ -41,6 +42,7 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
     final lng = wedding.venueLongitude ?? (wedding.venueAddress?.isNotEmpty == true ? null : appVenue?.longitude);
     return GradientScaffold(
       background: AppBackground.subtle,
+      gradientOverride: guestPageGradient,
       body: Stack(
         children: [
           SafeArea(
@@ -76,26 +78,24 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                             : Text(formatWeddingDateCaps(wedding.weddingDate!),
                                 style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                       ),
-                      if (wedding.program.isNotEmpty)
-                        for (var i = 0; i < wedding.program.length; i++)
-                          _ProgramCard(
-                            index: i,
-                            time: wedding.program[i].time,
-                            title: wedding.program[i].title,
-                            subtitle: wedding.program[i].place,
-                          )
-                      else
-                        _ProgramCard(
-                          index: 0,
-                          time: wedding.ceremonyTime?.isNotEmpty == true ? wedding.ceremonyTime! : '—',
-                          title: 'Cerimónia',
-                          subtitle: wedding.venue?.isNotEmpty == true ? wedding.venue! : 'Local a confirmar',
-                        ),
-                      if (placeName?.isNotEmpty == true || placeAddress?.isNotEmpty == true) ...[
-                        const SectionTitle('Onde'),
-                        _PlaceCard(name: placeName, address: placeAddress, latitude: lat, longitude: lng),
-                      ],
-                      if (wedding.dressCode?.isNotEmpty == true || wedding.themeColors.isNotEmpty) ...[
+                      // Linha do tempo com o momento atual marcado no dia
+                      // e o local com Como chegar (canvas 2026-11-07).
+                      GuestTimeline(
+                        program: wedding.program.isNotEmpty
+                            ? wedding.program
+                            : [
+                                ProgramItem(
+                                  time: wedding.ceremonyTime?.isNotEmpty == true ? wedding.ceremonyTime! : '—',
+                                  title: 'Cerimónia',
+                                  place: wedding.venue?.isNotEmpty == true ? wedding.venue! : 'Local a confirmar',
+                                ),
+                              ],
+                        live: _isToday(wedding.weddingDate),
+                      ),
+                      const SizedBox(height: 22),
+                      const SectionTitle('Onde'),
+                      GuestPlaceCard(wedding: wedding),
+                      if (wedding.themeColors.isNotEmpty) ...[
                         const SizedBox(height: 10),
                         V2RowCard(
                           lead: StickerIcon(Icons.checkroom_outlined, turns: StickerIcon.tilt(2)),
@@ -227,4 +227,9 @@ class _PlaceCard extends StatelessWidget {
       ),
     );
   }
+}
+
+bool _isToday(DateTime? d) {
+  final n = DateTime.now();
+  return d != null && d.year == n.year && d.month == n.month && d.day == n.day;
 }
