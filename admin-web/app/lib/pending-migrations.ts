@@ -124,6 +124,13 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "158",
     check: { kind: "column", table: "wedding_collaborators", column: "permissions" },
   },
+  {
+    file: "160_gift_shop.sql",
+    title: "Lista de presentes: loja dos parceiros + desejos",
+    what: "Parceiros vendem produtos para as listas de presentes (pagos na app ao parceiro); o organizador escreve o que precisa e os convidados reservam e compram fora.",
+    after: "159",
+    check: { kind: "table", table: "gift_list_items" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

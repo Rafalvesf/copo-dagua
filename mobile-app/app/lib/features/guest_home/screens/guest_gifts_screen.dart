@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/gifts/envelopes.dart';
 import '../widgets/envelope_sheet.dart';
+import '../../gifts/screens/gift_list_screens.dart' show GuestGiftListSection;
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
@@ -138,6 +139,9 @@ class GuestGiftsScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 14),
+                      // Lista de presentes na app (migração 160).
+                      if (wedding != null) GuestGiftListSection(weddingId: wedding.weddingId),
+                      if (hasList)
                       SnappyTap(
                         onTap: () => _openList(context, wedding),
                         child: Container(

@@ -363,6 +363,14 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                               const SizedBox(height: 10),
                               _Field(controller: _giftMessage, label: 'Mensagem', hint: 'Ex: A vossa presença é o melhor presente.', maxLines: 2),
                               const SizedBox(height: 10),
+                              // Lista de presentes na app (migração 160).
+                              _PreviewButton(
+                                onTap: () => context.push('/gift-list'),
+                                icon: Icons.checklist_rtl_rounded,
+                                title: 'Lista de presentes na app',
+                                subtitle: 'O que precisam (os convidados reservam) e produtos da loja dos parceiros.',
+                              ),
+                              const SizedBox(height: 10),
                               // Envelope digital (migração 156).
                               _PreviewButton(
                                 onTap: () => context.push('/envelopes'),
