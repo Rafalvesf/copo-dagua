@@ -58,6 +58,8 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
     }
   }
 
+  String _pts(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');
+
   String _date(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
   @override
@@ -72,7 +74,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 40),
           children: [
-            const PageHeader(title: 'À Nossa! Pro', subtitle: 'Para quem quer aparecer mais e saber mais.', centered: true),
+            const PageHeader(title: 'À Nossa! Pro', subtitle: 'Pagas menos comissão, apareces mais e sabes mais.', centered: true),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(18),
@@ -97,11 +99,16 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
               ]),
             ),
             const SizedBox(height: 16),
-            for (final b in const [
-              (Icons.verified_outlined, 'Selo Pro', 'No teu perfil e nos resultados de pesquisa.'),
-              (Icons.trending_up_rounded, 'Mais visibilidade', 'Apareces antes dos outros parceiros na lista.'),
+            for (final b in [
+              (Icons.percent_rounded, 'Comissão mais baixa',
+                  '${_pts(pro.feeDiscount)} ponto${pro.feeDiscount == 1 ? '' : 's'} a menos em todas as reservas (ex.: 4% passa a ${_pts(4 - pro.feeDiscount)}%).'),
+              (Icons.group_add_outlined, 'Convites valem mais',
+                  'Cada ${pro.proReferralFreeEvery}.º cliente que trazes fica sem comissão (sem Pro, o ${pro.referralFreeEvery}.º).'),
+              (Icons.campaign_outlined, 'Destaque mais barato',
+                  '+${_pts(pro.proPromotionExtraPct)}% nas reservas que vêm do destaque (sem Pro, +${_pts(pro.promotionExtraPct)}%).'),
+              (Icons.verified_outlined, 'Selo Pro e mais visibilidade', 'Selo no perfil e na pesquisa, e apareces antes dos outros parceiros.'),
               (Icons.insights_outlined, 'Estatísticas detalhadas', 'Visitas ao perfil por semana, pedidos começados e conversão.'),
-              (Icons.storefront_outlined, 'Loja sem limites', 'Sem Pro, até 5 produtos na Loja. Com Pro, os que quiseres.'),
+              (Icons.storefront_outlined, 'Loja sem limites', 'Se vendes produtos: sem Pro até ${pro.freeShopProducts}, com Pro os que quiseres.'),
             ])
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),

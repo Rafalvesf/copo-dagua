@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../auth/auth_controller.dart';
 import '../supabase/supabase_config.dart';
+import 'partner_pro.dart' show myPartnerProProvider;
 
 /// Destaques pagos dos parceiros e destaques personalizados (migração 155,
 /// pedido 2026-11-03). Tudo tolera a migração ainda não corrida.
@@ -118,7 +119,11 @@ final myPromotionProvider = FutureProvider<MyPromotion>((ref) async {
   ref.watch(authControllerProvider.select((s) => s.profile?.id));
   try {
     final rows = await supabase.rpc('my_partner_promotion') as List;
-    if (rows.isEmpty) return const MyPromotion();
+    if (rows.isEmpty) {
+      // Pro (migração 161): o destaque custa menos.
+      final pro = await ref.watch(myPartnerProProvider.future);
+      return MyPromotion(extraPct: pro.active ? pro.proPromotionExtraPct : (pro.enabled ? pro.promotionExtraPct : 6));
+    }
     final r = (rows.first as Map).cast<String, dynamic>();
     return MyPromotion(
       status: r['status'] as String?,

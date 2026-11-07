@@ -180,10 +180,13 @@ Deno.serve(async (req) => {
   // trazidos pelo próprio parceiro (link /p/CODIGO, antes de qualquer
   // pedido), a cada `referral_free_every` (5) um fica sem comissão do parceiro.
   const coupleId = (payment.bookings as unknown as { couple_id?: string } | null)?.couple_id ?? null;
+  // Plano Pro (migração 161): comissão 1 ponto mais baixa, cliente
+  // trazido sem comissão a cada 3 (em vez de 5) e destaque a +4%.
+  const isPro = await partnerIsPro(admin, payment.partner_id as string);
   const partnerFree =
     (await partnerIsFree(admin, payment.partner_id as string, partner.created_at, sett,
       await founderNumber(admin, payment.partner_id as string))) ||
-    (await isReferredClient(admin, payment.partner_id as string, coupleId, sett));
+    (await isReferredClient(admin, payment.partner_id as string, coupleId, sett, isPro));
   // Migração 155: reserva que veio do destaque pago do parceiro → +6%.
   const promoExtraPct = partnerFree ? 0 : await promotionExtraPct(admin, payment.booking_id as string);
   const partnerFeeCents = partnerFree ? 0 : Math.min(
@@ -191,8 +194,8 @@ Deno.serve(async (req) => {
     paymentFeeCents(
       partnerAmountCents,
       Math.max(bookingTotalCents, partnerAmountCents),
-      parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers),
-      partnerFeePct,
+      proTiers(parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers), isPro ? Number(sett.pro_fee_discount ?? 1) : 0),
+      Math.max(0, partnerFeePct - (isPro ? Number(sett.pro_fee_discount ?? 1) : 0)),
     ) + Math.round((partnerAmountCents * promoExtraPct) / 100),
   );
   const bookingNumber = (payment.bookings as unknown as { booking_number: string } | null)?.booking_number ?? "";
@@ -304,9 +307,9 @@ async function partnerIsFree(
 // Cliente trazido pelo próprio parceiro (migração 151): a cada N (5)
 // clientes válidos, o N.º fica sem comissão do parceiro.
 // deno-lint-ignore no-explicit-any
-async function isReferredClient(admin: any, partnerId: string, coupleId: string | null, sett: Record<string, unknown>) {
+async function isReferredClient(admin: any, partnerId: string, coupleId: string | null, sett: Record<string, unknown>, isPro = false) {
   if (!coupleId || sett.referral_zero_fee === false) return false;
-  const every = Math.max(1, Number(sett.referral_free_every ?? 5) || 5);
+  const every = Math.max(1, Number((isPro ? sett.pro_referral_free_every ?? 3 : sett.referral_free_every ?? 5)) || 5);
   const { data } = await admin
     .from("partner_referrals")
     .select("valid, seq")
@@ -337,4 +340,22 @@ async function promotionExtraPct(admin: any, bookingId: string): Promise<number>
   } catch {
     return 0;
   }
+}
+
+// Plano Pro (migração 161). Sem a migração, false.
+// deno-lint-ignore no-explicit-any
+async function partnerIsPro(admin: any, partnerId: string): Promise<boolean> {
+  try {
+    const { data, error } = await admin.from("partner_profiles").select("pro_until").eq("id", partnerId).maybeSingle();
+    if (error || !data?.pro_until) return false;
+    return new Date(data.pro_until as string) > new Date();
+  } catch {
+    return false;
+  }
+}
+
+// Escalões do parceiro com o desconto do Pro (nunca abaixo de 0%).
+function proTiers<T extends { pct: number }>(tiers: T[], discount: number): T[] {
+  if (!discount || discount <= 0) return tiers;
+  return tiers.map((t) => ({ ...t, pct: Math.max(0, t.pct - discount) }));
 }

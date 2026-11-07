@@ -362,8 +362,24 @@ final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
         }
       }
     }
-    return FeeConfig.parse(row['partner_fee_tiers'],
+    final feeBase = FeeConfig.parse(row['partner_fee_tiers'],
         flatPct: (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0, freeUntil: freeUntil);
+    // Plano Pro (migração 161): comissão `pro_fee_discount` pontos mais baixa.
+    if (uid != null) {
+      try {
+        final p = await supabase.from('partner_profiles').select('pro_until').eq('id', uid).maybeSingle();
+        final until = DateTime.tryParse('${p?['pro_until'] ?? ''}');
+        final d = (row['pro_fee_discount'] as num?)?.toDouble() ?? 0;
+        if (until != null && until.isAfter(DateTime.now()) && d > 0) {
+          return FeeConfig(
+            tiers: [for (final t in feeBase.tiers) (upTo: t.upTo, pct: (t.pct - d) < 0 ? 0.0 : t.pct - d)],
+            flatPct: (feeBase.flatPct - d) < 0 ? 0 : feeBase.flatPct - d,
+            freeUntil: feeBase.freeUntil,
+          );
+        }
+      } catch (_) {}
+    }
+    return feeBase;
   } catch (_) {
     return const FeeConfig();
   }

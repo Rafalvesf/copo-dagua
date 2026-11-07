@@ -134,7 +134,7 @@ export const MIGRATIONS: PendingMigration[] = [
   {
     file: "161_partner_pro_founders_admin.sql",
     title: "Plano Pro dos parceiros + fundadores no admin",
-    what: "Pro a 19 €/mês ou 190 €/ano (selo, mais visibilidade, estatísticas, loja sem limites); dar/tirar fundador e Pro no admin; definições de fundadores, convites e Pro.",
+    what: "Pro a 19 €/mês ou 190 €/ano: comissão −1 ponto, cliente grátis a cada 3, destaque +4%, selo, visibilidade, estatísticas, loja sem limites; fundadores e Pro no admin.",
     after: "160",
     check: { kind: "column", table: "partner_profiles", column: "pro_until" },
   },

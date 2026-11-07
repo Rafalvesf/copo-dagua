@@ -63,12 +63,14 @@ export async function updateGrowthSettings(
   const { userId } = await requireAdmin();
   const supabase = await createClient();
   const n = (k: string) => Number(formData.get(k));
-  const ints = ["founder_slots", "founder_free_months", "founder_featured_slots", "founder_featured_months", "referral_free_every", "free_shop_products"];
+  const ints = ["founder_slots", "founder_free_months", "founder_featured_slots", "founder_featured_months", "referral_free_every", "free_shop_products", "pro_referral_free_every"];
   for (const k of ints) {
     if (!Number.isInteger(n(k)) || n(k) < 0) return { error: "Valores inválidos — confirma os números introduzidos." };
   }
+  if (n("pro_referral_free_every") < 1) return { error: "“Pro: a cada N clientes” tem de ser pelo menos 1." };
+  if (n("pro_fee_discount") > 10) return { error: "O desconto do Pro não pode passar de 10 pontos." };
   if (n("referral_free_every") < 1) return { error: "“A cada N clientes” tem de ser pelo menos 1." };
-  for (const k of ["referral_min_booking", "pro_price_monthly", "pro_price_yearly", "gift_fee_percentage"]) {
+  for (const k of ["referral_min_booking", "pro_price_monthly", "pro_price_yearly", "gift_fee_percentage", "pro_fee_discount", "pro_promotion_extra_pct"]) {
     if (!Number.isFinite(n(k)) || n(k) < 0) return { error: "Valores inválidos — confirma os números introduzidos." };
   }
   if (n("pro_price_monthly") < 1 || n("pro_price_yearly") < 1) return { error: "Os preços do Pro têm de ser pelo menos 1 €." };
@@ -89,6 +91,9 @@ export async function updateGrowthSettings(
       pro_price_yearly: n("pro_price_yearly"),
       free_shop_products: n("free_shop_products"),
       gift_fee_percentage: n("gift_fee_percentage"),
+      pro_fee_discount: n("pro_fee_discount"),
+      pro_referral_free_every: n("pro_referral_free_every"),
+      pro_promotion_extra_pct: n("pro_promotion_extra_pct"),
       updated_at: new Date().toISOString(),
       updated_by: userId,
     })
