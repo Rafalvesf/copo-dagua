@@ -631,33 +631,61 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
         ),
         if (!_signedIn) ...[
           const SizedBox(height: 14),
+          // Sugestão de conta (2026-11-07). No browser, "Criar conta aqui"
+          // liga a resposta logo (o token está neste browser) — a app
+          // instalada no iPhone não vê o que o Safari guardou.
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: AppColors.blue, borderRadius: BorderRadius.circular(AppRadius.md)),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(Icons.notifications_none_rounded, color: AppTheme.accentOliveDark),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Queres saber se algo mudar?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      SizedBox(height: 2),
-                      Text('Cria conta com a resposta já guardada.', style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
-                    ],
-                  ),
+                Row(
+                  children: [
+                    Icon(Icons.notifications_none_rounded, color: AppTheme.accentOliveDark),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Queres saber se algo mudar?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          SizedBox(height: 2),
+                          Text('Cria conta com a resposta já guardada.', style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: () => kIsWeb && !widget.fromInstall ? _downloadApp(ev) : _createAccount(ev),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(0, 44),
-                    backgroundColor: AppTheme.ink,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
-                  ),
-                  child: Text(kIsWeb && !widget.fromInstall ? 'Ter a app' : 'Criar conta'),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => _createAccount(ev),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, 44),
+                          backgroundColor: AppTheme.ink,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                        ),
+                        child: Text(kIsWeb && !widget.fromInstall ? 'Criar conta aqui' : 'Criar conta'),
+                      ),
+                    ),
+                    if (kIsWeb && !widget.fromInstall) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _downloadApp(ev),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(0, 44),
+                            foregroundColor: AppTheme.ink,
+                            side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                          ),
+                          child: const Text('Ter a app'),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
