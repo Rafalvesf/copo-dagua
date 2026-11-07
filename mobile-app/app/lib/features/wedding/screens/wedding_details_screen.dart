@@ -404,41 +404,25 @@ class _PageBody extends ConsumerWidget {
         // Aparência escolhida (098): o clássico por defeito, ou uma das
         // três opções.
         ...switch (layout) {
-          MenuLayout.classic => [
-              _HeroCard(wedding: wedding),
-              const SizedBox(height: 22),
-              const _QuickLinksRow(),
-            ],
+          // O cartão de cima fica igual; por baixo passa a ser a nova
+          // organização (canvas "Organizadores · O meu evento", 2026-11-07).
+          MenuLayout.classic => [_HeroCard(wedding: wedding)],
           MenuLayout.stickers => [_StickersTop(wedding: wedding)],
           MenuLayout.mural => [_MuralTop(wedding: wedding)],
           MenuLayout.clothesline => [_ClotheslineTop(wedding: wedding)],
         },
-        const SizedBox(height: 22),
-        const _BookingsSection(),
         const SizedBox(height: 14),
-        const _UpcomingPaymentsCard(),
+        const _UrgentStrip(),
+        const SizedBox(height: 18),
+        const _PlanningBar(),
         const SizedBox(height: 22),
-        Row(
-          children: [
-            const Text('Próximas tarefas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(width: 8),
-            Transform.rotate(angle: -0.17, child: Icon(look.doodles[1], size: 18, color: look.accent)),
-            const Spacer(),
-            SnappyTap(
-              onTap: () => context.push('/tasks'),
-              child: Text(
-                'Ver todas',
-                style: TextStyle(color: look.accent, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        const _UpcomingTasksSection(),
-        const SizedBox(height: 26),
-        const _FinancialSummaryRow(),
+        _TodoNow(wedding: wedding),
         const SizedBox(height: 22),
-        _ShareWeddingButton(wedding: wedding, color: look.color, on: look.on),
+        const _StatBlocks(),
+        const SizedBox(height: 22),
+        const _ManageList(),
+        const SizedBox(height: 22),
+        _InviteCodeCard(wedding: wedding),
     ];
     const padding = EdgeInsets.fromLTRB(AppTheme.screenMargin, 40, AppTheme.screenMargin, 140);
     if (!scrollable) {
