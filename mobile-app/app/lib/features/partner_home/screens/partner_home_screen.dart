@@ -336,10 +336,12 @@ class _RespondFirstCard extends StatelessWidget {
             const SizedBox(height: 12),
             Row(children: [
               Expanded(
+                flex: 2,
                 child: OutlinedButton(
                   onPressed: () => open(b),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(44),
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
                     foregroundColor: AppTheme.ink,
                     side: const BorderSide(color: Color(0xFFE6E0D2)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

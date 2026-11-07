@@ -150,7 +150,7 @@ class GuestShortcutsRow extends StatelessWidget {
           child: SnappyTap(
             onTap: items[i].onTap,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
+              padding: const EdgeInsets.fromLTRB(6, 12, 6, 10),
               decoration: guestCard(radius: 18),
               child: Column(children: [
                 Container(
@@ -160,10 +160,11 @@ class GuestShortcutsRow extends StatelessWidget {
                   child: Icon(items[i].icon, size: 21, color: AppTheme.ink),
                 ),
                 const SizedBox(height: 7),
-                Text(items[i].label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(items[i].label,
+                      maxLines: 1, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ),
                 Text(items[i].sub,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
