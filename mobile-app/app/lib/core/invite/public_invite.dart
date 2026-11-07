@@ -269,12 +269,42 @@ Future<void> _forgetToken(String code) async {
   await _writeTokens(t);
 }
 
-/// Depois de entrar ou criar conta: liga as respostas dadas sem conta
-/// neste telemóvel à conta (`claim_public_rsvp`). Nunca bloqueia o login.
+const _claimKey = 'public_rsvp_claim';
+
+/// "Criar conta" a partir de um convite já respondido: marca essa
+/// resposta para ser ligada à conta que se criar ou entrar a seguir.
+/// Só estas — num telemóvel partilhado, outra pessoa que entre não fica
+/// com as respostas de quem respondeu sem conta.
+Future<void> markInviteClaim(String code) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final set = {...(prefs.getStringList(_claimKey) ?? const <String>[]), code.trim().toUpperCase()};
+    await prefs.setStringList(_claimKey, set.toList());
+    await prefs.setString('${_claimKey}_at', DateTime.now().toIso8601String());
+  } catch (_) {}
+}
+
+/// Depois de entrar ou criar conta: liga à conta as respostas marcadas
+/// com [markInviteClaim] na última hora (`claim_public_rsvp`). Nunca
+/// bloqueia o login.
 Future<void> claimStoredPublicRsvps() async {
+  if (supabase.auth.currentUser == null) return;
+  List<String> codes;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    codes = prefs.getStringList(_claimKey) ?? const [];
+    final at = DateTime.tryParse(prefs.getString('${_claimKey}_at') ?? '');
+    await prefs.remove(_claimKey);
+    await prefs.remove('${_claimKey}_at');
+    if (at == null || DateTime.now().difference(at) > const Duration(hours: 1)) return;
+  } catch (_) {
+    return;
+  }
+  if (codes.isEmpty) return;
   final t = await _tokens();
-  if (t.isEmpty || supabase.auth.currentUser == null) return;
-  for (final token in t.values) {
+  for (final code in codes) {
+    final token = t[code];
+    if (token == null) continue;
     try {
       await supabase.rpc('claim_public_rsvp', params: {'p_token': token});
     } catch (_) {}

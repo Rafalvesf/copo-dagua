@@ -330,7 +330,9 @@ class _MenuList extends StatelessWidget {
           children: [
             for (final (i, (icon, title, sub, route)) in items.indexed) ...[
               if (i > 0) const Divider(height: 1, indent: 60, color: AppTheme.borderMuted),
-              InkWell(
+              Material(
+                type: MaterialType.transparency,
+                child: InkWell(
                 onTap: () => context.push(route),
                 borderRadius: BorderRadius.circular(AppRadius.lg),
                 child: ConstrainedBox(
@@ -355,6 +357,7 @@ class _MenuList extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
               ),
             ],
           ],
