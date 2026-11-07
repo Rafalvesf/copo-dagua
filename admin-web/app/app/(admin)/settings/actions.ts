@@ -54,3 +54,48 @@ export async function updatePlatformSettings(
   revalidatePath("/settings");
   return { error: null };
 }
+
+// Fundadores, convites dos parceiros e Pro (migrações 151 e 161).
+export async function updateGrowthSettings(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const { userId } = await requireAdmin();
+  const supabase = await createClient();
+  const n = (k: string) => Number(formData.get(k));
+  const ints = ["founder_slots", "founder_free_months", "founder_featured_slots", "founder_featured_months", "referral_free_every", "free_shop_products"];
+  for (const k of ints) {
+    if (!Number.isInteger(n(k)) || n(k) < 0) return { error: "Valores inválidos — confirma os números introduzidos." };
+  }
+  if (n("referral_free_every") < 1) return { error: "“A cada N clientes” tem de ser pelo menos 1." };
+  for (const k of ["referral_min_booking", "pro_price_monthly", "pro_price_yearly", "gift_fee_percentage"]) {
+    if (!Number.isFinite(n(k)) || n(k) < 0) return { error: "Valores inválidos — confirma os números introduzidos." };
+  }
+  if (n("pro_price_monthly") < 1 || n("pro_price_yearly") < 1) return { error: "Os preços do Pro têm de ser pelo menos 1 €." };
+  if (n("gift_fee_percentage") > 30) return { error: "A comissão da loja não pode passar de 30%." };
+
+  const { error } = await supabase
+    .from("platform_settings")
+    .update({
+      founder_slots: n("founder_slots"),
+      founder_free_months: n("founder_free_months"),
+      founder_featured_slots: n("founder_featured_slots"),
+      founder_featured_months: n("founder_featured_months"),
+      referral_zero_fee: formData.get("referral_zero_fee") === "on",
+      referral_free_every: n("referral_free_every"),
+      referral_min_booking: n("referral_min_booking"),
+      pro_enabled: formData.get("pro_enabled") === "on",
+      pro_price_monthly: n("pro_price_monthly"),
+      pro_price_yearly: n("pro_price_yearly"),
+      free_shop_products: n("free_shop_products"),
+      gift_fee_percentage: n("gift_fee_percentage"),
+      updated_at: new Date().toISOString(),
+      updated_by: userId,
+    })
+    .eq("id", 1);
+  if (error) {
+    return { error: error.code === "42703" ? "Falta correr as migrações 160 e 161 (página Migrações)." : "Não tens permissão para alterar as definições da plataforma." };
+  }
+  revalidatePath("/settings");
+  return { error: null };
+}

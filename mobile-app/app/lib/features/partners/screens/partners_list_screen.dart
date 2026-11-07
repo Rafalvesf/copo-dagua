@@ -6,6 +6,8 @@ import 'package:copo_dagua_app/core/partners/promotions.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
+import '../../partner_pro/partner_pro_screen.dart' show ProBadge;
 
 import '../../../core/models/models.dart';
 import '../../../core/partner_profile/partner_profile_controller.dart';
@@ -132,7 +134,11 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
     }).toList();
     switch (_sort) {
       case _PartnerSort.relevance:
-        break;
+        // Pro sobe na lista (migração 161); a ordem entre eles mantém-se.
+        final pros = ref.read(proPartnerIdsProvider).value ?? const <String>{};
+        if (pros.isNotEmpty) {
+          out = [...out.where((p) => pros.contains(p.id)), ...out.where((p) => !pros.contains(p.id))];
+        }
       case _PartnerSort.priceAsc:
         out.sort((a, b) => (price(a) ?? double.infinity).compareTo(price(b) ?? double.infinity));
       case _PartnerSort.rating:
@@ -163,6 +169,8 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Pro sobe na lista (migração 161): reconstrói quando a lista chega.
+    ref.watch(proPartnerIdsProvider);
     final categoryOptionsAsync = ref.watch(partnerCategoryOptionsProvider);
     final partnersAsync = ref.watch(
       partnersProvider(widget.selectionMode ? widget.categorySlug : _filter),
@@ -798,6 +806,7 @@ class _PartnerCard extends ConsumerWidget {
                     ),
                     const SizedBox(width: 6),
                     FounderBadge(partner.id),
+                    ProBadge(partner.id),
                   ]),
                   const SizedBox(height: 2),
                   Text.rich(

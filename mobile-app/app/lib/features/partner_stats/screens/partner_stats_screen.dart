@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/partners/partner_pro.dart';
 
 import '../../../core/partner_app/partner_analytics.dart';
 import '../../../core/theme/app_theme.dart';
@@ -78,6 +80,8 @@ class _PartnerStatsScreenState extends ConsumerState<PartnerStatsScreen> {
               ),
               data: (a) => _Dashboard(a),
             ),
+            // Estatísticas Pro (migração 161).
+            const _ProInsights(),
           ],
         ),
       ),
@@ -540,6 +544,94 @@ class _FunnelRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+
+/// Estatísticas Pro (migração 161): visitas ao perfil e pedidos começados.
+/// Sem Pro mostra o que se ganha, com ligação ao Pro.
+class _ProInsights extends ConsumerWidget {
+  const _ProInsights();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pro = ref.watch(myPartnerProProvider).value;
+    if (pro == null || (!pro.enabled && !pro.active)) return const SizedBox.shrink();
+    final green = AppTheme.accentOliveDark;
+    if (!pro.active) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(28, 24, 28, 0),
+        child: InkWell(
+          onTap: () => context.push('/partner-pro'),
+          borderRadius: BorderRadius.circular(22),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: softCard(),
+            child: Row(children: [
+              Icon(Icons.lock_outline_rounded, color: green),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Com Pro vês as visitas ao teu perfil por semana, quantos começaram um pedido e a conversão.',
+                  style: TextStyle(fontSize: 13.5, height: 1.4, color: AppTheme.ink),
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppTheme.inkMuted),
+            ]),
+          ),
+        ),
+      );
+    }
+    final st = ref.watch(partnerProStatsProvider).value;
+    if (st == null || !st.pro) return const SizedBox.shrink();
+    final delta = st.viewsPrev30d == 0 ? null : ((st.views30d - st.viewsPrev30d) / st.viewsPrev30d * 100).round();
+    final conv = st.views30d == 0 ? null : (st.requests30d / st.views30d * 100).round();
+    Widget tile(String label, String value, [String? sub]) => Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: softCard(),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              const SizedBox(height: 4),
+              Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+              if (sub != null) Text(sub, style: TextStyle(fontSize: 12, color: green, fontWeight: FontWeight.w700)),
+            ]),
+          ),
+        );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 24, 28, 0),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(Icons.verified_rounded, size: 18, color: green),
+          const SizedBox(width: 6),
+          const Text('Pro · últimos 30 dias', style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        ]),
+        const SizedBox(height: 12),
+        Row(children: [
+          tile('Visitas ao perfil', '${st.views30d}', delta == null ? null : '${delta >= 0 ? '+' : ''}$delta% vs. 30 dias antes'),
+          const SizedBox(width: 10),
+          tile('Começaram um pedido', '${st.quoteStarts30d}'),
+        ]),
+        const SizedBox(height: 10),
+        Row(children: [
+          tile('Pedidos recebidos', '${st.requests30d}', conv == null ? null : '$conv% das visitas'),
+          const SizedBox(width: 10),
+          tile('Cliques no destaque', '${st.promotionClicks30d}'),
+        ]),
+        if (st.viewsByWeek.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),
+            decoration: softCard(),
+            child: SimpleBarChart(
+              values: [for (final w in st.viewsByWeek) w.views.toDouble()],
+              labels: [for (final w in st.viewsByWeek) '${w.start.day}/${w.start.month}'],
+              describe: (i) => 'Semana de ${st.viewsByWeek[i].start.day}/${st.viewsByWeek[i].start.month}: ${st.viewsByWeek[i].views} visitas',
+            ),
+          ),
+        ],
+      ]),
     );
   }
 }

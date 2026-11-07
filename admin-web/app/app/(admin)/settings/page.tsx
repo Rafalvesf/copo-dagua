@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { SettingsForm } from "./SettingsForm";
+import { GrowthForm, type GrowthSettings } from "./GrowthForm";
 import { CommissionsForm } from "../commissions/CommissionsForm";
 import { MaintenanceSwitch } from "@/components/MaintenanceSwitch";
 import { Alert, Card, DetailList, PageHeader } from "@/components/ui";
@@ -16,6 +17,10 @@ export default async function SettingsPage() {
   const { data } = await supabase.from("platform_settings").select("*").eq("id", 1).single();
   const settings = data as PlatformSettings & { maintenance_mode_guest?: boolean; guest_offers_enabled?: boolean };
   const canManage = adminRole === "super_admin";
+  const { data: summary } = await supabase.rpc("admin_growth_summary");
+  const sum = (summary ?? null) as { founders: number; founders_featured: number; pro_active: number; pro_paying: number; referrals: number; referrals_counted: number } | null;
+  const g = settings as unknown as GrowthSettings;
+  const growthReady = g.pro_price_monthly !== undefined;
   const yes = (b: boolean | undefined) => (b ? "Sim" : "Não");
 
   return (
@@ -69,6 +74,34 @@ export default async function SettingsPage() {
             ]}
           />
         )}
+      </Card>
+
+      <Card id="fundadores" title="Fundadores, convites e Pro" subtitle="Incentivos para os parceiros: vagas de fundador, clientes sem comissão pelos convites e o plano Pro.">
+        {sum && (
+          <DetailList
+            items={[
+              { label: "Fundadores", value: `${sum.founders} de ${g.founder_slots ?? 100} (${sum.founders_featured} com destaque grátis)` },
+              { label: "Clientes trazidos por convite", value: `${sum.referrals} (${sum.referrals_counted} já pagaram)` },
+              { label: "Parceiros Pro", value: `${sum.pro_active} (${sum.pro_paying} a pagar)` },
+            ]}
+          />
+        )}
+        {!growthReady ? (
+          <Alert tone="warning">Falta correr as migrações 160 e 161 (página Migrações) para editar estas definições.</Alert>
+        ) : canManage ? (
+          <div style={{ marginTop: 14 }}>
+            <GrowthForm settings={g} />
+          </div>
+        ) : (
+          <DetailList
+            items={[
+              { label: "Vagas de fundador", value: `${g.founder_slots}` },
+              { label: "Sem comissão a cada", value: `${g.referral_free_every} clientes (mín. ${g.referral_min_booking} €)` },
+              { label: "Pro", value: `${g.pro_price_monthly} €/mês · ${g.pro_price_yearly} €/ano` },
+            ]}
+          />
+        )}
+        <p className="field-hint" style={{ marginTop: 12 }}>Para dar ou tirar o selo de fundador ou o Pro a um parceiro, abre o parceiro em Parceiros.</p>
       </Card>
 
       <Card id="manutencao" title="Modo de manutenção" subtitle="Bloqueia a app para um tipo de utilizador enquanto fazes alterações. O admin continua a funcionar.">

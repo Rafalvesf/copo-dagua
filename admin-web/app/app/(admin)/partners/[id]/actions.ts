@@ -200,3 +200,35 @@ export async function getPayoutStatus(partnerId: string): Promise<PayoutStatus> 
 export async function submitPayoutDetails(partnerId: string, details: Record<string, unknown>): Promise<PayoutStatus> {
   return callPayments(partnerId, { action: "details", details });
 }
+
+// Fundador e Pro dados à mão (migração 161).
+async function rpcAction(fn: string, params: Record<string, unknown>, partnerId: string): Promise<ActionState> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc(fn, params);
+  if (error) {
+    return {
+      error: error.code === "42501" ? "Não tens permissão para esta ação." : error.code === "PGRST202" ? "Falta correr a migração 161 (página Migrações)." : "Não foi possível guardar. Tenta novamente.",
+    };
+  }
+  revalidatePath("/partners");
+  revalidatePath(`/partners/${partnerId}`);
+  revalidatePath("/settings");
+  return { error: null };
+}
+
+export async function makeFounder(partnerId: string) {
+  return rpcAction("admin_set_founder", { p_partner: partnerId, p_make: true }, partnerId);
+}
+export async function removeFounder(partnerId: string) {
+  return rpcAction("admin_set_founder", { p_partner: partnerId, p_make: false }, partnerId);
+}
+export async function giftPro3(partnerId: string) {
+  return rpcAction("admin_set_partner_pro", { p_partner: partnerId, p_months: 3 }, partnerId);
+}
+export async function giftPro12(partnerId: string) {
+  return rpcAction("admin_set_partner_pro", { p_partner: partnerId, p_months: 12 }, partnerId);
+}
+export async function removePro(partnerId: string) {
+  return rpcAction("admin_set_partner_pro", { p_partner: partnerId, p_months: 0 }, partnerId);
+}

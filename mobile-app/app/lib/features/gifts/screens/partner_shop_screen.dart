@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/gifts/gift_shop.dart';
+import '../../../core/partners/partner_pro.dart' show myPartnerProProvider;
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
@@ -30,7 +33,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
       body: SafeArea(
         bottom: false,
         child: Column(children: [
-          const PageHeader(title: 'Loja de presentes', subtitle: 'Produtos para as listas de presentes dos eventos.', centered: true),
+          const PageHeader(title: 'Loja', subtitle: 'Produtos para as listas de presentes dos eventos.', centered: true),
           Padding(
             padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 8),
             child: SegmentedButton<int>(
@@ -58,6 +61,25 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                             style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
                           ),
                           const SizedBox(height: 12),
+                          // Limite da loja sem Pro (migração 161).
+                          Builder(builder: (context) {
+                            final pro = ref.watch(myPartnerProProvider).value;
+                            if (pro == null || !pro.enabled || pro.active) return const SizedBox.shrink();
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: InkWell(
+                                onTap: () => context.push('/partner-pro'),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 6),
+                                  child: Text(
+                                    '${pro.products} de ${pro.freeShopProducts} produtos. Com Pro não há limite →',
+                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: green),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
                           FilledButton.icon(
                             onPressed: () => _edit(context, null),
                             icon: const Icon(Icons.add_rounded),
@@ -246,7 +268,15 @@ class _ProductSheetState extends ConsumerState<_ProductSheet> {
         active: _active,
       );
       ref.invalidate(myProductsProvider);
+      ref.invalidate(myPartnerProProvider);
       if (mounted) Navigator.of(context).pop();
+    } on PostgrestException catch (e) {
+      // Sem Pro há um limite de produtos (migração 161).
+      if (mounted) {
+        setState(() => _error = e.message.contains('shop_limit')
+            ? 'Sem Pro podes ter até ${ref.read(myPartnerProProvider).value?.freeShopProducts ?? 5} produtos. Passa a Pro para não teres limites.'
+            : 'Não foi possível guardar. Tenta outra vez.');
+      }
     } catch (_) {
       if (mounted) setState(() => _error = 'Não foi possível guardar. Tenta outra vez.');
     } finally {
