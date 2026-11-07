@@ -30,6 +30,7 @@ import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/seating/seating_controller.dart';
 import '../../../core/supabase/supabase_config.dart';
+import '../../../core/events/events_providers.dart' show joinRequestsProvider;
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
@@ -148,7 +149,13 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
     final layout = ref.watch(currentMenuStyleProvider).layout;
 
     return GradientScaffold(
-      background: AppBackground.feed,
+      // Cinzento claro → branco, para os cartões e botões sobressaírem
+      // (pedido 2026-11-07).
+      gradientOverride: const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFE9E8E4), Colors.white],
+      ),
       body: wedding == null
           ? const _WeddingSkeleton()
           : PopScope(
@@ -399,7 +406,6 @@ class _PageBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final look = _look(context, ref);
     final children = <Widget>[
         // Aparência escolhida (098): o clássico por defeito, ou uma das
         // três opções.
@@ -2211,5 +2217,505 @@ class _Grid extends StatelessWidget {
       ));
     }
     return Column(mainAxisSize: MainAxisSize.min, children: rows);
+  }
+}
+
+
+// ---------- Parte de baixo (canvas "Organizadores · O meu evento") ----------
+
+const _cardBorder = Color(0xFFDCD8CE);
+const _green = Color(0xFF4F6B4A);
+const _greenDark = Color(0xFF2F4A2C);
+
+BoxDecoration _card({double radius = 22}) => BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(color: _cardBorder),
+      boxShadow: const [BoxShadow(color: Color(0x1A171713), blurRadius: 14, offset: Offset(0, 4))],
+    );
+
+const _monthsShort = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
+String _shortDay(DateTime d) => '${d.day} ${_monthsShort[d.month - 1]}';
+
+/// Pagamentos por fazer (despesas com data e sinais/restantes das
+/// reservas), por ordem de data — o mesmo cálculo de "Pagamentos próximos".
+List<(Expense, String?)> _duePayments(WidgetRef ref) {
+  final pending = ref.watch(expenseControllerProvider).pending;
+  final orgFee = ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig();
+  final bookings = ref.watch(coupleBookingsProvider).asData?.value ?? const <CoupleBooking>[];
+  final out = <(Expense, String?)>[
+    for (final e in pending.where((e) => e.dueDate != null)) (e, null),
+    for (final b in bookings.where((b) => b.status != BookingStatus.recusado)) ...[
+      if (b.pendingDepositPaymentId != null)
+        (
+          Expense(
+            id: 'booking:${b.id}:deposit',
+            weddingId: b.weddingId,
+            title: 'Sinal · ${b.partnerName}',
+            amount: amountWithCommission(b.depositAmount ?? 0, orgFee.effectivePct(b.amount)),
+            dueDate: b.pendingDepositDueAt ?? DateTime.now(),
+          ),
+          b.pendingDepositPaymentId,
+        ),
+      if (b.pendingFinalPaymentId != null)
+        (
+          Expense(
+            id: 'booking:${b.id}:final',
+            weddingId: b.weddingId,
+            title: 'Restante · ${b.partnerName}',
+            amount: amountWithCommission(b.finalPaymentAmount ?? 0, orgFee.effectivePct(b.amount)),
+            dueDate: b.serviceDate,
+          ),
+          b.pendingFinalPaymentId,
+        ),
+    ],
+  ]..sort((a, b) => a.$1.dueDate!.compareTo(b.$1.dueDate!));
+  return out;
+}
+
+class _TodoItem {
+  final IconData icon;
+  final Color tint;
+  final Color ink;
+  final String title;
+  final String subtitle;
+  final bool urgent;
+  final String action;
+  final bool primary;
+  final void Function(BuildContext context, WidgetRef ref) onTap;
+  const _TodoItem(this.icon, this.tint, this.ink, this.title, this.subtitle, this.action, this.onTap,
+      {this.urgent = false, this.primary = false});
+}
+
+List<_TodoItem> _todoItems(WidgetRef ref) {
+  final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+  final due = _duePayments(ref);
+  final guests = ref.watch(guestsControllerProvider).guests;
+  final noAnswer = guests.where((g) => g.rsvpStatus == RsvpStatus.pending).length;
+  final requests = weddingId == null ? 0 : (ref.watch(joinRequestsProvider(weddingId)).value?.length ?? 0);
+  final task = ref.watch(taskEngineControllerProvider).systemActive.firstOrNull;
+  final items = <_TodoItem>[];
+  if (due.isNotEmpty) {
+    final (e, payId) = due.first;
+    items.add(_TodoItem(
+      Icons.payments_outlined, const Color(0xFFF7EACA), const Color(0xFF6B4A10),
+      e.title,
+      '${euros(e.amount, cents: payId != null)} até ${_shortDay(e.dueDate!)}${due.length > 1 ? ' · mais ${due.length - 1}' : ''}',
+      'Pagar',
+      (context, ref) => payId != null ? openPaymentFlow(context, ref, payId) : context.push('/budget'),
+      urgent: true,
+      primary: true,
+    ));
+  }
+  if (requests > 0) {
+    items.add(_TodoItem(
+      Icons.how_to_reg_outlined, const Color(0xFFF3DEE0), const Color(0xFF6B2C33),
+      '$requests ${requests == 1 ? 'pedido para entrar' : 'pedidos para entrar'}',
+      'Responderam pelo link',
+      'Aceitar',
+      (context, ref) => context.push('/guests'),
+    ));
+  }
+  if (noAnswer > 0) {
+    items.add(_TodoItem(
+      Icons.notifications_none_rounded, const Color(0xFFECE7DC), const Color(0xFF4A3F2A),
+      '$noAnswer sem resposta',
+      'Convidados que ainda não responderam',
+      'Lembrar',
+      (context, ref) => context.push('/guests'),
+    ));
+  }
+  if (task != null) {
+    items.add(_TodoItem(
+      taskIcon(task.category), const Color(0xFFDDE5D3), _greenDark,
+      task.title,
+      'Tarefa recomendada',
+      'Abrir',
+      (context, ref) => openTask(context, ref, task),
+    ));
+  }
+  return items;
+}
+
+/// Faixa fina logo abaixo do cartão: há coisas para tratar.
+class _UrgentStrip extends ConsumerWidget {
+  const _UrgentStrip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = _todoItems(ref);
+    if (items.isEmpty) return const SizedBox.shrink();
+    final urgent = items.where((i) => i.urgent).firstOrNull;
+    return SnappyTap(
+      onTap: () {
+        // Desce até "Para fazer agora" (logo abaixo do planeamento).
+        final pos = Scrollable.maybeOf(context)?.position;
+        if (pos == null) return;
+        pos.animateTo((pos.pixels + 260).clamp(0.0, pos.maxScrollExtent),
+            duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic);
+      },
+      child: Container(
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(color: const Color(0xFFF7EACA), borderRadius: BorderRadius.circular(16)),
+        child: Row(
+          children: [
+            Container(
+              width: 26,
+              height: 26,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(color: Color(0xFF8A4B10), shape: BoxShape.circle),
+              child: Text('${items.length}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                [
+                  items.length == 1 ? 'coisa para tratar' : 'coisas para tratar',
+                  if (urgent != null) urgent.subtitle.split(' · ').first,
+                ].join(' · '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF5A3E0C)),
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF5A3E0C)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Planeamento: tarefas feitas / total.
+class _PlanningBar extends ConsumerWidget {
+  const _PlanningBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(taskEngineControllerProvider);
+    final done = s.systemDone.length;
+    final total = done + s.systemActive.length;
+    if (total == 0) return const SizedBox.shrink();
+    final pct = done / total;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Text('Planeamento', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const Spacer(),
+            Text('${(pct * 100).round()}% · $done de $total tarefas',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _green)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(value: pct, minHeight: 8, color: _green, backgroundColor: const Color(0xFFE2DED4)),
+        ),
+      ],
+    );
+  }
+}
+
+/// "Para fazer agora" (ou "Esta semana" nos últimos 7 dias).
+class _TodoNow extends ConsumerWidget {
+  final Wedding wedding;
+  const _TodoNow({required this.wedding});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = _todoItems(ref);
+    final days = wedding.weddingDate?.difference(DateTime.now()).inDays;
+    final week = days != null && days >= 0 && days <= 7;
+    if (items.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(week ? 'Esta semana' : 'Para fazer agora',
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: _card(),
+          child: Column(
+            children: [
+              for (final (i, it) in items.indexed) ...[
+                if (i > 0) const Divider(height: 1, color: Color(0xFFF2F0EB)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(color: it.tint, borderRadius: BorderRadius.circular(12)),
+                        child: Icon(it.icon, size: 20, color: it.ink),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(it.title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 13, color: it.urgent ? const Color(0xFF8A4B10) : AppTheme.inkMuted)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton(
+                        onPressed: () => it.onTap(context, ref),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: it.primary ? AppTheme.ink : _green,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(0, 40),
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                        ),
+                        child: Text(it.action),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Os 4 blocos: convidados, orçamento, parceiros, lugares.
+class _StatBlocks extends ConsumerWidget {
+  const _StatBlocks();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final guests = ref.watch(guestsControllerProvider).guests;
+    final confirmed = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).length;
+    final budget = ref.watch(budgetControllerProvider).budget;
+    final bookings = (ref.watch(coupleBookingsProvider).asData?.value ?? const <CoupleBooking>[])
+        .where((b) => b.status != BookingStatus.recusado)
+        .toList();
+    final reserved = bookings
+        .where((b) => b.status == BookingStatus.confirmado || b.status == BookingStatus.concluido)
+        .map((b) => b.partnerName)
+        .toSet()
+        .length;
+    final partners = bookings.map((b) => b.partnerName).toSet().length;
+    final seated = ref.watch(seatingControllerProvider).tables.fold<int>(0, (n, t) => n + t.guestIds.length);
+
+    Widget block(String label, String value, String? of, double pct, String sub, String route, {Color? bar}) => Expanded(
+          child: SnappyTap(
+            onTap: () => context.push(route),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: _card(radius: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: const TextStyle(fontSize: 11, letterSpacing: 1.1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  const SizedBox(height: 6),
+                  Text.rich(TextSpan(children: [
+                    TextSpan(text: value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    if (of != null) TextSpan(text: ' $of', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  ])),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: LinearProgressIndicator(
+                      value: pct.clamp(0.0, 1.0),
+                      minHeight: 6,
+                      color: bar ?? _green,
+                      backgroundColor: const Color(0xFFF2F0EB),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                ],
+              ),
+            ),
+          ),
+        );
+
+    return Column(
+      children: [
+        Row(children: [
+          block('CONVIDADOS', '$confirmed', 'de ${guests.length}', guests.isEmpty ? 0 : confirmed / guests.length, 'confirmados', '/guests'),
+          const SizedBox(width: 10),
+          block(
+            'ORÇAMENTO',
+            budget == null ? '—' : euros(budget.spent),
+            null,
+            budget == null || budget.total == 0 ? 0 : budget.spent / budget.total,
+            budget == null || budget.total == 0 ? 'por definir' : 'de ${euros(budget.total)}',
+            '/budget',
+            bar: const Color(0xFFB8995A),
+          ),
+        ]),
+        const SizedBox(height: 10),
+        Row(children: [
+          block('PARCEIROS', '$reserved', partners == 0 ? null : 'de $partners', partners == 0 ? 0 : reserved / partners, 'reservados', '/bookings'),
+          const SizedBox(width: 10),
+          block('LUGARES', '$seated', guests.isEmpty ? null : 'de ${guests.length}', guests.isEmpty ? 0 : seated / guests.length, 'sentados', '/seating'),
+        ]),
+      ],
+    );
+  }
+}
+
+/// "Gerir": tudo o resto numa lista.
+class _ManageList extends ConsumerWidget {
+  const _ManageList();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = _shortcuts(ref);
+    String sub(String label) => s.firstWhere((x) => x.label == label, orElse: () => const _Shortcut(Icons.circle, '', '', '')).subtitle;
+    final rows = <(IconData, String, String, String)>[
+      (Icons.people_outline, 'Convidados', sub('Convidados'), '/guests'),
+      (Icons.event_seat_outlined, 'Mesas e lugares', sub('Lugares'), '/seating'),
+      (Icons.savings_outlined, 'Orçamento e pagamentos', sub('Orçamento'), '/budget'),
+      (Icons.event_available_outlined, 'Reservas', 'Parceiros contratados', '/bookings'),
+      (Icons.checklist_rtl_outlined, 'Tarefas', '${ref.watch(taskEngineControllerProvider).systemActive.length} por fazer', '/tasks'),
+      (Icons.card_giftcard_outlined, 'Para os convidados', 'Programa e presentes', '/guest-page'),
+      (Icons.photo_library_outlined, 'Galeria', sub('Galeria'), '/gallery'),
+      (Icons.handshake_outlined, 'Serviços tratados', sub('Serviços tratados'), '/service-preferences'),
+      (Icons.group_add_outlined, 'Organizadores', 'Quem ajuda a organizar', '/organizadores'),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text('Gerir', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 10),
+        Container(
+          decoration: _card(),
+          clipBehavior: Clip.antiAlias,
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(
+              children: [
+                for (final (i, (icon, label, subtitle, route)) in rows.indexed) ...[
+                  if (i > 0) const Divider(height: 1, indent: 52, color: Color(0xFFF2F0EB)),
+                  InkWell(
+                    onTap: () => context.push(route),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 56),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        child: Row(
+                          children: [
+                            Icon(icon, size: 22, color: _green),
+                            const SizedBox(width: 14),
+                            Expanded(child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+                            Flexible(
+                              child: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.right,
+                                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.chevron_right_rounded, size: 20, color: AppTheme.inkMuted),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// O convite: código, enviar e ver como convidado.
+class _InviteCodeCard extends StatelessWidget {
+  final Wedding wedding;
+  const _InviteCodeCard({required this.wedding});
+
+  @override
+  Widget build(BuildContext context) {
+    final code = wedding.guestCode;
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: const Color(0xFF3F5A3B), borderRadius: BorderRadius.circular(22)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('O convite', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+          if (code != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+              decoration: BoxDecoration(color: _greenDark, borderRadius: BorderRadius.circular(14)),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('CÓDIGO', style: TextStyle(fontSize: 11, letterSpacing: 1.1, fontWeight: FontWeight.w700, color: Color(0xFFDDE5D3))),
+                        Text(code, style: const TextStyle(fontSize: 18, letterSpacing: 2.4, fontWeight: FontWeight.w700, color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Copiar link',
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: wedding.inviteUrl ?? code));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link do convite copiado.')));
+                    },
+                    style: IconButton.styleFrom(backgroundColor: _green, minimumSize: const Size(44, 44)),
+                    icon: const Icon(Icons.copy_rounded, size: 20, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                flex: 7,
+                child: FilledButton(
+                  onPressed: () => shareWeddingInvite(context, wedding),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: _greenDark,
+                    minimumSize: const Size(0, 48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                  child: const Text('Enviar convite'),
+                ),
+              ),
+              if (code != null) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 5,
+                  child: OutlinedButton(
+                    onPressed: () => context.push('/invite/$code'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 48),
+                      side: const BorderSide(color: Color(0xFFDDE5D3), width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                    ),
+                    child: const Text('Ver como convidado'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

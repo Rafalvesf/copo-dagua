@@ -392,105 +392,203 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
 }
 
 /// Loja dos parceiros: o organizador escolhe produtos para a lista.
-class GiftShopScreen extends ConsumerStatefulWidget {
+class GiftShopScreen extends StatelessWidget {
   const GiftShopScreen({super.key});
+
   @override
-  ConsumerState<GiftShopScreen> createState() => _GiftShopScreenState();
+  Widget build(BuildContext context) => const GradientScaffold(
+        background: AppBackground.subtle,
+        body: SafeArea(
+          bottom: false,
+          child: Column(children: [
+            PageHeader(title: 'Loja', subtitle: 'Peças de artesãos e lojas parceiras.', centered: true),
+            Expanded(child: GiftShopView()),
+          ]),
+        ),
+      );
 }
 
-class _GiftShopScreenState extends ConsumerState<GiftShopScreen> {
+/// Pesquisa + grelha de produtos das lojas parceiras (migração 160).
+/// Ecrã próprio ([GiftShopScreen]) e separador "Lojas" em Parceiros
+/// (pedido 2026-11-07); ocupa o espaço que lhe derem (usar em Expanded).
+class GiftShopView extends ConsumerStatefulWidget {
+  /// Espaço no fim da grelha (a navbar flutuante tapa o fundo).
+  final double bottomPadding;
+
+  /// Atalho para a lista de presentes do evento por cima da grelha.
+  final bool showListLink;
+  const GiftShopView({super.key, this.bottomPadding = 40, this.showListLink = false});
+  @override
+  ConsumerState<GiftShopView> createState() => _GiftShopViewState();
+}
+
+class _GiftShopViewState extends ConsumerState<GiftShopView> {
   String _query = '';
   final Set<String> _added = {};
+
+  Future<void> _add(ShopProduct p, String weddingId) async {
+    try {
+      await addProductToList(weddingId: weddingId, productId: p.id);
+      if (mounted) setState(() => _added.add(p.id));
+      ref.invalidate(giftListProvider(weddingId));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${p.title} está na lista.')));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível pôr na lista.')));
+      }
+    }
+  }
+
+  void _showProduct(ShopProduct p, String? weddingId, bool added) {
+    showIslandSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          if (p.photoUrl != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: AspectRatio(aspectRatio: 4 / 3, child: Image.network(p.photoUrl!, fit: BoxFit.cover)),
+            ),
+          const SizedBox(height: 14),
+          Text(p.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          Text('${p.partnerName}${p.city != null ? ' · ${p.city}' : ''}', style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
+          const SizedBox(height: 8),
+          Text(giftEuros(p.price), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          if (p.description?.isNotEmpty == true) ...[
+            const SizedBox(height: 10),
+            Text(p.description!, style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.ink)),
+          ],
+          if (p.deliveryNote?.isNotEmpty == true) ...[
+            const SizedBox(height: 8),
+            Row(children: [
+              const Icon(Icons.local_shipping_outlined, size: 18, color: AppTheme.inkMuted),
+              const SizedBox(width: 6),
+              Expanded(child: Text(p.deliveryNote!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+            ]),
+          ],
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: weddingId == null || added || !p.inStock
+                ? null
+                : () async {
+                    Navigator.of(sheetContext).pop();
+                    await _add(p, weddingId);
+                  },
+            icon: Icon(added ? Icons.check_rounded : Icons.add_rounded),
+            label: Text(added ? 'Já está na vossa lista' : (p.inStock ? 'Pôr na lista de presentes' : 'Esgotado')),
+            style: FilledButton.styleFrom(backgroundColor: _green, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Os convidados pagam na app e a loja envia para a vossa morada.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted),
+          ),
+        ]),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
     final products = ref.watch(shopProductsProvider(_query));
-    return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(
-        bottom: false,
-        child: Column(children: [
-          const PageHeader(title: 'Loja', subtitle: 'Peças de artesãos e lojas parceiras.', centered: true),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 8),
-            child: TextField(
-              decoration: const InputDecoration(prefixIcon: Icon(Icons.search_rounded), hintText: 'Procurar: cerâmica, mantas, vinho…'),
-              textInputAction: TextInputAction.search,
-              onSubmitted: (v) => setState(() => _query = v.trim()),
-            ),
-          ),
-          Expanded(
-            child: products.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, s) => const _Info('Não foi possível carregar a loja.'),
-              data: (list) => list.isEmpty
-                  ? const _Info('Ainda não há produtos. Os parceiros juntam-nos na sua Loja.')
-                  : GridView.builder(
-                      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, 40),
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 240,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 0.62,
-                      ),
-                      itemCount: list.length,
-                      itemBuilder: (context, n) {
-                        final p = list[n];
-                        final added = _added.contains(p.id);
-                        return Container(
-                          decoration: _card(),
-                          clipBehavior: Clip.antiAlias,
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                            AspectRatio(
-                              aspectRatio: 1,
-                              child: p.photoUrl == null
-                                  ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, size: 40, color: _green))
-                                  : Image.network(p.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Text(p.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                                  Text('${p.partnerName}${p.city != null ? ' · ${p.city}' : ''}',
-                                      maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                                  const Spacer(),
-                                  Row(children: [
-                                    Expanded(child: Text(giftEuros(p.price), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.ink))),
-                                    IconButton.filledTonal(
-                                      tooltip: added ? 'Na lista' : 'Pôr na lista',
-                                      onPressed: weddingId == null || added || !p.inStock
-                                          ? null
-                                          : () async {
-                                              try {
-                                                await addProductToList(weddingId: weddingId, productId: p.id);
-                                                setState(() => _added.add(p.id));
-                                                ref.invalidate(giftListProvider(weddingId));
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${p.title} está na lista.')));
-                                                }
-                                              } catch (_) {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível pôr na lista.')));
-                                                }
-                                              }
-                                            },
-                                      icon: Icon(added ? Icons.check_rounded : Icons.add_rounded),
-                                    ),
-                                  ]),
-                                ]),
-                              ),
-                            ),
-                          ]),
-                        );
-                      },
-                    ),
-            ),
-          ),
-        ]),
+    final list = weddingId == null ? null : ref.watch(giftListProvider(weddingId)).value;
+    final inList = {
+      ..._added,
+      for (final i in list ?? const <GiftItem>[]) if (i.productId != null) i.productId!,
+    };
+    return Column(children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 8),
+        child: TextField(
+          decoration: const InputDecoration(prefixIcon: Icon(Icons.search_rounded), hintText: 'Procurar: cerâmica, mantas, vinho…'),
+          textInputAction: TextInputAction.search,
+          onSubmitted: (v) => setState(() => _query = v.trim()),
+        ),
       ),
-    );
+      if (widget.showListLink && weddingId != null)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 8),
+          child: Material(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            child: ListTile(
+              onTap: () => context.push('/gift-list'),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+              leading: CircleAvatar(backgroundColor: _green, child: const Icon(Icons.checklist_rtl_rounded, color: Colors.white, size: 20)),
+              title: const Text('A vossa lista de presentes', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              subtitle: Text(
+                list == null || list.isEmpty
+                    ? 'Desejos e produtos'
+                    : '${list.length} ${list.length == 1 ? 'presente' : 'presentes'} · ${list.where((i) => i.complete).length} oferecidos',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+            ),
+          ),
+        ),
+      Expanded(
+        child: products.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, s) => const _Info('Não foi possível carregar a loja.'),
+          data: (items) => items.isEmpty
+              ? const _Info('Ainda não há produtos. Os parceiros juntam-nos na sua Loja.')
+              : GridView.builder(
+                  padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, widget.bottomPadding),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 240,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.62,
+                  ),
+                  itemCount: items.length,
+                  itemBuilder: (context, n) {
+                    final p = items[n];
+                    final added = inList.contains(p.id);
+                    return Material(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: () => _showProduct(p, weddingId, added),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                          AspectRatio(
+                            aspectRatio: 1,
+                            child: p.photoUrl == null
+                                ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, size: 40, color: _green))
+                                : Image.network(p.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text(p.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                Text('${p.partnerName}${p.city != null ? ' · ${p.city}' : ''}',
+                                    maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                                const Spacer(),
+                                Row(children: [
+                                  Expanded(child: Text(giftEuros(p.price), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.ink))),
+                                  IconButton.filledTonal(
+                                    tooltip: added ? 'Na lista' : 'Pôr na lista',
+                                    onPressed: weddingId == null || added || !p.inStock ? null : () => _add(p, weddingId),
+                                    icon: Icon(added ? Icons.check_rounded : Icons.add_rounded),
+                                  ),
+                                ]),
+                              ]),
+                            ),
+                          ),
+                        ]),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ),
+    ]);
   }
 }
 
