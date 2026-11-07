@@ -182,8 +182,15 @@ class PartnerHomeScreen extends ConsumerWidget {
                   // Loja de presentes (migração 160; pedido 2026-11-07: na
                   // secção do parceiro, não nas Definições).
                   V2Tile(
+                    icon: Icons.verified_outlined,
+                    label: 'Pro',
+                    sub: 'Selo, visibilidade e estatísticas',
+                    index: 5,
+                    onTap: () => context.push('/partner-pro'),
+                  ),
+                  V2Tile(
                     icon: Icons.storefront_outlined,
-                    label: 'Loja de presentes',
+                    label: 'Loja',
                     sub: 'Produtos e encomendas',
                     index: 5,
                     onTap: () => context.push('/partner-shop'),

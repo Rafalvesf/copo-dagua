@@ -131,6 +131,13 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "159",
     check: { kind: "table", table: "gift_list_items" },
   },
+  {
+    file: "161_partner_pro_founders_admin.sql",
+    title: "Plano Pro dos parceiros + fundadores no admin",
+    what: "Pro a 19 €/mês ou 190 €/ano (selo, mais visibilidade, estatísticas, loja sem limites); dar/tirar fundador e Pro no admin; definições de fundadores, convites e Pro.",
+    after: "160",
+    check: { kind: "column", table: "partner_profiles", column: "pro_until" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

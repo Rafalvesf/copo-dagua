@@ -25,6 +25,7 @@ import '../../../core/partners/category_figure.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
+import '../../partner_pro/partner_pro_screen.dart' show ProBadge;
 
 
 class PartnerDetailScreen extends ConsumerStatefulWidget {
@@ -305,7 +306,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                       color: AppTheme.ink,
                                     ),
                                   ),
-                                  FounderBadge(partner.id, long: true),
+                                  Row(mainAxisSize: MainAxisSize.min, children: [
+                                    FounderBadge(partner.id, long: true),
+                                    ProBadge(partner.id),
+                                  ]),
                                   const SizedBox(height: 3),
                                   Text(
                                     [

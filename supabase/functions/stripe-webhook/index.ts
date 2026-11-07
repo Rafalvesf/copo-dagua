@@ -2,6 +2,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { stripeClient } from "../_shared/stripe.ts";
 import { confirmTicket } from "../_shared/tickets.ts";
 import { confirmGiftOrder } from "../_shared/gifts.ts";
+import { syncPartnerPro } from "../_shared/pro.ts";
 
 // Contract: mobile-app/payments/stripe-connect.md
 //
@@ -62,6 +63,11 @@ Deno.serve(async (req) => {
           await confirmGiftOrder(stripe, supabase, session.id);
           break;
         }
+        // Plano Pro dos parceiros (migração 161).
+        if (session.metadata?.kind === "partner_pro") {
+          if (session.metadata.partner_id) await syncPartnerPro(stripe, supabase, session.metadata.partner_id);
+          break;
+        }
         // Reservas dos convidados (alojamento/transporte, 099_guest_offers.sql).
         if (session.metadata?.kind === "guest_reservation") {
           const { error } = await supabase.rpc("confirm_guest_reservation_payment", {
@@ -97,6 +103,16 @@ Deno.serve(async (req) => {
         if (error) {
           console.error("confirm_stripe_deposit_payment (pi) failed", error);
           return new Response("db error", { status: 500 });
+        }
+        break;
+      }
+      // Renovações, cancelamentos e falhas de pagamento do Pro (migração 161).
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as { metadata?: Record<string, string> | null };
+        if (sub.metadata?.kind === "partner_pro" && sub.metadata.partner_id) {
+          await syncPartnerPro(stripe, supabase, sub.metadata.partner_id);
         }
         break;
       }

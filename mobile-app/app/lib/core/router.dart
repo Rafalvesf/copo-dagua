@@ -5,6 +5,7 @@ import '../features/events/screens/ticket_pass_screens.dart' show CheckInScreen;
 import '../features/settings/screens/organizers_screen.dart' show OrganizersScreen, PermissionGate;
 import '../features/gifts/screens/gift_list_screens.dart' show OrganizerGiftListScreen, GiftShopScreen, GiftReturnScreen;
 import '../features/gifts/screens/partner_shop_screen.dart' show PartnerShopScreen;
+import '../features/partner_pro/partner_pro_screen.dart' show PartnerProScreen;
 import 'wedding/organizers.dart' show OrganizerPerm;
 import '../features/messages/team_messages.dart';
 import 'package:flutter/foundation.dart';
@@ -359,6 +360,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/gift-shop', builder: (context, state) => const PermissionGate(perm: OrganizerPerm.evento, child: GiftShopScreen())),
       GoRoute(path: '/presente/:id', builder: (context, state) => GiftReturnScreen(orderId: state.pathParameters['id']!)),
       GoRoute(path: '/partner-shop', builder: (context, state) => const PartnerShopScreen()),
+      // Plano Pro dos parceiros (migração 161).
+      GoRoute(path: '/partner-pro', builder: (context, state) => PartnerProScreen(returned: state.uri.queryParameters['ok'] == '1')),
       GoRoute(path: '/entrada/:code', builder: (context, state) => CheckInScreen(code: state.pathParameters['code']!)),
       GoRoute(path: '/bilhetes/ativar', builder: (context, state) => const PartnerPayoutSetupScreen(organizer: true)),
       // Evento público aberto por link partilhado (2026-11).
