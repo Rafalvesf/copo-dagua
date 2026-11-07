@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 import '../../gifts/screens/gift_list_screens.dart' show GiftShopView;
 import '../../../shared/widgets/floating_filter_bar.dart' show FilterChipsRow, FilterBarItem;
@@ -17,7 +17,6 @@ import '../../../core/partners/favorite_partners_controller.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -51,6 +50,19 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
 
   /// Separador por cima da navbar: 0 = Empresas, 1 = Lojas (2026-11-07).
   int _tab = 0;
+
+  /// A navbar (com Empresas | Lojas) esconde-se ao descer a lista e volta
+  /// ao subir (pedido 2026-11-07).
+  bool _navHidden = false;
+
+  bool _onScroll(UserScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final hide = n.direction == ScrollDirection.reverse && n.metrics.pixels > 0;
+    final show = n.direction == ScrollDirection.forward;
+    if (hide && !_navHidden) setState(() => _navHidden = true);
+    if (show && _navHidden) setState(() => _navHidden = false);
+    return false;
+  }
   final _search = TextEditingController();
 
   /// Localização escolhida pelo cliente para filtrar parceiros — `null`
@@ -205,7 +217,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
       background: AppBackground.subtle,
       body: Stack(
         children: [
-          SafeArea(
+          NotificationListener<UserScrollNotification>(
+            onNotification: _onScroll,
+            child: SafeArea(
             bottom: false,
             child: Column(
               children: [
@@ -572,19 +586,31 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
               ],
             ),
           ),
+          ),
           if (!widget.selectionMode)
             Positioned(
               left: 0,
               right: 0,
               bottom: 0,
-              child: FloatingBottomNav(
-                current: AppTab.partners,
-                top: FilterChipsRow(
-                  items: const [FilterBarItem('Empresas'), FilterBarItem('Lojas')],
-                  selected: _tab,
-                  infinite: false,
-                  visible: 2,
-                  onSelected: (i) => setState(() => _tab = i),
+              child: IgnorePointer(
+                ignoring: _navHidden,
+                child: AnimatedSlide(
+                  offset: _navHidden ? const Offset(0, 1.3) : Offset.zero,
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  child: FloatingBottomNav(
+                    current: AppTab.partners,
+                    top: FilterChipsRow(
+                      items: const [FilterBarItem('Empresas'), FilterBarItem('Lojas')],
+                      selected: _tab,
+                      infinite: false,
+                      visible: 2,
+                      onSelected: (i) => setState(() {
+                        _tab = i;
+                        _navHidden = false;
+                      }),
+                    ),
+                  ),
                 ),
               ),
             ),
