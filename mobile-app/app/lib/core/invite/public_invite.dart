@@ -107,9 +107,16 @@ class InviteEvent {
 }
 
 Future<InviteEvent?> loadInviteEvent(String code) async {
-  final res = await supabase.rpc('get_public_event', params: {'p_code': code});
-  if (res is! Map) return null;
-  return InviteEvent.fromJson(res.cast<String, dynamic>(), code);
+  try {
+    final res = await supabase.rpc('get_public_event', params: {'p_code': code});
+    if (res is! Map) return null;
+    return InviteEvent.fromJson(res.cast<String, dynamic>(), code);
+  } catch (_) {
+    // Antes da migração 162: só nomes, data, local e foto (075).
+    final rows = await supabase.rpc('get_public_invite', params: {'p_code': code}) as List;
+    if (rows.isEmpty) return null;
+    return InviteEvent.fromJson((rows.first as Map).cast<String, dynamic>(), code);
+  }
 }
 
 /// O que a pessoa já respondeu neste telemóvel (pelo token guardado).
