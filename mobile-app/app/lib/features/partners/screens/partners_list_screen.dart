@@ -7,7 +7,8 @@ import '../../../shared/widgets/permissions_step.dart' show ensurePermission, Ap
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
-import '../../../core/gifts/gift_shop.dart' show GiftItem, ShopProduct, addProductToList, giftEuros, giftListProvider, shopProductsProvider;
+import '../../gifts/screens/gift_list_screens.dart' show GiftShopView;
+import '../../../shared/widgets/floating_filter_bar.dart' show FilterChipsRow, FilterBarItem;
 import '../../partner_pro/partner_pro_screen.dart' show ProBadge;
 
 import '../../../core/models/models.dart';
@@ -47,6 +48,9 @@ class PartnersListScreen extends ConsumerStatefulWidget {
 
 class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   late String? _filter = widget.categorySlug;
+
+  /// Separador por cima da navbar: 0 = Empresas, 1 = Lojas (2026-11-07).
+  int _tab = 0;
   final _search = TextEditingController();
 
   /// Localização escolhida pelo cliente para filtrar parceiros — `null`
@@ -245,6 +249,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                     ),
                   ),
                 ),
+                if (_tab == 1 && !widget.selectionMode)
+                  const Expanded(child: GiftShopView(bottomPadding: 190, showListLink: true))
+                else ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppTheme.screenMargin,
@@ -480,7 +487,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             0,
                             12,
                             0,
-                            widget.selectionMode ? 40 : 140,
+                            widget.selectionMode ? 40 : 200,
                           ),
                           children: [
                             // Como no mockup (2026-10-19): destaques num
@@ -526,9 +533,6 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                               ),
                               const SizedBox(height: 14),
                             ],
-                            // Loja (migração 160): presentes dos parceiros e
-                            // a lista do evento, entre os destaques e a lista.
-                            if (!widget.selectionMode && query.isEmpty && _filter == null) const _GiftsEntry(),
                             if (!widget.selectionMode)
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, 12),
@@ -564,6 +568,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                     },
                   ),
                 ),
+                ],
               ],
             ),
           ),
@@ -572,7 +577,16 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: FloatingBottomNav(current: AppTab.partners),
+              child: FloatingBottomNav(
+                current: AppTab.partners,
+                top: FilterChipsRow(
+                  items: const [FilterBarItem('Empresas'), FilterBarItem('Lojas')],
+                  selected: _tab,
+                  infinite: false,
+                  visible: 2,
+                  onSelected: (i) => setState(() => _tab = i),
+                ),
+              ),
             ),
         ],
       ),
@@ -1214,234 +1228,6 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
                   _tile(Icons.location_on_outlined, o, onTap: () => Navigator.of(context).pop(o)),
               ],
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
-/// Loja (migração 160) na secção dos parceiros: produtos de artesãos e
-/// lojas parceiras numa faixa, com atalho para a lista do evento
-/// (redesenho pedido a 2026-11-07).
-class _GiftsEntry extends ConsumerWidget {
-  const _GiftsEntry();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final green = AppTheme.accentOliveDark;
-    final products = ref.watch(shopProductsProvider('')).value ?? const <ShopProduct>[];
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-    final list = weddingId == null ? null : ref.watch(giftListProvider(weddingId)).value;
-    final inList = {for (final i in list ?? const <GiftItem>[]) if (i.productId != null) i.productId!};
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            const Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Loja', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                SizedBox(height: 2),
-                Text('Presentes de artesãos e lojas parceiras', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              ]),
-            ),
-            TextButton(onPressed: () => context.push('/gift-shop'), child: const Text('Ver tudo')),
-          ]),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 214,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-            children: [
-              // A vossa lista: primeiro cartão, sempre visível.
-              _ShopTile(
-                width: 150,
-                onTap: () => context.push('/gift-list'),
-                image: Container(
-                  color: green,
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.checklist_rtl_rounded, size: 40, color: Colors.white),
-                ),
-                title: 'A vossa lista',
-                sub: list == null || list.isEmpty
-                    ? 'Desejos e produtos'
-                    : '${list.length} ${list.length == 1 ? 'presente' : 'presentes'} · ${list.where((i) => i.complete).length} oferecidos',
-              ),
-              for (final p in products.take(12)) ...[
-                const SizedBox(width: 10),
-                _ShopTile(
-                  width: 150,
-                  onTap: () => _showProduct(context, ref, p, weddingId, inList.contains(p.id)),
-                  image: p.photoUrl == null
-                      ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, size: 36, color: green))
-                      : Image.network(p.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
-                  title: p.title,
-                  sub: p.partnerName,
-                  price: giftEuros(p.price),
-                  added: inList.contains(p.id),
-                ),
-              ],
-              if (products.isEmpty) ...[
-                const SizedBox(width: 10),
-                _ShopTile(
-                  width: 190,
-                  onTap: () => context.push('/gift-shop'),
-                  image: Container(
-                    color: AppTheme.accentTint,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.storefront_outlined, size: 40, color: green),
-                  ),
-                  title: 'A loja está a abrir',
-                  sub: 'Os parceiros estão a juntar produtos',
-                ),
-              ],
-            ],
-          ),
-        ),
-      ]),
-    );
-  }
-
-  void _showProduct(BuildContext context, WidgetRef ref, ShopProduct p, String? weddingId, bool added) {
-    showIslandSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) => SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          if (p.photoUrl != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: AspectRatio(aspectRatio: 4 / 3, child: Image.network(p.photoUrl!, fit: BoxFit.cover)),
-            ),
-          const SizedBox(height: 14),
-          Text(p.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-          Text('${p.partnerName}${p.city != null ? ' · ${p.city}' : ''}', style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
-          const SizedBox(height: 8),
-          Text(giftEuros(p.price), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-          if (p.description?.isNotEmpty == true) ...[
-            const SizedBox(height: 10),
-            Text(p.description!, style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.ink)),
-          ],
-          if (p.deliveryNote?.isNotEmpty == true) ...[
-            const SizedBox(height: 8),
-            Row(children: [
-              const Icon(Icons.local_shipping_outlined, size: 18, color: AppTheme.inkMuted),
-              const SizedBox(width: 6),
-              Expanded(child: Text(p.deliveryNote!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
-            ]),
-          ],
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: weddingId == null || added || !p.inStock
-                ? null
-                : () async {
-                    try {
-                      await addProductToList(weddingId: weddingId, productId: p.id);
-                      ref.invalidate(giftListProvider(weddingId));
-                      if (sheetContext.mounted) Navigator.of(sheetContext).pop();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${p.title} está na vossa lista.')));
-                      }
-                    } catch (_) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível pôr na lista.')));
-                      }
-                    }
-                  },
-            icon: Icon(added ? Icons.check_rounded : Icons.add_rounded),
-            label: Text(added ? 'Já está na vossa lista' : (p.inStock ? 'Pôr na lista de presentes' : 'Esgotado')),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.accentOliveDark,
-              minimumSize: const Size.fromHeight(50),
-              shape: const StadiumBorder(),
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Os convidados pagam na app e a loja envia para a vossa morada.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted),
-          ),
-        ]),
-      ),
-    );
-  }
-}
-
-class _ShopTile extends StatelessWidget {
-  final double width;
-  final VoidCallback onTap;
-  final Widget image;
-  final String title;
-  final String? sub;
-  final String? price;
-  final bool added;
-  const _ShopTile({
-    required this.width,
-    required this.onTap,
-    required this.image,
-    required this.title,
-    this.sub,
-    this.price,
-    this.added = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: SnappyTap(
-        onTap: onTap,
-        child: Semantics(
-          button: true,
-          label: price == null ? title : '$title, $price',
-          child: Container(
-            decoration: softCard(),
-            clipBehavior: Clip.antiAlias,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              SizedBox(
-                height: 130,
-                child: Stack(fit: StackFit.expand, children: [
-                  image,
-                  if (price != null)
-                    Positioned(
-                      left: 8,
-                      bottom: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
-                        child: Text(price!, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                      ),
-                    ),
-                  if (added)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(999)),
-                        child: const Icon(Icons.check_rounded, size: 14, color: Colors.white, semanticLabel: 'Na lista'),
-                      ),
-                    ),
-                ]),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, height: 1.25, color: AppTheme.ink)),
-                  if (sub != null)
-                    Text(sub!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                ]),
-              ),
-            ]),
           ),
         ),
       ),
