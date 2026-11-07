@@ -74,7 +74,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 40),
           children: [
-            const PageHeader(title: 'À Nossa! Pro', subtitle: 'Pagas menos comissão, apareces mais e sabes mais.', centered: true),
+            const PageHeader(title: 'À Nossa! Verificado', subtitle: 'Pagas menos comissão, apareces mais e sabes mais.', centered: true),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(18),
@@ -83,7 +83,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
                 Row(children: [
                   const Icon(Icons.verified_rounded, color: Colors.white),
                   const SizedBox(width: 8),
-                  Text(pro.active ? 'És Pro' : 'Pro', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
+                  Text(pro.active ? 'És Verificado' : 'Verificado', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
                 ]),
                 const SizedBox(height: 6),
                 Text(
@@ -103,12 +103,12 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
               (Icons.percent_rounded, 'Comissão mais baixa',
                   '${_pts(pro.feeDiscount)} ponto${pro.feeDiscount == 1 ? '' : 's'} a menos em todas as reservas (ex.: 4% passa a ${_pts(4 - pro.feeDiscount)}%).'),
               (Icons.group_add_outlined, 'Convites valem mais',
-                  'Cada ${pro.proReferralFreeEvery}.º cliente que trazes fica sem comissão (sem Pro, o ${pro.referralFreeEvery}.º).'),
+                  'Cada ${pro.proReferralFreeEvery}.º cliente que trazes fica sem comissão (sem o Verificado, o ${pro.referralFreeEvery}.º).'),
               (Icons.campaign_outlined, 'Destaque mais barato',
-                  '+${_pts(pro.proPromotionExtraPct)}% nas reservas que vêm do destaque (sem Pro, +${_pts(pro.promotionExtraPct)}%).'),
-              (Icons.verified_outlined, 'Selo Pro e mais visibilidade', 'Selo no perfil e na pesquisa, e apareces antes dos outros parceiros.'),
+                  '+${_pts(pro.proPromotionExtraPct)}% nas reservas que vêm do destaque (sem o Verificado, +${_pts(pro.promotionExtraPct)}%).'),
+              (Icons.verified_outlined, 'Selo Verificado e mais visibilidade', 'Selo no perfil e na pesquisa, e apareces antes dos outros parceiros.'),
               (Icons.insights_outlined, 'Estatísticas detalhadas', 'Visitas ao perfil por semana, pedidos começados e conversão.'),
-              (Icons.storefront_outlined, 'Loja sem limites', 'Se vendes produtos: sem Pro até ${pro.freeShopProducts}, com Pro os que quiseres.'),
+              (Icons.storefront_outlined, 'Loja sem limites', 'Se vendes produtos: sem o Verificado até ${pro.freeShopProducts}, com o Verificado os que quiseres.'),
             ])
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -130,7 +130,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
               ),
             const SizedBox(height: 8),
             if (!pro.enabled && !pro.active)
-              const Text('O Pro ainda não está disponível.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.inkMuted))
+              const Text('O Verificado ainda não está disponível.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.inkMuted))
             else if (!pro.active) ...[
               SegmentedButton<bool>(
                 segments: [
@@ -150,7 +150,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
               FilledButton(
                 onPressed: _busy ? null : () => _open(() => proCheckoutUrl(yearly: _yearly)),
                 style: FilledButton.styleFrom(backgroundColor: green, minimumSize: const Size.fromHeight(52), shape: const StadiumBorder()),
-                child: Text(_busy ? 'A abrir…' : 'Passar a Pro'),
+                child: Text(_busy ? 'A abrir…' : 'Ser Verificado'),
               ),
             ] else if (pro.hasSubscription)
               OutlinedButton(
@@ -170,7 +170,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
   }
 }
 
-/// Selo "Pro" (migração 161).
+/// Selo "Verificado" (migração 161; era "Pro" até 2026-11-07).
 class ProBadge extends ConsumerWidget {
   final String partnerId;
   const ProBadge(this.partnerId, {super.key});
@@ -180,12 +180,10 @@ class ProBadge extends ConsumerWidget {
     final isPro = ref.watch(proPartnerIdsProvider).value?.contains(partnerId) ?? false;
     if (!isPro) return const SizedBox.shrink();
     return Tooltip(
-      message: 'Parceiro Pro',
+      message: 'Parceiro verificado',
       child: Container(
         margin: const EdgeInsets.only(left: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(999)),
-        child: const Text('PRO', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: Colors.white)),
+        child: Icon(Icons.verified_rounded, size: 17, color: AppTheme.accentOliveDark, semanticLabel: 'Verificado'),
       ),
     );
   }

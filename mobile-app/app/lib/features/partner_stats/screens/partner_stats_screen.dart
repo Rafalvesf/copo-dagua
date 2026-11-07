@@ -573,7 +573,7 @@ class _ProInsights extends ConsumerWidget {
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'Com Pro vês as visitas ao teu perfil por semana, quantos começaram um pedido e a conversão.',
+                  'Com o Verificado vês as visitas ao teu perfil por semana, quantos começaram um pedido e a conversão.',
                   style: TextStyle(fontSize: 13.5, height: 1.4, color: AppTheme.ink),
                 ),
               ),
@@ -605,7 +605,7 @@ class _ProInsights extends ConsumerWidget {
         Row(children: [
           Icon(Icons.verified_rounded, size: 18, color: green),
           const SizedBox(width: 6),
-          const Text('Pro · últimos 30 dias', style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const Text('Verificado · últimos 30 dias', style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
         const SizedBox(height: 12),
         Row(children: [
