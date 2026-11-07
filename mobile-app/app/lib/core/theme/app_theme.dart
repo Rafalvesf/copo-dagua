@@ -5,8 +5,8 @@ import '../page_transitions.dart';
 /// mobile-app/shared/design-system.md — fundo branco (creme quente
 /// antes, pedido explícito do utilizador 2026-08-31: "make the bg
 /// white on all pages instead of that cream") com acentos
-/// verde-oliva, cards cinzento-claro sem sombra, tipografia Roboto
-/// Black para títulos e Roboto Regular para o resto. Escala definida
+/// verde-oliva, cards cinzento-claro sem sombra, tipografia Louis George
+/// Café em toda a app (títulos a negrito, resto Regular). Escala definida
 /// para um ecrã de referência de 375px.
 class AppTheme {
   static Color get seedColor => accentOliveDark;
@@ -115,7 +115,7 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
       textTheme: baseText.copyWith(
-        // Saudação (headline) — Roboto Black, forte e direta.
+        // Saudação (headline) — Louis George Café a negrito, forte e direta.
         headlineMedium: baseText.headlineMedium?.copyWith(
           fontSize: AppFontSize.hero,
           height: 40 / 34,
@@ -484,7 +484,7 @@ class AppTypography {
   );
   static const iconSize = 24.0;
 
-  /// Título em Roboto Black para usar fora do textTheme, onde a cor tem
+  /// Título em Louis George Café (negrito) para usar fora do textTheme, onde a cor tem
   /// de ser explícita (ex: texto sobre um gradiente). Mantém o nome
   /// histórico `displaySerif` (já usado em dezenas de ecrãs) mesmo não
   /// sendo serifado — só a família/peso mudaram.
