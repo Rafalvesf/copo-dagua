@@ -70,13 +70,13 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
     if (_wedding) {
       return [
         if (d != null) '${d.day} · ${_monthsRoman[d.month - 1]} · ${d.year}',
-        if (place != null) place,
+        ?place,
       ].join(' · ');
     }
     return [
       if (d != null) '${_weekdays[d.weekday - 1]}, ${d.day} de ${_months[d.month - 1]}',
-      if (ev.time != null) ev.time!,
-      if (place != null) place,
+      ?ev.time,
+      ?place,
     ].join(' · ');
   }
 
@@ -153,6 +153,15 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                               ],
                             ),
                           ),
+                          // Aba fechada por cima, com o selo.
+                          if (flap < 0.5)
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              height: h,
+                              child: CustomPaint(painter: _FlapPainter(flap: flap, sprigs: _wedding)),
+                            ),
                           if (!_wedding)
                             Positioned(
                               right: w * 0.05,
@@ -166,15 +175,6 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                                       style: const TextStyle(fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.w700, color: _paper)),
                                 ),
                               ),
-                            ),
-                          // Aba fechada por cima, com o selo.
-                          if (flap < 0.5)
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              height: h,
-                              child: CustomPaint(painter: _FlapPainter(flap: flap, sprigs: _wedding)),
                             ),
                           Positioned(
                             left: w / 2 - w * 0.15,

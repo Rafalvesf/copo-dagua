@@ -90,7 +90,11 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
     showInstallAppSheet(context, code: ev.code);
   }
 
-  void _createAccount(InviteEvent ev) => context.push('/register?role=guest&code=${ev.code}');
+  void _createAccount(InviteEvent ev) {
+    // Só a resposta deste convite fica ligada à conta nova.
+    if (_answer != null) markInviteClaim(ev.code);
+    context.push('/register?role=guest&code=${ev.code}');
+  }
 
   /// Com conta: entra no evento pelo código (143). Público entra logo;
   /// privado fica à espera do organizador; pago abre a compra.
