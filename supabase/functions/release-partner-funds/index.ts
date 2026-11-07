@@ -146,7 +146,9 @@ async function isFreeReferralBooking(admin: any, bookingId: string): Promise<boo
     if (!b?.couple_id) return false;
     const { data: s } = await admin.from("platform_settings").select("*").eq("id", 1).maybeSingle();
     if (s?.referral_zero_fee === false) return false;
-    const every = Math.max(1, Number(s?.referral_free_every ?? 5) || 5);
+    // Pro (migração 161): a cada 3 em vez de 5.
+    const { data: everyFor } = await admin.rpc("referral_free_every_for", { p_partner: b.partner_id });
+    const every = Math.max(1, Number(everyFor ?? s?.referral_free_every ?? 5) || 5);
     const { data: ref, error } = await admin
       .from("partner_referrals")
       .select("valid, seq")

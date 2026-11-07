@@ -97,7 +97,7 @@ export default async function SettingsPage() {
             items={[
               { label: "Vagas de fundador", value: `${g.founder_slots}` },
               { label: "Sem comissão a cada", value: `${g.referral_free_every} clientes (mín. ${g.referral_min_booking} €)` },
-              { label: "Pro", value: `${g.pro_price_monthly} €/mês · ${g.pro_price_yearly} €/ano` },
+              { label: "Pro", value: `${g.pro_price_monthly} €/mês · ${g.pro_price_yearly} €/ano · −${g.pro_fee_discount} ponto(s) de comissão · cliente grátis a cada ${g.pro_referral_free_every} · destaque +${g.pro_promotion_extra_pct}%` },
             ]}
           />
         )}

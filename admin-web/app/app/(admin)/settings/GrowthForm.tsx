@@ -18,6 +18,9 @@ export type GrowthSettings = {
   pro_price_yearly?: number;
   free_shop_products?: number;
   gift_fee_percentage?: number;
+  pro_fee_discount?: number;
+  pro_referral_free_every?: number;
+  pro_promotion_extra_pct?: number;
 };
 
 // Fundadores, convites dos parceiros e Pro (migrações 151, 160, 161).
@@ -46,6 +49,9 @@ export function GrowthForm({ settings }: { settings: GrowthSettings }) {
       </label>
       <Num name="pro_price_monthly" label="Pro mensal" suffix="€ / mês" value={settings.pro_price_monthly ?? 19} step={0.01} min={1} />
       <Num name="pro_price_yearly" label="Pro anual" suffix="€ / ano" value={settings.pro_price_yearly ?? 190} step={0.01} min={1} />
+      <Num name="pro_fee_discount" label="Pro: desconto na comissão das reservas" suffix="pontos (4% → 3%)" value={settings.pro_fee_discount ?? 1} step={0.1} />
+      <Num name="pro_referral_free_every" label="Pro: sem comissão a cada" suffix="clientes trazidos" value={settings.pro_referral_free_every ?? 3} min={1} />
+      <Num name="pro_promotion_extra_pct" label="Pro: comissão extra do destaque" suffix="% (sem Pro, +6%)" value={settings.pro_promotion_extra_pct ?? 4} step={0.1} />
       <Num name="free_shop_products" label="Produtos na Loja sem Pro" suffix="produtos" value={settings.free_shop_products ?? 5} />
       <Num name="gift_fee_percentage" label="Comissão da Loja" suffix="% + taxa da Stripe, paga pelo parceiro" value={settings.gift_fee_percentage ?? 4} step={0.1} />
       <p className="field-hint" style={{ margin: 0 }}>

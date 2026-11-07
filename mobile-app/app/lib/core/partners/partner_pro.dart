@@ -17,6 +17,12 @@ class PartnerPro {
   final double priceYearly;
   final int freeShopProducts;
   final int products;
+  /// Vantagens Pro nas comissões (migração 161).
+  final double feeDiscount;
+  final int referralFreeEvery;
+  final int proReferralFreeEvery;
+  final double promotionExtraPct;
+  final double proPromotionExtraPct;
   const PartnerPro({
     this.enabled = false,
     this.active = false,
@@ -27,6 +33,11 @@ class PartnerPro {
     this.priceYearly = 190,
     this.freeShopProducts = 5,
     this.products = 0,
+    this.feeDiscount = 1,
+    this.referralFreeEvery = 5,
+    this.proReferralFreeEvery = 3,
+    this.promotionExtraPct = 6,
+    this.proPromotionExtraPct = 4,
   });
 
   bool get shopFull => !active && products >= freeShopProducts;
@@ -47,6 +58,11 @@ final myPartnerProProvider = FutureProvider<PartnerPro>((ref) async {
       priceYearly: (r['price_yearly'] as num?)?.toDouble() ?? 190,
       freeShopProducts: (r['free_shop_products'] as num?)?.toInt() ?? 5,
       products: (r['products'] as num?)?.toInt() ?? 0,
+      feeDiscount: (r['fee_discount'] as num?)?.toDouble() ?? 1,
+      referralFreeEvery: (r['referral_free_every'] as num?)?.toInt() ?? 5,
+      proReferralFreeEvery: (r['pro_referral_free_every'] as num?)?.toInt() ?? 3,
+      promotionExtraPct: (r['promotion_extra_pct'] as num?)?.toDouble() ?? 6,
+      proPromotionExtraPct: (r['pro_promotion_extra_pct'] as num?)?.toDouble() ?? 4,
     );
   } on PostgrestException {
     return const PartnerPro();
