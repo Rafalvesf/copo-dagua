@@ -3,6 +3,8 @@ import 'pending_deep_link.dart';
 import '../features/events/screens/tickets_screens.dart';
 import '../features/events/screens/ticket_pass_screens.dart' show CheckInScreen;
 import '../features/settings/screens/organizers_screen.dart' show OrganizersScreen, PermissionGate;
+import '../features/gifts/screens/gift_list_screens.dart' show OrganizerGiftListScreen, GiftShopScreen, GiftReturnScreen;
+import '../features/gifts/screens/partner_shop_screen.dart' show PartnerShopScreen;
 import 'wedding/organizers.dart' show OrganizerPerm;
 import '../features/messages/team_messages.dart';
 import 'package:flutter/foundation.dart';
@@ -352,6 +354,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       // O organizador leu o QR de um bilhete (migração 158).
       // Organizadores do evento e o que cada um pode (migração 159).
       GoRoute(path: '/organizadores', builder: (context, state) => const OrganizersScreen()),
+      // Lista de presentes e loja dos parceiros (migração 160).
+      GoRoute(path: '/gift-list', builder: (context, state) => const PermissionGate(perm: OrganizerPerm.evento, child: OrganizerGiftListScreen())),
+      GoRoute(path: '/gift-shop', builder: (context, state) => const PermissionGate(perm: OrganizerPerm.evento, child: GiftShopScreen())),
+      GoRoute(path: '/presente/:id', builder: (context, state) => GiftReturnScreen(orderId: state.pathParameters['id']!)),
+      GoRoute(path: '/partner-shop', builder: (context, state) => const PartnerShopScreen()),
       GoRoute(path: '/entrada/:code', builder: (context, state) => CheckInScreen(code: state.pathParameters['code']!)),
       GoRoute(path: '/bilhetes/ativar', builder: (context, state) => const PartnerPayoutSetupScreen(organizer: true)),
       // Evento público aberto por link partilhado (2026-11).
