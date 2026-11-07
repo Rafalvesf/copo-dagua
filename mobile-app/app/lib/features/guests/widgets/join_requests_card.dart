@@ -43,7 +43,7 @@ class JoinRequestsCard extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Pediram para entrar com o link ou o código. Aceita quem convidaste.',
+            'Responderam pelo link ou entraram com o código. Aceita quem convidaste.',
             style: TextStyle(fontSize: 12.5, height: 1.35, color: AppTheme.inkMuted),
           ),
           for (final r in requests) ...[
@@ -78,6 +78,11 @@ class JoinRequestsCard extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+                            if (r.answerSummary != null)
+                              Text(r.answerSummary!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: 12.5, color: AppTheme.accentOliveDark)),
                           ],
                         ),
                       ),

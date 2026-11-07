@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pending_deep_link.dart';
+import 'invite/public_invite.dart' show PendingInvite;
 import '../features/events/screens/tickets_screens.dart';
 import '../features/events/screens/ticket_pass_screens.dart' show CheckInScreen;
 import '../features/settings/screens/organizers_screen.dart' show OrganizersScreen, PermissionGate;
@@ -189,6 +190,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       switch (auth.status) {
         case AuthStatus.unauthenticated:
         case AuthStatus.error:
+          // App instalada a partir do convite ("Descarregar a app", 162):
+          // ao abrir, vai direto ao convite com o código já aplicado.
+          if (location == '/welcome' && PendingInvite.code != null) {
+            return '/invite/${PendingInvite.take()}?app=1';
+          }
           if (_authRoutes.contains(location)) return null;
           // Link partilhado aberto sem sessão: volta lá depois de entrar.
           if (_deepLinkWorthKeeping(location)) PendingDeepLink.save(state.uri.toString());
@@ -635,8 +641,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/invite/:slug',
-        builder: (context, state) =>
-            InvitePageScreen(slug: state.pathParameters['slug']!),
+        builder: (context, state) => InvitePageScreen(
+          slug: state.pathParameters['slug']!,
+          fromInstall: state.uri.queryParameters['app'] == '1',
+        ),
       ),
       GoRoute(
         path: '/rsvp/:token',

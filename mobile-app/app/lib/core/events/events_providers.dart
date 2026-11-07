@@ -118,7 +118,11 @@ class JoinRequest {
   final String? phone;
   final DateTime createdAt;
 
-  const JoinRequest({required this.id, required this.name, this.email, this.phone, required this.createdAt});
+  /// Respostas dadas pelo link sem conta (162): vai?, acompanhantes,
+  /// menu e alergias. `null` enquanto não respondeu.
+  final Map<String, dynamic>? answers;
+
+  const JoinRequest({required this.id, required this.name, this.email, this.phone, required this.createdAt, this.answers});
 
   factory JoinRequest.fromRow(Map<String, dynamic> r) => JoinRequest(
         id: r['id'] as String,
@@ -126,17 +130,42 @@ class JoinRequest {
         email: r['email'] as String?,
         phone: r['phone'] as String?,
         createdAt: DateTime.parse(r['created_at'] as String),
+        answers: (r['answers'] as Map?)?.cast<String, dynamic>(),
       );
+
+  /// "Vai com 1 pessoa · Carne · sem alergias" — para o organizador decidir.
+  String? get answerSummary {
+    final a = answers;
+    if (a == null) return null;
+    if (a['attending'] == false) return 'Respondeu que não vai';
+    final comps = ((a['companions'] as List?) ?? const []).whereType<Map>().toList();
+    final dietary = (a['dietary'] as String?)?.trim();
+    return [
+      comps.isEmpty ? 'Vai sozinho/a' : 'Vai com ${comps.map((c) => c['name']).join(', ')}',
+      if (a['menu'] != null) a['menu'] as String,
+      dietary == null || dietary.isEmpty ? 'sem alergias' : dietary,
+    ].join(' · ');
+  }
 }
 
 final joinRequestsProvider = FutureProvider.family<List<JoinRequest>, String>((ref, weddingId) async {
   try {
-    final rows = await supabase
-        .from('guest_join_requests')
-        .select('id, full_name, email, phone, created_at')
-        .eq('wedding_id', weddingId)
-        .order('created_at');
-    return [for (final r in (rows as List).cast<Map<String, dynamic>>()) JoinRequest.fromRow(r)];
+    List rows;
+    try {
+      rows = await supabase
+          .from('guest_join_requests')
+          .select('id, full_name, email, phone, created_at, answers')
+          .eq('wedding_id', weddingId)
+          .order('created_at');
+    } on PostgrestException {
+      // Antes da migração 162 (sem `answers`).
+      rows = await supabase
+          .from('guest_join_requests')
+          .select('id, full_name, email, phone, created_at')
+          .eq('wedding_id', weddingId)
+          .order('created_at');
+    }
+    return [for (final r in rows.cast<Map<String, dynamic>>()) JoinRequest.fromRow(r)];
   } on PostgrestException {
     return const [];
   }

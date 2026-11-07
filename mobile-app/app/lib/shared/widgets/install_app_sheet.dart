@@ -60,7 +60,7 @@ Future<void> showInstallAppSheet(BuildContext context, {String? code}) {
             ],
             step(4, code == null
                 ? 'Abre a app e cria conta com o mesmo email ou telemóvel do convite — fica logo ligada a ti.'
-                : 'Abre a app, cria conta como convidado e usa o código $code.'),
+                : 'Abre a app: o convite abre sozinho. Se não abrir, usa o código $code (já está copiado).'),
             const SizedBox(height: 10),
             FilledButton(onPressed: () => Navigator.of(sheet).pop(), child: const Text('Percebi')),
           ],

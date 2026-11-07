@@ -13,6 +13,7 @@ import '../supabase/supabase_config.dart';
 import '../wedding/partner_invite.dart';
 import '../../shared/widgets/brinde_gate.dart';
 import '../../shared/widgets/tchin_splash.dart';
+import '../invite/public_invite.dart' show claimStoredPublicRsvps;
 
 class _Unset {
   const _Unset();
@@ -384,6 +385,7 @@ class AuthController extends Notifier<AuthState> {
         await supabase.rpc('set_new_account_role', params: {'p_role': role});
       } catch (_) {}
     }
+    await claimStoredPublicRsvps();
     if (code != null && code.isNotEmpty) {
       try {
         await supabase.rpc('join_wedding_by_code', params: {'p_code': code});
@@ -688,6 +690,10 @@ class AuthController extends Notifier<AuthState> {
   /// Link "Convidar o teu par" aberto antes de entrar/criar conta —
   /// junta esta conta ao casamento (colaborador ativo) e limpa o convite.
   Future<void> _applyPendingPartnerInvite(User user) async {
+    // Respostas dadas sem conta neste telemóvel (convite geral, 162):
+    // ficam ligadas à conta. Antes do código, para não criar um pedido
+    // repetido no mesmo evento.
+    await claimStoredPublicRsvps();
     final token = ref.read(pendingPartnerInviteProvider) ??
         user.userMetadata?['partner_invite'] as String?;
     if (token == null || token.isEmpty) return;

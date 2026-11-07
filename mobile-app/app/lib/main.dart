@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'core/pending_deep_link.dart';
+import 'core/invite/public_invite.dart' show PendingInvite;
 import 'core/page_transitions.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,6 +41,7 @@ Future<void> main() async {
   SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]).catchError((_) {});
   await SupabaseConfig.initialize();
   await PendingDeepLink.load();
+  await PendingInvite.load();
   Funnel.track('app_open');
   await PushNotifications.init();
   installBrowserBackDetection();
