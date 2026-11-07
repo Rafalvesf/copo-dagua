@@ -17,6 +17,7 @@ import '../widgets/partner_invite_card.dart';
 import '../widgets/partner_promotion_card.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import '../../../core/partners/partner_pro.dart';
 
 /// Área do parceiro (fornecedor) — versão mínima. Os módulos reais
 /// (Quotations, Bookings, Calendar, Profile, Contracts, Payouts) estão
@@ -61,6 +62,18 @@ class PartnerHomeScreen extends ConsumerWidget {
       },
       orElse: () => null,
     );
+    final thisWeek = bookingsAsync.maybeWhen(
+      data: (list) {
+        final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+        final end = today.add(const Duration(days: 7));
+        return list
+            .where((b) => b.status == BookingStatus.confirmado && !b.eventDate.isBefore(today) && b.eventDate.isBefore(end))
+            .toList()
+          ..sort((a, b) => a.eventDate.compareTo(b.eventDate));
+      },
+      orElse: () => const <Booking>[],
+    );
+    final isPro = ref.watch(myPartnerProProvider).value?.active ?? false;
     return GradientScaffold(
       background: AppBackground.subtle,
       body: Stack(
@@ -118,10 +131,39 @@ class PartnerHomeScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 const TeamBannerCard(padding: EdgeInsets.only(bottom: 16)),
                 Text(
-                  firstName.isEmpty ? 'Olá! O que precisas hoje?' : 'Olá, $firstName! O que precisas hoje?',
+                  firstName.isEmpty ? 'Olá!' : 'Olá, $firstName!',
                   style: const TextStyle(fontSize: 26, height: 32 / 26, fontWeight: FontWeight.w700, color: AppTheme.ink),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  newRequests.isEmpty
+                      ? 'Sem pedidos à espera. Avisamos-te quando chegar um.'
+                      : 'Tens ${newRequests.length} ${newRequests.length == 1 ? 'pedido' : 'pedidos'} à espera de resposta.',
+                  style: const TextStyle(fontSize: 15, height: 1.4, color: AppTheme.inkMuted),
+                ),
                 const SizedBox(height: 18),
+                // Rearranjo 2026-11-07 ("tem muitos botões"): o que precisa de
+                // resposta primeiro; depois vendas, a semana, o negócio (4
+                // mosaicos) e a montra numa lista. Canvas "Parceiros · Início".
+                if (newRequests.isNotEmpty) ...[
+                  SectionTitle(
+                    'Responder primeiro',
+                    trailing: GestureDetector(
+                      onTap: () => context.push('/partner-requests'),
+                      child: Text('Ver todos',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                    ),
+                  ),
+                  for (final booking in newRequests.take(2)) ...[
+                    RequestRow(
+                      booking: booking,
+                      compact: true,
+                      onTap: () => context.push('/partner-requests/${booking.id}', extra: booking),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  const SizedBox(height: 8),
+                ],
                 SnappyTap(
                   onTap: () => context.push('/partner-stats'),
                   child: GreenHero(
@@ -135,13 +177,19 @@ class PartnerHomeScreen extends ConsumerWidget {
                     ]),
                   ),
                 ),
-                const SizedBox(height: 14),
-                // Convite de clientes e selo de fundador (migração 151).
-                const PartnerInviteCard(),
-                const SizedBox(height: 14),
-                // Destaque pago (migração 155).
-                const PartnerPromotionCard(),
-                const SizedBox(height: 14),
+                if (thisWeek.isNotEmpty) ...[
+                  const SectionTitle('Esta semana'),
+                  for (final b in thisWeek.take(3)) ...[
+                    V2RowCard(
+                      lead: const StickerIcon(Icons.event_outlined),
+                      title: '${b.eventType.label} · ${b.clientName}',
+                      sub: [requestDateLabel(b.eventDate), if (b.city.isNotEmpty) b.city].join(' · '),
+                      onTap: () => context.push('/partner-requests/${b.id}', extra: b),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ],
+                const SectionTitle('O teu negócio'),
                 V2Grid([
                   V2Tile(
                     icon: Icons.event_available_outlined,
@@ -172,77 +220,35 @@ class PartnerHomeScreen extends ConsumerWidget {
                     index: 3,
                     onTap: () => context.push('/partner-contracts'),
                   ),
-                  V2Tile(
-                    icon: Icons.sell_outlined,
-                    label: 'Serviços e preços',
-                    sub: 'Pacotes e orçamentos',
-                    index: 4,
-                    onTap: () => context.push('/partner-pricing'),
+                ]),
+                const SectionTitle('A tua montra'),
+                _MenuList(items: [
+                  (Icons.sell_outlined, 'Serviços e preços', 'Pacotes e orçamentos', '/partner-pricing'),
+                  (Icons.photo_library_outlined, 'Portefólio', 'Fotos e vídeos', '/partner-portfolio'),
+                  (Icons.storefront_outlined, 'Loja', 'Produtos e encomendas', '/partner-shop'),
+                  (
+                    Icons.star_border_rounded,
+                    'Avaliações',
+                    stats?.averageRating == null ? 'Ainda sem avaliações' : '${stats!.averageRating!.toStringAsFixed(1).replaceAll('.', ',')} de 5',
+                    '/partner-reviews',
                   ),
-                  // Loja de presentes (migração 160; pedido 2026-11-07: na
-                  // secção do parceiro, não nas Definições).
-                  V2Tile(
-                    icon: Icons.verified_outlined,
-                    label: 'Pro',
-                    sub: 'Selo, visibilidade e estatísticas',
-                    index: 5,
-                    onTap: () => context.push('/partner-pro'),
-                  ),
-                  V2Tile(
-                    icon: Icons.storefront_outlined,
-                    label: 'Loja',
-                    sub: 'Produtos e encomendas',
-                    index: 5,
-                    onTap: () => context.push('/partner-shop'),
-                  ),
-                  V2Tile(
-                    icon: Icons.photo_library_outlined,
-                    label: 'Portefólio',
-                    sub: 'Fotos e vídeos',
-                    index: 6,
-                    onTap: () => context.push('/partner-portfolio'),
-                  ),
-                  V2Tile(
-                    icon: Icons.star_border_rounded,
-                    label: 'Avaliações',
-                    sub: stats?.averageRating == null ? 'Ainda sem avaliações' : '${stats!.averageRating!.toStringAsFixed(1).replaceAll('.', ',')} de 5',
-                    index: 7,
-                    onTap: () => context.push('/partner-reviews'),
-                  ),
-                  V2Tile(
-                    icon: Icons.bar_chart_rounded,
-                    label: 'Resultados',
-                    sub: 'Pedidos e conversão',
-                    index: 8,
-                    onTap: () => context.push('/partner-stats'),
+                  (Icons.bar_chart_rounded, 'Resultados', 'Pedidos e conversão', '/partner-stats'),
+                ]),
+                const SectionTitle('Crescer'),
+                _MenuList(items: [
+                  (
+                    Icons.verified_outlined,
+                    'Plano Pro',
+                    isPro ? 'Ativo · ver a poupança' : 'Menos comissão e mais visibilidade',
+                    '/partner-pro',
                   ),
                 ]),
-                SectionTitle(
-                  'Novos pedidos',
-                  trailing: GestureDetector(
-                    onTap: () => context.push('/partner-requests'),
-                    child: Text('Ver todos',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-                  ),
-                ),
-                if (newRequests.isEmpty)
-                  const V2RowCard(
-                    lead: StickerIcon(Icons.inbox_outlined),
-                    title: 'Sem pedidos novos por agora',
-                    sub: 'Avisamos-te assim que um cliente te contactar.',
-                  )
-                else
-                  for (final booking in newRequests.take(3)) ...[
-                    RequestRow(
-                      booking: booking,
-                      compact: true,
-                      onTap: () => context.push(
-                        '/partner-requests/${booking.id}',
-                        extra: booking,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
+                const SizedBox(height: 14),
+                // Convite de clientes e selo de fundador (migração 151).
+                const PartnerInviteCard(),
+                const SizedBox(height: 14),
+                // Destaque pago (migração 155).
+                const PartnerPromotionCard(),
               ],
             ),
           ),
@@ -258,3 +264,49 @@ class PartnerHomeScreen extends ConsumerWidget {
   }
 }
 
+
+
+/// Lista branca com várias linhas (ícone, título, detalhe) — usada na
+/// "Montra" e em "Crescer" em vez de mais mosaicos (2026-11-07).
+class _MenuList extends StatelessWidget {
+  final List<(IconData, String, String, String)> items;
+  const _MenuList({required this.items});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        decoration: softCard(),
+        child: Column(
+          children: [
+            for (final (i, (icon, title, sub, route)) in items.indexed) ...[
+              if (i > 0) const Divider(height: 1, indent: 60, color: AppTheme.borderMuted),
+              InkWell(
+                onTap: () => context.push(route),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 60),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    child: Row(
+                      children: [
+                        Icon(icon, size: 22, color: AppTheme.accentOliveDark),
+                        const SizedBox(width: 22),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                              Text(sub, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+}
