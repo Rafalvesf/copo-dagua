@@ -10,8 +10,7 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
-import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/v2_kit.dart' show softCard;
+import '../../partners/screens/partners_list_screen.dart' show FeaturedOverlayCard;
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 
 /// Lista de presentes (migração 160).
@@ -550,7 +549,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                               style: AppTypography.displaySerif(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                         ),
                         SizedBox(
-                          height: 176,
+                          height: FeaturedOverlayCard.height,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             clipBehavior: Clip.none,
@@ -641,8 +640,8 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
   }
 }
 
-/// Cartão do carrossel "Em destaque" da Loja — o mesmo formato do
-/// destaque das empresas em Parceiros.
+/// Cartão do carrossel "Em destaque" da Loja — o mesmo cartão grande
+/// do destaque das empresas em Parceiros.
 class _FeaturedProductCard extends StatelessWidget {
   final ShopProduct product;
   final bool added;
@@ -652,47 +651,20 @@ class _FeaturedProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = product;
-    return SnappyTap(
+    return FeaturedOverlayCard(
       onTap: onTap,
-      child: Container(
-        width: 150,
-        clipBehavior: Clip.antiAlias,
-        decoration: softCard(radius: 20),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          SizedBox(
-            height: 96,
-            width: double.infinity,
-            child: Stack(fit: StackFit.expand, children: [
-              p.photoUrl == null
-                  ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, size: 34, color: _green))
-                  : Image.network(p.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
-              if (added)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(color: _green, borderRadius: BorderRadius.circular(999)),
-                    child: const Icon(Icons.check_rounded, size: 14, color: Colors.white, semanticLabel: 'Na lista'),
-                  ),
-                ),
-            ]),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(11, 9, 11, 0),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(p.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 2),
-              Text(p.partnerName, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-              const SizedBox(height: 4),
-              Text(giftEuros(p.price), maxLines: 1,
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _green)),
-            ]),
-          ),
-        ]),
-      ),
+      image: p.photoUrl == null
+          ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, size: 40, color: _green))
+          : Image.network(p.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
+      badge: added
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: _green, borderRadius: BorderRadius.circular(999)),
+              child: const Text('Na lista', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Colors.white)),
+            )
+          : null,
+      title: p.title,
+      subtitle: '${p.partnerName} · ${giftEuros(p.price)}',
     );
   }
 }
