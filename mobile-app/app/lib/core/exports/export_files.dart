@@ -32,9 +32,14 @@ String _slug(String s) => s
     .replaceAll(RegExp('^-|-\$'), '');
 
 Future<pw.ThemeData> _pdfTheme() async {
-  final reg = pw.Font.ttf(await rootBundle.load('assets/fonts/roboto/Roboto-Regular.ttf'));
-  final bold = pw.Font.ttf(await rootBundle.load('assets/fonts/roboto/Roboto-Bold.ttf'));
-  return pw.ThemeData.withFont(base: reg, bold: bold);
+  // Mesma letra da app (Louis George Café); a Roboto só cobre os
+  // carateres que ela não tem (ex.: o travessão no Bold).
+  final reg = pw.Font.ttf(await rootBundle.load('assets/fonts/louis_george_cafe/LouisGeorgeCafe-Regular.ttf'));
+  final bold = pw.Font.ttf(await rootBundle.load('assets/fonts/louis_george_cafe/LouisGeorgeCafe-Bold.ttf'));
+  final italic = pw.Font.ttf(await rootBundle.load('assets/fonts/louis_george_cafe/LouisGeorgeCafe-Italic.ttf'));
+  final fbReg = pw.Font.ttf(await rootBundle.load('assets/fonts/roboto/Roboto-Regular.ttf'));
+  final fbBold = pw.Font.ttf(await rootBundle.load('assets/fonts/roboto/Roboto-Bold.ttf'));
+  return pw.ThemeData.withFont(base: reg, bold: bold, italic: italic, fontFallback: [fbReg, fbBold]);
 }
 
 const _green = PdfColor.fromInt(0xFF4F6B4A);

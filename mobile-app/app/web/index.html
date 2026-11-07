@@ -570,9 +570,16 @@
           return load().then(function () {
             clean();
             var used = false;
+            // Mesma letra da app (Louis George Café) no formulário da Stripe.
+            var fontBase = new URL((document.querySelector('base') && document.querySelector('base').getAttribute('href')) || '/', location.href).href
+              + 'assets/assets/fonts/louis_george_cafe/';
             var instance = window.StripeConnect.init({
               publishableKey: pk,
               locale: 'pt-PT',
+              fonts: [
+                { family: 'LouisGeorgeCafe', src: 'url(' + fontBase + 'LouisGeorgeCafe-Regular.ttf)', weight: '400' },
+                { family: 'LouisGeorgeCafe', src: 'url(' + fontBase + 'LouisGeorgeCafe-Bold.ttf)', weight: '700' }
+              ],
               fetchClientSecret: function () {
                 if (!used) { used = true; return Promise.resolve(firstSecret); }
                 return fetch(fnUrl, {
@@ -587,7 +594,7 @@
                   colorPrimary: '#4F6B4A', colorText: '#171713', colorSecondaryText: '#57534E',
                   colorBackground: '#FFFFFF', colorBorder: '#E6E0D2', colorDanger: '#B3261E',
                   borderRadius: '14px', buttonBorderRadius: '999px', formBorderRadius: '14px',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  fontFamily: 'LouisGeorgeCafe, Roboto, -apple-system, sans-serif',
                   fontSizeBase: '15px', spacingUnit: '10px',
                   buttonPrimaryColorBackground: '#4F6B4A', buttonPrimaryColorText: '#FFFFFF'
                 }
