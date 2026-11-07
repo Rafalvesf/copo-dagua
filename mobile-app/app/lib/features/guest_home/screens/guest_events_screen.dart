@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
+import '../widgets/guest_home_sections.dart' show guestCard;
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -114,7 +115,11 @@ class GuestEventCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final guest = ref.watch(myGuestRowProvider(wedding.weddingId)).value;
+    final d = wedding.weddingDate;
+    final n = DateTime.now();
+    final past = d != null && DateTime(d.year, d.month, d.day).isBefore(DateTime(n.year, n.month, n.day));
     final (label, bg, fg) = switch (guest?.rsvpStatus) {
+      _ when past => ('Já foi', AppTheme.surface, AppTheme.inkMuted),
       RsvpStatus.confirmed => ('Vais', AppTheme.accentOliveDark, Colors.white),
       RsvpStatus.declined => ('Não vais', AppTheme.surface, AppTheme.inkMuted),
       _ => ('Por responder', const Color(0xFFFBEFD3), const Color(0xFF8A5A00)),
@@ -127,7 +132,7 @@ class GuestEventCard extends ConsumerWidget {
       onTap: () => context.go('/guest-home/${wedding.weddingId}'),
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: softCard(),
+        decoration: guestCard(),
         child: Row(
           children: [
             wedding.coverPhotoUrl == null
