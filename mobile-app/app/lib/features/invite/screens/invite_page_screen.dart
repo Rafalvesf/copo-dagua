@@ -18,6 +18,7 @@ import '../../../shared/widgets/navigation_sheet.dart';
 import '../../../shared/widgets/public_state.dart';
 import '../../events/screens/tickets_screens.dart' show openTicketPurchase;
 import '../../guest_home/screens/guest_onboarding_wizard_screen.dart';
+import '../widgets/invite_envelope.dart';
 
 /// Convite do evento (`/invite/<código>`) — o mesmo para todos, na app e
 /// no browser (canvas "Envelope do convite", 2026-11-07):
@@ -42,7 +43,7 @@ class InvitePageScreen extends StatefulWidget {
   State<InvitePageScreen> createState() => _InvitePageScreenState();
 }
 
-enum _Stage { gate, invite, done }
+enum _Stage { envelope, gate, invite, done }
 
 class _InvitePageScreenState extends State<InvitePageScreen> {
   InviteEvent? _event;
@@ -73,11 +74,9 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
       _missing = ev == null;
       _answer = answer;
       _loading = false;
-      _stage = answer?.answered == true
-          ? _Stage.done
-          : (_signedIn || answer != null)
-              ? _Stage.invite
-              : _Stage.gate;
+      // Primeiro o envelope (canvas "Envelope do convite"); quem já
+      // respondeu vai direto à resposta.
+      _stage = answer?.answered == true ? _Stage.done : _Stage.envelope;
     });
   }
 
@@ -279,8 +278,14 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
 
   // ---------- ecrãs ----------
 
+  void _afterEnvelope() => setState(() => _stage = (_signedIn || _answer != null) ? _Stage.invite : _Stage.gate);
+
   @override
   Widget build(BuildContext context) {
+    final ev0 = _event;
+    if (!_loading && ev0 != null && _stage == _Stage.envelope) {
+      return InviteEnvelopeScreen(event: ev0, onOpened: _afterEnvelope);
+    }
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
@@ -299,7 +304,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
               child: switch (_stage) {
-                _Stage.gate => _gate(ev),
+                _Stage.envelope || _Stage.gate => _gate(ev),
                 _Stage.invite => _invite(ev),
                 _Stage.done => _done(ev),
               },
