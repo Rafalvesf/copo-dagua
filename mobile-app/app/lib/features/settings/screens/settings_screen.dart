@@ -26,6 +26,7 @@ import '../../../shared/widgets/first_run_tour.dart' show FirstRunTour, TourRole
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../core/supabase/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
+import '../../../core/profile/username.dart';
 
 /// Definições — uma por tipo de conta (organizadores, parceiros,
 /// convidados). Redesign 2026-10-17 (canvas "Organizadores · Definições",
@@ -745,6 +746,16 @@ class _AccountSection extends ConsumerWidget {
           label: 'Nome',
           value: profile.fullName,
           onTap: () => _editName(context, ref, profile.fullName),
+        ),
+        // @ único (migração 163).
+        _Row(
+          icon: Icons.alternate_email_rounded,
+          label: 'Nome de utilizador',
+          value: switch (ref.watch(myUsernameProvider).value?.username) {
+            final u? => '@$u',
+            _ => 'Escolher',
+          },
+          onTap: () => context.push('/username'),
         ),
         _Row(icon: Icons.mail_outline, label: 'Email', value: profile.email),
         _Row(

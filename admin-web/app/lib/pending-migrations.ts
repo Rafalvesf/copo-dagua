@@ -145,6 +145,13 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "159",
     check: { kind: "column", table: "guest_join_requests", column: "answers" },
   },
+  {
+    file: "163_usernames.sql",
+    title: "@ único para parceiros e utilizadores",
+    what: "Cada conta escolhe um @ só seu (3–30, letras/números/ponto/_), sem nomes reservados; muda no máximo uma vez a cada 30 dias.",
+    after: "159",
+    check: { kind: "column", table: "profiles", column: "username" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
