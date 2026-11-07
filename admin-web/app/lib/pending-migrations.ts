@@ -138,6 +138,13 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "160",
     check: { kind: "column", table: "partner_profiles", column: "pro_until" },
   },
+  {
+    file: "162_public_rsvp_link.sql",
+    title: "Convite geral: responder sem conta",
+    what: "O mesmo link para todos: quem abre vê o convite completo e responde sem conta (nome, acompanhantes, menu, alergias). Evento privado fica em Pedidos para entrar com as respostas.",
+    after: "159",
+    check: { kind: "column", table: "guest_join_requests", column: "answers" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

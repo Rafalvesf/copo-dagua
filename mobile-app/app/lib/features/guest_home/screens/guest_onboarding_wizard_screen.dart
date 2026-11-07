@@ -59,7 +59,9 @@ enum _Step { attending, companions, ages, menu, allergies, side, relationship }
 
 const _adultMenus = ['Carne', 'Peixe', 'Vegetariano'];
 const _childMenus = ['Menu criança', 'Carne', 'Peixe'];
-const _allergyOptions = ['Glúten', 'Lactose', 'Marisco', 'Frutos secos', 'Outra'];
+// 'Nenhuma' (2026-11-07): menu e alergias passam a ser obrigatórios —
+// quem não tem alergias diz que não tem.
+const _allergyOptions = ['Nenhuma', 'Glúten', 'Lactose', 'Marisco', 'Frutos secos', 'Outra'];
 const _relationOptions = <(String, IconData)>[
   ('Família', Icons.favorite_border),
   ('Amigos', Icons.groups_2_outlined),
@@ -105,7 +107,7 @@ class _Person {
   }) : allergies = allergies ?? {};
 
   List<String> get allAllergies => [
-        ...allergies.where((a) => a != 'Outra'),
+        ...allergies.where((a) => a != 'Outra' && a != 'Nenhuma'),
         if (allergies.contains('Outra') && otherAllergy.trim().isNotEmpty) otherAllergy.trim(),
       ];
 }
@@ -118,12 +120,23 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   /// Permissões pedidas no último passo, antes do ecrã de sucesso (2026-10-25).
   /// Só com conta: sem sessão não há onde guardar as notificações.
   bool _permsDone = false;
-  late final _Person _me = _Person(
-    name: widget.guest.name.split(' ').first,
-    ageGroup: widget.guest.ageGroup,
-    menu: widget.guest.menuSelection,
-    otherAllergy: widget.guest.dietaryRestrictions ?? '',
-  );
+  late final _Person _me = () {
+    // Alergias já respondidas ("Glúten, Kiwi") voltam às opções certas.
+    final parts = (widget.guest.dietaryRestrictions ?? '')
+        .split(',')
+        .map((a) => a.trim())
+        .where((a) => a.isNotEmpty)
+        .toList();
+    final known = parts.where(_allergyOptions.contains).toSet();
+    final other = parts.where((a) => !_allergyOptions.contains(a)).join(', ');
+    return _Person(
+      name: widget.guest.name.split(' ').first,
+      ageGroup: widget.guest.ageGroup,
+      menu: widget.guest.menuSelection,
+      allergies: {...known, if (other.isNotEmpty) 'Outra'},
+      otherAllergy: other,
+    );
+  }();
   final List<_Person> _companions = [];
   WeddingSide? _side;
   String? _relationship;
@@ -396,9 +409,11 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                     // Seta sempre visível (2026-10-18): volta um passo ou,
                     // no primeiro, sai para o início do evento.
                     CircleBackButton(
-                      onTap: _index > 0
+                      onTap: _index > 0 && _index > widget.initialStep
                           ? () => setState(() => _index--)
-                          : () => context.go('/guest-home/${widget.weddingId}'),
+                          : widget.rsvpToken != null
+                              ? () => Navigator.of(context).maybePop()
+                              : () => context.go('/guest-home/${widget.weddingId}'),
                     ),
                     const Spacer(),
                     if (step == _Step.allergies)
@@ -406,7 +421,9 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                         onPressed: () {
                           setState(() {
                             for (final p in _people) {
-                              p.allergies.clear();
+                              p.allergies
+                                ..clear()
+                                ..add('Nenhuma');
                               p.otherAllergy = '';
                             }
                           });
@@ -474,6 +491,24 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Indica o telemóvel de ${missing.first.name}.')),
         );
+        return;
+      }
+    }
+    // Menu e alergias obrigatórios para todos (2026-11-07).
+    String who(_Person p) => p == _me ? 'ti' : p.name;
+    if (step == _Step.menu) {
+      final missing = _people.where((p) => p.menu == null).toList();
+      if (missing.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Escolhe a refeição para ${who(missing.first)}.')));
+        return;
+      }
+    }
+    if (step == _Step.allergies) {
+      final missing = _people
+          .where((p) => p.allergies.isEmpty || (p.allergies.length == 1 && p.allergies.contains('Outra') && p.otherAllergy.trim().isEmpty))
+          .toList();
+      if (missing.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Indica as alergias de ${who(missing.first)} (ou Nenhuma).')));
         return;
       }
     }
@@ -629,7 +664,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       case _Step.menu:
         return _StepScaffold(
           question: _people.length == 1 ? 'Que refeição preferes?' : 'Que refeição para cada pessoa?',
-          subtitle: _people.length == 1 ? 'Podes mudar depois.' : 'Cada um escolhe a sua.',
+          subtitle: _people.length == 1 ? 'Obrigatório. Podes mudar depois.' : 'Obrigatório. Cada um escolhe a sua.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -647,7 +682,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       case _Step.allergies:
         return _StepScaffold(
           question: 'Alguma alergia ou intolerância?',
-          subtitle: 'De cada pessoa. Deixa vazio se não houver.',
+          subtitle: 'De cada pessoa. Se não houver, escolhe Nenhuma.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -656,7 +691,19 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   title: p == _me ? '${p.name} (tu)' : p.name,
                   options: _allergyOptions,
                   selected: p.allergies,
-                  onTap: (o) => setState(() => p.allergies.contains(o) ? p.allergies.remove(o) : p.allergies.add(o)),
+                  onTap: (o) => setState(() {
+                    if (p.allergies.contains(o)) {
+                      p.allergies.remove(o);
+                    } else if (o == 'Nenhuma') {
+                      p.allergies
+                        ..clear()
+                        ..add(o);
+                    } else {
+                      p.allergies
+                        ..remove('Nenhuma')
+                        ..add(o);
+                    }
+                  }),
                   other: p.otherAllergy,
                   onOther: (v) => p.otherAllergy = v,
                 ),
@@ -1137,7 +1184,7 @@ class _ConfirmedView extends StatelessWidget {
                     delay: const Duration(milliseconds: 550),
                     child: Text(
                       rsvp
-                          ? 'Os anfitriões já sabem. Instala a app para veres o programa, a tua mesa e as fotos.'
+                          ? 'A tua resposta foi enviada aos anfitriões.'
                           : 'Os anfitriões já sabem. Podes mudar as respostas no teu perfil.',
                       style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
                     ),
@@ -1153,7 +1200,7 @@ class _ConfirmedView extends StatelessWidget {
                     delay: const Duration(milliseconds: 1200),
                     child: ShineSweep(
                       delay: const Duration(milliseconds: 1600),
-                      child: AuthPrimaryButton(label: rsvp ? 'Instalar a app' : 'Ver o evento', onPressed: onContinue),
+                      child: AuthPrimaryButton(label: rsvp ? 'Continuar' : 'Ver o evento', onPressed: onContinue),
                     ),
                   ),
                 ],
