@@ -649,8 +649,6 @@ class _PartnerSettings extends ConsumerWidget {
         _Group(
           children: [
             _Row(icon: Icons.credit_card, label: 'Pagamentos e conta Stripe', onTap: () => context.push('/partner-payments')),
-            // Loja de presentes (migração 160).
-            _Row(icon: Icons.storefront_outlined, label: 'Loja de presentes', onTap: () => context.push('/partner-shop')),
             _Row(icon: Icons.description_outlined, label: 'Contratos', onTap: () => context.push('/partner-contracts')),
           ],
         ),

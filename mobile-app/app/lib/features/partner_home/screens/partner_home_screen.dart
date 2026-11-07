@@ -179,25 +179,34 @@ class PartnerHomeScreen extends ConsumerWidget {
                     index: 4,
                     onTap: () => context.push('/partner-pricing'),
                   ),
+                  // Loja de presentes (migração 160; pedido 2026-11-07: na
+                  // secção do parceiro, não nas Definições).
+                  V2Tile(
+                    icon: Icons.storefront_outlined,
+                    label: 'Loja de presentes',
+                    sub: 'Produtos e encomendas',
+                    index: 5,
+                    onTap: () => context.push('/partner-shop'),
+                  ),
                   V2Tile(
                     icon: Icons.photo_library_outlined,
                     label: 'Portefólio',
                     sub: 'Fotos e vídeos',
-                    index: 5,
+                    index: 6,
                     onTap: () => context.push('/partner-portfolio'),
                   ),
                   V2Tile(
                     icon: Icons.star_border_rounded,
                     label: 'Avaliações',
                     sub: stats?.averageRating == null ? 'Ainda sem avaliações' : '${stats!.averageRating!.toStringAsFixed(1).replaceAll('.', ',')} de 5',
-                    index: 6,
+                    index: 7,
                     onTap: () => context.push('/partner-reviews'),
                   ),
                   V2Tile(
                     icon: Icons.bar_chart_rounded,
                     label: 'Resultados',
                     sub: 'Pedidos e conversão',
-                    index: 7,
+                    index: 8,
                     onTap: () => context.push('/partner-stats'),
                   ),
                 ]),

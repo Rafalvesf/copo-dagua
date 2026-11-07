@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/partner_profile/partner_profile_controller.dart';
@@ -310,6 +311,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                     ],
                   ),
                 ),
+                // Presentes na secção dos parceiros (pedido 2026-11-07):
+                // loja dos parceiros e a lista do evento (migração 160).
+                if (!widget.selectionMode) const _GiftsEntry(),
                 // Categorias em pílulas por baixo da pesquisa (mockup,
                 // 2026-10-19) — antes estavam na barra de baixo.
                 if (!widget.selectionMode)
@@ -1202,6 +1206,41 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+/// Presentes (migração 160): loja dos parceiros e a lista do evento.
+class _GiftsEntry extends StatelessWidget {
+  const _GiftsEntry();
+
+  @override
+  Widget build(BuildContext context) {
+    final green = AppTheme.accentOliveDark;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, AppTheme.screenMargin, 0),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+        decoration: softCard(),
+        child: Row(children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(12)),
+            child: Icon(Icons.card_giftcard_outlined, color: green),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Presentes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text('Loja de artesãos e a vossa lista', style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+            ]),
+          ),
+          TextButton(onPressed: () => context.push('/gift-shop'), child: const Text('Loja')),
+          TextButton(onPressed: () => context.push('/gift-list'), child: const Text('Lista')),
+        ]),
       ),
     );
   }
