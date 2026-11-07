@@ -10,6 +10,9 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/v2_kit.dart' show softCard;
+import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 
 /// Lista de presentes (migração 160).
 ///  • Organizador: desejos (bloco de notas do que precisa) e produtos da
@@ -537,8 +540,43 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
           error: (e, s) => const _Info('Não foi possível carregar a loja.'),
           data: (items) => items.isEmpty
               ? const _Info('Ainda não há produtos. Os parceiros juntam-nos na sua Loja.')
-              : GridView.builder(
+              : CustomScrollView(slivers: [
+                  if (_query.isEmpty && featured(items).isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 12),
+                          child: Text('Em destaque',
+                              style: AppTypography.displaySerif(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                        ),
+                        SizedBox(
+                          height: 176,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            clipBehavior: Clip.none,
+                            padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                            itemCount: featured(items).length,
+                            separatorBuilder: (context, i) => const SizedBox(width: 10),
+                            itemBuilder: (context, i) {
+                              final p = featured(items)[i];
+                              return _FeaturedProductCard(
+                                product: p,
+                                added: inList.contains(p.id),
+                                onTap: () => _showProduct(p, weddingId, inList.contains(p.id)),
+                              );
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 18, AppTheme.screenMargin, 12),
+                          child: Text('${items.length} ${items.length == 1 ? 'produto' : 'produtos'}',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        ),
+                      ]),
+                    ),
+                  SliverPadding(
                   padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, widget.bottomPadding),
+                  sliver: SliverGrid.builder(
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 240,
                     mainAxisSpacing: 12,
@@ -585,10 +623,77 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                       ),
                     );
                   },
-                ),
+                  ),
+                  ),
+                ]),
         ),
       ),
     ]);
+  }
+
+  /// "Em destaque" (como nas empresas, 2026-11-07): lojas Verificado
+  /// primeiro, depois produtos com foto; só o que há em stock, até 6.
+  List<ShopProduct> featured(List<ShopProduct> all) {
+    final pro = ref.watch(proPartnerIdsProvider).value ?? const <String>{};
+    int score(ShopProduct p) => (pro.contains(p.partnerId) ? 2 : 0) + (p.photoUrl != null ? 1 : 0);
+    final list = all.where((p) => p.inStock).toList()..sort((a, b) => score(b).compareTo(score(a)));
+    return list.length < 3 ? const [] : list.take(6).toList();
+  }
+}
+
+/// Cartão do carrossel "Em destaque" da Loja — o mesmo formato do
+/// destaque das empresas em Parceiros.
+class _FeaturedProductCard extends StatelessWidget {
+  final ShopProduct product;
+  final bool added;
+  final VoidCallback onTap;
+  const _FeaturedProductCard({required this.product, required this.added, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = product;
+    return SnappyTap(
+      onTap: onTap,
+      child: Container(
+        width: 150,
+        clipBehavior: Clip.antiAlias,
+        decoration: softCard(radius: 20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          SizedBox(
+            height: 96,
+            width: double.infinity,
+            child: Stack(fit: StackFit.expand, children: [
+              p.photoUrl == null
+                  ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, size: 34, color: _green))
+                  : Image.network(p.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
+              if (added)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(color: _green, borderRadius: BorderRadius.circular(999)),
+                    child: const Icon(Icons.check_rounded, size: 14, color: Colors.white, semanticLabel: 'Na lista'),
+                  ),
+                ),
+            ]),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(11, 9, 11, 0),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(p.title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 2),
+              Text(p.partnerName, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+              const SizedBox(height: 4),
+              Text(giftEuros(p.price), maxLines: 1,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _green)),
+            ]),
+          ),
+        ]),
+      ),
+    );
   }
 }
 
