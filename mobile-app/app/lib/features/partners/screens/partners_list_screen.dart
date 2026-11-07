@@ -525,7 +525,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 strong: true,
                               ),
                               SizedBox(
-                                height: 176,
+                                height: FeaturedOverlayCard.height,
                                 child: ListView.separated(
                                   scrollDirection: Axis.horizontal,
                                   clipBehavior: Clip.none,
@@ -764,47 +764,81 @@ class _FeaturedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rating = _ratingLabel(partner);
-    return SnappyTap(
+    return FeaturedOverlayCard(
       onTap: onTap,
-      child: Container(
-        width: 150,
-        clipBehavior: Clip.antiAlias,
-        decoration: softCard(radius: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 96,
-              width: double.infinity,
-              child: Stack(fit: StackFit.expand, children: [
-                _PartnerPhoto(partner),
-                if (rating != null) Positioned(left: 8, top: 8, child: _RatingChip(rating)),
-              ]),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(11, 9, 11, 0),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(partner.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                const SizedBox(height: 2),
-                Text(partner.primaryCategoryLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: v2Muted)),
-                const SizedBox(height: 4),
-                Text(_priceLabel(partner),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-              ]),
-            ),
-          ],
-        ),
-      ),
+      image: _PartnerPhoto(partner),
+      badge: rating == null ? null : _RatingChip(rating),
+      title: partner.name,
+      subtitle: '${partner.primaryCategoryLabel} · ${_priceLabel(partner)}',
     );
   }
+}
+
+/// Cartão grande do "Em destaque" (mockup 2026-11-07): foto a toda a
+/// área, nome e linha de baixo a branco sobre um degradê escuro. Usado
+/// nas Empresas e nas Lojas.
+class FeaturedOverlayCard extends StatelessWidget {
+  final VoidCallback onTap;
+  final Widget image;
+  final Widget? badge;
+  final String title;
+  final String subtitle;
+  const FeaturedOverlayCard({
+    super.key,
+    required this.onTap,
+    required this.image,
+    required this.title,
+    required this.subtitle,
+    this.badge,
+  });
+
+  static const double height = 150;
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Semantics(
+          button: true,
+          label: '$title, $subtitle',
+          excludeSemantics: true,
+          child: Container(
+            width: 230,
+            height: height,
+            clipBehavior: Clip.antiAlias,
+            decoration: softCard(radius: 20),
+            child: Stack(fit: StackFit.expand, children: [
+              image,
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: [0.3, 1],
+                    colors: [Color(0x00000000), Color(0x8C000000)],
+                  ),
+                ),
+              ),
+              if (badge != null) Positioned(left: 10, top: 10, child: badge!),
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                  Text(title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, height: 1.15, color: Colors.white)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, color: Color(0xE6FFFFFF))),
+                ]),
+              ),
+            ]),
+          ),
+        ),
+      );
 }
 
 /// Linha de parceiro: foto quadrada, nome, categoria · zona · nota,
