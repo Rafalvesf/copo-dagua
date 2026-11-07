@@ -26,6 +26,7 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import '../../partner_pro/partner_pro_screen.dart' show ProBadge;
+import '../../../core/profile/username.dart';
 
 
 class PartnerDetailScreen extends ConsumerStatefulWidget {
@@ -310,6 +311,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                     FounderBadge(partner.id, long: true),
                                     ProBadge(partner.id),
                                   ]),
+                                  // @ único do parceiro (migração 163).
+                                  if (ref.watch(usernameOfProvider(partner.id)).value case final u?)
+                                    Text('@$u', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                                   const SizedBox(height: 3),
                                   Text(
                                     [

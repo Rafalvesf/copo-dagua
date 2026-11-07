@@ -92,6 +92,7 @@ import 'platform/maintenance_controller.dart';
 import '../features/legal/legal_screen.dart';
 import '../features/messages/admin_message_screen.dart';
 import '../features/legal/legal_texts.dart';
+import '../features/settings/screens/username_screen.dart';
 
 /// Rotas que vale a pena guardar para depois do login (não o início).
 bool _deepLinkWorthKeeping(String location) =>
@@ -366,6 +367,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/gift-shop', builder: (context, state) => const PermissionGate(perm: OrganizerPerm.evento, child: GiftShopScreen())),
       GoRoute(path: '/presente/:id', builder: (context, state) => GiftReturnScreen(orderId: state.pathParameters['id']!)),
       GoRoute(path: '/partner-shop', builder: (context, state) => const PartnerShopScreen()),
+      GoRoute(path: '/username', builder: (context, state) => const UsernameScreen()),
       // Plano Pro dos parceiros (migração 161).
       GoRoute(path: '/partner-pro', builder: (context, state) => PartnerProScreen(returned: state.uri.queryParameters['ok'] == '1')),
       GoRoute(path: '/entrada/:code', builder: (context, state) => CheckInScreen(code: state.pathParameters['code']!)),
