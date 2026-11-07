@@ -5,10 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 import '../../gifts/screens/gift_list_screens.dart' show GiftShopView;
-import '../../../shared/widgets/floating_filter_bar.dart' show FilterChipsRow, FilterBarItem;
 import '../../partner_pro/partner_pro_screen.dart' show ProBadge;
 
 import '../../../core/models/models.dart';
@@ -17,7 +15,6 @@ import '../../../core/partners/favorite_partners_controller.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -577,16 +574,13 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: FloatingBottomNav(
-                current: AppTab.partners,
-                top: FilterChipsRow(
-                  items: const [FilterBarItem('Empresas'), FilterBarItem('Lojas')],
-                  selected: _tab,
-                  infinite: false,
-                  visible: 2,
-                  onSelected: (i) => setState(() => _tab = i),
-                ),
-              ),
+              // Separador próprio por cima da navbar, sem mexer nela
+              // (pedido 2026-11-07: "não mudes a navbar").
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                _KindTabs(selected: _tab, onSelected: (i) => setState(() => _tab = i)),
+                const SizedBox(height: 10),
+                const FloatingBottomNav(current: AppTab.partners),
+              ]),
             ),
         ],
       ),
@@ -1231,6 +1225,56 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Empresas | Lojas: pílula branca a flutuar por cima da navbar.
+class _KindTabs extends StatelessWidget {
+  final int selected;
+  final ValueChanged<int> onSelected;
+  const _KindTabs({required this.selected, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = ['Empresas', 'Lojas'];
+    return Container(
+      width: 250,
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: AppTheme.navBarShadow,
+      ),
+      child: Row(children: [
+        for (var i = 0; i < labels.length; i++)
+          Expanded(
+            child: Semantics(
+              button: true,
+              selected: i == selected,
+              child: SnappyTap(
+                onTap: () => onSelected(i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  height: 38,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: i == selected ? AppTheme.accentOliveDark : Colors.transparent,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    labels[i],
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: i == selected ? Colors.white : AppTheme.inkMuted,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ]),
     );
   }
 }
