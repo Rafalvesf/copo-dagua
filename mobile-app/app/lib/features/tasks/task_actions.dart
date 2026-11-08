@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../partners/partner_style.dart' show companyCategoryLabel, iconForCategorySlug;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -44,6 +45,8 @@ IconData taskIcon(String? category) => switch (category) {
       'cerimonia' => Icons.church_outlined,
       'festa' => Icons.celebration_outlined,
       'programa' => Icons.schedule_outlined,
+      // Categoria de empresa escolhida ao criar (2026-11-08).
+      final c? when companyCategoryLabel(c) != null => iconForCategorySlug(c),
       _ => Icons.task_alt_outlined,
     };
 
@@ -54,6 +57,7 @@ String? _categoryRoute(String? category) => switch (category) {
       'parceiros' => '/partners',
       'pagamentos' => '/bookings',
       'programa' => '/guest-page',
+      final c? when companyCategoryLabel(c) != null => '/partners',
       _ => null,
     };
 

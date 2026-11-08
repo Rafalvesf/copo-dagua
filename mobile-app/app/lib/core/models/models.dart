@@ -1515,6 +1515,10 @@ class Expense {
   final String weddingId;
   final String title;
   final PartnerCategory? category;
+
+  /// Categoria da empresa (`partner_categories.slug`, 2026-11-08); a
+  /// [category] antiga (5 valores) vem dela quando há equivalente.
+  final String? categorySlug;
   final double amount;
   final DateTime? dueDate;
   final bool paid;
@@ -1524,6 +1528,7 @@ class Expense {
     required this.weddingId,
     required this.title,
     this.category,
+    this.categorySlug,
     required this.amount,
     this.dueDate,
     this.paid = false,
@@ -1535,6 +1540,7 @@ class Expense {
       weddingId: weddingId,
       title: title,
       category: category,
+      categorySlug: categorySlug,
       amount: amount,
       dueDate: dueDate,
       paid: paid ?? this.paid,

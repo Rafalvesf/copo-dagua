@@ -11,6 +11,7 @@ import '../task_actions.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/tasks/task_models.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../partners/partner_style.dart' show CompanyCategoryPicker;
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/green_hero.dart';
@@ -255,6 +256,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           title: result.title,
           description: result.description,
           dueDate: result.dueDate,
+          category: result.category,
         );
   }
 }
@@ -498,11 +500,13 @@ class _NewUserTaskResult {
   final String title;
   final String? description;
   final DateTime? dueDate;
+  final String? category;
 
   const _NewUserTaskResult({
     required this.title,
     this.description,
     this.dueDate,
+    this.category,
   });
 }
 
@@ -517,6 +521,7 @@ class _NewUserTaskSheetState extends State<_NewUserTaskSheet> {
   final _title = TextEditingController();
   final _description = TextEditingController();
   DateTime? _dueDate;
+  String? _category;
   String? _titleError;
 
   @override
@@ -557,6 +562,8 @@ class _NewUserTaskSheetState extends State<_NewUserTaskSheet> {
             value: _dueDate,
             onChanged: (d) => setState(() => _dueDate = d),
           ),
+          const SizedBox(height: 14),
+          CompanyCategoryPicker(selected: _category, onChanged: (c) => setState(() => _category = c)),
           const SizedBox(height: 16),
           PrimaryButton(
             label: 'Adicionar',
@@ -574,6 +581,7 @@ class _NewUserTaskSheetState extends State<_NewUserTaskSheet> {
                       ? null
                       : _description.text.trim(),
                   dueDate: _dueDate,
+                  category: _category,
                 ),
               );
             },

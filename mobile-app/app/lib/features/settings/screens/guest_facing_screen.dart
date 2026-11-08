@@ -1452,27 +1452,66 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           ),
         ]),
         if (paid) ...[
-          const SizedBox(height: 12),
+          // Como no mockup "Entrada paga" (2026-11-08: "desformatado"):
+          // rótulo em cima, campo grande com €, Guardar à mesma altura.
+          const SizedBox(height: 14),
+          const _Label('Preço por pessoa'),
           Row(children: [
             Expanded(
-              child: TextField(
-                controller: _price,
-                focusNode: _priceFocus,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _savePrice(),
-                decoration: const InputDecoration(labelText: 'Preço por pessoa', suffixText: '€', isDense: true),
+              child: Container(
+                height: 54,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppTheme.accentOliveDark, width: 1.5),
+                ),
+                child: Row(children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _price,
+                      focusNode: _priceFocus,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _savePrice(),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                      decoration: const InputDecoration(
+                        hintText: '25',
+                        isCollapsed: true,
+                        filled: false,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                  const Text('€', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                ]),
               ),
             ),
-            const SizedBox(width: 10),
-            FilledButton(
-              onPressed: _savingPrice ? null : _savePrice,
-              style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, shape: const StadiumBorder()),
-              child: _savingPrice
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Guardar'),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 54,
+              child: FilledButton(
+                onPressed: _savingPrice ? null : _savePrice,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.accentOliveDark,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  shape: const StadiumBorder(),
+                ),
+                child: _savingPrice
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Guardar', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
             ),
           ]),
+          const SizedBox(height: 8),
+          const Text(
+            'Cada pessoa paga o bilhete na app e recebe-o logo.',
+            style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
+          ),
           if (entry.paid) ...[
             const SizedBox(height: 8),
             Align(

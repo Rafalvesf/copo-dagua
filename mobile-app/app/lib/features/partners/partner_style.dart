@@ -70,3 +70,57 @@ IconData iconForPartnerCategory(PartnerCategory category) {
       return Icons.villa_outlined;
   }
 }
+
+/// Categorias das empresas (as de `partner_categories`), pela ordem da aba
+/// Parceiros — usadas ao criar despesas no Orçamento e tarefas
+/// (pedido 2026-11-08).
+const companyCategories = <(String, String)>[
+  ('venue', 'Espaços'),
+  ('catering', 'Catering'),
+  ('photography', 'Fotografia'),
+  ('videography', 'Vídeo'),
+  ('flowers_decor', 'Flores e decoração'),
+  ('music_dj', 'Música e DJ'),
+  ('bands_musicians', 'Bandas e músicos'),
+  ('cake', 'Bolo'),
+  ('beauty', 'Beleza'),
+  ('invitations', 'Convites'),
+  ('officiant', 'Celebrante'),
+  ('photobooth_entertainment', 'Fotobooth e animação'),
+  ('rentals', 'Aluguer de material'),
+  ('transport', 'Transporte'),
+  ('wedding_planner', 'Wedding planner'),
+];
+
+String? companyCategoryLabel(String? slug) =>
+    slug == null ? null : companyCategories.where((c) => c.$1 == slug).map((c) => c.$2).firstOrNull;
+
+/// Escolha de categoria (opcional) em pílulas, como as da aba Parceiros.
+class CompanyCategoryPicker extends StatelessWidget {
+  final String? selected;
+  final ValueChanged<String?> onChanged;
+  const CompanyCategoryPicker({super.key, required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Categoria (opcional)',
+            style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+        const SizedBox(height: 8),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          for (final (slug, label) in companyCategories)
+            ChoiceChip(
+              avatar: Icon(iconForCategorySlug(slug), size: 16, color: selected == slug ? Colors.white : AppTheme.accentOliveDark),
+              label: Text(label),
+              selected: selected == slug,
+              showCheckmark: false,
+              selectedColor: AppTheme.accentOliveDark,
+              labelStyle: TextStyle(
+                fontFamily: AppTheme.fontFamily,
+                fontWeight: FontWeight.w700,
+                color: selected == slug ? Colors.white : AppTheme.ink,
+              ),
+              onSelected: (on) => onChanged(on ? slug : null),
+            ),
+        ]),
+      ]);
+}

@@ -25,13 +25,30 @@ Expense _expenseFromRow(Map<String, dynamic> row) => Expense(
   id: row['id'] as String,
   weddingId: row['wedding_id'] as String,
   title: row['title'] as String,
-  category: (row['category'] as String?) == null
-      ? null
-      : PartnerCategory.values.byName(row['category'] as String),
+  category: _enumFor(_slugFor(row['category'] as String?)),
+  categorySlug: _slugFor(row['category'] as String?),
   amount: (row['amount'] as num).toDouble(),
   dueDate: row['due_date'] == null ? null : DateTime.parse(row['due_date'] as String),
   paid: row['paid'] as bool? ?? false,
 );
+
+/// `expenses.category` guarda o slug da empresa (2026-11-08); linhas
+/// antigas têm o nome do enum de 5 categorias.
+String? _slugFor(String? raw) => switch (raw) {
+      null || '' => null,
+      'music' => 'music_dj',
+      'decoration' => 'flowers_decor',
+      final s => s,
+    };
+
+PartnerCategory? _enumFor(String? slug) => switch (slug) {
+      'venue' => PartnerCategory.venue,
+      'catering' => PartnerCategory.catering,
+      'photography' => PartnerCategory.photography,
+      'music_dj' || 'bands_musicians' => PartnerCategory.music,
+      'flowers_decor' => PartnerCategory.decoration,
+      _ => null,
+    };
 
 /// Liga-se à tabela `expenses` real (`database/migrations/033_budget.sql`)
 /// — substitui `MockBackend.listExpenses/addExpense/updateExpense`.
@@ -67,7 +84,7 @@ class ExpenseController extends Notifier<ExpenseState> {
         .insert({
           'wedding_id': expense.weddingId,
           'title': expense.title,
-          'category': expense.category?.name,
+          'category': expense.categorySlug ?? expense.category?.name,
           'amount': expense.amount,
           'due_date': expense.dueDate?.toIso8601String().split('T').first,
         })
