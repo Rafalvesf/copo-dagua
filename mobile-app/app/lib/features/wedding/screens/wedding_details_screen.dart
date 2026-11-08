@@ -2612,8 +2612,11 @@ class _ManageList extends ConsumerWidget {
                           children: [
                             Icon(icon, size: 22, color: _green),
                             const SizedBox(width: 14),
-                            Expanded(child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-                            Flexible(
+                            // Nome com o espaço que precisa; o detalhe ocupa o resto
+                            // e fica encostado à direita (pedido 2026-11-08).
+                            Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            const SizedBox(width: 12),
+                            Expanded(
                               child: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.right,
                                   style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                             ),
