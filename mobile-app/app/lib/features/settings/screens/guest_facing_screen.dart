@@ -529,6 +529,22 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                 title: 'Mesas e lugares',
                 subtitle: 'Sentar quem ainda não tem lugar',
               ),
+              const SizedBox(height: 16),
+              _OptSegment(
+                weddingId: widget.wedding.id,
+                optKey: 'opt_table_reveal',
+                fallback: 'now',
+                title: 'Quando aparece aos convidados',
+                options: const [('now', 'Já'), ('week', '1 semana antes'), ('day', 'No dia')],
+              ),
+              const SizedBox(height: 8),
+              _OptSwitch(
+                weddingId: widget.wedding.id,
+                optKey: 'opt_table_mates',
+                fallback: true,
+                title: 'Mostrar quem está na mesa',
+                subtitle: 'Os nomes de quem fica ao lado',
+              ),
             ]),
       ),
       _Part(
@@ -536,13 +552,44 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
         title: 'Galeria',
         section: GuestSection.galeria,
         status: 'Fotos do evento, partilhadas por todos',
-        onOpen: () => context.push('/gallery'),
+        onOpen: () => _openPart('Galeria', () => [
+              _OptSwitch(
+                weddingId: widget.wedding.id,
+                optKey: 'opt_gallery_upload',
+                fallback: true,
+                title: 'Convidados publicam fotos',
+                subtitle: 'Senão só vocês publicam',
+              ),
+              _OptSwitch(
+                weddingId: widget.wedding.id,
+                optKey: 'opt_gallery_on_day',
+                fallback: false,
+                title: 'Abrir só no dia',
+                subtitle: 'Antes disso os convidados veem "Abre no dia"',
+              ),
+              const SizedBox(height: 10),
+              _PreviewButton(
+                onTap: () => context.push('/gallery'),
+                icon: Icons.photo_library_outlined,
+                title: 'Ver a galeria',
+                subtitle: 'As fotos já partilhadas',
+              ),
+            ]),
       ),
       _Part(
         icon: Icons.groups_outlined,
         title: 'Grupos',
         section: GuestSection.grupos,
         status: 'Conversa entre os convidados',
+        onOpen: () => _openPart('Grupos', () => [
+              _OptSwitch(
+                weddingId: widget.wedding.id,
+                optKey: 'opt_groups_create',
+                fallback: true,
+                title: 'Convidados criam grupos',
+                subtitle: 'Ex.: boleia, despedida. Senão só vocês criam.',
+              ),
+            ]),
       ),
       // Ainda não disponível (pedido 2026-11-08: "bloqueia").
       const _Part(icon: Icons.hotel_outlined, title: 'Dormir e transporte', status: 'Ainda não disponível', locked: true),
@@ -1346,6 +1393,21 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
             value: v,
             onChanged: _set,
           ),
+          const SizedBox(height: 4),
+          _OptSwitch(
+            weddingId: widget.weddingId,
+            optKey: 'opt_companion_details',
+            fallback: true,
+            title: 'Pedir nome, menu e alergias',
+            subtitle: 'De cada acompanhante, na resposta',
+          ),
+          _OptSwitch(
+            weddingId: widget.weddingId,
+            optKey: 'opt_kids_free',
+            fallback: false,
+            title: 'Crianças à parte',
+            subtitle: 'Crianças não contam para o limite',
+          ),
           const SizedBox(height: 6),
           const Text(
             'Vale para quem entra com o código. Na ficha de cada convidado podes dar mais ou menos lugares.',
@@ -1975,6 +2037,117 @@ class _PartsListState extends ConsumerState<_PartsList> {
           ),
         ),
       ],
+    ]);
+  }
+}
+
+/// Opção da página (guardada em `guest_sections`, 2026-11-08).
+class _OptSwitch extends ConsumerStatefulWidget {
+  final String weddingId;
+  final String optKey;
+  final bool fallback;
+  final String title;
+  final String subtitle;
+  const _OptSwitch({required this.weddingId, required this.optKey, required this.fallback, required this.title, required this.subtitle});
+  @override
+  ConsumerState<_OptSwitch> createState() => _OptSwitchState();
+}
+
+class _OptSwitchState extends ConsumerState<_OptSwitch> {
+  bool? _local;
+
+  Future<void> _set(GuestSections sections, bool v) async {
+    setState(() => _local = v);
+    try {
+      await saveGuestSections(widget.weddingId, sections.withOption(widget.optKey, v));
+      ref.invalidate(guestSectionsProvider(widget.weddingId));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _local = null);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = ref.watch(guestSectionsProvider(widget.weddingId)).value;
+    if (sections == null) return const SizedBox.shrink();
+    final value = _local ?? sections.flag(widget.optKey, fallback: widget.fallback);
+    return SwitchListTile.adaptive(
+      contentPadding: EdgeInsets.zero,
+      activeTrackColor: AppTheme.accentOliveDark,
+      title: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      subtitle: Text(widget.subtitle, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+      value: value,
+      onChanged: (v) => _set(sections, v),
+    );
+  }
+}
+
+/// Opção com várias escolhas em pílula (ex.: quando a mesa aparece).
+class _OptSegment extends ConsumerStatefulWidget {
+  final String weddingId;
+  final String optKey;
+  final String fallback;
+  final String title;
+  final List<(String, String)> options;
+  const _OptSegment({required this.weddingId, required this.optKey, required this.fallback, required this.title, required this.options});
+  @override
+  ConsumerState<_OptSegment> createState() => _OptSegmentState();
+}
+
+class _OptSegmentState extends ConsumerState<_OptSegment> {
+  String? _local;
+
+  Future<void> _set(GuestSections sections, String v) async {
+    setState(() => _local = v);
+    try {
+      await saveGuestSections(widget.weddingId, sections.withOption(widget.optKey, v));
+      ref.invalidate(guestSectionsProvider(widget.weddingId));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _local = null);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = ref.watch(guestSectionsProvider(widget.weddingId)).value;
+    if (sections == null) return const SizedBox.shrink();
+    final raw = sections.toJson()[widget.optKey];
+    final value = _local ?? (raw is String ? raw : widget.fallback);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Text(widget.title, style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+      const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(999)),
+        child: Row(children: [
+          for (final (k, label) in widget.options)
+            Expanded(
+              child: SnappyTap(
+                onTap: () => _set(sections, k),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  height: 38,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: value == k ? AppTheme.accentOliveDark : Colors.transparent,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: FittedBox(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Text(label,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: value == k ? Colors.white : AppTheme.inkMuted)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ]),
+      ),
     ]);
   }
 }

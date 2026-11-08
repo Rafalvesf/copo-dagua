@@ -187,8 +187,13 @@ class _GuestHomeBody extends ConsumerWidget {
     final now = DateTime.now();
     final isToday = date != null && date.year == now.year && date.month == now.month && date.day == now.day;
     final guest = ref.watch(myGuestRowProvider(wedding.weddingId)).value;
-    final table = ref.watch(mySeatingTableProvider(wedding.weddingId)).value;
-    final mates = table == null ? 0 : (ref.watch(myTableRosterProvider(wedding.weddingId)).value?.length ?? 0);
+    final passOpts = ref.watch(myEventPassProvider(wedding.weddingId)).value?.sections ?? const GuestSections();
+    // A mesa só aparece quando o organizador quer (2026-11-08).
+    final tableShown = passOpts.tableVisible(wedding.weddingDate);
+    final table = tableShown ? ref.watch(mySeatingTableProvider(wedding.weddingId)).value : null;
+    final mates = table == null || !passOpts.tableMates
+        ? 0
+        : (ref.watch(myTableRosterProvider(wedding.weddingId)).value?.length ?? 0);
     final companions =
         guest == null ? const <GuestCompanion>[] : (ref.watch(guestCompanionsProvider(guest.id)).value ?? const <GuestCompanion>[]);
     // O que o organizador deixa ver e o meu bilhete (migração 158).
@@ -218,7 +223,13 @@ class _GuestHomeBody extends ConsumerWidget {
             () => context.push('/guest-wedding-details', extra: wedding)),
       if (show(GuestSection.mesa))
         GuestShortcut(Icons.table_restaurant_outlined, table == null ? 'Mesa' : 'Mesa $table',
-            table == null ? 'por atribuir' : (mates > 0 ? '$mates pessoas' : 'ver mesa'), const Color(0xFFF2D98D), openTable),
+            !tableShown
+                ? (passOpts.tableReveal == 'day' ? 'no dia' : '1 semana antes')
+                : table == null
+                    ? 'por atribuir'
+                    : (mates > 0 ? '$mates pessoas' : 'ver mesa'),
+            const Color(0xFFF2D98D),
+            openTable),
       if (show(GuestSection.presentes))
         GuestShortcut(Icons.card_giftcard_outlined, 'Presentes', 'lista', const Color(0xFFF3C9CF),
             () => context.go('/guest-gifts/${wedding.weddingId}')),

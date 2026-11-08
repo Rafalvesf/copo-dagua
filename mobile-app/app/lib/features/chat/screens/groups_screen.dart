@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/events/event_pass.dart' show myEventPassProvider;
 import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +38,9 @@ class GroupsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(chatGroupsProvider(weddingId));
+    // Convidados só criam grupos se o organizador deixar (2026-11-08).
+    final organizer = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id)) == weddingId;
+    final canCreate = organizer || (ref.watch(myEventPassProvider(weddingId)).value?.sections.groupsCreate ?? true);
     return GradientScaffold(
       background: AppBackground.feed,
       body: SafeArea(
@@ -44,7 +49,7 @@ class GroupsScreen extends ConsumerWidget {
           PageHeader(
             title: 'Grupos',
             centered: true,
-            trailing: AddActionButton(onTap: () => _newGroup(context, ref)),
+            trailing: canCreate ? AddActionButton(onTap: () => _newGroup(context, ref)) : null,
           ),
           Expanded(
             child: async.when(
@@ -56,8 +61,10 @@ class GroupsScreen extends ConsumerWidget {
               data: (groups) => groups.isEmpty
                   ? _Empty(
                       title: 'Ainda sem grupos',
-                      text: 'Cria um grupo com as pessoas do evento — família, padrinhos, amigos da faculdade…',
-                      action: () => _newGroup(context, ref),
+                      text: canCreate
+                          ? 'Cria um grupo com as pessoas do evento — família, padrinhos, amigos da faculdade…'
+                          : 'Os anfitriões ainda não criaram grupos.',
+                      action: canCreate ? () => _newGroup(context, ref) : null,
                     )
                   : RefreshIndicator(
                       onRefresh: () async => ref.invalidate(chatGroupsProvider(weddingId)),
