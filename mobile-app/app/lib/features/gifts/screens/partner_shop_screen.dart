@@ -100,7 +100,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                                     borderRadius: BorderRadius.circular(10),
                                     child: p.photoUrl == null
                                         ? Container(width: 52, height: 52, color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, color: green))
-                                        : Image.network(p.photoUrl!, width: 52, height: 52, fit: BoxFit.cover),
+                                        : Image.network(p.photoUrl!, width: 52, height: 52, fit: BoxFit.cover, cacheWidth: 156),
                                   ),
                                   title: Text(p.title, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
                                   subtitle: Text(
@@ -325,7 +325,7 @@ class _ProductSheetState extends ConsumerState<_ProductSheet> {
                         const Text('Foto', style: TextStyle(color: AppTheme.ink)),
                       ]),
                     )
-                  : Image.network(_photo!, width: 140, height: 140, fit: BoxFit.cover),
+                  : Image.network(_photo!, width: 140, height: 140, fit: BoxFit.cover, cacheWidth: 420),
             ),
           ),
         ),
