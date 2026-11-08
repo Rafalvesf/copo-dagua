@@ -352,18 +352,26 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
       background: AppBackground.subtle,
       body: SafeArea(
         bottom: false,
+        // A página inteira desliza, cabeçalho incluído, como no Orçamento
+        // (pedido 2026-11-08).
         child: Column(
           children: [
-            const PageHeader(title: 'Para os convidados', subtitle: 'O que os convidados veem do vosso evento.', centered: true),
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Column(children: [
+                      PageHeader(title: 'Para os convidados', subtitle: 'O que os convidados veem do vosso evento.', centered: true),
+                      Expanded(child: Center(child: CircularProgressIndicator())),
+                    ])
                   : ListView(
-                      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 40),
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
                       // Redesign 2026-11-08 (canvas "Para os convidados"):
                       // código, acompanhantes, acesso e uma só lista com
                       // cada parte da página; cada parte numa folha.
                       children: [
+                        const PageHeader(title: 'Para os convidados', subtitle: 'O que os convidados veem do vosso evento.', centered: true),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                         _CodeHero(
                           wedding: widget.wedding,
                           onShare: widget.wedding.inviteUrl == null ? null : () => _shareLink(widget.wedding.inviteUrl!),
@@ -375,6 +383,8 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                         _AccessCard(wedding: widget.wedding),
                         const SizedBox(height: 8),
                         _PartsList(weddingId: widget.wedding.id, parts: _parts()),
+                          ]),
+                        ),
                       ],
                     ),
             ),
