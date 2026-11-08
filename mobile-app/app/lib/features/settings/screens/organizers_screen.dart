@@ -350,26 +350,32 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
         const SizedBox(height: 12),
         Row(children: [
           Expanded(
-            flex: 3,
             child: FilledButton.icon(
               onPressed: _busy ? null : _share,
               icon: const Icon(Icons.ios_share, size: 18),
-              label: const Text('Enviar link'),
+              label: const FittedBox(child: Text('Enviar link', maxLines: 1, style: TextStyle(fontWeight: FontWeight.w700))),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.accentOliveDark,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(46),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 shape: const StadiumBorder(),
               ),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            flex: 2,
             child: OutlinedButton(
               onPressed: _busy ? null : () => _copy(),
-              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46), shape: const StadiumBorder()),
-              child: const Text('Copiar link'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.ink,
+                side: const BorderSide(color: Color(0xFFDCD8CE), width: 1.5),
+                minimumSize: const Size.fromHeight(46),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                shape: const StadiumBorder(),
+              ),
+              // Numa linha só, como o Enviar link (2026-11-08: "desformatado").
+              child: const FittedBox(child: Text('Copiar link', maxLines: 1, style: TextStyle(fontWeight: FontWeight.w700))),
             ),
           ),
         ]),

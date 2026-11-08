@@ -73,7 +73,6 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
   final _iban = TextEditingController();
   final _giftMessage = TextEditingController();
   final List<_Moment> _moments = [];
-  final _programKey = GlobalKey();
 
   GuestFacingInfo _info = const GuestFacingInfo();
   List<String> _colors = [];
@@ -92,6 +91,59 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  /// Faz as folhas de edição (que vivem noutra rota) redesenharem quando
+  /// este ecrã muda (2026-11-08: cada parte edita-se numa folha).
+  final _tick = ValueNotifier<int>(0);
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _tick.value++;
+  }
+
+  /// Abre a folha de uma parte; ao fechar guarda sozinho se houve mudanças.
+  Future<void> _openPart(String title, List<Widget> Function() body) async {
+    await showIslandSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheet) => ValueListenableBuilder<int>(
+        valueListenable: _tick,
+        builder: (context, _, _) => SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 14),
+            ...body(),
+            const SizedBox(height: 18),
+            Row(children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _preview,
+                  style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+                  child: const Text('Ver como convidado'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.of(sheet).pop(),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.accentOliveDark,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(50),
+                    shape: const StadiumBorder(),
+                  ),
+                  child: const Text('Feito'),
+                ),
+              ),
+            ]),
+          ]),
+        ),
+      ),
+    );
+    if (mounted && _dirty) await _save();
   }
 
   void _markDirty() {
@@ -144,8 +196,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
     setState(() => _loading = false);
     if (widget.focusProgram) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final ctx = _programKey.currentContext;
-        if (ctx != null) Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 300), alignment: 0.02);
+        if (mounted) _openProgram();
       });
     }
   }
@@ -182,7 +233,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    var message = 'Guardado. Os convidados já veem as alterações.';
+    var message = 'Guardado.';
     var ok = true;
     try {
       await saveGuestFacingInfo(widget.wedding.id, _current());
@@ -274,6 +325,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
 
   @override
   void dispose() {
+    _tick.dispose();
     for (final c in [_welcome, _time, _address, _dressCode, _giftUrl, _iban, _giftMessage]) {
       c.dispose();
     }
@@ -299,100 +351,139 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                   ? const Center(child: CircularProgressIndicator())
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 40),
+                      // Redesign 2026-11-08 (canvas "Para os convidados"):
+                      // código, acompanhantes, acesso e uma só lista com
+                      // cada parte da página; cada parte numa folha.
                       children: [
-                        // Convite só por link (pedido 2026-11-03): quem abre o link
-                        // entra; num evento privado o organizador aceita na app.
-                        if (widget.wedding.inviteUrl != null)
-                          _InviteLinkCard(
-                            link: widget.wedding.inviteUrl!,
-                            code: widget.wedding.guestCode,
-                            onShare: () => _shareLink(widget.wedding.inviteUrl!),
-                          ),
-                        const SizedBox(height: 12),
-                        _PreviewButton(onTap: _preview),
-                        const SizedBox(height: 18),
-                        // Público/privado e pago/grátis também aqui (pedido 2026-11-03).
-                        _AccessCard(wedding: widget.wedding),
-                        // O que os convidados veem (migração 158).
-                        const SizedBox(height: 18),
-                        _GuestSectionsCard(weddingId: widget.wedding.id),
+                        _CodeHero(
+                          wedding: widget.wedding,
+                          onShare: widget.wedding.inviteUrl == null ? null : () => _shareLink(widget.wedding.inviteUrl!),
+                          onPreview: _preview,
+                        ),
+                        const SizedBox(height: 14),
                         _CompanionsSection(weddingId: widget.wedding.id),
-                        // Redesign 2026-10-20: cada parte num cartão com
-                        // ícone, título e o que os convidados vão ver.
-                        const SizedBox(height: 18),
-                        _SectionCard(
-                          icon: Icons.waving_hand_outlined,
-                          title: 'Boas-vindas',
-                          subtitle: 'Aparece no topo da página dos convidados.',
-                          children: [
-                            _Field(controller: _welcome, hint: 'Ex: Mal podemos esperar por brindar convosco!', maxLines: 3),
-                          ],
-                        ),
-                        _SectionCard(
-                          key: _programKey,
-                          icon: Icons.schedule_rounded,
-                          title: 'Programa',
-                          subtitle: 'Os momentos do dia, por ordem.',
-                          children: [
-                            if (_info.programAvailable) ..._programSection() else _Field(controller: _time, label: 'Hora da cerimónia', hint: 'Ex: 16:00'),
-                          ],
-                        ),
-                        if (_info.programAvailable) ...[
-                          _SectionCard(
-                            icon: Icons.place_outlined,
-                            title: 'Local',
-                            subtitle: 'Com o botão "Como chegar" para os convidados.',
-                            children: _placeSection(),
-                          ),
-                          _SectionCard(
-                            icon: Icons.checkroom_outlined,
-                            title: 'Dress code',
-                            subtitle: 'Indicação e paleta de cores sugerida.',
-                            children: _dressSection(),
-                          ),
-                        ],
-                        if (_info.giftsAvailable)
-                          _SectionCard(
-                            icon: Icons.card_giftcard_outlined,
-                            title: 'Presentes',
-                            subtitle: 'Lista de presentes e contribuições.',
-                            children: [
-                              _Field(controller: _giftUrl, label: 'Link da lista', hint: 'https://…', keyboardType: TextInputType.url),
-                              const SizedBox(height: 10),
-                              _Field(controller: _iban, label: 'IBAN para contribuições', hint: 'PT50 …'),
-                              const SizedBox(height: 10),
-                              _Field(controller: _giftMessage, label: 'Mensagem', hint: 'Ex: A vossa presença é o melhor presente.', maxLines: 2),
-                              const SizedBox(height: 10),
-                              // Envelope digital (migração 156).
-                              _PreviewButton(
-                                onTap: () => context.push('/envelopes'),
-                                icon: Icons.mail_outline_rounded,
-                                title: 'Envelopes recebidos',
-                                subtitle: 'Quem ofereceu, quanto e a mensagem. O dinheiro vai direto para o IBAN.',
-                              ),
-                            ],
-                          ),
-                        _SectionCard(
-                          icon: Icons.key_outlined,
-                          title: 'Modo convidado',
-                          subtitle: 'Foste convidado para outro evento? Usa o código.',
-                          children: [
-                            _PreviewButton(
-                              onTap: () => showGuestModeSheet(context),
-                              icon: Icons.login_rounded,
-                              title: 'Entrar noutro evento',
-                              subtitle: 'Abre o evento com o código que recebeste.',
-                            ),
-                          ],
-                        ),
+                        const SizedBox(height: 14),
+                        _AccessCard(wedding: widget.wedding),
+                        const SizedBox(height: 8),
+                        _PartsList(weddingId: widget.wedding.id, parts: _parts()),
                       ],
                     ),
             ),
-            if (!_loading) _SaveBar(saving: _saving, dirty: _dirty, onSave: _save),
           ],
         ),
       ),
     );
+  }
+
+  void _openProgram() => _openPart('Programa', () => [
+        if (_info.programAvailable) ..._programSection() else _Field(controller: _time, label: 'Hora da cerimónia', hint: 'Ex: 16:00'),
+      ]);
+
+  /// As partes da página, pela ordem do mockup.
+  List<_Part> _parts() {
+    String? t(String v) => v.trim().isEmpty ? null : v.trim();
+    final welcome = t(_welcome.text);
+    final moments = _moments.where((m) => m.title.text.trim().isNotEmpty || m.time.text.trim().isNotEmpty).toList();
+    final firstTime = moments.map((m) => m.time.text.trim()).firstWhere((x) => x.isNotEmpty, orElse: () => '');
+    final address = t(_address.text);
+    final dress = t(_dressCode.text);
+    final iban = t(_iban.text);
+    final giftUrl = t(_giftUrl.text);
+    return [
+      _Part(
+        icon: Icons.waving_hand_outlined,
+        title: 'Boas-vindas',
+        status: welcome == null ? 'Falta escrever' : '"${welcome.length > 40 ? '${welcome.substring(0, 40)}…' : welcome}"',
+        missing: welcome == null,
+        onOpen: () => _openPart('Boas-vindas', () => [
+              const Text('Aparece no topo da página dos convidados.',
+                  style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+              const SizedBox(height: 10),
+              _Field(controller: _welcome, hint: 'Ex: Mal podemos esperar por brindar convosco!', maxLines: 4),
+            ]),
+      ),
+      _Part(
+        icon: Icons.schedule_rounded,
+        title: 'Programa',
+        section: GuestSection.programa,
+        status: _info.programAvailable
+            ? (moments.isEmpty
+                ? 'Falta juntar os momentos'
+                : '${moments.length} ${moments.length == 1 ? 'momento' : 'momentos'}${firstTime.isEmpty ? '' : ' · começa às $firstTime'}')
+            : (t(_time.text) == null ? 'Falta a hora' : 'Às ${_time.text.trim()}'),
+        missing: _info.programAvailable ? moments.isEmpty : t(_time.text) == null,
+        onOpen: _openProgram,
+      ),
+      if (_info.programAvailable) ...[
+        _Part(
+          icon: Icons.place_outlined,
+          title: 'Local',
+          status: address ?? 'Falta a morada',
+          missing: address == null && _lat == null,
+          onOpen: () => _openPart('Local', _placeSection),
+        ),
+        _Part(
+          icon: Icons.checkroom_outlined,
+          title: 'Dress code',
+          status: dress ?? (_colors.isEmpty ? 'Falta escrever' : '${_colors.length} ${_colors.length == 1 ? 'cor' : 'cores'}'),
+          missing: dress == null && _colors.isEmpty,
+          onOpen: () => _openPart('Dress code', _dressSection),
+        ),
+      ],
+      if (_info.giftsAvailable)
+        _Part(
+          icon: Icons.card_giftcard_outlined,
+          title: 'Presentes',
+          section: GuestSection.presentes,
+          status: [if (iban != null) 'IBAN para envelopes', if (giftUrl != null) 'lista noutra loja'].join(' · ').isEmpty
+              ? 'Lista na app'
+              : ['Lista na app', if (iban != null) 'IBAN para envelopes', if (giftUrl != null) 'lista noutra loja'].join(' · '),
+          onOpen: () => _openPart('Presentes', () => [
+                _PreviewButton(
+                  onTap: () => context.push('/gift-list'),
+                  icon: Icons.checklist_rtl_rounded,
+                  title: 'Lista na app',
+                  subtitle: 'Desejos e produtos das lojas parceiras.',
+                ),
+                const SizedBox(height: 12),
+                _Field(controller: _iban, label: 'IBAN para contribuições', hint: 'PT50 …'),
+                const SizedBox(height: 10),
+                _Field(controller: _giftMessage, label: 'Mensagem', hint: 'Ex: A vossa presença é o melhor presente.', maxLines: 2),
+                const SizedBox(height: 10),
+                _Field(controller: _giftUrl, label: 'Lista noutra loja (link, opcional)', hint: 'https://…', keyboardType: TextInputType.url),
+                const SizedBox(height: 12),
+                // Envelope digital (migração 156).
+                _PreviewButton(
+                  onTap: () => context.push('/envelopes'),
+                  icon: Icons.mail_outline_rounded,
+                  title: 'Envelopes recebidos',
+                  subtitle: 'Quem ofereceu, quanto e a mensagem. O dinheiro vai direto para o IBAN.',
+                ),
+              ]),
+        ),
+      _Part(
+        icon: Icons.table_restaurant_outlined,
+        title: 'A tua mesa',
+        section: GuestSection.mesa,
+        status: 'Cada convidado vê a sua mesa',
+        onOpen: () => context.push('/seating'),
+      ),
+      _Part(
+        icon: Icons.photo_library_outlined,
+        title: 'Galeria',
+        section: GuestSection.galeria,
+        status: 'Fotos do evento, partilhadas por todos',
+        onOpen: () => context.push('/gallery'),
+      ),
+      _Part(
+        icon: Icons.groups_outlined,
+        title: 'Grupos',
+        section: GuestSection.grupos,
+        status: 'Conversa entre os convidados',
+      ),
+      // Ainda não disponível (pedido 2026-11-08: "bloqueia").
+      const _Part(icon: Icons.hotel_outlined, title: 'Dormir e transporte', status: 'Ainda não disponível', locked: true),
+    ];
   }
 
   List<Widget> _programSection() {
@@ -602,7 +693,7 @@ class _SectionCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 14),
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-        decoration: softCard(radius: 24),
+        decoration: _whiteCard(),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
             Container(
@@ -1202,10 +1293,12 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
   bool _priceLoaded = false;
   bool _savingPrice = false;
   bool? _paidLocal;
+  final _priceFocus = FocusNode();
 
   @override
   void dispose() {
     _price.dispose();
+    _priceFocus.dispose();
     super.dispose();
   }
 
@@ -1231,6 +1324,10 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
     if (paid) {
       // Fica "Pago" quando houver preço.
       setState(() => _paidLocal = true);
+      // O campo do preço aparece e fica logo selecionado (pedido 2026-11-08).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _priceFocus.requestFocus();
+      });
       final v = _priceValue;
       if (v != null && v > 0) await _savePrice();
       return;
@@ -1268,34 +1365,37 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
 
   static String _fmt(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2).replaceAll('.', ',');
 
+  // Seletor em pílula (redesign 2026-11-08); o `hint` passa a uma linha
+  // por baixo do seletor.
   Widget _choice({required String label, required String hint, required bool selected, required VoidCallback onTap}) {
-    final green = AppTheme.accentOliveDark;
     return Expanded(
-      child: SnappyTap(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? AppTheme.accentTint : const Color(0xFFF7F6F2),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: selected ? green : const Color(0xFFE8E6DC), width: selected ? 1.5 : 1),
+      child: Semantics(
+        button: true,
+        selected: selected,
+        hint: hint,
+        child: SnappyTap(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected ? AppTheme.accentOliveDark : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(label,
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.inkMuted)),
           ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(
-                child: Text(label,
-                    style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w800, color: selected ? green : AppTheme.ink)),
-              ),
-              if (selected) Icon(Icons.check_circle_rounded, size: 18, color: green),
-            ]),
-            const SizedBox(height: 2),
-            Text(hint, style: const TextStyle(fontSize: AppFontSize.sm, height: 1.3, color: AppTheme.inkMuted)),
-          ]),
         ),
       ),
     );
   }
+
+  Widget _segment(List<Widget> children) => Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(999)),
+        child: Row(children: children),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -1316,14 +1416,13 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
       children: [
         const _Label('Quem vê o evento'),
         if (canBePublic)
-          Row(children: [
+          _segment([
             _choice(
               label: 'Privado',
               hint: 'Só convidados, com código ou convite.',
               selected: !isPublic,
               onTap: () => isPublic ? _setPublic(false) : null,
             ),
-            const SizedBox(width: 10),
             _choice(
               label: 'Público',
               hint: 'Aparece a todos em Eventos.',
@@ -1338,14 +1437,13 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           ),
         const SizedBox(height: 16),
         const _Label('Entrada'),
-        Row(children: [
+        _segment([
           _choice(
             label: 'Grátis',
             hint: 'Sem pagamento para entrar.',
             selected: !paid,
             onTap: () => paid ? _setPaid(false) : null,
           ),
-          const SizedBox(width: 10),
           _choice(
             label: 'Pago',
             hint: 'Bilhete pago na app.',
@@ -1359,6 +1457,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
             Expanded(
               child: TextField(
                 controller: _price,
+                focusNode: _priceFocus,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _savePrice(),
@@ -1498,5 +1597,265 @@ class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
           ),
       ]),
     );
+  }
+}
+
+// ───────────────────────── redesign 2026-11-08
+
+const _heroGreen = Color(0xFF3F5A3B);
+
+BoxDecoration _whiteCard() => BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: const Color(0xFFDCD8CE)),
+      boxShadow: const [BoxShadow(color: Color(0x1A171713), blurRadius: 14, offset: Offset(0, 4))],
+    );
+
+/// Cartão verde: código em grande, Partilhar convite e Ver como convidado.
+class _CodeHero extends ConsumerWidget {
+  final Wedding wedding;
+  final VoidCallback? onShare;
+  final VoidCallback onPreview;
+  const _CodeHero({required this.wedding, required this.onShare, required this.onPreview});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final code = wedding.guestCode;
+    final isPublic = ref.watch(eventIsPublicProvider(wedding.id)).value ?? false;
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(color: _heroGreen, borderRadius: BorderRadius.circular(26)),
+      child: Stack(children: [
+        Positioned(
+          right: -50,
+          top: -60,
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x14FFFFFF)),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const Text('CÓDIGO DO EVENTO',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.4, color: Color(0xFFDDE5D3))),
+            const SizedBox(height: 6),
+            Row(children: [
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(code?.isNotEmpty == true ? code! : '—',
+                      style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700, letterSpacing: 1, color: Colors.white)),
+                ),
+              ),
+              if (code?.isNotEmpty == true)
+                Material(
+                  color: const Color(0x29FFFFFF),
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () async {
+                      await Clipboard.setData(ClipboardData(text: code!));
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
+                      }
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Icon(Icons.copy_rounded, size: 18, color: Colors.white, semanticLabel: 'Copiar código'),
+                    ),
+                  ),
+                ),
+            ]),
+            const SizedBox(height: 6),
+            Text(
+              isPublic ? 'Aparece a todos em Eventos · público' : 'Quem tem o código ou o link entra · privado',
+              style: const TextStyle(fontSize: 13, color: Color(0xFFDDE5D3)),
+            ),
+            const SizedBox(height: 14),
+            Row(children: [
+              Expanded(
+                flex: 7,
+                child: FilledButton(
+                  onPressed: onShare,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: _heroGreen,
+                    minimumSize: const Size.fromHeight(46),
+                    shape: const StadiumBorder(),
+                  ),
+                  child: const Text('Partilhar convite', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 6,
+                child: OutlinedButton(
+                  onPressed: onPreview,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0x80FFFFFF), width: 1.5),
+                    minimumSize: const Size.fromHeight(46),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    shape: const StadiumBorder(),
+                  ),
+                  child: const FittedBox(child: Text('Ver como convidado', style: TextStyle(fontWeight: FontWeight.w700))),
+                ),
+              ),
+            ]),
+          ]),
+        ),
+      ]),
+    );
+  }
+}
+
+/// Uma parte da página dos convidados.
+class _Part {
+  final IconData icon;
+  final String title;
+  final String status;
+  final bool missing;
+  final bool locked;
+  final GuestSection? section;
+  final VoidCallback? onOpen;
+  const _Part({
+    required this.icon,
+    required this.title,
+    required this.status,
+    this.missing = false,
+    this.locked = false,
+    this.section,
+    this.onOpen,
+  });
+}
+
+/// "A página": cada parte com o que já tem, mostrar/esconder (migração
+/// 158) e a folha para editar. O que falta fica a amarelo.
+class _PartsList extends ConsumerStatefulWidget {
+  final String weddingId;
+  final List<_Part> parts;
+  const _PartsList({required this.weddingId, required this.parts});
+
+  @override
+  ConsumerState<_PartsList> createState() => _PartsListState();
+}
+
+class _PartsListState extends ConsumerState<_PartsList> {
+  GuestSections? _local;
+
+  Future<void> _set(GuestSections next) async {
+    final before = _local;
+    setState(() => _local = next);
+    try {
+      await saveGuestSections(widget.weddingId, next);
+      ref.invalidate(guestSectionsProvider(widget.weddingId));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _local = before);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = _local ?? ref.watch(guestSectionsProvider(widget.weddingId)).value;
+    final parts = widget.parts;
+    final countable = parts.where((p) => !p.locked).toList();
+    final ready = countable.where((p) => !p.missing).length;
+    const amber = Color(0xFF8A4B10);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(2, 12, 2, 10),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+          const Expanded(
+            child: Text('A página', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+          Text('$ready de ${countable.length} prontas',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+        ]),
+      ),
+      Container(
+        decoration: _whiteCard(),
+        clipBehavior: Clip.antiAlias,
+        child: Material(
+          type: MaterialType.transparency,
+          child: Column(children: [
+            for (final (i, p) in parts.indexed) ...[
+              if (i > 0) const Divider(height: 1, indent: 64, color: Color(0xFFF2F0EB)),
+              InkWell(
+                onTap: p.locked
+                    ? () => ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Dormir e transporte ainda não está disponível. Avisamos quando abrir.')))
+                    : p.onOpen,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+                  child: Row(children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: p.locked ? const Color(0xFFF2F0EB) : (p.missing ? const Color(0xFFF7EACA) : const Color(0xFFDDE5D3)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(p.icon, size: 19, color: p.locked ? AppTheme.inkMuted : (p.missing ? amber : _heroGreen)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Opacity(
+                        opacity: p.locked ? 0.6 : 1,
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(p.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          Text(p.status,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: p.missing ? FontWeight.w700 : FontWeight.w400,
+                                color: p.missing ? amber : AppTheme.inkMuted,
+                              )),
+                        ]),
+                      ),
+                    ),
+                    if (p.locked)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(999)),
+                        child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                          Icon(Icons.lock_outline_rounded, size: 13, color: AppTheme.inkMuted),
+                          SizedBox(width: 4),
+                          Text('Em breve', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                        ]),
+                      )
+                    else if (p.section != null && sections != null)
+                      Switch.adaptive(
+                        value: sections.shows(p.section!),
+                        activeTrackColor: AppTheme.accentOliveDark,
+                        onChanged: (v) => _set(sections.withSection(p.section!, v)),
+                      )
+                    else if (p.onOpen != null)
+                      const Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
+                  ]),
+                ),
+              ),
+            ],
+          ]),
+        ),
+      ),
+      const SizedBox(height: 10),
+      const Text('Toca numa parte para a editar. Guarda sozinho.',
+          textAlign: TextAlign.center, style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+      if (sections != null) ...[
+        const SizedBox(height: 6),
+        Center(
+          child: TextButton(
+            onPressed: () => _set(sections.onlyTicket ? sections.all(true) : sections.all(false)),
+            child: Text(sections.onlyTicket ? 'Mostrar tudo outra vez' : 'Esconder tudo (só o bilhete)'),
+          ),
+        ),
+      ],
+    ]);
   }
 }

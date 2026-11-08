@@ -113,7 +113,7 @@ class TicketPassScreen extends StatelessWidget {
                 child: Column(children: [
                   _qr(ticket.qrData, size),
                   const SizedBox(height: 16),
-                  SelectableText(
+                  Text(
                     ticket.code,
                     style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: 3, color: AppTheme.ink),
                   ),
