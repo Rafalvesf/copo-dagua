@@ -21,6 +21,11 @@ Deno.serve(async (req) => {
   const secret = (cfg as Record<string, string> | null)?.push_secret;
   if (!secret || req.headers.get("x-push-secret") !== secret) return new Response("forbidden", { status: 403 });
 
+  // Sinais cativos (2026-11-08): cobra-os quando a janela de reembolso
+  // fecha — antes de tudo e mesmo sem conta Stripe do parceiro ativa, para
+  // a reserva no cartão (válida 7 dias) nunca expirar.
+  const captured = await captureHeldDeposits(admin);
+
   const { data: rows, error } = await admin.rpc("payments_to_release");
   if (error) {
     console.error("payments_to_release failed", error);
@@ -103,8 +108,43 @@ Deno.serve(async (req) => {
       failed.push(r.payment_id);
     }
   }
-  return Response.json({ released, failed });
+  return Response.json({ released, failed, captured });
 });
+
+// deno-lint-ignore no-explicit-any
+async function captureHeldDeposits(admin: any): Promise<string[]> {
+  const out: string[] = [];
+  try {
+    const { data: s } = await admin.from("platform_settings").select("*").eq("id", 1).maybeSingle();
+    const hours = Number(s?.deposit_refund_window_hours ?? 48) || 48;
+    const cutoff = new Date(Date.now() - hours * 3600 * 1000).toISOString();
+    const { data: rows } = await admin
+      .from("payments")
+      .select("id, provider_payment_id")
+      .eq("type", "deposit")
+      .eq("status", "paid")
+      .is("released_at", null)
+      .like("provider_payment_id", "pi_%")
+      .lte("paid_at", cutoff)
+      // Qualquer estado da reserva: um sinal que não foi libertado por um
+      // cancelamento com reembolso fica do parceiro (como antes).
+      .limit(100);
+    const stripe = stripeClient();
+    for (const r of (rows ?? []) as { id: string; provider_payment_id: string }[]) {
+      try {
+        const pi = await stripe.paymentIntents.retrieve(r.provider_payment_id);
+        if (pi.status !== "requires_capture") continue;
+        await stripe.paymentIntents.capture(pi.id, {}, { idempotencyKey: `capture-${r.id}` });
+        out.push(r.id);
+      } catch (e) {
+        console.error("capture failed", r.id, (e as Error).message);
+      }
+    }
+  } catch (e) {
+    console.error("captureHeldDeposits failed", (e as Error).message);
+  }
+  return out;
+}
 
 // deno-lint-ignore no-explicit-any
 async function nudgePartner(admin: any, r: { partner_id: string; booking_number: string }) {

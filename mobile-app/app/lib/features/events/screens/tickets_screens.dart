@@ -424,7 +424,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                   const SizedBox(height: 8),
                   _line('Bilhetes vendidos', '${summary.sold}'),
                   _line('Total pago pelos convidados', euroLabel(summary.gross)),
-                  _line('Comissão À Nossa! (4%)', '− ${euroLabel(summary.platformFee)}'),
+                  _line('Comissão À Nossa! (4% + 1 €)', '− ${euroLabel(summary.platformFee)}'),
                   _line('Taxa da Stripe', '− ${euroLabel(summary.stripeFee)}'),
                   if (summary.refunded > 0)
                     _line('Reembolsados (${summary.refunded})', '${euroLabel(summary.refundedAmount)} devolvidos'),
@@ -458,7 +458,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
               ),
             const SizedBox(height: 16),
             const Text(
-              'Quem compra paga só o preço do bilhete. Do que recebes descontamos a comissão da À Nossa! (4%) e a taxa da Stripe de cada pagamento. '
+              'Quem compra paga só o preço do bilhete. Do que recebes descontamos a comissão da À Nossa! (4% + 1 € por compra) e a taxa da Stripe de cada pagamento. '
               'Se reembolsares um bilhete ou cancelares o evento, quem comprou recebe tudo de volta e essas taxas não são devolvidas.',
               style: TextStyle(fontSize: 12.5, height: 1.45, color: AppTheme.inkMuted),
             ),

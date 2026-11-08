@@ -198,6 +198,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "As funções usadas nas regras de acesso podem correr sem sessão (convite público, sessão a restaurar), em vez de dar «permission denied».",
     check: { kind: "marker", id: "170" },
   },
+  {
+    file: "171_fixed_fee.sql",
+    title: "+1 € por transação nas taxas",
+    what: "Valor fixo por transação (1 €) somado às taxas: organizador, parceiro, bilhetes e Loja. Fica editável em platform_settings.fixed_fee_cents.",
+    check: { kind: "column", table: "platform_settings", column: "fixed_fee_cents" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

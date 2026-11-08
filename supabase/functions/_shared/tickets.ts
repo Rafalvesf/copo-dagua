@@ -10,8 +10,9 @@ type Admin = any;
 export const STRIPE_FEE_RESERVE_PCT = 3.25; // cartões de fora do EEE (o pior caso)
 export const STRIPE_FEE_RESERVE_FIXED_CENTS = 25;
 
-export function reserveCents(amountCents: number, platformPct: number): { platformCents: number; applicationFeeCents: number } {
-  const platformCents = Math.round((amountCents * platformPct) / 100);
+// `fixedCents`: o valor fixo por transação (+1 €, 2026-11-08).
+export function reserveCents(amountCents: number, platformPct: number, fixedCents = 0): { platformCents: number; applicationFeeCents: number } {
+  const platformCents = Math.min(amountCents, Math.round((amountCents * platformPct) / 100) + fixedCents);
   const reserve = Math.round((amountCents * STRIPE_FEE_RESERVE_PCT) / 100) + STRIPE_FEE_RESERVE_FIXED_CENTS;
   // Nunca mais do que o valor do bilhete.
   return { platformCents, applicationFeeCents: Math.min(amountCents, platformCents + reserve) };

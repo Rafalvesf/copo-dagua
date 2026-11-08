@@ -93,6 +93,9 @@ Deno.serve(async (req) => {
       // Pagamento dentro da app (PaymentIntent direto, sem Checkout —
       // `create-payment-intent`, 2026-10-19). Multibanco paga-se horas
       // depois no multibanco, por isso só este evento o confirma.
+      // Sinal cativo (captura manual, 2026-11-08): o valor fica reservado
+      // no cartão e a reserva confirma-se já; a cobrança vem depois.
+      case "payment_intent.amount_capturable_updated":
       case "payment_intent.succeeded": {
         const intent = event.data.object as { id: string; metadata?: Record<string, string> | null };
         if (intent.metadata?.kind !== "booking_payment") break;

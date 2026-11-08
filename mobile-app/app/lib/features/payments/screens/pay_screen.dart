@@ -365,6 +365,14 @@ class _PayScreenState extends ConsumerState<PayScreen> {
             const SizedBox(height: 10),
           ],
           if (_error != null) _ErrorNote(_error!),
+          // Sinal cativo (2026-11-08): com cartão só é cobrado depois das 48 h.
+          if (a.kind == 'deposit') ...[
+            const SizedBox(height: 4),
+            const Text(
+              'Com cartão, Apple Pay ou Google Pay, o sinal fica cativo 48 h e só é cobrado depois. Se cancelares antes, não pagas nada.',
+              style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
+            ),
+          ],
           const SizedBox(height: 8),
           const _SecureNote(),
         ];

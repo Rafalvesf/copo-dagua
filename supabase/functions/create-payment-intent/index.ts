@@ -1,7 +1,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
-import { parseTiers, paymentFeeCents } from "../_shared/fees.ts";
+import { fixedFeeCents, parseTiers, paymentFeeCents } from "../_shared/fees.ts";
 
 // Pagamento DENTRO da app (pedido 2026-10-19: "não quero que a app abra o
 // browser"). Em vez de uma Checkout Session hospedada, cria um
@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
   try {
     if (prev?.startsWith("pi_")) {
       const pi = await stripe.paymentIntents.retrieve(prev);
-      if (pi.status === "succeeded") {
+      if (pi.status === "succeeded" || pi.status === "requires_capture") {
         await admin.rpc("confirm_stripe_deposit_payment", { p_session_id: pi.id, p_payment_intent_id: pi.id });
         return json({ error: "invalid_state" }, 409);
       }
@@ -164,12 +164,14 @@ Deno.serve(async (req) => {
   const sett = (settings as Record<string, unknown> | null) ?? {};
   // Taxa do organizador por escalões (migração 127), parte proporcional
   // deste pagamento; sem escalões, a percentagem fixa.
+  // + valor fixo por transação (4% + 1 €, 3% + 1 €; 2026-11-08).
+  const fixedCents = fixedFeeCents(sett);
   const applicationFeeCents = paymentFeeCents(
     partnerAmountCents,
     Math.max(bookingTotalCents, partnerAmountCents),
     parseTiers(sett.organizer_fee_tiers),
     commissionPct,
-  );
+  ) + fixedCents;
   const totalChargeCents = partnerAmountCents + applicationFeeCents;
   // Escalões sobre o valor total da reserva (migração 126); cada pagamento
   // leva a parte proporcional. Sem escalões, a percentagem fixa (123).
@@ -196,16 +198,24 @@ Deno.serve(async (req) => {
       Math.max(bookingTotalCents, partnerAmountCents),
       proTiers(parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers), isPro ? Number(sett.pro_fee_discount ?? 1) : 0),
       Math.max(0, partnerFeePct - (isPro ? Number(sett.pro_fee_discount ?? 1) : 0)),
-    ) + Math.round((partnerAmountCents * promoExtraPct) / 100),
+    ) + Math.round((partnerAmountCents * promoExtraPct) / 100) + fixedCents,
   );
   const bookingNumber = (payment.bookings as unknown as { booking_number: string } | null)?.booking_number ?? "";
   const label = payment.type === "deposit" ? "Sinal" : "Pagamento final";
+
+  // Sinal pago com cartão (Apple Pay e Google Pay incluídos) fica CATIVO
+  // durante a janela de reembolso (2026-11-08): só é cobrado quando ela
+  // fecha (`release-partner-funds`); cancelado antes, é libertado sem
+  // reembolso nem taxa da Stripe. MB WAY e Multibanco não permitem
+  // cativar — esses cobram logo, como antes.
+  const holdDeposit = payment.type === "deposit" && (method === "card" || method === "all");
 
   let intent;
   try {
     intent = await stripe.paymentIntents.create({
       amount: totalChargeCents,
       currency: "eur",
+      ...(holdDeposit ? { capture_method: "manual" as const } : {}),
       ...(method === "all"
         ? { automatic_payment_methods: { enabled: true, allow_redirects: "never" as const } }
         : { payment_method_types: [method] }),
@@ -230,6 +240,8 @@ Deno.serve(async (req) => {
         partner_amount_cents: String(partnerAmountCents),
         commission_cents: String(applicationFeeCents),
         partner_fee_cents: String(partnerFeeCents),
+        fixed_fee_cents: String(fixedCents),
+        held: holdDeposit ? "1" : "0",
       },
     }, method === "mb_way" ? { apiVersion: "2025-09-30.clover" as never } : undefined);
   } catch (err) {

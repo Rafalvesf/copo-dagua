@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
         states[p.id as string] = { state: paid ? "paid" : "open" };
       } else if (sid.startsWith("pi_")) {
         const intent = await stripe.paymentIntents.retrieve(sid);
-        paid = intent.status === "succeeded";
+        paid = intent.status === "succeeded" || intent.status === "requires_capture";
         const mb = (intent.next_action as any)?.multibanco_display_details;
         states[p.id as string] = paid
           ? { state: "paid" }

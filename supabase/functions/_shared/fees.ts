@@ -35,3 +35,11 @@ export function paymentFeeCents(
   const bookingFee = tieredFeeCents(bookingTotalCents, tiers);
   return Math.min(paymentCents, Math.round((bookingFee * paymentCents) / bookingTotalCents));
 }
+
+/// Valor fixo por transação, somado à percentagem (pedido 2026-11-08:
+/// "4% + 1 €, tal como 3% + 1 €", em todas as taxas). Vem de
+/// `platform_settings.fixed_fee_cents`; sem a coluna, 100 (1 €).
+export function fixedFeeCents(settings: Record<string, unknown> | null | undefined): number {
+  const v = Number(settings?.fixed_fee_cents ?? 100);
+  return Number.isFinite(v) && v >= 0 ? Math.round(v) : 100;
+}

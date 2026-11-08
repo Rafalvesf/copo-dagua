@@ -368,7 +368,8 @@
       function result(res) {
         if (res.error) return JSON.stringify({ error: res.error.message || 'Pagamento recusado.', code: res.error.code || null });
         var pi = res.paymentIntent || {};
-        return JSON.stringify({ status: pi.status || null });
+        // Sinal cativo (captura manual): para a app, já está pago.
+        return JSON.stringify({ status: pi.status === 'requires_capture' ? 'succeeded' : (pi.status || null) });
       }
       return {
         createHost: function () {

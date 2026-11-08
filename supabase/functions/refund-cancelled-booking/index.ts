@@ -105,6 +105,7 @@ Deno.serve(async (req) => {
   const failed: string[] = [];
   // Total devolvido ao casal (o que pagou na Stripe, comissão incluída).
   let refundedCents = 0;
+  let released = false;
 
   for (const p of payments) {
     const sid = p.provider_payment_id as string | null;
@@ -124,6 +125,20 @@ Deno.serve(async (req) => {
         continue;
       }
       const intent = await stripe.paymentIntents.retrieve(pi);
+      // Sinal ainda cativo (2026-11-08): liberta-se o valor no cartão, sem
+      // reembolso nem taxa da Stripe.
+      if (intent.status === "requires_capture") {
+        await stripe.paymentIntents.cancel(pi, { cancellation_reason: "requested_by_customer" }, { idempotencyKey: `release-hold-${p.id}` });
+        await admin
+          .from("payments")
+          .update({ status: "refunded", refunded_amount: intent.amount / 100, updated_at: new Date().toISOString() })
+          .eq("id", p.id)
+          .eq("status", "paid");
+        refunded.push(p.id as string);
+        refundedCents += intent.amount;
+        released = true;
+        continue;
+      }
       const hasTransfer = Boolean(intent.transfer_data?.destination);
       const hasFee = intent.application_fee_amount != null && intent.application_fee_amount > 0;
       await stripe.refunds.create(
@@ -184,8 +199,10 @@ Deno.serve(async (req) => {
       wedding_id: booking.wedding_id,
       ...(owner ? { profile_id: owner } : {}),
       type: "booking_refunded",
-      title: "Reembolso enviado",
-      body: `${fmtEur(total)} de ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`,
+      title: released ? "Valor libertado" : "Reembolso enviado",
+      body: released
+        ? `${fmtEur(total)} de ${partnerName} deixaram de estar cativos no teu cartão. Não foste cobrado.`
+        : `${fmtEur(total)} de ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`,
     }).then(({ error }) => error && console.error("notification insert failed", error));
   }
 

@@ -420,9 +420,13 @@ final platformDepositPercentageProvider = FutureProvider<double>((ref) async {
 /// `supabase/functions/create-deposit-checkout/index.ts` — tem de dar
 /// exatamente o mesmo valor que a Stripe vai mostrar a seguir, nunca só
 /// uma aproximação.
+/// Valor de um pagamento com a taxa de serviço: a percentagem mais o valor
+/// fixo por transação ([kFixedFee], 1 €, 2026-11-08). Igual ao que a Stripe
+/// cobra (`create-payment-intent`).
 double amountWithCommission(double partnerAmount, double commissionPercentage) {
   final partnerCents = (partnerAmount * 100).round();
-  final feeCents = (partnerCents * commissionPercentage / 100).round();
+  if (partnerCents <= 0) return 0;
+  final feeCents = (partnerCents * commissionPercentage / 100).round() + (kFixedFee * 100).round();
   return (partnerCents + feeCents) / 100;
 }
 
