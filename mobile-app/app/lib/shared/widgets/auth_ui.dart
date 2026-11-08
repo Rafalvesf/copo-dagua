@@ -188,6 +188,9 @@ class _AuthFieldState extends State<AuthField> {
                     controller: widget.controller,
                     focusNode: _focus,
                     obscureText: widget.password && _obscure,
+                    // `*` em vez de `•` — a LouisGeorgeCafe não tem o
+                    // ponto e a password parecia vazia (2026-11-08).
+                    obscuringCharacter: '*',
                     keyboardType: widget.keyboardType,
                     onChanged: widget.onChanged,
                     autofillHints: widget.autofillHints,

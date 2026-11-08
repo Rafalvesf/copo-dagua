@@ -57,6 +57,7 @@ class _PasswordFieldState extends State<PasswordField> {
     return TextField(
       controller: widget.controller,
       obscureText: _obscure,
+      obscuringCharacter: '*',
       onChanged: widget.onChanged,
       decoration: InputDecoration(
         labelText: widget.label,
