@@ -703,7 +703,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       case _Step.allergies:
         return _StepScaffold(
           question: 'Alguma alergia ou intolerância?',
-          subtitle: _detailPeople.length == 1 ? 'Se não houver, escolhe Nenhuma.' : 'De cada pessoa. Se não houver, escolhe Nenhuma.',
+          subtitle: '${_detailPeople.length == 1 ? 'Se não houver, escolhe Nenhuma.' : 'De cada pessoa. Se não houver, escolhe Nenhuma.'} Só os anfitriões e o catering veem isto, e é apagado 90 dias depois do evento.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
