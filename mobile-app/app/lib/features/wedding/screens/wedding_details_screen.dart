@@ -2345,7 +2345,6 @@ class _UrgentStrip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = _todoItems(ref);
     if (items.isEmpty) return const SizedBox.shrink();
-    final urgent = items.where((i) => i.urgent).firstOrNull;
     return SnappyTap(
       onTap: () {
         // Desce até "Para fazer agora" (logo abaixo do planeamento).
@@ -2365,18 +2364,21 @@ class _UrgentStrip extends ConsumerWidget {
               height: 26,
               alignment: Alignment.center,
               decoration: const BoxDecoration(color: Color(0xFF8A4B10), shape: BoxShape.circle),
-              child: Text('${items.length}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+              child: Text('${items.length}',
+                  textAlign: TextAlign.center,
+                  textHeightBehavior: const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
+                  style: const TextStyle(fontSize: 13, height: 1, fontWeight: FontWeight.w700, color: Colors.white)),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                [
-                  items.length == 1 ? 'coisa para tratar' : 'coisas para tratar',
-                  if (urgent != null) urgent.subtitle.split(' · ').first,
-                ].join(' · '),
+                // Só a contagem: o resto da linha cortava-se e o detalhe já
+                // está logo abaixo, em "Para fazer agora" (2026-11-08).
+                items.length == 1 ? 'coisa para tratar' : 'coisas para tratar',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF5A3E0C)),
+                textHeightBehavior: const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
+                style: const TextStyle(fontSize: 15, height: 1, fontWeight: FontWeight.w700, color: Color(0xFF5A3E0C)),
               ),
             ),
             const Icon(Icons.chevron_right_rounded, color: Color(0xFF5A3E0C)),
