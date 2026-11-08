@@ -344,6 +344,7 @@ class _PendingPhotoCard extends ConsumerWidget {
               width: 56,
               height: 56,
               fit: BoxFit.cover,
+              semanticLabel: 'Foto por aprovar',
             ),
           ),
           const SizedBox(width: 12),

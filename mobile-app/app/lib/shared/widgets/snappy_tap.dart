@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Envolve um botão/pill/card tocável com o feedback padrão da app: ao
 /// pairar o rato (web/desktop), é a sombra do próprio elemento que fica
@@ -42,6 +43,7 @@ class SnappyTap extends StatefulWidget {
 class _SnappyTapState extends State<SnappyTap> {
   bool _pressed = false;
   bool _hovered = false;
+  bool _focused = false;
 
   // Só o toque/clique escurece a superfície — o hover é comunicado só
   // pela sombra (via builder) e pelo cursor, nunca por um tom mais
@@ -64,6 +66,34 @@ class _SnappyTapState extends State<SnappyTap> {
         ? widget.builder!(context, _hovered)
         : widget.child!;
     // Anunciado como botão aos leitores de ecrã (acessibilidade, 2026-11-03).
+    // Teclado (acessibilidade, 2026-11-08): Tab chega aqui, Enter/Espaço
+    // ativa e um contorno verde mostra onde está o foco.
+    final focusable = Focus(
+      canRequestFocus: widget.onTap != null,
+      skipTraversal: widget.onTap == null,
+      onFocusChange: (f) {
+        if (_focused != f) setState(() => _focused = f);
+      },
+      onKeyEvent: (node, event) {
+        if (widget.onTap == null || event is! KeyDownEvent) return KeyEventResult.ignored;
+        final k = event.logicalKey;
+        if (k == LogicalKeyboardKey.enter || k == LogicalKeyboardKey.numpadEnter || k == LogicalKeyboardKey.space) {
+          widget.onTap!();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: _focused && FocusManager.instance.highlightMode == FocusHighlightMode.traditional
+          ? DecoratedBox(
+              position: DecorationPosition.foreground,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF4F6B4A), width: 2),
+              ),
+              child: content,
+            )
+          : content,
+    );
     return Semantics(
       button: widget.onTap != null,
       enabled: widget.onTap != null,
@@ -98,7 +128,7 @@ class _SnappyTapState extends State<SnappyTap> {
               child: child,
             );
           },
-          child: content,
+          child: focusable,
         ),
         ),
       ),
