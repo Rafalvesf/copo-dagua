@@ -71,6 +71,7 @@ class GallerySocialGrid extends ConsumerWidget {
                 SizedNetworkImage(
                   photo.imageUrl,
                   fit: BoxFit.cover,
+                  semanticLabel: galleryPhotoLabel(photo, index, photos.length),
                   errorBuilder: (context, error, stack) => const SizedBox.shrink(),
                 ),
                 if (m != null && (m.likedByMe || m.commentCount > 0))
@@ -344,6 +345,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                     SizedNetworkImage(
                       widget.photo.imageUrl,
                       fit: BoxFit.cover,
+                      semanticLabel: galleryPhotoLabel(widget.photo, null, null),
                       errorBuilder: (context, error, stack) => const SizedBox.shrink(),
                     ),
                     AnimatedBuilder(
@@ -924,4 +926,13 @@ Uri _downloadUri(String url) {
   final uri = Uri.parse(url);
   final name = uri.pathSegments.isEmpty ? 'foto.jpg' : uri.pathSegments.last;
   return uri.replace(queryParameters: {...uri.queryParameters, 'download': 'tchin-tchin-$name'});
+}
+
+
+/// Texto alternativo de uma foto da galeria: a legenda, se houver, e a
+/// posição na grelha (acessibilidade, 2026-11-08).
+String galleryPhotoLabel(GalleryPhoto photo, int? index, int? total) {
+  final cap = photo.caption?.trim();
+  final pos = index != null && total != null ? 'Foto ${index + 1} de $total' : 'Foto';
+  return cap == null || cap.isEmpty ? pos : '$pos: $cap';
 }

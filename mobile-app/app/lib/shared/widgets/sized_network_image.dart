@@ -35,6 +35,7 @@ class SizedNetworkImage extends StatelessWidget {
     this.alignment = Alignment.center,
     this.loadingBuilder,
     this.errorBuilder,
+    this.semanticLabel,
   });
 
   final String url;
@@ -44,6 +45,10 @@ class SizedNetworkImage extends StatelessWidget {
   final AlignmentGeometry alignment;
   final ImageLoadingBuilder? loadingBuilder;
   final ImageErrorWidgetBuilder? errorBuilder;
+
+  /// Descrição para leitores de ecrã (texto alternativo). Sem ela, a
+  /// imagem é decorativa e fica de fora da árvore de acessibilidade.
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +65,8 @@ class SizedNetworkImage extends StatelessWidget {
         loadingBuilder: loadingBuilder,
         errorBuilder: errorBuilder,
         gaplessPlayback: true,
+        semanticLabel: semanticLabel,
+        excludeFromSemantics: semanticLabel == null,
       );
     }
 
