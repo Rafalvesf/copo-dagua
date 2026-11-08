@@ -161,7 +161,9 @@ class PartnerHomeScreen extends ConsumerWidget {
                 // Rearranjo 2026-11-07 ("tem muitos botões"): o que precisa de
                 // resposta primeiro; depois vendas, a semana, o negócio (4
                 // mosaicos) e a montra numa lista. Canvas "Parceiros · Início".
-                if (!isPro && newRequests.isNotEmpty) ...[
+                // Responder primeiro sempre no topo, no Normal e no
+                // Verificado (pedido 2026-11-08: "igual nos dois").
+                if (newRequests.isNotEmpty) ...[
                   _RespondFirstCard(requests: newRequests),
                   const SizedBox(height: 18),
                 ],
@@ -180,10 +182,6 @@ class PartnerHomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 14),
                   _ProStatsRow(stats: stats, pro: proStats),
-                  if (newRequests.isNotEmpty) ...[
-                    const SizedBox(height: 18),
-                    _RespondFirstCard(requests: newRequests),
-                  ],
                 ] else
                 SnappyTap(
                   onTap: () => context.push('/partner-stats'),
