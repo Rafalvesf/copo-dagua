@@ -55,7 +55,6 @@ class SettingsScreen extends ConsumerWidget {
 // Definições" — pedido 2026-10-17: "gostei destas definições, aplica no
 // resto" (parceiro e organizador usam os mesmos componentes).
 const _pageBackground = Colors.white;
-const _cardBorder = Color(0xFFEFEBE3);
 
 class _SettingsPage extends StatelessWidget {
   final String title;
@@ -82,6 +81,48 @@ class _SettingsPage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Cartão do topo das Definições, igual para organizadores e parceiros:
+/// degradê suave, etiqueta, ação à direita, nome e uma linha de detalhe.
+class _HeaderCard extends StatelessWidget {
+  final String chip;
+  final String action;
+  final String title;
+  final String meta;
+  final VoidCallback onTap;
+  const _HeaderCard({required this.chip, required this.action, required this.title, required this.meta, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+            gradient: LinearGradient(
+              begin: const Alignment(-0.6, -1),
+              end: const Alignment(0.6, 1),
+              colors: [AppTheme.accentTint, const Color(0xFFF7EACA), const Color(0xFFF3DEE0)],
+              stops: const [0, 0.6, 1],
+            ),
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(999)),
+                child: Text(chip, style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
+              ),
+              const Spacer(),
+              Text(action, style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
+            ]),
+            const SizedBox(height: 10),
+            Text(title, style: const TextStyle(fontSize: AppFontSize.h2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
+          ]),
+        ),
+      );
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -305,39 +346,12 @@ class _CoupleSettings extends ConsumerWidget {
     return _SettingsPage(
       title: 'Definições',
       children: [
-        SnappyTap(
+        _HeaderCard(
+          chip: wedding.eventType.label,
+          action: 'Editar',
+          title: wedding.displayNames,
+          meta: meta,
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EditEventPage(wedding: wedding))),
-          child: Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.xl),
-              gradient: LinearGradient(
-                begin: Alignment(-0.6, -1),
-                end: Alignment(0.6, 1),
-                colors: [AppTheme.accentTint, Color(0xFFF7EACA), Color(0xFFF3DEE0)],
-                stops: [0, 0.6, 1],
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(999)),
-                      child: Text(wedding.eventType.label, style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
-                    ),
-                    const Spacer(),
-                    const Text('Editar', style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(wedding.displayNames, style: const TextStyle(fontSize: AppFontSize.h2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
-              ],
-            ),
-          ),
         ),
         ..._sections(context, ref, wedding),
       ],
@@ -533,56 +547,22 @@ class _PartnerSettings extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(authControllerProvider).profile;
     final name = profile?.businessName?.isNotEmpty == true ? profile!.businessName! : (profile?.fullName ?? '');
-    final initials = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).take(2).map((w) => w[0].toUpperCase()).join();
     return _SettingsPage(
       title: 'Definições',
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-            border: Border.all(color: _cardBorder),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(16)),
-                child: Text(initials, style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name, style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    if (profile?.categoryLabels.isNotEmpty == true) ...[
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          for (final c in profile!.categoryLabels)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                              decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(999)),
-                              child: Text(c, style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ],
+        // Mesmo cartão do organizador (pedido 2026-11-08: "mantém igual").
+        _HeaderCard(
+          chip: 'Parceiro',
+          action: 'Ver perfil',
+          title: name,
+          meta: [
+            ...?profile?.categoryLabels,
+            ?ref.watch(partnerLocationProvider).maybeWhen(
+                  data: (l) => l == null || l.isEmpty || l.city.isEmpty ? null : l.city,
+                  orElse: () => null,
                 ),
-              ),
-              TextButton(
-                onPressed: () => context.push('/partner-profile'),
-                child: const Text('Ver'),
-              ),
-            ],
-          ),
+          ].join(' · '),
+          onTap: () => context.push('/partner-profile'),
         ),
         const _SectionTitle('Negócio'),
         _Group(
