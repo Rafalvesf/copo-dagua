@@ -268,7 +268,7 @@ class PermissionGate extends ConsumerWidget {
                   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 8),
               const Text(
-                'O organizador principal não te deu esta permissão. Pede-lhe em Definições → Organizadores.',
+                'O organizador principal não te deu esta permissão. Pede-lhe em Definições › Organizadores.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
               ),
