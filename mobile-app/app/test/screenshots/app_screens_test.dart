@@ -733,6 +733,19 @@ void main() {
   ]) {
     testWidgets(name, (t) => _shoot(t, name, couple, path));
   }
+  // Acesso e entrada › Pago, com um preço escrito (2026-11-08).
+  testWidgets('28b_casal_entrada_paga', (t) => _shoot(t, '28b_casal_entrada_paga', couple, '/guest-page', after: (t) async {
+        await _tapText('Pago')(t);
+        for (var i = 0; i < 6; i++) {
+          await t.pump(const Duration(milliseconds: 120));
+        }
+        final field = find.byType(TextField);
+        if (field.evaluate().isNotEmpty) {
+          await t.ensureVisible(field.last);
+          await t.pump(const Duration(milliseconds: 100));
+          await t.enterText(field.last, '25');
+        }
+      }));
   testWidgets('20_casal_conversa', (t) => _shoot(t, '20_casal_conversa', couple, '/chat/cv1', extra: _conversations.first));
   testWidgets('27_casal_parceiro_folha', (t) => _shoot(
         t,
