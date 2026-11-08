@@ -110,7 +110,7 @@ const privacyDoc = LegalDoc(
     ]),
     LegalSection('4. Dados dos convidados', [
       'Quando o organizador adiciona convidados, é ele quem decide que dados introduz e tem de ter legitimidade para o fazer (por exemplo, o convidado deu-lhe esses contactos). Os convidados podem pedir-nos acesso, correção ou eliminação dos seus dados a qualquer momento.',
-      'As restrições alimentares podem revelar informação de saúde. Só são usadas para o organizador e o catering prepararem o evento.',
+      'As restrições alimentares e alergias podem revelar informação de saúde. Só são pedidas para o organizador e o catering prepararem o evento, e são apagadas automaticamente 90 dias depois da data do evento.',
     ]),
     LegalSection('5. Com quem partilhamos', [
       'Dentro da app: com as pessoas do mesmo evento ou conversa, na medida necessária (por exemplo, o parceiro vê os dados da reserva e o nome do organizador).',
@@ -121,6 +121,8 @@ const privacyDoc = LegalDoc(
     ]),
     LegalSection('6. Durante quanto tempo', [
       'Enquanto a tua conta estiver ativa. Podes apagá-la a qualquer momento em Definições › Conta › Apagar conta: os teus dados pessoais são apagados de imediato, exceto os que a lei nos obriga a guardar (por exemplo, registos de pagamentos, durante 10 anos, sem o teu nome). Se tiveres reservas ativas, tens de as cancelar ou esperar que o evento passe.',
+      'Alguns dados têm prazos mais curtos, apagados automaticamente: alergias e restrições alimentares e pedidos para entrar num evento, 90 dias depois do evento; passos de utilização sem conta iniciada, 90 dias; dados de utilização ligados à conta, 24 meses.',
+      'Para estatística, a app não guarda identificadores no teu dispositivo: o identificador anónimo de utilização existe só enquanto a app está aberta.',
     ]),
     LegalSection('7. Os teus direitos', [
       'Podes apagar a tua conta e descarregar uma cópia dos teus dados diretamente em Definições › Conta ("Apagar conta" e "Descarregar os meus dados"). As notificações desligam-se em Definições › Conta › Notificações. Podes também pedir acesso aos teus dados, a sua correção, eliminação ou portabilidade, opor-te a um tratamento ou pedir a sua limitação, e retirar um consentimento dado. Para isso, usa "Falar com a equipa À Nossa!" nas Definições ou escreve para ${LegalEntity.email}. Respondemos no prazo de um mês.',
