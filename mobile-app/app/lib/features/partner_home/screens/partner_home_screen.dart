@@ -78,7 +78,7 @@ class PartnerHomeScreen extends ConsumerWidget {
     // Canvas "Parceiros · Início Normal e Pro" (2026-11-07).
     final yearStats = isPro ? ref.watch(partnerAnalyticsProvider(AnalyticsPeriod.year)).value : null;
     final proStats = isPro ? ref.watch(partnerProStatsProvider).value : null;
-    // Poupança da comissão −N pontos sobre as vendas do mês (estimativa).
+    // Poupança da comissão −N% sobre as vendas do mês (estimativa).
     final commissionSaving = stats == null || pro == null ? 0.0 : stats.revenue * pro.feeDiscount / 100;
     return GradientScaffold(
       background: AppBackground.subtle,
@@ -680,8 +680,8 @@ class _ProSavingsCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               bookings == 0
-                  ? 'Comissão −${_num(feeDiscount)} ponto em cada reserva que fechares.'
-                  : 'Comissão −${_num(feeDiscount)} ponto em $bookings ${bookings == 1 ? 'reserva' : 'reservas'} este mês.',
+                  ? 'Comissão −${_num(feeDiscount)}% em cada reserva que fechares.'
+                  : 'Comissão −${_num(feeDiscount)}% em $bookings ${bookings == 1 ? 'reserva' : 'reservas'} este mês.',
               style: const TextStyle(fontSize: 14, color: AppTheme.ink),
             ),
           ],
@@ -779,7 +779,7 @@ class _ProUpsellCard extends StatelessWidget {
               style: TextStyle(fontSize: 22, height: 1.2, fontWeight: FontWeight.w700, color: Colors.white)),
           const SizedBox(height: 14),
           Row(children: [
-            cell('−${_num(pro.feeDiscount)} ponto', 'de comissão nas reservas'),
+            cell('−${_num(pro.feeDiscount)}%', 'de comissão nas reservas'),
             const SizedBox(width: 8),
             cell('1 em ${pro.proReferralFreeEvery}', 'clientes trazidos sem comissão (em vez de 1 em ${pro.referralFreeEvery})'),
           ]),
