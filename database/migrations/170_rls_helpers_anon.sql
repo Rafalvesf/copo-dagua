@@ -22,4 +22,9 @@ grant execute on function public.is_booking_partner_for_wedding(uuid) to anon;
 grant execute on function public.is_review_counterpart(uuid) to anon;
 grant execute on function public.is_review_partner_for_wedding(uuid) to anon;
 
+-- Marca para a página Migrações do admin (sai da lista quando corre).
+create table if not exists public.applied_migrations (id text primary key, applied_at timestamptz not null default now());
+alter table public.applied_migrations enable row level security;
+insert into public.applied_migrations (id) values ('170') on conflict do nothing;
+
 commit;

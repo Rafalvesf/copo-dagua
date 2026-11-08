@@ -20,6 +20,10 @@ async function applied(db: ReturnType<typeof createAdminClient>, c: MigrationChe
       const { error, status } = await db.from(c.table).select("*").limit(1);
       return !error && status >= 200 && status < 300;
     }
+    if (c.kind === "marker") {
+      const { data, error } = await db.from("applied_migrations").select("id").eq("id", c.id).maybeSingle();
+      return !error && !!data;
+    }
     if (c.kind === "column") {
       const { error } = await db.from(c.table).select(c.column).limit(1);
       return !error;

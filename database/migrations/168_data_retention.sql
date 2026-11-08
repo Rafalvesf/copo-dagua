@@ -45,4 +45,9 @@ revoke execute on function public.purge_old_personal_data() from public, anon, a
 select cron.unschedule('purge-old-personal-data') where exists (select 1 from cron.job where jobname = 'purge-old-personal-data');
 select cron.schedule('purge-old-personal-data', '17 3 * * *', $$select public.purge_old_personal_data();$$);
 
+-- Marca para a página Migrações do admin (sai da lista quando corre).
+create table if not exists public.applied_migrations (id text primary key, applied_at timestamptz not null default now());
+alter table public.applied_migrations enable row level security;
+insert into public.applied_migrations (id) values ('168') on conflict do nothing;
+
 commit;

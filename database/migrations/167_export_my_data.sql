@@ -54,4 +54,9 @@ $$;
 revoke execute on function public.export_my_data() from public, anon;
 grant execute on function public.export_my_data() to authenticated;
 
+-- Marca para a página Migrações do admin (sai da lista quando corre).
+create table if not exists public.applied_migrations (id text primary key, applied_at timestamptz not null default now());
+alter table public.applied_migrations enable row level security;
+insert into public.applied_migrations (id) values ('167') on conflict do nothing;
+
 commit;
