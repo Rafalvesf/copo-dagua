@@ -26,6 +26,8 @@ class InviteEvent {
   final String? message;
   final List<ProgramItem> program;
   final String? dressCode;
+  /// Cores do evento (dress code), em hex.
+  final List<String> themeColors;
   final int maxCompanions;
   final bool isPaid;
   final double? entryPrice;
@@ -48,6 +50,7 @@ class InviteEvent {
     this.message,
     this.program = const [],
     this.dressCode,
+    this.themeColors = const [],
     this.maxCompanions = 0,
     this.isPaid = false,
     this.entryPrice,
@@ -81,6 +84,7 @@ class InviteEvent {
       message: quote,
       program: ProgramItem.listFrom(j['program']),
       dressCode: s('dress_code'),
+      themeColors: [for (final c in (j['theme_colors'] as List?) ?? const []) if (c is String && c.trim().isNotEmpty) c.trim()],
       maxCompanions: (j['max_companions'] as num?)?.toInt() ?? 0,
       isPaid: j['is_paid'] == true,
       entryPrice: (j['entry_price'] as num?)?.toDouble(),

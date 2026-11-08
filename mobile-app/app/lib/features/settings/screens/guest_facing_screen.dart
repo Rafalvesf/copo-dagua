@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1473,9 +1474,14 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
       // Fica "Pago" quando houver preço.
       setState(() => _paidLocal = true);
       // O campo do preço aparece e fica logo selecionado (pedido 2026-11-08).
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _priceFocus.requestFocus();
-      });
+      // Na web (PWA no iPhone) não: o foco dado por código, fora de um
+      // toque, deixa o campo "focado" sem teclado e os toques seguintes já
+      // não o abrem — era por isso que não dava para escrever o preço.
+      if (!kIsWeb) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _priceFocus.requestFocus();
+        });
+      }
       final v = _priceValue;
       if (v != null && v > 0) await _savePrice();
       return;
