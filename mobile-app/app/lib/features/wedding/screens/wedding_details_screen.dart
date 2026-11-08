@@ -2577,11 +2577,9 @@ class _ManageList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final s = _shortcuts(ref);
     String sub(String label) => s.firstWhere((x) => x.label == label, orElse: () => const _Shortcut(Icons.circle, '', '', '')).subtitle;
+    // Sem o que já está nos 4 blocos de cima (convidados, orçamento,
+    // parceiros/reservas, lugares) — pedido 2026-11-08.
     final rows = <(IconData, String, String, String)>[
-      (Icons.people_outline, 'Convidados', sub('Convidados'), '/guests'),
-      (Icons.event_seat_outlined, 'Mesas e lugares', sub('Lugares'), '/seating'),
-      (Icons.savings_outlined, 'Orçamento e pagamentos', sub('Orçamento'), '/budget'),
-      (Icons.event_available_outlined, 'Reservas', 'Parceiros contratados', '/bookings'),
       (Icons.checklist_rtl_outlined, 'Tarefas', '${ref.watch(taskEngineControllerProvider).systemActive.length} por fazer', '/tasks'),
       (Icons.card_giftcard_outlined, 'Para os convidados', 'Programa e presentes', '/guest-page'),
       (Icons.photo_library_outlined, 'Galeria', sub('Galeria'), '/gallery'),
