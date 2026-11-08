@@ -2345,12 +2345,6 @@ class _UrgentStrip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = _todoItems(ref);
     if (items.isEmpty) return const SizedBox.shrink();
-    // Resumo curto como no mockup ("1 pagamento até 15 nov."), para não
-    // cortar o texto (2026-11-08).
-    final due = _duePayments(ref);
-    final summary = due.isEmpty
-        ? null
-        : '${due.length} ${due.length == 1 ? 'pagamento' : 'pagamentos'} até ${_shortDay(due.first.$1.dueDate!)}';
     return SnappyTap(
       onTap: () {
         // Desce até "Para fazer agora" (logo abaixo do planeamento).
@@ -2378,10 +2372,9 @@ class _UrgentStrip extends ConsumerWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                [
-                  items.length == 1 ? 'coisa para tratar' : 'coisas para tratar',
-                  ?summary,
-                ].join(' · '),
+                // Só a contagem: o resto da linha cortava-se e o detalhe já
+                // está logo abaixo, em "Para fazer agora" (2026-11-08).
+                items.length == 1 ? 'coisa para tratar' : 'coisas para tratar',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textHeightBehavior: const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
