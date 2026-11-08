@@ -361,7 +361,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
             Expanded(
               child: _loading
                   ? const Column(children: [
-                      PageHeader(title: 'Para os convidados', subtitle: 'O que os convidados veem do vosso evento.', centered: true),
+                      PageHeader(title: 'Para os convidados', subtitle: 'O que os convidados veem do vosso evento', titleFontSize: 24),
                       Expanded(child: Center(child: CircularProgressIndicator())),
                     ])
                   : ListView(
@@ -370,7 +370,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                       // código, acompanhantes, acesso e uma só lista com
                       // cada parte da página; cada parte numa folha.
                       children: [
-                        const PageHeader(title: 'Para os convidados', subtitle: 'O que os convidados veem do vosso evento.', centered: true),
+                        const PageHeader(title: 'Para os convidados', subtitle: 'O que os convidados veem do vosso evento', titleFontSize: 24),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
                           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -811,61 +811,6 @@ class _Moment {
     time.dispose();
     title.dispose();
     place.dispose();
-  }
-}
-
-/// Cartão de secção: ícone, título, explicação e o conteúdo.
-class _SectionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final List<Widget> children;
-  const _SectionCard({super.key, required this.icon, required this.title, required this.subtitle, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-        decoration: _whiteCard(),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Row(children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(13)),
-              child: Icon(icon, size: 20, color: _olive),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(title, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text(subtitle, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-              ]),
-            ),
-          ]),
-          const SizedBox(height: 14),
-          ...children,
-        ]),
-      ),
-    );
-  }
-}
-
-class _Caps extends StatelessWidget {
-  final String text;
-  const _Caps(this.text, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 26, 0, 10),
-      child: Text(
-        text.toUpperCase(),
-        style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: _caps),
-      ),
-    );
   }
 }
 
@@ -1378,54 +1323,117 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  // Conteúdo da folha "Acompanhantes" (mockup: linha compacta que abre
+  // uma folha, 2026-11-08).
+  List<Widget> _sheetBody(void Function() refresh) {
+    final v = _value ?? 1;
+    return [
+      CompanionLimitRow(
+        title: 'Cada convidado pode trazer',
+        subtitle: v == 0 ? 'Ninguém traz acompanhantes' : (v == 1 ? 'Até 1 pessoa' : 'Até $v pessoas'),
+        value: v,
+        onChanged: (n) async {
+          await _set(n);
+          refresh();
+        },
+      ),
+      const SizedBox(height: 4),
+      _OptSwitch(
+        weddingId: widget.weddingId,
+        optKey: 'opt_companion_details',
+        fallback: true,
+        title: 'Pedir nome, menu e alergias',
+        subtitle: 'De cada acompanhante, na resposta',
+      ),
+      _OptSwitch(
+        weddingId: widget.weddingId,
+        optKey: 'opt_kids_free',
+        fallback: false,
+        title: 'Crianças à parte',
+        subtitle: 'Crianças não contam para o limite',
+      ),
+      const SizedBox(height: 6),
+      const Text(
+        'Vale para quem entra com o código. Na ficha de cada convidado podes dar mais ou menos lugares.',
+        style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4),
+      ),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton(
+          onPressed: _applying ? null : _applyAll,
+          child: Text(_applying ? 'A aplicar…' : 'Aplicar a todos os convidados'),
+        ),
+      ),
+    ];
+  }
+
+  Future<void> _openSheet() async {
+    await showIslandSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheet) => StatefulBuilder(
+        builder: (context, setSheet) => SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const Text('Acompanhantes', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 14),
+            ..._sheetBody(() => setSheet(() {})),
+            const SizedBox(height: 18),
+            FilledButton(
+              onPressed: () => Navigator.of(sheet).pop(),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.accentOliveDark,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(50),
+                shape: const StadiumBorder(),
+              ),
+              child: const Text('Feito', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+            ),
+          ]),
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_available) return const SizedBox.shrink();
     final v = _value;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const _Caps('Acompanhantes'),
-        if (v == null)
-          const SizedBox(height: 60, child: Center(child: CircularProgressIndicator()))
-        else ...[
-          CompanionLimitRow(
-            title: 'Cada convidado pode trazer',
-            subtitle: v == 0 ? 'Ninguém traz acompanhantes' : (v == 1 ? 'Até 1 pessoa' : 'Até $v pessoas'),
-            value: v,
-            onChanged: _set,
+    final sub = v == null
+        ? 'A carregar…'
+        : '${v == 0 ? 'Só o convidado' : 'Até $v por convidado'} · editar por pessoa';
+    return Container(
+      decoration: _whiteCard(),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: v == null ? null : _openSheet,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+            child: Row(children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(color: const Color(0xFFDDE5D3), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.group_outlined, size: 19, color: _heroGreen),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Acompanhantes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+                ]),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
+            ]),
           ),
-          const SizedBox(height: 4),
-          _OptSwitch(
-            weddingId: widget.weddingId,
-            optKey: 'opt_companion_details',
-            fallback: true,
-            title: 'Pedir nome, menu e alergias',
-            subtitle: 'De cada acompanhante, na resposta',
-          ),
-          _OptSwitch(
-            weddingId: widget.weddingId,
-            optKey: 'opt_kids_free',
-            fallback: false,
-            title: 'Crianças à parte',
-            subtitle: 'Crianças não contam para o limite',
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Vale para quem entra com o código. Na ficha de cada convidado podes dar mais ou menos lugares.',
-            style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4),
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              onPressed: _applying ? null : _applyAll,
-              child: Text(_applying ? 'A aplicar…' : 'Aplicar a todos os convidados'),
-            ),
-          ),
-        ],
-      ],
+        ),
+      ),
     );
   }
+
 }
 
 /// "Acesso e entrada": evento público ou privado, grátis ou pago (com
@@ -1564,34 +1572,36 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
     }
     final paid = _paidLocal ?? entry.paid;
 
-    return _SectionCard(
-      icon: Icons.tune_rounded,
-      title: 'Acesso e entrada',
-      subtitle: 'Quem pode ver o evento e se a entrada é paga.',
-      children: [
-        const _Label('Quem vê o evento'),
-        if (canBePublic)
-          _segment([
-            _choice(
-              label: 'Privado',
-              hint: 'Só convidados, com código ou convite.',
-              selected: !isPublic,
-              onTap: () => isPublic ? _setPublic(false) : null,
-            ),
-            _choice(
-              label: 'Público',
-              hint: 'Aparece a todos em Eventos.',
-              selected: isPublic,
-              onTap: () => isPublic ? null : _setPublic(true),
-            ),
-          ])
-        else
-          const Text(
-            'Privado — só convidados. Casamentos, batizados e aniversários não podem ser públicos.',
-            style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
+    // Igual ao mockup "Para os convidados" (2026-11-08): título, dois
+    // seletores e uma nota; com Pago, o preço por baixo.
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _whiteCard(),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        const Text('Acesso e entrada', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 12),
+        _segment([
+          _choice(
+            label: 'Privado',
+            hint: 'Só convidados, com código ou convite.',
+            selected: !isPublic,
+            onTap: () => isPublic ? _setPublic(false) : null,
           ),
-        const SizedBox(height: 16),
-        const _Label('Entrada'),
+          _choice(
+            label: 'Público',
+            hint: 'Aparece a todos em Eventos.',
+            selected: isPublic,
+            onTap: () {
+              if (isPublic) return;
+              if (!canBePublic) {
+                _toast('${widget.wedding.eventType.label} é sempre privado. Públicos só festas, concertos, festivais e eventos de empresa.');
+                return;
+              }
+              _setPublic(true);
+            },
+          ),
+        ]),
+        const SizedBox(height: 10),
         _segment([
           _choice(
             label: 'Grátis',
@@ -1606,43 +1616,38 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
             onTap: () => paid ? null : _setPaid(true),
           ),
         ]),
-        if (paid) ...[
-          // Como no mockup "Entrada paga" (2026-11-08: "desformatado"):
-          // rótulo em cima, campo grande com €, Guardar à mesma altura.
-          const SizedBox(height: 14),
-          const _Label('Preço por pessoa'),
-          Row(children: [
+        if (!paid) ...[
+          const SizedBox(height: 10),
+          Text(
+            '${canBePublic ? (isPublic ? 'Aparece a todos em Eventos.' : 'Só entra quem tem o código ou o convite.') : '${widget.wedding.eventType.label} é sempre privado.'} Com Pago aparece o preço por pessoa.',
+            style: const TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
+          ),
+        ] else ...[
+          const SizedBox(height: 16),
+          const Text('Preço por pessoa', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+          const SizedBox(height: 8),
+          // O próprio campo ocupa a caixa toda: qualquer toque nela abre o
+          // teclado (antes só a linha do número recebia o toque).
+          Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
             Expanded(
-              child: Container(
-                height: 54,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.accentOliveDark, width: 1.5),
+              child: TextField(
+                controller: _price,
+                focusNode: _priceFocus,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _savePrice(),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                decoration: InputDecoration(
+                  hintText: '25',
+                  suffixText: '€',
+                  suffixStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFDCD8CE))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFDCD8CE), width: 1.5)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppTheme.accentOliveDark, width: 1.5)),
                 ),
-                child: Row(children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _price,
-                      focusNode: _priceFocus,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _savePrice(),
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                      decoration: const InputDecoration(
-                        hintText: '25',
-                        isCollapsed: true,
-                        filled: false,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ),
-                  const Text('€', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                ]),
               ),
             ),
             const SizedBox(width: 8),
@@ -1664,46 +1669,23 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           ]),
           const SizedBox(height: 8),
           const Text(
-            'Cada pessoa paga o bilhete na app e recebe-o logo.',
+            'Cada pessoa paga o bilhete na app e recebe-o logo. A À Nossa! fica com a taxa de serviço; o resto vai para a tua conta.',
             style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
           ),
-          if (entry.paid) ...[
-            const SizedBox(height: 8),
+          if (entry.paid)
             Align(
               alignment: Alignment.centerLeft,
-              child: TextButton.icon(
+              child: TextButton(
                 onPressed: () => context.push('/bilhetes'),
-                icon: const Icon(Icons.account_balance_wallet_outlined, size: 18),
-                label: const Text('Bilhetes e pagamentos'),
-              ),
-            ),
-          ],
-          if (!isPublic)
-            const Padding(
-              padding: EdgeInsets.only(top: 4),
-              child: Text(
-                'Privado e pago: quem tem o código ou o link de convite paga o bilhete na app e entra logo.',
-                style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
+                style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: AppTheme.accentOliveDark),
+                child: const Text('Bilhetes vendidos e pagamentos ›', style: TextStyle(fontWeight: FontWeight.w700)),
               ),
             ),
         ],
-      ],
+      ]),
     );
   }
 }
-
-class _Label extends StatelessWidget {
-  final String text;
-  const _Label(this.text);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Text(text.toUpperCase(),
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
-      );
-}
-
 
 /// O que os convidados veem (migração 158): o organizador liga e desliga
 /// cada parte. Tudo desligado = só o bilhete (num evento pago).
@@ -1949,7 +1931,9 @@ class _PartsListState extends ConsumerState<_PartsList> {
 
   @override
   Widget build(BuildContext context) {
-    final sections = _local ?? ref.watch(guestSectionsProvider(widget.weddingId)).value;
+    // Sem resposta ainda: tudo visível (o padrão), para os interruptores
+    // aparecerem sempre, como no mockup.
+    final sections = _local ?? ref.watch(guestSectionsProvider(widget.weddingId)).value ?? const GuestSections();
     final parts = widget.parts;
     final countable = parts.where((p) => !p.locked).toList();
     final ready = countable.where((p) => !p.missing).length;
@@ -2017,7 +2001,7 @@ class _PartsListState extends ConsumerState<_PartsList> {
                           Text('Em breve', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                         ]),
                       )
-                    else if (p.section != null && sections != null)
+                    else if (p.section != null)
                       Switch.adaptive(
                         value: sections.shows(p.section!),
                         activeTrackColor: AppTheme.accentOliveDark,
@@ -2035,7 +2019,7 @@ class _PartsListState extends ConsumerState<_PartsList> {
       const SizedBox(height: 10),
       const Text('Toca numa parte para a editar. Guarda sozinho.',
           textAlign: TextAlign.center, style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
-      if (sections != null) ...[
+      ...[
         const SizedBox(height: 6),
         Center(
           child: TextButton(
