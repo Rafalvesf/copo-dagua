@@ -53,8 +53,10 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
       background: AppBackground.feed,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
+        // Parceiros: a página inteira desliza, como no Orçamento e nos
+        // Lugares (pedido 2026-11-08). Convidados (ofertas) fica igual.
+        child: Builder(builder: (context) {
+          final top = <Widget>[
             const PageHeader(
               title: 'Reservas',
               centered: true,
@@ -66,36 +68,40 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
               child: _TabSwitch(guests: _guests, onChanged: (g) => setState(() => _guests = g)),
             ),
             const SizedBox(height: 16),
-            if (_guests)
+          ];
+          if (_guests) {
+            return Column(children: [
+              ...top,
               Expanded(
-                child: weddingId == null
-                    ? const SizedBox.shrink()
-                    : OrganizerGuestOffers(weddingId: weddingId),
-              )
-            else
-            Expanded(
-              child: bookingsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(coupleBookingsProvider)),
+                child: weddingId == null ? const SizedBox.shrink() : OrganizerGuestOffers(weddingId: weddingId),
+              ),
+            ]);
+          }
+          Widget whole(Widget body) => CustomScrollView(slivers: [
+                SliverToBoxAdapter(child: Column(children: top)),
+                SliverFillRemaining(hasScrollBody: false, child: body),
+              ]);
+          return bookingsAsync.when(
+                loading: () => whole(const Center(child: CircularProgressIndicator())),
+                error: (err, st) => whole(AsyncErrorView(onRetry: () => ref.invalidate(coupleBookingsProvider))),
                 data: (bookings) {
                   final proposals = proposalsAsync.maybeWhen(
                     data: (p) => p,
                     orElse: () => const <ReceivedProposal>[],
                   );
                   if (bookings.isEmpty && proposals.isEmpty) {
-                    return const EmptyStateView(
+                    return whole(const EmptyStateView(
                       message: 'Ainda sem parceiros reservados.',
                       icon: Icons.storefront_outlined,
-                    );
+                    ));
                   }
                   return ListView(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      0,
-                      AppTheme.screenMargin,
-                      140,
-                    ),
+                    padding: const EdgeInsets.only(bottom: 140),
                     children: [
+                      ...top,
+                      Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                       // Canvas "Reservas — redesign": cartão verde com os
                       // serviços tratados (sinal pago ou mais).
                       Builder(builder: (context) {
@@ -128,13 +134,13 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _CoupleBookingRow(booking: booking),
                         ),
+                      ]),
+                      ),
                     ],
                   );
                 },
-              ),
-            ),
-          ],
-        ),
+          );
+        }),
       ),
     );
   }

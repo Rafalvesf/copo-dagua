@@ -102,8 +102,11 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
               children: [
                 SafeArea(
                   bottom: false,
-                  child: Column(
-                    children: [
+                  // A página inteira desliza, como no Orçamento e nos Lugares
+                  // (pedido 2026-11-08): cabeçalho e cartão sobem com a lista.
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(child: Column(children: [
                       PageHeader(
                         title: 'Convidados',
                         centered: true,
@@ -173,45 +176,44 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                           ],
                         ),
                       ),
-                      Expanded(
-                        child: state.guests.isEmpty
-                            ? IllustratedEmptyState(
-                                mascot: MascotPose.wave,
-                                title: 'Quem vem celebrar convosco?',
-                                message: 'Comecem pela família mais próxima. A lista pode crescer aos poucos, e cada convidado confirma pelo link do convite.',
-                                primaryLabel: 'Adicionar o primeiro convidado',
-                                onPrimary: _addGuest,
-                                secondaryLabel: wedding == null ? null : 'Partilhar convite',
-                                onSecondary: wedding == null ? null : () => _shareInvite(wedding),
-                              )
-                            : visible.isEmpty
-                            ? const EmptyStateView(message: 'Sem convidados nesta categoria.', icon: Icons.people_outline)
-                            : EdgeFade(
-                                topFadeHeight: 32,
-                                bottomFadeHeight: 32,
-                                child: ListView.builder(
-                                  padding: EdgeInsets.fromLTRB(
-                                    AppTheme.screenMargin,
-                                    16,
-                                    AppTheme.screenMargin,
-                                    groups.isEmpty
-                                        ? 40
-                                        : FloatingFilterBar.bottomPadding(
-                                            aboveNav: false,
-                                          ),
-                                  ),
-                                  itemCount: visible.length,
-                                  itemBuilder: (context, index) {
-                                    final guest = visible[index];
-                                    return GuestListItem(
-                                      guest: guest,
-                                      onTap: () =>
-                                          context.push('/guests/${guest.id}'),
-                                    );
-                                  },
-                                ),
-                              ),
-                      ),
+                      ])),
+                      if (state.guests.isEmpty)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: IllustratedEmptyState(
+                            mascot: MascotPose.wave,
+                            title: 'Quem vem celebrar convosco?',
+                            message: 'Comecem pela família mais próxima. A lista pode crescer aos poucos, e cada convidado confirma pelo link do convite.',
+                            primaryLabel: 'Adicionar o primeiro convidado',
+                            onPrimary: _addGuest,
+                            secondaryLabel: wedding == null ? null : 'Partilhar convite',
+                            onSecondary: wedding == null ? null : () => _shareInvite(wedding),
+                          ),
+                        )
+                      else if (visible.isEmpty)
+                        const SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: EmptyStateView(message: 'Sem convidados nesta categoria.', icon: Icons.people_outline),
+                        )
+                      else
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(
+                            AppTheme.screenMargin,
+                            16,
+                            AppTheme.screenMargin,
+                            groups.isEmpty ? 40 : FloatingFilterBar.bottomPadding(aboveNav: false),
+                          ),
+                          sliver: SliverList.builder(
+                            itemCount: visible.length,
+                            itemBuilder: (context, index) {
+                              final guest = visible[index];
+                              return GuestListItem(
+                                guest: guest,
+                                onTap: () => context.push('/guests/${guest.id}'),
+                              );
+                            },
+                          ),
+                        ),
                     ],
                   ),
                 ),
