@@ -152,6 +152,13 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "159",
     check: { kind: "column", table: "profiles", column: "username" },
   },
+  {
+    file: "164_envelope_message.sql",
+    title: "Envelope avisa por mensagem",
+    what: "Quando um convidado oferece um envelope, os organizadores recebem uma mensagem dele numa conversa privada convidado ↔ anfitriões (em Grupos), com valor e dedicatória.",
+    after: "156",
+    check: { kind: "column", table: "chat_groups", column: "hosts_guest_id" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

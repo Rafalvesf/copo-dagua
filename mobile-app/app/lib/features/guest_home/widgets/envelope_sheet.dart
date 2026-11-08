@@ -74,7 +74,7 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Envelope entregue a ${widget.wedding.displayNames}. Obrigado!')),
+        SnackBar(content: Text('Envelope entregue. ${widget.wedding.displayNames} recebem a tua mensagem em Grupos.')),
       );
     } catch (_) {
       if (mounted) setState(() => _error = 'Não foi possível registar o envelope. Tenta outra vez.');
