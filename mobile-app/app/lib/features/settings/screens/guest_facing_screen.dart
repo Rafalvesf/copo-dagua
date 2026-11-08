@@ -61,6 +61,7 @@ class GuestFacingScreen extends ConsumerStatefulWidget {
 }
 
 const _line = Color(0xFFE6E0D2);
+const _dressStyles = ['Formal', 'Cocktail', 'Casual chique', 'Black tie', 'Tema'];
 const _caps = Color(0xFF8F8B84);
 const _olive = Color(0xFF3E5539);
 
@@ -72,6 +73,11 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
   final _giftUrl = TextEditingController();
   final _iban = TextEditingController();
   final _giftMessage = TextEditingController();
+  final _venueName = TextEditingController();
+  final _dressNote = TextEditingController();
+  String? _dressStyle;
+  bool _ibanOn = false;
+  bool _giftUrlOn = false;
   final List<_Moment> _moments = [];
 
   GuestFacingInfo _info = const GuestFacingInfo();
@@ -117,28 +123,17 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
             const SizedBox(height: 14),
             ...body(),
             const SizedBox(height: 18),
-            Row(children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _preview,
-                  style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
-                  child: const Text('Ver como convidado'),
-                ),
+            // Só "Feito" (2026-11-08: sem "Ver como convidado" nas partes).
+            FilledButton(
+              onPressed: () => Navigator.of(sheet).pop(),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.accentOliveDark,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(50),
+                shape: const StadiumBorder(),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () => Navigator.of(sheet).pop(),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.accentOliveDark,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(50),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: const Text('Feito'),
-                ),
-              ),
-            ]),
+              child: const Text('Feito', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+            ),
           ]),
         ),
       ),
@@ -164,6 +159,14 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
     _iban.text = _info.giftIban ?? '';
     _giftMessage.text = _info.giftMessage ?? '';
     _colors = [..._info.themeColors];
+    _venueName.text = widget.wedding.venue ?? '';
+    // Dress code "Estilo · nota" (2026-11-08, como no mockup).
+    final dc = _dressCode.text.trim();
+    final style = _dressStyles.where((st) => dc == st || dc.startsWith('$st · ')).firstOrNull;
+    _dressStyle = style;
+    _dressNote.text = style == null ? dc : dc.substring(style.length).replaceFirst(RegExp(r'^\s*·\s*'), '');
+    _ibanOn = _iban.text.trim().isNotEmpty;
+    _giftUrlOn = _giftUrl.text.trim().isNotEmpty;
     _joinMode = _info.joinMode;
     _lat = _info.venueLatitude;
     _lng = _info.venueLongitude;
@@ -181,7 +184,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
       _useVenue(venue!, markDirty: true);
     }
 
-    for (final c in [_welcome, _time, _address, _dressCode, _giftUrl, _iban, _giftMessage]) {
+    for (final c in [_welcome, _time, _address, _dressCode, _giftUrl, _iban, _giftMessage, _venueName, _dressNote]) {
       c.addListener(_markDirty);
     }
     _address.addListener(() {
@@ -216,12 +219,12 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
       ceremonyTime: _info.programAvailable ? firstTime : _time.text,
       welcomeMessage: _welcome.text,
       joinMode: _joinMode,
-      giftListUrl: _giftUrl.text,
-      giftIban: _iban.text,
+      giftListUrl: _giftUrlOn ? _giftUrl.text : '',
+      giftIban: _ibanOn ? _iban.text : '',
       giftMessage: _giftMessage.text,
       giftsAvailable: _info.giftsAvailable,
       program: program,
-      dressCode: _dressCode.text,
+      dressCode: [?_dressStyle, if (_dressNote.text.trim().isNotEmpty) _dressNote.text.trim()].join(' · '),
       venueAddress: _address.text,
       themeColors: _colors,
       venueLatitude: _lat,
@@ -237,6 +240,12 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
     var ok = true;
     try {
       await saveGuestFacingInfo(widget.wedding.id, _current());
+      // Nome do local (weddings.venue), editado na folha Local.
+      final w = ref.read(weddingControllerProvider).wedding;
+      final name = _venueName.text.trim();
+      if (w != null && name != (w.venue ?? '')) {
+        await ref.read(weddingControllerProvider.notifier).update(w.copyWith(venue: name.isEmpty ? null : name));
+      }
     } catch (_) {
       ok = false;
       message = 'Não foi possível guardar. Tenta outra vez.';
@@ -326,7 +335,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
   @override
   void dispose() {
     _tick.dispose();
-    for (final c in [_welcome, _time, _address, _dressCode, _giftUrl, _iban, _giftMessage]) {
+    for (final c in [_welcome, _time, _address, _dressCode, _giftUrl, _iban, _giftMessage, _venueName, _dressNote]) {
       c.dispose();
     }
     for (final m in _moments) {
@@ -386,9 +395,9 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
     final moments = _moments.where((m) => m.title.text.trim().isNotEmpty || m.time.text.trim().isNotEmpty).toList();
     final firstTime = moments.map((m) => m.time.text.trim()).firstWhere((x) => x.isNotEmpty, orElse: () => '');
     final address = t(_address.text);
-    final dress = t(_dressCode.text);
-    final iban = t(_iban.text);
-    final giftUrl = t(_giftUrl.text);
+    final dress = t([?_dressStyle, if (_dressNote.text.trim().isNotEmpty) _dressNote.text.trim()].join(' · '));
+    final iban = _ibanOn ? t(_iban.text) : null;
+    final giftUrl = _giftUrlOn ? t(_giftUrl.text) : null;
     return [
       _Part(
         icon: Icons.waving_hand_outlined,
@@ -400,6 +409,13 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                   style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
               const SizedBox(height: 10),
               _Field(controller: _welcome, hint: 'Ex: Mal podemos esperar por brindar convosco!', maxLines: 4),
+              const SizedBox(height: 10),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                for (final sug in const ['Contamos convosco!', 'Vamos celebrar juntos!', 'Obrigado por fazerem parte do nosso dia.'])
+                  _SuggestChip(label: sug, onTap: () => setState(() => _welcome.text = sug)),
+              ]),
+              const SizedBox(height: 8),
+              Text('Assinado: ${widget.wedding.displayNames}', style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
             ]),
       ),
       _Part(
@@ -439,25 +455,52 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
               ? 'Lista na app'
               : ['Lista na app', if (iban != null) 'IBAN para envelopes', if (giftUrl != null) 'lista noutra loja'].join(' · '),
           onOpen: () => _openPart('Presentes', () => [
+                const Text('Escolhe como os convidados vos podem oferecer algo. Podes ter vários.',
+                    style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                const SizedBox(height: 12),
                 _PreviewButton(
                   onTap: () => context.push('/gift-list'),
                   icon: Icons.checklist_rtl_rounded,
                   title: 'Lista na app',
-                  subtitle: 'Desejos e produtos das lojas parceiras.',
+                  subtitle: 'Desejos e produtos das lojas parceiras · Gerir',
                 ),
-                const SizedBox(height: 12),
-                _Field(controller: _iban, label: 'IBAN para contribuições', hint: 'PT50 …'),
-                const SizedBox(height: 10),
-                _Field(controller: _giftMessage, label: 'Mensagem', hint: 'Ex: A vossa presença é o melhor presente.', maxLines: 2),
-                const SizedBox(height: 10),
-                _Field(controller: _giftUrl, label: 'Lista noutra loja (link, opcional)', hint: 'https://…', keyboardType: TextInputType.url),
+                const SizedBox(height: 6),
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  activeTrackColor: AppTheme.accentOliveDark,
+                  title: const Text('Envelope digital (IBAN)', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  subtitle: const Text('Os convidados transferem para a vossa conta', style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+                  value: _ibanOn,
+                  onChanged: (v) => setState(() {
+                    _ibanOn = v;
+                    _dirty = true;
+                  }),
+                ),
+                if (_ibanOn) ...[
+                  _Field(controller: _iban, label: 'IBAN para contribuições', hint: 'PT50 …'),
+                  const SizedBox(height: 10),
+                  _Field(controller: _giftMessage, label: 'Mensagem', hint: 'Ex: A vossa presença é o melhor presente.', maxLines: 2),
+                  const SizedBox(height: 6),
+                ],
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  activeTrackColor: AppTheme.accentOliveDark,
+                  title: const Text('Lista noutra loja', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  subtitle: const Text('Um link para uma lista fora da app', style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+                  value: _giftUrlOn,
+                  onChanged: (v) => setState(() {
+                    _giftUrlOn = v;
+                    _dirty = true;
+                  }),
+                ),
+                if (_giftUrlOn) _Field(controller: _giftUrl, label: 'Link da lista', hint: 'https://…', keyboardType: TextInputType.url),
                 const SizedBox(height: 12),
                 // Envelope digital (migração 156).
                 _PreviewButton(
                   onTap: () => context.push('/envelopes'),
                   icon: Icons.mail_outline_rounded,
                   title: 'Envelopes recebidos',
-                  subtitle: 'Quem ofereceu, quanto e a mensagem. O dinheiro vai direto para o IBAN.',
+                  subtitle: 'Quem ofereceu, quanto e a mensagem.',
                 ),
               ]),
         ),
@@ -466,7 +509,17 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
         title: 'A tua mesa',
         section: GuestSection.mesa,
         status: 'Cada convidado vê a sua mesa',
-        onOpen: () => context.push('/seating'),
+        onOpen: () => _openPart('A tua mesa', () => [
+              const Text('Cada convidado vê o número da mesa na página do evento. Quem ainda não tem lugar vê "Ainda por atribuir".',
+                  style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted)),
+              const SizedBox(height: 12),
+              _PreviewButton(
+                onTap: () => context.push('/seating'),
+                icon: Icons.event_seat_outlined,
+                title: 'Mesas e lugares',
+                subtitle: 'Sentar quem ainda não tem lugar',
+              ),
+            ]),
       ),
       _Part(
         icon: Icons.photo_library_outlined,
@@ -576,6 +629,8 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
             ],
           ),
         ),
+      _Field(controller: _venueName, label: 'Nome do local', hint: 'Ex: Quinta do Lago Azul'),
+      const SizedBox(height: 10),
       _Field(controller: _address, label: 'Morada', hint: 'Rua, número, localidade', keyboardType: TextInputType.streetAddress),
       const SizedBox(height: 8),
       Align(
@@ -593,7 +648,28 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
 
   List<Widget> _dressSection() {
     return [
-      _Field(controller: _dressCode, hint: 'Ex: Formal · evita branco'),
+      const Text('Estilo', style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      const SizedBox(height: 8),
+      Wrap(spacing: 8, runSpacing: 8, children: [
+        for (final st in _dressStyles)
+          ChoiceChip(
+            label: Text(st),
+            selected: _dressStyle == st,
+            showCheckmark: false,
+            selectedColor: AppTheme.accentOliveDark,
+            labelStyle: TextStyle(
+              fontFamily: AppTheme.fontFamily,
+              fontWeight: FontWeight.w700,
+              color: _dressStyle == st ? Colors.white : AppTheme.ink,
+            ),
+            onSelected: (on) => setState(() {
+              _dressStyle = on ? st : null;
+              _dirty = true;
+            }),
+          ),
+      ]),
+      const SizedBox(height: 14),
+      _Field(controller: _dressNote, label: 'Nota para os convidados', hint: 'Ex: Evita branco · sapatos rasos para o jardim'),
       const SizedBox(height: 14),
       Row(
         children: [
@@ -1714,36 +1790,30 @@ class _CodeHero extends ConsumerWidget {
               style: const TextStyle(fontSize: 13, color: Color(0xFFDDE5D3)),
             ),
             const SizedBox(height: 14),
-            Row(children: [
-              Expanded(
-                flex: 7,
-                child: FilledButton(
-                  onPressed: onShare,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: _heroGreen,
-                    minimumSize: const Size.fromHeight(46),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: const Text('Partilhar convite', style: TextStyle(fontWeight: FontWeight.w700)),
-                ),
+            // Um por linha (2026-11-08: "Ver como convidado desformatado").
+            FilledButton.icon(
+              onPressed: onShare,
+              icon: const Icon(Icons.ios_share, size: 18),
+              label: const Text('Partilhar convite', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: _heroGreen,
+                minimumSize: const Size.fromHeight(48),
+                shape: const StadiumBorder(),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 6,
-                child: OutlinedButton(
-                  onPressed: onPreview,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0x80FFFFFF), width: 1.5),
-                    minimumSize: const Size.fromHeight(46),
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: const FittedBox(child: Text('Ver como convidado', style: TextStyle(fontWeight: FontWeight.w700))),
-                ),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: onPreview,
+              icon: const Icon(Icons.visibility_outlined, size: 18),
+              label: const Text('Ver como convidado', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Color(0x80FFFFFF), width: 1.5),
+                minimumSize: const Size.fromHeight(48),
+                shape: const StadiumBorder(),
               ),
-            ]),
+            ),
           ]),
         ),
       ]),
