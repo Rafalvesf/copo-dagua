@@ -241,7 +241,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                             const SizedBox(height: 10),
                             const Text(
                               'O dinheiro vai diretamente para a conta dos anfitriões — a À Nossa! não fica com nada.',
-                              style: TextStyle(fontSize: 12, color: Color(0xFF8F8B84)),
+                              style: TextStyle(fontSize: 12, color: Color(0xFF6E6A63)),
                             ),
                             if (wedding != null) _MyEnvelopes(weddingId: wedding.weddingId),
                           ],

@@ -455,7 +455,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
           if (p.photoUrl != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(18),
-              child: AspectRatio(aspectRatio: 4 / 3, child: Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 1100)),
+              child: AspectRatio(aspectRatio: 4 / 3, child: Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 1100, semanticLabel: p.title)),
             ),
           const SizedBox(height: 14),
           Text(p.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
@@ -653,7 +653,7 @@ class _ProductRow extends StatelessWidget {
               height: 76,
               child: p.photoUrl == null
                   ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, color: _green))
-                  : Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 700, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
+                  : Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 700, semanticLabel: p.title, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
             ),
           ),
           const SizedBox(width: 12),
@@ -708,7 +708,7 @@ class _FeaturedProductCard extends StatelessWidget {
       onTap: onTap,
       image: p.photoUrl == null
           ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, size: 40, color: _green))
-          : Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 700, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
+          : Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 700, semanticLabel: p.title, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
       badge: added
           ? Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

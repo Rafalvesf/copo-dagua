@@ -370,7 +370,7 @@ class _TaskRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF8F8B84)),
+            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF6E6A63)),
           ],
         ),
       ),
@@ -425,7 +425,7 @@ class _DoneTaskRow extends StatelessWidget {
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: AppFontSize.base,
-                    color: Color(0xFF8F8B84),
+                    color: Color(0xFF6E6A63),
                     decoration: TextDecoration.lineThrough,
                   ),
                 ),

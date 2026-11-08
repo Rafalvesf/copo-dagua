@@ -423,7 +423,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
             const SizedBox(height: 6),
             Text(
               _stamp(widget.photo.createdAt),
-              style: const TextStyle(fontSize: 11, letterSpacing: 0.7, color: Color(0xFF8F8B84)),
+              style: const TextStyle(fontSize: 11, letterSpacing: 0.7, color: Color(0xFF6E6A63)),
             ),
           ],
         ],

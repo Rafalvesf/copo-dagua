@@ -11,7 +11,7 @@ class LegalEntity {
   static const nif = '[NIF]';
   static const address = '[Morada da sede]';
   static const email = '[email de contacto]';
-  static const updated = '25 de outubro de 2026';
+  static const updated = '8 de novembro de 2026';
 }
 
 class LegalSection {
@@ -99,6 +99,7 @@ const privacyDoc = LegalDoc(
       'Pagamentos: valores, datas e estado dos pagamentos. Os dados do cartão são tratados apenas pela Stripe.',
       'Com a tua autorização: localização aproximada (para mostrar parceiros perto de ti), câmara (para fotos) e notificações.',
       'Dados técnicos: registos de erros da app (o erro, o tipo de dispositivo e o identificador da conta — sem nome nem email), para corrigirmos problemas.',
+      'Utilização da app: passos importantes (por exemplo, criar o evento ou pedir um orçamento), categorias de parceiros que vês e cliques em parceiros em destaque, ligados à tua conta, para melhorar a app e as sugestões. Não são partilhados com anunciantes.',
     ]),
     LegalSection('3. Para que usamos os dados', [
       'Para prestar o serviço que pediste: criar e gerir o evento, ligar-te aos parceiros, processar reservas, pagamentos e reembolsos (execução do contrato).',
@@ -114,7 +115,7 @@ const privacyDoc = LegalDoc(
     LegalSection('5. Com quem partilhamos', [
       'Dentro da app: com as pessoas do mesmo evento ou conversa, na medida necessária (por exemplo, o parceiro vê os dados da reserva e o nome do organizador).',
       'Depois de pago o sinal de uma reserva, o parceiro contratado vê, para preparar o serviço, o número de convidados confirmados, os nomes, os menus escolhidos, as alergias e restrições alimentares indicadas e a distribuição pelas mesas. Não vê emails nem telefones dos convidados.',
-      'Prestadores de serviços que tratam dados por nossa conta: Supabase (base de dados e autenticação, servidores na UE, em Frankfurt), Stripe (pagamentos), GitHub e Vercel (alojamento da app e do painel de administração), Sentry (registo de erros) e Giphy (pesquisa de GIFs no chat, só o termo pesquisado).',
+      'Prestadores de serviços que tratam dados por nossa conta: Supabase (base de dados e autenticação, servidores na UE, em Frankfurt), Stripe (pagamentos), GitHub e Vercel (alojamento da app e do painel de administração), Sentry (registo de erros), Google Firebase Cloud Messaging (notificações no telemóvel Android e iPhone), InvoiceXpress (emissão de faturas), Google e Apple (só se escolheres entrar com essas contas) e Giphy (pesquisa de GIFs no chat, só o termo pesquisado).',
       'Alguns destes prestadores podem tratar dados fora da UE; nesse caso, existem as garantias exigidas pelo RGPD, como as cláusulas contratuais-tipo da Comissão Europeia.',
       'Autoridades, quando a lei o exigir.',
     ]),
@@ -122,14 +123,15 @@ const privacyDoc = LegalDoc(
       'Enquanto a tua conta estiver ativa. Podes apagá-la a qualquer momento em Definições › Conta › Apagar conta: os teus dados pessoais são apagados de imediato, exceto os que a lei nos obriga a guardar (por exemplo, registos de pagamentos, durante 10 anos, sem o teu nome). Se tiveres reservas ativas, tens de as cancelar ou esperar que o evento passe.',
     ]),
     LegalSection('7. Os teus direitos', [
-      'Podes apagar a tua conta diretamente nas Definições. Podes também pedir acesso aos teus dados, a sua correção, eliminação ou portabilidade, opor-te a um tratamento ou pedir a sua limitação, e retirar um consentimento dado. Para isso, usa "Falar com a equipa À Nossa!" nas Definições ou escreve para ${LegalEntity.email}. Respondemos no prazo de um mês.',
+      'Podes apagar a tua conta e descarregar uma cópia dos teus dados diretamente em Definições › Conta ("Apagar conta" e "Descarregar os meus dados"). As notificações desligam-se em Definições › Conta › Notificações. Podes também pedir acesso aos teus dados, a sua correção, eliminação ou portabilidade, opor-te a um tratamento ou pedir a sua limitação, e retirar um consentimento dado. Para isso, usa "Falar com a equipa À Nossa!" nas Definições ou escreve para ${LegalEntity.email}. Respondemos no prazo de um mês.',
       'Tens também o direito de apresentar reclamação à Comissão Nacional de Proteção de Dados (www.cnpd.pt).',
     ]),
     LegalSection('8. Segurança', [
       'Os dados viajam sempre cifrados, o acesso é limitado por regras de permissões em cada tabela e a equipa só acede ao necessário para dar suporte.',
     ]),
     LegalSection('9. Armazenamento no dispositivo', [
-      'A app guarda no teu dispositivo apenas o necessário para funcionar (por exemplo, a sessão iniciada e preferências). Não usamos cookies de publicidade.',
+      'A app guarda no teu dispositivo apenas o necessário para funcionar: a sessão iniciada, preferências (por exemplo, o evento aberto e os filtros) e, se aceitares, a subscrição das notificações. É armazenamento estritamente necessário, por isso não pedimos consentimento para ele.',
+      'Não usamos cookies nem identificadores de publicidade, nem ferramentas de estatística de terceiros.',
     ]),
     LegalSection('10. Menores', [
       'As contas de organizador e de parceiro são para maiores de 18 anos. Dados de menores (por exemplo, crianças acompanhantes de um convidado) só são tratados quando introduzidos por um adulto responsável, para a organização do evento.',

@@ -1283,7 +1283,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
                 _tile(Icons.location_on_outlined, r, onTap: () => Navigator.of(context).pop(r)),
               if (widget.options.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                const Text('ONDE HÁ PARCEIROS', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF8F8B84))),
+                const Text('ONDE HÁ PARCEIROS', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF6E6A63))),
                 for (final o in widget.options)
                   _tile(Icons.location_on_outlined, o, onTap: () => Navigator.of(context).pop(o)),
               ],

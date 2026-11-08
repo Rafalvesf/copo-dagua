@@ -1,3 +1,7 @@
+import '../../../core/exports/export_files.dart' show deliverFile;
+import '../../../core/notifications/push.dart';
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../core/wedding/organizers.dart' show myWeddingPermsProvider;
 import '../../../core/events/events_providers.dart';
@@ -727,6 +731,14 @@ class _AccountSection extends ConsumerWidget {
             value: '${ref.watch(blockedProfilesProvider).value!.length}',
             onTap: () => _blockedList(context, ref),
           ),
+        // Notificações no telemóvel (lista de conformidade, 2026-11-08).
+        const _PushRow(),
+        // Direito de acesso e portabilidade (RGPD, migração 167).
+        _Row(
+          icon: Icons.download_outlined,
+          label: 'Descarregar os meus dados',
+          onTap: () => _exportData(context),
+        ),
         // Direito ao apagamento (RGPD, 2026-10-25).
         _Row(
           icon: Icons.delete_outline_rounded,
@@ -897,4 +909,89 @@ extension on Widget {
               style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted)),
         ),
       ]);
+}
+
+/// Descarrega os dados pessoais da conta num ficheiro JSON (migração 167).
+Future<void> _exportData(BuildContext context) async {
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.showSnackBar(const SnackBar(content: Text('A preparar os teus dados…')));
+  try {
+    final data = await supabase.rpc('export_my_data');
+    final json = const JsonEncoder.withIndent('  ').convert(data);
+    final now = DateTime.now();
+    final stamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+    await deliverFile(Uint8List.fromList(utf8.encode(json)), 'a-nossa-os-meus-dados-$stamp.json', 'application/json');
+  } catch (_) {
+    messenger.showSnackBar(const SnackBar(content: Text('Não foi possível preparar os dados. Tenta outra vez ou fala com a equipa.')));
+  }
+}
+
+/// Ligar/desligar as notificações neste dispositivo.
+class _PushRow extends StatefulWidget {
+  const _PushRow();
+  @override
+  State<_PushRow> createState() => _PushRowState();
+}
+
+class _PushRowState extends State<_PushRow> {
+  PushStatus _status = PushNotifications.status();
+  bool _off = false;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    PushNotifications.isOff().then((v) {
+      if (mounted) setState(() => _off = v);
+    });
+  }
+
+  Future<void> _toggle(bool on) async {
+    setState(() => _busy = true);
+    if (on) {
+      final st = await PushNotifications.enable();
+      if (mounted) setState(() {
+        _status = st;
+        _off = st != PushStatus.enabled;
+      });
+      if (st == PushStatus.denied && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('As notificações estão bloqueadas nas definições do telemóvel para esta app.'),
+        ));
+      }
+    } else {
+      await PushNotifications.turnOff();
+      if (mounted) setState(() => _off = true);
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_status == PushStatus.unsupported) return const SizedBox.shrink();
+    final on = _status == PushStatus.enabled && !_off;
+    final sub = switch (_status) {
+      PushStatus.iosInstall => 'Adiciona a app ao ecrã principal para as receber',
+      PushStatus.denied => 'Bloqueadas nas definições do telemóvel',
+      _ => on ? 'Mensagens, pedidos e lembretes' : 'Desligadas neste dispositivo',
+    };
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(children: [
+        StickerIcon(Icons.notifications_none_rounded, size: 36, turns: StickerIcon.tilt(12)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Notificações', style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w600, color: AppTheme.ink)),
+            Text(sub, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+          ]),
+        ),
+        Switch.adaptive(
+          value: on,
+          activeTrackColor: AppTheme.accentOliveDark,
+          onChanged: _busy || _status == PushStatus.iosInstall || _status == PushStatus.denied ? null : _toggle,
+        ),
+      ]),
+    );
+  }
 }

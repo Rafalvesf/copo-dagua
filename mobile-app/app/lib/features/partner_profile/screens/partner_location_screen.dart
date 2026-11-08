@@ -184,7 +184,7 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                       Expanded(child: Divider(color: AppTheme.borderMuted)),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Text('ou procura a morada', style: TextStyle(fontSize: AppFontSize.sm, color: Color(0xFF8F8B84))),
+                        child: Text('ou procura a morada', style: TextStyle(fontSize: AppFontSize.sm, color: Color(0xFF6E6A63))),
                       ),
                       Expanded(child: Divider(color: AppTheme.borderMuted)),
                     ],
@@ -217,7 +217,7 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                       ),
                     ),
                   const SizedBox(height: 20),
-                  const Text('MORADA', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF8F8B84))),
+                  const Text('MORADA', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF6E6A63))),
                   const SizedBox(height: 10),
                   AuthTextField(label: 'Rua e número', controller: _address),
                   const SizedBox(height: 12),

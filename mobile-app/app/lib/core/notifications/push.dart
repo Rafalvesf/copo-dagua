@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../supabase/supabase_config.dart';
 import 'push_native.dart' if (dart.library.js_interop) 'push_web.dart' as impl;
@@ -29,7 +30,30 @@ class PushNotifications {
 
   /// Pede autorização (tem de vir de um toque) e guarda a subscrição.
   /// Devolve o estado final.
+  static const _offKey = 'push_off';
+
+  /// A pessoa desligou as notificações nas Definições (2026-11-08).
+  static Future<bool> isOff() async {
+    try {
+      return (await SharedPreferences.getInstance()).getBool(_offKey) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Desligar nas Definições: este dispositivo deixa de receber e não volta
+  /// a subscrever sozinho ao abrir a app.
+  static Future<void> turnOff() async {
+    await disableForThisDevice();
+    try {
+      await (await SharedPreferences.getInstance()).setBool(_offKey, true);
+    } catch (_) {}
+  }
+
   static Future<PushStatus> enable() async {
+    try {
+      await (await SharedPreferences.getInstance()).setBool(_offKey, false);
+    } catch (_) {}
     // Web Push precisa da chave pública VAPID; o Firebase (Android/iOS) não.
     String key = '';
     if (kIsWeb) {
@@ -49,7 +73,7 @@ class PushNotifications {
   /// (pode ter mudado de conta neste dispositivo). Nunca falha.
   static Future<void> resync() async {
     try {
-      if (status() != PushStatus.enabled) return;
+      if (status() != PushStatus.enabled || await isOff()) return;
       final raw = await impl.pushCurrent();
       if (raw.isEmpty) return;
       await _save(jsonDecode(raw) as Map<String, dynamic>);

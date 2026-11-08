@@ -186,7 +186,7 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surface,
-        hintStyle: const TextStyle(color: Color(0xFF8F8B84)),
+        hintStyle: const TextStyle(color: Color(0xFF6E6A63)),
         labelStyle: const TextStyle(color: inkMuted),
         floatingLabelStyle: TextStyle(color: accentOliveDark, fontWeight: FontWeight.w700),
         border: OutlineInputBorder(

@@ -139,7 +139,7 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: 3, color: AppTheme.ink),
                 decoration: InputDecoration(
                   hintText: 'CÓDIGO',
-                  hintStyle: const TextStyle(color: Color(0xFFB5B0A6), letterSpacing: 3),
+                  hintStyle: const TextStyle(color: Color(0xFF6E6A63), letterSpacing: 3),
                   errorText: _codeError,
                   errorMaxLines: 2,
                   filled: true,
@@ -159,7 +159,7 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
                 const SizedBox(height: 24),
                 const Text(
                   'OS TEUS EVENTOS',
-                  style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF8F8B84)),
+                  style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF6E6A63)),
                 ),
                 const SizedBox(height: 4),
                 for (var i = 0; i < weddings.length; i++) ...[
