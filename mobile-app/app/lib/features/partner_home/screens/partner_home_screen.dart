@@ -100,7 +100,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                               ? BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(color: _gold, width: 1.5),
+                                  border: Border.all(color: _proInk, width: 1.5),
                                 )
                               : softCard(radius: 999),
                           child: Row(
@@ -508,10 +508,13 @@ class _ValueList extends StatelessWidget {
 
 // ---------- Pro (canvas "Parceiros · Início Normal e Pro") ----------
 
-const _gold = Color(0xFFD9B96E);
-const _goldInk = Color(0xFF8C6D2C);
-const _proInk = Color(0xFF171713);
-const _proMuted = Color(0xFFC9C4B8);
+// Verificado com o estilo da app (pedido 2026-11-08): cartão verde da
+// app em vez de preto e dourado; destaques a branco.
+const _gold = Colors.white;
+const _goldInk = Color(0xFF4F6B4A);
+const _proInk = Color(0xFF4F6B4A);
+const _proMuted = Color(0xFFDDE5D3);
+const _proText = Color(0xFF171713);
 const _months = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
 
 String _shortDate(DateTime d) => '${d.day} ${_months[d.month - 1]}';
@@ -519,21 +522,27 @@ String _shortDate(DateTime d) => '${d.day} ${_months[d.month - 1]}';
 String _num(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');
 
 class _ProBadge extends StatelessWidget {
-  const _ProBadge();
+  /// Em cima do cartão verde: selo branco com letras verdes.
+  final bool onGreen;
+  const _ProBadge({this.onGreen = false});
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(5, 3, 8, 3),
-        decoration: BoxDecoration(color: _gold, borderRadius: BorderRadius.circular(999)),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.verified_rounded, size: 12, color: _proInk),
-            SizedBox(width: 3),
-            Text('VERIFICADO', style: TextStyle(fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.w700, color: _proInk)),
-          ],
-        ),
-      );
+  Widget build(BuildContext context) {
+    final bg = onGreen ? Colors.white : _proInk;
+    final fg = onGreen ? _proInk : Colors.white;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(5, 3, 8, 3),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.verified_rounded, size: 12, color: fg),
+          const SizedBox(width: 3),
+          Text('VERIFICADO', style: TextStyle(fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.w700, color: fg)),
+        ],
+      ),
+    );
+  }
 }
 
 /// Vendas do mês em escuro, com a comparação ao período anterior e os
@@ -573,7 +582,7 @@ class _ProHero extends StatelessWidget {
                   ),
                   child: Text(
                     '${change >= 0 ? '+' : '−'}${_num(change.abs().roundToDouble())}% que o mês passado',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _proInk),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _proText),
                   ),
                 ),
             ],
@@ -601,7 +610,7 @@ class _ProHero extends StatelessWidget {
                       child: Container(
                         height: maxV <= 0 ? 6 : 6 + 50 * (p.value / maxV),
                         decoration: BoxDecoration(
-                          color: i == last.length - 1 ? _gold : const Color(0xFF3A3833),
+                          color: i == last.length - 1 ? _gold : const Color(0x40FFFFFF),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -651,7 +660,7 @@ class _ProSavingsCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFEADFC4), width: 1.5),
+          border: Border.all(color: const Color(0xFFDCD8CE)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -749,7 +758,7 @@ class _ProUpsellCard extends StatelessWidget {
     Widget cell(String big, String small) => Expanded(
           child: Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(border: Border.all(color: const Color(0xFF3A3833)), borderRadius: BorderRadius.circular(14)),
+            decoration: BoxDecoration(border: Border.all(color: const Color(0x40FFFFFF)), borderRadius: BorderRadius.circular(14)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -768,7 +777,7 @@ class _ProUpsellCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const _ProBadge(),
+              const _ProBadge(onGreen: true),
               const SizedBox(width: 8),
               Text('${euros(pro.priceMonthly)}/mês ou ${euros(pro.priceYearly)}/ano',
                   style: const TextStyle(fontSize: 13, color: _proMuted)),
