@@ -2345,7 +2345,12 @@ class _UrgentStrip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = _todoItems(ref);
     if (items.isEmpty) return const SizedBox.shrink();
-    final urgent = items.where((i) => i.urgent).firstOrNull;
+    // Resumo curto como no mockup ("1 pagamento até 15 nov."), para não
+    // cortar o texto (2026-11-08).
+    final due = _duePayments(ref);
+    final summary = due.isEmpty
+        ? null
+        : '${due.length} ${due.length == 1 ? 'pagamento' : 'pagamentos'} até ${_shortDay(due.first.$1.dueDate!)}';
     return SnappyTap(
       onTap: () {
         // Desce até "Para fazer agora" (logo abaixo do planeamento).
@@ -2365,18 +2370,22 @@ class _UrgentStrip extends ConsumerWidget {
               height: 26,
               alignment: Alignment.center,
               decoration: const BoxDecoration(color: Color(0xFF8A4B10), shape: BoxShape.circle),
-              child: Text('${items.length}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+              child: Text('${items.length}',
+                  textAlign: TextAlign.center,
+                  textHeightBehavior: const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
+                  style: const TextStyle(fontSize: 13, height: 1, fontWeight: FontWeight.w700, color: Colors.white)),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 [
                   items.length == 1 ? 'coisa para tratar' : 'coisas para tratar',
-                  if (urgent != null) urgent.subtitle.split(' · ').first,
+                  ?summary,
                 ].join(' · '),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF5A3E0C)),
+                textHeightBehavior: const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
+                style: const TextStyle(fontSize: 15, height: 1, fontWeight: FontWeight.w700, color: Color(0xFF5A3E0C)),
               ),
             ),
             const Icon(Icons.chevron_right_rounded, color: Color(0xFF5A3E0C)),
