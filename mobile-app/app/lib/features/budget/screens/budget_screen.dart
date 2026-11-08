@@ -73,6 +73,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             title: result.title,
             amount: result.amount,
             dueDate: result.dueDate,
+            categorySlug: result.categorySlug,
           ),
         );
   }
@@ -554,7 +555,9 @@ class _ExpenseRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final due = expense.dueDate;
-    final icon = expense.category == null
+    final icon = expense.categorySlug != null
+        ? iconForCategorySlug(expense.categorySlug!)
+        : expense.category == null
         ? Icons.receipt_long_outlined
         : iconForPartnerCategory(expense.category!);
     final pink = !expense.paid && due != null && due.difference(DateTime.now()).inDays <= 30;
@@ -635,8 +638,9 @@ class _AddExpenseResult {
   final String title;
   final double amount;
   final DateTime? dueDate;
+  final String? categorySlug;
 
-  _AddExpenseResult({required this.title, required this.amount, this.dueDate});
+  _AddExpenseResult({required this.title, required this.amount, this.dueDate, this.categorySlug});
 }
 
 class _AddExpenseSheet extends StatefulWidget {
@@ -650,6 +654,7 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
   final _title = TextEditingController();
   final _amount = TextEditingController();
   DateTime? _dueDate;
+  String? _category;
   String? _titleError;
   String? _amountError;
 
@@ -696,6 +701,8 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
             value: _dueDate,
             onChanged: (d) => setState(() => _dueDate = d),
           ),
+          const SizedBox(height: 14),
+          CompanyCategoryPicker(selected: _category, onChanged: (c) => setState(() => _category = c)),
           const SizedBox(height: 16),
           PrimaryButton(
             label: 'Guardar',
@@ -715,6 +722,7 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
                   title: _title.text.trim(),
                   amount: amount!,
                   dueDate: _dueDate,
+                  categorySlug: _category,
                 ),
               );
             },
