@@ -361,7 +361,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
             Expanded(
               child: _loading
                   ? const Column(children: [
-                      PageHeader(title: 'Para os convidados', subtitle: 'O que os convidados veem do vosso evento', titleFontSize: 24),
+                      PageHeader(title: 'Para os convidados', titleFontSize: 24),
                       Expanded(child: Center(child: CircularProgressIndicator())),
                     ])
                   : ListView(
@@ -370,7 +370,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                       // código, acompanhantes, acesso e uma só lista com
                       // cada parte da página; cada parte numa folha.
                       children: [
-                        const PageHeader(title: 'Para os convidados', subtitle: 'O que os convidados veem do vosso evento', titleFontSize: 24),
+                        const PageHeader(title: 'Para os convidados', titleFontSize: 24),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
                           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -467,9 +467,6 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
               ? 'Lista na app'
               : ['Lista na app', if (iban != null) 'IBAN para envelopes', if (giftUrl != null) 'lista noutra loja'].join(' · '),
           onOpen: () => _openPart('Presentes', () => [
-                const Text('Escolhe como os convidados vos podem oferecer algo. Podes ter vários.',
-                    style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-                const SizedBox(height: 12),
                 _PreviewButton(
                   onTap: () => context.push('/gift-list'),
                   icon: Icons.checklist_rtl_rounded,
@@ -522,9 +519,6 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
         section: GuestSection.mesa,
         status: 'Cada convidado vê a sua mesa',
         onOpen: () => _openPart('A tua mesa', () => [
-              const Text('Cada convidado vê o número da mesa na página do evento. Quem ainda não tem lugar vê "Ainda por atribuir".',
-                  style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted)),
-              const SizedBox(height: 12),
               _PreviewButton(
                 onTap: () => context.push('/seating'),
                 icon: Icons.event_seat_outlined,
@@ -602,13 +596,6 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
     const suggestions = ['Cerimónia', 'Cocktail', 'Jantar', 'Primeira dança', 'Bolo', 'Festa'];
     final used = _moments.map((m) => m.title.text.trim().toLowerCase()).toSet();
     return [
-      const Padding(
-        padding: EdgeInsets.only(bottom: 10),
-        child: Text(
-          'Os momentos do dia, por ordem. Os convidados veem-nos como uma linha do tempo.',
-          style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4),
-        ),
-      ),
       for (var i = 0; i < _moments.length; i++)
         _MomentRow(
           key: ObjectKey(_moments[i]),
@@ -1716,7 +1703,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           ]),
           const SizedBox(height: 8),
           const Text(
-            'Cada pessoa paga o bilhete na app e recebe-o logo. A À Nossa! fica com a taxa de serviço; o resto vai para a tua conta.',
+            'Cada pessoa paga o bilhete na app.',
             style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
           ),
           if (entry.paid)
@@ -1788,11 +1775,6 @@ class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
           ),
           if (_saving) const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
         ]),
-        const SizedBox(height: 4),
-        const Text(
-          'Escolhe o que aparece na página do evento. Quem pagou bilhete vê sempre o bilhete com o código QR.',
-          style: TextStyle(fontSize: 12.5, height: 1.4, color: AppTheme.inkMuted),
-        ),
         const SizedBox(height: 10),
         Wrap(spacing: 8, runSpacing: 8, children: [
           ChoiceChip(

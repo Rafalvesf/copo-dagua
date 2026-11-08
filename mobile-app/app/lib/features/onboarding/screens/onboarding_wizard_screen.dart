@@ -541,11 +541,6 @@ class _OnboardingWizardScreenState
                 hint: '912 345 678',
                 keyboardType: TextInputType.phone,
               ),
-              const SizedBox(height: 10),
-              const Text(
-                'No fim podes enviar-lhe o link para entrar e organizarem juntos.',
-                style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-              ),
             ],
           ),
         );
@@ -553,7 +548,7 @@ class _OnboardingWizardScreenState
         return _StepScaffold(
           question: 'Quando é o ${_eventType.noun}?',
           subtitle:
-              'Usamos a data para organizar as tarefas. Podes mudá-la depois.',
+              'Podes mudá-la depois.',
           child: _DateStep(
             mode: _dateMode,
             date: _date,
@@ -632,7 +627,7 @@ class _OnboardingWizardScreenState
         return _StepScaffold(
           question: 'Quanto querem investir?',
           subtitle:
-              'Um valor aproximado chega. Dividimos por categorias e podem ajustar quando quiserem.',
+              'Um valor aproximado chega.',
           child: _LabeledField(
             label: 'Orçamento total',
             controller: _budget,

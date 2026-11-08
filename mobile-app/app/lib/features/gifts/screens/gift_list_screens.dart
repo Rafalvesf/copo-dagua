@@ -60,7 +60,7 @@ class OrganizerGiftListScreen extends ConsumerWidget {
       body: SafeArea(
         bottom: false,
         child: Column(children: [
-          const PageHeader(title: 'Lista de presentes', subtitle: 'O que precisam e o que os convidados já ofereceram.', centered: true),
+          const PageHeader(title: 'Lista de presentes', centered: true),
           Expanded(
             child: listAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -405,7 +405,7 @@ class GiftShopScreen extends StatelessWidget {
         body: SafeArea(
           bottom: false,
           child: Column(children: [
-            PageHeader(title: 'Loja', subtitle: 'Peças de artesãos e lojas parceiras.', centered: true),
+            PageHeader(title: 'Loja', centered: true),
             Expanded(child: GiftShopView()),
           ]),
         ),

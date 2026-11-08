@@ -994,7 +994,7 @@ class _FavoritesSheet extends ConsumerWidget {
                           child: Padding(
                             padding: const EdgeInsets.all(24),
                             child: Text(
-                              'Ainda não guardaste nenhum favorito — toca no coração de um parceiro para o guardares aqui.',
+                              'Toca no coração de um parceiro para o guardar aqui.',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: AppTheme.inkMuted),
                             ),

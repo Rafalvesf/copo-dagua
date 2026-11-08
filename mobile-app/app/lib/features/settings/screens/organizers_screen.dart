@@ -28,7 +28,7 @@ class OrganizersScreen extends ConsumerWidget {
       body: SafeArea(
         bottom: false,
         child: Column(children: [
-          const PageHeader(title: 'Organizadores', subtitle: 'Quem organiza contigo e o que pode fazer.', centered: true),
+          const PageHeader(title: 'Organizadores', centered: true),
           Expanded(
             child: listAsync == null
                 ? const SizedBox.shrink()

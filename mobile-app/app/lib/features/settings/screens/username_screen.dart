@@ -109,11 +109,6 @@ class _UsernameScreenState extends ConsumerState<UsernameScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 32),
           children: [
-            const Text(
-              'Um nome único para te encontrarem na À Nossa!. Ninguém mais o pode ter.',
-              style: TextStyle(fontSize: AppFontSize.lg, height: 1.45, color: AppTheme.inkMuted),
-            ),
-            const SizedBox(height: 20),
             TextField(
               controller: _ctrl,
               enabled: !locked,

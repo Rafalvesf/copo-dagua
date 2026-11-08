@@ -41,11 +41,6 @@ class JoinRequestsCard extends ConsumerWidget {
             'PEDIDOS PARA ENTRAR · ${requests.length}',
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark),
           ),
-          const SizedBox(height: 4),
-          const Text(
-            'Responderam pelo link ou entraram com o código. Aceita quem convidaste.',
-            style: TextStyle(fontSize: 12.5, height: 1.35, color: AppTheme.inkMuted),
-          ),
           for (final r in requests) ...[
             const SizedBox(height: 12),
             Container(
