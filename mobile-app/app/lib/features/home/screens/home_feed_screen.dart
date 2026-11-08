@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../settings/screens/settings_screen.dart' show CoupleAccountSections, GuestAccountSections;
@@ -9,7 +10,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/auth/auth_controller.dart';
-import '../../../core/feedback/app_feedback.dart';
 import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/tasks/task_engine_controller.dart';
@@ -23,7 +23,6 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/push_opt_in.dart';
 import '../../../shared/widgets/first_run_tour.dart' show TourAnchor;
-import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// Perfil — conta de quem está com sessão iniciada. Pedido explícito do
 /// utilizador (redesign 2026-10): "o perfil fica apenas de quem criou a
@@ -120,21 +119,19 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                           const Align(alignment: Alignment.centerLeft, child: GuestEventsPill()),
                           const SizedBox(height: 12),
                         ],
-                        Row(
-                          children: [
-                            const Expanded(
-                              child: Text(
-                                'Perfil',
-                                style: TextStyle(
-                                  fontSize: AppFontSize.display,
-                                  height: 40 / 34,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppTheme.ink,
+                        // Igual ao Perfil do parceiro (pedido 2026-11-08): título ao centro.
+                        SizedBox(
+                          height: 46,
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 48),
+                              const Expanded(
+                                child: Text(
+                                  'Perfil',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
                                 ),
                               ),
-                            ),
-                            // Sino no canto direito em vez da linha
-                            // "Notificações" na lista (pedido 2026-10-17).
                             if (wedding != null) Stack(
                               clipBehavior: Clip.none,
                               children: [
@@ -161,7 +158,9 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                   ),
                               ],
                             ),
-                          ],
+                              if (wedding == null) const SizedBox(width: 48),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 18),
                         _ProfileHeader(
@@ -183,96 +182,9 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                         const _SupportSummaryCard(),
                         // Definições da conta dentro do Perfil (2026-10-17).
                         if (organizer)
-                          const CoupleAccountSections(help: false, signOut: false)
+                          const CoupleAccountSections()
                         else
-                          const GuestAccountSections(help: false, signOut: false),
-                        const SizedBox(height: 28),
-                        const Text(
-                          'Como podemos ajudar?',
-                          style: TextStyle(
-                            fontSize: AppFontSize.xl,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // "Reportar um erro" logo debaixo do título (pedido 2026-11).
-                        _HelpCard(
-                          icon: Icons.bug_report_outlined,
-                          title: 'Reportar um erro',
-                          subtitle: 'Diz-nos o que não funcionou',
-                          onTap: () => showBugReportSheet(context, ref),
-                        ),
-                        const SizedBox(height: 12),
-                        SnappyTap(
-                          onTap: () => context.push('/support'),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: AppTheme.accentTint,
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.lg),
-                            ),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 22,
-                                  backgroundColor: Colors.white,
-                                  child: Icon(
-                                    Icons.support_agent_outlined,
-                                    color: AppTheme.accentOliveDark,
-                                  ),
-                                ),
-                                SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Falar com a equipa',
-                                        style: TextStyle(
-                                          fontSize: AppFontSize.lg,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppTheme.ink,
-                                        ),
-                                      ),
-                                      SizedBox(height: 2),
-                                      Text(
-                                        'Envia-nos uma mensagem',
-                                        style: TextStyle(
-                                          fontSize: AppFontSize.md,
-                                          color: AppTheme.inkMuted,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.chevron_right_rounded,
-                                  color: AppTheme.ink,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Center(
-                          child: TextButton(
-                            onPressed: () => ref
-                                .read(authControllerProvider.notifier)
-                                .logout(),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppStatusColors.declined,
-                              padding: EdgeInsets.zero,
-                              textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
-                                fontSize: AppFontSize.base + 1,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            child: const Text('Terminar sessão'),
-                          ),
-                        ),
+                          const GuestAccountSections(),
                       ],
                     ),
                   ),
@@ -320,42 +232,6 @@ class _PresenceCard extends StatelessWidget {
                   SizedBox(height: 2),
                   Text('Resposta, menu, acompanhantes e mesa',
                       style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: AppTheme.ink),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HelpCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  const _HelpCard({required this.icon, required this.title, required this.subtitle, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(AppRadius.lg)),
-        child: Row(
-          children: [
-            CircleAvatar(radius: 22, backgroundColor: Colors.white, child: Icon(icon, color: AppTheme.accentOliveDark)),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
                 ],
               ),
             ),
@@ -738,137 +614,49 @@ class _ProfileHeader extends StatelessWidget {
     required this.onChangePhoto,
   });
 
-  String get _initials {
-    final parts = (name ?? '').trim().split(RegExp(r'\s+'))
-      ..removeWhere((p) => p.isEmpty);
-    if (parts.isEmpty) return '?';
-    final first = parts.first[0];
-    final last = parts.length > 1 ? parts.last[0] : '';
-    return (first + last).toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final initials = Center(
-      child: Text(
-        _initials,
-        style: TextStyle(
-          fontSize: AppFontSize.h1,
-          fontWeight: FontWeight.w700,
-          color: AppTheme.accentOliveDark,
-        ),
-      ),
-    );
-    return Row(
+    // Igual ao cabeçalho do Perfil do parceiro (pedido 2026-11-08).
+    return Column(
       children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: AppTheme.accentTint,
-                shape: BoxShape.circle,
-              ),
-              child: ClipOval(
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (avatarUrl != null)
-                      SizedNetworkImage(
-                        avatarUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => initials,
-                      )
-                    else
-                      initials,
-                    if (uploading)
-                      Container(
-                        color: Colors.black.withValues(alpha: 0.35),
-                        alignment: Alignment.center,
-                        child: const CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      ),
-                  ],
+        Semantics(
+          button: true,
+          label: 'Mudar foto de perfil',
+          child: GestureDetector(
+            onTap: onChangePhoto,
+            child: Stack(clipBehavior: Clip.none, children: [
+              V2Avatar(name ?? '', size: 84, imageUrl: avatarUrl),
+              if (uploading)
+                const Positioned.fill(
+                  child: Center(child: SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.accentOliveDark))),
+                ),
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
+                  child: const Icon(Icons.photo_camera_rounded, size: 15, color: Colors.white),
                 ),
               ),
-            ),
-            Positioned(
-              bottom: -2,
-              right: -2,
-              child: Semantics(
-                button: true,
-                label: 'Mudar foto',
-                child: SnappyTap(
-                  onTap: onChangePhoto,
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.background, width: 3),
-                    ),
-                    child: Icon(
-                      Icons.camera_alt_outlined,
-                      size: 17,
-                      color: AppTheme.accentOliveDark,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+            ]),
+          ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        const SizedBox(height: 10),
         Text(
           name ?? '—',
-          textAlign: TextAlign.start,
-          style: AppTypography.displaySerif(
-            fontSize: AppFontSize.h2,
-            color: AppTheme.ink,
-          ).copyWith(fontWeight: FontWeight.w700),
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
         ),
         if (email != null && email!.isNotEmpty) ...[
           const SizedBox(height: 4),
-          Text(
-            email!,
-            textAlign: TextAlign.start,
-            style: const TextStyle(
-              fontSize: AppFontSize.base,
-              fontWeight: FontWeight.w300,
-              color: AppTheme.inkMuted,
-            ),
-          ),
+          Text(email!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         ],
         if (createdWedding) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.accentTint,
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-            ),
-            child: Text(
-              'Criou o casamento',
-              style: TextStyle(
-                fontSize: AppFontSize.xs,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.accentOliveDark,
-              ),
-            ),
-          ),
+          const SizedBox(height: 8),
+          const V2Chip('Criou o casamento'),
         ],
-            ],
-          ),
-        ),
       ],
     );
   }
