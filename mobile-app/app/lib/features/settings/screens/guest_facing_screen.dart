@@ -62,7 +62,7 @@ class GuestFacingScreen extends ConsumerStatefulWidget {
 
 const _line = Color(0xFFE6E0D2);
 const _dressStyles = ['Formal', 'Cocktail', 'Casual chique', 'Black tie', 'Tema'];
-const _caps = Color(0xFF8F8B84);
+const _caps = Color(0xFF6E6A63);
 const _olive = Color(0xFF3E5539);
 
 class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {

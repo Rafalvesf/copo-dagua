@@ -9,7 +9,7 @@ import 'snappy_tap.dart';
 /// em cinzento (verde com brilho quando focados) e botão verde em baixo.
 
 const _fieldFill = Color(0xFFF2F0EB);
-const _placeholder = Color(0xFF8F8B84);
+const _placeholder = Color(0xFF6E6A63);
 
 class AuthPage extends StatelessWidget {
   final List<Widget> children;

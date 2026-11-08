@@ -136,7 +136,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           : 'A password precisa de pelo menos 8 caracteres, com letras e números';
       _termsError = _acceptedTerms
           ? null
-          : 'Precisas de aceitar os termos para continuar';
+          : 'Confirma que tens 18 anos ou mais e aceitas os termos';
       // Conta única "Utilizador" (2026-11): o código é opcional — quem
       // não foi convidado entra e vê os eventos públicos.
       if (widget.role == UserRole.guest) _weddingCodeError = null;
@@ -211,7 +211,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   /// Google/Apple: o convidado precisa de um código válido antes (como
   /// no registo com email); o papel escolhido segue para a conta nova.
+  /// Também com Google/Apple: confirmar a idade e os termos primeiro
+  /// (lista de conformidade, 2026-11-08).
+  bool _termsOk() {
+    if (_acceptedTerms) return true;
+    setState(() => _termsError = 'Confirma que tens 18 anos ou mais e aceitas os termos');
+    return false;
+  }
+
   Future<void> _social(OAuthProvider provider) async {
+    if (!_termsOk()) return;
     if (!await _guestCodeOk()) return;
     await ref.read(authControllerProvider.notifier).signInWithProvider(
           provider,
@@ -222,6 +231,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   /// Google na web: o botão oficial já devolveu o ID token.
   Future<void> _googleCredential(String idToken, String nonce) async {
+    if (!_termsOk()) return;
     if (!await _guestCodeOk()) return;
     await ref.read(authControllerProvider.notifier).signInWithGoogleIdToken(
           idToken,
@@ -346,7 +356,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    const Text('Aceito os ', style: _termsStyle),
+                    const Text('Tenho 18 anos ou mais e aceito os ', style: _termsStyle),
                     GestureDetector(
                       onTap: () => context.push('/termos'),
                       child: const Text('Termos', style: _termsLink),

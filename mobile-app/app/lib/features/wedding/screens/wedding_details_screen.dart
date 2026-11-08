@@ -1184,7 +1184,7 @@ class _TaskRow extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF8F8B84)),
+            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF6E6A63)),
           ],
         ),
       ),
@@ -2090,7 +2090,7 @@ class _LinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF8F8B84)
+      ..color = const Color(0xFF6E6A63)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
     final path = Path()

@@ -80,7 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       decoration: BoxDecoration(
                         color: _keep ? AppTheme.accentOliveDark : Colors.white,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: _keep ? AppTheme.accentOliveDark : const Color(0xFF8F8B84), width: 1.5),
+                        border: Border.all(color: _keep ? AppTheme.accentOliveDark : const Color(0xFF6E6A63), width: 1.5),
                       ),
                       child: _keep ? const Icon(Icons.check_rounded, size: 15, color: Colors.white) : null,
                     ),

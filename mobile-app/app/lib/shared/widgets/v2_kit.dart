@@ -347,7 +347,7 @@ class V2SetRow extends StatelessWidget {
           )
         else if (onTap != null) ...[
           const SizedBox(width: 4),
-          const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFF8F8B84)),
+          const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFF6E6A63)),
         ],
       ]),
     );

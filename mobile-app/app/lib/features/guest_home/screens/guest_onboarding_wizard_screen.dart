@@ -1094,7 +1094,7 @@ class _RadioRow extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFF8F8B84), width: 1.5),
+                  border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFF6E6A63), width: 1.5),
                 ),
                 child: selected
                     ? Container(width: 12, height: 12, decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))

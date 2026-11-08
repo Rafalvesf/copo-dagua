@@ -37,7 +37,7 @@ class SearchPill extends StatelessWidget {
               style: const TextStyle(fontSize: 15, color: AppTheme.ink),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: const TextStyle(fontSize: 15, color: Color(0xFF8F8B84)),
+                hintStyle: const TextStyle(fontSize: 15, color: Color(0xFF6E6A63)),
                 isDense: true,
                 filled: false,
                 border: InputBorder.none,

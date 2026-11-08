@@ -234,7 +234,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                               const SizedBox(height: 14),
                               Text(
                                 isCouple ? 'COM MUITA ALEGRIA' : 'ESTÁS CONVIDADO',
-                                style: const TextStyle(fontSize: 11, letterSpacing: 3, fontWeight: FontWeight.w700, color: Color(0xFF8F8B84)),
+                                style: const TextStyle(fontSize: 11, letterSpacing: 3, fontWeight: FontWeight.w700, color: Color(0xFF6E6A63)),
                               ),
                               const SizedBox(height: 12),
                               if (isCouple) ...[
@@ -263,7 +263,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                               const SizedBox(height: 16),
                               if (date != null) ...[
                                 Text(weekdays[date.weekday - 1].toUpperCase(),
-                                    style: const TextStyle(fontSize: 11, letterSpacing: 2.5, fontWeight: FontWeight.w700, color: Color(0xFF8F8B84))),
+                                    style: const TextStyle(fontSize: 11, letterSpacing: 2.5, fontWeight: FontWeight.w700, color: Color(0xFF6E6A63))),
                                 const SizedBox(height: 4),
                                 Text(
                                   '${date.day} de ${months[date.month - 1]} de ${date.year}',

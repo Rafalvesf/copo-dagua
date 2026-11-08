@@ -171,7 +171,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                       fontWeight: FontWeight.w700,
                       fontSize: AppFontSize.sm,
                       letterSpacing: 1,
-                      color: Color(0xFF8F8B84),
+                      color: Color(0xFF6E6A63),
                     ),
                   ),
                   const SizedBox(height: 10),
