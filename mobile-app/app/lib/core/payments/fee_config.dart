@@ -2,6 +2,10 @@
 /// (como no IRS), IVA incluído — migrações 126/127. Usado para a taxa do
 /// parceiro (descontada na libertação) e para a do organizador (somada a
 /// cada pagamento). Mesma conta que `supabase/functions/_shared/fees.ts`.
+/// Valor fixo por transação, somado à percentagem em todas as taxas
+/// (4% + 1 €, 3% + 1 €; `platform_settings.fixed_fee_cents`).
+const double kFixedFee = 1;
+
 class FeeConfig {
   final List<({double? upTo, double pct})> tiers;
   final double flatPct;
@@ -53,9 +57,9 @@ class FeeConfig {
   /// Parte da taxa de um pagamento (sinal/restante) de uma reserva.
   double feeForPayment(double payment, double bookingTotal) {
     if (isFree) return 0;
-    if (tiers.isEmpty) return ((payment * 100).round() * flatPct / 100).round() / 100;
+    if (tiers.isEmpty) return ((payment * 100).round() * flatPct / 100).round() / 100 + kFixedFee;
     if (bookingTotal <= 0) return 0;
-    final f = (feeFor(bookingTotal) * 100 * payment / bookingTotal).round() / 100;
+    final f = (feeFor(bookingTotal) * 100 * payment / bookingTotal).round() / 100 + kFixedFee;
     return f > payment ? payment : f;
   }
 
@@ -76,5 +80,6 @@ typedef PartnerFeeConfig = FeeConfig;
 double organizerPays(double partnerAmount, double bookingTotal, FeeConfig fee) {
   final cents = (partnerAmount * 100).round();
   final pct = fee.effectivePct(bookingTotal);
-  return (cents + (cents * pct / 100).round()) / 100;
+  if (cents <= 0) return 0;
+  return (cents + (cents * pct / 100).round() + (kFixedFee * 100).round()) / 100;
 }

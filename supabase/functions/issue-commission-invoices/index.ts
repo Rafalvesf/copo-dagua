@@ -101,6 +101,8 @@ Deno.serve(async (req) => {
       continue;
     }
     if (!intent.livemode && !allowTest) continue;
+    // Sinal ainda cativo (2026-11-08): só se fatura depois de cobrado.
+    if (intent.status === "requires_capture") continue;
     const commission = Number(intent.metadata?.commission_cents ?? 0) / 100;
     const charge = typeof intent.latest_charge === "object" ? intent.latest_charge : null;
     // Parte reembolsada do pagamento (0..1); reembolso total = 1.

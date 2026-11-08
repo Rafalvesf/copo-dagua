@@ -2,6 +2,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
 import { confirmTicket, reserveCents } from "../_shared/tickets.ts";
+import { fixedFeeCents } from "../_shared/fees.ts";
 
 // Bilhetes para eventos públicos pagos (migração 149).
 //
@@ -99,11 +100,11 @@ Deno.serve(async (req) => {
     }
   }
 
-  const { data: settings } = await admin.from("platform_settings").select("ticket_fee_percentage").eq("id", 1).maybeSingle();
+  const { data: settings } = await admin.from("platform_settings").select("*").eq("id", 1).maybeSingle();
   const platformPct = Number(settings?.ticket_fee_percentage ?? 4);
   const unitCents = Math.round(Number(w.entry_price) * 100);
   const amountCents = unitCents * quantity;
-  const { platformCents, applicationFeeCents } = reserveCents(amountCents, platformPct);
+  const { platformCents, applicationFeeCents } = reserveCents(amountCents, platformPct, fixedFeeCents(settings));
   const name = [w.partner_name_1, w.partner_name_2].filter(Boolean).join(" & ");
 
   const { data: ticket, error: insErr } = await admin

@@ -3,6 +3,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
 import { confirmGiftOrder } from "../_shared/gifts.ts";
 import { reserveCents } from "../_shared/tickets.ts";
+import { fixedFeeCents } from "../_shared/fees.ts";
 
 // Presentes da loja dos parceiros (migração 160).
 //
@@ -106,11 +107,11 @@ Deno.serve(async (req) => {
     }
   }
 
-  const { data: settings } = await admin.from("platform_settings").select("gift_fee_percentage").eq("id", 1).maybeSingle();
+  const { data: settings } = await admin.from("platform_settings").select("*").eq("id", 1).maybeSingle();
   const platformPct = Number(settings?.gift_fee_percentage ?? 4);
   const unitCents = Math.round(Number(p.price) * 100);
   const amountCents = unitCents * quantity;
-  const { platformCents, applicationFeeCents } = reserveCents(amountCents, platformPct);
+  const { platformCents, applicationFeeCents } = reserveCents(amountCents, platformPct, fixedFeeCents(settings));
   const { data: buyer } = await admin.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
 
   const { data: order, error: insErr } = await admin
