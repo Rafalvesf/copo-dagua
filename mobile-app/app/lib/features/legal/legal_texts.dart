@@ -119,7 +119,7 @@ const privacyDoc = LegalDoc(
       'Autoridades, quando a lei o exigir.',
     ]),
     LegalSection('6. Durante quanto tempo', [
-      'Enquanto a tua conta estiver ativa. Podes apagá-la a qualquer momento em Definições → Conta → Apagar conta: os teus dados pessoais são apagados de imediato, exceto os que a lei nos obriga a guardar (por exemplo, registos de pagamentos, durante 10 anos, sem o teu nome). Se tiveres reservas ativas, tens de as cancelar ou esperar que o evento passe.',
+      'Enquanto a tua conta estiver ativa. Podes apagá-la a qualquer momento em Definições › Conta › Apagar conta: os teus dados pessoais são apagados de imediato, exceto os que a lei nos obriga a guardar (por exemplo, registos de pagamentos, durante 10 anos, sem o teu nome). Se tiveres reservas ativas, tens de as cancelar ou esperar que o evento passe.',
     ]),
     LegalSection('7. Os teus direitos', [
       'Podes apagar a tua conta diretamente nas Definições. Podes também pedir acesso aos teus dados, a sua correção, eliminação ou portabilidade, opor-te a um tratamento ou pedir a sua limitação, e retirar um consentimento dado. Para isso, usa "Falar com a equipa À Nossa!" nas Definições ou escreve para ${LegalEntity.email}. Respondemos no prazo de um mês.',
@@ -148,7 +148,7 @@ const deleteAccountDoc = LegalDoc(
   [
     LegalSection('Na app (o mais rápido)', [
       '1. Entra na tua conta na app ou em rafalvesf.github.io/copo-dagua.',
-      '2. Abre Definições → Conta → Apagar conta.',
+      '2. Abre Definições › Conta › Apagar conta.',
       '3. Escreve APAGAR para confirmar. A conta é apagada de imediato.',
     ]),
     LegalSection('Sem acesso à app', [

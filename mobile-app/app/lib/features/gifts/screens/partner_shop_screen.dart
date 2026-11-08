@@ -73,7 +73,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 6),
                                   child: Text(
-                                    '${pro.products} de ${pro.freeShopProducts} produtos. Com o Verificado não há limite →',
+                                    '${pro.products} de ${pro.freeShopProducts} produtos. Com o Verificado não há limite ›',
                                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: green),
                                   ),
                                 ),

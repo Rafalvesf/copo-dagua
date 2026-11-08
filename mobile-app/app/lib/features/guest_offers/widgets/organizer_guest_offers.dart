@@ -535,7 +535,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
                 controller: _title,
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 120,
-                decoration: deco('Nome', hint: _kind == GuestOfferKind.lodging ? 'Hotel da Ribeira' : 'Autocarro Porto → Quinta'),
+                decoration: deco('Nome', hint: _kind == GuestOfferKind.lodging ? 'Hotel da Ribeira' : 'Autocarro Porto › Quinta'),
               ),
               TextField(
                 controller: _details,

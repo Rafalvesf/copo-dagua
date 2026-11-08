@@ -676,7 +676,7 @@ class _ProSavingsCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('≈ ${euros(saving)}', style: const TextStyle(fontSize: 30, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(euros(saving), style: const TextStyle(fontSize: 30, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -739,7 +739,7 @@ class _ProStatsRow extends StatelessWidget {
           const SizedBox(width: 8),
           cell('PEDIDOS', requests == null ? '—' : '$requests', '30 dias'),
           const SizedBox(width: 8),
-          cell('CONVERSÃO', conversion == null ? '—' : '${_num(conversion.roundToDouble())}%', 'pedidos → reservas'),
+          cell('CONVERSÃO', conversion == null ? '—' : '${_num(conversion.roundToDouble())}%', 'pedidos › reservas'),
         ],
       ),
     );

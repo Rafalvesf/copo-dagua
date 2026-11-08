@@ -101,7 +101,7 @@ flutter:
     # Fonte principal da app (redesign 2026-10): Louis George Café,
     # grátis para uso pessoal e comercial (assets/fonts/louis_george_cafe/
     # LICENSE.txt). Subset Latin + Latin-1 + Latin Ext-A. A Roboto fica como
-    # fallback (o Bold não tem travessão, por exemplo).
+    # fallback. Bold completado com — … • – “ ” › da Regular e − (2026-11-08).
     - family: LouisGeorgeCafe
       fonts:
         - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Light.ttf

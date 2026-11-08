@@ -118,7 +118,7 @@ class TeamBannerCard extends ConsumerWidget {
                   const SizedBox(height: 8),
                   GestureDetector(
                     onTap: () => context.push(b.link ?? '/mensagem/${b.id}'),
-                    child: Text(b.link == null ? 'Ler mais →' : 'Ver →',
+                    child: Text(b.link == null ? 'Ler mais ›' : 'Ver ›',
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                 ],
@@ -380,7 +380,7 @@ class _TeamThreadScreenState extends ConsumerState<TeamThreadScreen> {
                                         TextButton(
                                           onPressed: () => context.push(m.link!),
                                           style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 32)),
-                                          child: const Text('Abrir →'),
+                                          child: const Text('Abrir ›'),
                                         ),
                                       const SizedBox(height: 2),
                                       Text(_time(m.at),

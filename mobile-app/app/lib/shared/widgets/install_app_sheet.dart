@@ -55,7 +55,7 @@ Future<void> showInstallAppSheet(BuildContext context, {String? code}) {
               step(3, 'Escolhe "Adicionar ao ecrã principal".'),
             ] else ...[
               step(1, 'Abre esta página no Chrome.'),
-              step(2, 'Toca no menu ⋮ no canto de cima.'),
+              step(2, 'Toca no menu (três pontos) no canto de cima.'),
               step(3, 'Escolhe "Instalar app" ou "Adicionar ao ecrã principal".'),
             ],
             step(4, code == null
