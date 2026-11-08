@@ -122,9 +122,6 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
               const Expanded(child: Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700))),
               Text(euroLabel(unit * _qty), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
             ]),
-            const SizedBox(height: 4),
-            const Text('Sem taxas extra. Pagamento seguro pela Stripe; ao pagar, entras no evento.',
-                style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
             if (_error != null) ...[
               const SizedBox(height: 10),
               Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13)),

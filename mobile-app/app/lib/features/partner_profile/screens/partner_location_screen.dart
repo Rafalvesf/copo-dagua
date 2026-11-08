@@ -145,11 +145,6 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Onde fica o teu negócio? Os clientes veem a zona e a distância ao evento deles.',
-                    style: TextStyle(fontSize: AppFontSize.base, height: 1.5, color: AppTheme.inkMuted),
-                  ),
-                  const SizedBox(height: 18),
                   SnappyTap(
                     onTap: _locating ? () {} : _useCurrent,
                     child: Container(

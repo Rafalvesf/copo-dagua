@@ -132,7 +132,7 @@ class TicketPassScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark))
             else
               const Text(
-                'Mostra este código à entrada. Aumenta o brilho do ecrã para ler mais depressa.',
+                'Mostra este código à entrada.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
               ),

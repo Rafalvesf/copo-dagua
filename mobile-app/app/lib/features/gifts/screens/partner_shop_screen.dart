@@ -33,7 +33,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
       body: SafeArea(
         bottom: false,
         child: Column(children: [
-          const PageHeader(title: 'Loja', subtitle: 'Produtos para as listas de presentes dos eventos.', centered: true),
+          const PageHeader(title: 'Loja', centered: true),
           Padding(
             padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 8),
             child: SegmentedButton<int>(

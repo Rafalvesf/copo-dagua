@@ -244,14 +244,6 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
             ),
           ]),
         ),
-      if (s.pendingCents > 0) ...[
-        const SizedBox(height: 8),
-        const Text(
-          'Os pagamentos novos ficam disponíveis passados alguns dias (prazo da Stripe).',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-        ),
-      ],
       if (s.needsData) ...[
         const SizedBox(height: 14),
         _ActionCard(
