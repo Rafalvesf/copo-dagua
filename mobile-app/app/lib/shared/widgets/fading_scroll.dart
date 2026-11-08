@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 /// Desvanece as bordas de um conteúdo scrollável, para ele nunca
@@ -19,6 +20,10 @@ class EdgeFade extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Na web o ShaderMask obriga a redesenhar a lista inteira numa camada à
+    // parte a cada frame do scroll — era o que mais pesava (2026-11-08,
+    // "a app está lenta"). Na web fica sem o desvanecimento.
+    if (kIsWeb) return child;
     return ShaderMask(
       blendMode: BlendMode.dstIn,
       shaderCallback: (rect) {

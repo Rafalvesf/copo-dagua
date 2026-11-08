@@ -240,7 +240,7 @@
       }
       var t0 = Date.now(), ready = false, gone = false;
       function exit() {
-        if (gone || !ready || Date.now() - t0 < 3200) return;
+        if (gone || !ready || Date.now() - t0 < 1500) return;
         gone = true;
         var sp = document.getElementById('tt-splash');
         sp.classList.add('go');
@@ -265,7 +265,7 @@
         // um instante para o primeiro ecrã ficar desenhado por baixo
         setTimeout(function () { ready = true; exit(); }, 250);
       });
-      setTimeout(exit, 3200);
+      setTimeout(exit, 1500);
       // segurança: nunca fica preso na abertura
       setTimeout(function () { ready = true; exit(); }, 12000);
     })();

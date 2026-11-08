@@ -771,7 +771,11 @@ class _CountdownRowState extends State<_CountdownRow> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      // Atualiza a cada segundo: só esta parte volta a pintar.
+      RepaintBoundary(child: _build(context));
+
+  Widget _build(BuildContext context) {
     final date = widget.weddingDate;
     if (date == null) return const SizedBox.shrink();
 
@@ -2126,7 +2130,11 @@ class _FilmStripState extends State<_FilmStrip> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      // Atualiza a cada segundo: só esta parte volta a pintar.
+      RepaintBoundary(child: _build(context));
+
+  Widget _build(BuildContext context) {
     final date = widget.date;
     if (date == null) return const SizedBox.shrink();
     var left = date.difference(DateTime.now());
