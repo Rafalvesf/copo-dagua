@@ -353,7 +353,7 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
                 minimumSize: const Size.fromHeight(52),
                 backgroundColor: AppTheme.accentOliveDark,
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontWeight: FontWeight.w700, fontSize: AppFontSize.lg),
               ),
               child: _saving
                   ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))

@@ -556,7 +556,7 @@ class GuestPhotosCta extends StatelessWidget {
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(52),
           shape: const StadiumBorder(),
-          textStyle: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15.5, fontWeight: FontWeight.w700),
         ),
       );
 }

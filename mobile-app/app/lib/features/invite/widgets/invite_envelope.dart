@@ -233,7 +233,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                       backgroundColor: _paper,
                       foregroundColor: _ink,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
                     ),
                     child: const Text('Abrir convite'),
                   ),
