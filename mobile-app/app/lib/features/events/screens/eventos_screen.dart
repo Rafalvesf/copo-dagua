@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart';
 import '../../../shared/widgets/island_sheet.dart';
@@ -667,7 +668,7 @@ Future<void> sharePublicEvent(BuildContext context, PublicEvent e) async {
     shared = r.status != ShareResultStatus.unavailable;
   } catch (_) {}
   if (!shared) {
-    await Clipboard.setData(ClipboardData(text: link));
+    await copyText(link);
     messenger.showSnackBar(const SnackBar(content: Text('Link copiado.')));
   }
 }

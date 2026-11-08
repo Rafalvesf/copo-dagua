@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -296,7 +297,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
       final codeLine = code?.isNotEmpty == true ? '\nOu entra na app com o código $code' : '';
       await SharePlus.instance.share(ShareParams(text: 'Estás convidado para ${widget.wedding.displayNames} na À Nossa!: $link$codeLine'));
     } catch (_) {
-      await Clipboard.setData(ClipboardData(text: link));
+      await copyText(link);
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
     }
   }
@@ -968,7 +969,7 @@ class _InviteLinkCard extends ConsumerWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(AppRadius.md),
               onTap: () async {
-                await Clipboard.setData(ClipboardData(text: code!));
+                await copyText(code!);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
                 }
@@ -996,7 +997,7 @@ class _InviteLinkCard extends ConsumerWidget {
           Expanded(
             child: TextButton.icon(
               onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: link));
+                await copyText(link);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
                 }
@@ -1850,7 +1851,7 @@ class _CodeHero extends ConsumerWidget {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () async {
-                      await Clipboard.setData(ClipboardData(text: code!));
+                      await copyText(code!);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
                       }

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -88,7 +89,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
     // O código fica no telemóvel: ao abrir a app instalada, o convite
     // abre sozinho. Copiado também, para o caso de não entrar sozinho.
     PendingInvite.save(ev.code);
-    Clipboard.setData(ClipboardData(text: ev.code)).catchError((_) {});
+    copyText(ev.code);
     showInstallAppSheet(context, code: ev.code);
   }
 
@@ -468,7 +469,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                   Center(
                     child: TextButton.icon(
                       onPressed: () {
-                        Clipboard.setData(ClipboardData(text: ev.address ?? ev.location!));
+                        copyText(ev.address ?? ev.location!);
                         _snack('Morada copiada.');
                       },
                       icon: const Icon(Icons.copy_rounded, size: 16),
@@ -1013,7 +1014,7 @@ class _CodeBox extends StatelessWidget {
             IconButton(
               tooltip: 'Copiar código',
               onPressed: () {
-                Clipboard.setData(ClipboardData(text: code));
+                copyText(code);
                 onCopied();
               },
               style: IconButton.styleFrom(backgroundColor: Colors.white, minimumSize: const Size(44, 44)),

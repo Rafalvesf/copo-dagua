@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
@@ -322,7 +323,7 @@ class _OnboardingWizardScreenState
       shared = result.status != ShareResultStatus.unavailable;
     } catch (_) {}
     if (!shared) {
-      await Clipboard.setData(ClipboardData(text: link));
+      await copyText(link);
       messenger.showSnackBar(const SnackBar(content: Text('Link copiado.')));
     }
   }

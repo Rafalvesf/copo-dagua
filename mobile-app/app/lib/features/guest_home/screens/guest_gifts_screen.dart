@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import 'package:flutter/services.dart';
@@ -84,7 +85,7 @@ class GuestGiftsScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: iban.replaceAll(' ', '')));
+                await copyText(iban.replaceAll(' ', ''));
                 if (context.mounted) Navigator.of(context).pop();
               },
               icon: const Icon(Icons.copy, size: 18),
@@ -213,7 +214,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                             if (iban?.isNotEmpty == true)
                               SnappyTap(
                                 onTap: () async {
-                                  await Clipboard.setData(ClipboardData(text: iban!.replaceAll(' ', '')));
+                                  await copyText(iban!.replaceAll(' ', ''));
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('IBAN copiado.')));
                                   }

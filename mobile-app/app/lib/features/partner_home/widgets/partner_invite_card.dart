@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,7 +30,7 @@ class PartnerInviteCard extends ConsumerWidget {
     }
 
     Future<void> copy() async {
-      await Clipboard.setData(ClipboardData(text: link));
+      await copyText(link);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
       }

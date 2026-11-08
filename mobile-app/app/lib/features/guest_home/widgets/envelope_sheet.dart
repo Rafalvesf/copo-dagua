@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,7 +58,7 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
   }
 
   Future<void> _copy(String text, String what) async {
-    await Clipboard.setData(ClipboardData(text: text));
+    await copyText(text);
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$what copiado.')));
   }
 
