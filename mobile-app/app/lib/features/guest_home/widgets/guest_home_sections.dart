@@ -135,7 +135,8 @@ class GuestShortcut {
   const GuestShortcut(this.icon, this.label, this.sub, this.color, this.onTap);
 }
 
-/// Os atalhos numa linha (em vez de mosaicos grandes).
+/// Os atalhos em mosaicos 2×2 (pedido 2026-11-08: "passa os botões a
+/// mosaicos"), com a cor de cada atalho.
 class GuestShortcutsRow extends StatelessWidget {
   final List<GuestShortcut> items;
   const GuestShortcutsRow({super.key, required this.items});
@@ -143,38 +144,46 @@ class GuestShortcutsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
-    return Row(children: [
-      for (var i = 0; i < items.length; i++) ...[
-        if (i > 0) const SizedBox(width: 8),
-        Expanded(
-          child: SnappyTap(
-            onTap: items[i].onTap,
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      childAspectRatio: 1.45,
+      children: [
+        for (final it in items)
+          SnappyTap(
+            onTap: it.onTap,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(6, 12, 6, 10),
-              decoration: guestCard(radius: 18),
-              child: Column(children: [
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+              decoration: BoxDecoration(
+                color: it.color,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: const [BoxShadow(color: Color(0x14171713), blurRadius: 12, offset: Offset(0, 4))],
+              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Container(
                   width: 40,
                   height: 40,
-                  decoration: BoxDecoration(color: items[i].color, borderRadius: BorderRadius.circular(13)),
-                  child: Icon(items[i].icon, size: 21, color: AppTheme.ink),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13)),
+                  child: Icon(it.icon, size: 21, color: guestHeroGreen),
                 ),
-                const SizedBox(height: 7),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(items[i].label,
-                      maxLines: 1, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                ),
-                Text(items[i].sub,
+                const Spacer(),
+                Text(it.label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(it.sub,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12.5, color: Color(0xFF57534E))),
               ]),
             ),
           ),
-        ),
       ],
-    ]);
+    );
   }
 }
 
