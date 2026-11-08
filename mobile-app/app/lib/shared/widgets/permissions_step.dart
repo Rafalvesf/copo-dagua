@@ -462,7 +462,7 @@ class _SinglePermissionSheetState extends State<_SinglePermissionSheet> {
             _blocked
                 ? (kIsWeb
                     ? 'Esta permissão foi recusada antes. Para a ativar, abre as definições do site no browser (o cadeado ao lado do endereço) ou do telemóvel e permite-a.'
-                    : 'Esta permissão foi recusada antes. Para a ativar, abre as Definições do telemóvel → À Nossa! e permite-a.')
+                    : 'Esta permissão foi recusada antes. Para a ativar, abre as Definições do telemóvel › À Nossa! e permite-a.')
                 : (widget.reason ?? c.body),
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted, height: 1.45),

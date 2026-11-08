@@ -44,12 +44,12 @@ class _PushOptInCardState extends State<PushOptInCard> {
           'Notificações bloqueadas',
           kIsWeb
               ? 'Bloqueaste as notificações neste browser. Para as receber, permite-as nas definições do site.'
-              : 'Bloqueaste as notificações. Para as receber, abre as Definições do telemóvel → À Nossa! → Notificações.',
+              : 'Bloqueaste as notificações. Para as receber, abre as Definições do telemóvel › À Nossa! › Notificações.',
           false,
         ),
       PushStatus.iosInstall => (
           'No iPhone, instala a app',
-          'Toca em Partilhar → “Adicionar ao ecrã principal” e abre a À Nossa! a partir daí para receber notificações.',
+          'Toca em Partilhar › “Adicionar ao ecrã principal” e abre a À Nossa! a partir daí para receber notificações.',
           false,
         ),
       _ => ('', '', false),

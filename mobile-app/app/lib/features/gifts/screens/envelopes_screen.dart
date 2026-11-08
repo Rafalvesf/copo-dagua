@@ -57,7 +57,7 @@ class EnvelopesScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 10),
               const Text(
-                'Os convidados transferem diretamente para o vosso IBAN (em Para os convidados → Presentes). '
+                'Os convidados transferem diretamente para o vosso IBAN (em Para os convidados › Presentes). '
                 'Marquem "Chegou" quando o virem no banco.',
                 style: TextStyle(fontSize: 12.5, height: 1.4, color: AppTheme.inkMuted),
               ),

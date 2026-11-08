@@ -710,7 +710,7 @@ class _InviteLinkCard extends ConsumerWidget {
           (Icons.public_rounded, code?.isNotEmpty == true
               ? 'Evento público: quem abre o link (ou escreve o código na app) entra logo.'
               : 'Evento público: quem abre o link entra logo.'),
-          (Icons.lock_outline_rounded, 'Evento privado: a pessoa pede para entrar e tu aceitas em Convidados → Pedidos para entrar.'),
+          (Icons.lock_outline_rounded, 'Evento privado: a pessoa pede para entrar e tu aceitas em Convidados › Pedidos para entrar.'),
           (Icons.confirmation_number_outlined, 'Evento pago: paga o bilhete e entra logo, mesmo sendo privado.'),
         ])
           Padding(

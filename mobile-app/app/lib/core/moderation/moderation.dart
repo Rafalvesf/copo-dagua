@@ -137,7 +137,7 @@ Future<void> _block(BuildContext context, WidgetRef ref, String profileId, Strin
   try {
     await supabase.from('user_blocks').upsert({'blocker_id': me, 'blocked_id': profileId});
     ref.invalidate(blockedProfilesProvider);
-    msg = 'Bloqueaste $who. Podes desbloquear em Definições → Conta.';
+    msg = 'Bloqueaste $who. Podes desbloquear em Definições › Conta.';
   } catch (_) {
     msg = 'Não foi possível bloquear. Tenta outra vez.';
   }
