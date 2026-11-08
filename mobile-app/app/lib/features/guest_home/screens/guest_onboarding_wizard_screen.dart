@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/events/event_pass.dart' show myEventPassProvider, GuestSections;
 import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
 import '../../../shared/widgets/first_run_tour.dart' show TourRole;
 import '../../../core/supabase/supabase_config.dart';
@@ -195,6 +196,16 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       ];
 
   List<_Person> get _people => [_me, ..._companions];
+
+  // Opções do organizador (Para os convidados › Acompanhantes, 2026-11-08).
+  GuestSections get _opts => ref.watch(myEventPassProvider(widget.weddingId)).value?.sections ?? const GuestSections();
+
+  /// Quem tem de escolher menu e alergias: todos, ou só tu se o
+  /// organizador não pedir os dados dos acompanhantes.
+  List<_Person> get _detailPeople => _opts.companionDetails ? _people : [_me];
+
+  /// Crianças à parte: não contam para o limite.
+  int get _countedCompanions => _companions.where((c) => !(_opts.kidsFree && c.isChild)).length;
 
   /// Lado, conforme o evento (canvas "Convidado 6 · Lado"): casamento
   /// noiva/noivo; batizado, comunhão e chá de bebé mãe/pai. Nos outros
@@ -494,17 +505,25 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         return;
       }
     }
+    if (step == _Step.ages && _countedCompanions > _limit) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(_limit == 1
+            ? 'Podes trazer 1 adulto. As crianças não contam.'
+            : 'Podes trazer até $_limit adultos. As crianças não contam.'),
+      ));
+      return;
+    }
     // Menu e alergias obrigatórios para todos (2026-11-07).
     String who(_Person p) => p == _me ? 'ti' : p.name;
     if (step == _Step.menu) {
-      final missing = _people.where((p) => p.menu == null).toList();
+      final missing = _detailPeople.where((p) => p.menu == null).toList();
       if (missing.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Escolhe a refeição para ${who(missing.first)}.')));
         return;
       }
     }
     if (step == _Step.allergies) {
-      final missing = _people
+      final missing = _detailPeople
           .where((p) => p.allergies.isEmpty || (p.allergies.length == 1 && p.allergies.contains('Outra') && p.otherAllergy.trim().isEmpty))
           .toList();
       if (missing.isNotEmpty) {
@@ -545,7 +564,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       case _Step.companions:
         return _StepScaffold(
           question: 'Quem vai contigo?',
-          subtitle: _limit == 1 ? 'Os anfitriões deixaram levar 1 pessoa.' : 'Os anfitriões deixaram levar até $_limit pessoas.',
+          subtitle: (_limit == 1 ? 'Os anfitriões deixaram levar 1 pessoa.' : 'Os anfitriões deixaram levar até $_limit pessoas.') + (_opts.kidsFree ? ' Crianças não contam.' : ''),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -560,7 +579,9 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   ].join(' · '),
                   onEdit: () => _editCompanion(c),
                 ),
-              if (_companions.length < _limit)
+              // Crianças à parte: dá para juntar mais e o limite conta só
+              // adultos (vê-se no passo das idades).
+              if (_companions.length < (_opts.kidsFree ? _limit + 6 : _limit))
                 SnappyTap(
                   onTap: () => _editCompanion(),
                   child: CustomPaint(
@@ -663,12 +684,12 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         );
       case _Step.menu:
         return _StepScaffold(
-          question: _people.length == 1 ? 'Que refeição preferes?' : 'Que refeição para cada pessoa?',
-          subtitle: _people.length == 1 ? 'Obrigatório. Podes mudar depois.' : 'Obrigatório. Cada um escolhe a sua.',
+          question: _detailPeople.length == 1 ? 'Que refeição preferes?' : 'Que refeição para cada pessoa?',
+          subtitle: _detailPeople.length == 1 ? 'Obrigatório. Podes mudar depois.' : 'Obrigatório. Cada um escolhe a sua.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final p in _people)
+              for (final p in _detailPeople)
                 _PersonChoices(
                   title: p == _me ? '${p.name} (tu)' : p.name,
                   options: p.isChild ? _childMenus : _adultMenus,
@@ -682,11 +703,11 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       case _Step.allergies:
         return _StepScaffold(
           question: 'Alguma alergia ou intolerância?',
-          subtitle: 'De cada pessoa. Se não houver, escolhe Nenhuma.',
+          subtitle: _detailPeople.length == 1 ? 'Se não houver, escolhe Nenhuma.' : 'De cada pessoa. Se não houver, escolhe Nenhuma.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final p in _people)
+              for (final p in _detailPeople)
                 _PersonChoices(
                   title: p == _me ? '${p.name} (tu)' : p.name,
                   options: _allergyOptions,

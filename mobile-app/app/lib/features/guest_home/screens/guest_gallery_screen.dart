@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/events/event_pass.dart' show myEventPassProvider, GuestSections;
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -121,6 +122,11 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
   Widget build(BuildContext context) {
     final photosAsync = ref.watch(weddingGalleryPhotosProvider(widget.weddingId));
     final myUserId = ref.watch(authControllerProvider).profile?.id;
+    // Opções do organizador (Para os convidados › Galeria, 2026-11-08).
+    final opts = ref.watch(myEventPassProvider(widget.weddingId)).value?.sections ?? const GuestSections();
+    final date = ref.watch(guestWeddingsProvider).value?.where((w) => w.weddingId == widget.weddingId).firstOrNull?.weddingDate;
+    final open = opts.galleryOpen(date);
+    final canUpload = open && opts.galleryUpload;
 
     return GradientScaffold(
       background: AppBackground.subtle,
@@ -137,11 +143,13 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                   title: 'Galeria',
                   showBack: false,
                   centered: true,
-                  trailing: V2RoundButton(icon: Icons.add_rounded, tooltip: 'Partilhar fotos', solid: true, onTap: _upload),
+                  trailing: canUpload ? V2RoundButton(icon: Icons.add_rounded, tooltip: 'Partilhar fotos', solid: true, onTap: _upload) : null,
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: photosAsync.when(
+                  child: !open
+                      ? const EmptyStateView(message: 'A galeria abre no dia do evento.', icon: Icons.photo_library_outlined)
+                      : photosAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId))),
                     data: (photos) {

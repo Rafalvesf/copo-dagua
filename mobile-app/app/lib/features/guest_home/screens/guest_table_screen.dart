@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../../../core/events/event_pass.dart' show myEventPassProvider;
 import '../../../shared/widgets/page_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -27,6 +28,28 @@ class GuestTableScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final rosterAsync = ref.watch(myTableRosterProvider(weddingId));
     final myGuestAsync = ref.watch(myGuestRowProvider(weddingId));
+    // Opções do organizador (Para os convidados › A tua mesa, 2026-11-08).
+    final opts = ref.watch(myEventPassProvider(weddingId)).value?.sections;
+    final date = ref.watch(guestWeddingsProvider).value?.where((w) => w.weddingId == weddingId).firstOrNull?.weddingDate;
+    if (opts != null && (!opts.tableVisible(date) || !opts.tableMates)) {
+      final hidden = !opts.tableVisible(date);
+      return GradientScaffold(
+        background: AppBackground.subtle,
+        body: SafeArea(
+          child: Column(children: [
+            const PageHeader(title: 'A tua mesa', centered: true),
+            Expanded(
+              child: EmptyStateView(
+                message: hidden
+                    ? 'A tua mesa aparece ${opts.tableReveal == 'day' ? 'no dia do evento' : 'uma semana antes do evento'}.'
+                    : (tableNumber == null ? 'Ainda não foste colocado em nenhuma mesa.' : 'Ficas na mesa $tableNumber.'),
+                icon: Icons.table_restaurant_outlined,
+              ),
+            ),
+          ]),
+        ),
+      );
+    }
 
     return GradientScaffold(
       background: AppBackground.subtle,

@@ -23,22 +23,56 @@ enum GuestSection {
 }
 
 /// Chave a `false` = escondido; chaves que faltam = visíveis.
+/// Também guarda as opções da página (`opt_*`, 2026-11-08, migração 166
+/// para `opt_kids_free`); o resto só precisa da app.
 class GuestSections {
-  final Map<String, bool> _map;
+  final Map<String, Object?> _map;
   const GuestSections([this._map = const {}]);
 
   factory GuestSections.fromJson(Object? json) {
     if (json is! Map) return const GuestSections();
-    return GuestSections({for (final e in json.entries) '${e.key}': e.value != false});
+    return GuestSections({for (final e in json.entries) '${e.key}': e.value});
   }
 
-  bool shows(GuestSection s) => _map[s.key] ?? true;
+  bool shows(GuestSection s) => _map[s.key] != false;
   bool get onlyTicket => GuestSection.values.every((s) => !shows(s));
 
   GuestSections withSection(GuestSection s, bool visible) => GuestSections({..._map, s.key: visible});
-  GuestSections all(bool visible) => GuestSections({for (final s in GuestSection.values) s.key: visible});
+  GuestSections all(bool visible) => GuestSections({..._map, for (final s in GuestSection.values) s.key: visible});
 
-  Map<String, bool> toJson() => {for (final s in GuestSection.values) s.key: shows(s)};
+  bool flag(String key, {required bool fallback}) {
+    final v = _map[key];
+    return v is bool ? v : fallback;
+  }
+
+  GuestSections withOption(String key, Object value) => GuestSections({..._map, key: value});
+
+  /// Mesa: 'now' (já), 'week' (1 semana antes) ou 'day' (no dia).
+  String get tableReveal => switch (_map['opt_table_reveal']) { 'week' => 'week', 'day' => 'day', _ => 'now' };
+  bool get tableMates => flag('opt_table_mates', fallback: true);
+  bool get galleryUpload => flag('opt_gallery_upload', fallback: true);
+  bool get galleryOnDay => flag('opt_gallery_on_day', fallback: false);
+  bool get groupsCreate => flag('opt_groups_create', fallback: true);
+  bool get kidsFree => flag('opt_kids_free', fallback: false);
+  bool get companionDetails => flag('opt_companion_details', fallback: true);
+
+  /// A mesa já se mostra ao convidado, dada a data do evento.
+  bool tableVisible(DateTime? eventDate) {
+    if (eventDate == null || tableReveal == 'now') return true;
+    final now = DateTime.now();
+    final day = DateTime(eventDate.year, eventDate.month, eventDate.day);
+    final today = DateTime(now.year, now.month, now.day);
+    return tableReveal == 'day' ? !today.isBefore(day) : !today.isBefore(day.subtract(const Duration(days: 7)));
+  }
+
+  /// A galeria já abriu para os convidados.
+  bool galleryOpen(DateTime? eventDate) {
+    if (!galleryOnDay || eventDate == null) return true;
+    final now = DateTime.now();
+    return !DateTime(now.year, now.month, now.day).isBefore(DateTime(eventDate.year, eventDate.month, eventDate.day));
+  }
+
+  Map<String, Object?> toJson() => {..._map, for (final s in GuestSection.values) s.key: shows(s)};
 }
 
 class MyTicket {
