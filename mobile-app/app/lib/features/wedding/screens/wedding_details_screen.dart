@@ -2322,7 +2322,7 @@ List<_TodoItem> _todoItems(WidgetRef ref) {
       '$noAnswer sem resposta',
       'Convidados que ainda não responderam',
       'Lembrar',
-      (context, ref) => context.push('/guests'),
+      (context, ref) => _openRemind(context, ref),
     ));
   }
   if (task != null) {
@@ -2719,6 +2719,153 @@ class _InviteCodeCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Lembrar" quem não respondeu (migração 165, pedido 2026-11-08): quem
+/// tem conta na app recebe notificação e push; quem não tem recebe o
+/// convite por mensagem.
+Future<void> _openRemind(BuildContext context, WidgetRef ref) async {
+  final wedding = ref.read(weddingControllerProvider).wedding;
+  if (wedding == null) return;
+  await showIslandSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (sheet) => _RemindSheet(wedding: wedding),
+  );
+}
+
+class _RemindSheet extends StatefulWidget {
+  final Wedding wedding;
+  const _RemindSheet({required this.wedding});
+  @override
+  State<_RemindSheet> createState() => _RemindSheetState();
+}
+
+class _RemindSheetState extends State<_RemindSheet> {
+  Map<String, dynamic>? _summary;
+  bool _failed = false;
+  bool _sending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final r = await supabase.rpc('rsvp_reminder_summary', params: {'p_wedding': widget.wedding.id});
+      if (mounted) setState(() => _summary = Map<String, dynamic>.from(r as Map));
+    } catch (_) {
+      if (mounted) setState(() => _failed = true);
+    }
+  }
+
+  int _n(String k) => (_summary?[k] as num?)?.toInt() ?? 0;
+
+  Future<void> _remind() async {
+    setState(() => _sending = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final sent = await supabase.rpc('remind_pending_guests', params: {'p_wedding': widget.wedding.id}) as int? ?? 0;
+      messenger.showSnackBar(SnackBar(
+        content: Text(sent == 0
+            ? 'Já foram lembrados nas últimas 24 h.'
+            : 'Lembrete enviado a $sent ${sent == 1 ? 'convidado' : 'convidados'} na app.'),
+      ));
+      await _load();
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível enviar. Tenta outra vez.')));
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pending = _n('pending');
+    final withApp = _n('with_app');
+    final canRemind = _n('can_remind');
+    final withoutApp = _n('without_app');
+    Widget block({required IconData icon, required String title, required String sub, required Widget action}) => Container(
+          padding: const EdgeInsets.all(14),
+          decoration: _card(),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(children: [
+              Icon(icon, color: _green),
+              const SizedBox(width: 10),
+              Expanded(child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            ]),
+            const SizedBox(height: 4),
+            Text(sub, style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
+            const SizedBox(height: 12),
+            action,
+          ]),
+        );
+    ButtonStyle filled() => FilledButton.styleFrom(
+          backgroundColor: _green,
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(46),
+          shape: const StadiumBorder(),
+          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+        );
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text(
+          _summary == null ? 'Lembrar quem não respondeu' : '$pending sem resposta',
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink),
+        ),
+        const SizedBox(height: 14),
+        if (_summary == null && !_failed)
+          const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
+        else ...[
+          if (!_failed)
+            block(
+              icon: Icons.notifications_active_outlined,
+              title: '$withApp ${withApp == 1 ? 'tem' : 'têm'} a app',
+              sub: canRemind == withApp
+                  ? 'Recebem uma notificação no telemóvel a pedir a resposta.'
+                  : canRemind == 0
+                      ? 'Já foram lembrados nas últimas 24 h. Podes voltar a lembrar amanhã.'
+                      : '$canRemind ainda não foram lembrados hoje.',
+              action: FilledButton.icon(
+                onPressed: _sending || canRemind == 0 ? null : _remind,
+                icon: const Icon(Icons.send_rounded, size: 18),
+                label: Text(canRemind == 0 ? 'Lembrete enviado' : 'Enviar lembrete na app'),
+                style: filled(),
+              ),
+            ),
+          const SizedBox(height: 12),
+          block(
+            icon: Icons.ios_share,
+            title: _failed ? 'Enviar o convite outra vez' : '$withoutApp sem a app',
+            sub: 'Envia-lhes o convite por WhatsApp ou mensagem. Respondem pelo link, sem conta.',
+            action: OutlinedButton.icon(
+              onPressed: () => shareWeddingInvite(context, widget.wedding),
+              icon: const Icon(Icons.ios_share, size: 18),
+              label: const Text('Enviar convite por mensagem'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.ink,
+                side: const BorderSide(color: Color(0xFFDCD8CE), width: 1.5),
+                minimumSize: const Size.fromHeight(46),
+                shape: const StadiumBorder(),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.push('/guests');
+            },
+            child: const Text('Ver a lista de convidados'),
+          ),
+        ],
+      ]),
     );
   }
 }

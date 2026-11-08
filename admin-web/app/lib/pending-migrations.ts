@@ -159,6 +159,12 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "156",
     check: { kind: "column", table: "chat_groups", column: "hosts_guest_id" },
   },
+  {
+    file: "165_rsvp_reminders.sql",
+    title: "Lembrar quem não respondeu",
+    what: "O botão Lembrar envia notificação e push aos convidados com app que ainda não responderam (no máximo 1 vez a cada 24 h).",
+    check: { kind: "column", table: "guests", column: "last_reminded_at" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
