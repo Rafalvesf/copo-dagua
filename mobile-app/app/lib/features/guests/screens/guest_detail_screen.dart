@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import '../../../core/guest_home/guest_home_providers.dart' show guestCompanionsProvider, ageGroupLabel;
 import 'package:flutter/services.dart';
@@ -62,7 +63,7 @@ class _GuestDetailHeader extends ConsumerWidget {
 
   Future<void> _copyInviteLink(BuildContext context) async {
     final link = publicLink('/rsvp/${guest.rsvpToken}');
-    await Clipboard.setData(ClipboardData(text: link));
+    await copyText(link);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Link de convite copiado.')),

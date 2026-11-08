@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -327,7 +328,7 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
   Future<void> _copy([String? existing]) async {
     final link = existing ?? await _link();
     if (link == null) return;
-    await Clipboard.setData(ClipboardData(text: link));
+    await copyText(link);
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
   }
 

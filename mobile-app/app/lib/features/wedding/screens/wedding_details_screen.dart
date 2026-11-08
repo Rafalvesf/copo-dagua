@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -2679,7 +2680,7 @@ class _InviteCodeCard extends StatelessWidget {
                   IconButton(
                     tooltip: 'Copiar link',
                     onPressed: () {
-                      Clipboard.setData(ClipboardData(text: wedding.inviteUrl ?? code));
+                      copyText(wedding.inviteUrl ?? code);
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link do convite copiado.')));
                     },
                     style: IconButton.styleFrom(backgroundColor: _green, minimumSize: const Size(44, 44)),

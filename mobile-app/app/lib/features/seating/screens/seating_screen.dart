@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:math' as math;
 import '../../../shared/widgets/feedback.dart';
 
@@ -1430,7 +1431,7 @@ Future<void> _showMoreOptions(BuildContext context) async {
       }
       buf.writeln();
     }
-    await Clipboard.setData(ClipboardData(text: buf.toString().trim()));
+    await copyText(buf.toString().trim());
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lista das mesas copiada.')),

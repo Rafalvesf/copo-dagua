@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:async';
 
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
@@ -695,7 +696,7 @@ class _RefRow extends StatelessWidget {
           visualDensity: VisualDensity.compact,
           icon: Icon(Icons.copy_rounded, size: 18, color: AppTheme.accentOliveDark),
           onPressed: () async {
-            await Clipboard.setData(ClipboardData(text: copy!));
+            await copyText(copy!);
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Referência copiada')));
             }

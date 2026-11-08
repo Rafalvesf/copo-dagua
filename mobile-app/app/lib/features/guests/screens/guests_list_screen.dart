@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import '../widgets/join_requests_card.dart';
 import 'package:flutter/services.dart';
@@ -369,15 +370,13 @@ class InviteShareSheetState extends State<InviteShareSheet> {
   bool _codeCopied = false;
 
   Future<void> _copyLink() async {
-    await Clipboard.setData(
-      ClipboardData(text: widget.wedding.inviteUrl ?? ''),
-    );
+    await copyText(widget.wedding.inviteUrl ?? '');
     if (!mounted) return;
     setState(() => _linkCopied = true);
   }
 
   Future<void> _copyCode(String code) async {
-    await Clipboard.setData(ClipboardData(text: code));
+    await copyText(code);
     if (!mounted) return;
     setState(() => _codeCopied = true);
   }
