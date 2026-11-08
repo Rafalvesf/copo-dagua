@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/invite/public_invite.dart';
 import '../../../core/models/models.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Envelope do convite (canvas "Envelope do convite", 2026-11-07): o
 /// convidado abre o link e vê primeiro o envelope fechado; ao tocar no
