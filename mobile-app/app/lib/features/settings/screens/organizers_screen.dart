@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/public_link.dart';
 import '../../../core/wedding/organizers.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -40,8 +44,14 @@ class OrganizersScreen extends ConsumerWidget {
                         children: [
                           for (final o in list.where((o) => o.isOwner)) _OwnerTile(o),
                           const SizedBox(height: 12),
+                          // Convidar o par ou outro organizador, só por link
+                          // (pedido 2026-11-08: juntar aqui e sem email).
+                          if (mine.isOwner) ...[
+                            _InviteCard(wedding: wedding!),
+                            const SizedBox(height: 12),
+                          ],
                           if (others.isEmpty)
-                            const _Message('Ainda não há mais ninguém a organizar. Convida em Definições → Convidar outro organizador.')
+                            const _Message('Ainda não há mais ninguém a organizar.')
                           else
                             for (final o in others) ...[
                               _CollaboratorCard(organizer: o, editable: mine.isOwner, weddingId: wedding!.id),
@@ -271,6 +281,99 @@ class PermissionGate extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Convidar por link: um link por pessoa (o par, um wedding planner, a
+/// família…); quem o abre fica a organizar (migração 079/159).
+class _InviteCard extends ConsumerStatefulWidget {
+  final Wedding wedding;
+  const _InviteCard({required this.wedding});
+  @override
+  ConsumerState<_InviteCard> createState() => _InviteCardState();
+}
+
+class _InviteCardState extends ConsumerState<_InviteCard> {
+  bool _busy = false;
+
+  Future<String?> _link() async {
+    try {
+      final token = await ref.read(weddingControllerProvider.notifier).createPartnerInviteToken(widget.wedding.id);
+      return publicLink('/juntar/$token');
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível criar o link de convite.')));
+      }
+      return null;
+    }
+  }
+
+  Future<void> _share() async {
+    setState(() => _busy = true);
+    final link = await _link();
+    if (mounted) setState(() => _busy = false);
+    if (link == null) return;
+    var shared = false;
+    try {
+      final result = await SharePlus.instance.share(
+        ShareParams(text: 'Junta-te a mim para organizarmos o evento na app À Nossa!: $link', subject: 'Organiza comigo'),
+      );
+      shared = result.status != ShareResultStatus.unavailable;
+    } catch (_) {}
+    if (!shared) await _copy(link);
+  }
+
+  Future<void> _copy([String? existing]) async {
+    final link = existing ?? await _link();
+    if (link == null) return;
+    await Clipboard.setData(ClipboardData(text: link));
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isWedding = widget.wedding.eventType == EventType.wedding;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: const Color(0xFFDCD8CE)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text(isWedding ? 'Convidar o teu par ou outro organizador' : 'Convidar outro organizador',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 4),
+        const Text('Envia o link a quem vai organizar contigo. Cada link serve para uma pessoa.',
+            style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(
+            flex: 3,
+            child: FilledButton.icon(
+              onPressed: _busy ? null : _share,
+              icon: const Icon(Icons.ios_share, size: 18),
+              label: const Text('Enviar link'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.accentOliveDark,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(46),
+                shape: const StadiumBorder(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: OutlinedButton(
+              onPressed: _busy ? null : () => _copy(),
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46), shape: const StadiumBorder()),
+              child: const Text('Copiar link'),
+            ),
+          ),
+        ]),
+      ]),
     );
   }
 }

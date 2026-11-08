@@ -2586,7 +2586,7 @@ class _ManageList extends ConsumerWidget {
       (Icons.card_giftcard_outlined, 'Para os convidados', 'Programa e presentes', '/guest-page'),
       (Icons.photo_library_outlined, 'Galeria', sub('Galeria'), '/gallery'),
       (Icons.handshake_outlined, 'Serviços tratados', sub('Serviços tratados'), '/service-preferences'),
-      (Icons.group_add_outlined, 'Organizadores', 'Quem ajuda a organizar', '/organizadores'),
+      (Icons.group_add_outlined, 'Organizadores', 'Convidar o teu par ou quem ajuda', '/organizadores'),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
