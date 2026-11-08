@@ -627,7 +627,7 @@ class _ProfileHeader extends StatelessWidget {
             child: Stack(clipBehavior: Clip.none, children: [
               V2Avatar(name ?? '', size: 84, imageUrl: avatarUrl),
               if (uploading)
-                const Positioned.fill(
+                Positioned.fill(
                   child: Center(child: SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.accentOliveDark))),
                 ),
               Positioned(
