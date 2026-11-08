@@ -9,6 +9,7 @@ import '../../../core/invite/public_invite.dart';
 import '../../../core/models/models.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/wedding/pastel_colors.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -16,6 +17,7 @@ import '../../../shared/widgets/install_app_sheet.dart';
 import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/navigation_sheet.dart';
 import '../../../shared/widgets/public_state.dart';
+import '../../../shared/widgets/venue_map.dart';
 import '../../events/screens/tickets_screens.dart' show openTicketPurchase;
 import '../../guest_home/screens/guest_onboarding_wizard_screen.dart';
 import '../widgets/invite_envelope.dart';
@@ -433,38 +435,51 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                   Text(ev.address ?? ev.location!, style: const TextStyle(fontSize: AppFontSize.base, height: 1.45, color: AppTheme.inkMuted)),
                 ],
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => showNavigationSheet(
-                          context,
-                          label: ev.venue ?? ev.displayNames,
-                          address: ev.address ?? ev.location,
-                          latitude: ev.latitude,
-                          longitude: ev.longitude,
-                        ),
-                        icon: const Icon(Icons.directions_outlined, size: 18),
-                        label: const Text('Como chegar'),
-                        style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44), foregroundColor: AppTheme.ink),
+                // Mapa embutido e botões numa coluna (pedido 2026-11-08).
+                VenueMap(
+                  label: ev.venue ?? ev.displayNames,
+                  address: ev.address ?? ev.location,
+                  latitude: ev.latitude,
+                  longitude: ev.longitude,
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 48,
+                  child: FilledButton.icon(
+                    onPressed: () => showNavigationSheet(
+                      context,
+                      label: ev.venue ?? ev.displayNames,
+                      address: ev.address ?? ev.location,
+                      latitude: ev.latitude,
+                      longitude: ev.longitude,
+                    ),
+                    icon: const Icon(Icons.directions_outlined, size: 20),
+                    label: const Text('Como chegar'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.accentOliveDark,
+                      foregroundColor: Colors.white,
+                      shape: const StadiumBorder(),
+                      textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+                if ((ev.address ?? ev.location) != null) ...[
+                  const SizedBox(height: 4),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: ev.address ?? ev.location!));
+                        _snack('Morada copiada.');
+                      },
+                      icon: const Icon(Icons.copy_rounded, size: 16),
+                      label: const Text('Copiar morada'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTheme.accentOliveDark,
+                        textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 14, fontWeight: FontWeight.w700),
                       ),
                     ),
-                    if ((ev.address ?? ev.location) != null) ...[
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextButton.icon(
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: ev.address ?? ev.location!));
-                            _snack('Morada copiada.');
-                          },
-                          icon: const Icon(Icons.copy_rounded, size: 18),
-                          label: const Text('Copiar morada'),
-                          style: TextButton.styleFrom(minimumSize: const Size(0, 44), foregroundColor: AppTheme.ink),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -508,16 +523,25 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
           ),
         ],
         const SizedBox(height: 14),
-        _DetailsGrid(items: [
-          if (ev.dressCode != null) ('Dress code', ev.dressCode!),
+        // Uma linha para cada (pedido 2026-11-08).
+        _DetailsList(items: [
+          if (ev.dressCode != null || ev.themeColors.isNotEmpty)
+            (Icons.checkroom_outlined, 'Dress code', ev.dressCode ?? 'Cores do evento', ev.themeColors),
           (
+            Icons.group_outlined,
             'Acompanhantes',
             ev.maxCompanions <= 0
                 ? 'Só tu'
                 : 'Podes levar ${ev.maxCompanions == 1 ? '1 pessoa' : 'até ${ev.maxCompanions} pessoas'}',
+            const <String>[],
           ),
-          ('Entrada', ev.isPaid ? (ev.entryPrice == null ? 'Com bilhete' : '${_euros(ev.entryPrice!)} por pessoa') : 'Grátis'),
-          ('Organização', ev.displayNames),
+          (
+            Icons.confirmation_number_outlined,
+            'Entrada',
+            ev.isPaid ? (ev.entryPrice == null ? 'Com bilhete' : '${_euros(ev.entryPrice!)} por pessoa') : 'Grátis',
+            const <String>[],
+          ),
+          (Icons.favorite_border_rounded, 'Organização', ev.displayNames, const <String>[]),
         ]),
         const SizedBox(height: 14),
         _CodeBox(code: ev.code, onCopied: () => _snack('Código copiado.')),
@@ -902,36 +926,65 @@ class _Section extends StatelessWidget {
       );
 }
 
-class _DetailsGrid extends StatelessWidget {
-  final List<(String, String)> items;
-  const _DetailsGrid({required this.items});
+class _DetailsList extends StatelessWidget {
+  final List<(IconData, String, String, List<String>)> items;
+  const _DetailsList({required this.items});
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-        builder: (context, c) {
-          final w = (c.maxWidth - 10) / 2;
-          return Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              for (final (label, value) in items)
-                Container(
-                  width: w,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(label.toUpperCase(),
-                          style: const TextStyle(fontSize: 11, letterSpacing: 1.2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                      const SizedBox(height: 6),
-                      Text(value, style: const TextStyle(fontSize: 15, height: 1.35, fontWeight: FontWeight.w600, color: AppTheme.ink)),
-                    ],
-                  ),
+  Widget build(BuildContext context) => Container(
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md)),
+        child: Column(
+          children: [
+            for (final (i, (icon, label, value, colors)) in items.indexed) ...[
+              if (i > 0) const Divider(height: 1, indent: 18, endIndent: 18, color: AppTheme.borderMuted),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                child: Row(
+                  children: [
+                    Icon(icon, size: 20, color: AppTheme.accentOliveDark),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(label.toUpperCase(),
+                              style: const TextStyle(fontSize: 11, letterSpacing: 1.2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                          const SizedBox(height: 3),
+                          Text(value, style: const TextStyle(fontSize: 15, height: 1.35, fontWeight: FontWeight.w600, color: AppTheme.ink)),
+                          if (colors.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                for (final hex in colors)
+                                  Tooltip(
+                                    message: pastelName(hex) ?? hex,
+                                    child: Semantics(
+                                      label: pastelName(hex) ?? 'Cor $hex',
+                                      child: Container(
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                          color: colorFromHex(hex),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: const Color(0x1F000000)),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
+              ),
             ],
-          );
-        },
+          ],
+        ),
       );
 }
 

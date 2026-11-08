@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
@@ -610,7 +611,8 @@ class _OnboardingWizardScreenState
                   hint: 'Ex.: 25',
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   suffix: '€',
-                  autofocus: true,
+                  // Na web, o foco automático deixa o campo sem teclado no iPhone.
+                  autofocus: !kIsWeb,
                 ),
               ],
             ],
