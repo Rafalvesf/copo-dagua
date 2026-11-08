@@ -250,48 +250,16 @@ class _CoupleSettings extends ConsumerWidget {
   final bool fromGuestMode;
   const _CoupleSettings({required this.fromGuestMode});
 
-  Future<void> _invite(BuildContext context, WidgetRef ref, Wedding wedding) async {
-    final messenger = ScaffoldMessenger.of(context);
-    String link;
-    try {
-      final token = await ref.read(weddingControllerProvider.notifier).createPartnerInviteToken(wedding.id);
-      link = publicLink('/juntar/$token');
-    } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível criar o link de convite.')));
-      return;
-    }
-    var shared = false;
-    try {
-      final result = await SharePlus.instance.share(
-        ShareParams(text: 'Junta-te a mim para organizarmos o evento na app À Nossa!: $link', subject: 'Organiza comigo'),
-      );
-      shared = result.status != ShareResultStatus.unavailable;
-    } catch (_) {}
-    if (!shared) {
-      await Clipboard.setData(ClipboardData(text: link));
-      messenger.showSnackBar(const SnackBar(content: Text('Link copiado.')));
-    }
-  }
-
   List<Widget> _sections(BuildContext context, WidgetRef ref, Wedding wedding, {bool help = true, bool signOut = true}) {
     return [
       const _SectionTitle('Organização'),
       _Group(
         children: [
-          // Um link por pessoa: o par, um wedding planner, a família…
-          // (pedido 2026-11-03: "convidar um organizador não aparece").
-          // Só o organizador principal convida (migração 159).
-          if (ref.watch(myWeddingPermsProvider).value?.isOwner ?? true)
-          _Row(
-            icon: Icons.person_add_alt_outlined,
-            label: wedding.eventType == EventType.wedding ? 'Convidar o teu par ou outro organizador' : 'Convidar outro organizador',
-            value: 'Link',
-            onTap: () => _invite(context, ref, wedding),
-          ),
           // Quem organiza e o que pode fazer (migração 159).
           _Row(
             icon: Icons.admin_panel_settings_outlined,
-            label: 'Organizadores',
+            label: wedding.eventType == EventType.wedding ? 'Organizadores e o teu par' : 'Organizadores',
+            value: 'Convidar',
             onTap: () => context.push('/organizadores'),
           ),
           _Row(
