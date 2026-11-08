@@ -104,4 +104,9 @@ $$;
 revoke execute on function public.submit_rsvp_full(uuid, boolean, text, text, text, text, text, text, jsonb) from public;
 grant execute on function public.submit_rsvp_full(uuid, boolean, text, text, text, text, text, text, jsonb) to anon, authenticated;
 
+-- Marca para a página Migrações do admin (sai da lista quando corre).
+create table if not exists public.applied_migrations (id text primary key, applied_at timestamptz not null default now());
+alter table public.applied_migrations enable row level security;
+insert into public.applied_migrations (id) values ('166') on conflict do nothing;
+
 commit;

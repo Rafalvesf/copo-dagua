@@ -8,6 +8,9 @@
 export type MigrationCheck =
   | { kind: "column"; table: string; column: string }
   | { kind: "table"; table: string }
+  // Migrações que só mudam funções/permissões: cada uma insere o seu
+  // número em public.applied_migrations (desde a 166).
+  | { kind: "marker"; id: string }
   | { kind: "settings"; test: (s: Record<string, unknown>) => boolean };
 
 export type PendingMigration = {
@@ -164,6 +167,36 @@ export const MIGRATIONS: PendingMigration[] = [
     title: "Lembrar quem não respondeu",
     what: "O botão Lembrar envia notificação e push aos convidados com app que ainda não responderam (no máximo 1 vez a cada 24 h).",
     check: { kind: "column", table: "guests", column: "last_reminded_at" },
+  },
+  {
+    file: "166_kids_free_companions.sql",
+    title: "Crianças à parte nos acompanhantes",
+    what: "Com a opção «Crianças à parte», as crianças não contam para o limite de acompanhantes na resposta.",
+    check: { kind: "marker", id: "166" },
+  },
+  {
+    file: "167_export_my_data.sql",
+    title: "Descarregar os meus dados (RGPD)",
+    what: "Definições › Conta › Descarregar os meus dados devolve um ficheiro JSON com os dados da conta.",
+    check: { kind: "marker", id: "167" },
+  },
+  {
+    file: "168_data_retention.sql",
+    title: "Prazos de conservação dos dados",
+    what: "Todos os dias apaga alergias e pedidos de entrada 90 dias após o evento, passos sem conta aos 90 dias e dados de utilização aos 24 meses.",
+    check: { kind: "marker", id: "168" },
+  },
+  {
+    file: "169_invite_theme_colors.sql",
+    title: "Cores do evento no convite",
+    what: "O convite público mostra as cores escolhidas pelo organizador no dress code.",
+    check: { kind: "marker", id: "169" },
+  },
+  {
+    file: "170_rls_helpers_anon.sql",
+    title: "Sem erros de permissão sem sessão (Sentry)",
+    what: "As funções usadas nas regras de acesso podem correr sem sessão (convite público, sessão a restaurar), em vez de dar «permission denied».",
+    check: { kind: "marker", id: "170" },
   },
 ];
 

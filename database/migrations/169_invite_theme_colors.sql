@@ -37,4 +37,9 @@ language sql stable security definer set search_path = public, pg_temp as $$
   where w.guest_code = upper(trim(p_code));
 $$;
 
+-- Marca para a página Migrações do admin (sai da lista quando corre).
+create table if not exists public.applied_migrations (id text primary key, applied_at timestamptz not null default now());
+alter table public.applied_migrations enable row level security;
+insert into public.applied_migrations (id) values ('169') on conflict do nothing;
+
 commit;
