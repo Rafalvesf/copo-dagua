@@ -124,8 +124,8 @@ class ProError implements Exception {
   final String code;
   const ProError(this.code);
   String get message => switch (code) {
-        'already_pro' => 'Já és Verificado.',
-        'pro_disabled' => 'O Verificado não está disponível de momento.',
+        'already_pro' => 'Já és Premium.',
+        'pro_disabled' => 'O Premium não está disponível de momento.',
         'portal_unavailable' => 'Não foi possível abrir a gestão da subscrição. Fala connosco no suporte.',
         'no_subscription' => 'Não tens uma subscrição para gerir.',
         _ => 'Não foi possível abrir o pagamento. Tenta novamente.',
