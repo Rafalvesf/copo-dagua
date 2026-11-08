@@ -123,7 +123,7 @@ class _AdminMessageScreenState extends State<AdminMessageScreen> {
                               Text(_date(m['created_at'] as String?),
                                   style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
                               const SizedBox(height: 12),
-                              SelectableText(m['body'] as String? ?? '',
+                              Text(m['body'] as String? ?? '',
                                   style: const TextStyle(fontSize: AppFontSize.base, height: 1.5, color: AppTheme.ink)),
                               if (link != null && link.isNotEmpty) ...[
                                 const SizedBox(height: 16),

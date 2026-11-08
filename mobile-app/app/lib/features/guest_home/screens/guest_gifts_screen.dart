@@ -76,7 +76,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                 color: AppTheme.accentTint,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
-              child: SelectableText(
+              child: Text(
                 iban,
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, letterSpacing: 0.5),
               ),

@@ -166,7 +166,7 @@ class _Orders extends ConsumerWidget {
                     style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
                 const SizedBox(height: 8),
                 const Text('Enviar para', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                SelectableText(
+                Text(
                   o.deliveryAddress?.trim().isNotEmpty == true ? o.deliveryAddress! : 'O cliente ainda não indicou a morada. Fala com ele no chat.',
                   style: const TextStyle(fontSize: 14, height: 1.35, color: AppTheme.ink),
                 ),

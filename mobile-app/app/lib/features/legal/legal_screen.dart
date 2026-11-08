@@ -37,7 +37,7 @@ class LegalScreen extends StatelessWidget {
                           style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                       for (final p in s.paragraphs) ...[
                         const SizedBox(height: 8),
-                        SelectableText(p, style: const TextStyle(fontSize: AppFontSize.base, height: 1.5, color: AppTheme.ink)),
+                        Text(p, style: const TextStyle(fontSize: AppFontSize.base, height: 1.5, color: AppTheme.ink)),
                       ],
                     ]),
                   ),

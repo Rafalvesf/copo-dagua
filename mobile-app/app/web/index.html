@@ -170,6 +170,11 @@
     }
     @keyframes ttRot { 0%, 20% { transform: rotate(-90deg) } 60%, 100% { transform: rotate(0deg) } }
   </style>
+  <style>
+    /* Sem selecionar/copiar texto fora das caixas de texto (2026-11-08). */
+    html, body, flutter-view, flt-glass-pane { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+  </style>
 </head>
 <body>
   <div id="tt-splash" role="img" aria-label="À Nossa!">
