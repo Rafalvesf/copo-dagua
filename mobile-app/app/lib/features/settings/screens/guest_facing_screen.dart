@@ -814,22 +814,6 @@ class _Moment {
   }
 }
 
-class _Caps extends StatelessWidget {
-  final String text;
-  const _Caps(this.text, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 26, 0, 10),
-      child: Text(
-        text.toUpperCase(),
-        style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: _caps),
-      ),
-    );
-  }
-}
-
 /// Campo cinzento sem contorno, como nos onboardings.
 class _Field extends StatelessWidget {
   final TextEditingController controller;
