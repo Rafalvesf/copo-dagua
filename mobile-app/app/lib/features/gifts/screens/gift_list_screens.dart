@@ -11,6 +11,8 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../partners/screens/partners_list_screen.dart' show FeaturedOverlayCard;
+import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/v2_kit.dart' show softCard;
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 
 /// Lista de presentes (migração 160).
@@ -504,127 +506,112 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
       ..._added,
       for (final i in list ?? const <GiftItem>[]) if (i.productId != null) i.productId!,
     };
+    // Igual à aba Empresas (pedido 2026-11-08): pesquisa em pílula com um
+    // botão redondo ao lado (a vossa lista), "Em destaque", "N produtos" e
+    // cartões em lista com foto à esquerda.
+    final pill = OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.pill), borderSide: BorderSide.none);
     return Column(children: [
       Padding(
-        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 8),
-        child: TextField(
-          decoration: const InputDecoration(prefixIcon: Icon(Icons.search_rounded), hintText: 'Procurar: cerâmica, mantas, vinho…'),
-          textInputAction: TextInputAction.search,
-          onSubmitted: (v) => setState(() => _query = v.trim()),
-        ),
-      ),
-      if (widget.showListLink && weddingId != null)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 8),
-          child: Material(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            child: ListTile(
-              onTap: () => context.push('/gift-list'),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-              leading: CircleAvatar(backgroundColor: _green, child: const Icon(Icons.checklist_rtl_rounded, color: Colors.white, size: 20)),
-              title: const Text('A vossa lista de presentes', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              subtitle: Text(
-                list == null || list.isEmpty
-                    ? 'Desejos e produtos'
-                    : '${list.length} ${list.length == 1 ? 'presente' : 'presentes'} · ${list.where((i) => i.complete).length} oferecidos',
+        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),
+        child: Row(children: [
+          Expanded(
+            child: Container(
+              decoration: softCard(radius: AppRadius.pill),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Cerâmica, mantas, vinho…',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: pill,
+                  enabledBorder: pill,
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    borderSide: BorderSide(color: AppTheme.accentOliveDark),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                textInputAction: TextInputAction.search,
+                onSubmitted: (v) => setState(() => _query = v.trim()),
               ),
-              trailing: const Icon(Icons.chevron_right_rounded),
             ),
           ),
-        ),
+          if (widget.showListLink && weddingId != null) ...[
+            const SizedBox(width: 10),
+            Tooltip(
+              message: 'A vossa lista de presentes',
+              child: SnappyTap(
+                onTap: () => context.push('/gift-list'),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: softCard(radius: 999),
+                  child: Badge(
+                    isLabelVisible: (list?.length ?? 0) > 0,
+                    backgroundColor: AppTheme.accentOliveDark,
+                    label: Text('${list?.length ?? 0}'),
+                    child: const Icon(Icons.checklist_rtl_rounded, size: 20, color: AppTheme.ink),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ]),
+      ),
       Expanded(
         child: products.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, s) => const _Info('Não foi possível carregar a loja.'),
           data: (items) => items.isEmpty
               ? const _Info('Ainda não há produtos. Os parceiros juntam-nos na sua Loja.')
-              : CustomScrollView(slivers: [
-                  if (_query.isEmpty && featured(items).isNotEmpty)
-                    SliverToBoxAdapter(
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 12),
-                          child: Text('Em destaque',
-                              style: AppTypography.displaySerif(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                        ),
-                        SizedBox(
-                          height: FeaturedOverlayCard.height,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            clipBehavior: Clip.none,
-                            padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                            itemCount: featured(items).length,
-                            separatorBuilder: (context, i) => const SizedBox(width: 10),
-                            itemBuilder: (context, i) {
-                              final p = featured(items)[i];
-                              return _FeaturedProductCard(
-                                product: p,
-                                added: inList.contains(p.id),
-                                onTap: () => _showProduct(p, weddingId, inList.contains(p.id)),
-                              );
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 18, AppTheme.screenMargin, 12),
-                          child: Text('${items.length} ${items.length == 1 ? 'produto' : 'produtos'}',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                        ),
-                      ]),
-                    ),
-                  SliverPadding(
-                  padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, widget.bottomPadding),
-                  sliver: SliverGrid.builder(
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 240,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.62,
-                  ),
-                  itemCount: items.length,
-                  itemBuilder: (context, n) {
-                    final p = items[n];
-                    final added = inList.contains(p.id);
-                    return Material(
-                      color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                      clipBehavior: Clip.antiAlias,
-                      child: InkWell(
-                        onTap: () => _showProduct(p, weddingId, added),
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                          AspectRatio(
-                            aspectRatio: 1,
-                            child: p.photoUrl == null
-                                ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, size: 40, color: _green))
-                                : Image.network(p.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text(p.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                                Text('${p.partnerName}${p.city != null ? ' · ${p.city}' : ''}',
-                                    maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                                const Spacer(),
-                                Row(children: [
-                                  Expanded(child: Text(giftEuros(p.price), style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.ink))),
-                                  IconButton.filledTonal(
-                                    tooltip: added ? 'Na lista' : 'Pôr na lista',
-                                    onPressed: weddingId == null || added || !p.inStock ? null : () => _add(p, weddingId),
-                                    icon: Icon(added ? Icons.check_rounded : Icons.add_rounded),
-                                  ),
-                                ]),
-                              ]),
-                            ),
-                          ),
-                        ]),
+              : ListView(
+                  padding: EdgeInsets.fromLTRB(0, 12, 0, widget.bottomPadding),
+                  children: [
+                    if (_query.isEmpty && featured(items).isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, 12),
+                        child: Text('Em destaque',
+                            style: AppTypography.displaySerif(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                       ),
-                    );
-                  },
-                  ),
-                  ),
-                ]),
+                      SizedBox(
+                        height: FeaturedOverlayCard.height,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          clipBehavior: Clip.none,
+                          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                          itemCount: featured(items).length,
+                          separatorBuilder: (context, i) => const SizedBox(width: 10),
+                          itemBuilder: (context, i) {
+                            final p = featured(items)[i];
+                            return _FeaturedProductCard(
+                              product: p,
+                              added: inList.contains(p.id),
+                              onTap: () => _showProduct(p, weddingId, inList.contains(p.id)),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, 12),
+                      child: Text('${items.length} ${items.length == 1 ? 'produto' : 'produtos'}',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    ),
+                    for (final p in items)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 12),
+                        child: _ProductRow(
+                          product: p,
+                          added: inList.contains(p.id),
+                          canAdd: weddingId != null && p.inStock,
+                          onTap: () => _showProduct(p, weddingId, inList.contains(p.id)),
+                          onAdd: () => _add(p, weddingId!),
+                        ),
+                      ),
+                  ],
+                ),
         ),
       ),
     ]);
@@ -637,6 +624,72 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
     int score(ShopProduct p) => (pro.contains(p.partnerId) ? 2 : 0) + (p.photoUrl != null ? 1 : 0);
     final list = all.where((p) => p.inStock).toList()..sort((a, b) => score(b).compareTo(score(a)));
     return list.length < 3 ? const [] : list.take(6).toList();
+  }
+}
+
+/// Produto em lista, com o mesmo cartão dos parceiros (foto à esquerda,
+/// nome, loja, preço a verde e um botão redondo à direita).
+class _ProductRow extends StatelessWidget {
+  final ShopProduct product;
+  final bool added;
+  final bool canAdd;
+  final VoidCallback onTap;
+  final VoidCallback onAdd;
+  const _ProductRow({required this.product, required this.added, required this.canAdd, required this.onTap, required this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = product;
+    return SnappyTap(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: softCard(radius: 22),
+        child: Row(children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              width: 76,
+              height: 76,
+              child: p.photoUrl == null
+                  ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, color: _green))
+                  : Image.network(p.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(p.title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink)),
+              const SizedBox(height: 2),
+              Text('${p.partnerName}${p.city != null ? ' · ${p.city}' : ''}', maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12)),
+              const SizedBox(height: 6),
+              Text(p.inStock ? giftEuros(p.price) : 'Esgotado',
+                  style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 13)),
+            ]),
+          ),
+          const SizedBox(width: 8),
+          Tooltip(
+            message: added ? 'Na vossa lista' : 'Pôr na lista',
+            child: SnappyTap(
+              onTap: added || !canAdd ? null : onAdd,
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: added ? AppTheme.accentOliveDark : Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: const [BoxShadow(color: Color(0x14171713), blurRadius: 10, offset: Offset(0, 3))],
+                ),
+                child: Icon(added ? Icons.check_rounded : Icons.add_rounded,
+                    size: 19, color: added ? Colors.white : (canAdd ? AppTheme.accentOliveDark : AppTheme.inkMuted)),
+              ),
+            ),
+          ),
+        ]),
+      ),
+    );
   }
 }
 
