@@ -67,13 +67,13 @@ export async function updateGrowthSettings(
   for (const k of ints) {
     if (!Number.isInteger(n(k)) || n(k) < 0) return { error: "Valores inválidos — confirma os números introduzidos." };
   }
-  if (n("pro_referral_free_every") < 1) return { error: "“Verificado: a cada N clientes” tem de ser pelo menos 1." };
-  if (n("pro_fee_discount") > 10) return { error: "O desconto do Verificado não pode passar de 10%." };
+  if (n("pro_referral_free_every") < 1) return { error: "“Premium: a cada N clientes” tem de ser pelo menos 1." };
+  if (n("pro_fee_discount") > 10) return { error: "O desconto do Premium não pode passar de 10%." };
   if (n("referral_free_every") < 1) return { error: "“A cada N clientes” tem de ser pelo menos 1." };
   for (const k of ["referral_min_booking", "pro_price_monthly", "pro_price_yearly", "gift_fee_percentage", "pro_fee_discount", "pro_promotion_extra_pct"]) {
     if (!Number.isFinite(n(k)) || n(k) < 0) return { error: "Valores inválidos — confirma os números introduzidos." };
   }
-  if (n("pro_price_monthly") < 1 || n("pro_price_yearly") < 1) return { error: "Os preços do Verificado têm de ser pelo menos 1 €." };
+  if (n("pro_price_monthly") < 1 || n("pro_price_yearly") < 1) return { error: "Os preços do Premium têm de ser pelo menos 1 €." };
   if (n("gift_fee_percentage") > 30) return { error: "A comissão da loja não pode passar de 30%." };
 
   const { error } = await supabase

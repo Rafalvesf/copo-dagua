@@ -73,7 +73,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 6),
                                   child: Text(
-                                    '${pro.products} de ${pro.freeShopProducts} produtos. Com o Verificado não há limite ›',
+                                    '${pro.products} de ${pro.freeShopProducts} produtos. Com o Premium não há limite ›',
                                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: green),
                                   ),
                                 ),
@@ -274,7 +274,7 @@ class _ProductSheetState extends ConsumerState<_ProductSheet> {
       // Sem Pro há um limite de produtos (migração 161).
       if (mounted) {
         setState(() => _error = e.message.contains('shop_limit')
-            ? 'Sem o Verificado podes ter até ${ref.read(myPartnerProProvider).value?.freeShopProducts ?? 5} produtos. Passa a Verificado para não teres limites.'
+            ? 'Sem o Premium podes ter até ${ref.read(myPartnerProProvider).value?.freeShopProducts ?? 5} produtos. Passa a Premium para não teres limites.'
             : 'Não foi possível guardar. Tenta outra vez.');
       }
     } catch (_) {

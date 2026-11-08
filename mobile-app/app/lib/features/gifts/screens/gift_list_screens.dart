@@ -617,7 +617,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
     ]);
   }
 
-  /// "Em destaque" (como nas empresas, 2026-11-07): lojas Verificado
+  /// "Em destaque" (como nas empresas, 2026-11-07): lojas Premium
   /// primeiro, depois produtos com foto; só o que há em stock, até 6.
   List<ShopProduct> featured(List<ShopProduct> all) {
     final pro = ref.watch(proPartnerIdsProvider).value ?? const <String>{};

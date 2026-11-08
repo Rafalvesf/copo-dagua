@@ -162,7 +162,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                 // resposta primeiro; depois vendas, a semana, o negócio (4
                 // mosaicos) e a montra numa lista. Canvas "Parceiros · Início".
                 // Responder primeiro sempre no topo, no Normal e no
-                // Verificado (pedido 2026-11-08: "igual nos dois").
+                // Premium (pedido 2026-11-08: "igual nos dois").
                 if (newRequests.isNotEmpty) ...[
                   _RespondFirstCard(requests: newRequests),
                   const SizedBox(height: 18),
@@ -256,8 +256,8 @@ class PartnerHomeScreen extends ConsumerWidget {
                       style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted),
                       child: Text(
                         pro.until == null
-                            ? 'Verificado ativo · Gerir subscrição'
-                            : 'Verificado até ${_shortDate(pro.until!)} · Gerir subscrição',
+                            ? 'Premium ativo · Gerir subscrição'
+                            : 'Premium até ${_shortDate(pro.until!)} · Gerir subscrição',
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),
@@ -506,7 +506,7 @@ class _ValueList extends StatelessWidget {
 
 // ---------- Pro (canvas "Parceiros · Início Normal e Pro") ----------
 
-// Verificado com o estilo da app (pedido 2026-11-08): cartão verde da
+// Premium com o estilo da app (pedido 2026-11-08): cartão verde da
 // app em vez de preto e dourado; destaques a branco.
 const _gold = Colors.white;
 const _goldInk = Color(0xFF4F6B4A);
@@ -534,9 +534,9 @@ class _ProBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.verified_rounded, size: 12, color: fg),
+          Icon(Icons.workspace_premium_rounded, size: 12, color: fg),
           const SizedBox(width: 3),
-          Text('VERIFICADO', style: TextStyle(fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.w700, color: fg)),
+          Text('PREMIUM', style: TextStyle(fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.w700, color: fg)),
         ],
       ),
     );
@@ -667,7 +667,7 @@ class _ProSavingsCard extends StatelessWidget {
               children: [
                 Icon(Icons.workspace_premium_outlined, size: 20, color: _goldInk),
                 SizedBox(width: 8),
-                Text('O VERIFICADO ESTE MÊS', style: TextStyle(fontSize: 12, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: _goldInk)),
+                Text('O PREMIUM ESTE MÊS', style: TextStyle(fontSize: 12, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: _goldInk)),
               ],
             ),
             const SizedBox(height: 10),
@@ -678,7 +678,7 @@ class _ProSavingsCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    gift ? 'poupados · Verificado oferecido' : 'poupados · o Verificado custa ${euros(price)}/mês',
+                    gift ? 'poupados · Premium oferecido' : 'poupados · o Premium custa ${euros(price)}/mês',
                     style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
                   ),
                 ),
@@ -813,7 +813,7 @@ class _ProUpsellCard extends StatelessWidget {
                 foregroundColor: _proInk,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
-              child: const Text('Ser Verificado', style: TextStyle(fontWeight: FontWeight.w700)),
+              child: const Text('Ser Premium', style: TextStyle(fontWeight: FontWeight.w700)),
             ),
           ),
         ],

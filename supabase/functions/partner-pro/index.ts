@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
           currency: "eur",
           unit_amount: cents,
           recurring: { interval },
-          product_data: { name: interval === "year" ? "À Nossa! Verificado · anual" : "À Nossa! Verificado · mensal" },
+          product_data: { name: interval === "year" ? "À Nossa! Premium · anual" : "À Nossa! Premium · mensal" },
         },
         quantity: 1,
       }],

@@ -42,17 +42,17 @@ export function GrowthForm({ settings }: { settings: GrowthSettings }) {
       <Num name="referral_free_every" label="Sem comissão a cada" suffix="clientes trazidos" value={settings.referral_free_every ?? 5} min={1} />
       <Num name="referral_min_booking" label="Primeira reserva mínima para contar" suffix="€" value={settings.referral_min_booking ?? 500} step={0.01} />
 
-      <h3 style={{ margin: "8px 0 0", fontSize: 15 }}>Plano Verificado e Loja</h3>
+      <h3 style={{ margin: "8px 0 0", fontSize: 15 }}>Plano Premium e Loja</h3>
       <label className="check">
         <input name="pro_enabled" type="checkbox" defaultChecked={settings.pro_enabled ?? true} />
-        <span>Verificado disponível para os parceiros</span>
+        <span>Premium disponível para os parceiros</span>
       </label>
-      <Num name="pro_price_monthly" label="Verificado mensal" suffix="€ / mês" value={settings.pro_price_monthly ?? 19} step={0.01} min={1} />
-      <Num name="pro_price_yearly" label="Verificado anual" suffix="€ / ano" value={settings.pro_price_yearly ?? 190} step={0.01} min={1} />
-      <Num name="pro_fee_discount" label="Verificado: desconto na comissão das reservas" suffix="% (4% → 3%)" value={settings.pro_fee_discount ?? 1} step={0.1} />
-      <Num name="pro_referral_free_every" label="Verificado: sem comissão a cada" suffix="clientes trazidos" value={settings.pro_referral_free_every ?? 3} min={1} />
-      <Num name="pro_promotion_extra_pct" label="Verificado: comissão extra do destaque" suffix="% (sem Verificado, +6%)" value={settings.pro_promotion_extra_pct ?? 4} step={0.1} />
-      <Num name="free_shop_products" label="Produtos na Loja sem Verificado" suffix="produtos" value={settings.free_shop_products ?? 5} />
+      <Num name="pro_price_monthly" label="Premium mensal" suffix="€ / mês" value={settings.pro_price_monthly ?? 19} step={0.01} min={1} />
+      <Num name="pro_price_yearly" label="Premium anual" suffix="€ / ano" value={settings.pro_price_yearly ?? 190} step={0.01} min={1} />
+      <Num name="pro_fee_discount" label="Premium: desconto na comissão das reservas" suffix="% (4% → 3%)" value={settings.pro_fee_discount ?? 1} step={0.1} />
+      <Num name="pro_referral_free_every" label="Premium: sem comissão a cada" suffix="clientes trazidos" value={settings.pro_referral_free_every ?? 3} min={1} />
+      <Num name="pro_promotion_extra_pct" label="Premium: comissão extra do destaque" suffix="% (sem Premium, +6%)" value={settings.pro_promotion_extra_pct ?? 4} step={0.1} />
+      <Num name="free_shop_products" label="Produtos na Loja sem Premium" suffix="produtos" value={settings.free_shop_products ?? 5} />
       <Num name="gift_fee_percentage" label="Comissão da Loja" suffix="% + taxa da Stripe, paga pelo parceiro" value={settings.gift_fee_percentage ?? 4} step={0.1} />
       <p className="field-hint" style={{ margin: 0 }}>
         Os preços novos aplicam-se a subscrições novas. Quem já é Pro mantém o preço até cancelar.

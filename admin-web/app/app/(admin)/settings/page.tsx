@@ -76,7 +76,7 @@ export default async function SettingsPage() {
         )}
       </Card>
 
-      <Card id="fundadores" title="Fundadores, convites e Verificado" subtitle="Incentivos para os parceiros: vagas de fundador, clientes sem comissão pelos convites e o plano Verificado.">
+      <Card id="fundadores" title="Fundadores, convites e Premium" subtitle="Incentivos para os parceiros: vagas de fundador, clientes sem comissão pelos convites e o plano Premium.">
         {sum && (
           <DetailList
             items={[
@@ -97,11 +97,11 @@ export default async function SettingsPage() {
             items={[
               { label: "Vagas de fundador", value: `${g.founder_slots}` },
               { label: "Sem comissão a cada", value: `${g.referral_free_every} clientes (mín. ${g.referral_min_booking} €)` },
-              { label: "Verificado", value: `${g.pro_price_monthly} €/mês · ${g.pro_price_yearly} €/ano · −${g.pro_fee_discount}% de comissão · cliente grátis a cada ${g.pro_referral_free_every} · destaque +${g.pro_promotion_extra_pct}%` },
+              { label: "Premium", value: `${g.pro_price_monthly} €/mês · ${g.pro_price_yearly} €/ano · −${g.pro_fee_discount}% de comissão · cliente grátis a cada ${g.pro_referral_free_every} · destaque +${g.pro_promotion_extra_pct}%` },
             ]}
           />
         )}
-        <p className="field-hint" style={{ marginTop: 12 }}>Para dar ou tirar o selo de fundador ou o Verificado a um parceiro, abre o parceiro em Parceiros.</p>
+        <p className="field-hint" style={{ marginTop: 12 }}>Para dar ou tirar o selo de fundador ou o Premium a um parceiro, abre o parceiro em Parceiros.</p>
       </Card>
 
       <Card id="manutencao" title="Modo de manutenção" subtitle="Bloqueia a app para um tipo de utilizador enquanto fazes alterações. O admin continua a funcionar.">
