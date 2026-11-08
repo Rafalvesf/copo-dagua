@@ -68,7 +68,7 @@ export async function updateGrowthSettings(
     if (!Number.isInteger(n(k)) || n(k) < 0) return { error: "Valores inválidos — confirma os números introduzidos." };
   }
   if (n("pro_referral_free_every") < 1) return { error: "“Verificado: a cada N clientes” tem de ser pelo menos 1." };
-  if (n("pro_fee_discount") > 10) return { error: "O desconto do Verificado não pode passar de 10 pontos." };
+  if (n("pro_fee_discount") > 10) return { error: "O desconto do Verificado não pode passar de 10%." };
   if (n("referral_free_every") < 1) return { error: "“A cada N clientes” tem de ser pelo menos 1." };
   for (const k of ["referral_min_booking", "pro_price_monthly", "pro_price_yearly", "gift_fee_percentage", "pro_fee_discount", "pro_promotion_extra_pct"]) {
     if (!Number.isFinite(n(k)) || n(k) < 0) return { error: "Valores inválidos — confirma os números introduzidos." };
