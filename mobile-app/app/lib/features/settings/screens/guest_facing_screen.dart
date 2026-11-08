@@ -1526,6 +1526,25 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
     }
   }
 
+  void _bump(int delta) {
+    final next = ((_priceValue ?? 0) + delta).clamp(1, 100000).toDouble();
+    setState(() => _price.text = _fmt(next));
+  }
+
+  Widget _stepBtn(IconData icon, String label, VoidCallback onTap) => Semantics(
+        button: true,
+        label: label,
+        child: SnappyTap(
+          onTap: onTap,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
+            child: Icon(icon, color: AppTheme.ink),
+          ),
+        ),
+      );
+
   static String _fmt(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2).replaceAll('.', ',');
 
   // Seletor em pílula (redesign 2026-11-08); o `hint` passa a uma linha
@@ -1626,6 +1645,34 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           const SizedBox(height: 16),
           const Text('Preço por pessoa', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           const SizedBox(height: 8),
+          // Sem teclado também (pedido 2026-11-08: "não consigo colocar o
+          // preço"): − / + e valores rápidos. O campo continua a aceitar
+          // escrever.
+          Row(children: [
+            _stepBtn(Icons.remove_rounded, 'Menos 1 €', () => _bump(-1)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final v in const [10, 15, 20, 25, 30, 50])
+                    ChoiceChip(
+                      label: Text('$v €'),
+                      selected: _priceValue == v.toDouble(),
+                      onSelected: (_) => setState(() => _price.text = '$v'),
+                      selectedColor: const Color(0xFFDDE5D3),
+                      labelStyle: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink),
+                      showCheckmark: false,
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            _stepBtn(Icons.add_rounded, 'Mais 1 €', () => _bump(1)),
+          ]),
+          const SizedBox(height: 10),
           // O próprio campo ocupa a caixa toda: qualquer toque nela abre o
           // teclado (antes só a linha do número recebia o toque).
           Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
