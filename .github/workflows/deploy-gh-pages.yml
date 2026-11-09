@@ -77,6 +77,11 @@ jobs:
           V=$(git rev-parse --short HEAD)
           sed -i "s#\"mainJsPath\":\"main.dart.js\"#\"mainJsPath\":\"main.dart.js?v=$V\"#" build/web/flutter_bootstrap.js
           sed -i "s#src=\"flutter_bootstrap.js\"#src=\"flutter_bootstrap.js?v=$V\"#" build/web/index.html build/web/404.html
+          # Ecrãs deferred desta versão também em v/<versão>/ (ver index.html).
+          sed -i "s#__TCHIN_BUILD__#$V#" build/web/index.html build/web/404.html
+          mkdir -p build/web/v/$V
+          cp build/web/main.dart.js_*.part.js build/web/v/$V/ 2>/dev/null || true
+          echo "$V" > build/web/v/current.txt
           grep -o 'main.dart.js?v=[a-z0-9]*' build/web/flutter_bootstrap.js
           grep -o 'flutter_bootstrap.js?v=[a-z0-9]*' build/web/index.html
 
@@ -96,7 +101,7 @@ jobs:
             cp -a "$OLD/backup/." "$DEST/"
           else
             ( cd "$OLD" && find . -mindepth 1 -maxdepth 1 \
-                ! -name '.git' ! -name 'backup' ! -name 'pr-*' \
+                ! -name '.git' ! -name 'backup' ! -name 'pr-*' ! -name 'v' \
                 -exec cp -a {} "$GITHUB_WORKSPACE/mobile-app/app/$DEST/" \; )
             for f in "$DEST/index.html" "$DEST/404.html"; do
               [ -f "$f" ] && sed -i 's#<base href="/copo-dagua/">#<base href="/copo-dagua/backup/">#' "$f"
@@ -109,7 +114,15 @@ jobs:
             n="${d##*/pr-}"
             if [ -d "$d" ] && [[ "$OPEN" == *" $n "* ]]; then cp -a "$d" build/web/; fi
           done
-          cat "$DEST/version.txt" 2>/dev/null || echo "backup sem version.txt (anterior a esta mudança)"
+          # Ecrãs das últimas versões (para quem tem a app aberta numa
+          # versão anterior): guarda as 8 mais recentes.
+          if [ -f "$OLD/v/list.txt" ]; then cp "$OLD/v/list.txt" build/web/v/list.txt; fi
+          echo "$(git rev-parse --short HEAD)" >> build/web/v/list.txt
+          tail -n 8 build/web/v/list.txt > build/web/v/list.tmp && mv build/web/v/list.tmp build/web/v/list.txt
+          while read -r ver; do
+            if [ -n "$ver" ] && [ -d "$OLD/v/$ver" ] && [ ! -d "build/web/v/$ver" ]; then cp -a "$OLD/v/$ver" build/web/v/; fi
+          done < build/web/v/list.txt
+                    cat "$DEST/version.txt" 2>/dev/null || echo "backup sem version.txt (anterior a esta mudança)"
 
       # Site de apresentação, separado da app (pedido 2026-11):
       # https://rafalvesf.github.io/copo-dagua/site/

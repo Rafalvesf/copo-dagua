@@ -287,6 +287,10 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
 
   void _afterEnvelope() => setState(() => _stage = (_signedIn || _answer != null) ? _Stage.invite : _Stage.gate);
 
+  bool _canPop = false;
+
+  Widget get _back => const Align(alignment: Alignment.centerLeft, child: CircleBackButton());
+
   @override
   Widget build(BuildContext context) {
     final ev0 = _event;
@@ -313,16 +317,13 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
   Widget _page(BuildContext context) {
     // Seta para voltar só quando o convite foi aberto dentro da app (ex.:
     // pré-visualização do organizador); quem abre o link não a vê.
-    final canPop = Navigator.of(context).canPop();
+    // A seta vai dentro da lista: a página toda faz scroll (pedido
+    // 2026-11-09), sem uma faixa fixa no topo.
+    _canPop = Navigator.of(context).canPop();
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
         child: Column(children: [
-          if (canPop)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Align(alignment: Alignment.centerLeft, child: CircleBackButton()),
-            ),
           Expanded(child: Builder(builder: (context) {
           if (_loading) return const Center(child: CircularProgressIndicator());
           final ev = _event;
@@ -372,6 +373,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: _revealInOrder([
+          if (_canPop) ...[_back, const SizedBox(height: 8)],
           if (widget.fromInstall) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -463,6 +465,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       // Cada parte entra a seguir à anterior (pedido 2026-11-09).
       children: _revealInOrder([
+        if (_canPop) ...[_back, const SizedBox(height: 8)],
         _InviteCard(ev: ev),
         if (ev.venue != null || ev.address != null || ev.location != null) ...[
           const SizedBox(height: 14),
@@ -660,6 +663,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 36, AppTheme.screenMargin, 28),
       children: [
+        if (_canPop) ...[_back, const SizedBox(height: 8)],
         Center(
           child: Container(
             width: 64,

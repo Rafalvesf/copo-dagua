@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'lazy_reload_stub.dart' if (dart.library.js_interop) 'lazy_reload_web.dart';
+
 /// Carrega o código de um ecrã só quando se abre (imports `deferred` no
 /// router; pedido 2026-11-09: "faz o load apenas da página que estás a ver
 /// e nunca da app toda"). Na web cada ecrã fica num ficheiro à parte; nas
@@ -34,6 +36,10 @@ class _LazyPageState extends State<LazyPage> {
       LazyPage._loaded.addAll(widget.loads);
       if (mounted) setState(() => _ready = true);
     } catch (e) {
+      // Na web isto acontece quando sai uma versão nova com a app aberta:
+      // o código antigo já não encaixa nos ficheiros novos. Recarrega a
+      // página (uma vez) para ficar com a versão nova — a ligação está boa.
+      if (reloadForNewVersion()) return;
       if (mounted) setState(() => _error = e);
     }
   }
@@ -47,10 +53,11 @@ class _LazyPageState extends State<LazyPage> {
         child: Center(
           child: TextButton(
             onPressed: () {
+              if (reloadForNewVersion()) return;
               setState(() => _error = null);
               _load();
             },
-            child: const Text('Sem ligação. Tocar para tentar outra vez.'),
+            child: const Text('Não foi possível abrir. Tocar para tentar outra vez.'),
           ),
         ),
       );
