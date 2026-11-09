@@ -6,6 +6,7 @@ import '../../../core/invite/public_invite.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/theme_color/theme_color.dart';
+import '../../../shared/widgets/buttons.dart';
 
 /// Envelope do convite (canvas "Envelope do convite", 2026-11-07): o
 /// convidado abre o link e vê primeiro o envelope fechado; ao tocar no
@@ -92,7 +93,8 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
       child: Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
-        child: LayoutBuilder(builder: (context, box) {
+        child: Stack(children: [
+          Positioned.fill(child: LayoutBuilder(builder: (context, box) {
           final w = math.min(342.0, box.maxWidth - 48);
           final h = w * 242 / 342;
           return Padding(
@@ -104,6 +106,9 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 12, letterSpacing: 2.6, fontWeight: FontWeight.w700, color: _muted),
                 ),
+                // Mais espaço em cima (o cartão sobe para lá ao abrir), mas o
+                // envelope fica perto do meio (pedido 2026-11-09: "a carta
+                // está muito para baixo").
                 const Spacer(),
                 AnimatedBuilder(
                   animation: _c,
@@ -111,9 +116,12 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                     final t = _c.value;
                     final flap = Curves.easeInOut.transform((t / 0.4).clamp(0.0, 1.0));
                     final rise = Curves.easeOutCubic.transform(((t - 0.4) / 0.6).clamp(0.0, 1.0));
+                    // Só a altura do envelope: o cartão sobe por cima, para o
+                    // espaço livre acima (Clip.none), em vez de reservar 75%
+                    // de altura vazia que empurrava a carta para baixo.
                     return SizedBox(
                       width: w,
-                      height: h + h * 0.75,
+                      height: h,
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
@@ -248,7 +256,11 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
               ],
             ),
           );
-        }),
+        })),
+          // Seta para voltar quando o convite foi aberto dentro da app.
+          if (Navigator.of(context).canPop())
+            const Positioned(left: 16, top: 8, child: CircleBackButton()),
+        ]),
       ),
     ),
     );

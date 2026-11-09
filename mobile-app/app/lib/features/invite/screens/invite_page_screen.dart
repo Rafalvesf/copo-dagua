@@ -293,10 +293,19 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
     if (!_loading && ev0 != null && _stage == _Stage.envelope) {
       return InviteEnvelopeScreen(event: ev0, onOpened: _afterEnvelope);
     }
+    // Seta para voltar só quando o convite foi aberto dentro da app (ex.:
+    // pré-visualização do organizador); quem abre o link não a vê.
+    final canPop = Navigator.of(context).canPop();
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
-        child: Builder(builder: (context) {
+        child: Column(children: [
+          if (canPop)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Align(alignment: Alignment.centerLeft, child: CircleBackButton()),
+            ),
+          Expanded(child: Builder(builder: (context) {
           if (_loading) return const Center(child: CircularProgressIndicator());
           final ev = _event;
           if (_missing || ev == null) {
@@ -317,7 +326,8 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
               },
             ),
           );
-        }),
+        })),
+        ]),
       ),
     );
   }
