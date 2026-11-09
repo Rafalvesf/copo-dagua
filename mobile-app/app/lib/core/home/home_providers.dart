@@ -37,7 +37,7 @@ final coupleBookingsProvider = FutureProvider<List<CoupleBooking>>((ref) async {
     syncPendingStripePayments(coupleId: userId),
     retryPendingRefunds(coupleId: userId),
   ]).then((done) {
-    if (done.any((d) => d)) ref.invalidateSelf();
+    if (done.any((d) => d) && ref.mounted) ref.invalidateSelf();
   }));
   const cols = 'id, wedding_id, partner_id, event_date, total_amount, deposit_amount, status, '
       'partner_profiles(business_name, cover_photo_url, partner_profile_categories(partner_categories(label_pt))), '
