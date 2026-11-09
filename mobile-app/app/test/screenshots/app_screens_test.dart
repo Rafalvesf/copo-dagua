@@ -547,6 +547,7 @@ Future<void> _shoot(
   String location, {
   Object? extra,
   Future<void> Function(WidgetTester tester)? after,
+  bool settle = true,
 }) async {
   tester.view.physicalSize = const Size(1170, 2532);
   tester.view.devicePixelRatio = 3;
@@ -584,7 +585,8 @@ Future<void> _shoot(
     }
     if (after != null) {
       await after(tester);
-      for (var i = 0; i < 10; i++) {
+      // `settle: false` fotografa a meio de uma animação.
+      for (var i = 0; settle && i < 10; i++) {
         await tester.pump(const Duration(milliseconds: 120));
       }
     }
@@ -920,6 +922,23 @@ void main() {
     await _shoot(t, '85a_convite_envelope', signedOut, '/invite/SOFIATIAGO24',
         after: (t) => t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 600))));
   });
+  for (final (name, ms) in const [('85c_selo_racha', 520), ('85d_selo_parte', 900)]) {
+    testWidgets(name, (t) async {
+      debugInviteEventLoader = (_) => sampleInvite;
+      addTearDown(() => debugInviteEventLoader = null);
+      await _shoot(t, name, signedOut, '/invite/SOFIATIAGO24', after: (t) async {
+        await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 600)));
+        for (var i = 0; i < 5; i++) {
+          await t.pump(const Duration(milliseconds: 120));
+        }
+        final f = find.text('Abrir convite');
+        if (f.evaluate().isEmpty) return;
+        await t.tap(f.first);
+        await t.pump();
+        await t.pump(Duration(milliseconds: ms));
+      }, settle: false);
+    });
+  }
   testWidgets('85b_convite_aberto', (t) async {
     debugInviteEventLoader = (_) => sampleInvite;
     addTearDown(() => debugInviteEventLoader = null);
