@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/invite/public_invite.dart';
 import '../../../core/models/models.dart';
@@ -37,7 +38,7 @@ const _weekdays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 
 const _months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
 class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1700));
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 2600));
   bool _opening = false;
 
   bool get _wedding => const {EventType.wedding, EventType.engagement, EventType.vowRenewal}.contains(widget.event.eventType);
@@ -55,6 +56,8 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
       widget.onOpened();
       return;
     }
+    // Estalo do selo: vibração curta quando parte (telemóvel).
+    Future<void>.delayed(const Duration(milliseconds: 300), HapticFeedback.mediumImpact);
     await _c.forward();
     await Future<void>.delayed(const Duration(milliseconds: 250));
     if (mounted) widget.onOpened();
@@ -114,8 +117,11 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                   animation: _c,
                   builder: (context, _) {
                     final t = _c.value;
-                    final flap = Curves.easeInOut.transform((t / 0.4).clamp(0.0, 1.0));
-                    final rise = Curves.easeOutCubic.transform(((t - 0.4) / 0.6).clamp(0.0, 1.0));
+                    // 1 · o selo parte-se (0–0,32); 2 · a aba abre (0,32–0,6);
+                    // 3 · o cartão sobe (0,6–1). Pedido 2026-11-09.
+                    final crack = (t / 0.32).clamp(0.0, 1.0);
+                    final flap = Curves.easeInOut.transform(((t - 0.32) / 0.28).clamp(0.0, 1.0));
+                    final rise = Curves.easeOutCubic.transform(((t - 0.6) / 0.4).clamp(0.0, 1.0));
                     // Só a altura do envelope: o cartão sobe por cima, para o
                     // espaço livre acima (Clip.none), em vez de reservar 75%
                     // de altura vazia que empurrava a carta para baixo.
@@ -194,14 +200,14 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                             bottom: h - h * 0.545 - w * 0.15,
                             width: w * 0.3,
                             height: w * 0.3,
-                            child: Opacity(
-                              opacity: (1 - flap * 3).clamp(0.0, 1.0),
-                              child: Semantics(
-                                button: true,
-                                label: 'Abrir o convite',
-                                child: GestureDetector(
-                                  onTap: _open,
-                                  child: CustomPaint(
+                            child: Semantics(
+                              button: true,
+                              label: 'Abrir o convite',
+                              child: GestureDetector(
+                                onTap: _open,
+                                child: _BreakingSeal(
+                                  progress: crack,
+                                  seal: CustomPaint(
                                     painter: _SealPainter(color: sealColor),
                                     child: Center(
                                       child: _wedding
@@ -210,6 +216,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                                           : Icon(Icons.wine_bar_outlined, size: w * 0.08, color: _paper),
                                     ),
                                   ),
+                                  color: sealColor,
                                 ),
                               ),
                             ),
@@ -495,4 +502,153 @@ class _SealPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SealPainter old) => old.color != color;
+}
+
+
+/// Selo de lacre que se parte ao abrir (pedido 2026-11-09).
+/// 0–0,35: aperta e treme, com uma racha a crescer de cima a baixo;
+/// 0,35–1: parte em duas metades que caem e rodam, com lascas.
+class _BreakingSeal extends StatelessWidget {
+  const _BreakingSeal({required this.progress, required this.seal, required this.color});
+
+  final double progress;
+  final Widget seal;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = progress;
+    if (p <= 0) return seal;
+    final press = (p / 0.35).clamp(0.0, 1.0);
+    final split = Curves.easeIn.transform(((p - 0.35) / 0.65).clamp(0.0, 1.0));
+    // Tremor só durante a racha.
+    final shake = p < 0.35 ? math.sin(press * math.pi * 6) * 0.05 * (1 - press * 0.5) : 0.0;
+    final scale = p < 0.35 ? 1 - 0.06 * math.sin(press * math.pi) : 1.0;
+    final fade = (1 - ((split - 0.55) / 0.45)).clamp(0.0, 1.0);
+
+    return LayoutBuilder(builder: (context, box) {
+      final size = box.biggest.shortestSide;
+      Widget half(bool left) => Transform.translate(
+            offset: Offset((left ? -1 : 1) * split * size * 0.45, split * split * size * 1.1),
+            child: Transform.rotate(
+              angle: (left ? -1 : 1) * split * 0.9,
+              child: ClipPath(clipper: _HalfClipper(left: left), child: seal),
+            ),
+          );
+      return Opacity(
+        opacity: fade,
+        child: Transform.rotate(
+          angle: shake,
+          child: Transform.scale(
+            scale: scale,
+            child: Stack(clipBehavior: Clip.none, fit: StackFit.expand, children: [
+              half(true),
+              half(false),
+              // Racha a crescer de cima para baixo.
+              if (split < 0.15)
+                IgnorePointer(child: CustomPaint(painter: _CrackPainter(progress: press))),
+              // Lascas de lacre.
+              if (split > 0)
+                IgnorePointer(child: CustomPaint(painter: _ChipsPainter(progress: split, color: color))),
+            ]),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+// Linha da racha, em proporções do selo.
+const _crackLine = [
+  Offset(0.50, 0.00), Offset(0.44, 0.17), Offset(0.57, 0.33), Offset(0.46, 0.51),
+  Offset(0.58, 0.69), Offset(0.48, 0.85), Offset(0.53, 1.00),
+];
+
+class _HalfClipper extends CustomClipper<Path> {
+  const _HalfClipper({required this.left});
+  final bool left;
+
+  @override
+  Path getClip(Size s) {
+    final path = Path();
+    final edgeX = left ? -s.width * 0.2 : s.width * 1.2;
+    path.moveTo(edgeX, -s.height * 0.2);
+    for (final o in _crackLine) {
+      path.lineTo(o.dx * s.width, o.dy * s.height);
+    }
+    path
+      ..lineTo(_crackLine.last.dx * s.width, s.height * 1.2)
+      ..lineTo(edgeX, s.height * 1.2)
+      ..close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(_HalfClipper old) => old.left != left;
+}
+
+class _CrackPainter extends CustomPainter {
+  _CrackPainter({required this.progress});
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    if (progress <= 0) return;
+    final n = _crackLine.length - 1;
+    final upto = progress * n;
+    final path = Path()..moveTo(_crackLine[0].dx * s.width, _crackLine[0].dy * s.height);
+    for (var i = 1; i <= n; i++) {
+      final a = _crackLine[i - 1];
+      final b = _crackLine[i];
+      final f = (upto - (i - 1)).clamp(0.0, 1.0);
+      if (f <= 0) break;
+      final o = Offset.lerp(a, b, f)!;
+      path.lineTo(o.dx * s.width, o.dy * s.height);
+    }
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..strokeJoin = StrokeJoin.round
+        ..color = Colors.black.withValues(alpha: 0.45),
+    );
+    canvas.drawPath(
+      path.shift(const Offset(0.8, 0.8)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8
+        ..color = Colors.white.withValues(alpha: 0.25),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CrackPainter old) => old.progress != progress;
+}
+
+class _ChipsPainter extends CustomPainter {
+  _ChipsPainter({required this.progress, required this.color});
+  final double progress;
+  final Color color;
+
+  static const _dirs = [-2.4, -1.9, -1.2, -0.6, 0.5, 1.3, 2.0, 2.6];
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final c = Offset(s.width / 2, s.height / 2);
+    final paint = Paint()..color = color.withValues(alpha: (1 - progress).clamp(0.0, 1.0));
+    for (var i = 0; i < _dirs.length; i++) {
+      final d = Offset.fromDirection(_dirs[i] - math.pi / 2, s.width * (0.35 + progress * (0.55 + (i % 3) * 0.15)));
+      final pos = c + d + Offset(0, progress * progress * s.height * 0.9);
+      final r = s.width * (0.035 + (i % 2) * 0.02) * (1 - progress * 0.4);
+      canvas.save();
+      canvas.translate(pos.dx, pos.dy);
+      canvas.rotate(progress * (i.isEven ? 3 : -3));
+      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset.zero, width: r * 2, height: r * 1.4), Radius.circular(r * 0.4)), paint);
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ChipsPainter old) => old.progress != progress;
 }
