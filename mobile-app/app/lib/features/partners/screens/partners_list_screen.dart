@@ -236,7 +236,8 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       constraints: const BoxConstraints(maxWidth: 170),
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
-                        color: AppTheme.surface,
+                        // Fundo branco (pedido 2026-11-09).
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: Row(
