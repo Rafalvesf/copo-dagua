@@ -371,7 +371,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
       padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+        children: _revealInOrder([
           if (widget.fromInstall) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -451,7 +451,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
               child: const Text('Continuar aqui'),
             ),
           ),
-        ],
+        ]),
       ),
     );
   }
