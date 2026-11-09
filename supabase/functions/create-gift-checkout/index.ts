@@ -217,8 +217,8 @@ Deno.serve(async (req) => {
       metadata: { kind: "gift_order", order_id: order.id },
       customer_email: user.email ?? undefined,
       expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
-      success_url: successUrl.replace("{ORDER_ID}", order.id),
-      cancel_url: cancelUrl,
+      success_url: (successUrl as string).replace("{ORDER_ID}", order.id),
+      cancel_url: cancelUrl as string,
     });
     await admin.from("gift_orders").update({ checkout_session_id: session.id }).eq("id", order.id);
     return json({ url: session.url, order_id: order.id });

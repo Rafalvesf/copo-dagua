@@ -205,8 +205,8 @@ Deno.serve(async (req) => {
       metadata: { kind: "event_ticket", ticket_id: ticket.id },
       customer_email: user.email ?? undefined,
       expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
-      success_url: successUrl.replace("{TICKET_ID}", ticket.id),
-      cancel_url: cancelUrl,
+      success_url: (successUrl as string).replace("{TICKET_ID}", ticket.id),
+      cancel_url: cancelUrl as string,
     });
     await admin.from("event_tickets").update({ checkout_session_id: session.id }).eq("id", ticket.id);
     return json({ url: session.url, ticket_id: ticket.id });
