@@ -130,12 +130,16 @@ final partnerAnalyticsProvider =
       : [for (final s in starts) s.subtract(Duration(days: period.days))];
   final previousStart = previousStarts.first;
 
-  final bookingRows = (await supabase
-          .from('bookings')
-          .select('total_amount, status, created_at, confirmed_at')
-          .eq('partner_id', partnerId)
-          .inFilter('status', ['confirmed', 'completed']))
-      .cast<Map<String, dynamic>>();
+  // Os três pedidos ao mesmo tempo (2026-11-09).
+  final bookingsF = supabase
+      .from('bookings')
+      .select('total_amount, status, created_at, confirmed_at')
+      .eq('partner_id', partnerId)
+      .inFilter('status', ['confirmed', 'completed'])
+      .then((r) => r); // .then arranca já o pedido
+  final requestsF = supabase.from('quote_requests').select('status, created_at').eq('partner_id', partnerId).then((r) => r);
+  final reviewsF = supabase.from('reviews').select('rating').eq('partner_id', partnerId).eq('status', 'published').then((r) => r);
+  final bookingRows = (await bookingsF).cast<Map<String, dynamic>>();
   final bookingEvents = [
     for (final r in bookingRows)
       (
@@ -144,11 +148,7 @@ final partnerAnalyticsProvider =
       ),
   ];
 
-  final requestRows = (await supabase
-          .from('quote_requests')
-          .select('status, created_at')
-          .eq('partner_id', partnerId))
-      .cast<Map<String, dynamic>>();
+  final requestRows = (await requestsF).cast<Map<String, dynamic>>();
   final requestEvents = [
     for (final r in requestRows)
       (at: _parse(r['created_at']), status: r['status'] as String),
@@ -181,12 +181,7 @@ final partnerAnalyticsProvider =
       ),
   ];
 
-  final reviewRows = (await supabase
-          .from('reviews')
-          .select('rating')
-          .eq('partner_id', partnerId)
-          .eq('status', 'published'))
-      .cast<Map<String, dynamic>>();
+  final reviewRows = (await reviewsF).cast<Map<String, dynamic>>();
   final ratings = [for (final r in reviewRows) (r['rating'] as num).toDouble()];
 
   return PartnerAnalytics(

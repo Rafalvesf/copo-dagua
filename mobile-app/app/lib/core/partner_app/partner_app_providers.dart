@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions, PostgrestException;
@@ -28,8 +30,9 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
   status,
 ) async {
   final partnerId = _partnerId(ref);
-  // Plano B do reembolso automático (2026-10-20).
-  await retryPendingRefunds(partnerId: partnerId);
+  // Plano B do reembolso automático (2026-10-20). Em segundo plano: antes
+  // atrasava o início do parceiro (2026-11-09: "demora a mostrar tudo").
+  unawaited(retryPendingRefunds(partnerId: partnerId));
   final categoryLabels = ref.watch(
     authControllerProvider.select((s) => s.profile?.categoryLabels),
   );
@@ -44,22 +47,27 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
       ? categoryLabels.first
       : null;
 
-  final quoteRows = await supabase
+  // Os dois pedidos ao mesmo tempo (antes um depois do outro).
+  final quoteFuture = supabase
       .from('quote_requests')
       .select(
         'id, partner_id, wedding_id, couple_id, event_date, location, message, status, profiles(full_name, avatar_url), weddings(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
       )
       .eq('partner_id', partnerId)
       .neq('status', 'accepted')
-      .order('created_at', ascending: false);
+      .order('created_at', ascending: false)
+      .then((r) => r); // .then arranca já o pedido (os builders são preguiçosos)
 
-  final bookingRows = await supabase
+  final bookingFuture = supabase
       .from('bookings')
       .select(
         'id, partner_id, wedding_id, couple_id, event_date, status, profiles(full_name, avatar_url), proposals(title), weddings(location, partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
       )
       .eq('partner_id', partnerId)
-      .order('event_date', ascending: false);
+      .order('event_date', ascending: false)
+      .then((r) => r);
+  final quoteRows = await quoteFuture;
+  final bookingRows = await bookingFuture;
 
   final all = [
     ...quoteRows.map((row) => _bookingFromQuoteRequestRow(row, category)),

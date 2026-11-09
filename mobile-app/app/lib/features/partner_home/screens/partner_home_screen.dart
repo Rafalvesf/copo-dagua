@@ -77,7 +77,9 @@ class PartnerHomeScreen extends ConsumerWidget {
     final isPro = pro?.active ?? false;
     // Canvas "Parceiros · Início Normal e Pro" (2026-11-07).
     final yearStats = isPro ? ref.watch(partnerAnalyticsProvider(AnalyticsPeriod.year)).value : null;
-    final proStats = isPro ? ref.watch(partnerProStatsProvider).value : null;
+    // Pedido logo (não espera por saber se é Pro): sem Pro devolve vazio.
+    final proStatsAll = ref.watch(partnerProStatsProvider).value;
+    final proStats = isPro ? proStatsAll : null;
     // Poupança da comissão −N% sobre as vendas do mês (estimativa).
     final commissionSaving = stats == null || pro == null ? 0.0 : stats.revenue * pro.feeDiscount / 100;
     return GradientScaffold(

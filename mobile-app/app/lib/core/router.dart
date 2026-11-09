@@ -44,7 +44,7 @@ import '../features/events/screens/eventos_screen.dart' deferred as l16;
 import '../features/events/screens/mode_switch_screen.dart';
 import '../features/guest_home/screens/guest_gallery_screen.dart' deferred as l17;
 import '../features/guest_home/screens/guest_gifts_screen.dart' deferred as l18;
-import '../features/guest_home/screens/guest_home_screen.dart' deferred as l19;
+import '../features/guest_home/screens/guest_home_screen.dart' as l19;
 import '../features/guest_home/screens/guest_onboarding_wizard_screen.dart' deferred as l20;
 import '../features/guest_home/screens/guest_profile_screen.dart' deferred as l21;
 import '../features/guest_home/screens/invite_token_screen.dart' deferred as l22;
@@ -54,7 +54,7 @@ import '../features/guest_home/screens/guest_wedding_details_screen.dart' deferr
 import '../features/gallery/screens/gallery_screen.dart' deferred as l26;
 import '../features/guests/screens/guest_detail_screen.dart' deferred as l27;
 import '../features/guests/screens/guests_list_screen.dart' deferred as l28;
-import '../features/home/screens/home_feed_screen.dart' deferred as l29;
+import '../features/home/screens/home_feed_screen.dart' as l29;
 import '../features/auth/screens/join_wedding_screen.dart' deferred as l30;
 import '../features/invite/screens/invite_page_screen.dart' deferred as l31;
 import '../features/invite/screens/rsvp_page_screen.dart' deferred as l32;
@@ -65,7 +65,7 @@ import '../features/partner_bookings/screens/booking_detail_screen.dart' deferre
 import '../features/partner_bookings/screens/partner_bookings_screen.dart' deferred as l36;
 import '../features/partner_bookings/screens/send_proposal_screen.dart' deferred as l37;
 import '../features/partner_calendar/screens/partner_calendar_screen.dart' deferred as l38;
-import '../features/partner_home/screens/partner_home_screen.dart' deferred as l39;
+import '../features/partner_home/screens/partner_home_screen.dart' as l39;
 import '../features/partner_messages/screens/partner_chat_thread_screen.dart' deferred as l40;
 import '../features/partner_messages/screens/partner_messages_screen.dart' deferred as l41;
 import '../features/partner_contracts/screens/partner_contracts_screen.dart' deferred as l42;
@@ -297,15 +297,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       tabRoute(
         path: '/home',
-        builder: (context, state) =>lazyPage([l29.loadLibrary], () =>  l29.HomeFeedScreen()),
+        builder: (context, state) =>l29.HomeFeedScreen(),
       ),
       tabRoute(
         path: '/partner-home',
-        builder: (context, state) =>lazyPage([l39.loadLibrary], () =>  l39.PartnerHomeScreen()),
+        builder: (context, state) =>l39.PartnerHomeScreen(),
       ),
       tabRoute(
         path: '/guest-home',
-        builder: (context, state) =>lazyPage([l19.loadLibrary], () =>  l19.GuestHomeScreen()),
+        builder: (context, state) =>l19.GuestHomeScreen(),
       ),
       tabRoute(
         // Variante com `weddingId` explícito — usada só por uma conta
@@ -316,8 +316,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         // '/guest-home'` exatamente — este caminho nunca é esse texto
         // exato, por isso não é apanhado por essa guarda.
         path: '/guest-home/:weddingId',
-        builder: (context, state) =>lazyPage([l19.loadLibrary], () => 
-            l19.GuestHomeScreen(weddingId: state.pathParameters['weddingId'])),
+        builder: (context, state) =>l19.GuestHomeScreen(weddingId: state.pathParameters['weddingId']),
       ),
       // Mensagem da equipa (admin, migrações 133/134), com resposta.
       GoRoute(path: '/mensagem/:id', builder: (context, state) =>lazyPage([l61.loadLibrary], () =>  l61.AdminMessageScreen(id: state.pathParameters['id']!))),
@@ -409,12 +408,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       tabRoute(
         // Perfil igual ao do organizador (2026-11), com a barra de convidado.
         path: '/guest-profile',
-        builder: (context, state) =>lazyPage([l29.loadLibrary], () =>  l29.HomeFeedScreen(guestMode: true)),
+        builder: (context, state) =>l29.HomeFeedScreen(guestMode: true),
       ),
       tabRoute(
         path: '/guest-profile/:weddingId',
-        builder: (context, state) =>lazyPage([l29.loadLibrary], () => 
-            l29.HomeFeedScreen(guestMode: true, guestWeddingId: state.pathParameters['weddingId'])),
+        builder: (context, state) =>l29.HomeFeedScreen(guestMode: true, guestWeddingId: state.pathParameters['weddingId']),
       ),
       // Resposta, menu, acompanhantes e mesa de um evento (antigo perfil
       // do convidado).
@@ -682,7 +680,7 @@ class _LostRoute extends StatelessWidget {
 
 /// Carrega todos os ecrãs deferred de uma vez (capturas de ecrã/testes).
 Future<void> preloadDeferredPages() async {
-  final loads = <Future<void> Function()>[l1.loadLibrary, l2.loadLibrary, l3.loadLibrary, l4.loadLibrary, l5.loadLibrary, l6.loadLibrary, l7.loadLibrary, l8.loadLibrary, l9.loadLibrary, l10.loadLibrary, l11.loadLibrary, l12.loadLibrary, l13.loadLibrary, l14.loadLibrary, l15.loadLibrary, l16.loadLibrary, l17.loadLibrary, l18.loadLibrary, l19.loadLibrary, l20.loadLibrary, l21.loadLibrary, l22.loadLibrary, l23.loadLibrary, l24.loadLibrary, l25.loadLibrary, l26.loadLibrary, l27.loadLibrary, l28.loadLibrary, l29.loadLibrary, l30.loadLibrary, l31.loadLibrary, l32.loadLibrary, l33.loadLibrary, l34.loadLibrary, l35.loadLibrary, l36.loadLibrary, l37.loadLibrary, l38.loadLibrary, l39.loadLibrary, l40.loadLibrary, l41.loadLibrary, l42.loadLibrary, l43.loadLibrary, l44.loadLibrary, l45.loadLibrary, l46.loadLibrary, l47.loadLibrary, l48.loadLibrary, l49.loadLibrary, l50.loadLibrary, l51.loadLibrary, l52.loadLibrary, l53.loadLibrary, l54.loadLibrary, l55.loadLibrary, l56.loadLibrary, l57.loadLibrary, l58.loadLibrary, l59.loadLibrary, l60.loadLibrary, l61.loadLibrary, l62.loadLibrary];
+  final loads = <Future<void> Function()>[l1.loadLibrary, l2.loadLibrary, l3.loadLibrary, l4.loadLibrary, l5.loadLibrary, l6.loadLibrary, l7.loadLibrary, l8.loadLibrary, l9.loadLibrary, l10.loadLibrary, l11.loadLibrary, l12.loadLibrary, l13.loadLibrary, l14.loadLibrary, l15.loadLibrary, l16.loadLibrary, l17.loadLibrary, l18.loadLibrary, l20.loadLibrary, l21.loadLibrary, l22.loadLibrary, l23.loadLibrary, l24.loadLibrary, l25.loadLibrary, l26.loadLibrary, l27.loadLibrary, l28.loadLibrary, l30.loadLibrary, l31.loadLibrary, l32.loadLibrary, l33.loadLibrary, l34.loadLibrary, l35.loadLibrary, l36.loadLibrary, l37.loadLibrary, l38.loadLibrary, l40.loadLibrary, l41.loadLibrary, l42.loadLibrary, l43.loadLibrary, l44.loadLibrary, l45.loadLibrary, l46.loadLibrary, l47.loadLibrary, l48.loadLibrary, l49.loadLibrary, l50.loadLibrary, l51.loadLibrary, l52.loadLibrary, l53.loadLibrary, l54.loadLibrary, l55.loadLibrary, l56.loadLibrary, l57.loadLibrary, l58.loadLibrary, l59.loadLibrary, l60.loadLibrary, l61.loadLibrary, l62.loadLibrary];
   await Future.wait([for (final l in loads) l()]);
   LazyPage.markLoaded(loads);
 }
