@@ -12,6 +12,8 @@ class LazyPage extends StatefulWidget {
 
   static final Set<Object> _loaded = {};
 
+  static void markLoaded(Iterable<Future<void> Function()> loads) => _loaded.addAll(loads);
+
   @override
   State<LazyPage> createState() => _LazyPageState();
 }

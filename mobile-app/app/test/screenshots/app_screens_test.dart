@@ -562,6 +562,7 @@ Future<void> _shoot(
   };
   debugDisableShadows = false;
   try {
+    await tester.runAsync(preloadDeferredPages);
     await tester.pumpWidget(
       ProviderScope(
         overrides: _overrides(auth),
@@ -620,6 +621,7 @@ Future<void> _shootTransition(
   };
   debugDisableShadows = false;
   try {
+    await tester.runAsync(preloadDeferredPages);
     await tester.pumpWidget(ProviderScope(overrides: _overrides(auth), child: const CopoDaguaApp()));
     await tester.pump(const Duration(milliseconds: 50));
     final router = GoRouter.of(tester.element(find.byType(Navigator).first));
