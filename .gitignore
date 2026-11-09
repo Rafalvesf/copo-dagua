@@ -14,3 +14,4 @@ supabase/.temp/
 # Configuração Firebase: nunca no repositório (é público)
 **/google-services.json
 **/GoogleService-Info.plist
+__pycache__/
