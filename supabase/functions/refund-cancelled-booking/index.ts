@@ -106,6 +106,9 @@ Deno.serve(async (req) => {
   // Total devolvido ao casal (o que pagou na Stripe, comissão incluída).
   let refundedCents = 0;
   let released = false;
+  // Parceiro cancela (2026-11-09): paga a taxa de serviço de cada pagamento.
+  const partnerCharges: { payment_id: string; cents: number }[] = [];
+  const byPartner = booking.status === "cancelled_by_partner";
 
   for (const p of payments) {
     const sid = p.provider_payment_id as string | null;
@@ -127,6 +130,9 @@ Deno.serve(async (req) => {
       const intent = await stripe.paymentIntents.retrieve(pi);
       // Sinal ainda cativo (2026-11-08): liberta-se o valor no cartão, sem
       // reembolso nem taxa da Stripe.
+      const commissionCents = Number(intent.metadata?.commission_cents ?? 0) ||
+        (intent.application_fee_amount ?? 0);
+      if (byPartner && commissionCents > 0) partnerCharges.push({ payment_id: p.id as string, cents: commissionCents });
       if (intent.status === "requires_capture") {
         await stripe.paymentIntents.cancel(pi, { cancellation_reason: "requested_by_customer" }, { idempotencyKey: `release-hold-${p.id}` });
         await admin
@@ -187,6 +193,27 @@ Deno.serve(async (req) => {
       }
       console.error("refund failed", p.id, msg);
       failed.push(p.id as string);
+    }
+  }
+
+  if (byPartner && partnerCharges.length > 0) {
+    const rows = partnerCharges
+      .filter((c) => refunded.includes(c.payment_id))
+      .map((c) => ({ partner_id: booking.partner_id, booking_id: bookingId, payment_id: c.payment_id, amount: c.cents / 100 }));
+    if (rows.length > 0) {
+      const { error: chErr } = await admin.from("partner_charges").upsert(rows, { onConflict: "payment_id,reason", ignoreDuplicates: true });
+      if (chErr) {
+        console.error("partner_charges insert failed", chErr);
+      } else {
+        const sum = rows.reduce((a, r) => a + r.amount, 0);
+        await admin.from("notifications").insert({
+          partner_id: booking.partner_id,
+          type: "partner_cancel_fee",
+          title: "Taxa de serviço do cancelamento",
+          body: `Cancelaste a reserva ${booking.booking_number}. A taxa de serviço (${fmtEur(sum)}) é descontada no teu próximo pagamento.`,
+          link: "/partner-payments",
+        }).then(({ error }) => error && console.error("notification failed", error));
+      }
     }
   }
 

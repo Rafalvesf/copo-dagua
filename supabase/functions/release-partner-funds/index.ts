@@ -70,8 +70,8 @@ Deno.serve(async (req) => {
       const referralFree = await isFreeReferralBooking(admin, r.booking_id);
       const fee = !referralFree && Number.isFinite(feeMeta) && feeMeta > 0 ? Math.min(feeMeta, gross) : 0;
       const keep = charge.amount_refunded > 0 ? 1 - charge.amount_refunded / charge.amount : 1;
-      const feeCents = Math.round(fee * keep);
-      const cents = Math.floor(gross * keep) - feeCents;
+      let feeCents = Math.round(fee * keep);
+      let cents = Math.floor(gross * keep) - feeCents;
       if (cents <= 0) {
         await markReleased(admin, r.payment_id, "nothing_to_release", feeCents / 100, 0);
         continue;
@@ -82,6 +82,15 @@ Deno.serve(async (req) => {
       if (acc.capabilities?.transfers !== "active") {
         await nudgePartner(admin, r);
         failed.push(r.payment_id);
+        continue;
+      }
+      // Taxas de cancelamentos do parceiro em dívida (migração 175):
+      // descontadas só agora, com a transferência garantida a seguir.
+      const owedCents = await settleCharges(admin, r.partner_id, cents);
+      feeCents += owedCents;
+      cents -= owedCents;
+      if (cents <= 0) {
+        await markReleased(admin, r.payment_id, "nothing_to_release", feeCents / 100, 0);
         continue;
       }
       const transfer = await stripe.transfers.create(
@@ -236,5 +245,18 @@ async function isFreeReferralBooking(admin: any, bookingId: string): Promise<boo
     return ref.valid === true && seq > 0 && seq % every === 0;
   } catch {
     return false;
+  }
+}
+
+// Desconta a dívida do parceiro (taxas de cancelamento) até `maxCents`.
+// deno-lint-ignore no-explicit-any
+async function settleCharges(admin: any, partnerId: string, maxCents: number): Promise<number> {
+  if (maxCents <= 0) return 0;
+  try {
+    const { data, error } = await admin.rpc("settle_partner_charges", { p_partner: partnerId, p_max: maxCents / 100 });
+    if (error) return 0;
+    return Math.round(Number(data ?? 0) * 100);
+  } catch {
+    return 0;
   }
 }

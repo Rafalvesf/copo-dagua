@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/home/home_providers.dart' show PartnerFeeConfig, partnerFeeConfigProvider;
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/payments/partner_connect.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -216,6 +217,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
           if (s.bankLast4 != null) HeroPill('IBAN •••• ${s.bankLast4}'),
         ]),
       ),
+      const _OwedNote(),
       const SizedBox(height: 14),
       if (s.manualPayouts)
         _PillButton(
@@ -531,6 +533,43 @@ class _ModeSheetState extends State<_ModeSheet> {
         TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
         FilledButton(onPressed: () => Navigator.of(context).pop(_sel), child: const Text('Guardar')),
       ],
+    );
+  }
+}
+
+
+/// Taxas de cancelamento em dívida (migração 175): descontadas nos
+/// próximos pagamentos. Sem a migração ou sem dívida, nada.
+final _owedProvider = FutureProvider.autoDispose<double>((ref) async {
+  try {
+    final rows = await supabase.from('partner_charges').select('amount, settled_amount');
+    var sum = 0.0;
+    for (final r in rows as List) {
+      sum += ((r['amount'] as num?) ?? 0).toDouble() - ((r['settled_amount'] as num?) ?? 0).toDouble();
+    }
+    return sum;
+  } catch (_) {
+    return 0;
+  }
+});
+
+class _OwedNote extends ConsumerWidget {
+  const _OwedNote();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final owed = ref.watch(_owedProvider).value ?? 0;
+    if (owed <= 0.004) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: const Color(0xFFF7EACA), borderRadius: BorderRadius.circular(14)),
+        child: Text(
+          'Taxas de serviço de reservas que cancelaste: ${euros(owed, cents: true)}. São descontadas nos próximos pagamentos.',
+          style: const TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: Color(0xFF8A4B10)),
+        ),
+      ),
     );
   }
 }
