@@ -290,9 +290,27 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
   @override
   Widget build(BuildContext context) {
     final ev0 = _event;
-    if (!_loading && ev0 != null && _stage == _Stage.envelope) {
-      return InviteEnvelopeScreen(event: ev0, onOpened: _afterEnvelope);
-    }
+    final showEnvelope = !_loading && ev0 != null && _stage == _Stage.envelope;
+    // Transição envelope → convite (pedido 2026-11-09): o convite aparece
+    // a esbater-se e a subir por cima do envelope aberto.
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 700),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeIn,
+      transitionBuilder: (child, a) => FadeTransition(
+        opacity: a,
+        child: SlideTransition(
+          position: Tween(begin: const Offset(0, 0.03), end: Offset.zero).animate(a),
+          child: child,
+        ),
+      ),
+      child: showEnvelope
+          ? KeyedSubtree(key: const ValueKey('envelope'), child: InviteEnvelopeScreen(event: ev0, onOpened: _afterEnvelope))
+          : KeyedSubtree(key: const ValueKey('page'), child: _page(context)),
+    );
+  }
+
+  Widget _page(BuildContext context) {
     // Seta para voltar só quando o convite foi aberto dentro da app (ex.:
     // pré-visualização do organizador); quem abre o link não a vê.
     final canPop = Navigator.of(context).canPop();
@@ -319,11 +337,25 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
-              child: switch (_stage) {
-                _Stage.envelope || _Stage.gate => _gate(ev),
-                _Stage.invite => _invite(ev),
-                _Stage.done => _done(ev),
-              },
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 450),
+                switchInCurve: Curves.easeOutCubic,
+                transitionBuilder: (child, a) => FadeTransition(
+                  opacity: a,
+                  child: SlideTransition(
+                    position: Tween(begin: const Offset(0, 0.02), end: Offset.zero).animate(a),
+                    child: child,
+                  ),
+                ),
+                child: KeyedSubtree(
+                  key: ValueKey(_stage == _Stage.envelope ? _Stage.gate : _stage),
+                  child: switch (_stage) {
+                    _Stage.envelope || _Stage.gate => _gate(ev),
+                    _Stage.invite => _invite(ev),
+                    _Stage.done => _done(ev),
+                  },
+                ),
+              ),
             ),
           );
         })),
@@ -429,7 +461,8 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
     final a = _answer;
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-      children: [
+      // Cada parte entra a seguir à anterior (pedido 2026-11-09).
+      children: _revealInOrder([
         _InviteCard(ev: ev),
         if (ev.venue != null || ev.address != null || ev.location != null) ...[
           const SizedBox(height: 14),
@@ -614,7 +647,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
             style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
           ),
         ],
-      ],
+      ]),
     );
   }
 
@@ -1071,6 +1104,58 @@ class _AnswerRow extends StatelessWidget {
                   textAlign: TextAlign.right, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
             ),
           ],
+        ),
+      );
+}
+
+
+/// Envolve cada parte em [_Reveal], com atraso crescente (até 7 passos).
+List<Widget> _revealInOrder(List<Widget> children) => [
+      for (var i = 0; i < children.length; i++)
+        children[i] is SizedBox ? children[i] : _Reveal(step: i ~/ 2 > 7 ? 7 : i ~/ 2, child: children[i]),
+    ];
+
+/// Entra a esbater-se e a subir 16 px, uma vez (não repete em rebuilds).
+class _Reveal extends StatefulWidget {
+  const _Reveal({required this.step, required this.child});
+  final int step;
+  final Widget child;
+
+  @override
+  State<_Reveal> createState() => _RevealState();
+}
+
+class _RevealState extends State<_Reveal> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 520));
+  late final Animation<double> _a = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(Duration(milliseconds: 250 + widget.step * 110), () {
+      if (mounted) _c.forward();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.of(context).disableAnimations) _c.value = 1;
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: _a,
+        child: widget.child,
+        builder: (context, child) => Opacity(
+          opacity: _a.value,
+          child: Transform.translate(offset: Offset(0, (1 - _a.value) * 16), child: child),
         ),
       );
 }
