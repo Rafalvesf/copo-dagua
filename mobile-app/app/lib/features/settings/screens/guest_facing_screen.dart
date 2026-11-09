@@ -1573,17 +1573,21 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
       selected: selected,
       child: SnappyTap(
         onTap: () => setState(() => _price.text = '$v'),
+        // Sem `alignment`: com ele o Container esticava-se à largura toda
+        // e cada valor ficava numa linha (iPhone, 2026-11-09).
         child: Container(
           height: 34,
           padding: const EdgeInsets.symmetric(horizontal: 14),
-          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected ? const Color(0xFFDDE5D3) : Colors.white,
             borderRadius: BorderRadius.circular(999),
             border: selected ? null : Border.all(color: const Color(0xFFDCD8CE), width: 1.5),
           ),
-          child: Text('$v €',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: selected ? const Color(0xFF3F5A3B) : AppTheme.ink)),
+          child: Center(
+            widthFactor: 1,
+            child: Text('$v €',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: selected ? const Color(0xFF3F5A3B) : AppTheme.ink)),
+          ),
         ),
       ),
     );
@@ -1710,8 +1714,10 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
                       onChanged: (_) => setState(() {}),
                       onSubmitted: (_) => _savePrice(),
                       style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                      // Sem o fundo cinzento do tema (só metade da caixa ficava cinzenta).
                       decoration: const InputDecoration(
                         hintText: '25',
+                        filled: false,
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
