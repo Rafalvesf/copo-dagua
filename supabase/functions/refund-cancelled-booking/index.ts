@@ -16,9 +16,9 @@ const fmtEur = (v: number) => {
 // - organizador cancela com 30+ dias de antecedência → o restante já
 //   pago é devolvido;
 // - parceiro cancela → reembolso sempre;
-// - o casal recebe 100%: a comissão À Nossa! é devolvida
-//   (`refund_application_fee`) e a parte do parceiro é recuperada da conta
-//   dele (`reverse_transfer`).
+// - nunca na totalidade (2026-11-09): a taxa de serviço fica sempre. Cativo
+//   → cobra-se só a taxa e o resto é libertado; já cobrado → devolve-se o
+//   resto e a parte do parceiro é recuperada da conta dele.
 //
 // A decisão "há direito a reembolso" NÃO é feita aqui: vem de
 // `booking_events.metadata.refund_required`, gravado pelas RPCs
