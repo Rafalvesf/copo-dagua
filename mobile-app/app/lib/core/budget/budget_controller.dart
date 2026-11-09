@@ -54,16 +54,18 @@ class BudgetController extends Notifier<BudgetState> {
 
   Future<void> load(Wedding wedding) async {
     state = state.copyWith(loading: true);
-    final row = await supabase
-        .from('budgets')
-        .select()
-        .eq('wedding_id', wedding.id)
-        .maybeSingle();
-    final categoryRows = await supabase
+    // Tudo ao mesmo tempo (2026-11-09: início do organizador lento).
+    final rowF = supabase.from('budgets').select().eq('wedding_id', wedding.id).maybeSingle().then((r) => r);
+    final categoryF = supabase
         .from('budget_categories')
         .select()
         .eq('wedding_id', wedding.id)
-        .order('position', ascending: true);
+        .order('position', ascending: true)
+        .then((r) => r);
+    final paymentsF = _appPaymentsByCategory(wedding.id)
+        .then<Map<(String, String), double>?>((m) => m, onError: (_) => null);
+    final row = await rowF;
+    final categoryRows = await categoryF;
 
     double total;
     if (row != null) {
@@ -87,11 +89,9 @@ class BudgetController extends Notifier<BudgetState> {
     // Pagamentos feitos na app (sinais e restantes) entram no "Gasto" —
     // pedido 2026-10-17: "o orçamento não mudou, mesmo depois de eu ter
     // pago os sinais". Antes o orçamento só somava valores escritos à mão.
-    try {
-      _mergeAppPayments(categories, await _appPaymentsByCategory(wedding.id));
-    } catch (_) {
-      // Sem acesso aos pagamentos: fica só o que foi escrito à mão.
-    }
+    // Sem acesso aos pagamentos: fica só o que foi escrito à mão.
+    final appPayments = await paymentsF;
+    if (appPayments != null) _mergeAppPayments(categories, appPayments);
 
     state = BudgetState(
       loading: false,

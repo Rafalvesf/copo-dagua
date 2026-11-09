@@ -68,20 +68,19 @@ class WeddingController extends Notifier<WeddingState> {
 
   Future<void> load(String ownerId, {String? activeId}) async {
     state = state.copyWith(loading: true);
-    final owned = (await supabase
-            .from('weddings')
-            .select()
-            .eq('owner_id', ownerId)
-            .order('created_at', ascending: false))
-        .cast<Map<String, dynamic>>();
+    // Os dois pedidos e a preferência guardada ao mesmo tempo (2026-11-09).
+    final ownedF = supabase.from('weddings').select().eq('owner_id', ownerId).order('created_at', ascending: false).then((r) => r);
+    final linksF = supabase
+        .from('wedding_collaborators')
+        .select('wedding_id')
+        .eq('user_id', ownerId)
+        .eq('status', 'active')
+        .then((r) => r);
+    final savedF = activeId != null || state.wedding != null ? Future<String?>.value(null) : _savedActiveId();
+    final owned = (await ownedF).cast<Map<String, dynamic>>();
     // O par que entrou pelo link de convite (079) não é dono — é
     // colaborador ativo do casamento do outro.
-    final links = (await supabase
-            .from('wedding_collaborators')
-            .select('wedding_id')
-            .eq('user_id', ownerId)
-            .eq('status', 'active'))
-        .cast<Map<String, dynamic>>();
+    final links = (await linksF).cast<Map<String, dynamic>>();
     final ownedIds = owned.map((r) => r['id']).toSet();
     final collabIds = [
       for (final l in links)
@@ -91,7 +90,7 @@ class WeddingController extends Notifier<WeddingState> {
         ? const <Map<String, dynamic>>[]
         : (await supabase.from('weddings').select().inFilter('id', collabIds)).cast<Map<String, dynamic>>();
     final events = [for (final r in [...owned, ...collab]) _fromRow(r)];
-    final wanted = activeId ?? state.wedding?.id ?? await _savedActiveId();
+    final wanted = activeId ?? state.wedding?.id ?? await savedF;
     final active = events.where((e) => e.id == wanted).firstOrNull ?? events.firstOrNull;
     state = WeddingState(loading: false, wedding: active, events: events);
   }

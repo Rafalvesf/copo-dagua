@@ -171,8 +171,10 @@ class TaskEngineController extends Notifier<TaskEngineState> {
     if (weddingId == null || _recomputing) return;
     _recomputing = true;
     try {
-      final ctx = await _gatherContext(weddingId);
-      final templates = await _loadTemplates();
+      final ctxF = _gatherContext(weddingId);
+      final templatesF = _loadTemplates();
+      final ctx = await ctxF;
+      final templates = await templatesF;
 
       final existingRows = await supabase
           .from('wedding_tasks')
@@ -605,61 +607,75 @@ class TaskEngineController extends Notifier<TaskEngineState> {
   }
 
   Future<_TaskContext> _gatherContext(String weddingId) async {
-    final budgetRow = await supabase
+    // Todos os pedidos arrancam já, em paralelo (2026-11-09: início do
+    // organizador lento); `.then` dispara os builders preguiçosos.
+    final budgetRowF = supabase
         .from('budgets')
         .select('wedding_id')
         .eq('wedding_id', weddingId)
-        .maybeSingle();
-
-    final guestRows = await supabase
+        .maybeSingle().then((r) => r);
+    final guestRowsF = supabase
         .from('guests')
         .select('rsvp_status')
-        .eq('wedding_id', weddingId);
+        .eq('wedding_id', weddingId).then((r) => r);
+    final seatingRowsF = supabase
+        .from('seating_tables')
+        .select('id')
+        .eq('wedding_id', weddingId).then((r) => r);
+    final prefRowsF = supabase
+        .from('wedding_service_preferences')
+        .select('partner_category_slug, preference')
+        .eq('wedding_id', weddingId).then((r) => r);
+    final favRowsF = supabase
+        .from('favorite_partners')
+        .select('partner_id')
+        .eq('wedding_id', weddingId).then((r) => r);
+    final liveBookingRowsF = supabase
+        .from('bookings')
+        .select('partner_id, status')
+        .eq('wedding_id', weddingId)
+        .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed', 'payment_overdue', 'disputed']).then((r) => r);
+    final quoteRowsF = supabase
+        .from('quote_requests')
+        .select('id, partner_id, status')
+        .eq('wedding_id', weddingId).then((r) => r);
+    final secretRowsF = supabase
+          .from('conversations')
+          .select('partner_id')
+          .eq('wedding_id', weddingId)
+          .not('private_owner', 'is', null).then<List<dynamic>>((r) => r, onError: (_) => const <dynamic>[]);
+
+    final budgetRow = await budgetRowF;
+
+    final guestRows = await guestRowsF;
     final guests = (guestRows as List).cast<Map<String, dynamic>>();
     final pendingCount = guests
         .where((g) => g['rsvp_status'] == 'pending' || g['rsvp_status'] == 'invited')
         .length;
     final confirmedCount = guests.where((g) => g['rsvp_status'] == 'confirmed').length;
 
-    final seatingRows = await supabase
-        .from('seating_tables')
-        .select('id')
-        .eq('wedding_id', weddingId);
+    final seatingRows = await seatingRowsF;
 
-    final prefRows = await supabase
-        .from('wedding_service_preferences')
-        .select('partner_category_slug, preference')
-        .eq('wedding_id', weddingId);
+    final prefRows = await prefRowsF;
     final preferences = {
       for (final r in (prefRows as List).cast<Map<String, dynamic>>())
         r['partner_category_slug'] as String: r['preference'] as String,
     };
 
-    final favRows = await supabase
-        .from('favorite_partners')
-        .select('partner_id')
-        .eq('wedding_id', weddingId);
+    final favRows = await favRowsF;
     final favPartnerIds = (favRows as List)
         .map((r) => (r as Map<String, dynamic>)['partner_id'] as String)
         .toSet();
 
     // Só contam pedidos e reservas "vivos" (2026-10-21): depois de cancelar
     // com um parceiro, as tarefas dessa categoria voltam a aparecer.
-    final liveBookingRows = await supabase
-        .from('bookings')
-        .select('partner_id, status')
-        .eq('wedding_id', weddingId)
-        .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed', 'payment_overdue', 'disputed']);
+    final liveBookingRows = await liveBookingRowsF;
     // Contratações em segredo (migração 116) não mexem nas tarefas
     // partilhadas — senão "Contratar X" aparecia feito aos outros
     // organizadores e estragava a surpresa.
     final secretPartnerIds = <String>{};
     try {
-      final secretRows = await supabase
-          .from('conversations')
-          .select('partner_id')
-          .eq('wedding_id', weddingId)
-          .not('private_owner', 'is', null);
+      final secretRows = await secretRowsF;
       for (final r in (secretRows as List).cast<Map<String, dynamic>>()) {
         secretPartnerIds.add(r['partner_id'] as String);
       }
@@ -670,10 +686,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         .toList();
     final liveBookingPartnerIds = liveBookings.map((r) => r['partner_id'] as String).toSet();
 
-    final quoteRows = await supabase
-        .from('quote_requests')
-        .select('id, partner_id, status')
-        .eq('wedding_id', weddingId);
+    final quoteRows = await quoteRowsF;
     final quoteRequests = (quoteRows as List)
         .cast<Map<String, dynamic>>()
         .where((r) => !secretPartnerIds.contains(r['partner_id']))
