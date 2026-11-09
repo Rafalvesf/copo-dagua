@@ -45,6 +45,14 @@ const _bySlug = <String, CategoryFigure>{
   'invitations': CategoryFigure(label: 'Encomenda mín.', question: 'Encomenda mínima (convites)', unit: 'convites'),
   'officiant': CategoryFigure(label: 'Cerimónia', question: 'Duração da cerimónia (minutos)', unit: 'min'),
   'rentals': CategoryFigure(label: 'Peças', question: 'Peças disponíveis', unit: 'peças'),
+  'restaurants': CategoryFigure(label: 'Grupos', question: 'Maior grupo que recebem', unit: 'pessoas', prefix: 'até'),
+  'bars_nightlife': CategoryFigure(label: 'Lotação', question: 'Lotação máxima', unit: 'pessoas', prefix: 'até'),
+  'adventure_activities': CategoryFigure(label: 'Grupos', question: 'Maior grupo por sessão', unit: 'pessoas', prefix: 'até'),
+  'experiences_tours': CategoryFigure(label: 'Grupos', question: 'Maior grupo por saída', unit: 'pessoas', prefix: 'até'),
+  'games_escape': CategoryFigure(label: 'Por sala', question: 'Jogadores por sala ou jogo', unit: 'pessoas', prefix: 'até'),
+  'lodging': CategoryFigure(label: 'Quartos', question: 'Número de quartos', unit: 'quartos'),
+  'spa_wellness': CategoryFigure(label: 'Grupos', question: 'Pessoas em simultâneo', unit: 'pessoas', prefix: 'até'),
+  'kids_entertainment': CategoryFigure(label: 'Animação', question: 'Horas de animação incluídas', unit: 'h'),
 };
 
 const _labelToSlug = <String, String>{
@@ -63,6 +71,14 @@ const _labelToSlug = <String, String>{
   'Convites': 'invitations',
   'Celebrante': 'officiant',
   'Aluguer de Material': 'rentals',
+  'Restaurantes': 'restaurants',
+  'Bares e Discotecas': 'bars_nightlife',
+  'Atividades Radicais': 'adventure_activities',
+  'Experiências e Passeios': 'experiences_tours',
+  'Jogos e Escape Rooms': 'games_escape',
+  'Alojamento': 'lodging',
+  'Spa e Bem-estar': 'spa_wellness',
+  'Animação Infantil': 'kids_entertainment',
 };
 
 const _fallback = CategoryFigure(label: 'Experiência', question: 'Eventos realizados', unit: 'eventos');

@@ -204,6 +204,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Valor fixo por transação (1 €) somado às taxas: organizador, parceiro, bilhetes e Loja. Fica editável em platform_settings.fixed_fee_cents.",
     check: { kind: "column", table: "platform_settings", column: "fixed_fee_cents" },
   },
+  {
+    file: "172_more_partner_categories.sql",
+    title: "Mais categorias de parceiros",
+    what: "Restaurantes, bares e discotecas, atividades radicais (paintball, karting, escalada…), experiências e passeios, jogos e escape rooms, alojamento, spa e animação infantil.",
+    check: { kind: "marker", id: "172" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
