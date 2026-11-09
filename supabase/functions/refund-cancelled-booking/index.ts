@@ -141,20 +141,31 @@ Deno.serve(async (req) => {
       }
       const hasTransfer = Boolean(intent.transfer_data?.destination);
       const hasFee = intent.application_fee_amount != null && intent.application_fee_amount > 0;
+      // Já cobrado e cancelado pelo organizador (2026-11-09: "não podemos
+      // aceitar reembolsos totais senão perdemos dinheiro"): devolve-se o
+      // valor do parceiro; a taxa de serviço não é reembolsável. Cativo
+      // (acima) liberta-se tudo, sem custo. Cancelado pelo parceiro:
+      // devolve-se tudo.
+      const keepFee = booking.status === "cancelled_by_couple";
+      const feeCents = Number(intent.metadata?.commission_cents ?? 0) || (hasFee ? intent.application_fee_amount! : 0);
+      const refundCents = keepFee ? Math.max(0, intent.amount - feeCents) : intent.amount;
+      if (refundCents <= 0) continue;
       await stripe.refunds.create(
         {
           payment_intent: pi,
           reason: "requested_by_customer",
+          ...(keepFee ? { amount: refundCents } : {}),
           ...(hasTransfer ? { reverse_transfer: true } : {}),
-          ...(hasFee ? { refund_application_fee: true } : {}),
+          ...(hasFee && !keepFee ? { refund_application_fee: true } : {}),
           metadata: { payment_id: p.id as string, booking_id: bookingId },
         },
         { idempotencyKey: `refund-${p.id}` },
       );
-      await reverseReleasedShare(stripe, admin, p.id as string, intent.amount, intent.amount);
+      // O parceiro devolve tudo o que recebeu deste pagamento.
+      await reverseReleasedShare(stripe, admin, p.id as string, refundCents, keepFee ? refundCents : intent.amount);
       const { error } = await admin
         .from("payments")
-        .update({ status: "refunded", refunded_amount: intent.amount / 100, updated_at: new Date().toISOString() })
+        .update({ status: "refunded", refunded_amount: refundCents / 100, updated_at: new Date().toISOString() })
         .eq("id", p.id)
         .eq("status", "paid");
       if (error) {
@@ -163,7 +174,7 @@ Deno.serve(async (req) => {
         continue;
       }
       refunded.push(p.id as string);
-      refundedCents += intent.amount;
+      refundedCents += refundCents;
     } catch (e) {
       const msg = String((e as Error).message ?? e);
       // Já reembolsado na Stripe (ex: à mão no painel) — alinha a base de dados.

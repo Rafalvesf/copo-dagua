@@ -6,7 +6,8 @@ import '../supabase/supabase_config.dart';
 /// `cancel_booking_by_partner()`); a Edge Function
 /// `refund-cancelled-booking` só executa, e é idempotente.
 /// - casal cancela com `cancellation_penalty_days` (30) ou mais dias de
-///   antecedência → devolve tudo, comissão incluída;
+///   antecedência → devolve o valor do parceiro (a taxa de serviço só
+///   volta se o pagamento ainda estiver cativo; 2026-11-09);
 /// - parceiro cancela → devolve sempre.
 
 /// Reservas já vistas como sem direito a reembolso nesta sessão — não
@@ -121,7 +122,7 @@ String coupleCancelRefundNote({required DateTime eventDate, required RefundInfo 
       final left = deadline.difference(t);
       final h = left.inHours;
       final when = h >= 1 ? '$h h' : '${left.inMinutes.clamp(1, 59)} min';
-      lines.add('Ainda estás dentro das ${info.windowHours} h depois de pagar o sinal (faltam $when): o sinal é devolvido, taxa de serviço incluída.');
+      lines.add('Ainda estás dentro das ${info.windowHours} h depois de pagar o sinal (faltam $when): o sinal é devolvido.');
     } else {
       lines.add('Já passaram mais de ${info.windowHours} h desde que pagaste o sinal: o sinal fica com o parceiro.');
     }
@@ -135,7 +136,7 @@ String coupleCancelRefundNote({required DateTime eventDate, required RefundInfo 
         : 'Faltam menos de ${info.penaltyDays} dias para o evento: o restante já pago não é devolvido.');
   }
   if (lines.isEmpty) return '';
-  return '\n\n${lines.join('\n')}${lines.any((l) => l.contains('devolvido,') || l.contains('é devolvido')) ? '\nOs reembolsos chegam em 5 a 10 dias úteis.' : ''}';
+  return '\n\n${lines.join('\n')}${lines.any((l) => l.contains('devolvido') || l.contains('devolvemos')) ? '\nSe o valor ainda estiver cativo no cartão, é libertado por inteiro. Se já tiver sido cobrado, devolvemos tudo menos a taxa de serviço, em 5 a 10 dias úteis.' : ''}';
 }
 
 /// Aviso ao cancelar a partir da decisão do servidor (migração 174: regra
@@ -150,16 +151,16 @@ Future<String?> cancelPreviewNote(String bookingId) async {
     final finalPaid = d['final_paid'] == true;
     final lines = <String>[];
     if (refundFinal || (refundDeposit && !finalPaid && d['rule'] == 'hours')) {
-      lines.add('Estás dentro do prazo de cancelamento do parceiro: devolvemos tudo o que pagaste, taxa de serviço incluída.');
+      lines.add('Estás dentro do prazo de cancelamento do parceiro: devolvemos o que pagaste.');
     } else {
       if (depositPaid) {
-        lines.add(refundDeposit ? 'O sinal é devolvido, taxa de serviço incluída.' : 'O sinal fica com o parceiro.');
+        lines.add(refundDeposit ? 'O sinal é devolvido.' : 'O sinal fica com o parceiro.');
       }
       if (finalPaid) lines.add('O restante já pago não é devolvido: passou o prazo de cancelamento do parceiro.');
     }
     if (lines.isEmpty) return '';
     final any = refundDeposit || refundFinal;
-    return '\n\n${lines.join('\n')}${any ? '\nSe ainda estiver cativo, o valor é libertado no cartão; senão, o reembolso chega em 5 a 10 dias úteis.' : ''}';
+    return '\n\n${lines.join('\n')}${any ? '\nSe o valor ainda estiver cativo no cartão, é libertado por inteiro. Se já tiver sido cobrado, devolvemos tudo menos a taxa de serviço, em 5 a 10 dias úteis.' : ''}';
   } catch (_) {
     return null;
   }
