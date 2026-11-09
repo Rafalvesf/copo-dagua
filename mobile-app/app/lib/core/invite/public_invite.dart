@@ -110,7 +110,12 @@ class InviteEvent {
       );
 }
 
+/// Só para as capturas de ecrã: devolve um convite de exemplo.
+InviteEvent? Function(String code)? debugInviteEventLoader;
+
 Future<InviteEvent?> loadInviteEvent(String code) async {
+  final debug = debugInviteEventLoader;
+  if (debug != null) return debug(code);
   try {
     final res = await supabase.rpc('get_public_event', params: {'p_code': code});
     if (res is! Map) return null;

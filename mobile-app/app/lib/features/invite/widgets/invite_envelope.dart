@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../core/invite/public_invite.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/theme_color/theme_color.dart';
 
 /// Envelope do convite (canvas "Envelope do convite", 2026-11-07): o
 /// convidado abre o link e vê primeiro o envelope fechado; ao tocar no
@@ -85,7 +86,10 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
   Widget build(BuildContext context) {
     final ev = widget.event;
     final sealColor = _wedding ? const Color(0xFF7A2E2E) : const Color(0xFF6B7A3F);
-    return Scaffold(
+    // A barra do topo fica da cor do envelope (antes ficava branca).
+    return BarColorScope(
+      color: _bg,
+      child: Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
         child: LayoutBuilder(builder: (context, box) {
@@ -246,6 +250,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
           );
         }),
       ),
+    ),
     );
   }
 }
