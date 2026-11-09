@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
       old_status: booking.status,
       new_status: booking.status,
       actor_type: "system",
-      metadata: { payment_ids: refunded, amount: total },
+      metadata: { payment_ids: refunded, amount: total, service_fee_kept: keptCents / 100 },
     }).then(({ error }) => error && console.error("booking_events insert failed", error));
     // Contratação em segredo (migração 116): só quem a fez é avisado.
     // Consulta à parte para não falhar antes de a migração correr.
