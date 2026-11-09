@@ -18,6 +18,14 @@ Color colorForCategorySlug(String slug) => switch (slug) {
   'flowers_decor' => AppColors.gray,
   'venue' => AppColors.purple,
   'rentals' => AppColors.purple,
+  'restaurants' => AppColors.yellow,
+  'bars_nightlife' => AppColors.purple,
+  'adventure_activities' => AppTheme.accentTint,
+  'experiences_tours' => AppColors.blue,
+  'games_escape' => AppColors.purple,
+  'lodging' => AppColors.blue,
+  'spa_wellness' => AppTheme.accentTint,
+  'kids_entertainment' => AppColors.yellow,
   _ => AppColors.gray,
 };
 
@@ -35,6 +43,16 @@ IconData iconForCategorySlug(String slug) => switch (slug) {
   'rentals' => Icons.chair_outlined,
   'transport' => Icons.directions_car_outlined,
   'wedding_planner' => Icons.event_note_outlined,
+  'restaurants' => Icons.restaurant_menu_rounded,
+  'bars_nightlife' => Icons.local_bar_outlined,
+  'adventure_activities' => Icons.terrain_outlined,
+  'experiences_tours' => Icons.sailing_outlined,
+  'games_escape' => Icons.extension_outlined,
+  'lodging' => Icons.hotel_outlined,
+  'spa_wellness' => Icons.spa_outlined,
+  'kids_entertainment' => Icons.child_care_outlined,
+  'bands_musicians' => Icons.queue_music_outlined,
+  'photobooth_entertainment' => Icons.photo_camera_front_outlined,
   _ => Icons.storefront_outlined,
 };
 
@@ -90,6 +108,15 @@ const companyCategories = <(String, String)>[
   ('rentals', 'Aluguer de material'),
   ('transport', 'Transporte'),
   ('wedding_planner', 'Wedding planner'),
+  // Eventos de grupo (2026-11-08).
+  ('restaurants', 'Restaurantes'),
+  ('bars_nightlife', 'Bares e discotecas'),
+  ('adventure_activities', 'Atividades radicais'),
+  ('experiences_tours', 'Experiências e passeios'),
+  ('games_escape', 'Jogos e escape rooms'),
+  ('lodging', 'Alojamento'),
+  ('spa_wellness', 'Spa e bem-estar'),
+  ('kids_entertainment', 'Animação infantil'),
 ];
 
 String? companyCategoryLabel(String? slug) =>
