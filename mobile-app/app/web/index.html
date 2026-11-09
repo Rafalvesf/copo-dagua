@@ -687,5 +687,40 @@
       window.addEventListener('focusout', function () { setTimeout(fit, 50); });
     })();
   </script>
+  <script>
+    // Barra do teclado do Safari: ⌃ ⌄ ✓ (2026-11-09). Dois campos
+    // invisíveis antes e depois da app: as setas do Safari saltam para eles
+    // e a app passa para o campo de texto anterior/seguinte (tchinKbNav).
+    // O ✓ tira o foco ao campo: a app fecha o teclado (tchinKbDone).
+    (function () {
+      var host = document.getElementById('app-host');
+      if (!host) return;
+      function mk(dir) {
+        var i = document.createElement('input');
+        i.type = 'text';
+        i.setAttribute('aria-hidden', 'true');
+        i.setAttribute('autocomplete', 'off');
+        i.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;font-size:16px;border:0;padding:0;margin:0;pointer-events:none;';
+        i.addEventListener('focus', function () {
+          if (window.tchinKbNav) window.tchinKbNav(dir);
+          var me = i;
+          setTimeout(function () { if (document.activeElement === me) me.blur(); }, 300);
+        });
+        return i;
+      }
+      var prev = mk('prev'), next = mk('next');
+      host.parentNode.insertBefore(prev, host);
+      host.parentNode.insertBefore(next, host.nextSibling);
+      window.addEventListener('focusout', function (e) {
+        var t = e.target;
+        if (!t || t === prev || t === next || !/^(INPUT|TEXTAREA)$/.test(t.tagName)) return;
+        setTimeout(function () {
+          var a = document.activeElement;
+          if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) return;
+          if (window.tchinKbDone) window.tchinKbDone();
+        }, 250);
+      });
+    })();
+  </script>
 </body>
 </html>
