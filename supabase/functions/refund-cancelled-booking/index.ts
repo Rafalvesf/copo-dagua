@@ -16,9 +16,9 @@ const fmtEur = (v: number) => {
 // - organizador cancela com 30+ dias de antecedência → o restante já
 //   pago é devolvido;
 // - parceiro cancela → reembolso sempre;
-// - o casal recebe 100%: a comissão À Nossa! é devolvida
-//   (`refund_application_fee`) e a parte do parceiro é recuperada da conta
-//   dele (`reverse_transfer`).
+// - nunca na totalidade (2026-11-09): a taxa de serviço fica sempre. Cativo
+//   → cobra-se só a taxa e o resto é libertado; já cobrado → devolve-se o
+//   resto e a parte do parceiro é recuperada da conta dele.
 //
 // A decisão "há direito a reembolso" NÃO é feita aqui: vem de
 // `booking_events.metadata.refund_required`, gravado pelas RPCs
@@ -103,12 +103,10 @@ Deno.serve(async (req) => {
   const refunded: string[] = [];
   const manual: string[] = [];
   const failed: string[] = [];
-  // Total devolvido ao casal (o que pagou na Stripe, comissão incluída).
+  // Devolvido ao organizador e taxa de serviço que fica connosco.
   let refundedCents = 0;
   let released = false;
-  // Parceiro cancela (2026-11-09): paga a taxa de serviço de cada pagamento.
-  const partnerCharges: { payment_id: string; cents: number }[] = [];
-  const byPartner = booking.status === "cancelled_by_partner";
+  let keptCents = 0;
 
   for (const p of payments) {
     const sid = p.provider_payment_id as string | null;
@@ -128,47 +126,46 @@ Deno.serve(async (req) => {
         continue;
       }
       const intent = await stripe.paymentIntents.retrieve(pi);
-      // Sinal ainda cativo (2026-11-08): liberta-se o valor no cartão, sem
-      // reembolso nem taxa da Stripe.
       const commissionCents = Number(intent.metadata?.commission_cents ?? 0) ||
         (intent.application_fee_amount ?? 0);
-      if (byPartner && commissionCents > 0) partnerCharges.push({ payment_id: p.id as string, cents: commissionCents });
+      // Nunca devolvemos na totalidade (2026-11-09): a taxa de serviço fica
+      // sempre connosco, cancele quem cancelar.
+      const keepCents = Math.min(commissionCents, intent.amount);
       if (intent.status === "requires_capture") {
-        await stripe.paymentIntents.cancel(pi, { cancellation_reason: "requested_by_customer" }, { idempotencyKey: `release-hold-${p.id}` });
+        // Cativo: cobra-se só a taxa de serviço; o resto é libertado.
+        if (keepCents > 0) {
+          await stripe.paymentIntents.capture(pi, { amount_to_capture: keepCents }, { idempotencyKey: `capture-fee-${p.id}` });
+        } else {
+          await stripe.paymentIntents.cancel(pi, { cancellation_reason: "requested_by_customer" }, { idempotencyKey: `release-hold-${p.id}` });
+        }
+        const freed = intent.amount - keepCents;
         await admin
           .from("payments")
-          .update({ status: "refunded", refunded_amount: intent.amount / 100, updated_at: new Date().toISOString() })
+          .update({ status: "refunded", refunded_amount: freed / 100, is_held: false, updated_at: new Date().toISOString() })
           .eq("id", p.id)
           .eq("status", "paid");
         refunded.push(p.id as string);
-        refundedCents += intent.amount;
+        refundedCents += freed;
+        keptCents += keepCents;
         released = true;
         continue;
       }
       const hasTransfer = Boolean(intent.transfer_data?.destination);
-      const hasFee = intent.application_fee_amount != null && intent.application_fee_amount > 0;
-      // Já cobrado e cancelado pelo organizador (2026-11-09: "não podemos
-      // aceitar reembolsos totais senão perdemos dinheiro"): devolve-se o
-      // valor do parceiro; a taxa de serviço não é reembolsável. Cativo
-      // (acima) liberta-se tudo, sem custo. Cancelado pelo parceiro:
-      // devolve-se tudo.
-      const keepFee = booking.status === "cancelled_by_couple";
-      const feeCents = Number(intent.metadata?.commission_cents ?? 0) || (hasFee ? intent.application_fee_amount! : 0);
-      const refundCents = keepFee ? Math.max(0, intent.amount - feeCents) : intent.amount;
+      // Já cobrado: devolve-se tudo menos a taxa de serviço.
+      const refundCents = Math.max(0, intent.amount - keepCents);
       if (refundCents <= 0) continue;
       await stripe.refunds.create(
         {
           payment_intent: pi,
           reason: "requested_by_customer",
-          ...(keepFee ? { amount: refundCents } : {}),
+          amount: refundCents,
           ...(hasTransfer ? { reverse_transfer: true } : {}),
-          ...(hasFee && !keepFee ? { refund_application_fee: true } : {}),
           metadata: { payment_id: p.id as string, booking_id: bookingId },
         },
         { idempotencyKey: `refund-${p.id}` },
       );
       // O parceiro devolve tudo o que recebeu deste pagamento.
-      await reverseReleasedShare(stripe, admin, p.id as string, refundCents, keepFee ? refundCents : intent.amount);
+      await reverseReleasedShare(stripe, admin, p.id as string, refundCents, refundCents);
       const { error } = await admin
         .from("payments")
         .update({ status: "refunded", refunded_amount: refundCents / 100, updated_at: new Date().toISOString() })
@@ -181,6 +178,7 @@ Deno.serve(async (req) => {
       }
       refunded.push(p.id as string);
       refundedCents += refundCents;
+      keptCents += keepCents;
     } catch (e) {
       const msg = String((e as Error).message ?? e);
       // Já reembolsado na Stripe (ex: à mão no painel) — alinha a base de dados.
@@ -196,27 +194,6 @@ Deno.serve(async (req) => {
     }
   }
 
-  if (byPartner && partnerCharges.length > 0) {
-    const rows = partnerCharges
-      .filter((c) => refunded.includes(c.payment_id))
-      .map((c) => ({ partner_id: booking.partner_id, booking_id: bookingId, payment_id: c.payment_id, amount: c.cents / 100 }));
-    if (rows.length > 0) {
-      const { error: chErr } = await admin.from("partner_charges").upsert(rows, { onConflict: "payment_id,reason", ignoreDuplicates: true });
-      if (chErr) {
-        console.error("partner_charges insert failed", chErr);
-      } else {
-        const sum = rows.reduce((a, r) => a + r.amount, 0);
-        await admin.from("notifications").insert({
-          partner_id: booking.partner_id,
-          type: "partner_cancel_fee",
-          title: "Taxa de serviço do cancelamento",
-          body: `Cancelaste a reserva ${booking.booking_number}. A taxa de serviço (${fmtEur(sum)}) é descontada no teu próximo pagamento.`,
-          link: "/partner-payments",
-        }).then(({ error }) => error && console.error("notification failed", error));
-      }
-    }
-  }
-
   if (refunded.length > 0) {
     const total = refundedCents / 100;
     const pp = (booking as { partner_profiles?: { business_name?: string } | { business_name?: string }[] | null }).partner_profiles;
@@ -227,7 +204,7 @@ Deno.serve(async (req) => {
       old_status: booking.status,
       new_status: booking.status,
       actor_type: "system",
-      metadata: { payment_ids: refunded, amount: total },
+      metadata: { payment_ids: refunded, amount: total, service_fee_kept: keptCents / 100 },
     }).then(({ error }) => error && console.error("booking_events insert failed", error));
     // Contratação em segredo (migração 116): só quem a fez é avisado.
     // Consulta à parte para não falhar antes de a migração correr.
@@ -238,9 +215,10 @@ Deno.serve(async (req) => {
       ...(owner ? { profile_id: owner } : {}),
       type: "booking_refunded",
       title: released ? "Valor libertado" : "Reembolso enviado",
-      body: released
-        ? `${fmtEur(total)} de ${partnerName} deixaram de estar cativos no teu cartão. Não foste cobrado.`
-        : `${fmtEur(total)} de ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`,
+      body: (released
+        ? `${fmtEur(total)} de ${partnerName} deixaram de estar cativos no teu cartão.`
+        : `${fmtEur(total)} de ${partnerName}. Chega à tua conta em 5 a 10 dias úteis.`) +
+        (keptCents > 0 ? ` A taxa de serviço (${fmtEur(keptCents / 100)}) não é reembolsável.` : ""),
     }).then(({ error }) => error && console.error("notification insert failed", error));
   }
 

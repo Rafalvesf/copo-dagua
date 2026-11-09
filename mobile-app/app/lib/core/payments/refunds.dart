@@ -136,7 +136,7 @@ String coupleCancelRefundNote({required DateTime eventDate, required RefundInfo 
         : 'Faltam menos de ${info.penaltyDays} dias para o evento: o restante já pago não é devolvido.');
   }
   if (lines.isEmpty) return '';
-  return '\n\n${lines.join('\n')}${lines.any((l) => l.contains('devolvido') || l.contains('devolvemos')) ? '\nSe o valor ainda estiver cativo no cartão, é libertado por inteiro. Se já tiver sido cobrado, devolvemos tudo menos a taxa de serviço, em 5 a 10 dias úteis.' : ''}';
+  return '\n\n${lines.join('\n')}${lines.any((l) => l.contains('devolvido') || l.contains('devolvemos')) ? '\nDevolvemos tudo menos a taxa de serviço: se o valor ainda estiver cativo no cartão, o resto é libertado; se já tiver sido cobrado, o reembolso chega em 5 a 10 dias úteis.' : ''}';
 }
 
 /// Aviso ao cancelar a partir da decisão do servidor (migração 174: regra
@@ -160,7 +160,7 @@ Future<String?> cancelPreviewNote(String bookingId) async {
     }
     if (lines.isEmpty) return '';
     final any = refundDeposit || refundFinal;
-    return '\n\n${lines.join('\n')}${any ? '\nSe o valor ainda estiver cativo no cartão, é libertado por inteiro. Se já tiver sido cobrado, devolvemos tudo menos a taxa de serviço, em 5 a 10 dias úteis.' : ''}';
+    return '\n\n${lines.join('\n')}${any ? '\nDevolvemos tudo menos a taxa de serviço: se o valor ainda estiver cativo no cartão, o resto é libertado; se já tiver sido cobrado, o reembolso chega em 5 a 10 dias úteis.' : ''}';
   } catch (_) {
     return null;
   }
