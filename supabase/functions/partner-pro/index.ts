@@ -137,8 +137,8 @@ Deno.serve(async (req) => {
       }],
       subscription_data: { metadata: { kind: "partner_pro", partner_id: partner.id } },
       metadata: { kind: "partner_pro", partner_id: partner.id },
-      success_url: body.success_url,
-      cancel_url: body.cancel_url,
+      success_url: body.success_url as string,
+      cancel_url: body.cancel_url as string,
     });
     return json({ url: session.url });
   } catch (e) {
