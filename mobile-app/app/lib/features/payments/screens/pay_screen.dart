@@ -12,6 +12,7 @@ import '../../../core/home/home_providers.dart';
 import '../../../core/payments/payments.dart';
 import '../../../core/payments/stripe_element.dart';
 import '../../../core/tasks/task_engine_controller.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -365,14 +366,10 @@ class _PayScreenState extends ConsumerState<PayScreen> {
             const SizedBox(height: 10),
           ],
           if (_error != null) _ErrorNote(_error!),
-          // Sinal cativo (2026-11-08): com cartão só é cobrado depois das 48 h.
-          if (a.kind == 'deposit') ...[
-            const SizedBox(height: 4),
-            const Text(
-              'Com cartão, Apple Pay ou Google Pay, o sinal fica cativo 48 h e só é cobrado depois. Se cancelares antes, não pagas nada.',
-              style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
-            ),
-          ],
+          // Cancelamento (2026-11-09): fica aqui e nos termos, não no perfil
+          // do parceiro. Prazo grátis da regra do parceiro (migração 174).
+          const SizedBox(height: 4),
+          _CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit'),
           const SizedBox(height: 8),
           const _SecureNote(),
         ];
@@ -749,5 +746,47 @@ class _ErrorNote extends StatelessWidget {
         Expanded(child: Text(text, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink))),
       ]),
     );
+  }
+}
+
+
+/// Até quando se cancela de graça (servidor, regra do parceiro).
+final _freeUntilProvider = FutureProvider.autoDispose.family<DateTime?, String>((ref, paymentId) async {
+  try {
+    final p = await supabase.from('payments').select('booking_id').eq('id', paymentId).maybeSingle();
+    final bookingId = p?['booking_id'] as String?;
+    if (bookingId == null) return null;
+    final d = await supabase.rpc('booking_cancel_preview', params: {'p_booking_id': bookingId});
+    final v = d is Map ? d['free_until'] as String? : null;
+    return v == null ? null : DateTime.tryParse(v)?.toLocal();
+  } catch (_) {
+    return null;
+  }
+});
+
+class _CancelNote extends ConsumerWidget {
+  const _CancelNote({required this.paymentId, required this.deposit});
+  final String paymentId;
+  final bool deposit;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final until = ref.watch(_freeUntilProvider(paymentId)).value;
+    final free = until != null && until.isAfter(DateTime.now());
+    String two(int n) => n.toString().padLeft(2, '0');
+    final text = free
+        ? 'Cancelamento grátis até ${two(until.day)}/${two(until.month)} às ${two(until.hour)}:${two(until.minute)}. '
+            'Com cartão, Apple Pay ou Google Pay, o valor fica cativo e só é cobrado mais tarde.'
+        : deposit
+            ? 'Com cartão, Apple Pay ou Google Pay, o sinal fica cativo 48 h e só é cobrado depois.'
+            : null;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      if (text != null) Text(text, style: const TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted)),
+      TextButton(
+        onPressed: () => context.push('/termos'),
+        style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: AppTheme.accentOliveDark),
+        child: const Text('Condições de cancelamento', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700)),
+      ),
+    ]);
   }
 }
