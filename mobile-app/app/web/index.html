@@ -65,6 +65,47 @@
       } catch (e) {}
     })();
   </script>
+  <!-- Ecrãs carregados à parte (2026-11-09). Cada publicação guarda os
+       seus ficheiros em v/<versão>/: uma app aberta antes de uma
+       publicação nova continua a ir buscar os da SUA versão (antes ia
+       buscar os novos, que não encaixam, e dava "Sem ligação"). -->
+  <script>
+    (function () {
+      window.tchinBuild = '__TCHIN_BUILD__';
+      var versioned = window.tchinBuild.indexOf('__') !== 0;
+      function add(src, ok, err) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = function () { ok(); };
+        s.onerror = err;
+        document.head.appendChild(s);
+      }
+      window.dartDeferredLibraryLoader = function (uri, ok, err) {
+        var v = versioned ? uri.replace(/(main\.dart\.js_\d+\.part\.js)/, 'v/' + window.tchinBuild + '/$1') : uri;
+        add(v, ok, function (e) { if (v !== uri) add(uri, ok, err); else err(e); });
+      };
+      // Último recurso: recarrega a página uma vez por minuto, já sem a
+      // abertura (a app pede isto quando um ecrã não carrega).
+      window.tchinReloadForNewVersion = function () {
+        try {
+          var last = +(sessionStorage.getItem('tt-reload-at') || 0);
+          if (Date.now() - last < 60000) return false;
+          sessionStorage.setItem('tt-reload-at', String(Date.now()));
+          sessionStorage.setItem('tt-skip-opening', '1');
+        } catch (e) { return false; }
+        location.reload();
+        return true;
+      };
+      try {
+        if (sessionStorage.getItem('tt-skip-opening')) {
+          sessionStorage.removeItem('tt-skip-opening');
+          window.tchinSkipOpening = true;
+          document.documentElement.classList.remove('tt-opening');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="À Nossa! — o teu evento, num só lugar.">
