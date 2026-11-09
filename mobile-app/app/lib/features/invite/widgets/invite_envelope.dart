@@ -104,16 +104,22 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 12, letterSpacing: 2.6, fontWeight: FontWeight.w700, color: _muted),
                 ),
-                const Spacer(),
+                // Mais espaço em cima (o cartão sobe para lá ao abrir), mas o
+                // envelope fica perto do meio (pedido 2026-11-09: "a carta
+                // está muito para baixo").
+                const Spacer(flex: 3),
                 AnimatedBuilder(
                   animation: _c,
                   builder: (context, _) {
                     final t = _c.value;
                     final flap = Curves.easeInOut.transform((t / 0.4).clamp(0.0, 1.0));
                     final rise = Curves.easeOutCubic.transform(((t - 0.4) / 0.6).clamp(0.0, 1.0));
+                    // Só a altura do envelope: o cartão sobe por cima, para o
+                    // espaço livre acima (Clip.none), em vez de reservar 75%
+                    // de altura vazia que empurrava a carta para baixo.
                     return SizedBox(
                       width: w,
-                      height: h + h * 0.75,
+                      height: h,
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
@@ -228,7 +234,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                     color: _muted,
                   ),
                 ),
-                const Spacer(),
+                const Spacer(flex: 2),
                 SizedBox(
                   width: double.infinity,
                   height: 54,
