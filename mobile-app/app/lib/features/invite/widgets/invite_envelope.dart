@@ -109,7 +109,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                 // Mais espaço em cima (o cartão sobe para lá ao abrir), mas o
                 // envelope fica perto do meio (pedido 2026-11-09: "a carta
                 // está muito para baixo").
-                const Spacer(flex: 3),
+                const Spacer(),
                 AnimatedBuilder(
                   animation: _c,
                   builder: (context, _) {
@@ -236,7 +236,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                     color: _muted,
                   ),
                 ),
-                const Spacer(flex: 2),
+                const Spacer(),
                 SizedBox(
                   width: double.infinity,
                   height: 54,
