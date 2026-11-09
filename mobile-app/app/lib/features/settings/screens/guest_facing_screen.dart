@@ -1499,6 +1499,11 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
       _toast('Escreve um preço válido (ex.: 15).');
       return;
     }
+    // Abaixo disto a taxa de serviço come o bilhete todo (2026-11-09).
+    if (v < _minTicketPrice) {
+      _toast('O preço mínimo é ${_fmt(_minTicketPrice)} €.');
+      return;
+    }
     setState(() => _savingPrice = true);
     try {
       await setEventEntry(_id, paid: true, price: v);
@@ -1514,7 +1519,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
   }
 
   void _bump(int delta) {
-    final next = ((_priceValue ?? 0) + delta).clamp(1, 100000).toDouble();
+    final next = ((_priceValue ?? 0) + delta).clamp(_minTicketPrice, 100000).toDouble();
     setState(() => _price.text = _fmt(next));
   }
 
@@ -1531,6 +1536,9 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           ),
         ),
       );
+
+  /// Preço mínimo por pessoa (abaixo a taxa de serviço come o bilhete).
+  static const double _minTicketPrice = 3;
 
   static String _fmt(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2).replaceAll('.', ',');
 
@@ -1618,6 +1626,12 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
         line('Quem compra paga', eur(price)),
         line('Taxa de serviço', '− ${eur(fee)}', muted: true),
         line('Recebes por bilhete', '≈ ${eur(price - fee)}', bold: true),
+        if (price > 0 && price < _minTicketPrice)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text('O preço mínimo é ${_fmt(_minTicketPrice)} €.',
+                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFFB3261E))),
+          ),
       ]),
     );
   }
@@ -1701,7 +1715,8 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppTheme.accentOliveDark, width: 1.5),
                 ),
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                // Número e € na mesma linha de base (no iPhone o € ficava mais abaixo).
+                child: Row(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: [
                   // O campo ocupa a metade esquerda toda: um toque em
                   // qualquer ponto abre o teclado.
                   Expanded(
@@ -1713,7 +1728,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
                       textInputAction: TextInputAction.done,
                       onChanged: (_) => setState(() {}),
                       onSubmitted: (_) => _savePrice(),
-                      style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                      style: const TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink),
                       // Sem o fundo cinzento do tema (só metade da caixa ficava cinzenta).
                       decoration: const InputDecoration(
                         hintText: '25',
@@ -1728,7 +1743,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
                   ),
                   const SizedBox(width: 6),
                   const Expanded(
-                    child: Text('€', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                    child: Text('€', style: TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                   ),
                 ]),
               ),
