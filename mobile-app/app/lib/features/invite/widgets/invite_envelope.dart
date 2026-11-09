@@ -6,6 +6,7 @@ import '../../../core/invite/public_invite.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/theme_color/theme_color.dart';
+import '../../../shared/widgets/buttons.dart';
 
 /// Envelope do convite (canvas "Envelope do convite", 2026-11-07): o
 /// convidado abre o link e vê primeiro o envelope fechado; ao tocar no
@@ -92,7 +93,8 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
       child: Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
-        child: LayoutBuilder(builder: (context, box) {
+        child: Stack(children: [
+          Positioned.fill(child: LayoutBuilder(builder: (context, box) {
           final w = math.min(342.0, box.maxWidth - 48);
           final h = w * 242 / 342;
           return Padding(
@@ -254,7 +256,11 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
               ],
             ),
           );
-        }),
+        })),
+          // Seta para voltar quando o convite foi aberto dentro da app.
+          if (Navigator.of(context).canPop())
+            const Positioned(left: 16, top: 8, child: CircleBackButton()),
+        ]),
       ),
     ),
     );
