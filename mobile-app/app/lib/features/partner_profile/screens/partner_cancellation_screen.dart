@@ -59,9 +59,10 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
     var ok = true;
     try {
       await supabase.from('partner_profiles').update({
+        // Regra base = sem regra própria (null).
         'cancellation_rule': rule.dbValue,
         'cancellation_hours': _kind == CancellationKind.hours ? _hours : null,
-        'cancellation_note': rule.note.isEmpty ? null : rule.note,
+        'cancellation_note': rule.note.isEmpty || _kind == CancellationKind.standard ? null : rule.note,
       }).eq('id', _profile.id);
       ref.invalidate(partnerCancellationProvider((_profile.id, _slug)));
     } catch (_) {
@@ -111,6 +112,8 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
                         groupValue: _kind,
                         onChanged: (v) => setState(() => _kind = v ?? _kind),
                         child: Column(children: [
+                        _option(CancellationKind.standard, 'Regra base da À Nossa!'),
+                        const Divider(height: 1, color: AppTheme.borderMuted),
                         _option(CancellationKind.hours, 'Grátis até um prazo antes'),
                         const Divider(height: 1, color: AppTheme.borderMuted),
                         _option(CancellationKind.untilPurchase, 'Até à compra; depois, segundo as minhas condições'),
@@ -135,7 +138,7 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
                           ),
                       ]),
                     ],
-                    if (_kind != CancellationKind.hours) ...[
+                    if (_kind == CancellationKind.untilPurchase || _kind == CancellationKind.partnerTerms) ...[
                       const SizedBox(height: 18),
                       const Text('As tuas condições',
                           style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),

@@ -208,12 +208,26 @@ Deno.serve(async (req) => {
   // fecha (`release-partner-funds`); cancelado antes, é libertado sem
   // reembolso nem taxa da Stripe. MB WAY e Multibanco não permitem
   // cativar — esses cobram logo, como antes.
-  const holdDeposit = payment.type === "deposit" && (method === "card" || method === "all");
+  // Regras de cancelamento do parceiro (migração 174): com cartão, também
+  // o restante fica cativo até ao fim do prazo de cancelamento grátis,
+  // enquanto a Stripe deixar (7 dias; até 30 com autorização estendida,
+  // quando a Stripe a aceita). Depois cobra-se e, se cancelarem a tempo,
+  // reembolsa-se.
+  const cardLike = method === "card" || method === "all";
+  let holdUntilMs = 0;
+  if (cardLike) {
+    try {
+      const { data: hu } = await admin.rpc("payment_hold_until", { p_payment_id: payment.id });
+      holdUntilMs = hu ? new Date(hu as string).getTime() : 0;
+    } catch (_) { /* migração 174 por correr */ }
+  }
+  const holdDeposit = cardLike && (payment.type === "deposit" || holdUntilMs > Date.now() + 3600 * 1000);
+  const wantExtended = holdDeposit && holdUntilMs > Date.now() + 6 * 24 * 3600 * 1000;
 
   let intent;
-  try {
-    intent = await stripe.paymentIntents.create({
+  const createIntent = (extended: boolean) => stripe.paymentIntents.create({
       amount: totalChargeCents,
+      ...(extended ? { payment_method_options: { card: { request_extended_authorization: "if_available" } } as never } : {}),
       currency: "eur",
       ...(holdDeposit ? { capture_method: "manual" as const } : {}),
       ...(method === "all"
@@ -244,6 +258,14 @@ Deno.serve(async (req) => {
         held: holdDeposit ? "1" : "0",
       },
     }, method === "mb_way" ? { apiVersion: "2025-09-30.clover" as never } : undefined);
+  try {
+    try {
+      intent = await createIntent(wantExtended);
+    } catch (e) {
+      // Conta sem autorização estendida: cativo normal (7 dias).
+      if (!wantExtended) throw e;
+      intent = await createIntent(false);
+    }
   } catch (err) {
     console.error("paymentIntents.create failed", err);
     const code = (err as { code?: string; param?: string }).code;
@@ -257,6 +279,10 @@ Deno.serve(async (req) => {
       return json({ error: "method_unavailable" }, 409);
     }
     return json({ error: "stripe_error" }, 502);
+  }
+
+  if (holdDeposit) {
+    await admin.from("payments").update({ is_held: true }).eq("id", payment.id).then(() => {}, () => {});
   }
 
   const { error: recordError } = await supabase.rpc("record_stripe_checkout_session", {

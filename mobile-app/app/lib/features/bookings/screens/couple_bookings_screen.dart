@@ -176,9 +176,10 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
   /// função aceita (`invalid_state` para qualquer outro).
   Future<void> _cancel() async {
     if (_cancelling) return;
-    final info = await bookingRefundInfo(booking.id);
+    // Decisão do servidor com a regra do parceiro (174); sem ela, a antiga.
+    final refundNote = await cancelPreviewNote(booking.id) ??
+        coupleCancelRefundNote(eventDate: booking.serviceDate, info: await bookingRefundInfo(booking.id));
     if (!mounted) return;
-    final refundNote = coupleCancelRefundNote(eventDate: booking.serviceDate, info: info);
     final confirmed = await showIslandDialog<bool>(
       context: context,
       builder: (context) => IslandAlert(

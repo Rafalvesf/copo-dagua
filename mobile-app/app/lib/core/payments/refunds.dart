@@ -137,3 +137,30 @@ String coupleCancelRefundNote({required DateTime eventDate, required RefundInfo 
   if (lines.isEmpty) return '';
   return '\n\n${lines.join('\n')}${lines.any((l) => l.contains('devolvido,') || l.contains('é devolvido')) ? '\nOs reembolsos chegam em 5 a 10 dias úteis.' : ''}';
 }
+
+/// Aviso ao cancelar a partir da decisão do servidor (migração 174: regra
+/// de cancelamento de cada parceiro). `null` se a migração ainda não correu.
+Future<String?> cancelPreviewNote(String bookingId) async {
+  try {
+    final d = await supabase.rpc('booking_cancel_preview', params: {'p_booking_id': bookingId});
+    if (d is! Map) return null;
+    final refundDeposit = d['refund_deposit'] == true;
+    final refundFinal = d['refund_final'] == true;
+    final depositPaid = d['deposit_paid'] == true;
+    final finalPaid = d['final_paid'] == true;
+    final lines = <String>[];
+    if (refundFinal || (refundDeposit && !finalPaid && d['rule'] == 'hours')) {
+      lines.add('Estás dentro do prazo de cancelamento do parceiro: devolvemos tudo o que pagaste, taxa de serviço incluída.');
+    } else {
+      if (depositPaid) {
+        lines.add(refundDeposit ? 'O sinal é devolvido, taxa de serviço incluída.' : 'O sinal fica com o parceiro.');
+      }
+      if (finalPaid) lines.add('O restante já pago não é devolvido: passou o prazo de cancelamento do parceiro.');
+    }
+    if (lines.isEmpty) return '';
+    final any = refundDeposit || refundFinal;
+    return '\n\n${lines.join('\n')}${any ? '\nSe ainda estiver cativo, o valor é libertado no cartão; senão, o reembolso chega em 5 a 10 dias úteis.' : ''}';
+  } catch (_) {
+    return null;
+  }
+}
