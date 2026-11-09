@@ -63,7 +63,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         PayMethod.card,
         PayMethod.mbWay,
         PayMethod.multibanco,
-      ];
+      ].where((m) => a.methods == null || a.methods!.contains(m)).toList();
 
   @override
   void initState() {
@@ -98,7 +98,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
 
   /// Pode já estar pago (ou ter uma referência Multibanco por pagar).
   Future<void> _checkExisting() async {
-    final (state, mb) = await paymentState(a.paymentId);
+    final (state, mb) = await a.currentState();
     if (!mounted) return;
     switch (state) {
       case 'paid':
@@ -124,7 +124,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     if (e is CheckoutUnavailable && e.reason == 'invalid_state') return _done();
     setState(() {
       _step = back;
-      _error = e is CheckoutUnavailable ? payErrorMessage(e.reason) : 'Não foi possível iniciar o pagamento. Verifica a ligação.';
+      _error = e is CheckoutUnavailable ? a.error(e.reason) : 'Não foi possível iniciar o pagamento. Verifica a ligação.';
     });
   }
 
@@ -142,7 +142,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       case PayMethod.multibanco:
         setState(() => _step = _Step.loading);
         try {
-          final info = await createPaymentIntent(a.paymentId, PayMethod.multibanco);
+          final info = await a.createIntent(PayMethod.multibanco);
           if (!mounted) return;
           _amountCents = info.amountCents;
           setState(() {
@@ -192,7 +192,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       _error = null;
     });
     try {
-      final info = await createPaymentIntent(a.paymentId, PayMethod.card);
+      final info = await a.createIntent(PayMethod.card);
       _amountCents = info.amountCents;
       final r = await _stripe.payCard(info.clientSecret, _email);
       _handleResult(r, back: _Step.card);
@@ -206,7 +206,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     setState(() => _error = null);
     final future = _stripe.payWallet(() async {
       try {
-        final info = await createPaymentIntent(a.paymentId, PayMethod.wallet);
+        final info = await a.createIntent(PayMethod.wallet);
         _amountCents = info.amountCents;
         return info.clientSecret;
       } catch (e) {
@@ -232,7 +232,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       _error = null;
     });
     try {
-      final info = await createPaymentIntent(a.paymentId, PayMethod.mbWay, phone: phone);
+      final info = await a.createIntent(PayMethod.mbWay, phone: phone);
       if (!mounted) return;
       _amountCents = info.amountCents;
       if (info.status == 'succeeded') return _done();
@@ -253,7 +253,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       return;
     }
     if (r['status'] == 'succeeded') {
-      await paymentState(a.paymentId); // confirma já na base de dados
+      await a.currentState(); // confirma já na base de dados
       if (mounted) _done();
     } else {
       setState(() => _step = _Step.mbWayWaiting);
@@ -264,7 +264,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   void _startPolling({bool slow = false}) {
     _poll?.cancel();
     _poll = Timer.periodic(Duration(seconds: slow ? 15 : 3), (_) async {
-      final (state, _) = await paymentState(a.paymentId);
+      final (state, _) = await a.currentState();
       if (!mounted) return;
       if (state == 'paid') {
         _poll?.cancel();
@@ -290,6 +290,11 @@ class _PayScreenState extends ConsumerState<PayScreen> {
 
   void _done() {
     _poll?.cancel();
+    final onPaid = a.onPaid;
+    if (onPaid != null) {
+      onPaid(context);
+      return;
+    }
     ref.invalidate(coupleBookingsProvider);
     ref.read(taskEngineControllerProvider.notifier).recompute();
     context.pushReplacement(
@@ -320,7 +325,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                     doodles: const [Icons.lock_outline, Icons.auto_awesome_outlined, Icons.favorite_border],
                     footer: Wrap(spacing: 6, runSpacing: 6, children: [
                       const HeroPill('Pagamento seguro', solid: true),
-                      HeroPill(a.kind == 'deposit' ? 'Confirma a reserva' : 'Fecha a reserva'),
+                      if (a.isBooking) HeroPill(a.kind == 'deposit' ? 'Confirma a reserva' : 'Fecha a reserva'),
                     ]),
                   ),
                   ..._body(),
@@ -369,7 +374,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           // Cancelamento (2026-11-09): fica aqui e nos termos, não no perfil
           // do parceiro. Prazo grátis da regra do parceiro (migração 174).
           const SizedBox(height: 4),
-          _CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit'),
+          if (a.isBooking) _CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit'),
           const SizedBox(height: 8),
           const _SecureNote(),
         ];
@@ -539,7 +544,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       case _Step.multibanco:
         label = 'Já paguei';
         onTap = () async {
-          final (state, _) = await paymentState(a.paymentId);
+          final (state, _) = await a.currentState();
           if (!mounted) return;
           if (state == 'paid') {
             _done();

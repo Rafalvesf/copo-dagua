@@ -52,9 +52,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (body.action !== "checkout") return json({ error: "validation_error" }, 400);
+    // Gerir dentro da app (2026-11-09, sem página da Stripe): cancelar no
+    // fim do período pago, ou voltar atrás.
+    if (body.action === "cancel" || body.action === "resume") {
+      if (!partner.pro_subscription_id) return json({ error: "no_subscription" }, 409);
+      await stripe.subscriptions.update(partner.pro_subscription_id, { cancel_at_period_end: body.action === "cancel" });
+      return json(await syncPartnerPro(stripe, admin, partner.id));
+    }
+
+    if (body.action !== "checkout" && body.action !== "subscribe") return json({ error: "validation_error" }, 400);
     const interval = body.interval === "year" ? "year" : "month";
-    if (typeof body.success_url !== "string" || typeof body.cancel_url !== "string") return json({ error: "validation_error" }, 400);
+    if (body.action === "checkout" && (typeof body.success_url !== "string" || typeof body.cancel_url !== "string")) {
+      return json({ error: "validation_error" }, 400);
+    }
 
     const { data: s } = await admin.from("platform_settings").select("pro_enabled, pro_price_monthly, pro_price_yearly").eq("id", 1).maybeSingle();
     if (s && s.pro_enabled === false) return json({ error: "pro_disabled" }, 409);
@@ -74,6 +84,43 @@ Deno.serve(async (req) => {
       });
       customer = c.id;
       await admin.from("partner_profiles").update({ stripe_customer_id: customer }).eq("id", partner.id);
+    }
+
+    // Pagamento dentro da app: subscrição por pagar (default_incomplete) e
+    // o PaymentIntent da primeira fatura vai para o ecrã de pagamento da
+    // app (cartão, Apple Pay, Google Pay). Fica ativa quando é paga.
+    if (body.action === "subscribe") {
+      const pk = Deno.env.get("STRIPE_PUBLISHABLE_KEY");
+      if (!pk) return json({ error: "not_configured" }, 503);
+      // Tentativas anteriores por pagar: anula-as.
+      const open = await stripe.subscriptions.list({ customer, status: "incomplete", limit: 10 });
+      for (const o of open.data) {
+        if (o.metadata?.kind === "partner_pro") await stripe.subscriptions.cancel(o.id).catch(() => {});
+      }
+      const pid = `anossa_premium_${interval}`;
+      const product = await stripe.products.retrieve(pid).catch(() =>
+        stripe.products.create({ id: pid, name: interval === "year" ? "À Nossa! Premium · anual" : "À Nossa! Premium · mensal" })
+      );
+      const sub = await stripe.subscriptions.create({
+        customer,
+        items: [{ price_data: { currency: "eur", unit_amount: cents, recurring: { interval }, product: product.id } }],
+        payment_behavior: "default_incomplete",
+        payment_settings: { save_default_payment_method: "on_subscription", payment_method_types: ["card"] },
+        metadata: { kind: "partner_pro", partner_id: partner.id },
+        expand: ["latest_invoice.payment_intent"],
+      });
+      // deno-lint-ignore no-explicit-any
+      const pi = (sub.latest_invoice as any)?.payment_intent as { id: string; client_secret: string; amount: number; status: string } | null;
+      if (!pi?.client_secret) return json({ error: "stripe_error" }, 502);
+      return json({
+        client_secret: pi.client_secret,
+        publishable_key: pk,
+        payment_intent_id: pi.id,
+        amount_cents: pi.amount,
+        email: (partner.contact_email as string | null) ?? user.email ?? null,
+        status: pi.status,
+        subscription_id: sub.id,
+      });
     }
 
     const session = await stripe.checkout.sessions.create({

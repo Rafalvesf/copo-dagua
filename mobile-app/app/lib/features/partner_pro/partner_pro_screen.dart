@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/gifts/gift_shop.dart' show giftEuros;
 import '../../core/partners/partner_pro.dart';
+import '../../core/payments/payments.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/gradient_scaffold.dart';
 import '../../shared/widgets/page_header.dart';
@@ -29,26 +29,59 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
     // Ao voltar da Stripe (ou ao abrir), acerta o estado com a subscrição.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await syncPro();
+      final cancelling = await proCancelling();
       if (!mounted) return;
+      setState(() => _cancelling = cancelling);
       ref.invalidate(myPartnerProProvider);
       ref.invalidate(proPartnerIdsProvider);
       ref.invalidate(partnerProStatsProvider);
     });
   }
 
-  Future<void> _open(Future<String> Function() get) async {
+  bool _cancelling = false;
+
+  /// Pagamento dentro da app (2026-11-09: nunca com link) — cartão,
+  /// Apple Pay ou Google Pay; a subscrição fica ativa quando é paga.
+  void _subscribe(PartnerPro pro) {
+    final yearly = _yearly;
+    context.push('/pay', extra: PayArgs(
+      paymentId: '',
+      partnerName: 'À Nossa!',
+      kind: 'pro',
+      amount: yearly ? pro.priceYearly : pro.priceMonthly,
+      titleOverride: yearly ? 'Premium anual' : 'Premium mensal',
+      methods: const [PayMethod.wallet, PayMethod.card],
+      create: (m, {phone}) => createProIntent(yearly: yearly),
+      state: proPayState,
+      onPaid: (ctx) => ctx.pushReplacement('/partner-pro?ok=1'),
+      errorText: (c) => const {'method_unavailable', 'declined', 'not_configured'}.contains(c) ? payErrorMessage(c) : ProError(c).message,
+    ));
+  }
+
+  Future<void> _setCancelling(bool cancel) async {
+    if (cancel) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Cancelar o Premium?'),
+          content: const Text('Continuas Premium até ao fim do período que já pagaste. Depois não é renovado.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text('Voltar')),
+            FilledButton(onPressed: () => Navigator.of(c).pop(true), child: const Text('Cancelar subscrição')),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      final url = await get();
-      final ok = await launchUrl(
-        Uri.parse(url),
-        mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
-        webOnlyWindowName: kIsWeb ? '_self' : null,
-      );
-      if (!ok && mounted) setState(() => _error = 'Não foi possível abrir a página de pagamento.');
+      final c = await setProCancelling(cancel);
+      if (!mounted) return;
+      setState(() => _cancelling = c);
+      ref.invalidate(myPartnerProProvider);
     } on ProError catch (e) {
       if (mounted) setState(() => _error = e.message);
     } catch (_) {
@@ -148,16 +181,24 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
                 ),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: _busy ? null : () => _open(() => proCheckoutUrl(yearly: _yearly)),
+                onPressed: _busy ? null : () => _subscribe(pro),
                 style: FilledButton.styleFrom(backgroundColor: green, minimumSize: const Size.fromHeight(52), shape: const StadiumBorder()),
                 child: Text(_busy ? 'A abrir…' : 'Ser Premium'),
               ),
-            ] else if (pro.hasSubscription)
+            ] else if (pro.hasSubscription) ...[
+              // Gerir dentro da app, sem página da Stripe (2026-11-09).
+              if (_cancelling)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text('Cancelado: termina a ${pro.until == null ? '—' : _date(pro.until!)}.',
+                      textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                ),
               OutlinedButton(
-                onPressed: _busy ? null : () => _open(proPortalUrl),
+                onPressed: _busy ? null : () => _setCancelling(!_cancelling),
                 style: OutlinedButton.styleFrom(foregroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
-                child: const Text('Gerir ou cancelar a subscrição'),
+                child: Text(_cancelling ? 'Continuar com o Premium' : 'Cancelar subscrição'),
               ),
+            ],
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 10),

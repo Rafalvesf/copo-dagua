@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, PostgrestException;
 
 import '../../shared/public_link.dart';
+import '../payments/payments.dart';
 import '../supabase/supabase_config.dart';
 
 /// Plano Pro dos parceiros (migração 161): selo Pro e mais visibilidade,
@@ -150,6 +151,45 @@ Future<String> proCheckoutUrl({required bool yearly}) =>
     _invoke({'action': 'checkout', 'interval': yearly ? 'year' : 'month', 'success_url': '$_back?ok=1', 'cancel_url': _back});
 
 Future<String> proPortalUrl() => _invoke({'action': 'portal', 'return_url': _back});
+
+/// Premium pago dentro da app (2026-11-09): só cartão, Apple Pay e Google
+/// Pay (subscrição).
+Future<PaymentIntentInfo> createProIntent({required bool yearly}) async =>
+    paymentIntentInfoFromJson(await invokePayFunction('partner-pro', {'action': 'subscribe', 'interval': yearly ? 'year' : 'month'}));
+
+/// `paid` quando o Premium já está ativo.
+Future<(String, MultibancoRef?)> proPayState() async {
+  try {
+    final res = await supabase.functions.invoke('partner-pro', body: {'action': 'sync'});
+    final d = res.data;
+    return (d is Map && d['active'] == true ? 'paid' : 'open', null);
+  } catch (_) {
+    return ('open', null);
+  }
+}
+
+/// Cancelar no fim do período pago, ou voltar atrás. Devolve se está a cancelar.
+Future<bool> setProCancelling(bool cancel) async {
+  try {
+    final res = await supabase.functions.invoke('partner-pro', body: {'action': cancel ? 'cancel' : 'resume'});
+    final d = res.data;
+    return d is Map && d['cancelling'] == true;
+  } on FunctionException catch (e) {
+    final d = e.details;
+    throw ProError(d is Map ? (d['error'] as String? ?? 'unknown') : 'unknown');
+  }
+}
+
+/// Se a subscrição está marcada para terminar no fim do período.
+Future<bool> proCancelling() async {
+  try {
+    final res = await supabase.functions.invoke('partner-pro', body: {'action': 'sync'});
+    final d = res.data;
+    return d is Map && d['cancelling'] == true;
+  } catch (_) {
+    return false;
+  }
+}
 
 Future<void> syncPro() async {
   try {

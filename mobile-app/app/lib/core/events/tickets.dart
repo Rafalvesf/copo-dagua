@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, PostgrestException;
 
 import '../../shared/public_link.dart';
+import '../payments/payments.dart';
 import '../supabase/supabase_config.dart';
 import 'events_providers.dart';
 
@@ -45,6 +46,39 @@ Future<String> createTicketCheckoutUrl({required String weddingId, required int 
   } on FunctionException catch (e) {
     final d = e.details;
     throw TicketError(d is Map ? (d['error'] as String? ?? 'unknown') : 'unknown');
+  }
+}
+
+/// Pagamento dentro da app (2026-11-09): PaymentIntent para o ecrã de
+/// pagamento da app. [previousId]: bilhete de uma tentativa anterior (é
+/// anulado). Devolve o bilhete criado.
+Future<({String ticketId, PaymentIntentInfo info})> createTicketIntent({
+  required String weddingId,
+  required int quantity,
+  required PayMethod method,
+  String? phone,
+  String? code,
+  String? inviteToken,
+  String? previousId,
+}) async {
+  final d = await invokePayFunction('create-ticket-checkout', {
+    'action': 'intent',
+    'wedding_id': weddingId,
+    'quantity': quantity,
+    'method': method.code,
+    if (phone != null) 'phone': phone,
+    if (code != null) 'code': code,
+    if (inviteToken != null) 'invite_token': inviteToken,
+    if (previousId != null) 'previous_id': previousId,
+  });
+  return (ticketId: d['ticket_id'] as String, info: paymentIntentInfoFromJson(d));
+}
+
+Future<(String, MultibancoRef?)> ticketPayState(String ticketId) async {
+  try {
+    return payStateFromJson(await invokePayFunction('create-ticket-checkout', {'action': 'state', 'ticket_id': ticketId}));
+  } catch (_) {
+    return ('open', null);
   }
 }
 

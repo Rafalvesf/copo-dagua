@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions, FunctionException, PostgrestException;
 
 import '../../shared/public_link.dart';
+import '../payments/payments.dart';
 import '../supabase/supabase_config.dart';
 
 /// Lista de presentes (migração 160): produtos da loja dos parceiros, pagos
@@ -412,6 +413,36 @@ Future<String> createGiftCheckoutUrl({required String itemId, required int quant
   } on FunctionException catch (e) {
     final d = e.details;
     throw GiftError(d is Map ? (d['error'] as String? ?? 'unknown') : 'unknown');
+  }
+}
+
+/// Pagamento dentro da app (2026-11-09). [previousId]: encomenda de uma
+/// tentativa anterior (é anulada).
+Future<({String orderId, PaymentIntentInfo info})> createGiftIntent({
+  required String itemId,
+  required int quantity,
+  required PayMethod method,
+  String? phone,
+  String? message,
+  String? previousId,
+}) async {
+  final d = await invokePayFunction('create-gift-checkout', {
+    'action': 'intent',
+    'item_id': itemId,
+    'quantity': quantity,
+    'method': method.code,
+    if (phone != null) 'phone': phone,
+    if (message != null && message.trim().isNotEmpty) 'message': message.trim(),
+    if (previousId != null) 'previous_id': previousId,
+  });
+  return (orderId: d['order_id'] as String, info: paymentIntentInfoFromJson(d));
+}
+
+Future<(String, MultibancoRef?)> giftPayState(String orderId) async {
+  try {
+    return payStateFromJson(await invokePayFunction('create-gift-checkout', {'action': 'state', 'order_id': orderId}));
+  } catch (_) {
+    return ('open', null);
   }
 }
 

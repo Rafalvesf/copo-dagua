@@ -1,9 +1,8 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:flutter/material.dart';
+import '../../../core/payments/payments.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/events/event_pass.dart';
 import '../../../core/events/events_providers.dart';
@@ -59,18 +58,40 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
       _error = null;
     });
     try {
-      final url = await createTicketCheckoutUrl(
-        weddingId: widget.event.weddingId,
-        quantity: _qty,
-        code: widget.code,
-        inviteToken: widget.inviteToken,
+      // Pagamento dentro da app (2026-11-09: nunca com link): o mesmo ecrã
+      // das reservas — cartão, Apple Pay, Google Pay, MB WAY, Multibanco.
+      final e = widget.event;
+      final qty = _qty;
+      String? ticketId;
+      final args = PayArgs(
+        paymentId: '',
+        partnerName: e.displayNames,
+        kind: 'ticket',
+        amount: (e.entryPrice ?? 0) * qty,
+        titleOverride: qty == 1 ? 'Bilhete' : '$qty bilhetes',
+        create: (m, {phone}) async {
+          final r = await createTicketIntent(
+            weddingId: e.weddingId,
+            quantity: qty,
+            method: m,
+            phone: phone,
+            code: widget.code,
+            inviteToken: widget.inviteToken,
+            previousId: ticketId,
+          );
+          ticketId = r.ticketId;
+          return r.info;
+        },
+        state: () async => ticketId == null ? ('open', null) : await ticketPayState(ticketId!),
+        onPaid: (ctx) => ctx.pushReplacement('/bilhete/$ticketId'),
+        errorText: (c) => const {'method_unavailable', 'invalid_phone', 'declined', 'processing', 'not_configured'}.contains(c)
+            ? payErrorMessage(c)
+            : TicketError(c).message,
       );
-      final ok = await launchUrl(
-        Uri.parse(url),
-        mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
-        webOnlyWindowName: kIsWeb ? '_self' : null,
-      );
-      if (!ok && mounted) setState(() => _error = 'Não foi possível abrir o pagamento.');
+      if (!mounted) return;
+      final router = GoRouter.of(context);
+      Navigator.of(context).pop();
+      router.push('/pay', extra: args);
     } on TicketError catch (e) {
       if (mounted) setState(() => _error = e.message);
     } catch (_) {
