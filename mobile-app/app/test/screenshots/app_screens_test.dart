@@ -571,7 +571,11 @@ Future<void> _shoot(
     await tester.pump(const Duration(milliseconds: 50));
     final context = tester.element(find.byType(Navigator).first);
     GoRouter.of(context).go(location, extra: extra);
-    // Deixa terminar o carregamento real de imagens locais (assets).
+    // Ecrãs deferred (LazyPage): constrói-os e deixa o loadLibrary()
+    // terminar fora do relógio falso; depois, as imagens locais (assets).
+    await tester.pump();
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 400)));
+    await tester.pump();
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 400)));
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 120));
@@ -620,6 +624,9 @@ Future<void> _shootTransition(
     await tester.pump(const Duration(milliseconds: 50));
     final router = GoRouter.of(tester.element(find.byType(Navigator).first));
     router.go(from);
+    await tester.pump();
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 400)));
+    await tester.pump();
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 400)));
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 120));
