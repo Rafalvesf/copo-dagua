@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'pending_deep_link.dart';
 import 'invite/public_invite.dart' show PendingInvite;
-import '../features/events/screens/tickets_screens.dart';
+import '../features/events/screens/tickets_screens.dart' deferred as l1;
 import '../features/events/screens/ticket_pass_screens.dart' show CheckInScreen;
 import '../features/settings/screens/organizers_screen.dart' show OrganizersScreen, PermissionGate;
 import '../features/gifts/screens/gift_list_screens.dart' show OrganizerGiftListScreen, GiftShopScreen, GiftReturnScreen;
 import '../features/gifts/screens/partner_shop_screen.dart' show PartnerShopScreen;
 import '../features/partner_pro/partner_pro_screen.dart' show PartnerProScreen;
 import 'wedding/organizers.dart' show OrganizerPerm;
-import '../features/messages/team_messages.dart';
+import '../features/messages/team_messages.dart' deferred as l2;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'lazy_page.dart';
 import 'page_transitions.dart';
 import 'chat/group_chat.dart' show ChatGroup;
-import '../features/chat/screens/groups_screen.dart';
+import '../features/chat/screens/groups_screen.dart' deferred as l3;
 
 import '../shared/theme_color/theme_color.dart' show BarColorObserver;
 
@@ -24,76 +25,76 @@ import '../features/auth/screens/register_screen.dart';
 import '../features/auth/screens/role_selection_screen.dart';
 import '../features/auth/screens/verify_email_screen.dart';
 import '../features/auth/screens/welcome_screen.dart';
-import '../features/bookings/screens/couple_booking_detail_screen.dart';
-import '../features/bookings/screens/couple_bookings_screen.dart';
-import '../features/payments/screens/pay_screen.dart';
-import '../features/partner_payments/screens/partner_payout_setup_screen.dart';
+import '../features/bookings/screens/couple_booking_detail_screen.dart' deferred as l4;
+import '../features/bookings/screens/couple_bookings_screen.dart' deferred as l5;
+import '../features/payments/screens/pay_screen.dart' deferred as l6;
+import '../features/partner_payments/screens/partner_payout_setup_screen.dart' deferred as l7;
 import '../features/payments/screens/pay_done_screen.dart';
-import '../features/payments/screens/pay_return_screen.dart';
+import '../features/payments/screens/pay_return_screen.dart' deferred as l8;
 import 'payments/pay_return.dart';
 import 'payments/payments.dart' show PayArgs;
-import '../features/guest_offers/screens/guest_offers_screen.dart';
-import '../features/budget/screens/budget_screen.dart';
-import '../features/chat/screens/chat_list_screen.dart';
-import '../features/chat/screens/chat_thread_screen.dart';
-import '../features/checklist/screens/checklist_screen.dart';
-import '../features/tasks/screens/service_preferences_screen.dart';
-import '../features/tasks/screens/tasks_screen.dart';
-import '../features/events/screens/eventos_screen.dart';
+import '../features/guest_offers/screens/guest_offers_screen.dart' deferred as l9;
+import '../features/budget/screens/budget_screen.dart' deferred as l10;
+import '../features/chat/screens/chat_list_screen.dart' deferred as l11;
+import '../features/chat/screens/chat_thread_screen.dart' deferred as l12;
+import '../features/checklist/screens/checklist_screen.dart' deferred as l13;
+import '../features/tasks/screens/service_preferences_screen.dart' deferred as l14;
+import '../features/tasks/screens/tasks_screen.dart' deferred as l15;
+import '../features/events/screens/eventos_screen.dart' deferred as l16;
 import '../features/events/screens/mode_switch_screen.dart';
-import '../features/guest_home/screens/guest_gallery_screen.dart';
-import '../features/guest_home/screens/guest_gifts_screen.dart';
-import '../features/guest_home/screens/guest_home_screen.dart';
-import '../features/guest_home/screens/guest_onboarding_wizard_screen.dart';
-import '../features/guest_home/screens/guest_profile_screen.dart';
-import '../features/guest_home/screens/invite_token_screen.dart';
-import '../features/partners/screens/partner_invite_screen.dart';
-import '../features/gifts/screens/envelopes_screen.dart';
-import '../features/guest_home/screens/guest_wedding_details_screen.dart';
-import '../features/gallery/screens/gallery_screen.dart';
-import '../features/guests/screens/guest_detail_screen.dart';
-import '../features/guests/screens/guests_list_screen.dart';
-import '../features/home/screens/home_feed_screen.dart';
-import '../features/auth/screens/join_wedding_screen.dart';
-import '../features/invite/screens/invite_page_screen.dart';
-import '../features/invite/screens/rsvp_page_screen.dart';
-import '../features/calendar/screens/calendar_screen.dart';
+import '../features/guest_home/screens/guest_gallery_screen.dart' deferred as l17;
+import '../features/guest_home/screens/guest_gifts_screen.dart' deferred as l18;
+import '../features/guest_home/screens/guest_home_screen.dart' deferred as l19;
+import '../features/guest_home/screens/guest_onboarding_wizard_screen.dart' deferred as l20;
+import '../features/guest_home/screens/guest_profile_screen.dart' deferred as l21;
+import '../features/guest_home/screens/invite_token_screen.dart' deferred as l22;
+import '../features/partners/screens/partner_invite_screen.dart' deferred as l23;
+import '../features/gifts/screens/envelopes_screen.dart' deferred as l24;
+import '../features/guest_home/screens/guest_wedding_details_screen.dart' deferred as l25;
+import '../features/gallery/screens/gallery_screen.dart' deferred as l26;
+import '../features/guests/screens/guest_detail_screen.dart' deferred as l27;
+import '../features/guests/screens/guests_list_screen.dart' deferred as l28;
+import '../features/home/screens/home_feed_screen.dart' deferred as l29;
+import '../features/auth/screens/join_wedding_screen.dart' deferred as l30;
+import '../features/invite/screens/invite_page_screen.dart' deferred as l31;
+import '../features/invite/screens/rsvp_page_screen.dart' deferred as l32;
+import '../features/calendar/screens/calendar_screen.dart' deferred as l33;
 import '../features/maintenance/screens/maintenance_screen.dart';
-import '../features/onboarding/screens/onboarding_wizard_screen.dart';
-import '../features/partner_bookings/screens/booking_detail_screen.dart';
-import '../features/partner_bookings/screens/partner_bookings_screen.dart';
-import '../features/partner_bookings/screens/send_proposal_screen.dart';
-import '../features/partner_calendar/screens/partner_calendar_screen.dart';
-import '../features/partner_home/screens/partner_home_screen.dart';
-import '../features/partner_messages/screens/partner_chat_thread_screen.dart';
-import '../features/partner_messages/screens/partner_messages_screen.dart';
-import '../features/partner_contracts/screens/partner_contracts_screen.dart';
-import '../features/partner_onboarding/screens/partner_welcome_screen.dart';
-import '../features/partner_payments/screens/partner_payments_screen.dart';
-import '../features/partner_profile/screens/business_info_screen.dart';
-import '../features/partner_profile/screens/partner_location_screen.dart';
-import '../features/partner_profile/screens/partner_cancellation_screen.dart';
-import '../features/partner_profile/screens/partner_availability_screen.dart';
-import '../features/partner_profile/screens/partner_pricing_screen.dart';
-import '../features/partner_profile/screens/partner_portfolio_screen.dart';
-import '../features/partner_profile/screens/partner_profile_screen.dart';
-import '../features/partner_reviews/screens/partner_reviews_screen.dart';
-import '../features/partner_stats/screens/partner_stats_screen.dart';
-import '../features/partner_venue_tables/screens/partner_venue_tables_screen.dart';
-import '../features/seating/screens/seating_screen.dart';
-import '../features/partners/screens/partners_list_screen.dart';
+import '../features/onboarding/screens/onboarding_wizard_screen.dart' deferred as l34;
+import '../features/partner_bookings/screens/booking_detail_screen.dart' deferred as l35;
+import '../features/partner_bookings/screens/partner_bookings_screen.dart' deferred as l36;
+import '../features/partner_bookings/screens/send_proposal_screen.dart' deferred as l37;
+import '../features/partner_calendar/screens/partner_calendar_screen.dart' deferred as l38;
+import '../features/partner_home/screens/partner_home_screen.dart' deferred as l39;
+import '../features/partner_messages/screens/partner_chat_thread_screen.dart' deferred as l40;
+import '../features/partner_messages/screens/partner_messages_screen.dart' deferred as l41;
+import '../features/partner_contracts/screens/partner_contracts_screen.dart' deferred as l42;
+import '../features/partner_onboarding/screens/partner_welcome_screen.dart' deferred as l43;
+import '../features/partner_payments/screens/partner_payments_screen.dart' deferred as l44;
+import '../features/partner_profile/screens/business_info_screen.dart' deferred as l45;
+import '../features/partner_profile/screens/partner_location_screen.dart' deferred as l46;
+import '../features/partner_profile/screens/partner_cancellation_screen.dart' deferred as l47;
+import '../features/partner_profile/screens/partner_availability_screen.dart' deferred as l48;
+import '../features/partner_profile/screens/partner_pricing_screen.dart' deferred as l49;
+import '../features/partner_profile/screens/partner_portfolio_screen.dart' deferred as l50;
+import '../features/partner_profile/screens/partner_profile_screen.dart' deferred as l51;
+import '../features/partner_reviews/screens/partner_reviews_screen.dart' deferred as l52;
+import '../features/partner_stats/screens/partner_stats_screen.dart' deferred as l53;
+import '../features/partner_venue_tables/screens/partner_venue_tables_screen.dart' deferred as l54;
+import '../features/seating/screens/seating_screen.dart' deferred as l55;
+import '../features/partners/screens/partners_list_screen.dart' deferred as l56;
 import '../features/settings/screens/guest_facing_screen.dart' show GuestPageRoute;
-import '../features/settings/screens/settings_screen.dart';
-import '../features/support/screens/support_screen.dart';
-import '../features/wedding/screens/wedding_details_screen.dart';
+import '../features/settings/screens/settings_screen.dart' deferred as l57;
+import '../features/support/screens/support_screen.dart' deferred as l58;
+import '../features/wedding/screens/wedding_details_screen.dart' deferred as l59;
 import 'auth/auth_controller.dart';
 import 'models/models.dart';
 import 'partners/partner_providers.dart';
 import 'platform/maintenance_controller.dart';
-import '../features/legal/legal_screen.dart';
-import '../features/messages/admin_message_screen.dart';
+import '../features/legal/legal_screen.dart' deferred as l60;
+import '../features/messages/admin_message_screen.dart' deferred as l61;
 import '../features/legal/legal_texts.dart';
-import '../features/settings/screens/username_screen.dart';
+import '../features/settings/screens/username_screen.dart' deferred as l62;
 
 /// Rotas que vale a pena guardar para depois do login (não o início).
 bool _deepLinkWorthKeeping(String location) =>
@@ -287,7 +288,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         builder: (context, state) {
           final step = int.tryParse(state.uri.queryParameters['step'] ?? '') ?? 0;
-          return OnboardingWizardScreen(key: ValueKey('onb$step'), initialStep: step);
+          return lazyPage([l34.loadLibrary], () => l34.OnboardingWizardScreen(key: ValueKey('onb$step'), initialStep: step));
         },
       ),
       GoRoute(
@@ -296,15 +297,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       tabRoute(
         path: '/home',
-        builder: (context, state) => const HomeFeedScreen(),
+        builder: (context, state) =>lazyPage([l29.loadLibrary], () =>  l29.HomeFeedScreen()),
       ),
       tabRoute(
         path: '/partner-home',
-        builder: (context, state) => const PartnerHomeScreen(),
+        builder: (context, state) =>lazyPage([l39.loadLibrary], () =>  l39.PartnerHomeScreen()),
       ),
       tabRoute(
         path: '/guest-home',
-        builder: (context, state) => const GuestHomeScreen(),
+        builder: (context, state) =>lazyPage([l19.loadLibrary], () =>  l19.GuestHomeScreen()),
       ),
       tabRoute(
         // Variante com `weddingId` explícito — usada só por uma conta
@@ -315,24 +316,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         // '/guest-home'` exatamente — este caminho nunca é esse texto
         // exato, por isso não é apanhado por essa guarda.
         path: '/guest-home/:weddingId',
-        builder: (context, state) =>
-            GuestHomeScreen(weddingId: state.pathParameters['weddingId']),
+        builder: (context, state) =>lazyPage([l19.loadLibrary], () => 
+            l19.GuestHomeScreen(weddingId: state.pathParameters['weddingId'])),
       ),
       // Mensagem da equipa (admin, migrações 133/134), com resposta.
-      GoRoute(path: '/mensagem/:id', builder: (context, state) => AdminMessageScreen(id: state.pathParameters['id']!)),
+      GoRoute(path: '/mensagem/:id', builder: (context, state) =>lazyPage([l61.loadLibrary], () =>  l61.AdminMessageScreen(id: state.pathParameters['id']!))),
       // Conversa com a Equipa À Nossa! (mensagens diretas, migração 146).
-      GoRoute(path: '/equipa', builder: (context, state) => const TeamThreadScreen()),
-      GoRoute(path: '/termos', builder: (context, state) => const LegalScreen(doc: termsDoc)),
-      GoRoute(path: '/privacidade', builder: (context, state) => const LegalScreen(doc: privacyDoc)),
+      GoRoute(path: '/equipa', builder: (context, state) =>lazyPage([l2.loadLibrary], () =>  l2.TeamThreadScreen())),
+      GoRoute(path: '/termos', builder: (context, state) =>lazyPage([l60.loadLibrary], () =>  l60.LegalScreen(doc: termsDoc))),
+      GoRoute(path: '/privacidade', builder: (context, state) =>lazyPage([l60.loadLibrary], () =>  l60.LegalScreen(doc: privacyDoc))),
       // Pública (Google Play): como pedir para apagar a conta.
-      GoRoute(path: '/apagar-conta', builder: (context, state) => const LegalScreen(doc: deleteAccountDoc)),
+      GoRoute(path: '/apagar-conta', builder: (context, state) =>lazyPage([l60.loadLibrary], () =>  l60.LegalScreen(doc: deleteAccountDoc))),
       GoRoute(
         path: '/juntar/:token',
-        builder: (context, state) => JoinWeddingScreen(token: state.pathParameters['token']!),
+        builder: (context, state) =>lazyPage([l30.loadLibrary], () =>  l30.JoinWeddingScreen(token: state.pathParameters['token']!)),
       ),
       GoRoute(
         path: '/i/:token',
-        builder: (context, state) => InviteTokenScreen(token: state.pathParameters['token']!),
+        builder: (context, state) =>lazyPage([l22.loadLibrary], () =>  l22.InviteTokenScreen(token: state.pathParameters['token']!)),
       ),
       GoRoute(
         // Wizard "Vais ao casamento?" — pedido explícito do utilizador
@@ -342,12 +343,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final step = int.tryParse(state.uri.queryParameters['step'] ?? '') ?? 0;
           if (state.extra is! Guest) return _LostRoute('/guest-home/${state.pathParameters['weddingId']}');
-          return GuestOnboardingWizardScreen(
+          return lazyPage([l20.loadLibrary], () => l20.GuestOnboardingWizardScreen(
             key: ValueKey('gonb$step'),
             weddingId: state.pathParameters['weddingId']!,
             guest: state.extra as Guest,
             initialStep: step,
-          );
+          ));
         },
       ),
       GoRoute(
@@ -358,86 +359,86 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       // Bilhetes (migração 149).
-      GoRoute(path: '/bilhete/:id', builder: (context, state) => TicketReturnScreen(ticketId: state.pathParameters['id']!)),
-      GoRoute(path: '/bilhetes', builder: (context, state) => const PermissionGate(perm: OrganizerPerm.bilhetes, child: OrganizerTicketsScreen())),
+      GoRoute(path: '/bilhete/:id', builder: (context, state) =>lazyPage([l1.loadLibrary], () =>  l1.TicketReturnScreen(ticketId: state.pathParameters['id']!))),
+      GoRoute(path: '/bilhetes', builder: (context, state) =>lazyPage([l1.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.bilhetes, child: l1.OrganizerTicketsScreen()))),
       // O organizador leu o QR de um bilhete (migração 158).
       // Organizadores do evento e o que cada um pode (migração 159).
       GoRoute(path: '/organizadores', builder: (context, state) => const OrganizersScreen()),
       // Lista de presentes e loja dos parceiros (migração 160).
-      GoRoute(path: '/gift-list', builder: (context, state) => const PermissionGate(perm: OrganizerPerm.evento, child: OrganizerGiftListScreen())),
-      GoRoute(path: '/gift-shop', builder: (context, state) => const PermissionGate(perm: OrganizerPerm.evento, child: GiftShopScreen())),
+      GoRoute(path: '/gift-list', builder: (context, state) => PermissionGate(perm: OrganizerPerm.evento, child: OrganizerGiftListScreen())),
+      GoRoute(path: '/gift-shop', builder: (context, state) => PermissionGate(perm: OrganizerPerm.evento, child: GiftShopScreen())),
       GoRoute(path: '/presente/:id', builder: (context, state) => GiftReturnScreen(orderId: state.pathParameters['id']!)),
       GoRoute(path: '/partner-shop', builder: (context, state) => const PartnerShopScreen()),
-      GoRoute(path: '/username', builder: (context, state) => const UsernameScreen()),
+      GoRoute(path: '/username', builder: (context, state) =>lazyPage([l62.loadLibrary], () =>  l62.UsernameScreen())),
       // Plano Pro dos parceiros (migração 161).
       GoRoute(path: '/partner-pro', builder: (context, state) => PartnerProScreen(returned: state.uri.queryParameters['ok'] == '1')),
       GoRoute(path: '/entrada/:code', builder: (context, state) => CheckInScreen(code: state.pathParameters['code']!)),
-      GoRoute(path: '/bilhetes/ativar', builder: (context, state) => const PartnerPayoutSetupScreen(organizer: true)),
+      GoRoute(path: '/bilhetes/ativar', builder: (context, state) =>lazyPage([l7.loadLibrary], () =>  l7.PartnerPayoutSetupScreen(organizer: true))),
       // Evento público aberto por link partilhado (2026-11).
       // Envelopes recebidos (migração 156).
-      GoRoute(path: '/envelopes', builder: (context, state) => const EnvelopesScreen()),
-      GoRoute(path: '/p/:code', builder: (context, state) => PartnerInviteScreen(code: state.pathParameters['code']!)),
-      GoRoute(path: '/evento/:id', builder: (context, state) => PublicEventScreen(id: state.pathParameters['id']!)),
+      GoRoute(path: '/envelopes', builder: (context, state) =>lazyPage([l24.loadLibrary], () =>  l24.EnvelopesScreen())),
+      GoRoute(path: '/p/:code', builder: (context, state) =>lazyPage([l23.loadLibrary], () =>  l23.PartnerInviteScreen(code: state.pathParameters['code']!))),
+      GoRoute(path: '/evento/:id', builder: (context, state) =>lazyPage([l16.loadLibrary], () =>  l16.PublicEventScreen(id: state.pathParameters['id']!))),
       // Criar mais um evento (vários por conta, 2026-11).
       GoRoute(
         path: '/novo-evento',
-        builder: (context, state) => const OnboardingWizardScreen(newEvent: true),
+        builder: (context, state) =>lazyPage([l34.loadLibrary], () =>  l34.OnboardingWizardScreen(newEvent: true)),
       ),
       tabRoute(
         path: '/eventos',
-        builder: (context, state) =>
-            EventosScreen(initialTab: state.uri.queryParameters['tab'] == 'meus' ? 1 : null),
+        builder: (context, state) =>lazyPage([l16.loadLibrary], () => 
+            l16.EventosScreen(initialTab: state.uri.queryParameters['tab'] == 'meus' ? 1 : null)),
       ),
       // Caminho antigo de "Os teus eventos" — agora é o separador Eventos.
       GoRoute(path: '/guest-events', redirect: (context, state) => '/eventos'),
       GoRoute(
         path: '/guest-wedding-details',
-        builder: (context, state) => state.extra is GuestWedding
-            ? GuestWeddingDetailsScreen(wedding: state.extra as GuestWedding)
-            : const _LostRoute('/guest-home'),
+        builder: (context, state) =>lazyPage([l25.loadLibrary], () =>  state.extra is GuestWedding
+            ? l25.GuestWeddingDetailsScreen(wedding: state.extra as GuestWedding)
+            : const _LostRoute('/guest-home')),
       ),
       tabRoute(
         path: '/guest-gifts',
-        builder: (context, state) => const GuestGiftsScreen(),
+        builder: (context, state) =>lazyPage([l18.loadLibrary], () =>  l18.GuestGiftsScreen()),
       ),
       tabRoute(
         path: '/guest-gifts/:weddingId',
-        builder: (context, state) =>
-            GuestGiftsScreen(weddingId: state.pathParameters['weddingId']),
+        builder: (context, state) =>lazyPage([l18.loadLibrary], () => 
+            l18.GuestGiftsScreen(weddingId: state.pathParameters['weddingId'])),
       ),
       tabRoute(
         // Perfil igual ao do organizador (2026-11), com a barra de convidado.
         path: '/guest-profile',
-        builder: (context, state) => const HomeFeedScreen(guestMode: true),
+        builder: (context, state) =>lazyPage([l29.loadLibrary], () =>  l29.HomeFeedScreen(guestMode: true)),
       ),
       tabRoute(
         path: '/guest-profile/:weddingId',
-        builder: (context, state) =>
-            HomeFeedScreen(guestMode: true, guestWeddingId: state.pathParameters['weddingId']),
+        builder: (context, state) =>lazyPage([l29.loadLibrary], () => 
+            l29.HomeFeedScreen(guestMode: true, guestWeddingId: state.pathParameters['weddingId'])),
       ),
       // Resposta, menu, acompanhantes e mesa de um evento (antigo perfil
       // do convidado).
       GoRoute(
         path: '/guest-presenca/:weddingId',
-        builder: (context, state) => GuestProfileScreen(weddingId: state.pathParameters['weddingId']),
+        builder: (context, state) =>lazyPage([l21.loadLibrary], () =>  l21.GuestProfileScreen(weddingId: state.pathParameters['weddingId'])),
       ),
       GoRoute(
         // Alojamento e transporte para os convidados (099_guest_offers.sql).
         path: '/guest-stay/:weddingId',
-        builder: (context, state) => GuestOffersScreen(weddingId: state.pathParameters['weddingId']!),
+        builder: (context, state) =>lazyPage([l9.loadLibrary], () =>  l9.GuestOffersScreen(weddingId: state.pathParameters['weddingId']!)),
       ),
       tabRoute(
         path: '/guest-gallery',
-        builder: (context, state) => const GuestGalleryScreen(),
+        builder: (context, state) =>lazyPage([l17.loadLibrary], () =>  l17.GuestGalleryScreen()),
       ),
       tabRoute(
         path: '/guest-gallery/:weddingId',
-        builder: (context, state) =>
-            GuestGalleryScreen(weddingId: state.pathParameters['weddingId']),
+        builder: (context, state) =>lazyPage([l17.loadLibrary], () => 
+            l17.GuestGalleryScreen(weddingId: state.pathParameters['weddingId'])),
       ),
       GoRoute(
         path: '/partner-contracts',
-        builder: (context, state) => const PartnerContractsScreen(),
+        builder: (context, state) =>lazyPage([l42.loadLibrary], () =>  l42.PartnerContractsScreen()),
       ),
       GoRoute(
         // Chat antigo de demonstração (MockBackend) — removido; o link
@@ -447,152 +448,152 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/partner-welcome',
-        builder: (context, state) => const PartnerWelcomeScreen(),
+        builder: (context, state) =>lazyPage([l43.loadLibrary], () =>  l43.PartnerWelcomeScreen()),
       ),
       tabRoute(
         path: '/partner-profile',
-        builder: (context, state) => const PartnerProfileScreen(),
+        builder: (context, state) =>lazyPage([l51.loadLibrary], () =>  l51.PartnerProfileScreen()),
       ),
       GoRoute(
         path: '/partner-availability',
-        builder: (context, state) => const PartnerAvailabilityScreen(),
+        builder: (context, state) =>lazyPage([l48.loadLibrary], () =>  l48.PartnerAvailabilityScreen()),
       ),
       GoRoute(
         path: '/partner-location',
-        builder: (context, state) => const PartnerLocationScreen(),
+        builder: (context, state) =>lazyPage([l46.loadLibrary], () =>  l46.PartnerLocationScreen()),
       ),
       GoRoute(
         path: '/partner-cancellation',
-        builder: (context, state) => const PartnerCancellationScreen(),
+        builder: (context, state) =>lazyPage([l47.loadLibrary], () =>  l47.PartnerCancellationScreen()),
       ),
       GoRoute(
         path: '/partner-business-info',
-        builder: (context, state) => const BusinessInfoScreen(),
+        builder: (context, state) =>lazyPage([l45.loadLibrary], () =>  l45.BusinessInfoScreen()),
       ),
       GoRoute(
         path: '/partner-portfolio',
-        builder: (context, state) => const PartnerPortfolioScreen(),
+        builder: (context, state) =>lazyPage([l50.loadLibrary], () =>  l50.PartnerPortfolioScreen()),
       ),
       GoRoute(
         path: '/partner-pricing',
-        builder: (context, state) => const PartnerPricingScreen(),
+        builder: (context, state) =>lazyPage([l49.loadLibrary], () =>  l49.PartnerPricingScreen()),
       ),
       tabRoute(
         path: '/partner-requests',
-        builder: (context, state) => PartnerBookingsScreen(
+        builder: (context, state) =>lazyPage([l36.loadLibrary], () =>  l36.PartnerBookingsScreen(
           initialSegment: state.uri.queryParameters['segment'],
-        ),
+        )),
       ),
       GoRoute(
         path: '/partner-requests/:id',
-        builder: (context, state) => state.extra is Booking
-            ? BookingDetailScreen(booking: state.extra as Booking)
-            : const _LostRoute('/partner-requests'),
+        builder: (context, state) =>lazyPage([l35.loadLibrary], () =>  state.extra is Booking
+            ? l35.BookingDetailScreen(booking: state.extra as Booking)
+            : const _LostRoute('/partner-requests')),
       ),
       GoRoute(
         path: '/partner-requests/:id/proposal',
-        builder: (context, state) => state.extra is Booking
-            ? SendProposalScreen(booking: state.extra as Booking)
-            : const _LostRoute('/partner-requests'),
+        builder: (context, state) =>lazyPage([l37.loadLibrary], () =>  state.extra is Booking
+            ? l37.SendProposalScreen(booking: state.extra as Booking)
+            : const _LostRoute('/partner-requests')),
       ),
       tabRoute(
         path: '/partner-messages',
-        builder: (context, state) => const PartnerMessagesScreen(),
+        builder: (context, state) =>lazyPage([l41.loadLibrary], () =>  l41.PartnerMessagesScreen()),
       ),
       GoRoute(
         path: '/partner-messages/:id',
-        builder: (context, state) => state.extra is ChatConversation
-            ? PartnerChatThreadScreen(conversation: state.extra as ChatConversation)
-            : const _LostRoute('/partner-messages'),
+        builder: (context, state) =>lazyPage([l40.loadLibrary], () =>  state.extra is ChatConversation
+            ? l40.PartnerChatThreadScreen(conversation: state.extra as ChatConversation)
+            : const _LostRoute('/partner-messages')),
       ),
       GoRoute(
         path: '/partner-payments',
-        builder: (context, state) => const PartnerPaymentsScreen(),
+        builder: (context, state) =>lazyPage([l44.loadLibrary], () =>  l44.PartnerPaymentsScreen()),
       ),
       GoRoute(
         path: '/partner-payments/setup',
-        builder: (context, state) => const PartnerPayoutSetupScreen(),
+        builder: (context, state) =>lazyPage([l7.loadLibrary], () =>  l7.PartnerPayoutSetupScreen()),
       ),
       GoRoute(
         path: '/partner-venue-tables',
-        builder: (context, state) => const PartnerVenueTablesScreen(),
+        builder: (context, state) =>lazyPage([l54.loadLibrary], () =>  l54.PartnerVenueTablesScreen()),
       ),
       GoRoute(
         path: '/partner-reviews',
-        builder: (context, state) => const PartnerReviewsScreen(),
+        builder: (context, state) =>lazyPage([l52.loadLibrary], () =>  l52.PartnerReviewsScreen()),
       ),
       GoRoute(
         path: '/partner-stats',
-        builder: (context, state) => const PartnerStatsScreen(),
+        builder: (context, state) =>lazyPage([l53.loadLibrary], () =>  l53.PartnerStatsScreen()),
       ),
       GoRoute(
         path: '/partner-calendar',
-        builder: (context, state) => const PartnerCalendarScreen(),
+        builder: (context, state) =>lazyPage([l38.loadLibrary], () =>  l38.PartnerCalendarScreen()),
       ),
       GoRoute(
         path: '/calendar',
-        builder: (context, state) => const CalendarScreen(),
+        builder: (context, state) =>lazyPage([l33.loadLibrary], () =>  l33.CalendarScreen()),
       ),
       tabRoute(
         path: '/wedding',
         // `?aparencia=1`: abre logo no modo de mudar estilo e cor
         // (Definições → Aparência do menu).
-        builder: (context, state) => WeddingDetailsScreen(
+        builder: (context, state) =>lazyPage([l59.loadLibrary], () =>  l59.WeddingDetailsScreen(
           key: ValueKey(state.uri.toString()),
           startEditing: state.uri.queryParameters['aparencia'] == '1',
-        ),
+        )),
       ),
       GoRoute(
         path: '/gallery',
-        builder: (context, state) =>
-            GalleryScreen(weddingId: state.extra as String?),
+        builder: (context, state) =>lazyPage([l26.loadLibrary], () => 
+            l26.GalleryScreen(weddingId: state.extra as String?)),
       ),
       GoRoute(
         path: '/guests',
-        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.convidados, child: GuestsListScreen()),
+        builder: (context, state) =>lazyPage([l28.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.convidados, child: l28.GuestsListScreen())),
       ),
       GoRoute(
         path: '/guests/:id',
-        builder: (context, state) =>
-            PermissionGate(perm: OrganizerPerm.convidados, child: GuestDetailScreen(guestId: state.pathParameters['id']!)),
+        builder: (context, state) =>lazyPage([l27.loadLibrary], () => 
+            PermissionGate(perm: OrganizerPerm.convidados, child: l27.GuestDetailScreen(guestId: state.pathParameters['id']!))),
       ),
       GoRoute(
         path: '/checklist',
-        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.tarefas, child: ChecklistScreen()),
+        builder: (context, state) =>lazyPage([l13.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.tarefas, child: l13.ChecklistScreen())),
       ),
       GoRoute(
         path: '/tasks',
-        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.tarefas, child: TasksScreen()),
+        builder: (context, state) =>lazyPage([l15.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.tarefas, child: l15.TasksScreen())),
       ),
       GoRoute(
         path: '/service-preferences',
-        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.orcamento, child: ServicePreferencesScreen()),
+        builder: (context, state) =>lazyPage([l14.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.orcamento, child: l14.ServicePreferencesScreen())),
       ),
       GoRoute(
         path: '/guest-page',
-        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.evento, child: GuestPageRoute()),
+        builder: (context, state) => PermissionGate(perm: OrganizerPerm.evento, child: GuestPageRoute()),
       ),
       GoRoute(
         path: '/budget',
-        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.orcamento, child: BudgetScreen()),
+        builder: (context, state) =>lazyPage([l10.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.orcamento, child: l10.BudgetScreen())),
       ),
       GoRoute(
         path: '/seating',
-        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.convidados, child: SeatingScreen()),
+        builder: (context, state) =>lazyPage([l55.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.convidados, child: l55.SeatingScreen())),
       ),
       GoRoute(
         path: '/bookings',
-        builder: (context, state) => CoupleBookingsScreen(guestsTab: state.uri.queryParameters['convidados'] == '1'),
+        builder: (context, state) =>lazyPage([l5.loadLibrary], () =>  l5.CoupleBookingsScreen(guestsTab: state.uri.queryParameters['convidados'] == '1')),
       ),
       GoRoute(
         path: '/pay',
-        builder: (context, state) => state.extra is PayArgs
-            ? PayScreen(args: state.extra as PayArgs)
-            : const _LostRoute('/bookings'),
+        builder: (context, state) =>lazyPage([l6.loadLibrary], () =>  state.extra is PayArgs
+            ? l6.PayScreen(args: state.extra as PayArgs)
+            : const _LostRoute('/bookings')),
       ),
       GoRoute(
         path: '/pay/return',
-        builder: (context, state) => const PayReturnScreen(),
+        builder: (context, state) =>lazyPage([l8.loadLibrary], () =>  l8.PayReturnScreen()),
       ),
       GoRoute(
         path: '/pay/done',
@@ -602,61 +603,61 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/bookings/detail',
-        builder: (context, state) => state.extra is CoupleBooking
-            ? CoupleBookingDetailScreen(booking: state.extra as CoupleBooking)
-            : const _LostRoute('/bookings'),
+        builder: (context, state) =>lazyPage([l4.loadLibrary], () =>  state.extra is CoupleBooking
+            ? l4.CoupleBookingDetailScreen(booking: state.extra as CoupleBooking)
+            : const _LostRoute('/bookings')),
       ),
       tabRoute(
         path: '/partners',
         asButton: (state) => (state.extra as PartnerPickerArgs?)?.selectionMode ?? false,
         builder: (context, state) {
           final args = state.extra as PartnerPickerArgs?;
-          return PartnersListScreen(
+          return lazyPage([l56.loadLibrary], () => l56.PartnersListScreen(
             categorySlug: args?.categorySlug,
             selectionMode: args?.selectionMode ?? false,
-          );
+          ));
         },
       ),
       // Grupos do evento (2026-10-20).
       GoRoute(
         path: '/groups/:weddingId',
-        builder: (context, state) => GroupsScreen(weddingId: state.pathParameters['weddingId']!),
+        builder: (context, state) =>lazyPage([l3.loadLibrary], () =>  l3.GroupsScreen(weddingId: state.pathParameters['weddingId']!)),
       ),
       GoRoute(
         path: '/group/:id',
-        builder: (context, state) => state.extra is ChatGroup
-            ? GroupThreadScreen(group: state.extra as ChatGroup)
-            : const _LostRoute('/chat'),
+        builder: (context, state) =>lazyPage([l3.loadLibrary], () =>  state.extra is ChatGroup
+            ? l3.GroupThreadScreen(group: state.extra as ChatGroup)
+            : const _LostRoute('/chat')),
       ),
       tabRoute(
         path: '/chat',
-        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.conversas, child: ChatListScreen()),
+        builder: (context, state) =>lazyPage([l11.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.conversas, child: l11.ChatListScreen())),
       ),
       GoRoute(
         path: '/chat/:conversationId',
-        builder: (context, state) => state.extra is ChatConversation
-            ? PermissionGate(perm: OrganizerPerm.conversas, child: ChatThreadScreen(conversation: state.extra as ChatConversation))
-            : const _LostRoute('/chat'),
+        builder: (context, state) =>lazyPage([l12.loadLibrary], () =>  state.extra is ChatConversation
+            ? PermissionGate(perm: OrganizerPerm.conversas, child: l12.ChatThreadScreen(conversation: state.extra as ChatConversation))
+            : const _LostRoute('/chat')),
       ),
       GoRoute(
         path: '/settings',
-        builder: (context, state) => SettingsScreen(fromGuestMode: state.extra == true),
+        builder: (context, state) =>lazyPage([l57.loadLibrary], () =>  l57.SettingsScreen(fromGuestMode: state.extra == true)),
       ),
       GoRoute(
         path: '/support',
-        builder: (context, state) => const SupportScreen(),
+        builder: (context, state) =>lazyPage([l58.loadLibrary], () =>  l58.SupportScreen()),
       ),
       GoRoute(
         path: '/invite/:slug',
-        builder: (context, state) => InvitePageScreen(
+        builder: (context, state) =>lazyPage([l31.loadLibrary], () =>  l31.InvitePageScreen(
           slug: state.pathParameters['slug']!,
           fromInstall: state.uri.queryParameters['app'] == '1',
-        ),
+        )),
       ),
       GoRoute(
         path: '/rsvp/:token',
-        builder: (context, state) =>
-            RsvpPageScreen(token: state.pathParameters['token']!),
+        builder: (context, state) =>lazyPage([l32.loadLibrary], () => 
+            l32.RsvpPageScreen(token: state.pathParameters['token']!)),
       ),
     ],
   );

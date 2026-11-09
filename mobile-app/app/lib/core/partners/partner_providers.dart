@@ -109,7 +109,23 @@ final partnerCategoryOptionsProvider =
           .select('id, label_pt, slug')
           .eq('is_active', true)
           .order('label_pt', ascending: true);
+      // Só categorias com pelo menos um parceiro publicado (pedido
+      // 2026-11-09). Os parceiros, ao criar o perfil, continuam a ver todas
+      // (`loadCategoryOptions`). Se a consulta falhar, mostra todas.
+      Set<String>? withPartners;
+      try {
+        final links = await supabase
+            .from('partner_profiles')
+            .select('partner_profile_categories(partner_categories(slug))')
+            .eq('status', 'published');
+        withPartners = {
+          for (final p in links as List)
+            for (final l in (p['partner_profile_categories'] as List? ?? const []))
+              if ((l['partner_categories'] as Map?)?['slug'] case final String slug) slug,
+        };
+      } catch (_) {}
       return rows
+          .where((r) => withPartners == null || withPartners.contains(r['slug']))
           .map(
             (r) => PartnerCategoryOption(
               id: r['id'] as String,
