@@ -398,6 +398,7 @@ class PartnerAccountSections extends ConsumerWidget {
         _Group(
           children: [
             _Row(icon: Icons.storefront_outlined, label: 'Informações do negócio', onTap: () => context.push('/partner-business-info')),
+            _Row(icon: Icons.event_busy_outlined, label: 'Regras de cancelamento', onTap: () => context.push('/partner-cancellation')),
             _Row(
               icon: Icons.place_outlined,
               label: 'Localização',
@@ -572,6 +573,7 @@ class _PartnerSettings extends ConsumerWidget {
         _Group(
           children: [
             _Row(icon: Icons.storefront_outlined, label: 'Informações do negócio', onTap: () => context.push('/partner-business-info')),
+            _Row(icon: Icons.event_busy_outlined, label: 'Regras de cancelamento', onTap: () => context.push('/partner-cancellation')),
             _Row(icon: Icons.euro, label: 'Preços e pacotes', onTap: () => context.push('/partner-pricing')),
             _Row(
               icon: Icons.place_outlined,

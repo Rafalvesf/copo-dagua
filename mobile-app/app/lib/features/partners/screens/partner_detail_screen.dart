@@ -21,6 +21,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../partner_style.dart';
 import '../../../shared/money.dart';
+import '../../../core/partners/cancellation_rule.dart';
 import '../../../core/partners/category_figure.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
@@ -372,6 +373,19 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                             ),
                           ],
                         ),
+                        // Regra de cancelamento do parceiro (migração 173).
+                        if (ref.watch(partnerCancellationProvider((partner.id, partner.primaryCategorySlug))).value
+                            case final rule?) ...[
+                          const SizedBox(height: 12),
+                          Row(children: [
+                            const Icon(Icons.event_busy_outlined, size: 18, color: v2Muted),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(rule.summary(partner.primaryCategorySlug),
+                                  style: const TextStyle(fontSize: 13, color: AppTheme.ink)),
+                            ),
+                          ]),
+                        ],
                         if (gallery.isNotEmpty) ...[
                           const SizedBox(height: 22),
                           const _Heading('Galeria'),

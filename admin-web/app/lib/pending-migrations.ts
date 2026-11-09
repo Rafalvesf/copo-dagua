@@ -210,6 +210,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Restaurantes, bares e discotecas, atividades radicais (paintball, karting, escalada…), experiências e passeios, jogos e escape rooms, alojamento, spa e animação infantil.",
     check: { kind: "marker", id: "172" },
   },
+  {
+    file: "173_partner_cancellation_rules.sql",
+    title: "Regras de cancelamento por parceiro",
+    what: "Cada parceiro escolhe a sua regra de cancelamento (prazo, até à compra ou condições próprias); sem escolha, vale a da categoria.",
+    check: { kind: "column", table: "partner_profiles", column: "cancellation_rule" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
