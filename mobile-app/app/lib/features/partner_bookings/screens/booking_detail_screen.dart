@@ -304,9 +304,10 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                                       content: Text(
                                         owed > 0
                                             ? 'Já recebeste ${euros(owed, cents: true)} desta reserva. Para cancelar, tens de devolver esse valor: '
-                                                'é retirado do teu saldo À Nossa! e o cliente recebe de volta tudo o que pagou.\n\nEsta ação não pode ser desfeita.'
+                                                'é retirado do teu saldo À Nossa! e o cliente recebe de volta tudo o que pagou. '
+                                                'A taxa de serviço destes pagamentos fica a teu cargo e é descontada nos próximos pagamentos.\n\nEsta ação não pode ser desfeita.'
                                             : 'Cancelar a reserva com ${booking.clientName}? Esta ação não pode ser desfeita.'
-                                                '${booking.status == BookingStatus.confirmado ? '\n\nO cliente recebe de volta tudo o que pagou, de forma automática.' : ''}',
+                                                '${booking.status == BookingStatus.confirmado ? '\n\nO cliente recebe de volta tudo o que pagou, de forma automática. A taxa de serviço fica a teu cargo e é descontada nos próximos pagamentos.' : ''}',
                                       ),
                                       actions: [
                                         TextButton(

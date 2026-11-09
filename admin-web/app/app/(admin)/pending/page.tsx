@@ -5,7 +5,7 @@ import { TaskRow, type AdminTask } from "./task-row";
 import { AddTaskForm } from "./add-form";
 
 // Pendentes (migração 137): o que falta fazer para lançar, para ir riscando.
-const AREAS = ["Base de dados", "Testes", "Segurança", "Lojas e contas", "Pagamentos e faturação", "Produto", "Qualidade", "Marketing", "Outros"];
+const AREAS = ["Base de dados", "Testes", "Segurança", "Lojas e contas", "Pagamentos e faturação", "Legal", "Produto", "Qualidade", "Marketing", "Outros"];
 
 export default async function PendingPage({ searchParams }: PageProps<"/pending">) {
   await requireAdmin();

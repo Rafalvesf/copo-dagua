@@ -222,6 +222,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O cancelamento pelo organizador devolve segundo a regra do parceiro (ou da categoria). Com cartão, o valor fica cativo até ao fim do prazo grátis, enquanto a Stripe deixar.",
     check: { kind: "column", table: "payments", column: "is_held" },
   },
+  {
+    file: "175_partner_cancel_fee.sql",
+    title: "Parceiro cancela → paga a taxa de serviço",
+    what: "Quando o parceiro cancela, o organizador recebe tudo e a taxa de serviço fica em dívida do parceiro, descontada nos pagamentos seguintes.",
+    check: { kind: "marker", id: "175" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
