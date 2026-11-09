@@ -1524,8 +1524,8 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
         child: SnappyTap(
           onTap: onTap,
           child: Container(
-            width: 44,
-            height: 44,
+            width: 48,
+            height: 48,
             decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
             child: Icon(icon, color: AppTheme.ink),
           ),
@@ -1565,6 +1565,58 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
         decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(999)),
         child: Row(children: children),
       );
+
+  Widget _quickChip(int v) {
+    final selected = _priceValue == v.toDouble();
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: SnappyTap(
+        onTap: () => setState(() => _price.text = '$v'),
+        child: Container(
+          height: 34,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? const Color(0xFFDDE5D3) : Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: selected ? null : Border.all(color: const Color(0xFFDCD8CE), width: 1.5),
+          ),
+          child: Text('$v €',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: selected ? const Color(0xFF3F5A3B) : AppTheme.ink)),
+        ),
+      ),
+    );
+  }
+
+  // Contas do bilhete. A taxa de serviço inclui o custo do pagamento
+  // (que depende do cartão), por isso o valor recebido é aproximado.
+  Widget _feeBox() {
+    final price = _priceValue ?? 0;
+    final cfg = ref.watch(_ticketFeeProvider).value ?? (pct: 4.0, fixed: 1.0);
+    final fee = price <= 0 ? 0.0 : (price * cfg.pct / 100 + cfg.fixed + price * 0.015 + 0.25).clamp(0, price).toDouble();
+    String eur(double v) => '${v.toStringAsFixed(2).replaceAll('.', ',')} €';
+    Widget line(String a, String b, {bool bold = false, bool muted = false}) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(children: [
+            Expanded(
+              child: Text(a,
+                  style: TextStyle(fontSize: bold ? 14.5 : 13.5, fontWeight: bold ? FontWeight.w700 : FontWeight.w400, color: muted ? AppTheme.inkMuted : AppTheme.ink)),
+            ),
+            Text(b,
+                style: TextStyle(fontSize: bold ? 14.5 : 13.5, fontWeight: bold || !muted ? FontWeight.w700 : FontWeight.w400, color: muted ? AppTheme.inkMuted : AppTheme.ink)),
+          ]),
+        );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(14)),
+      child: Column(children: [
+        line('Quem compra paga', eur(price)),
+        line('Taxa de serviço', '− ${eur(fee)}', muted: true),
+        line('Recebes por bilhete', '≈ ${eur(price - fee)}', bold: true),
+      ]),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1629,92 +1681,91 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
             style: const TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
           ),
         ] else ...[
+          // Igual ao mockup "Bilhetes · Entrada paga" (2026-11-08): − / +
+          // à volta do preço, valores rápidos, contas e Guardar preço.
           const SizedBox(height: 16),
           const Text('Preço por pessoa', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           const SizedBox(height: 8),
-          // Sem teclado também (pedido 2026-11-08: "não consigo colocar o
-          // preço"): − / + e valores rápidos. O campo continua a aceitar
-          // escrever.
           Row(children: [
             _stepBtn(Icons.remove_rounded, 'Menos 1 €', () => _bump(-1)),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Expanded(
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  for (final v in const [10, 15, 20, 25, 30, 50])
-                    ChoiceChip(
-                      label: Text('$v €'),
-                      selected: _priceValue == v.toDouble(),
-                      onSelected: (_) => setState(() => _price.text = '$v'),
-                      selectedColor: const Color(0xFFDDE5D3),
-                      labelStyle: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink),
-                      showCheckmark: false,
+              child: Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.accentOliveDark, width: 1.5),
+                ),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  // O campo ocupa a metade esquerda toda: um toque em
+                  // qualquer ponto abre o teclado.
+                  Expanded(
+                    child: TextField(
+                      controller: _price,
+                      focusNode: _priceFocus,
+                      textAlign: TextAlign.right,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.done,
+                      onChanged: (_) => setState(() {}),
+                      onSubmitted: (_) => _savePrice(),
+                      style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                      decoration: const InputDecoration(
+                        hintText: '25',
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        isCollapsed: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 14),
+                      ),
                     ),
-                ],
+                  ),
+                  const SizedBox(width: 6),
+                  const Expanded(
+                    child: Text('€', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  ),
+                ]),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             _stepBtn(Icons.add_rounded, 'Mais 1 €', () => _bump(1)),
           ]),
           const SizedBox(height: 10),
-          // O próprio campo ocupa a caixa toda: qualquer toque nela abre o
-          // teclado (antes só a linha do número recebia o toque).
-          Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            Expanded(
-              child: TextField(
-                controller: _price,
-                focusNode: _priceFocus,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _savePrice(),
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                decoration: InputDecoration(
-                  hintText: '25',
-                  suffixText: '€',
-                  suffixStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFDCD8CE))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFDCD8CE), width: 1.5)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppTheme.accentOliveDark, width: 1.5)),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              height: 54,
-              child: FilledButton(
-                onPressed: _savingPrice ? null : _savePrice,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.accentOliveDark,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  shape: const StadiumBorder(),
-                ),
-                child: _savingPrice
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Guardar', style: TextStyle(fontWeight: FontWeight.w700)),
-              ),
-            ),
-          ]),
-          const SizedBox(height: 8),
-          const Text(
-            'Cada pessoa paga o bilhete na app.',
-            style: TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final v in const [10, 15, 20, 25, 50]) _quickChip(v),
+            ],
           ),
-          if (entry.paid)
-            Align(
-              alignment: Alignment.centerLeft,
+          const SizedBox(height: 12),
+          _feeBox(),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 50,
+            child: FilledButton(
+              onPressed: _savingPrice ? null : _savePrice,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.accentOliveDark,
+                foregroundColor: Colors.white,
+                shape: const StadiumBorder(),
+              ),
+              child: _savingPrice
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('Guardar preço', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+            ),
+          ),
+          if (entry.paid) ...[
+            const SizedBox(height: 6),
+            Center(
               child: TextButton(
                 onPressed: () => context.push('/bilhetes'),
-                style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: AppTheme.accentOliveDark),
-                child: const Text('Bilhetes vendidos e pagamentos ›', style: TextStyle(fontWeight: FontWeight.w700)),
+                style: TextButton.styleFrom(foregroundColor: AppTheme.accentOliveDark),
+                child: const Text('Bilhetes vendidos e revendas ›', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
               ),
             ),
+          ],
         ],
       ]),
     );
@@ -2171,3 +2222,16 @@ class _OptSegmentState extends ConsumerState<_OptSegment> {
     ]);
   }
 }
+
+/// Taxa de serviço dos bilhetes (`ticket_fee_percentage` + `fixed_fee_cents`).
+final _ticketFeeProvider = FutureProvider<({double pct, double fixed})>((ref) async {
+  try {
+    final r = await supabase.from('platform_settings').select('*').eq('id', 1).maybeSingle();
+    return (
+      pct: (r?['ticket_fee_percentage'] as num?)?.toDouble() ?? 4.0,
+      fixed: ((r?['fixed_fee_cents'] as num?)?.toDouble() ?? 100) / 100,
+    );
+  } catch (_) {
+    return (pct: 4.0, fixed: 1.0);
+  }
+});
