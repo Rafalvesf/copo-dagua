@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/router.dart' show prefetchEventPage;
 import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/tasks/task_engine_controller.dart';
@@ -52,6 +53,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   void initState() {
     super.initState();
     Future.microtask(() => ref.read(taskEngineControllerProvider.notifier).recompute());
+    WidgetsBinding.instance.addPostFrameCallback((_) => prefetchEventPage());
   }
 
   void _openNotifications(BuildContext context) {

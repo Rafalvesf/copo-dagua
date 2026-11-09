@@ -679,6 +679,13 @@ class _LostRoute extends StatelessWidget {
 }
 
 /// Carrega todos os ecrãs deferred de uma vez (capturas de ecrã/testes).
+/// Página do evento (a principal do organizador): vai buscar o código logo
+/// que o início abre, em segundo plano, para não esperar ao tocar no menu
+/// (2026-11-09: chegava a demorar 5 s só a descarregar o ecrã).
+void prefetchEventPage() {
+  l59.loadLibrary().then((_) => LazyPage.markLoaded([l59.loadLibrary]), onError: (_) {});
+}
+
 Future<void> preloadDeferredPages() async {
   final loads = <Future<void> Function()>[l1.loadLibrary, l2.loadLibrary, l3.loadLibrary, l4.loadLibrary, l5.loadLibrary, l6.loadLibrary, l7.loadLibrary, l8.loadLibrary, l9.loadLibrary, l10.loadLibrary, l11.loadLibrary, l12.loadLibrary, l13.loadLibrary, l14.loadLibrary, l15.loadLibrary, l16.loadLibrary, l17.loadLibrary, l18.loadLibrary, l20.loadLibrary, l21.loadLibrary, l22.loadLibrary, l23.loadLibrary, l24.loadLibrary, l25.loadLibrary, l26.loadLibrary, l27.loadLibrary, l28.loadLibrary, l30.loadLibrary, l31.loadLibrary, l32.loadLibrary, l33.loadLibrary, l34.loadLibrary, l35.loadLibrary, l36.loadLibrary, l37.loadLibrary, l38.loadLibrary, l40.loadLibrary, l41.loadLibrary, l42.loadLibrary, l43.loadLibrary, l44.loadLibrary, l45.loadLibrary, l46.loadLibrary, l47.loadLibrary, l48.loadLibrary, l49.loadLibrary, l50.loadLibrary, l51.loadLibrary, l52.loadLibrary, l53.loadLibrary, l54.loadLibrary, l55.loadLibrary, l56.loadLibrary, l57.loadLibrary, l58.loadLibrary, l59.loadLibrary, l60.loadLibrary, l61.loadLibrary, l62.loadLibrary];
   await Future.wait([for (final l in loads) l()]);

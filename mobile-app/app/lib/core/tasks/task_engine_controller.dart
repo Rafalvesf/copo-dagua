@@ -104,13 +104,22 @@ const _categoryRules = {
 class TaskEngineController extends Notifier<TaskEngineState> {
   String? _weddingId;
   bool _recomputing = false;
+  bool _loadedOnce = false;
 
   @override
   TaskEngineState build() {
     final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
     _weddingId = weddingId;
     if (weddingId != null) {
-      Future.microtask(() => recompute());
+      // Mostra logo o que já está guardado (uma consulta) e só depois
+      // recalcula — antes a barra "Planeamento" e "Para fazer agora" só
+      // apareciam no fim do recálculo inteiro (2026-11-09).
+      Future.microtask(() async {
+        try {
+          if (_weddingId == weddingId && !_loadedOnce) await _load(weddingId);
+        } catch (_) {}
+        await recompute();
+      });
     }
     return const TaskEngineState();
   }
@@ -152,6 +161,8 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         tasks.where((t) => t.source == TaskSource.system && t.status == TaskStatus.completed).toList()
           ..sort((a, b) => (b.completedAt ?? b.createdAt).compareTo(a.completedAt ?? a.createdAt));
 
+    if (!ref.mounted || _weddingId != weddingId) return;
+    _loadedOnce = true;
     state = state.copyWith(
       loading: false,
       systemActive: tasks
@@ -196,6 +207,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
       // Nunca reescreve `completed`/`dismissed`/`expired` — essas são
       // histórico, ver a nota "não alterar retroativamente" do próprio
       // pedido do utilizador sobre gestão de templates no admin.
+      final writes = <Future<void>>[];
       for (final task in existing) {
         if (task.status != TaskStatus.active && task.status != TaskStatus.upcoming) continue;
         if (task.taskTemplateId == null) continue;
@@ -208,7 +220,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
             task.completionBehavior != template.completionBehavior ||
             task.displayType != template.displayType;
         if (!needsSync) continue;
-        await supabase.from('wedding_tasks').update({
+        writes.add(supabase.from('wedding_tasks').update({
           'title': template.title,
           'description': template.description,
           'category': template.category,
@@ -216,8 +228,11 @@ class TaskEngineController extends Notifier<TaskEngineState> {
           'completion_behavior': taskCompletionBehaviorToDb(template.completionBehavior),
           'display_type': taskDisplayTypeToDb(template.displayType),
           'updated_at': DateTime.now().toIso8601String(),
-        }).eq('id', task.id);
+        }).eq('id', task.id).then((_) {}));
       }
+      // Escritas independentes umas das outras: vão todas ao mesmo tempo.
+      await Future.wait(writes);
+      writes.clear();
 
       // 1) Concluir automaticamente o que os dados reais já satisfazem.
       for (final task in existing) {
@@ -228,12 +243,12 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         final rule = template?.completionRule;
         if (rule == null) continue;
         if (_isComplete(rule, template!.partnerCategorySlug, ctx)) {
-          await supabase.from('wedding_tasks').update({
+          writes.add(supabase.from('wedding_tasks').update({
             'status': 'completed',
             'completed_at': DateTime.now().toIso8601String(),
             'completion_source': rule,
             'updated_at': DateTime.now().toIso8601String(),
-          }).eq('id', task.id);
+          }).eq('id', task.id).then((_) {}));
         }
       }
 
@@ -248,12 +263,12 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         if (rule == null || !_categoryRules.contains(rule)) continue;
         if (task.completionSource != rule) continue;
         if (_isComplete(rule, template!.partnerCategorySlug, ctx)) continue;
-        await supabase.from('wedding_tasks').update({
+        writes.add(supabase.from('wedding_tasks').update({
           'status': 'upcoming',
           'completed_at': null,
           'completion_source': null,
           'updated_at': DateTime.now().toIso8601String(),
-        }).eq('id', task.id);
+        }).eq('id', task.id).then((_) {}));
       }
 
       // 2) Criar linhas `upcoming` para templates elegíveis que ainda
@@ -265,8 +280,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
             _isComplete(template.completionRule!, template.partnerCategorySlug, ctx)) {
           continue; // já satisfeita antes de sequer aparecer — não vale a pena criar.
         }
-        try {
-          await supabase.from('wedding_tasks').insert({
+        writes.add(supabase.from('wedding_tasks').insert({
             'wedding_id': weddingId,
             'task_template_id': template.id,
             'source': 'system',
@@ -277,12 +291,13 @@ class TaskEngineController extends Notifier<TaskEngineState> {
             'status': 'upcoming',
             'completion_behavior': taskCompletionBehaviorToDb(template.completionBehavior),
             'display_type': taskDisplayTypeToDb(template.displayType),
-          });
-        } catch (_) {
+          }).then((_) {}, onError: (_) {
           // Corrida entre recomputes concorrentes — o índice único já
           // protege contra duplicados, ignora o conflito.
-        }
+        }));
       }
+      await Future.wait(writes);
+      writes.clear();
 
       // 3) Reavaliar elegibilidade das `upcoming` (podem ter deixado
       // de ser relevantes, ex: preferência mudou para "not_needed").
@@ -336,21 +351,24 @@ class TaskEngineController extends Notifier<TaskEngineState> {
       for (final candidate in eligibleUpcoming) {
         if (slots <= 0) break;
         if (alreadyActiveIds.contains(candidate.id)) continue;
-        await supabase.from('wedding_tasks').update({
-          'status': 'active',
-          'available_at': DateTime.now().toIso8601String(),
-          'seen': false,
-          'updated_at': DateTime.now().toIso8601String(),
-        }).eq('id', candidate.id);
-        await supabase.from('notifications').insert({
-          'wedding_id': weddingId,
-          'type': 'new_task',
-          'title': 'Nova tarefa',
-          'body': candidate.description ?? candidate.title,
-          'wedding_task_id': candidate.id,
-        });
+        writes.add(() async {
+          await supabase.from('wedding_tasks').update({
+            'status': 'active',
+            'available_at': DateTime.now().toIso8601String(),
+            'seen': false,
+            'updated_at': DateTime.now().toIso8601String(),
+          }).eq('id', candidate.id);
+          await supabase.from('notifications').insert({
+            'wedding_id': weddingId,
+            'type': 'new_task',
+            'title': 'Nova tarefa',
+            'body': candidate.description ?? candidate.title,
+            'wedding_task_id': candidate.id,
+          });
+        }());
         slots--;
       }
+      await Future.wait(writes);
 
       await _syncDynamicTasks(weddingId);
 
@@ -367,20 +385,30 @@ class TaskEngineController extends Notifier<TaskEngineState> {
   /// natureza) e são concluídas assim que o registo de origem já não as
   /// justifica — não passam pela fila de [kMaxActiveSystemTasks].
   Future<void> _syncDynamicTasks(String weddingId) async {
-    final existingRows = await supabase
+    // As três leituras de partida não dependem umas das outras.
+    final existingF = supabase
         .from('wedding_tasks')
         .select()
         .eq('wedding_id', weddingId)
-        .not('source_entity_id', 'is', null);
+        .not('source_entity_id', 'is', null)
+        .then((r) => r);
+    final bookingF = supabase
+        .from('bookings')
+        .select('id, status, partner_profiles(business_name)')
+        .eq('wedding_id', weddingId)
+        .then((r) => r);
+    final quoteF = supabase
+        .from('quote_requests')
+        .select('id, partner_id, partner_profiles(business_name)')
+        .eq('wedding_id', weddingId)
+        .then((r) => r);
+    final existingRows = await existingF;
     final existingByEntity = {
       for (final r in (existingRows as List).cast<Map<String, dynamic>>())
         r['source_entity_id'] as String: WeddingTask.fromRow(r),
     };
 
-    final bookingRows = await supabase
-        .from('bookings')
-        .select('id, status, partner_profiles(business_name)')
-        .eq('wedding_id', weddingId);
+    final bookingRows = await bookingF;
     final bookingPartnerName = <String, String>{};
     final completedBookingIds = <String>{};
     final deadBookingIds = <String>{};
@@ -465,10 +493,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
       }
     }
 
-    final quoteRows = await supabase
-        .from('quote_requests')
-        .select('id, partner_id, partner_profiles(business_name)')
-        .eq('wedding_id', weddingId);
+    final quoteRows = await quoteF;
     final quoteRequests = (quoteRows as List).cast<Map<String, dynamic>>();
     final quoteRequestIds = quoteRequests.map((r) => r['id'] as String).toList();
     final quotePartnerName = <String, String>{
