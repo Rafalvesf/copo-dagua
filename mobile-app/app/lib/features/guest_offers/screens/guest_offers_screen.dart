@@ -285,7 +285,7 @@ class _ReserveSheetState extends ConsumerState<_ReserveSheet> {
               ),
             ),
             const SizedBox(height: 8),
-            Text('Inclui a comissão da app. Pagas com cartão num ecrã seguro da Stripe.',
+            Text('Inclui a taxa de serviço. Pagas com cartão num ecrã seguro.',
                 style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
             const SizedBox(height: 20),
             FilledButton(

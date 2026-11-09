@@ -801,7 +801,7 @@ class _ProUpsellCard extends StatelessWidget {
           if (bookings > 0) ...[
             const SizedBox(height: 12),
             Text(
-              'Com as tuas $bookings ${bookings == 1 ? 'reserva' : 'reservas'} deste mês, terias poupado cerca de ${euros(saving)} em comissões.',
+              'Com as tuas $bookings ${bookings == 1 ? 'reserva' : 'reservas'} deste mês, terias poupado cerca de ${euros(saving)} em taxas de serviço.',
               style: const TextStyle(fontSize: 13, height: 1.4, color: _proMuted),
             ),
           ],

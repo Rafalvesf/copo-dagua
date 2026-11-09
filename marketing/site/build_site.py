@@ -224,7 +224,7 @@ footer .wrap {{ display: flex; flex-wrap: wrap; justify-content: space-between; 
     <ul class="feats">
       {feat('store', 0, 'Parceiros perto de ti', 'Filtra por categoria, região e preço, e guarda os favoritos.')}
       {feat('chat', 1, 'Propostas no chat', 'Cada proposta mostra o valor, o sinal e o estado do pagamento.')}
-      {feat('card', 2, 'Pagamento seguro', 'Processado pela Stripe. A comissão aparece logo no valor, sem surpresas.')}
+      {feat('card', 2, 'Pagamento seguro', 'Processado pela Stripe. A taxa de serviço aparece logo no valor, sem surpresas.')}
     </ul>
     <div class="methods"><span>Cartão</span><span>Apple Pay</span><span>Google Pay</span><span>MB WAY</span><span>Multibanco</span></div>
   </div>

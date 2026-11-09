@@ -566,7 +566,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
               ),
               if (price != null && price > 0) ...[
                 const SizedBox(height: 6),
-                Text('O convidado paga ${euros(amountWithCommission(price, fee), cents: true)} (com a comissão da app).',
+                Text('O convidado paga ${euros(amountWithCommission(price, fee), cents: true)} (com a taxa de serviço).',
                     style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
               ],
               const SizedBox(height: 12),
