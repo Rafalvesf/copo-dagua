@@ -103,10 +103,9 @@ Deno.serve(async (req) => {
   const refunded: string[] = [];
   const manual: string[] = [];
   const failed: string[] = [];
-  // Total devolvido ao casal (o que pagou na Stripe, comissão incluída).
+  // Devolvido ao organizador e taxa de serviço que fica connosco.
   let refundedCents = 0;
   let released = false;
-  // Parceiro cancela (2026-11-09): paga a taxa de serviço de cada pagamento.
   let keptCents = 0;
 
   for (const p of payments) {
@@ -127,8 +126,6 @@ Deno.serve(async (req) => {
         continue;
       }
       const intent = await stripe.paymentIntents.retrieve(pi);
-      // Sinal ainda cativo (2026-11-08): liberta-se o valor no cartão, sem
-      // reembolso nem taxa da Stripe.
       const commissionCents = Number(intent.metadata?.commission_cents ?? 0) ||
         (intent.application_fee_amount ?? 0);
       // Nunca devolvemos na totalidade (2026-11-09): a taxa de serviço fica
@@ -154,11 +151,7 @@ Deno.serve(async (req) => {
         continue;
       }
       const hasTransfer = Boolean(intent.transfer_data?.destination);
-      // Já cobrado e cancelado pelo organizador (2026-11-09: "não podemos
-      // aceitar reembolsos totais senão perdemos dinheiro"): devolve-se o
-      // valor do parceiro; a taxa de serviço não é reembolsável. Cativo
-      // (acima) liberta-se tudo, sem custo. Cancelado pelo parceiro:
-      // devolve-se tudo.
+      // Já cobrado: devolve-se tudo menos a taxa de serviço.
       const refundCents = Math.max(0, intent.amount - keepCents);
       if (refundCents <= 0) continue;
       await stripe.refunds.create(
