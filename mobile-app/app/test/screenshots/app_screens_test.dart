@@ -47,6 +47,7 @@ import 'package:copo_dagua_app/core/partners/partner_providers.dart';
 import 'package:copo_dagua_app/core/platform/maintenance_controller.dart';
 import 'package:copo_dagua_app/core/reviews/review_providers.dart';
 import 'package:copo_dagua_app/core/router.dart';
+import 'package:copo_dagua_app/core/invite/public_invite.dart';
 import 'package:copo_dagua_app/core/seating/seating_controller.dart';
 import 'package:copo_dagua_app/core/tasks/task_engine_controller.dart';
 import 'package:copo_dagua_app/core/tasks/task_models.dart';
@@ -897,6 +898,47 @@ void main() {
       }
     });
   }
+  // Convite com dados (envelope, convite aberto), sem rede.
+  final sampleInvite = InviteEvent(
+    weddingId: 'w-demo',
+    code: 'SOFIATIAGO24',
+    eventType: EventType.wedding,
+    name1: 'Sofia',
+    name2: 'Tiago',
+    date: DateTime(2027, 6, 12),
+    time: '16:00',
+    venue: 'Quinta da Ribafria',
+    address: 'Estrada da Ribafria, 2710-000 Sintra',
+    message: 'Vamos casar e queremos-te connosco.',
+    dressCode: 'Formal',
+    themeColors: const ['#A8B89A', '#E8D9C4'],
+    maxCompanions: 1,
+  );
+  testWidgets('85a_convite_envelope', (t) async {
+    debugInviteEventLoader = (_) => sampleInvite;
+    addTearDown(() => debugInviteEventLoader = null);
+    await _shoot(t, '85a_convite_envelope', signedOut, '/invite/SOFIATIAGO24',
+        after: (t) => t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 600))));
+  });
+  testWidgets('85b_convite_aberto', (t) async {
+    debugInviteEventLoader = (_) => sampleInvite;
+    addTearDown(() => debugInviteEventLoader = null);
+    await _shoot(t, '85b_convite_aberto', signedOut, '/invite/SOFIATIAGO24', after: (t) async {
+      await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 600)));
+      for (var i = 0; i < 5; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+      }
+      for (final label in ['Abrir convite', 'Continuar aqui']) {
+        final f = find.text(label);
+        if (f.evaluate().isNotEmpty) {
+          await t.tap(f.first);
+          for (var i = 0; i < 20; i++) {
+            await t.pump(const Duration(milliseconds: 120));
+          }
+        }
+      }
+    });
+  });
   testWidgets('85_convite_publico', (t) => _shoot(t, '85_convite_publico', signedOut, '/invite/SOFIATIAGO24', after: (t) => t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 600)))));
   testWidgets('86_convite_individual', (t) => _shoot(t, '86_convite_individual', signedOut, '/i/token-de-teste'));
   testWidgets('87_juntar_par', (t) => _shoot(t, '87_juntar_par', signedOut, '/juntar/00000000-0000-0000-0000-000000000000'));
