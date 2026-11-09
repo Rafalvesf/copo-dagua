@@ -216,6 +216,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Cada parceiro escolhe a sua regra de cancelamento (prazo, até à compra ou condições próprias); sem escolha, vale a da categoria.",
     check: { kind: "column", table: "partner_profiles", column: "cancellation_rule" },
   },
+  {
+    file: "174_cancellation_enforcement.sql",
+    title: "Reembolsos segundo a regra de cada parceiro",
+    what: "O cancelamento pelo organizador devolve segundo a regra do parceiro (ou da categoria). Com cartão, o valor fica cativo até ao fim do prazo grátis, enquanto a Stripe deixar.",
+    check: { kind: "column", table: "payments", column: "is_held" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

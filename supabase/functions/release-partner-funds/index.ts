@@ -51,6 +51,8 @@ Deno.serve(async (req) => {
         await admin.rpc("mark_payment_released", { p_payment_id: r.payment_id, p_transfer_id: "destination_charge" });
         continue;
       }
+      // Ainda cativo (prazo de cancelamento grátis): liberta-se depois.
+      if (intent.status === "requires_capture") continue;
       const charge = typeof intent.latest_charge === "object" ? intent.latest_charge : null;
       if (!charge || intent.status !== "succeeded") {
         failed.push(r.payment_id);
@@ -114,6 +116,43 @@ Deno.serve(async (req) => {
 // deno-lint-ignore no-explicit-any
 async function captureHeldDeposits(admin: any): Promise<string[]> {
   const out: string[] = [];
+  const stripe = stripeClient();
+  // Migração 174: qualquer pagamento cativo (sinal ou restante) fica até
+  // ao fim do prazo de cancelamento grátis do parceiro
+  // (`payment_hold_until`), ou até 12 h antes de a Stripe o largar
+  // (`capture_before`: 7 dias, ou até 30 com autorização estendida).
+  const { data: held, error: heldErr } = await admin
+    .from("payments")
+    .select("id, provider_payment_id")
+    .eq("is_held", true)
+    .eq("status", "paid")
+    .like("provider_payment_id", "pi_%")
+    .limit(200);
+  if (!heldErr) {
+    for (const r of (held ?? []) as { id: string; provider_payment_id: string }[]) {
+      try {
+        const pi = await stripe.paymentIntents.retrieve(r.provider_payment_id, { expand: ["latest_charge"] });
+        if (pi.status !== "requires_capture") {
+          await admin.from("payments").update({ is_held: false }).eq("id", r.id);
+          continue;
+        }
+        const { data: hu } = await admin.rpc("payment_hold_until", { p_payment_id: r.id });
+        const holdUntil = hu ? new Date(hu as string).getTime() : 0;
+        // deno-lint-ignore no-explicit-any
+        const captureBefore = Number((pi.latest_charge as any)?.payment_method_details?.card?.capture_before ?? 0) * 1000;
+        const now = Date.now();
+        const stripeLimit = captureBefore > 0 ? captureBefore - 12 * 3600 * 1000 : new Date(pi.created * 1000 + 6 * 24 * 3600 * 1000).getTime();
+        if (now < holdUntil && now < stripeLimit) continue;
+        await stripe.paymentIntents.capture(pi.id, {}, { idempotencyKey: `capture-${r.id}` });
+        await admin.from("payments").update({ is_held: false }).eq("id", r.id);
+        out.push(r.id);
+      } catch (e) {
+        console.error("capture failed", r.id, (e as Error).message);
+      }
+    }
+    return out;
+  }
+  // Antes da migração 174: só sinais, ao fim das 48 h.
   try {
     const { data: s } = await admin.from("platform_settings").select("*").eq("id", 1).maybeSingle();
     const hours = Number(s?.deposit_refund_window_hours ?? 48) || 48;
@@ -126,10 +165,7 @@ async function captureHeldDeposits(admin: any): Promise<string[]> {
       .is("released_at", null)
       .like("provider_payment_id", "pi_%")
       .lte("paid_at", cutoff)
-      // Qualquer estado da reserva: um sinal que não foi libertado por um
-      // cancelamento com reembolso fica do parceiro (como antes).
       .limit(100);
-    const stripe = stripeClient();
     for (const r of (rows ?? []) as { id: string; provider_payment_id: string }[]) {
       try {
         const pi = await stripe.paymentIntents.retrieve(r.provider_payment_id);
