@@ -193,7 +193,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
             text: 'Identidade, morada e IBAN — pedidos pela Stripe, cerca de 5 minutos.'),
         const SizedBox(height: 10),
         const _Step(i: 1, icon: Icons.favorite_border, title: 'Os clientes pagam na app',
-            text: 'O sinal e o restante entram no teu saldo, sem comissão descontada.'),
+            text: 'O sinal e o restante entram no teu saldo, já sem a taxa de serviço.'),
         const SizedBox(height: 10),
         const _Step(i: 2, icon: Icons.account_balance_outlined, title: 'Levantas para o IBAN',
             text: 'Um toque em Levantar e o dinheiro chega em 1 a 3 dias úteis.'),

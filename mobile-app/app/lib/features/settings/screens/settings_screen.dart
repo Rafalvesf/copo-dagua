@@ -718,7 +718,8 @@ class _AccountSection extends ConsumerWidget {
           onTap: () => _resetPassword(context, ref, profile.email),
         ),
         // NIF opcional nas faturas da taxa de serviço (migração 132).
-        if (profile.role == UserRole.couple)
+        // Organizadores e convidados (cada um o seu NIF). Parceiros: NIF da verificação.
+        if (profile.role != UserRole.partner)
           _Row(
             icon: Icons.receipt_long_outlined,
             label: 'Dados de faturação',

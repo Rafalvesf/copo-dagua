@@ -57,7 +57,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                         children: [
                           const Text(
                             'Os organizadores escolhem os teus produtos para a lista de presentes. Os convidados pagam na app e tu '
-                            'recebes o valor, menos a comissão da À Nossa! e a taxa do pagamento. Envias para a morada que aparece na encomenda.',
+                            'recebes o valor, menos a taxa de serviço da À Nossa!. Envias para a morada que aparece na encomenda.',
                             style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
                           ),
                           const SizedBox(height: 12),

@@ -126,7 +126,7 @@ Future<Uint8List> reportPdf(ReportData r, {required bool partnerSide}) async {
       else
         _stats([
           ('Orçamento', r.budgetTotal == null ? '—' : _e(r.budgetTotal!)),
-          ('Pago (com comissão)', _e(r.paidTotalWithFee)),
+          ('Pago (com taxa de serviço)', _e(r.paidTotalWithFee)),
           ('Por pagar', _e(r.dueTotalWithFee)),
           ('Outros gastos', _e(r.expensesTotal)),
         ]),
@@ -135,8 +135,8 @@ Future<Uint8List> reportPdf(ReportData r, {required bool partnerSide}) async {
       _section('Pagamentos'),
       _table(
         partnerSide
-            ? ['Data', 'Reserva', who, 'Tipo', 'Estado', 'Recebido', 'Comissão*', 'Cliente pagou']
-            : ['Data', 'Reserva', who, 'Tipo', 'Estado', 'Serviço', 'Comissão', 'Total pago'],
+            ? ['Data', 'Reserva', who, 'Tipo', 'Estado', 'Recebido', 'Taxa de serviço*', 'Cliente pagou']
+            : ['Data', 'Reserva', who, 'Tipo', 'Estado', 'Serviço', 'Taxa de serviço', 'Total pago'],
         _paymentRows(r, partnerSide: partnerSide),
         right: {5, 6, 7},
       ),
@@ -145,9 +145,9 @@ Future<Uint8List> reportPdf(ReportData r, {required bool partnerSide}) async {
         child: pw.Text(
           partnerSide
               ? (exportPartnerFeeText.isNotEmpty
-                  ? '* Comissão da À Nossa! ($exportPctLabel, IVA incluído) paga pelo cliente por cima do teu valor. Ao que recebes é descontada a taxa da À Nossa! ($exportPartnerFeeText do valor da reserva, IVA incluído) quando o dinheiro é libertado.'
-                  : '* Comissão da À Nossa! ($exportPctLabel) paga pelo cliente por cima do teu valor — não é descontada ao que recebes.')
-              : 'Comissão da À Nossa! ($exportPctLabel, IVA incluído) sobre o valor do parceiro. ${partnerSide ? '' : 'Totais da tabela de reservas já com comissão.'}',
+                  ? '* Taxa de serviço da À Nossa! ($exportPctLabel, IVA incluído) paga pelo cliente por cima do teu valor. Ao que recebes é descontada a taxa de serviço da À Nossa! ($exportPartnerFeeText do valor da reserva, IVA incluído) quando o dinheiro é libertado.'
+                  : '* Taxa de serviço da À Nossa! ($exportPctLabel) paga pelo cliente por cima do teu valor — não é descontada ao que recebes.')
+              : 'Taxa de serviço da À Nossa! ($exportPctLabel, IVA incluído) sobre o valor do parceiro. ${partnerSide ? '' : 'Totais da tabela de reservas já com taxa de serviço.'}',
           style: const pw.TextStyle(color: _muted, fontSize: 8),
         ),
       ),
@@ -209,7 +209,7 @@ Future<Uint8List> receiptsPdf(ReportData r, {bool receiptForPartner = false}) as
             pw.Divider(color: const PdfColor.fromInt(0xFFDDE5D3)),
             // Valor do parceiro + comissão da À Nossa! = total pago.
             row('Valor do serviço', _e(p.amount)),
-            row('Comissão À Nossa!', _e(commissionOf(p.amount, p.total))),
+            row('Taxa de serviço', _e(commissionOf(p.amount, p.total))),
             pw.Divider(color: const PdfColor.fromInt(0xFFDDE5D3)),
             // Detalhe do IVA (pedido do utilizador, 2026-10-20).
             row('Total sem IVA', _e(vatBase(withCommission(p.amount, p.total)))),
@@ -275,9 +275,9 @@ Uint8List reportXlsx(ReportData r, {required bool partnerSide}) {
         ]
       : [
           ['Orçamento', r.budgetTotal ?? 0],
-          ['Pago (com comissão)', r.paidTotalWithFee],
-          ['Por pagar (com comissão)', r.dueTotalWithFee],
-          ['Comissão À Nossa! ($exportPctLabel)', r.paidFee],
+          ['Pago (com taxa de serviço)', r.paidTotalWithFee],
+          ['Por pagar (com taxa de serviço)', r.dueTotalWithFee],
+          ['Taxa de serviço ($exportPctLabel)', r.paidFee],
           ['Outros gastos', r.expensesTotal],
         ]);
   sheet(partnerSide ? 'Clientes' : 'Parceiros', ['Reserva', who, 'Serviço', 'Data do evento', 'Local', 'Estado', 'Total (€)', 'Pago (€)', 'Em falta (€)'], [
@@ -289,7 +289,7 @@ Uint8List reportXlsx(ReportData r, {required bool partnerSide}) {
   sheet('Pagamentos', [
     'Data', 'Reserva', who, 'Tipo', 'Estado',
     partnerSide ? 'Recebido (€)' : 'Serviço (€)',
-    'Comissão $exportPctLabel (€)',
+    'Taxa de serviço $exportPctLabel (€)',
     partnerSide ? 'Cliente pagou (€)' : 'Total pago (€)',
     'Sem IVA (€)', 'IVA ${(vatRate * 100).round()}% (€)',
   ], [

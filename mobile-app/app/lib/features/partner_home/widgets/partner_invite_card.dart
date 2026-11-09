@@ -10,7 +10,7 @@ import '../../../shared/widgets/v2_kit.dart';
 
 /// Painel do parceiro (migração 151): selo "Parceiro Fundador" e o link
 /// para convidar os próprios clientes — a cada 5 que pagam a 1.ª reserva,
-/// o 5.º fica sem comissão.
+/// o 5.º fica sem taxa de serviço.
 class PartnerInviteCard extends ConsumerWidget {
   const PartnerInviteCard({super.key});
 
@@ -65,13 +65,13 @@ class PartnerInviteCard extends ConsumerWidget {
         const SizedBox(height: 4),
         Text(
           'A cada ${stats.freeEvery} clientes que trazes pelo teu link, o ${stats.freeEvery}.º fica '
-          'sem comissão nas reservas contigo. Conta quem paga a primeira reserva contigo'
+          'sem taxa de serviço nas reservas contigo. Conta quem paga a primeira reserva contigo'
           '${stats.minBooking > 0 ? ' (mín. ${stats.minBooking.toStringAsFixed(0)} €)' : ''}. '
-          'Os outros pagam a comissão normal.',
+          'Os outros pagam a taxa de serviço normal.',
           style: const TextStyle(fontSize: AppFontSize.sm + 1, height: 1.4, color: AppTheme.inkMuted),
         ),
         const SizedBox(height: 12),
-        // Progresso até ao próximo cliente sem comissão.
+        // Progresso até ao próximo cliente sem taxa de serviço.
         Row(children: [
           for (var i = 1; i <= stats.freeEvery; i++) ...[
             if (i > 1) const SizedBox(width: 6),
@@ -122,11 +122,11 @@ class PartnerInviteCard extends ConsumerWidget {
             stats.countedClients == 0 && stats.pendingClients == 0
                 ? 'Ainda nenhum cliente entrou pelo teu link.'
                 : '${stats.countedClients} ${stats.countedClients == 1 ? 'cliente conta' : 'clientes contam'}'
-                    '${stats.freeClients > 0 ? ' (${stats.freeClients} sem comissão)' : ''}'
+                    '${stats.freeClients > 0 ? ' (${stats.freeClients} sem taxa de serviço)' : ''}'
                     '${stats.pendingClients > 0 ? ', ${stats.pendingClients} à espera da primeira reserva' : ''}.',
             stats.untilNextFree == 1
-                ? 'O próximo cliente fica sem comissão.'
-                : 'Faltam ${stats.untilNextFree} para o próximo sem comissão.',
+                ? 'O próximo cliente fica sem taxa de serviço.'
+                : 'Faltam ${stats.untilNextFree} para o próximo sem taxa de serviço.',
           ].join(' '),
           style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
         ),

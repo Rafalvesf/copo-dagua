@@ -687,8 +687,8 @@ class _ProSavingsCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               bookings == 0
-                  ? 'Comissão −${_num(feeDiscount)}% em cada reserva que fechares.'
-                  : 'Comissão −${_num(feeDiscount)}% em $bookings ${bookings == 1 ? 'reserva' : 'reservas'} este mês.',
+                  ? 'Taxa de serviço −${_num(feeDiscount)}% em cada reserva que fechares.'
+                  : 'Taxa de serviço −${_num(feeDiscount)}% em $bookings ${bookings == 1 ? 'reserva' : 'reservas'} este mês.',
               style: const TextStyle(fontSize: 14, color: AppTheme.ink),
             ),
           ],
@@ -782,13 +782,13 @@ class _ProUpsellCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const Text('Paga menos comissão e aparece primeiro',
+          const Text('Paga menos taxa de serviço e aparece primeiro',
               style: TextStyle(fontSize: 22, height: 1.2, fontWeight: FontWeight.w700, color: Colors.white)),
           const SizedBox(height: 14),
           Row(children: [
-            cell('−${_num(pro.feeDiscount)}%', 'de comissão nas reservas'),
+            cell('−${_num(pro.feeDiscount)}%', 'de taxa de serviço'),
             const SizedBox(width: 8),
-            cell('1 em ${pro.proReferralFreeEvery}', 'clientes trazidos sem comissão (em vez de 1 em ${pro.referralFreeEvery})'),
+            cell('1 em ${pro.proReferralFreeEvery}', 'clientes trazidos sem taxa (em vez de 1 em ${pro.referralFreeEvery})'),
           ]),
           const SizedBox(height: 8),
           Row(children: [
