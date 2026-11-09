@@ -398,6 +398,7 @@ class PartnerAccountSections extends ConsumerWidget {
         _Group(
           children: [
             _Row(icon: Icons.storefront_outlined, label: 'Informações do negócio', onTap: () => context.push('/partner-business-info')),
+            _Row(icon: Icons.event_busy_outlined, label: 'Regras de cancelamento', onTap: () => context.push('/partner-cancellation')),
             _Row(
               icon: Icons.place_outlined,
               label: 'Localização',
@@ -572,6 +573,7 @@ class _PartnerSettings extends ConsumerWidget {
         _Group(
           children: [
             _Row(icon: Icons.storefront_outlined, label: 'Informações do negócio', onTap: () => context.push('/partner-business-info')),
+            _Row(icon: Icons.event_busy_outlined, label: 'Regras de cancelamento', onTap: () => context.push('/partner-cancellation')),
             _Row(icon: Icons.euro, label: 'Preços e pacotes', onTap: () => context.push('/partner-pricing')),
             _Row(
               icon: Icons.place_outlined,
@@ -716,7 +718,8 @@ class _AccountSection extends ConsumerWidget {
           onTap: () => _resetPassword(context, ref, profile.email),
         ),
         // NIF opcional nas faturas da taxa de serviço (migração 132).
-        if (profile.role == UserRole.couple)
+        // Organizadores e convidados (cada um o seu NIF). Parceiros: NIF da verificação.
+        if (profile.role != UserRole.partner)
           _Row(
             icon: Icons.receipt_long_outlined,
             label: 'Dados de faturação',

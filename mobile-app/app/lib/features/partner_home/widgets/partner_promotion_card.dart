@@ -7,7 +7,7 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 
 /// Destaque pago (migração 155, pedido 2026-11-03): sem mensalidade; as
-/// reservas que vêm do destaque pagam +6% de comissão. Liga e desliga
+/// reservas que vêm do destaque pagam +6% de taxa de serviço. Liga e desliga
 /// quando quiser; no máximo 6 parceiros por categoria e zona (fila).
 class PartnerPromotionCard extends ConsumerStatefulWidget {
   const PartnerPromotionCard({super.key});
@@ -38,7 +38,7 @@ class _PartnerPromotionCardState extends ConsumerState<PartnerPromotionCard> {
           content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Text(
               'Apareces em "Em destaque" a quem procura o teu serviço. Sem mensalidade: '
-              'só as reservas que vierem do destaque pagam +${_pct(p.extraPct)}% de comissão. '
+              'só as reservas que vierem do destaque pagam +${_pct(p.extraPct)}% de taxa de serviço. '
               'Desligas quando quiseres. Máximo ${p.slots} parceiros por categoria e zona — se estiver cheio, ficas na fila.',
             ),
             if (opts.categories.length > 1) ...[
@@ -104,7 +104,7 @@ class _PartnerPromotionCardState extends ConsumerState<PartnerPromotionCard> {
       context: context,
       builder: (ctx) => IslandAlert(
         title: const Text('Desligar o destaque?'),
-        content: const Text('Deixas de aparecer em "Em destaque". As reservas que já vieram do destaque continuam com a comissão do destaque.'),
+        content: const Text('Deixas de aparecer em "Em destaque". As reservas que já vieram do destaque continuam com a taxa de serviço do destaque.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Voltar')),
           FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Desligar')),
@@ -152,7 +152,7 @@ class _PartnerPromotionCardState extends ConsumerState<PartnerPromotionCard> {
         const SizedBox(height: 6),
         Text(
           p.on
-              ? '${p.categoryLabel ?? ''} · $zone. As reservas que vierem do destaque pagam +${_pct(p.extraPct)}% de comissão.'
+              ? '${p.categoryLabel ?? ''} · $zone. As reservas que vierem do destaque pagam +${_pct(p.extraPct)}% de taxa de serviço.'
               : 'Aparece primeiro a quem procura o teu serviço. Sem mensalidade: só pagas +${_pct(p.extraPct)}% nas reservas que vierem do destaque.',
           style: const TextStyle(fontSize: AppFontSize.sm + 1, height: 1.4, color: AppTheme.inkMuted),
         ),

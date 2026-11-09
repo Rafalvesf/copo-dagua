@@ -121,7 +121,7 @@ String coupleCancelRefundNote({required DateTime eventDate, required RefundInfo 
       final left = deadline.difference(t);
       final h = left.inHours;
       final when = h >= 1 ? '$h h' : '${left.inMinutes.clamp(1, 59)} min';
-      lines.add('Ainda estás dentro das ${info.windowHours} h depois de pagar o sinal (faltam $when): o sinal é devolvido, comissão incluída.');
+      lines.add('Ainda estás dentro das ${info.windowHours} h depois de pagar o sinal (faltam $when): o sinal é devolvido, taxa de serviço incluída.');
     } else {
       lines.add('Já passaram mais de ${info.windowHours} h desde que pagaste o sinal: o sinal fica com o parceiro.');
     }

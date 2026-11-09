@@ -113,7 +113,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                         _InfoRow(label: 'Data', value: dateLabel),
                         const SizedBox(height: 10),
                         _InfoRow(
-                          label: 'Valor total (com comissão)',
+                          label: 'Valor total (com taxa de serviço)',
                           value: euros(amountWithCommission(booking.amount, fee), cents: true),
                         ),
 

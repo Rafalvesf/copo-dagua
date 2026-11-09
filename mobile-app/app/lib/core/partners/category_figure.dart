@@ -86,3 +86,5 @@ const _fallback = CategoryFigure(label: 'Experiência', question: 'Eventos reali
 CategoryFigure figureForSlug(String? slug) => _bySlug[slug] ?? _fallback;
 
 CategoryFigure figureForLabel(String? label) => figureForSlug(_labelToSlug[label]);
+
+String? categorySlugForLabel(String? label) => _labelToSlug[label];

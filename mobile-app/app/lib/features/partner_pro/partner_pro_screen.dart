@@ -74,7 +74,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 40),
           children: [
-            const PageHeader(title: 'À Nossa! Premium', subtitle: 'Pagas menos comissão, apareces mais e sabes mais.', centered: true),
+            const PageHeader(title: 'À Nossa! Premium', subtitle: 'Pagas menos taxa de serviço, apareces mais e sabes mais.', centered: true),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(18),
@@ -100,10 +100,10 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
             ),
             const SizedBox(height: 16),
             for (final b in [
-              (Icons.percent_rounded, 'Comissão mais baixa',
+              (Icons.percent_rounded, 'Taxa de serviço mais baixa',
                   '−${_pts(pro.feeDiscount)}% em todas as reservas (ex.: 4% passa a ${_pts(4 - pro.feeDiscount)}%).'),
               (Icons.group_add_outlined, 'Convites valem mais',
-                  'Cada ${pro.proReferralFreeEvery}.º cliente que trazes fica sem comissão (sem o Premium, o ${pro.referralFreeEvery}.º).'),
+                  'Cada ${pro.proReferralFreeEvery}.º cliente que trazes fica sem taxa de serviço (sem o Premium, o ${pro.referralFreeEvery}.º).'),
               (Icons.campaign_outlined, 'Destaque mais barato',
                   '+${_pts(pro.proPromotionExtraPct)}% nas reservas que vêm do destaque (sem o Premium, +${_pts(pro.promotionExtraPct)}%).'),
               (Icons.workspace_premium_outlined, 'Selo Premium e mais visibilidade', 'Selo no perfil e na pesquisa, e apareces antes dos outros parceiros.'),

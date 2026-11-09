@@ -357,9 +357,11 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       subtitle: heading == null ? null : message.proposalTitle,
       // O cliente vê logo o que vai pagar: valor do parceiro + comissão
       // (mesma conta do checkout). Pedido 2026-10-17.
-      price: message.proposalPrice == null ? null : withFee(message.proposalPrice!),
+      price: message.proposalPrice == null
+          ? null
+          : totalWithCommission(message.proposalPrice!, message.proposalDepositAmount, pct),
       deposit: message.proposalDepositAmount == null ? null : withFee(message.proposalDepositAmount!),
-      note: pct > 0 ? 'Valores já com a comissão da À Nossa!' : null,
+      note: pct > 0 ? 'Valores já com a taxa de serviço' : null,
       actions: [
         ChatCardAction('Ver detalhe', () => context.push('/bookings')),
         if (_accepted && _bookingState == 'cancelled')

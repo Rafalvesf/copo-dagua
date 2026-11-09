@@ -430,6 +430,14 @@ double amountWithCommission(double partnerAmount, double commissionPercentage) {
   return (partnerCents + feeCents) / 100;
 }
 
+/// Total de uma reserva paga em sinal + restante: cada pagamento leva o
+/// seu 1 € fixo, por isso o total soma os dois (igual ao que a Stripe cobra).
+double totalWithCommission(double amount, double? deposit, double commissionPercentage) {
+  final d = deposit ?? 0;
+  if (d <= 0 || d >= amount) return amountWithCommission(amount, commissionPercentage);
+  return amountWithCommission(d, commissionPercentage) + amountWithCommission(amount - d, commissionPercentage);
+}
+
 final coupleSupportTicketsProvider = FutureProvider<List<SupportTicket>>((
   ref,
 ) async {
