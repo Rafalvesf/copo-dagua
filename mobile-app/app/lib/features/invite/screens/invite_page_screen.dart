@@ -1132,7 +1132,7 @@ class _RevealState extends State<_Reveal> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    Future<void>.delayed(Duration(milliseconds: 250 + widget.step * 110), () {
+    Future<void>.delayed(Duration(milliseconds: widget.step * 90), () {
       if (mounted) _c.forward();
     });
   }
