@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/router.dart';
+import 'core/web_keyboard_stub.dart' if (dart.library.js_interop) 'core/web_keyboard_web.dart';
 import 'core/auth/auth_controller.dart';
 import 'core/monitoring/error_reporting.dart';
 import 'core/notifications/push.dart';
@@ -45,6 +46,7 @@ Future<void> main() async {
   Funnel.track('app_open');
   await PushNotifications.init();
   installBrowserBackDetection();
+  setupWebKeyboard();
   await runWithErrorReporting(() => runApp(const ProviderScope(child: CopoDaguaApp())));
 }
 
