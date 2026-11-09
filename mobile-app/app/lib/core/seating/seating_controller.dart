@@ -137,13 +137,17 @@ class SeatingController extends Notifier<SeatingState> {
 
   Future<void> load(Wedding wedding) async {
     state = state.copyWith(loading: true);
-    final rows = await supabase
+    // As duas leituras ao mesmo tempo (2026-11-09).
+    _venueTypes = const [];
+    final rowsF = supabase
         .from('seating_tables')
         .select()
         .eq('wedding_id', wedding.id)
-        .order('position', ascending: true);
-    _venueTypes = const [];
-    final venueTableCount = await _venueTableCountFor(wedding.id);
+        .order('position', ascending: true)
+        .then((r) => r);
+    final venueF = _venueTableCountFor(wedding.id);
+    final rows = await rowsF;
+    final venueTableCount = await venueF;
     state = SeatingState(
       loading: false,
       tables: rows.map(_tableFromRow).toList(),

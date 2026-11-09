@@ -32,7 +32,8 @@ Future<int> requestBookingRefund(String bookingId) async {
 
 /// Plano B: reservas canceladas com pagamentos ainda "pagos" (a primeira
 /// chamada falhou ou o cancelamento foi feito antes desta funcionalidade).
-Future<void> retryPendingRefunds({String? coupleId, String? partnerId}) async {
+/// `true` se havia reembolsos por fazer.
+Future<bool> retryPendingRefunds({String? coupleId, String? partnerId}) async {
   try {
     var q = supabase
         .from('payments')
@@ -46,7 +47,10 @@ Future<void> retryPendingRefunds({String? coupleId, String? partnerId}) async {
     for (final id in ids) {
       await requestBookingRefund(id);
     }
-  } catch (_) {}
+    return ids.isNotEmpty;
+  } catch (_) {
+    return false;
+  }
 }
 
 /// O que é preciso para dizer ao organizador, antes de cancelar, o que lhe

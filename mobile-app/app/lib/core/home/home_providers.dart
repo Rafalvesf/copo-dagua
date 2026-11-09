@@ -1,3 +1,5 @@
+import 'dart:async';
+
 export '../payments/fee_config.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,8 +31,14 @@ final coupleBookingsProvider = FutureProvider<List<CoupleBooking>>((ref) async {
   final userId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
   if (userId == null) return const [];
 
-  await syncPendingStripePayments(coupleId: userId);
-  await retryPendingRefunds(coupleId: userId);
+  // Acertos com a Stripe em segundo plano (antes atrasavam o início e a
+  // página do evento, 2026-11-09); se mudarem alguma coisa, recarrega.
+  unawaited(Future.wait([
+    syncPendingStripePayments(coupleId: userId),
+    retryPendingRefunds(coupleId: userId),
+  ]).then((done) {
+    if (done.any((d) => d)) ref.invalidateSelf();
+  }));
   const cols = 'id, wedding_id, partner_id, event_date, total_amount, deposit_amount, status, '
       'partner_profiles(business_name, cover_photo_url, partner_profile_categories(partner_categories(label_pt))), '
       'payments(id, type, status, amount, due_at)';
@@ -182,7 +190,8 @@ Future<void> cancelBookingByCouple(String bookingId, {String? reason}) async {
 /// Plano B do webhook: pergunta à Stripe (via `sync-checkout-payment`)
 /// se os pagamentos pendentes com checkout aberto já foram pagos e
 /// confirma-os. Nunca falha — sem rede fica tudo como estava.
-Future<void> syncPendingStripePayments({String? coupleId, String? proposalId}) async {
+/// `true` se havia pagamentos para acertar.
+Future<bool> syncPendingStripePayments({String? coupleId, String? proposalId}) async {
   try {
     var q = supabase
         .from('payments')
@@ -193,9 +202,12 @@ Future<void> syncPendingStripePayments({String? coupleId, String? proposalId}) a
     if (proposalId != null) q = q.eq('bookings.proposal_id', proposalId);
     final rows = await q.limit(20);
     final ids = [for (final r in rows as List) r['id'] as String];
-    if (ids.isEmpty) return;
+    if (ids.isEmpty) return false;
     await supabase.functions.invoke('sync-checkout-payment', body: {'payment_ids': ids});
-  } catch (_) {}
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 /// Pagamento pendente (sinal ou restante) da reserva de uma proposta —
