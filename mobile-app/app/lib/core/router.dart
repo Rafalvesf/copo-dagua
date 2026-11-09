@@ -360,13 +360,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // Bilhetes (migração 149).
       GoRoute(path: '/bilhete/:id', builder: (context, state) =>lazyPage([l1.loadLibrary], () =>  l1.TicketReturnScreen(ticketId: state.pathParameters['id']!))),
-      GoRoute(path: '/bilhetes', builder: (context, state) =>lazyPage([l1.loadLibrary], () =>  const PermissionGate(perm: OrganizerPerm.bilhetes, child: l1.OrganizerTicketsScreen()))),
+      GoRoute(path: '/bilhetes', builder: (context, state) =>lazyPage([l1.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.bilhetes, child: l1.OrganizerTicketsScreen()))),
       // O organizador leu o QR de um bilhete (migração 158).
       // Organizadores do evento e o que cada um pode (migração 159).
       GoRoute(path: '/organizadores', builder: (context, state) => const OrganizersScreen()),
       // Lista de presentes e loja dos parceiros (migração 160).
-      GoRoute(path: '/gift-list', builder: (context, state) => const PermissionGate(perm: OrganizerPerm.evento, child: OrganizerGiftListScreen())),
-      GoRoute(path: '/gift-shop', builder: (context, state) => const PermissionGate(perm: OrganizerPerm.evento, child: GiftShopScreen())),
+      GoRoute(path: '/gift-list', builder: (context, state) => PermissionGate(perm: OrganizerPerm.evento, child: OrganizerGiftListScreen())),
+      GoRoute(path: '/gift-shop', builder: (context, state) => PermissionGate(perm: OrganizerPerm.evento, child: GiftShopScreen())),
       GoRoute(path: '/presente/:id', builder: (context, state) => GiftReturnScreen(orderId: state.pathParameters['id']!)),
       GoRoute(path: '/partner-shop', builder: (context, state) => const PartnerShopScreen()),
       GoRoute(path: '/username', builder: (context, state) =>lazyPage([l62.loadLibrary], () =>  l62.UsernameScreen())),
@@ -550,7 +550,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/guests',
-        builder: (context, state) =>lazyPage([l28.loadLibrary], () =>  const PermissionGate(perm: OrganizerPerm.convidados, child: l28.GuestsListScreen())),
+        builder: (context, state) =>lazyPage([l28.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.convidados, child: l28.GuestsListScreen())),
       ),
       GoRoute(
         path: '/guests/:id',
@@ -559,27 +559,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/checklist',
-        builder: (context, state) =>lazyPage([l13.loadLibrary], () =>  const PermissionGate(perm: OrganizerPerm.tarefas, child: l13.ChecklistScreen())),
+        builder: (context, state) =>lazyPage([l13.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.tarefas, child: l13.ChecklistScreen())),
       ),
       GoRoute(
         path: '/tasks',
-        builder: (context, state) =>lazyPage([l15.loadLibrary], () =>  const PermissionGate(perm: OrganizerPerm.tarefas, child: l15.TasksScreen())),
+        builder: (context, state) =>lazyPage([l15.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.tarefas, child: l15.TasksScreen())),
       ),
       GoRoute(
         path: '/service-preferences',
-        builder: (context, state) =>lazyPage([l14.loadLibrary], () =>  const PermissionGate(perm: OrganizerPerm.orcamento, child: l14.ServicePreferencesScreen())),
+        builder: (context, state) =>lazyPage([l14.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.orcamento, child: l14.ServicePreferencesScreen())),
       ),
       GoRoute(
         path: '/guest-page',
-        builder: (context, state) => const PermissionGate(perm: OrganizerPerm.evento, child: GuestPageRoute()),
+        builder: (context, state) => PermissionGate(perm: OrganizerPerm.evento, child: GuestPageRoute()),
       ),
       GoRoute(
         path: '/budget',
-        builder: (context, state) =>lazyPage([l10.loadLibrary], () =>  const PermissionGate(perm: OrganizerPerm.orcamento, child: l10.BudgetScreen())),
+        builder: (context, state) =>lazyPage([l10.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.orcamento, child: l10.BudgetScreen())),
       ),
       GoRoute(
         path: '/seating',
-        builder: (context, state) =>lazyPage([l55.loadLibrary], () =>  const PermissionGate(perm: OrganizerPerm.convidados, child: l55.SeatingScreen())),
+        builder: (context, state) =>lazyPage([l55.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.convidados, child: l55.SeatingScreen())),
       ),
       GoRoute(
         path: '/bookings',
@@ -631,7 +631,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       tabRoute(
         path: '/chat',
-        builder: (context, state) =>lazyPage([l11.loadLibrary], () =>  const PermissionGate(perm: OrganizerPerm.conversas, child: l11.ChatListScreen())),
+        builder: (context, state) =>lazyPage([l11.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.conversas, child: l11.ChatListScreen())),
       ),
       GoRoute(
         path: '/chat/:conversationId',
