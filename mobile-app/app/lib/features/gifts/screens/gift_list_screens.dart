@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import '../../../core/payments/payments.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -855,13 +855,31 @@ class _OfferSheetState extends ConsumerState<_OfferSheet> {
     });
     try {
       if (i.isProduct) {
-        final url = await createGiftCheckoutUrl(itemId: i.id, quantity: _qty, message: _message.text, weddingId: widget.weddingId);
-        final ok = await launchUrl(
-          Uri.parse(url),
-          mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
-          webOnlyWindowName: kIsWeb ? '_self' : null,
+        // Pagamento dentro da app (2026-11-09: nunca com link).
+        final qty = _qty;
+        final message = _message.text;
+        String? orderId;
+        final args = PayArgs(
+          paymentId: '',
+          partnerName: i.title,
+          kind: 'gift',
+          amount: (i.price ?? 0) * qty,
+          titleOverride: 'Presente',
+          create: (m, {phone}) async {
+            final r = await createGiftIntent(itemId: i.id, quantity: qty, method: m, phone: phone, message: message, previousId: orderId);
+            orderId = r.orderId;
+            return r.info;
+          },
+          state: () async => orderId == null ? ('open', null) : await giftPayState(orderId!),
+          onPaid: (ctx) => ctx.pushReplacement('/presente/$orderId'),
+          errorText: (c) => const {'method_unavailable', 'invalid_phone', 'declined', 'processing', 'not_configured'}.contains(c)
+              ? payErrorMessage(c)
+              : GiftError(c).message,
         );
-        if (!ok && mounted) setState(() => _error = 'Não foi possível abrir o pagamento.');
+        if (!mounted) return;
+        final router = GoRouter.of(context);
+        Navigator.of(context).pop();
+        router.push('/pay', extra: args);
       } else {
         await claimGift(i.id, quantity: _qty, message: _message.text);
         ref.invalidate(giftListProvider(widget.weddingId));

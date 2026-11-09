@@ -5,7 +5,7 @@ type Admin = any;
 // Plano Pro dos parceiros (migração 161): subscrição Stripe Billing na
 // conta da À Nossa!. Esta função acerta partner_profiles.pro_until com a
 // subscrição ativa do parceiro (fim do período pago). Idempotente.
-export async function syncPartnerPro(stripe: Stripe, admin: Admin, partnerId: string): Promise<{ active: boolean; until: string | null }> {
+export async function syncPartnerPro(stripe: Stripe, admin: Admin, partnerId: string): Promise<{ active: boolean; until: string | null; cancelling?: boolean }> {
   const { data: p } = await admin
     .from("partner_profiles")
     .select("stripe_customer_id, pro_until, pro_interval, pro_subscription_id")
@@ -22,7 +22,7 @@ export async function syncPartnerPro(stripe: Stripe, admin: Admin, partnerId: st
     const until = new Date(periodEnd(live) * 1000).toISOString();
     const interval = live.items.data[0]?.price?.recurring?.interval === "year" ? "year" : "month";
     await admin.from("partner_profiles").update({ pro_until: until, pro_interval: interval, pro_subscription_id: live.id }).eq("id", partnerId);
-    return { active: true, until };
+    return { active: true, until, cancelling: live.cancel_at_period_end === true };
   }
   // Sem subscrição ativa: fica Pro até ao fim do que já pagou (pro_until).
   if (p.pro_subscription_id) {

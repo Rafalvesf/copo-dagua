@@ -4,6 +4,7 @@ import { stripeClient } from "../_shared/stripe.ts";
 import { confirmGiftOrder } from "../_shared/gifts.ts";
 import { reserveCents } from "../_shared/tickets.ts";
 import { fixedFeeCents } from "../_shared/fees.ts";
+import { cancelOpenIntent, createInAppIntent, e164, intentJson, intentState } from "../_shared/inapp.ts";
 
 // Presentes da loja dos parceiros (migração 160).
 //
@@ -33,6 +34,24 @@ Deno.serve(async (req) => {
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const stripe = stripeClient();
 
+  // Pagamento dentro da app (2026-11-09): estado para o ecrã de pagamento.
+  if (body.action === "state") {
+    if (typeof body.order_id !== "string") return json({ error: "validation_error" }, 400);
+    const { data: row } = await admin.from("gift_orders").select("buyer_id, checkout_session_id, status").eq("id", body.order_id).maybeSingle();
+    if (!row || row.buyer_id !== user.id) return json({ error: "not_found" }, 404);
+    if (row.status === "paid") return json({ state: "paid" });
+    const sid = row.checkout_session_id as string | null;
+    if (!sid?.startsWith("pi_")) return json({ state: "open" });
+    try {
+      const st = await intentState(stripe, sid);
+      if (st.state === "paid") await confirmGiftOrder(stripe, admin, sid);
+      return json(st);
+    } catch (e) {
+      console.error("state failed", (e as Error).message);
+      return json({ state: "open" });
+    }
+  }
+
   if (body.action === "sync") {
     if (typeof body.order_id !== "string") return json({ error: "validation_error" }, 400);
     const { data: o } = await admin.from("gift_orders").select("buyer_id, checkout_session_id, status, wedding_id").eq("id", body.order_id).maybeSingle();
@@ -55,7 +74,8 @@ Deno.serve(async (req) => {
   const message = typeof body.message === "string" ? body.message.trim().slice(0, 600) : "";
   if (
     typeof itemId !== "string" || typeof quantity !== "number" || !Number.isInteger(quantity) ||
-    quantity < 1 || quantity > 20 || typeof successUrl !== "string" || typeof cancelUrl !== "string"
+    quantity < 1 || quantity > 20 ||
+    (body.action !== "intent" && (typeof successUrl !== "string" || typeof cancelUrl !== "string"))
   ) {
     return json({ error: "validation_error" }, 400);
   }
@@ -114,6 +134,24 @@ Deno.serve(async (req) => {
   const { platformCents, applicationFeeCents } = reserveCents(amountCents, platformPct, fixedFeeCents(settings));
   const { data: buyer } = await admin.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
 
+  // Pagamento dentro da app: valida o método e anula a tentativa anterior.
+  const inApp = body.action === "intent";
+  const method = typeof body.method === "string" ? body.method : "card";
+  const phone = inApp && method === "mb_way" ? e164(typeof body.phone === "string" ? body.phone : "") : null;
+  if (inApp && method === "mb_way" && !phone) return json({ error: "invalid_phone" }, 400);
+  if (inApp && typeof body.previous_id === "string") {
+    const { data: old } = await admin.from("gift_orders").select("buyer_id, status, checkout_session_id").eq("id", body.previous_id).maybeSingle();
+    if (old && old.buyer_id === user.id && old.status === "pending") {
+      const r = await cancelOpenIntent(stripe, old.checkout_session_id as string | null);
+      if (r === "paid") {
+        await confirmGiftOrder(stripe, admin, old.checkout_session_id as string).catch(() => {});
+        return json({ error: "invalid_state", order_id: body.previous_id }, 409);
+      }
+      if (r === "busy") return json({ error: "processing" }, 409);
+      await admin.from("gift_orders").update({ status: "cancelled" }).eq("id", body.previous_id);
+    }
+  }
+
   const { data: order, error: insErr } = await admin
     .from("gift_orders")
     .insert({
@@ -135,6 +173,35 @@ Deno.serve(async (req) => {
     .single();
   if (insErr || !order) return json({ error: "unknown_error" }, 500);
 
+  if (inApp) {
+    const pk = Deno.env.get("STRIPE_PUBLISHABLE_KEY");
+    if (!pk) return json({ error: "not_configured" }, 503);
+    try {
+      const intent = await createInAppIntent(stripe, {
+        method,
+        phone,
+        email: user.email ?? null,
+        amountCents,
+        description: `${p.title} · ${partner.business_name}`,
+        metadata: { kind: "gift_order", order_id: order.id },
+        applicationFeeCents,
+        destination: account,
+      });
+      await admin.from("gift_orders").update({ checkout_session_id: intent.id }).eq("id", order.id);
+      return json(intentJson(intent, pk, user.email ?? null, { order_id: order.id }));
+    } catch (err) {
+      console.error("in-app intent failed", (err as Error).message);
+      await admin.from("gift_orders").update({ status: "cancelled" }).eq("id", order.id);
+      if ((err as { type?: string }).type === "StripeCardError") return json({ error: "declined", message: (err as Error).message }, 402);
+      const code = (err as { code?: string }).code;
+      if (code === "payment_intent_invalid_parameter" || code === "parameter_invalid_empty" ||
+          String((err as Error).message ?? "").includes("payment_method_types")) {
+        return json({ error: "method_unavailable" }, 409);
+      }
+      return json({ error: "stripe_error" }, 502);
+    }
+  }
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -150,8 +217,8 @@ Deno.serve(async (req) => {
       metadata: { kind: "gift_order", order_id: order.id },
       customer_email: user.email ?? undefined,
       expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
-      success_url: successUrl.replace("{ORDER_ID}", order.id),
-      cancel_url: cancelUrl,
+      success_url: (successUrl as string).replace("{ORDER_ID}", order.id),
+      cancel_url: cancelUrl as string,
     });
     await admin.from("gift_orders").update({ checkout_session_id: session.id }).eq("id", order.id);
     return json({ url: session.url, order_id: order.id });

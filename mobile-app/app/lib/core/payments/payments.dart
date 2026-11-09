@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, FunctionResponse;
 
 import '../supabase/supabase_config.dart';
@@ -29,14 +30,39 @@ class PayArgs {
   /// o pagamento; depois vale o valor devolvido pela Stripe.
   final double amount;
 
+  // Bilhetes, prendas e Premium (2026-11-09: "sempre embutido na app,
+  // nunca com link"): o mesmo ecrã de pagamento, com outra origem.
+  final Future<PaymentIntentInfo> Function(PayMethod method, {String? phone})? create;
+  final Future<(String, MultibancoRef?)> Function()? state;
+  final List<PayMethod>? methods;
+  final void Function(BuildContext context)? onPaid;
+  final String? titleOverride;
+  final String Function(String code)? errorText;
+
   const PayArgs({
     required this.paymentId,
     required this.partnerName,
     required this.kind,
     required this.amount,
+    this.create,
+    this.state,
+    this.methods,
+    this.onPaid,
+    this.titleOverride,
+    this.errorText,
   });
 
-  String get title => kind == 'deposit' ? 'Sinal' : 'Restante';
+  /// Reserva (sinal ou restante) — tem regra de cancelamento.
+  bool get isBooking => create == null;
+
+  String get title => titleOverride ?? (kind == 'deposit' ? 'Sinal' : 'Restante');
+
+  Future<PaymentIntentInfo> createIntent(PayMethod method, {String? phone}) =>
+      create != null ? create!(method, phone: phone) : createPaymentIntent(paymentId, method, phone: phone);
+
+  Future<(String, MultibancoRef?)> currentState() => state != null ? state!() : paymentState(paymentId);
+
+  String error(String code) => errorText?.call(code) ?? payErrorMessage(code);
 }
 
 class MultibancoRef {
@@ -59,6 +85,36 @@ class MultibancoRef {
       amountCents: (j['amount_cents'] as num?)?.toInt() ?? amountCents,
     );
   }
+}
+
+/// Resposta das funções de pagamento dentro da app (mesmo formato em todas).
+PaymentIntentInfo paymentIntentInfoFromJson(Map<String, dynamic> d) {
+  final cents = (d['amount_cents'] as num).toInt();
+  return PaymentIntentInfo(
+    status: d['status'] as String?,
+    clientSecret: d['client_secret'] as String,
+    publishableKey: d['publishable_key'] as String,
+    amountCents: cents,
+    email: d['email'] as String?,
+    multibanco: MultibancoRef.fromJson(d['multibanco'], amountCents: cents),
+  );
+}
+
+/// Chama uma função que devolve um PaymentIntent; erros como [CheckoutUnavailable].
+Future<Map<String, dynamic>> invokePayFunction(String name, Map<String, dynamic> body) async {
+  try {
+    final res = await supabase.functions.invoke(name, body: body);
+    return (res.data as Map).cast<String, dynamic>();
+  } on FunctionException catch (e) {
+    final d = e.details;
+    throw CheckoutUnavailable(d is Map ? (d['error'] as String? ?? 'unknown_error') : 'unknown_error');
+  }
+}
+
+/// Estado no formato do ecrã de pagamento a partir de `{state, entity, …}`.
+(String, MultibancoRef?) payStateFromJson(Map<String, dynamic> d) {
+  final s = d['state'] as String? ?? 'open';
+  return (s, s == 'awaiting_multibanco' ? MultibancoRef.fromJson(d) : null);
 }
 
 class PaymentIntentInfo {

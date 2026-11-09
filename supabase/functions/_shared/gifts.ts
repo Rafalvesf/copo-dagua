@@ -17,9 +17,17 @@ export async function confirmGiftOrder(stripe: Stripe, admin: Admin, sessionId: 
     .eq("checkout_session_id", sessionId)
     .maybeSingle();
   if (!o) return "unknown";
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
-  if (session.payment_status !== "paid") return "open";
-  const piId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? sessionId;
+  // Pagamento dentro da app (2026-11-09): o id guardado é o PaymentIntent.
+  let piId: string;
+  if (sessionId.startsWith("pi_")) {
+    const intent = await stripe.paymentIntents.retrieve(sessionId);
+    if (intent.status !== "succeeded") return "open";
+    piId = intent.id;
+  } else {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (session.payment_status !== "paid") return "open";
+    piId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? sessionId;
+  }
   const { error } = await admin.rpc("confirm_gift_order", { p_session_id: sessionId, p_payment_intent_id: piId });
   if (error) throw new Error(`confirm_gift_order: ${error.message}`);
 

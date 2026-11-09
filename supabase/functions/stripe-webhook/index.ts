@@ -98,6 +98,15 @@ Deno.serve(async (req) => {
       case "payment_intent.amount_capturable_updated":
       case "payment_intent.succeeded": {
         const intent = event.data.object as { id: string; metadata?: Record<string, string> | null };
+        // Bilhetes e prendas pagos dentro da app (2026-11-09).
+        if (event.type === "payment_intent.succeeded" && intent.metadata?.kind === "event_ticket") {
+          await confirmTicket(stripe, supabase, intent.id);
+          break;
+        }
+        if (event.type === "payment_intent.succeeded" && intent.metadata?.kind === "gift_order") {
+          await confirmGiftOrder(stripe, supabase, intent.id);
+          break;
+        }
         if (intent.metadata?.kind !== "booking_payment") break;
         const { error } = await supabase.rpc("confirm_stripe_deposit_payment", {
           p_session_id: intent.id,
