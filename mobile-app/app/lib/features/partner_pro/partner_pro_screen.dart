@@ -134,7 +134,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
             const SizedBox(height: 16),
             for (final b in [
               (Icons.percent_rounded, 'Taxa de serviço mais baixa',
-                  '−${_pts(pro.feeDiscount)}% em todas as reservas (ex.: 4% passa a ${_pts(4 - pro.feeDiscount)}%).'),
+                  '−${_pts(pro.feeDiscount)}% em todas as reservas (ex.: 5% passa a ${_pts(5 - pro.feeDiscount)}%).'),
               (Icons.group_add_outlined, 'Convites valem mais',
                   'Cada ${pro.proReferralFreeEvery}.º cliente que trazes fica sem taxa de serviço (sem o Premium, o ${pro.referralFreeEvery}.º).'),
               (Icons.campaign_outlined, 'Destaque mais barato',

@@ -49,7 +49,7 @@ export function GrowthForm({ settings }: { settings: GrowthSettings }) {
       </label>
       <Num name="pro_price_monthly" label="Premium mensal" suffix="€ / mês" value={settings.pro_price_monthly ?? 19} step={0.01} min={1} />
       <Num name="pro_price_yearly" label="Premium anual" suffix="€ / ano" value={settings.pro_price_yearly ?? 190} step={0.01} min={1} />
-      <Num name="pro_fee_discount" label="Premium: desconto na comissão das reservas" suffix="% (4% → 3%)" value={settings.pro_fee_discount ?? 1} step={0.1} />
+      <Num name="pro_fee_discount" label="Premium: desconto na comissão das reservas" suffix="% (5% → 4%)" value={settings.pro_fee_discount ?? 1} step={0.1} />
       <Num name="pro_referral_free_every" label="Premium: sem comissão a cada" suffix="clientes trazidos" value={settings.pro_referral_free_every ?? 3} min={1} />
       <Num name="pro_promotion_extra_pct" label="Premium: comissão extra do destaque" suffix="% (sem Premium, +6%)" value={settings.pro_promotion_extra_pct ?? 4} step={0.1} />
       <Num name="free_shop_products" label="Produtos na Loja sem Premium" suffix="produtos" value={settings.free_shop_products ?? 5} />
