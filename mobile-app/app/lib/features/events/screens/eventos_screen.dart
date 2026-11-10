@@ -18,14 +18,13 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
-import '../../../shared/widgets/floating_filter_bar.dart' show FilterChipsRow, FilterBarItem;
+import '../../../core/tasks/task_engine_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/v2_kit.dart';
-import '../../guest_home/screens/guest_events_screen.dart' show GuestEventCard, DashedBorderPainter;
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
@@ -45,8 +44,6 @@ class EventosScreen extends ConsumerStatefulWidget {
 /// públicos em cartaz (ao estilo da Shotgun) e "Os meus" com os eventos
 /// que organizo e aqueles a que já tenho acesso.
 class _EventosScreenState extends ConsumerState<EventosScreen> {
-  late int? _tab = widget.initialTab; // 0 = Descobrir, 1 = Os meus
-
   // Descobrir: procurar por nome ou zona e filtrar por data (2026-11).
   final _search = TextEditingController();
   _When _when = _When.any;
@@ -135,78 +132,91 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
         .toList();
     final publicEvents = allPublic.where(_matches).toList();
     final filtering = _search.text.trim().isNotEmpty || _when != _When.any;
-    final tab = _tab ?? (myEvents.isNotEmpty || invited.isNotEmpty ? 1 : 0);
+    final hasMine = myEvents.isNotEmpty || invited.isNotEmpty;
 
-    final List<Widget> content = tab == 0
-        ? [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 0),
-              child: Row(children: [
-                Expanded(child: SearchPill(controller: _search, hint: 'Procurar por nome ou zona')),
-                const SizedBox(width: 10),
-                SnappyTap(
-                  onTap: _pickWhen,
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: _when == _When.any ? Colors.white : AppTheme.accentOliveDark,
-                      borderRadius: BorderRadius.circular(999),
-                      boxShadow: const [BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6))],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.calendar_today_outlined,
-                          size: 18, color: _when == _When.any ? AppTheme.ink : Colors.white),
-                      const SizedBox(width: 6),
-                      Text(_when.short,
-                          style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: _when == _When.any ? AppTheme.ink : Colors.white)),
-                    ]),
-                  ),
+    // Os meus eventos por data: os próximos primeiro, os passados no fim.
+    final today = DateTime.now();
+    final day0 = DateTime(today.year, today.month, today.day);
+    int byDate(DateTime? a, DateTime? b) {
+      final pa = a == null || a.isBefore(day0), pb = b == null || b.isBefore(day0);
+      if (pa != pb) return pa ? 1 : -1;
+      if (a == null || b == null) return 0;
+      return pa ? b.compareTo(a) : a.compareTo(b);
+    }
+    final own = [...myEvents]..sort((a, b) => byDate(a.weddingDate, b.weddingDate));
+    final guest = [...invited]..sort((a, b) => byDate(a.weddingDate, b.weddingDate));
+
+    // Uma só página (pedido 2026-11-10): criar / código, os meus eventos
+    // e "Descobrir" — nunca vazia, mesmo numa conta nova.
+    final content = <Widget>[
+      if (hasMine)
+        const _Pad(_ActionsRow())
+      else
+        const _Pad(_StartCard()),
+      if (!hasMine) const _Pad(_InviteTile()),
+      if (hasMine) ...[
+        const _Title('Os meus eventos'),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final (i, w) in own.indexed)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: _MyEventCard(wedding: w, wide: i == 0, showPlanning: w.id == activeId),
                 ),
+              for (final w in guest)
+                Padding(padding: const EdgeInsets.only(right: 12), child: _InvitedEventCard(wedding: w)),
+            ],
+          ),
+        ),
+      ],
+      const _Title('Descobrir', subtitle: 'Eventos abertos a que podes ir'),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 0),
+        child: Row(children: [
+          Expanded(child: SearchPill(controller: _search, hint: 'Procurar por nome ou zona')),
+          const SizedBox(width: 10),
+          SnappyTap(
+            onTap: _pickWhen,
+            child: Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: _when == _When.any ? Colors.white : AppTheme.accentOliveDark,
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: const [BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6))],
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.calendar_today_outlined,
+                    size: 18, color: _when == _When.any ? AppTheme.ink : Colors.white),
+                const SizedBox(width: 6),
+                Text(_when.short,
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _when == _When.any ? AppTheme.ink : Colors.white)),
               ]),
             ),
-            const SizedBox(height: 18),
-            if (publicAsync.isLoading && publicAsync.value == null)
-              const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()))
-            else if (publicEvents.isEmpty)
-              _Pad(_EmptyNote(filtering
-                  ? 'Nenhum evento público com estes filtros.'
-                  : 'Ainda não há eventos públicos. Quando um organizador abrir o seu evento a todos, aparece aqui.'))
-            else
-              for (final e in publicEvents)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 22),
-                  child: _PublicEventCard(event: e),
-                ),
-          ]
-        : [
-            if (myEvents.isNotEmpty) ...[
-              const _Section('A organizar'),
-              for (final w in myEvents)
-                _Pad(_OwnEventCard(wedding: w, active: myEvents.length > 1 && w.id == activeId)),
-              const SizedBox(height: 8),
-            ],
-            if (invited.isNotEmpty) ...[
-              const _Section('Convidado'),
-              for (final w in invited) _Pad(GuestEventCard(wedding: w)),
-              const SizedBox(height: 8),
-            ],
-            if (myEvents.isEmpty && invited.isEmpty)
-              const _Pad(_EmptyNote('Ainda não tens eventos. Cria o teu ou descobre um evento público.')),
-            _Pad(_CreateEventButton()),
-            _Pad(_CodeButton()),
-          ];
-
-    final tabs = FilterChipsRow(
-      items: const [FilterBarItem('Descobrir'), FilterBarItem('Os meus eventos')],
-      selected: tab,
-      infinite: false,
-      visible: 2,
-      onSelected: (i) => setState(() => _tab = i),
-    );
+          ),
+        ]),
+      ),
+      const SizedBox(height: 18),
+      if (publicAsync.isLoading && publicAsync.value == null)
+        const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()))
+      else if (publicEvents.isEmpty)
+        _Pad(_EmptyNote(filtering
+            ? 'Nenhum evento público com estes filtros.'
+            : 'Ainda não há eventos abertos. Cria o teu e abre-o a todos: aparece aqui para quem procura.'))
+      else
+        for (final e in publicEvents)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 22),
+            child: _PublicEventCard(event: e),
+          ),
+    ];
 
     return GradientScaffold(
       background: AppBackground.subtle,
@@ -217,7 +227,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             child: RefreshIndicator(
               onRefresh: _refresh,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 190),
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 150),
                 children: [
                   const PageHeader(title: 'Eventos', showBack: false, centered: true),
                   const SizedBox(height: 14),
@@ -233,11 +243,9 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            // "Descobrir" / "Os meus eventos" por cima da navbar (pedido
-            // 2026-11), na mesma ilha — como os filtros da Galeria.
             child: organizer
-                ? FloatingBottomNav(current: AppTab.events, top: tabs)
-                : GuestBottomNav(current: GuestTab.events, top: tabs),
+                ? const FloatingBottomNav(current: AppTab.events)
+                : const GuestBottomNav(current: GuestTab.events),
           ),
         ],
       ),
@@ -253,20 +261,6 @@ class _Pad extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 10),
         child: child,
-      );
-}
-
-class _Section extends StatelessWidget {
-  final String text;
-  const _Section(this.text);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 4, 4, AppTheme.screenMargin, 10),
-        child: Text(
-          text.toUpperCase(),
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark),
-        ),
       );
 }
 
@@ -293,103 +287,6 @@ String _meta(DateTime? date, String? place) => [
       if (date != null) formatWeddingDateCaps(date),
       if (place != null) place,
     ].join(' · ');
-
-class _EventTile extends StatelessWidget {
-  final String id;
-  final EventType type;
-  final String names;
-  final String meta;
-  final String? photo;
-  final Widget trailing;
-  final VoidCallback onTap;
-
-  const _EventTile({
-    required this.id,
-    required this.type,
-    required this.names,
-    required this.meta,
-    required this.photo,
-    required this.trailing,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: softCard(),
-        child: Row(
-          children: [
-            photo == null
-                ? StickerIcon(_typeIcon(type), turns: StickerIcon.tilt(id.hashCode))
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: SizedNetworkImage(photo!, width: 44, height: 44, fit: BoxFit.cover),
-                  ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    type.label.toUpperCase(),
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppTheme.accentOliveDark),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(names, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            trailing,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  final String text;
-  final Color bg;
-  final Color fg;
-  const _Badge(this.text, {required this.bg, required this.fg});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-        child: Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
-      );
-}
-
-class _OwnEventCard extends ConsumerWidget {
-  final Wedding wedding;
-  final bool active;
-  const _OwnEventCard({required this.wedding, this.active = false});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final place = wedding.venue?.isNotEmpty == true
-        ? wedding.venue
-        : (wedding.location?.isNotEmpty == true ? wedding.location : null);
-    return _EventTile(
-      id: wedding.id,
-      type: wedding.eventType,
-      names: wedding.displayNames,
-      meta: _meta(wedding.weddingDate, place),
-      photo: wedding.coverPhotoUrl,
-      trailing: _Badge(active ? 'Aberto' : 'Organizas', bg: AppTheme.accentOliveDark, fg: Colors.white),
-      onTap: () async {
-        await ref.read(weddingControllerProvider.notifier).select(wedding.id);
-        if (context.mounted) context.go('/wedding');
-      },
-    );
-  }
-}
 
 class _PublicEventCard extends ConsumerStatefulWidget {
   final PublicEvent event;
@@ -601,46 +498,321 @@ class _PosterPlaceholder extends StatelessWidget {
   }
 }
 
-class _CreateEventButton extends StatelessWidget {
+class _Title extends StatelessWidget {
+  final String text;
+  final String? subtitle;
+  const _Title(this.text, {this.subtitle});
+
   @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: () => context.push('/novo-evento'),
-      child: Container(
-        height: 56,
-        decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(18)),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 2, 18, AppTheme.screenMargin, 12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(text, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          if (subtitle != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(subtitle!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+            ),
+        ]),
+      );
+}
+
+/// "Criar evento" e "Tenho um código", lado a lado.
+class _ActionsRow extends StatelessWidget {
+  const _ActionsRow();
+
+  Widget _box(BuildContext context, {required bool dark, required IconData icon, required String label, required VoidCallback onTap}) =>
+      Expanded(
+        child: SnappyTap(
+          onTap: onTap,
+          child: Container(
+            height: 96,
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            decoration: BoxDecoration(
+              color: dark ? AppTheme.ink : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: dark ? null : const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(color: dark ? Colors.white : AppTheme.surface, shape: BoxShape.circle),
+                  child: Icon(icon, size: 18, color: AppTheme.ink),
+                ),
+                Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dark ? Colors.white : AppTheme.ink)),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) => Row(children: [
+        _box(context, dark: true, icon: Icons.add_rounded, label: 'Criar evento', onTap: () => context.push('/novo-evento')),
+        const SizedBox(width: 10),
+        _box(context, dark: false, icon: Icons.qr_code_2_rounded, label: 'Tenho um código', onTap: () => showGuestModeSheet(context)),
+      ]);
+}
+
+/// Conta sem eventos: convite a criar o primeiro.
+class _StartCard extends StatelessWidget {
+  const _StartCard();
+
+  static const _types = ['Casamento', 'Aniversário', 'Despedida', 'Jantar de grupo', 'Batizado', 'Outro'];
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+        decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(26)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(Icons.add_rounded, size: 22, color: Colors.white),
-            SizedBox(width: 10),
-            Text('Criar um evento', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+            Row(children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(color: const Color(0xFFF7EACA), borderRadius: BorderRadius.circular(18)),
+                padding: const EdgeInsets.all(6),
+                child: Image.asset('assets/mascot/duo_clink.png', fit: BoxFit.contain),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('O que vamos celebrar?',
+                      style: TextStyle(fontSize: 20, height: 1.2, fontWeight: FontWeight.w800, color: Colors.white)),
+                  SizedBox(height: 4),
+                  Text('Cria o teu evento em 1 minuto.',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFD9D6CE))),
+                ]),
+              ),
+            ]),
+            const SizedBox(height: 16),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final t in _types)
+                SnappyTap(
+                  onTap: () => context.push('/novo-evento'),
+                  child: Container(
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFF4A4A44), width: 1.5),
+                    ),
+                    child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white)),
+                  ),
+                ),
+            ]),
+            const SizedBox(height: 16),
+            SnappyTap(
+              onTap: () => context.push('/novo-evento'),
+              child: Container(
+                height: 50,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(25)),
+                child: const Text('Criar evento', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+              ),
+            ),
           ],
         ),
+      );
+}
+
+class _InviteTile extends StatelessWidget {
+  const _InviteTile();
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: () => showGuestModeSheet(context),
+        child: Container(
+          height: 64,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: softCard(),
+          child: const Row(children: [
+            Icon(Icons.qr_code_2_rounded, size: 22, color: AppTheme.ink),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Recebeste um convite?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                Text('Entra com o código ou o link', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+              ]),
+            ),
+            Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
+          ]),
+        ),
+      );
+}
+
+String? _daysLeft(DateTime? d) {
+  if (d == null) return null;
+  final now = DateTime.now();
+  final n = DateTime(d.year, d.month, d.day).difference(DateTime(now.year, now.month, now.day)).inDays;
+  if (n < 0) return 'Já foi';
+  if (n == 0) return 'É hoje';
+  if (n == 1) return 'É amanhã';
+  return 'Faltam $n dias';
+}
+
+class _Cover extends StatelessWidget {
+  final String id;
+  final EventType type;
+  final String? photo;
+  final double height;
+  final List<Widget> badges;
+  const _Cover({required this.id, required this.type, required this.photo, required this.height, required this.badges});
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        height: height,
+        child: Stack(fit: StackFit.expand, children: [
+          if (photo != null)
+            SizedNetworkImage(photo!, fit: BoxFit.cover)
+          else
+            Container(
+              color: const Color(0xFFE7D9C3),
+              alignment: Alignment.center,
+              child: StickerIcon(_typeIcon(type), turns: StickerIcon.tilt(id.hashCode)),
+            ),
+          Positioned(left: 12, right: 12, top: 12, child: Row(children: badges)),
+        ]),
+      );
+}
+
+Widget _pill(String text, {bool dark = false}) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: dark ? AppTheme.ink : Colors.white, borderRadius: BorderRadius.circular(999)),
+      child: Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: dark ? Colors.white : AppTheme.ink)),
+    );
+
+/// Evento que organizo: abre o painel desse evento.
+class _MyEventCard extends ConsumerWidget {
+  final Wedding wedding;
+  final bool wide;
+  final bool showPlanning;
+  const _MyEventCard({required this.wedding, required this.wide, required this.showPlanning});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final place = wedding.venue?.isNotEmpty == true
+        ? wedding.venue
+        : (wedding.location?.isNotEmpty == true ? wedding.location : null);
+    final left = _daysLeft(wedding.weddingDate);
+    final tasks = showPlanning ? ref.watch(taskEngineControllerProvider) : null;
+    final done = tasks?.systemDone.length ?? 0;
+    final total = done + (tasks?.systemActive.length ?? 0);
+    final next = tasks?.systemActive.firstOrNull;
+    return SnappyTap(
+      onTap: () async {
+        await ref.read(weddingControllerProvider.notifier).select(wedding.id);
+        if (context.mounted) context.go('/wedding');
+      },
+      child: Container(
+        width: wide ? 290 : 220,
+        clipBehavior: Clip.antiAlias,
+        decoration: softCard(radius: 22),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          _Cover(
+            id: wedding.id,
+            type: wedding.eventType,
+            photo: wedding.coverPhotoUrl,
+            height: 120,
+            badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Organizador')],
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(wedding.displayNames,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+              const SizedBox(height: 2),
+              Text(_meta(wedding.weddingDate, place),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              if (total > 0) ...[
+                const SizedBox(height: 12),
+                Row(children: [
+                  const Text('Planeamento', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                  const Spacer(),
+                  Text('${(done * 100 / total).round()}%',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.accentOliveDark)),
+                ]),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: done / total,
+                    minHeight: 8,
+                    color: AppTheme.accentOliveDark,
+                    backgroundColor: const Color(0xFFE2DED4),
+                  ),
+                ),
+              ],
+              if (next != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(color: const Color(0xFFF7EACA), borderRadius: BorderRadius.circular(12)),
+                  child: Text('Para fazer: ${next.title}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF5A3E0C))),
+                ),
+              ],
+            ]),
+          ),
+        ]),
       ),
     );
   }
 }
 
-class _CodeButton extends StatelessWidget {
+/// Evento onde sou convidado: abre a página de convidado.
+class _InvitedEventCard extends StatelessWidget {
+  final GuestWedding wedding;
+  const _InvitedEventCard({required this.wedding});
+
   @override
   Widget build(BuildContext context) {
+    final place = wedding.venue?.isNotEmpty == true
+        ? wedding.venue
+        : (wedding.location?.isNotEmpty == true ? wedding.location : null);
+    final left = _daysLeft(wedding.weddingDate);
     return SnappyTap(
-      onTap: () => showGuestModeSheet(context),
-      child: CustomPaint(
-        painter: DashedBorderPainter(),
-        child: SizedBox(
-          height: 56,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.qr_code_2_rounded, size: 20, color: AppTheme.accentOliveDark),
-              const SizedBox(width: 10),
-              Text('Tenho um código',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-            ],
+      onTap: () => context.go('/guest-home/${wedding.weddingId}'),
+      child: Container(
+        width: 220,
+        clipBehavior: Clip.antiAlias,
+        decoration: softCard(radius: 22),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          _Cover(
+            id: wedding.weddingId,
+            type: wedding.eventType,
+            photo: wedding.coverPhotoUrl,
+            height: 120,
+            badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Convidado')],
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(wedding.displayNames,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+              const SizedBox(height: 2),
+              Text(_meta(wedding.weddingDate, place),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+            ]),
+          ),
+        ]),
       ),
     );
   }

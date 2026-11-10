@@ -8,8 +8,6 @@ import '../../core/theme/app_theme.dart';
 import 'first_run_tour.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
 import '../../core/wedding/menu_style.dart';
-import '../../core/wedding/wedding_controller.dart';
-import '../../core/models/models.dart';
 
 enum AppTab { home, partners, chat, wedding, events }
 
@@ -42,10 +40,6 @@ class FloatingBottomNav extends ConsumerWidget {
   Widget _buildNav(BuildContext context, WidgetRef ref) {
     // A navbar acompanha a cor escolhida em "Aparência do menu" (098).
     final menuColor = ref.watch(currentMenuStyleProvider).color;
-    // Ícone do separador do evento = o símbolo do tipo de evento (pedido
-    // 2026-10-18), em vez da ilustração do casal.
-    final eventType = ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType)) ?? EventType.wedding;
-    final motif = EventDecor.of(eventType).motif;
     final unreadCount = ref
         .watch(unreadMessagesCountProvider)
         .maybeWhen(data: (count) => count, orElse: () => 0);
@@ -97,24 +91,13 @@ class FloatingBottomNav extends ConsumerWidget {
                   child: _NavIcon(
                     icon: Icons.explore_outlined,
                     activeIcon: Icons.explore_rounded,
-                    active: current == AppTab.events,
+                    // O painel de cada evento abre a partir de Eventos
+                    // (separador "O meu evento" retirado, 2026-11-10).
+                    active: current == AppTab.events || current == AppTab.wedding,
                     accent: menuColor.color,
                     onAccent: menuColor.on,
                     onTap: () => context.go('/eventos'),
                     label: 'Eventos',
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: _NavIcon(
-                    icon: motif,
-                    activeIcon: motif,
-                    active: current == AppTab.wedding,
-                    accent: menuColor.color,
-                    onAccent: menuColor.on,
-                    onTap: () => context.go('/wedding'),
-                    label: 'O meu evento',
                   ),
                 ),
               ),
