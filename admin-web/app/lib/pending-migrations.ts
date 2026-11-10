@@ -228,6 +228,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Quando o parceiro cancela, o organizador recebe tudo e a taxa de serviço fica em dívida do parceiro, descontada nos pagamentos seguintes.",
     check: { kind: "marker", id: "175" },
   },
+  {
+    file: "176_storage_lockdown.sql",
+    title: "Segurança dos ficheiros",
+    what: "Ninguém consegue listar os ficheiros dos outros (anexos do chat incluídos); fotos limitadas a 10 MB e só imagens; anexos do chat sem HTML/SVG.",
+    check: { kind: "marker", id: "176" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
