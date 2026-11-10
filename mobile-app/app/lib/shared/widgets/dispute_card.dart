@@ -222,7 +222,7 @@ class _OpenDisputeSheetState extends State<_OpenDisputeSheet> {
           onPressed: _busy ? null : _submit,
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(50),
-            backgroundColor: AppTheme.accentOliveDark,
+            backgroundColor: AppTheme.ink,
             shape: const StadiumBorder(),
           ),
           child: Text(_busy ? 'A enviar…' : 'Enviar disputa'),

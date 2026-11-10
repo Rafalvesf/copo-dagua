@@ -220,7 +220,7 @@ class _PlaceCard extends StatelessWidget {
         onTap: () => showNavigationSheet(context, label: title, address: sub, latitude: latitude, longitude: longitude),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(999)),
+          decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(999)),
           child: const Text('Como chegar',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
         ),

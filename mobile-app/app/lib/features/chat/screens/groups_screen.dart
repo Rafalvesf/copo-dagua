@@ -140,7 +140,7 @@ class _Empty extends StatelessWidget {
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: action,
-                style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, shape: const StadiumBorder()),
+                style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
                 child: const Text('Criar grupo'),
               ),
             ],
@@ -234,7 +234,7 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
           const SizedBox(height: 8),
           FilledButton(
             onPressed: _saving || _name.text.trim().isEmpty || _picked.isEmpty ? null : _create,
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
             child: Text(_saving ? 'A criar…' : 'Criar grupo'),
           ),
         ]),
@@ -467,7 +467,7 @@ class _AddPeopleSheetState extends State<_AddPeopleSheet> {
             ),
             FilledButton(
               onPressed: _picked.isEmpty ? null : () => Navigator.of(context).pop(_picked.toList()),
-              style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
               child: const Text('Adicionar'),
             ),
           ]),

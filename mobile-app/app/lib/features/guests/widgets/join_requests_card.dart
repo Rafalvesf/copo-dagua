@@ -105,7 +105,7 @@ class JoinRequestsCard extends ConsumerWidget {
                         child: FilledButton(
                           onPressed: () => _review(context, ref, r, true),
                           style: FilledButton.styleFrom(
-                            backgroundColor: AppTheme.accentOliveDark,
+                            backgroundColor: AppTheme.ink,
                             minimumSize: const Size(0, 42),
                             shape: const StadiumBorder(),
                           ),

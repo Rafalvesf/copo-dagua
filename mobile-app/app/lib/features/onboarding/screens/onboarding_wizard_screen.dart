@@ -821,7 +821,7 @@ class _BigButton extends StatelessWidget {
       child: FilledButton(
         onPressed: loading ? () {} : onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: AppTheme.accentOliveDark,
+          backgroundColor: AppTheme.ink,
           disabledBackgroundColor: AppTheme.surface,
           disabledForegroundColor: AppTheme.inkMuted,
           shape: RoundedRectangleBorder(

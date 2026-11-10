@@ -375,7 +375,7 @@ class V2RoundButton extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: solid ? AppTheme.accentOliveDark : Colors.white,
+            color: solid ? AppTheme.ink : Colors.white,
             shape: BoxShape.circle,
             boxShadow: solid
                 ? const [BoxShadow(color: Color(0x594F6B4A), blurRadius: 14, offset: Offset(0, 6))]
@@ -405,7 +405,7 @@ class V2BigButton extends StatelessWidget {
           ? FilledButton(
               onPressed: onTap,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.accentOliveDark,
+                backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
@@ -415,8 +415,8 @@ class V2BigButton extends StatelessWidget {
           : OutlinedButton(
               onPressed: onTap,
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.accentOliveDark,
-                side: BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
+                foregroundColor: AppTheme.ink,
+                side: BorderSide(color: AppTheme.ink, width: 1.5),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
               ),

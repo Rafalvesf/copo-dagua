@@ -574,7 +574,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                 child: FilledButton(
                   onPressed: !_canContinue || _saving ? null : _continue,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.accentOliveDark,
+                    backgroundColor: AppTheme.ink,
                     disabledBackgroundColor: AppTheme.borderMuted,
                     foregroundColor: Colors.white,
                     disabledForegroundColor: AppTheme.inkMuted,

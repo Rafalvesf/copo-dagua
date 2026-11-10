@@ -380,7 +380,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     amount: amountWithCommission(booking.depositAmount ?? 0, commissionPct),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.accentOliveDark,
+                    backgroundColor: AppTheme.ink,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -404,7 +404,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     amount: amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.accentOliveDark,
+                    backgroundColor: AppTheme.ink,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -603,7 +603,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
             child: FilledButton(
               onPressed: _accepting ? null : _accept,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.accentOliveDark,
+                backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
@@ -853,7 +853,7 @@ class ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
           FilledButton(
             onPressed: _rating == 0 || _submitting ? null : _submit,
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.accentOliveDark,
+              backgroundColor: AppTheme.ink,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(

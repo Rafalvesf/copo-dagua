@@ -440,8 +440,8 @@ class _PillButton extends StatelessWidget {
         child: FilledButton(
           onPressed: onPressed,
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.accentOliveDark,
-            disabledBackgroundColor: AppTheme.accentOliveDark.withValues(alpha: 0.35),
+            backgroundColor: AppTheme.ink,
+            disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.35),
             foregroundColor: Colors.white,
             disabledForegroundColor: Colors.white,
             shape: const StadiumBorder(),

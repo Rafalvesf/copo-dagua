@@ -301,7 +301,7 @@ class _PermRow extends StatelessWidget {
         FilledButton(
           onPressed: filled && !busy ? onTap : null,
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.accentOliveDark,
+            backgroundColor: AppTheme.ink,
             foregroundColor: Colors.white,
             disabledBackgroundColor: state == _State.granted ? AppTheme.accentTint : AppTheme.surface,
             disabledForegroundColor: state == _State.granted ? AppTheme.accentOliveDark : AppTheme.inkMuted,

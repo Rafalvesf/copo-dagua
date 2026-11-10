@@ -97,7 +97,7 @@ class _PayReturnScreenState extends ConsumerState<PayReturnScreen> {
                     const SizedBox(height: 20),
                     FilledButton(
                       onPressed: () => context.go('/bookings'),
-                      style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, shape: const StadiumBorder()),
+                      style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
                       child: const Text('Ver reservas'),
                     ),
                   ])

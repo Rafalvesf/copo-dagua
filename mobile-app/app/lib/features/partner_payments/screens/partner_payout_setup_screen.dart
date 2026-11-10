@@ -210,8 +210,8 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
         child: FilledButton(
           onPressed: _agreed && !_loading ? _open : null,
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.accentOliveDark,
-            disabledBackgroundColor: AppTheme.accentOliveDark.withValues(alpha: 0.4),
+            backgroundColor: AppTheme.ink,
+            disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.4),
             foregroundColor: Colors.white,
             disabledForegroundColor: Colors.white,
             shape: const StadiumBorder(),

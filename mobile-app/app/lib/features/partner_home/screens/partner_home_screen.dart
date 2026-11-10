@@ -356,7 +356,7 @@ class _RespondFirstCard extends StatelessWidget {
                   onPressed: () => open(b),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(44),
-                    backgroundColor: AppTheme.accentOliveDark,
+                    backgroundColor: AppTheme.ink,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
