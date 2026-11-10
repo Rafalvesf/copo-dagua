@@ -201,7 +201,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                           extra: booking,
                         ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.accentOliveDark,
+                          backgroundColor: AppTheme.ink,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),

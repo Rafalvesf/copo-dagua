@@ -168,7 +168,7 @@ class _OfferCard extends ConsumerWidget {
                     if (paid == true) await onReserved();
                   },
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.accentOliveDark,
+              backgroundColor: AppTheme.ink,
               minimumSize: const Size.fromHeight(46),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
             ),
@@ -291,7 +291,7 @@ class _ReserveSheetState extends ConsumerState<_ReserveSheet> {
             FilledButton(
               onPressed: _busy ? null : _pay,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.accentOliveDark,
+                backgroundColor: AppTheme.ink,
                 minimumSize: const Size.fromHeight(52),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
               ),

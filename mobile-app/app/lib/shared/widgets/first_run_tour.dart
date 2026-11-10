@@ -379,7 +379,7 @@ class _TourOverlayState extends State<_TourOverlay> {
           const SizedBox(width: 4),
           FilledButton(
             onPressed: () => setState(() => _step++),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
             child: const Text('Seguinte'),
           ),
         ]),
@@ -432,7 +432,7 @@ class _TourOverlayState extends State<_TourOverlay> {
                 onPressed: () => setState(() => _step = 1),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),
-                  backgroundColor: AppTheme.accentOliveDark,
+                  backgroundColor: AppTheme.ink,
                   shape: const StadiumBorder(),
                 ),
                 child: const Text('Começar'),
@@ -486,7 +486,7 @@ class _TourOverlayState extends State<_TourOverlay> {
           onPressed: _close,
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(50),
-            backgroundColor: AppTheme.accentOliveDark,
+            backgroundColor: AppTheme.ink,
             shape: const StadiumBorder(),
           ),
           child: Text(_c.finalCta),

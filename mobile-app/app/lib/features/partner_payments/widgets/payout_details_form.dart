@@ -351,7 +351,7 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
               onPressed: _saving ? null : _next,
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(52),
-                backgroundColor: AppTheme.accentOliveDark,
+                backgroundColor: AppTheme.ink,
                 shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontWeight: FontWeight.w700, fontSize: AppFontSize.lg),
               ),

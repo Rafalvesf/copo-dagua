@@ -203,7 +203,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                                 icon: const Icon(Icons.mail_outline_rounded, size: 18),
                                 label: const Text('Oferecer um envelope'),
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: AppTheme.accentOliveDark,
+                                  backgroundColor: AppTheme.ink,
                                   foregroundColor: Colors.white,
                                   minimumSize: const Size.fromHeight(48),
                                   shape: const StadiumBorder(),

@@ -356,7 +356,7 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
               icon: const Icon(Icons.ios_share, size: 18),
               label: const FittedBox(child: Text('Enviar link', maxLines: 1, style: TextStyle(fontWeight: FontWeight.w700))),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.accentOliveDark,
+                backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(46),
                 padding: const EdgeInsets.symmetric(horizontal: 12),

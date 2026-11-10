@@ -503,7 +503,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                     icon: const Icon(Icons.directions_outlined, size: 20),
                     label: const Text('Como chegar'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.accentOliveDark,
+                      backgroundColor: AppTheme.ink,
                       foregroundColor: Colors.white,
                       shape: const StadiumBorder(),
                       textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w700),
@@ -633,7 +633,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                   onPressed: _busy ? null : () => _respond(ev, attending: true),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(0, 54),
-                    backgroundColor: AppTheme.accentOliveDark,
+                    backgroundColor: AppTheme.ink,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                   ),
                   child: _busy

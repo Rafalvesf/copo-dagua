@@ -87,7 +87,7 @@ class SupportScreen extends ConsumerWidget {
                 child: FilledButton(
                   onPressed: () => _showNewTicketSheet(context, ref),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.accentOliveDark,
+                    backgroundColor: AppTheme.ink,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),

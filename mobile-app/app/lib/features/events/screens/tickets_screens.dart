@@ -150,7 +150,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _busy || unit <= 0 ? null : _pay,
-              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52), backgroundColor: AppTheme.accentOliveDark),
+              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52), backgroundColor: AppTheme.ink),
               child: _busy
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : Text('Pagar ${euroLabel(unit * _qty)}'),
@@ -249,7 +249,7 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
                   onPressed: () => paid && _weddingId != null
                       ? context.go('/guest-home/$_weddingId')
                       : context.go('/eventos'),
-                  style: FilledButton.styleFrom(minimumSize: const Size(220, 50), backgroundColor: AppTheme.accentOliveDark),
+                  style: FilledButton.styleFrom(minimumSize: const Size(220, 50), backgroundColor: AppTheme.ink),
                   child: Text(paid ? 'Ver o evento' : 'Voltar aos eventos'),
                 ),
             ]),
@@ -425,7 +425,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                   if (s == null || !s.active)
                     FilledButton(
                       onPressed: () => context.push('/bilhetes/ativar'),
-                      style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark),
+                      style: FilledButton.styleFrom(backgroundColor: AppTheme.ink),
                       child: Text(s == null || !s.hasAccount ? 'Ativar venda de bilhetes' : 'Completar dados'),
                     ),
                 ],
@@ -466,7 +466,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                   const SizedBox(height: 10),
                   FilledButton(
                     onPressed: s.payoutsEnabled && s.availableCents > 0 && !_paying ? _payout : null,
-                    style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark),
+                    style: FilledButton.styleFrom(backgroundColor: AppTheme.ink),
                     child: _paying
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         : const Text('Levantar para o IBAN'),

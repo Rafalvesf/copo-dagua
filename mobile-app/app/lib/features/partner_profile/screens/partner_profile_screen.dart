@@ -290,7 +290,7 @@ class _PaymentsRequiredCard extends ConsumerWidget {
           const SizedBox(width: 8),
           FilledButton(
             onPressed: () => context.push('/partner-payments'),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
             child: const Text('Ativar'),
           ),
         ]),

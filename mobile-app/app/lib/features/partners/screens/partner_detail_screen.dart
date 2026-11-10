@@ -502,7 +502,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                       height: 52,
                       child: FilledButton(
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.accentOliveDark,
+                          backgroundColor: AppTheme.ink,
                           shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback,
                               fontSize: AppFontSize.md, fontWeight: FontWeight.w700),

@@ -138,7 +138,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                       child: FilledButton(
                         onPressed: () => openPaymentFlow(context, ref, id),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.accentOliveDark,
+                          backgroundColor: AppTheme.ink,
                           foregroundColor: Colors.white,
                           shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),

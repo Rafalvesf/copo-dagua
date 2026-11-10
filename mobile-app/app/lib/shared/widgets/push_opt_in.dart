@@ -74,7 +74,7 @@ class _PushOptInCardState extends State<PushOptInCard> {
               const SizedBox(height: 10),
               FilledButton(
                 onPressed: _busy ? null : _enable,
-                style: FilledButton.styleFrom(backgroundColor: AppTheme.accentOliveDark, shape: const StadiumBorder()),
+                style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
                 child: Text(_busy ? 'A ativar…' : 'Ativar notificações'),
               ),
             ],

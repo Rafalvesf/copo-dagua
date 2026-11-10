@@ -129,7 +129,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
             FilledButton(
               onPressed: () => Navigator.of(sheet).pop(),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.accentOliveDark,
+                backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(50),
                 shape: const StadiumBorder(),
@@ -1369,7 +1369,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
             FilledButton(
               onPressed: () => Navigator.of(sheet).pop(),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.accentOliveDark,
+                backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(50),
                 shape: const StadiumBorder(),
@@ -1768,7 +1768,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
             child: FilledButton(
               onPressed: _savingPrice ? null : _savePrice,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.accentOliveDark,
+                backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
               ),
