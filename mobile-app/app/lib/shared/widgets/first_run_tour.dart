@@ -188,7 +188,7 @@ const _copy = {
     welcomeBody: 'Em menos de um minuto mostramos onde está tudo para organizarem o vosso evento.',
     steps: [
       _Step('Encontra parceiros', 'Espaços, catering, fotografia e muito mais. Pede orçamento e recebe propostas aqui.', navIndex: 0),
-      _Step('O vosso evento', 'Convidados, mesas, orçamento e programa do dia, tudo num só sítio.', navIndex: 1),
+      _Step('Eventos', 'Os vossos eventos (convidados, mesas, orçamento, programa) e eventos abertos para descobrir.', navIndex: 1),
       _Step('Conversas', 'Fala com os parceiros e cria grupos com a equipa e os convidados.', navIndex: 2),
       _Step('Tarefas e notificações', 'Dizemos-vos o que fazer a seguir: propostas para rever, pagamentos e lembretes.', anchor: 'bell', navIndex: 3),
     ],
