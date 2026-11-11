@@ -414,7 +414,7 @@ class _PosterCard extends StatelessWidget {
                 if (e.goingCount > 0) ...[
                   AvatarDots(e.goingCount),
                   const SizedBox(width: 8),
-                  Flexible(
+                  Expanded(
                     child: Text(
                         [
                           e.goingCount == 1 ? '1 vai' : '${e.goingCount} vão',
@@ -430,14 +430,16 @@ class _PosterCard extends StatelessWidget {
                   const GhostDots(),
                   const SizedBox(width: 8),
                   // Em duas linhas se não couber (cortava "Sê o prime…").
-                  const Flexible(
+                  const Expanded(
                     child: Text('Sê o primeiro a ir!',
                         maxLines: 2,
                         softWrap: true,
                         style: TextStyle(fontSize: 12.5, height: 1.15, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
                   ),
                 ],
-                const Spacer(),
+                // O texto ocupa o meio (Expanded): o botão fica sempre
+                // encostado à direita.
+                const SizedBox(width: 8),
                 busy
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : CtaPill(cta),
