@@ -596,11 +596,8 @@ class _PanelPage extends ConsumerWidget {
           tile('stat_partners', 'Parceiros', 'Reservados e propostas', indent: true),
           tile('stat_fourth', fourth, fourth == 'Mesas' ? 'Pessoas sentadas' : fourth == 'Bilhetes' ? 'Bilhetes vendidos' : 'Já oferecidos', indent: true),
         ],
-        tile('suggestions', 'Sugestões de parceiros', 'Para o tipo de evento e a zona'),
-        tile('guest_page', 'Página dos convidados', 'Em Gerir'),
-        tile('gallery', 'Galeria', 'Em Gerir'),
         const SizedBox(height: 8),
-        const Text('Os próximos passos, o convite, as reservas e Gerir aparecem sempre.',
+        const Text('Os próximos passos, o convite, as sugestões, as reservas e Gerir (com a página dos convidados e a galeria) aparecem sempre.',
             style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
       ],
     );
