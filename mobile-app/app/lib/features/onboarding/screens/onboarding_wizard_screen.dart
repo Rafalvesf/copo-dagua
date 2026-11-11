@@ -31,6 +31,15 @@ import '../../../shared/widgets/onboarding_exit.dart';
 /// tratado; no fim, um resumo com os próximos passos.
 enum _WizardStep { event, names, date, region, access, guests, budget, booked }
 
+/// As perguntas agrupadas em 3 páginas (mockup "Criar evento —
+/// onboarding", 2026-11-11): tipo → detalhes → pessoas e orçamento. O
+/// "Pronto" é o 4.º passo.
+const _pages = [
+  [_WizardStep.event],
+  [_WizardStep.names, _WizardStep.date, _WizardStep.region, _WizardStep.access],
+  [_WizardStep.guests, _WizardStep.budget, _WizardStep.booked],
+];
+
 /// Passos que se podem saltar (o tipo de evento e o nome são precisos).
 const _skippable = {
   _WizardStep.date,
@@ -110,7 +119,8 @@ class _OnboardingWizardScreenState
   int? _guests;
 
   bool get _isWedding => _eventType == EventType.wedding;
-  _WizardStep get _current => _WizardStep.values[_step];
+  _WizardStep get _current => _pages[_step].first;
+  List<_WizardStep> get _currentSteps => _pages[_step];
 
   @override
   void initState() {
@@ -144,7 +154,9 @@ class _OnboardingWizardScreenState
     return typed.isEmpty ? profile.fullName.split(' ').first : typed;
   }
 
-  bool get _canContinue => switch (_current) {
+  bool get _canContinue => _currentSteps.every(_stepOk);
+
+  bool _stepOk(_WizardStep step) => switch (step) {
         _WizardStep.event => _eventTypes.isNotEmpty &&
             (!_eventTypes.contains(EventType.other) || _otherLabel.text.trim().isNotEmpty),
         // "o nome do par não é opcional" (2026-10-17) — num casamento.
@@ -184,7 +196,7 @@ class _OnboardingWizardScreenState
   }
 
   Future<void> _next(Profile profile) async {
-    if (_step < _WizardStep.values.length - 1) {
+    if (_step < _pages.length - 1) {
       setState(() => _step++);
       return;
     }
@@ -370,7 +382,7 @@ class _OnboardingWizardScreenState
       );
     }
 
-    final total = _WizardStep.values.length;
+    final total = _pages.length + 1;
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
@@ -393,7 +405,7 @@ class _OnboardingWizardScreenState
                               : () => setState(() => _startAnswered = false),
                     ),
                     const Spacer(),
-                    if (_skippable.contains(_current))
+                    if (_currentSteps.every(_skippable.contains))
                       TextButton(
                         onPressed: _saving ? null : () => _next(profile),
                         style: TextButton.styleFrom(
@@ -441,12 +453,32 @@ class _OnboardingWizardScreenState
                     children: [...previous, ?current],
                   ),
                   child: KeyedSubtree(
-                    key: ValueKey(_current),
-                    child: _buildStep(context),
+                    key: ValueKey(_step),
+                    child: _currentSteps.length == 1
+                        ? _buildStep(context, _current)
+                        : SingleChildScrollView(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: _InlineSteps(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 28),
+                                    child: Text(_step == 1 ? 'Os detalhes' : 'Pessoas e orçamento',
+                                        style: const TextStyle(fontSize: AppFontSize.h1, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(_step == 1 ? 'Tudo isto muda-se depois.' : 'Uma estimativa chega. Podes saltar.',
+                                      style: const TextStyle(fontSize: AppFontSize.base + 1, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted)),
+                                  for (final st in _currentSteps) _buildStep(context, st),
+                                ],
+                              ),
+                            ),
+                          ),
                   ),
                 ),
               ),
-              if (_current == _WizardStep.names) ...[
+              if (_currentSteps.contains(_WizardStep.names)) ...[
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -467,7 +499,7 @@ class _OnboardingWizardScreenState
                 const SizedBox(height: 14),
               ],
               _BigButton(
-                label: 'Continuar',
+                label: _step == _pages.length - 1 ? 'Criar ${_eventType.noun}' : 'Continuar',
                 loading: _saving,
                 onPressed: _canContinue && !_saving ? () => _next(profile) : null,
               ),
@@ -478,8 +510,8 @@ class _OnboardingWizardScreenState
     );
   }
 
-  Widget _buildStep(BuildContext context) {
-    switch (_current) {
+  Widget _buildStep(BuildContext context, _WizardStep step) {
+    switch (step) {
       case _WizardStep.event:
         return _StepScaffold(
           question: 'O que estão a organizar?',
@@ -772,15 +804,16 @@ class _StepScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(top: 32, bottom: 16),
-      child: Column(
+    // Várias perguntas na mesma página: sem scroll próprio e com o título
+    // mais pequeno (o da página fica por cima).
+    final inline = context.dependOnInheritedWidgetOfExactType<_InlineSteps>() != null;
+    final column = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             question,
-            style: const TextStyle(
-              fontSize: AppFontSize.h1,
+            style: TextStyle(
+              fontSize: inline ? 18 : AppFontSize.h1,
               height: 34 / 28,
               fontWeight: FontWeight.w700,
               color: AppTheme.ink,
@@ -798,12 +831,24 @@ class _StepScaffold extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 24),
+          SizedBox(height: inline ? 14 : 24),
           child,
         ],
-      ),
+      );
+    if (inline) return Padding(padding: const EdgeInsets.only(top: 28), child: column);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(top: 32, bottom: 16),
+      child: column,
     );
   }
+}
+
+/// Marca as perguntas que aparecem juntas numa página (sem scroll próprio).
+class _InlineSteps extends InheritedWidget {
+  const _InlineSteps({required super.child});
+
+  @override
+  bool updateShouldNotify(_InlineSteps oldWidget) => false;
 }
 
 /// Botão principal do onboarding: 54 de altura, cheio, cantos 16.

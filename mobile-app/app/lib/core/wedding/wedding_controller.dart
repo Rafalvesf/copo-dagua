@@ -341,6 +341,46 @@ class WeddingController extends Notifier<WeddingState> {
       profilePhotoUrl: row['profile_photo_url'] as String?,
       updatedAt: row['updated_at'] == null ? null : DateTime.parse(row['updated_at'] as String),
       guestCode: row['guest_code'] as String?,
+      eventTypeOther: row['event_type_other'] as String?,
+      panelHidden: [for (final k in (row['panel_hidden'] as List?) ?? const []) k as String],
+    );
+  }
+
+  /// Nome do tipo quando é "Outro" (Definições → Detalhes do evento).
+  Future<void> setEventTypeOther(String? label) async {
+    final w = state.wedding;
+    if (w == null) return;
+    final v = (label == null || label.trim().isEmpty) ? null : label.trim();
+    await supabase.from('weddings').update({'event_type_other': v}).eq('id', w.id);
+    final updated = Wedding(
+      id: w.id, ownerId: w.ownerId, partnerName1: w.partnerName1, partnerName2: w.partnerName2,
+      partner1Age: w.partner1Age, partner2Age: w.partner2Age, weddingDate: w.weddingDate,
+      location: w.location, venue: w.venue, ceremonyType: w.ceremonyType, eventType: w.eventType,
+      estimatedGuests: w.estimatedGuests, estimatedBudget: w.estimatedBudget, status: w.status,
+      quote: w.quote, coverPhotoUrl: w.coverPhotoUrl, profilePhotoUrl: w.profilePhotoUrl,
+      updatedAt: w.updatedAt, guestCode: w.guestCode, eventTypeOther: v, panelHidden: w.panelHidden,
+    );
+    _replace(updated);
+  }
+
+  /// Mostrar/esconder um bloco do painel (migração 177). Se a migração
+  /// ainda não correu, a escolha fica só nesta sessão.
+  Future<void> setPanelShown(String key, bool shown) async {
+    final w = state.wedding;
+    if (w == null) return;
+    final hidden = {...w.panelHidden};
+    shown ? hidden.remove(key) : hidden.add(key);
+    _replace(w.copyWith(panelHidden: hidden.toList()));
+    try {
+      await supabase.from('weddings').update({'panel_hidden': hidden.toList()}).eq('id', w.id);
+    } catch (_) {}
+  }
+
+  void _replace(Wedding w) {
+    state = WeddingState(
+      loading: false,
+      wedding: w,
+      events: [for (final e in state.events) e.id == w.id ? w : e],
     );
   }
 }

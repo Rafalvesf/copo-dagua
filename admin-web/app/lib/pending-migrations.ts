@@ -234,6 +234,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Ninguém consegue listar os ficheiros dos outros (anexos do chat incluídos); fotos limitadas a 10 MB e só imagens; anexos do chat sem HTML/SVG.",
     check: { kind: "marker", id: "176" },
   },
+  {
+    file: "177_panel_hidden.sql",
+    title: "Painel do evento: ligar e desligar blocos",
+    what: "Guarda o que cada organizador escondeu no painel (contagem, números, sugestões, galeria…).",
+    check: { kind: "column", table: "weddings", column: "panel_hidden" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
