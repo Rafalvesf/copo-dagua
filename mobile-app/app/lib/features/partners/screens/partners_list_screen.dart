@@ -746,99 +746,23 @@ class _FeaturedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rating = _ratingLabel(partner);
+    final price = partner.startingPrice != null
+        ? ('DESDE', euros(partner.startingPrice!))
+        : (partner.averageQuotePrice != null ? ('MÉDIA', euros(partner.averageQuotePrice!)) : null);
     return FeaturedOverlayCard(
       onTap: onTap,
       image: _PartnerPhoto(partner),
-      topRight: rating == null
+      badge: rating == null
           ? null
           : PhotoPill(rating, icon: Hi.star, muted: partner.reviewCount > 0 ? '(${partner.reviewCount})' : null),
+      price: price,
       title: partner.name,
       subtitle: partner.location.isNotEmpty ? partner.location : partner.primaryCategoryLabel,
       // As categorias em todos os cartões (2026-11-11), não só nos que têm
       // mais do que uma.
       chips: (partner.categoryLabels.isEmpty ? [partner.primaryCategoryLabel] : partner.categoryLabels).take(3).toList(),
-      price: _priceLabel(partner),
     );
   }
-}
-
-/// Cartão do "Em destaque" (cartões densos, 2026-11-11): foto mais
-/// baixa e, por baixo, nome, categoria · zona, etiquetas, preço e "Ver".
-/// Usado nas Empresas e nas Lojas.
-class FeaturedOverlayCard extends StatelessWidget {
-  final VoidCallback onTap;
-  final Widget image;
-  final Widget? badge;
-  final Widget? topRight;
-  final String title;
-  final String subtitle;
-  final List<String> chips;
-  final String? price;
-  const FeaturedOverlayCard({
-    super.key,
-    required this.onTap,
-    required this.image,
-    required this.title,
-    required this.subtitle,
-    this.badge,
-    this.topRight,
-    this.chips = const [],
-    this.price,
-  });
-
-  static const double height = 268;
-
-  @override
-  Widget build(BuildContext context) => SnappyTap(
-        onTap: onTap,
-        child: Semantics(
-          button: true,
-          label: [title, subtitle, if (price != null) price!].join(', '),
-          excludeSemantics: true,
-          child: Container(
-            height: height,
-            clipBehavior: Clip.antiAlias,
-            decoration: softCard(radius: 22),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              SizedBox(
-                height: 112,
-                child: Stack(fit: StackFit.expand, children: [
-                  image,
-                  if (badge != null) Positioned(left: 12, top: 12, child: badge!),
-                  if (topRight != null) Positioned(right: 12, top: 12, child: topRight!),
-                ]),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                    const SizedBox(height: 3),
-                    MetaRow([(Hi.mapPin, subtitle)]),
-                    if (chips.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      DenseChipRow([for (final c in chips) DenseChip(c)]),
-                    ],
-                    const Spacer(),
-                    Row(children: [
-                      Expanded(
-                        child: Text(price ?? '',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                      ),
-                      const CtaPill('Ver'),
-                    ]),
-                  ]),
-                ),
-              ),
-            ]),
-          ),
-        ),
-      );
 }
 
 /// Linha de parceiro: foto quadrada, nome, categoria · zona · nota,

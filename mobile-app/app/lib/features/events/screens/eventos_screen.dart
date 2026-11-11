@@ -365,7 +365,7 @@ class _PosterCard extends StatelessWidget {
                     ]),
                   ),
                 ),
-              Positioned(right: 12, top: 12, child: PhotoPill(price, dark: true)),
+              Positioned(right: 12, top: 12, child: PriceBox('ENTRADA', price)),
               // Partilhar o evento por link (2026-11).
               Positioned(
                 right: 8,
