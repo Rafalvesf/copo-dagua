@@ -264,6 +264,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Até 2 000 € / acima (+ 1 €): cartão europeu 4% / 3%, do Reino Unido 5% / 4%, de fora da Europa 6% / 5%. Parceiro 4% / 3%. Bilhetes iguais.",
     check: { kind: "marker", id: "181" },
   },
+  {
+    file: "182_event_capacity.sql",
+    title: "Limite de pessoas por evento",
+    what: "O organizador escolhe quantas pessoas podem ir; quando chega ao limite, ninguém mais entra nem compra bilhete.",
+    check: { kind: "column", table: "weddings", column: "max_attendees" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

@@ -277,6 +277,11 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
       context.go('/guest-home/${e.weddingId}');
       return;
     }
+    // Sem lugares (migração 182).
+    if (e.isFull) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Este evento está esgotado.')));
+      return;
+    }
     // Evento pago: entra-se comprando bilhete (migração 149).
     if (e.isPaid) {
       await showBuyTicketSheet(context, e);
@@ -305,8 +310,10 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
       ref.invalidate(guestWeddingsProvider);
       ref.invalidate(publicEventsProvider);
       if (mounted) context.go('/guest-home/${e.weddingId}');
-    } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível entrar no evento. Tenta outra vez.')));
+    } catch (err) {
+      messenger.showSnackBar(SnackBar(
+          content: Text(isEventFull(err) ? 'Este evento está esgotado.' : 'Não foi possível entrar no evento. Tenta outra vez.')));
+      if (isEventFull(err)) ref.invalidate(publicEventsProvider);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -338,7 +345,7 @@ class _PosterCard extends StatelessWidget {
         ? null
         : '${_weekdaysShort[date.weekday - 1]} ${date.day} ${_monthsShort[date.month - 1]}${e.time?.isNotEmpty == true ? ' · ${e.time}' : ''}';
     final price = e.isPaid ? e.priceLabel.replaceAll(' por pessoa', '') : 'Grátis';
-    final cta = e.mine ? 'O teu evento' : (e.joined ? 'Abrir' : 'Ver evento');
+    final cta = e.mine ? 'O teu evento' : (e.joined ? 'Abrir' : (e.isFull ? 'Esgotado' : 'Ver evento'));
     return SnappyTap(
       onTap: onTap ?? () {},
       child: Container(
@@ -407,8 +414,17 @@ class _PosterCard extends StatelessWidget {
                 if (e.goingCount > 0) ...[
                   AvatarDots(e.goingCount),
                   const SizedBox(width: 8),
-                  Text(e.goingCount == 1 ? '1 vai' : '${e.goingCount} vão',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                  Flexible(
+                    child: Text(
+                        [
+                          e.goingCount == 1 ? '1 vai' : '${e.goingCount} vão',
+                          // Limite (migração 182): poucos lugares ou esgotado.
+                          if (e.isFull) 'esgotado' else if ((e.spotsLeft ?? 99) <= 10) 'restam ${e.spotsLeft}',
+                        ].join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                  ),
                 ] else ...[
                   // Ainda ninguém vai: lugares livres (mockup B, 2026-11-11).
                   const GhostDots(),
