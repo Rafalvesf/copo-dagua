@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -47,10 +48,10 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
 
     return GradientScaffold(
       background: AppBackground.feed,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
-        child: Column(
-          children: [
+        child: ScrollingHeader(
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
             PageHeader(
               title: 'Mesas do local',
               centered: true,
@@ -70,9 +71,9 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: state.loading
+            const SizedBox(height: 8)
+ ],
+ body: state.loading
                   ? const Center(child: CircularProgressIndicator())
                   : state.tableTypes.isEmpty
                       ? const Center(
@@ -104,9 +105,7 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
                               ),
                           ],
                         ),
-            ),
-          ],
-        ),
+),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -112,10 +113,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       background: AppBackground.feed,
       body: Stack(
         children: [
-          SafeArea(
+          SafeArea(top: false, 
             bottom: false,
-            child: Column(
-              children: [
+            child: ScrollingHeader(
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
                 PageHeader(
                   title: 'Mensagens',
                   topPadding: 8,
@@ -147,9 +148,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                     ),
                   ),
                 // Mensagens diretas da equipa (migração 146).
-                const TeamThreadEntry(),
-                Expanded(
-                  child: state.loading && state.conversations.isEmpty
+                const TeamThreadEntry()
+ ],
+ body: state.loading && state.conversations.isEmpty
                       ? const Center(child: CircularProgressIndicator())
                       : conversations.isEmpty && query.isEmpty
                       ? IllustratedEmptyState(
@@ -183,9 +184,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                             ),
                           ),
                         ),
-                ),
-              ],
-            ),
+),
           ),
           const Positioned(
             left: 0,

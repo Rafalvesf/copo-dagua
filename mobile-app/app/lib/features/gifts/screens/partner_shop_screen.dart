@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -31,9 +32,10 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
     final green = AppTheme.accentOliveDark;
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
-        child: Column(children: [
+        child: ScrollingHeader(
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
           const PageHeader(title: 'Loja', centered: true),
           Padding(
             padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 8),
@@ -45,9 +47,9 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
               selected: {_tab},
               onSelectionChanged: (s) => setState(() => _tab = s.first),
             ),
-          ),
-          Expanded(
-            child: _tab == 0
+          )
+ ],
+ body: _tab == 0
                 ? products.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (e, s) => const _Info('Não foi possível carregar os produtos.'),
@@ -120,8 +122,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                     },
                   )
                 : _Orders(orders: orders),
-          ),
-        ]),
+),
       ),
     );
   }

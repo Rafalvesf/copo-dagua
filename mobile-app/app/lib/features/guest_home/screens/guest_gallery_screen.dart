@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import '../../../core/events/event_pass.dart' show myEventPassProvider, GuestSections;
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
@@ -133,10 +134,10 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
       background: AppBackground.subtle,
       body: Stack(
         children: [
-          SafeArea(
+          SafeArea(top: false, 
             bottom: false,
-            child: Column(
-              children: [
+            child: ScrollingHeader(
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
                 const GuestEventsPillRow(),
                 // Canvas "Convidado · Galeria": título ao centro e "+" verde.
                 // Redesign 2026-10-19: "+" verde redondo como no canvas.
@@ -146,9 +147,9 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                   centered: true,
                   trailing: canUpload ? V2RoundButton(icon: Hi.plus, tooltip: 'Partilhar fotos', solid: true, onTap: _upload) : null,
                 ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: !open
+                const SizedBox(height: 16)
+ ],
+ body: !open
                       ? const EmptyStateView(message: 'A galeria abre no dia do evento.', icon: Hi.rectangleStack)
                       : photosAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
@@ -186,9 +187,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                       );
                     },
                   ),
-                ),
-              ],
-            ),
+),
           ),
           Positioned(
             left: 0,
