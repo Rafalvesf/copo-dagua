@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/snap_carousel.dart';
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/search_pill.dart';
@@ -164,21 +165,12 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
       if (!hasMine) const _Pad(_InviteTile()),
       if (hasMine) ...[
         const _Title('Os meus eventos'),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 6),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final (i, w) in own.indexed)
-                Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: _MyEventCard(wedding: w, wide: i == 0, showPlanning: w.id == activeId),
-                ),
-              for (final w in guest)
-                Padding(padding: const EdgeInsets.only(right: 12), child: _InvitedEventCard(wedding: w)),
-            ],
-          ),
+        SnapCarousel(
+          height: 330,
+          itemCount: own.length + guest.length,
+          itemBuilder: (context, i) => i < own.length
+              ? _MyEventCard(wedding: own[i], showPlanning: own[i].id == activeId)
+              : _InvitedEventCard(wedding: guest[i - own.length]),
         ),
       ],
       const _Title('Descobrir', subtitle: 'Eventos abertos a que podes ir'),
@@ -699,9 +691,8 @@ Widget _pill(String text, {bool dark = false}) => Container(
 /// Evento que organizo: abre o painel desse evento.
 class _MyEventCard extends ConsumerWidget {
   final Wedding wedding;
-  final bool wide;
   final bool showPlanning;
-  const _MyEventCard({required this.wedding, required this.wide, required this.showPlanning});
+  const _MyEventCard({required this.wedding, required this.showPlanning});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -719,7 +710,6 @@ class _MyEventCard extends ConsumerWidget {
         if (context.mounted) context.go('/wedding');
       },
       child: Container(
-        width: wide ? 290 : 220,
         clipBehavior: Clip.antiAlias,
         decoration: softCard(radius: 22),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -727,7 +717,7 @@ class _MyEventCard extends ConsumerWidget {
             id: wedding.id,
             type: wedding.eventType,
             photo: wedding.coverPhotoUrl,
-            height: 120,
+            height: 150,
             badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Organizador')],
           ),
           Padding(
@@ -768,7 +758,7 @@ class _MyEventCard extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(color: const Color(0xFFF7EACA), borderRadius: BorderRadius.circular(12)),
                   child: Text('Para fazer: ${next.title}',
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF5A3E0C))),
                 ),
@@ -795,7 +785,6 @@ class _InvitedEventCard extends StatelessWidget {
     return SnappyTap(
       onTap: () => context.go('/guest-home/${wedding.weddingId}'),
       child: Container(
-        width: 220,
         clipBehavior: Clip.antiAlias,
         decoration: softCard(radius: 22),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -803,7 +792,7 @@ class _InvitedEventCard extends StatelessWidget {
             id: wedding.weddingId,
             type: wedding.eventType,
             photo: wedding.coverPhotoUrl,
-            height: 120,
+            height: 150,
             badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Convidado')],
           ),
           Padding(

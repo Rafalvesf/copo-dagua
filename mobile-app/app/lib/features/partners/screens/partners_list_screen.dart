@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/snap_carousel.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
@@ -525,26 +526,20 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                         : 'Em destaque perto de ti',
                                 strong: true,
                               ),
-                              SizedBox(
+                              SnapCarousel(
                                 height: FeaturedOverlayCard.height,
-                                child: ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  clipBehavior: Clip.none,
-                                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                                  itemCount: featuredList.length,
-                                  separatorBuilder: (context, i) => const SizedBox(width: 10),
-                                  itemBuilder: (context, i) {
-                                    final p = featuredList[i];
-                                    return _FeaturedCard(
-                                      partner: p,
-                                      onTap: () {
-                                        // Destaque pago: a reserva que vier daqui paga +6%.
-                                        if (paidIds.contains(p.id)) trackPromotionClick(p.id);
-                                        _openDetails(context, p);
-                                      },
-                                    );
-                                  },
-                                ),
+                                itemCount: featuredList.length,
+                                itemBuilder: (context, i) {
+                                  final p = featuredList[i];
+                                  return _FeaturedCard(
+                                    partner: p,
+                                    onTap: () {
+                                      // Destaque pago: a reserva que vier daqui paga +6%.
+                                      if (paidIds.contains(p.id)) trackPromotionClick(p.id);
+                                      _openDetails(context, p);
+                                    },
+                                  );
+                                },
                               ),
                               const SizedBox(height: 14),
                             ],
@@ -793,7 +788,7 @@ class FeaturedOverlayCard extends StatelessWidget {
     this.badge,
   });
 
-  static const double height = 150;
+  static const double height = 200;
 
   @override
   Widget build(BuildContext context) => SnappyTap(
@@ -803,7 +798,6 @@ class FeaturedOverlayCard extends StatelessWidget {
           label: '$title, $subtitle',
           excludeSemantics: true,
           child: Container(
-            width: 230,
             height: height,
             clipBehavior: Clip.antiAlias,
             decoration: softCard(radius: 20),
