@@ -100,6 +100,40 @@ final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, St
   ];
 }, retry: _noRetry);
 
+/// Todos os grupos onde estou, de todos os eventos (2026-11-11: os grupos
+/// aparecem nas Mensagens como uma conversa normal). A policy de
+/// `chat_groups` só deixa ver os grupos de que sou membro.
+final myChatGroupsProvider = FutureProvider.autoDispose<List<ChatGroup>>((ref) async {
+  if (supabase.auth.currentUser == null) return const [];
+  final rows = await supabase
+      .from('chat_groups')
+      .select('id, wedding_id, name, last_message, last_message_at, created_at')
+      .order('last_message_at', ascending: false, nullsFirst: false);
+  final reads = await supabase.from('chat_group_members').select('group_id, last_read_at').eq('profile_id', _me);
+  final readAt = {
+    for (final r in (reads as List).cast<Map<String, dynamic>>())
+      r['group_id'] as String: r['last_read_at'] == null ? null : DateTime.parse(r['last_read_at'] as String),
+  };
+  return [
+    for (final r in (rows as List).cast<Map<String, dynamic>>())
+      if (readAt.containsKey(r['id']))
+        () {
+          final last = r['last_message_at'] == null
+              ? DateTime.parse(r['created_at'] as String)
+              : DateTime.parse(r['last_message_at'] as String);
+          final read = readAt[r['id']];
+          return ChatGroup(
+            id: r['id'] as String,
+            weddingId: r['wedding_id'] as String,
+            name: r['name'] as String,
+            lastMessage: r['last_message'] as String?,
+            lastMessageAt: last,
+            unread: r['last_message_at'] != null && (read == null || last.isAfter(read)),
+          );
+        }(),
+  ];
+}, retry: _noRetry);
+
 final eventPeopleProvider = FutureProvider.autoDispose.family<List<EventPerson>, String>((ref, weddingId) async {
   final rows = await supabase.rpc('event_chat_people', params: {'p_wedding_id': weddingId}) as List;
   return [
