@@ -240,6 +240,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Guarda o que cada organizador escondeu no painel (contagem, números, sugestões, galeria…).",
     check: { kind: "column", table: "weddings", column: "panel_hidden" },
   },
+  {
+    file: "178_public_events_going.sql",
+    title: "Descobrir: quantos vão",
+    what: "Os cartões dos eventos abertos mostram quantas pessoas já vão.",
+    check: { kind: "marker", id: "178" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

@@ -25,6 +25,9 @@ class PublicEvent {
   /// Evento que eu organizo (aparece também em Descobrir).
   final bool mine;
 
+  /// Quantas pessoas já vão (migração 178; 0 antes de correr).
+  final int goingCount;
+
   const PublicEvent({
     required this.weddingId,
     required this.eventType,
@@ -40,6 +43,7 @@ class PublicEvent {
     this.isPaid = false,
     this.entryPrice,
     this.mine = false,
+    this.goingCount = 0,
   });
 
   /// "Grátis" ou "25 € por pessoa".
@@ -73,6 +77,7 @@ class PublicEvent {
       isPaid: r['is_paid'] == true,
       entryPrice: (r['entry_price'] as num?)?.toDouble(),
       mine: r['mine'] == true,
+      goingCount: (r['going_count'] as num?)?.toInt() ?? 0,
     );
   }
 }

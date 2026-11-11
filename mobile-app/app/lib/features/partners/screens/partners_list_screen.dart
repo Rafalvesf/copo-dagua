@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/snap_carousel.dart';
+import '../../../shared/widgets/dense_card.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
@@ -735,22 +736,6 @@ class _PartnerPhoto extends StatelessWidget {
       );
 }
 
-class _RatingChip extends StatelessWidget {
-  final String rating;
-  const _RatingChip(this.rating);
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(999)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.star_rounded, size: 12, color: Colors.white),
-          const SizedBox(width: 2),
-          Text(rating, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
-        ]),
-      );
-}
-
 /// Destaque: cartão estreito com foto, nota e nome (carrossel).
 class _FeaturedCard extends StatelessWidget {
   final Partner partner;
@@ -763,22 +748,29 @@ class _FeaturedCard extends StatelessWidget {
     return FeaturedOverlayCard(
       onTap: onTap,
       image: _PartnerPhoto(partner),
-      badge: rating == null ? null : _RatingChip(rating),
+      topRight: rating == null
+          ? null
+          : PhotoPill(rating, icon: Icons.star_rounded, muted: partner.reviewCount > 0 ? '(${partner.reviewCount})' : null),
       title: partner.name,
-      subtitle: '${partner.primaryCategoryLabel} · ${_priceLabel(partner)}',
+      subtitle: [partner.primaryCategoryLabel, if (partner.location.isNotEmpty) partner.location].join(' · '),
+      chips: partner.categoryLabels.skip(1).take(3).toList(),
+      price: _priceLabel(partner),
     );
   }
 }
 
-/// Cartão grande do "Em destaque" (mockup 2026-11-07): foto a toda a
-/// área, nome e linha de baixo a branco sobre um degradê escuro. Usado
-/// nas Empresas e nas Lojas.
+/// Cartão do "Em destaque" (cartões densos, 2026-11-11): foto mais
+/// baixa e, por baixo, nome, categoria · zona, etiquetas, preço e "Ver".
+/// Usado nas Empresas e nas Lojas.
 class FeaturedOverlayCard extends StatelessWidget {
   final VoidCallback onTap;
   final Widget image;
   final Widget? badge;
+  final Widget? topRight;
   final String title;
   final String subtitle;
+  final List<String> chips;
+  final String? price;
   const FeaturedOverlayCard({
     super.key,
     required this.onTap,
@@ -786,49 +778,59 @@ class FeaturedOverlayCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.badge,
+    this.topRight,
+    this.chips = const [],
+    this.price,
   });
 
-  static const double height = 200;
+  static const double height = 268;
 
   @override
   Widget build(BuildContext context) => SnappyTap(
         onTap: onTap,
         child: Semantics(
           button: true,
-          label: '$title, $subtitle',
+          label: [title, subtitle, if (price != null) price!].join(', '),
           excludeSemantics: true,
           child: Container(
             height: height,
             clipBehavior: Clip.antiAlias,
-            decoration: softCard(radius: 20),
-            child: Stack(fit: StackFit.expand, children: [
-              image,
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: [0.3, 1],
-                    colors: [Color(0x00000000), Color(0x8C000000)],
-                  ),
-                ),
-              ),
-              if (badge != null) Positioned(left: 10, top: 10, child: badge!),
-              Positioned(
-                left: 12,
-                right: 12,
-                bottom: 12,
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                  Text(title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, height: 1.15, color: Colors.white)),
-                  const SizedBox(height: 2),
-                  Text(subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12, color: Color(0xE6FFFFFF))),
+            decoration: softCard(radius: 22),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              SizedBox(
+                height: 112,
+                child: Stack(fit: StackFit.expand, children: [
+                  image,
+                  if (badge != null) Positioned(left: 12, top: 12, child: badge!),
+                  if (topRight != null) Positioned(right: 12, top: 12, child: topRight!),
                 ]),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                    const SizedBox(height: 3),
+                    MetaRow([(Icons.place_outlined, subtitle)]),
+                    if (chips.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      DenseChipRow([for (final c in chips) DenseChip(c)]),
+                    ],
+                    const Spacer(),
+                    Row(children: [
+                      Expanded(
+                        child: Text(price ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                      ),
+                      const CtaPill('Ver'),
+                    ]),
+                  ]),
+                ),
               ),
             ]),
           ),
