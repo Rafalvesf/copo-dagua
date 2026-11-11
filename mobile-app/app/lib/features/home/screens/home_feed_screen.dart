@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import '../../../shared/widgets/feedback.dart';
@@ -161,6 +162,9 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                   ),
                               ],
                             ),
+                            // Sem evento meu: os avisos pessoais (convites, lembretes)
+                            // continuam a aparecer (2026-11-11).
+                            if (wedding == null) const PartnerNotificationBell(),
                               if (wedding == null) const SizedBox(width: 48),
                             ],
                           ),
