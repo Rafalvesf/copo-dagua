@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/chat/chat_attachments.dart';
+import '../../../core/chat/chat_delete.dart';
 import '../../../core/chat/group_chat.dart';
 import '../../../core/moderation/moderation.dart';
 import '../../../core/theme/app_theme.dart';
@@ -314,6 +315,13 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
               icon: const Icon(Hi.userPlus),
               label: const Text('Adicionar pessoas'),
             ),
+            if (widget.group.isMine)
+              TextButton.icon(
+                onPressed: () => Navigator.of(context).pop('delete'),
+                style: TextButton.styleFrom(foregroundColor: const Color(0xFFA3412E)),
+                icon: const Icon(Hi.trash),
+                label: const Text('Apagar grupo'),
+              ),
             TextButton.icon(
               onPressed: () => Navigator.of(context).pop('leave'),
               style: TextButton.styleFrom(foregroundColor: const Color(0xFFA3412E)),
@@ -325,9 +333,23 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
       ),
     );
     if (!mounted || action == null) return;
+    if (action == 'delete') {
+      final ok = await confirmChatDelete(context,
+          title: 'Apagar o grupo?',
+          body: 'O grupo "${widget.group.name}" e as mensagens desaparecem para todos os membros.',
+          cta: 'Apagar grupo');
+      if (!ok || !mounted) return;
+      if (await runChatDelete(context, () => deleteChatGroup(widget.group.id))) {
+        ref.invalidate(chatGroupsProvider(widget.group.weddingId));
+        ref.invalidate(myChatGroupsProvider);
+        if (mounted) context.pop();
+      }
+      return;
+    }
     if (action == 'leave') {
       await leaveChatGroup(widget.group.id);
       ref.invalidate(chatGroupsProvider(widget.group.weddingId));
+      ref.invalidate(myChatGroupsProvider);
       if (mounted) context.pop();
     } else if (action == 'add') {
       final all = await ref.read(eventPeopleProvider(widget.group.weddingId).future);
@@ -389,7 +411,19 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                         : ChatBubble(text: m.body ?? '', isMe: mine);
                     // Toque longo numa mensagem de outra pessoa: denunciar / bloquear.
                     final content = mine
-                        ? bubble
+                        // Toque longo numa mensagem minha: apagar (179).
+                        ? GestureDetector(
+                            onLongPress: () async {
+                              final ok = await confirmChatDelete(context,
+                                  title: 'Apagar a mensagem?',
+                                  body: 'A mensagem desaparece para todos no grupo.',
+                                  cta: 'Apagar mensagem');
+                              if (!ok || !context.mounted) return;
+                              await runChatDelete(
+                                  context, () => ref.read(groupThreadControllerProvider(widget.group.id).notifier).delete(m.id));
+                            },
+                            child: bubble,
+                          )
                         : GestureDetector(
                             onLongPress: () => showModerationSheet(context, ref,
                                 kind: ReportKind.groupMessage, targetId: m.id, authorId: m.senderId, authorName: sender?.name),

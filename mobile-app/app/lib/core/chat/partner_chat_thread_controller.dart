@@ -6,6 +6,7 @@ import '../partner_app/partner_app_providers.dart'
 import '../supabase/supabase_config.dart';
 import 'chat_attachments.dart';
 import 'chat_thread_controller.dart' show ChatThreadState;
+import 'chat_delete.dart';
 
 /// Fio de conversa das Mensagens (lado do parceiro) — mesma tabela
 /// `messages` (036_chat.sql) que [ChatThreadController], mas grava
@@ -77,6 +78,12 @@ class PartnerChatThreadController extends Notifier<ChatThreadState> {
         .select()
         .single();
     state = state.copyWith(messages: [...state.messages, _fromRow(row)]);
+  }
+
+  /// Apaga uma mensagem minha (`delete_message`, 179).
+  Future<void> delete(String id) async {
+    await deleteMessage(id);
+    state = state.copyWith(messages: [for (final m in state.messages) if (m.id != id) m]);
   }
 
   ChatMessage _fromRow(Map<String, dynamic> row) {

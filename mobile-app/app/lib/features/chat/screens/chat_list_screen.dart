@@ -5,6 +5,7 @@ import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/chat/chat_delete.dart';
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/chat/chat_list_controller.dart';
 import '../../../shared/widgets/island_sheet.dart';
@@ -36,6 +37,8 @@ class ChatListScreen extends ConsumerStatefulWidget {
 class _ChatListScreenState extends ConsumerState<ChatListScreen> {
   final _search = TextEditingController();
   bool _startingConversation = false;
+  // Apagados nesta sessão: saem logo da lista (o Dismissible exige-o).
+  final _removed = <String>{};
 
   @override
   void initState() {
@@ -130,6 +133,61 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     ref.invalidate(myChatGroupsProvider);
   }
 
+  /// Conversa: apaga só do nosso lado. Grupo: quem criou apaga para
+  /// todos; os outros saem do grupo.
+  Future<bool> _delete(Object it) async {
+    final String id;
+    final String title;
+    final String body;
+    final String cta;
+    final Future<void> Function() action;
+    if (it is ChatGroup) {
+      id = it.id;
+      if (it.isMine) {
+        title = 'Apagar o grupo?';
+        body = 'O grupo "${it.name}" e as mensagens desaparecem para todos os membros.';
+        cta = 'Apagar grupo';
+        action = () => deleteChatGroup(it.id);
+      } else {
+        title = 'Sair do grupo?';
+        body = 'Deixas de ver "${it.name}". Só quem o criou o pode apagar para todos.';
+        cta = 'Sair do grupo';
+        action = () => leaveChatGroup(it.id);
+      }
+    } else {
+      final c = it as ChatConversation;
+      id = c.id;
+      title = 'Apagar a conversa?';
+      body = 'A conversa com ${c.name} sai da tua lista. ${c.name} continua a vê-la; se te escrever, volta a aparecer.';
+      cta = 'Apagar conversa';
+      action = () => ref.read(chatListControllerProvider.notifier).hide(c.id);
+    }
+    if (!await confirmChatDelete(context, title: title, body: body, cta: cta)) return false;
+    if (!mounted) return false;
+    final ok = await runChatDelete(context, action);
+    if (ok && mounted) {
+      setState(() => _removed.add(id));
+      if (it is ChatGroup) ref.invalidate(myChatGroupsProvider);
+    }
+    return ok;
+  }
+
+  Widget _deletable(String id, Object it, Widget child) => Dismissible(
+        key: ValueKey('del-$id'),
+        direction: DismissDirection.endToStart,
+        confirmDismiss: (_) => _delete(it),
+        background: Padding(
+          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 10),
+          child: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 22),
+            decoration: BoxDecoration(color: const Color(0xFFA3412E), borderRadius: BorderRadius.circular(22)),
+            child: const Icon(Hi.trash, color: Colors.white, size: 24),
+          ),
+        ),
+        child: GestureDetector(onLongPress: () => _delete(it), child: child),
+      );
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(chatListControllerProvider);
@@ -144,8 +202,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     final allGroups = ref.watch(myChatGroupsProvider).value ?? const <ChatGroup>[];
     final groups = query.isEmpty ? allGroups : allGroups.where((g) => g.name.toLowerCase().contains(query)).toList();
     final items = <(DateTime?, Object)>[
-      for (final c in conversations) (c.lastMessageAt, c),
-      for (final g in groups) (g.lastMessageAt, g),
+      for (final c in conversations)
+        if (!_removed.contains(c.id)) (c.lastMessageAt, c),
+      for (final g in groups)
+        if (!_removed.contains(g.id)) (g.lastMessageAt, g),
     ]..sort((a, b) {
         if (a.$1 == null && b.$1 == null) return 0;
         if (a.$1 == null) return 1;
@@ -217,18 +277,26 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                             itemBuilder: (context, index) {
                               final it = items[index].$2;
                               if (it is ChatGroup) {
-                                return _GroupListItem(
-                                  group: it,
-                                  onTap: () async {
-                                    await context.push('/group/${it.id}', extra: it);
-                                    ref.invalidate(myChatGroupsProvider);
-                                  },
+                                return _deletable(
+                                  it.id,
+                                  it,
+                                  _GroupListItem(
+                                    group: it,
+                                    onTap: () async {
+                                      await context.push('/group/${it.id}', extra: it);
+                                      ref.invalidate(myChatGroupsProvider);
+                                    },
+                                  ),
                                 );
                               }
                               final c = it as ChatConversation;
-                              return ConversationListItem(
-                                conversation: c,
-                                onTap: () => context.push('/chat/${c.id}', extra: c),
+                              return _deletable(
+                                c.id,
+                                c,
+                                ConversationListItem(
+                                  conversation: c,
+                                  onTap: () => context.push('/chat/${c.id}', extra: c),
+                                ),
                               );
                             },
                           ),

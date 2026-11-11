@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart'
 
 import '../supabase/supabase_config.dart';
 import 'chat_attachments.dart';
+import 'chat_delete.dart';
 
 /// Grupos do evento (pedido do utilizador, 2026-10-20): organizadores e
 /// convidados criam grupos com as pessoas desse evento.
@@ -18,6 +19,7 @@ class ChatGroup {
   final String? lastMessage;
   final DateTime? lastMessageAt;
   final bool unread;
+  final String? createdBy;
   const ChatGroup({
     required this.id,
     required this.weddingId,
@@ -25,7 +27,10 @@ class ChatGroup {
     this.lastMessage,
     this.lastMessageAt,
     this.unread = false,
+    this.createdBy,
   });
+
+  bool get isMine => createdBy != null && createdBy == supabase.auth.currentUser?.id;
 }
 
 class EventPerson {
@@ -75,7 +80,7 @@ Duration? _noRetry(int count, Object error) => null;
 final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, String>((ref, weddingId) async {
   final rows = await supabase
       .from('chat_groups')
-      .select('id, wedding_id, name, last_message, last_message_at, created_at')
+      .select('id, wedding_id, name, last_message, last_message_at, created_at, created_by')
       .eq('wedding_id', weddingId)
       .order('last_message_at', ascending: false, nullsFirst: false);
   final reads = await supabase.from('chat_group_members').select('group_id, last_read_at').eq('profile_id', _me);
@@ -95,6 +100,7 @@ final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, St
           lastMessage: r['last_message'] as String?,
           lastMessageAt: last,
           unread: last != null && (read == null || last.isAfter(read)),
+          createdBy: r['created_by'] as String?,
         );
       }(),
   ];
@@ -107,7 +113,7 @@ final myChatGroupsProvider = FutureProvider.autoDispose<List<ChatGroup>>((ref) a
   if (supabase.auth.currentUser == null) return const [];
   final rows = await supabase
       .from('chat_groups')
-      .select('id, wedding_id, name, last_message, last_message_at, created_at')
+      .select('id, wedding_id, name, last_message, last_message_at, created_at, created_by')
       .order('last_message_at', ascending: false, nullsFirst: false);
   final reads = await supabase.from('chat_group_members').select('group_id, last_read_at').eq('profile_id', _me);
   final readAt = {
@@ -129,6 +135,7 @@ final myChatGroupsProvider = FutureProvider.autoDispose<List<ChatGroup>>((ref) a
             lastMessage: r['last_message'] as String?,
             lastMessageAt: last,
             unread: r['last_message_at'] != null && (read == null || last.isAfter(read)),
+            createdBy: r['created_by'] as String?,
           );
         }(),
   ];
@@ -256,6 +263,12 @@ class GroupThreadController extends Notifier<GroupThreadState> {
         .select(_groupColumns)
         .single();
     _append(GroupMessage.fromRow(row));
+  }
+
+  /// Apaga uma mensagem minha (`delete_group_message`, 179).
+  Future<void> delete(String id) async {
+    await deleteGroupMessage(id);
+    state = GroupThreadState(loading: false, messages: [for (final m in state.messages) if (m.id != id) m]);
   }
 
   void _append(GroupMessage m) {

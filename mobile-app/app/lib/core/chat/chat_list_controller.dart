@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
+import 'chat_delete.dart';
 import '../wedding/wedding_controller.dart';
 
 class ChatListState {
@@ -67,7 +68,29 @@ class ChatListController extends Notifier<ChatListState> {
       if (ref.mounted) state = state.copyWith(loading: false);
       return;
     }
-    final conversationRows = (rows as List).cast<Map<String, dynamic>>();
+    var conversationRows = (rows as List).cast<Map<String, dynamic>>();
+    // Conversas apagadas deste lado (`couple_hidden_at`, 179): só voltam
+    // a aparecer com uma mensagem nova. Antes da migração, mostra tudo.
+    try {
+      final hiddenRows = await supabase
+          .from('conversations')
+          .select('id, couple_hidden_at')
+          .inFilter('wedding_id', weddingIds)
+          .not('couple_hidden_at', 'is', null);
+      final hidden = {
+        for (final h in (hiddenRows as List).cast<Map<String, dynamic>>())
+          h['id'] as String: DateTime.parse(h['couple_hidden_at'] as String),
+      };
+      if (hidden.isNotEmpty) {
+        conversationRows = [
+          for (final r in conversationRows)
+            if (!hidden.containsKey(r['id']) ||
+                (r['last_message_at'] != null &&
+                    DateTime.parse(r['last_message_at'] as String).isAfter(hidden[r['id']]!)))
+              r,
+        ];
+      }
+    } catch (_) {}
 
     final conversationIds = conversationRows
         .map((r) => r['id'] as String)
@@ -80,6 +103,15 @@ class ChatListController extends Notifier<ChatListState> {
       conversations: conversationRows
           .map((r) => _fromRow(r, unreadCounts[r['id']] ?? 0))
           .toList(),
+    );
+  }
+
+  /// Apaga a conversa só do lado de quem organiza (`hide_conversation`).
+  Future<void> hide(String conversationId) async {
+    await hideConversation(conversationId);
+    state = ChatListState(
+      loading: false,
+      conversations: [for (final c in state.conversations) if (c.id != conversationId) c],
     );
   }
 
