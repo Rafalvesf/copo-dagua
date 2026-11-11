@@ -68,8 +68,8 @@ export async function partnerRegionRates(
   partnerId: string,
   stripeAccountId: string | null | undefined,
   settings: Record<string, unknown> | null | undefined,
-): Promise<{ organizer: number; partner: number } | null> {
-  const rf = settings?.region_fees as Record<string, { organizer?: number; partner?: number }> | undefined;
+): Promise<{ organizer: FeeTier[]; partner: FeeTier[] } | null> {
+  const rf = settings?.region_fees as Record<string, { organizer?: unknown; partner?: unknown }> | undefined;
   if (!rf || typeof rf !== "object") return null;
   let country: string | null = null;
   try {
@@ -86,8 +86,16 @@ export async function partnerRegionRates(
     console.error("partner country lookup failed", e);
   }
   const r = rf[feeRegion(country)];
-  const organizer = Number(r?.organizer);
-  const partner = Number(r?.partner);
-  if (!Number.isFinite(organizer) || !Number.isFinite(partner)) return null;
+  const organizer = regionTiers(r?.organizer);
+  const partner = regionTiers(r?.partner);
+  if (!organizer.length || !partner.length) return null;
   return { organizer, partner };
+}
+
+/// Migração 181: escalões (até 2 000 € / acima). Aceita ainda um número
+/// (percentagem única, migração 180).
+function regionTiers(v: unknown): FeeTier[] {
+  if (Array.isArray(v)) return parseTiers(v);
+  const n = Number(v);
+  return Number.isFinite(n) && v != null ? [{ up_to: null, pct: n }] : [];
 }

@@ -172,10 +172,10 @@ Deno.serve(async (req) => {
     admin, stripe, payment.partner_id as string, partner.stripe_account_id, sett,
   );
   const organizerTiers: FeeTier[] = regionRates
-    ? [{ up_to: null, pct: regionRates.organizer }]
+    ? regionRates.organizer
     : parseTiers(sett.organizer_fee_tiers);
   const partnerTiers: FeeTier[] = regionRates
-    ? [{ up_to: null, pct: regionRates.partner }]
+    ? regionRates.partner
     : parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers);
   const applicationFeeCents = paymentFeeCents(
     partnerAmountCents,
