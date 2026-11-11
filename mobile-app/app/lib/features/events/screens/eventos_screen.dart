@@ -529,7 +529,7 @@ class _ActionsRow extends StatelessWidget {
             height: 96,
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             decoration: BoxDecoration(
-              color: dark ? AppTheme.ink : Colors.white,
+              color: dark ? _brandGreen : Colors.white,
               borderRadius: BorderRadius.circular(20),
               boxShadow: dark ? null : const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
             ),
@@ -567,7 +567,7 @@ class _StartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
-        decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(26)),
+        decoration: BoxDecoration(color: _brandGreen, borderRadius: BorderRadius.circular(26)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -586,7 +586,7 @@ class _StartCard extends StatelessWidget {
                       style: TextStyle(fontSize: 20, height: 1.2, fontWeight: FontWeight.w800, color: Colors.white)),
                   SizedBox(height: 4),
                   Text('Cria o teu evento em 1 minuto.',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFD9D6CE))),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),
                 ]),
               ),
             ]),
@@ -601,7 +601,7 @@ class _StartCard extends StatelessWidget {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFF4A4A44), width: 1.5),
+                      border: Border.all(color: const Color(0x99FFFFFF), width: 1.5),
                     ),
                     child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white)),
                   ),
@@ -947,3 +947,6 @@ class _InviteNotice extends StatelessWidget {
     );
   }
 }
+
+/// Verde da app nas caixas de criar evento (pedido 2026-11-11).
+const _brandGreen = Color(0xFF4F6B4A);
