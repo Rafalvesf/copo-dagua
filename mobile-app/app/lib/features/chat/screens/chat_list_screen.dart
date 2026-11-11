@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/chat/chat_list_controller.dart';
+import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
@@ -99,6 +100,14 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               .where((c) => c.name.toLowerCase().contains(query))
               .toList();
 
+    final mine = ref.watch(weddingControllerProvider).events;
+    final invited = ref.watch(guestWeddingsProvider).value ?? const [];
+    final groupEvents = <(String, String)>[
+      for (final w in mine) (w.id, w.displayNames),
+      for (final g in invited)
+        if (!mine.any((w) => w.id == g.weddingId)) (g.weddingId, g.displayNames),
+    ];
+
     return GradientScaffold(
       background: AppBackground.feed,
       body: Stack(
@@ -127,11 +136,15 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   ),
                   child: SearchPill(controller: _search, hint: 'Pesquisar conversas'),
                 ),
-                // Grupos com as pessoas do evento (2026-10-20).
-                if (ref.watch(weddingControllerProvider).wedding?.id case final weddingId?)
+                // Grupos de cada evento onde estou — os meus e aqueles
+                // onde sou convidado (conta única, 2026-11-11).
+                for (final (id, name) in groupEvents)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
-                    child: _GroupsEntry(onTap: () => context.push('/groups/$weddingId')),
+                    child: _GroupsEntry(
+                      label: groupEvents.length == 1 ? 'Grupos do evento' : 'Grupos · $name',
+                      onTap: () => context.push('/groups/$id'),
+                    ),
                   ),
                 // Mensagens diretas da equipa (migração 146).
                 const TeamThreadEntry(),
@@ -188,8 +201,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 
 /// Entrada para os grupos do evento (organizadores e convidados).
 class _GroupsEntry extends StatelessWidget {
+  final String label;
   final VoidCallback onTap;
-  const _GroupsEntry({required this.onTap});
+  const _GroupsEntry({required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) => InkWell(
@@ -204,7 +218,7 @@ class _GroupsEntry extends StatelessWidget {
             Icon(Hi.userGroup, color: AppTheme.accentOliveDark),
             SizedBox(width: 12),
             Expanded(
-              child: Text('Grupos do evento', style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
             Icon(Hi.chevronRight, color: AppTheme.inkMuted),
           ]),

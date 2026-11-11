@@ -1,6 +1,7 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/snap_carousel.dart';
 import '../../../shared/widgets/dense_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -202,7 +203,8 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
               child: ListView(
                 padding: ( const EdgeInsets.fromLTRB(0, 0, 0, 150)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
                 children: [
-                  const PageHeader(title: 'Eventos', showBack: false, centered: true),
+                  // Sino com os avisos pessoais (convites, lembretes) — 2026-11-11.
+                  const PageHeader(title: 'Eventos', showBack: false, centered: true, trailing: PartnerNotificationBell()),
                   const SizedBox(height: 14),
                   const TeamBannerCard(),
                   // Quem não tem Chat vê aqui a conversa com a equipa.

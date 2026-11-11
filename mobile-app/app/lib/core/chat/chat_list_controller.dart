@@ -33,25 +33,40 @@ class ChatListState {
 class ChatListController extends Notifier<ChatListState> {
   @override
   ChatListState build() {
-    final weddingId = ref.watch(
-      weddingControllerProvider.select((s) => s.wedding?.id),
+    // Conversas de todos os meus eventos, não só do que está aberto
+    // (2026-11-11: "as mensagens não estão a aparecer").
+    final ids = ref.watch(
+      weddingControllerProvider.select((s) => s.events.map((w) => w.id).join(',')),
     );
-    if (weddingId != null) {
-      Future.microtask(() => load(weddingId));
+    if (ids.isNotEmpty) {
+      Future.microtask(() => _loadIds(ids.split(',')));
     }
     return const ChatListState();
   }
 
+  /// Recarrega (o [weddingId] é mantido por compatibilidade: carrega
+  /// sempre todos os eventos).
   Future<void> load(String weddingId) async {
+    final ids = ref.read(weddingControllerProvider).events.map((w) => w.id).toList();
+    await _loadIds(ids.isEmpty ? [weddingId] : ids);
+  }
+
+  Future<void> _loadIds(List<String> weddingIds) async {
     state = state.copyWith(loading: true);
-    final rows = await supabase
-        .from('conversations')
-        .select(
-          'id, wedding_id, partner_id, last_message, last_message_at, couple_last_read_at, '
-          'partner_profiles(business_name, cover_photo_url)',
-        )
-        .eq('wedding_id', weddingId)
-        .order('last_message_at', ascending: false);
+    List rows;
+    try {
+      rows = await supabase
+          .from('conversations')
+          .select(
+            'id, wedding_id, partner_id, last_message, last_message_at, couple_last_read_at, '
+            'partner_profiles(business_name, cover_photo_url)',
+          )
+          .inFilter('wedding_id', weddingIds)
+          .order('last_message_at', ascending: false);
+    } catch (_) {
+      if (ref.mounted) state = state.copyWith(loading: false);
+      return;
+    }
     final conversationRows = (rows as List).cast<Map<String, dynamic>>();
 
     final conversationIds = conversationRows
@@ -59,6 +74,7 @@ class ChatListController extends Notifier<ChatListState> {
         .toList();
     final unreadCounts = await _unreadCountsByConversation(conversationIds);
 
+    if (!ref.mounted) return;
     state = ChatListState(
       loading: false,
       conversations: conversationRows
