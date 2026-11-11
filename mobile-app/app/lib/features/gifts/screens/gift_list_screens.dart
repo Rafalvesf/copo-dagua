@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import '../../../shared/widgets/snap_carousel.dart';
 import '../../../core/payments/payments.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -61,10 +62,11 @@ class OrganizerGiftListScreen extends ConsumerWidget {
       background: AppBackground.subtle,
       body: SafeArea(
         bottom: false,
-        child: Column(children: [
-          const PageHeader(title: 'Lista de presentes', centered: true),
-          Expanded(
-            child: listAsync.when(
+        child: ScrollingHeader(
+ header: [
+          const PageHeader(title: 'Lista de presentes', centered: true)
+ ],
+ body: listAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, s) => const _Info('Não foi possível carregar a lista.'),
               data: (items) {
@@ -150,8 +152,7 @@ class OrganizerGiftListScreen extends ConsumerWidget {
                 );
               },
             ),
-          ),
-        ]),
+),
       ),
     );
   }

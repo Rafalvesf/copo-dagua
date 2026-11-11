@@ -2,6 +2,8 @@ import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../shared/widgets/feedback.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/gradient_scaffold.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -32,12 +34,12 @@ class GuestOffersScreen extends ConsumerWidget {
       ref.invalidate(myGuestReservationsProvider(weddingId));
     }
 
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return GradientScaffold(
+      gradientOverride: const LinearGradient(colors: [Colors.white, Colors.white]),
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
+        child: ScrollingHeader(
+ header: [
             const PageHeader(title: 'Alojamento e transporte', centered: true),
             if (!enabled)
               const Padding(
@@ -45,10 +47,9 @@ class GuestOffersScreen extends ConsumerWidget {
                 child: LockedFeatureCard(
                   text: 'Em breve vais poder reservar e pagar aqui o alojamento e o transporte que os anfitriões combinarem.',
                 ),
-              )
-            else
-            Expanded(
-              child: RefreshIndicator(
+              ),
+ ],
+ body: !enabled ? const SizedBox.shrink() : RefreshIndicator(
                 onRefresh: refresh,
                 child: offersAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
@@ -92,9 +93,7 @@ class GuestOffersScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+),
       ),
     );
   }
@@ -315,11 +314,15 @@ class _Stepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = AppTheme.accentOliveDark;
-    Widget btn(IconData icon, String tip, int? next) => IconButton.filledTonal(
+    Widget btn(IconData icon, String tip, int? next) => IconButton.filled(
           tooltip: tip,
+          style: IconButton.styleFrom(
+            backgroundColor: AppTheme.ink,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: const Color(0xFFE4E1D8),
+          ),
           onPressed: next == null ? null : () => onChanged(next),
-          icon: Icon(icon, color: c),
+          icon: Icon(icon),
         );
     return Row(
       children: [

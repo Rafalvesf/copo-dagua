@@ -2,6 +2,7 @@ import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import '../../../core/events/event_pass.dart' show myEventPassProvider;
 import '../../../shared/widgets/page_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,11 +56,11 @@ class GuestTableScreen extends ConsumerWidget {
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
-        child: Column(
-          children: [
-            const PageHeader(title: 'A tua mesa', centered: true),
-            Expanded(
-              child: rosterAsync.when(
+        child: ScrollingHeader(
+ header: [
+            const PageHeader(title: 'A tua mesa', centered: true)
+ ],
+ body: rosterAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(myTableRosterProvider(weddingId))),
                 data: (roster) {
@@ -163,9 +164,7 @@ class GuestTableScreen extends ConsumerWidget {
                   );
                 },
               ),
-            ),
-          ],
-        ),
+),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
@@ -39,11 +40,11 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
-        child: Column(
-          children: [
-            PageHeader(title: 'Detalhes da reserva', centered: true),
-            Expanded(
-              child: ListView(
+        child: ScrollingHeader(
+ header: [
+            PageHeader(title: 'Detalhes da reserva', centered: true)
+ ],
+ body: ListView(
                 padding: const EdgeInsets.all(AppTheme.screenMargin),
                 children: [
                   // Redesign 2026-10-20: foto do parceiro, estado e
@@ -176,9 +177,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                   ],
                 ],
               ),
-            ),
-          ],
-        ),
+),
       ),
     );
   }

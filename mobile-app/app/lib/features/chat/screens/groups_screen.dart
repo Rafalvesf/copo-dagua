@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/events/event_pass.dart' show myEventPassProvider;
 import '../../../shared/widgets/feedback.dart';
@@ -46,14 +47,15 @@ class GroupsScreen extends ConsumerWidget {
       background: AppBackground.feed,
       body: SafeArea(
         bottom: false,
-        child: Column(children: [
+        child: ScrollingHeader(
+ header: [
           PageHeader(
             title: 'Grupos',
             centered: true,
             trailing: canCreate ? AddActionButton(onTap: () => _newGroup(context, ref)) : null,
-          ),
-          Expanded(
-            child: async.when(
+          )
+ ],
+ body: async.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => const _Empty(
                 title: 'Grupos ainda indisponíveis',
@@ -114,8 +116,7 @@ class GroupsScreen extends ConsumerWidget {
                       ),
                     ),
             ),
-          ),
-        ]),
+),
       ),
     );
   }

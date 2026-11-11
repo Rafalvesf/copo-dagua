@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -114,11 +115,11 @@ class PartnerContractsScreen extends ConsumerWidget {
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
-        child: Column(
-          children: [
-            const PageHeader(title: 'Contratos', centered: true),
-            Expanded(
-              child: async.when(
+        child: ScrollingHeader(
+ header: [
+            const PageHeader(title: 'Contratos', centered: true)
+ ],
+ body: async.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerContractsProvider)),
                 data: (list) => list.isEmpty
@@ -152,9 +153,7 @@ class PartnerContractsScreen extends ConsumerWidget {
                         ),
                       ),
               ),
-            ),
-          ],
-        ),
+),
       ),
     );
   }
