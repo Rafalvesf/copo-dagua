@@ -177,7 +177,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
                             )
                           : message.isProposal
-                          ? _ProposalCard(message: message, onRequestNew: _openPartnerProfile)
+                          ? _ProposalCard(message: message, partnerId: widget.conversation.partnerId, onRequestNew: _openPartnerProfile)
                           : message.isQuoteRequestNotice
                           ? GestureDetector(
                               onTap: _openPartnerProfile,
@@ -210,7 +210,15 @@ class _ProposalCard extends ConsumerStatefulWidget {
   final ChatMessage message;
 
   final VoidCallback? onRequestNew;
-  const _ProposalCard({required this.message, this.onRequestNew});
+  final String? partnerId;
+  const _ProposalCard({required this.message, this.partnerId, this.onRequestNew});
+
+  // Taxa do organizador para este parceiro (migração 180).
+  FeeConfig? fee(WidgetRef ref, {bool watch = false}) {
+    final id = partnerId;
+    if (id == null) return watch ? ref.watch(organizerFeeConfigProvider).value : ref.read(organizerFeeConfigProvider).value;
+    return watch ? ref.watch(organizerFeeForPartnerProvider(id)).value : ref.read(organizerFeeForPartnerProvider(id)).value;
+  }
 
   @override
   ConsumerState<_ProposalCard> createState() => _ProposalCardState();
@@ -264,7 +272,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
         action: SnackBarAction(
           label: 'Pagar',
           onPressed: () => _openPay(
-            (ref.read(organizerFeeConfigProvider).value ?? const FeeConfig())
+            (widget.fee(ref) ?? const FeeConfig())
                 .effectivePct(widget.message.proposalPrice ?? 0),
           ),
         ),
@@ -369,7 +377,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
     final heading = date == null
         ? null
         : '${wedding!.eventType.label} · ${date.day} ${months[date.month - 1]} ${date.year}';
-    final pct = (ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig())
+    final pct = (widget.fee(ref, watch: true) ?? const FeeConfig())
         .effectivePct(message.proposalPrice ?? 0);
     double withFee(double v) => amountWithCommission(v, pct);
     return ChatProposalCard(

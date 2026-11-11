@@ -276,7 +276,11 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
     // a seguir.
     // Escalões do organizador (migração 127): a percentagem efetiva desta
     // reserva vale para o sinal e para o restante.
-    final commissionPct = (ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig()).effectivePct(booking.amount);
+    final commissionPct = ((booking.partnerId == null
+                ? ref.watch(organizerFeeConfigProvider).value
+                : ref.watch(organizerFeeForPartnerProvider(booking.partnerId!)).value) ??
+            const FeeConfig())
+        .effectivePct(booking.amount);
 
     return SnappyTap(
       onTap: () => context.push(
@@ -548,7 +552,11 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
     final dateLabel = proposal.eventDate == null
         ? null
         : '${proposal.eventDate!.day.toString().padLeft(2, '0')}/${proposal.eventDate!.month.toString().padLeft(2, '0')}/${proposal.eventDate!.year}';
-    final fee = (ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig()).effectivePct(proposal.price);
+    final fee = ((proposal.partnerId == null
+                ? ref.watch(organizerFeeConfigProvider).value
+                : ref.watch(organizerFeeForPartnerProvider(proposal.partnerId!)).value) ??
+            const FeeConfig())
+        .effectivePct(proposal.price);
 
     return Container(
       padding: const EdgeInsets.all(14),

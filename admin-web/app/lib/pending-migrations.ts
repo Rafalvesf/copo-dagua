@@ -252,6 +252,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Quem enviou apaga a mensagem; quem criou o grupo apaga-o; cada lado esconde uma conversa com parceiro só para si.",
     check: { kind: "column", table: "conversations", column: "couple_hidden_at" },
   },
+  {
+    file: "180_fees_by_partner_country.sql",
+    title: "Taxa de serviço pelo país do parceiro",
+    what: "Portugal 4% + 1 € / 3% + 1 €, resto da Europa 5% + 1 € / 4% + 1 €, fora da Europa 6% + 1 € / 5% + 1 € (organizador / parceiro).",
+    check: { kind: "column", table: "platform_settings", column: "region_fees" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

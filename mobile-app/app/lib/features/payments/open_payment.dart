@@ -15,7 +15,7 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
   try {
     row = await supabase
         .from('payments')
-        .select('id, type, status, amount, bookings(total_amount), partner_profiles(business_name)')
+        .select('id, type, status, amount, partner_id, bookings(total_amount), partner_profiles(business_name)')
         .eq('id', paymentId)
         .maybeSingle();
   } catch (_) {}
@@ -35,7 +35,11 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
   double pct = 0;
   try {
     final total = ((row['bookings'] as Map?)?['total_amount'] as num?)?.toDouble() ?? (row['amount'] as num).toDouble();
-    pct = (await ref.read(organizerFeeConfigProvider.future)).effectivePct(total);
+    final pid = row['partner_id'] as String?;
+    final cfg = pid == null
+        ? await ref.read(organizerFeeConfigProvider.future)
+        : await ref.read(organizerFeeForPartnerProvider(pid).future);
+    pct = cfg.effectivePct(total);
   } catch (_) {}
   if (!context.mounted) return;
   final partner = (row['partner_profiles'] as Map?)?['business_name'] as String? ?? 'Parceiro';

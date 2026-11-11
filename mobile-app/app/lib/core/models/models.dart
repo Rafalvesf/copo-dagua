@@ -1302,6 +1302,7 @@ class ReceivedProposal {
   final String id;
   final String weddingId;
   final String partnerName;
+  final String? partnerId;
   final String? category;
   final String title;
   final String? description;
@@ -1317,6 +1318,7 @@ class ReceivedProposal {
     required this.id,
     required this.weddingId,
     required this.partnerName,
+    this.partnerId,
     required this.category,
     required this.title,
     this.description,

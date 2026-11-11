@@ -1,7 +1,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
-import { fixedFeeCents, parseTiers, paymentFeeCents } from "../_shared/fees.ts";
+import { type FeeTier, fixedFeeCents, parseTiers, partnerRegionRates, paymentFeeCents } from "../_shared/fees.ts";
 
 // Pagamento DENTRO da app (pedido 2026-10-19: "não quero que a app abra o
 // browser"). Em vez de uma Checkout Session hospedada, cria um
@@ -166,10 +166,21 @@ Deno.serve(async (req) => {
   // deste pagamento; sem escalões, a percentagem fixa.
   // + valor fixo por transação (4% + 1 €, 3% + 1 €; 2026-11-08).
   const fixedCents = fixedFeeCents(sett);
+  // Migração 180: a taxa depende do país do parceiro (Portugal, resto da
+  // Europa, fora da Europa) — nunca do cartão de quem paga.
+  const regionRates = await partnerRegionRates(
+    admin, stripe, payment.partner_id as string, partner.stripe_account_id, sett,
+  );
+  const organizerTiers: FeeTier[] = regionRates
+    ? [{ up_to: null, pct: regionRates.organizer }]
+    : parseTiers(sett.organizer_fee_tiers);
+  const partnerTiers: FeeTier[] = regionRates
+    ? [{ up_to: null, pct: regionRates.partner }]
+    : parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers);
   const applicationFeeCents = paymentFeeCents(
     partnerAmountCents,
     Math.max(bookingTotalCents, partnerAmountCents),
-    parseTiers(sett.organizer_fee_tiers),
+    organizerTiers,
     commissionPct,
   ) + fixedCents;
   const totalChargeCents = partnerAmountCents + applicationFeeCents;
@@ -196,7 +207,7 @@ Deno.serve(async (req) => {
     paymentFeeCents(
       partnerAmountCents,
       Math.max(bookingTotalCents, partnerAmountCents),
-      proTiers(parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers), isPro ? Number(sett.pro_fee_discount ?? 1) : 0),
+      proTiers(partnerTiers, isPro ? Number(sett.pro_fee_discount ?? 1) : 0),
       Math.max(0, partnerFeePct - (isPro ? Number(sett.pro_fee_discount ?? 1) : 0)),
     ) + Math.round((partnerAmountCents * promoExtraPct) / 100) + fixedCents,
   );
