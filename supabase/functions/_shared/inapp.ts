@@ -29,6 +29,8 @@ export type InAppOpts = {
   metadata: Record<string, string>;
   applicationFeeCents?: number;
   destination?: string | null;
+  /// Cartão já criado na app (migração 181).
+  paymentMethod?: string | null;
 };
 
 export async function createInAppIntent(stripe: Stripe, o: InAppOpts): Promise<Stripe.PaymentIntent> {
@@ -36,6 +38,7 @@ export async function createInAppIntent(stripe: Stripe, o: InAppOpts): Promise<S
   return await stripe.paymentIntents.create({
     amount: o.amountCents,
     currency: "eur",
+    ...(o.paymentMethod ? { payment_method: o.paymentMethod } : {}),
     ...(m === "all"
       ? { automatic_payment_methods: { enabled: true, allow_redirects: "never" as const } }
       : { payment_method_types: [m] }),

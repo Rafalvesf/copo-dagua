@@ -3,7 +3,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
 import { confirmGiftOrder } from "../_shared/gifts.ts";
 import { reserveCents } from "../_shared/tickets.ts";
-import { fixedFeeCents, parseTiers, tieredFeeCents } from "../_shared/fees.ts";
+import { cardRegion, fixedFeeCents, organizerTiersForCard, parseTiers, tieredFeeCents } from "../_shared/fees.ts";
 import { cancelOpenIntent, createInAppIntent, e164, intentJson, intentState } from "../_shared/inapp.ts";
 
 // Presentes da loja dos parceiros (migração 160).
@@ -137,7 +137,31 @@ Deno.serve(async (req) => {
   const platformPct = partnerTiers.length && amountCents > 0
     ? (tieredFeeCents(amountCents, partnerTiers) / amountCents) * 100
     : Number(settings?.gift_fee_percentage ?? 4);
-  const { platformCents, applicationFeeCents } = reserveCents(amountCents, platformPct, fixedFeeCents(settings));
+  const reserved = reserveCents(amountCents, platformPct, fixedFeeCents(settings));
+  // Migração 181: quem oferece com um cartão do Reino Unido ou de fora da
+  // Europa paga a diferença da taxa de serviço por cima do preço (cartões
+  // europeus, MB WAY, Multibanco e carteiras: nada a mais).
+  const pmId = body.action === "intent" && (body.method ?? "card") === "card" &&
+      typeof body.payment_method === "string" && body.payment_method.startsWith("pm_")
+    ? body.payment_method as string
+    : null;
+  let region: "EEA" | "GB" | "OTHER" = "EEA";
+  if (pmId) {
+    try {
+      const pm = await stripe.paymentMethods.retrieve(pmId);
+      region = cardRegion(pm.card?.country ?? null);
+    } catch (e) {
+      console.error("payment method lookup failed", e);
+      return json({ error: "card_error" }, 400);
+    }
+  }
+  const extraCents = region === "EEA" ? 0 : Math.max(
+    0,
+    tieredFeeCents(amountCents, organizerTiersForCard(settings, region)) -
+      tieredFeeCents(amountCents, organizerTiersForCard(settings, "EEA")),
+  );
+  const platformCents = reserved.platformCents + extraCents;
+  const applicationFeeCents = reserved.applicationFeeCents + extraCents;
   const { data: buyer } = await admin.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
 
   // Pagamento dentro da app: valida o método e anula a tentativa anterior.
@@ -187,14 +211,19 @@ Deno.serve(async (req) => {
         method,
         phone,
         email: user.email ?? null,
-        amountCents,
+        amountCents: amountCents + extraCents,
         description: `${p.title} · ${partner.business_name}`,
-        metadata: { kind: "gift_order", order_id: order.id },
+        metadata: { kind: "gift_order", order_id: order.id, card_region: region, card_extra_cents: String(extraCents) },
         applicationFeeCents,
         destination: account,
+        paymentMethod: pmId,
       });
       await admin.from("gift_orders").update({ checkout_session_id: intent.id }).eq("id", order.id);
-      return json(intentJson(intent, pk, user.email ?? null, { order_id: order.id }));
+      return json(intentJson(intent, pk, user.email ?? null, {
+        order_id: order.id,
+        base_amount_cents: amountCents,
+        card_region: region,
+      }));
     } catch (err) {
       console.error("in-app intent failed", (err as Error).message);
       await admin.from("gift_orders").update({ status: "cancelled" }).eq("id", order.id);

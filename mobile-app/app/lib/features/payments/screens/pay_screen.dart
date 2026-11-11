@@ -198,7 +198,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       // seguir o país do cartão (Reino Unido e fora da Europa pagam mais;
       // cartões europeus pagam sempre a base).
       String? pmId;
-      if (a.isBooking) {
+      if (a.feeByCard) {
         final pm = await _stripe.cardMethod(_email);
         if (!mounted) return;
         if (pm['id'] is! String) {
