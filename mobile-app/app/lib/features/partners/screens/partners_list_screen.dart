@@ -682,8 +682,7 @@ List<Partner> featured(List<Partner> all) {
 
 String _priceLabel(Partner p) {
   if (p.startingPrice != null) return 'desde ${euros(p.startingPrice!)}';
-  if (p.averageQuotePrice != null) return 'média ${euros(p.averageQuotePrice!)}';
-  return 'Pedir orçamento';
+  return 'Por orçamento';
 }
 
 String? _ratingLabel(Partner p) {
@@ -760,9 +759,9 @@ class _FeaturedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rating = _ratingLabel(partner);
-    final price = partner.startingPrice != null
-        ? ('DESDE', euros(partner.startingPrice!))
-        : (partner.averageQuotePrice != null ? ('MÉDIA', euros(partner.averageQuotePrice!)) : null);
+    // Quem trabalha só por orçamento: "Por orçamento" no lugar do preço
+    // (2026-11-11).
+    final price = partner.startingPrice != null ? ('DESDE', euros(partner.startingPrice!)) : ('POR', 'Orçamento');
     return FeaturedOverlayCard(
       onTap: onTap,
       image: _PartnerPhoto(partner),
