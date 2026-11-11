@@ -431,7 +431,7 @@ class _PageBody extends ConsumerWidget {
       _NextSteps(wedding: wedding),
       if (wedding.panelShows('stats')) _StatBlocks(wedding: wedding),
       _InviteCodeCard(wedding: wedding),
-      if (wedding.panelShows('suggestions')) _Suggestions(wedding: wedding),
+      _Suggestions(wedding: wedding),
       const _BookingsSection(),
       _ManageList(wedding: wedding),
     ];
@@ -2645,10 +2645,10 @@ class _ManageList extends ConsumerWidget {
     String sub(String label) => s.firstWhere((x) => x.label == label, orElse: () => const _Shortcut(Icons.circle, '', '', '')).subtitle;
     final fourth = _fourthOf(w.eventType);
     final rows = <(IconData, String, String, String)>[
-      if (w.panelShows('guest_page')) (Icons.card_giftcard_outlined, 'Página dos convidados', 'programa e presentes', '/guest-page'),
+      (Icons.card_giftcard_outlined, 'Página dos convidados', 'programa e presentes', '/guest-page'),
       if (fourth == _Fourth.gifts) (Icons.redeem_outlined, 'Lista de presentes', '', '/gift-list'),
       if (fourth == _Fourth.tickets) (Icons.confirmation_number_outlined, 'Bilhetes', '', '/bilhetes'),
-      if (w.panelShows('gallery')) (Icons.photo_library_outlined, 'Galeria', sub('Galeria'), '/gallery'),
+      (Icons.photo_library_outlined, 'Galeria', sub('Galeria'), '/gallery'),
       (Icons.handshake_outlined, 'Serviços tratados', sub('Serviços tratados'), '/service-preferences'),
       (Icons.group_add_outlined, 'Organizadores', 'convidar quem ajuda', '/organizadores'),
     ];
