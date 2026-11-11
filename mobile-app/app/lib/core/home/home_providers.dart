@@ -114,7 +114,7 @@ final pendingProposalsProvider = FutureProvider<List<ReceivedProposal>>((
   final rows = await supabase
       .from('proposals')
       .select(
-        'id, title, description, price, deposit_amount, deposit_refundable, '
+        'id, partner_id, title, description, price, deposit_amount, deposit_refundable, '
         'quote_requests(wedding_id, event_date), '
         'partner_profiles(business_name, partner_profile_categories(partner_categories(label_pt)))',
       )
@@ -140,6 +140,7 @@ ReceivedProposal _receivedProposalFromRow(Map<String, dynamic> row) {
     id: row['id'] as String,
     weddingId: quoteRequest?['wedding_id'] as String,
     partnerName: (partner?['business_name'] as String?) ?? 'Parceiro',
+    partnerId: row['partner_id'] as String?,
     category: firstCategory?['label_pt'] as String?,
     title: row['title'] as String,
     description: row['description'] as String?,
@@ -374,8 +375,15 @@ final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
         }
       }
     }
-    final feeBase = FeeConfig.parse(row['partner_fee_tiers'],
+    var feeBase = FeeConfig.parse(row['partner_fee_tiers'],
         flatPct: (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0, freeUntil: freeUntil);
+    // Migração 180: a taxa do parceiro depende do país dele.
+    if (uid != null) {
+      final rates = await ref.read(partnerFeeRatesProvider(uid).future);
+      if (rates != null) {
+        feeBase = FeeConfig(tiers: [(upTo: null, pct: rates.partner)], flatPct: rates.partner, freeUntil: freeUntil);
+      }
+    }
     // Plano Pro (migração 161): comissão `pro_fee_discount` pontos mais baixa.
     if (uid != null) {
       try {
@@ -395,6 +403,30 @@ final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
   } catch (_) {
     return const FeeConfig();
   }
+});
+
+/// Taxas pelo país do parceiro (migração 180): Portugal, resto da Europa
+/// ou fora da Europa — nunca pelo cartão de quem paga. null antes da
+/// migração (ficam os escalões gerais).
+final partnerFeeRatesProvider = FutureProvider.family<({double organizer, double partner})?, String>((ref, partnerId) async {
+  try {
+    final r = await supabase.rpc('partner_fee_rates', params: {'p_partner_id': partnerId});
+    if (r is! Map) return null;
+    final o = (r['organizer'] as num?)?.toDouble();
+    final p = (r['partner'] as num?)?.toDouble();
+    if (o == null || p == null) return null;
+    return (organizer: o, partner: p);
+  } catch (_) {
+    return null;
+  }
+});
+
+/// Taxa do organizador numa reserva com este parceiro (mesma conta que
+/// `create-payment-intent`).
+final organizerFeeForPartnerProvider = FutureProvider.family<FeeConfig, String>((ref, partnerId) async {
+  final rates = await ref.watch(partnerFeeRatesProvider(partnerId).future);
+  if (rates != null) return FeeConfig(tiers: [(upTo: null, pct: rates.organizer)], flatPct: rates.organizer);
+  return ref.watch(organizerFeeConfigProvider.future);
 });
 
 /// Taxa do organizador (migração 127): escalões sobre o total da reserva;

@@ -265,7 +265,9 @@ class _DepositPreview extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final depositPct = ref.watch(platformDepositPercentageProvider).value;
-    final orgFee = ref.watch(organizerFeeConfigProvider).value;
+    // Migração 180: a taxa do cliente depende do país deste parceiro.
+    final me = supabase.auth.currentUser?.id;
+    final orgFee = me == null ? ref.watch(organizerFeeConfigProvider).value : ref.watch(organizerFeeForPartnerProvider(me)).value;
     final feeCfg = ref.watch(partnerFeeConfigProvider).value ?? const PartnerFeeConfig();
     if (depositPct == null || orgFee == null) return const SizedBox.shrink();
     final price = double.tryParse(priceText.trim().replaceAll(' ', '').replaceAll(',', '.'));

@@ -61,14 +61,18 @@ class _PayReturnScreenState extends ConsumerState<PayReturnScreen> {
     try {
       final row = await supabase
           .from('payments')
-          .select('type, amount, bookings(total_amount), partner_profiles(business_name)')
+          .select('type, amount, partner_id, bookings(total_amount), partner_profiles(business_name)')
           .eq('id', id)
           .maybeSingle();
       partner = (row?['partner_profiles'] as Map?)?['business_name'] as String? ?? partner;
       title = row?['type'] == 'deposit' ? 'Sinal' : 'Restante';
       final base = (row?['amount'] as num?)?.toDouble() ?? 0;
       final total = ((row?['bookings'] as Map?)?['total_amount'] as num?)?.toDouble() ?? base;
-      final pct = (await ref.read(organizerFeeConfigProvider.future)).effectivePct(total);
+      final pid = row?['partner_id'] as String?;
+      final cfg = pid == null
+          ? await ref.read(organizerFeeConfigProvider.future)
+          : await ref.read(organizerFeeForPartnerProvider(pid).future);
+      final pct = cfg.effectivePct(total);
       amount = euros(amountWithCommission(base, pct), cents: true);
     } catch (_) {}
     if (!mounted) return;
