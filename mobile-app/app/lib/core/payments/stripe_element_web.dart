@@ -9,7 +9,8 @@ import 'stripe_element.dart';
 extension type _TchinPay(JSObject _) implements JSObject {
   external JSObject createHost();
   external JSPromise<JSString> mountCard(JSString pk, JSObject hosts, JSFunction onChange);
-  external JSPromise<JSString> payCard(JSString secret, JSString email);
+  external JSPromise<JSString> payCard(JSString secret, JSString email, JSString pmId);
+  external JSPromise<JSString> cardMethod(JSString email);
   external JSPromise<JSString> wallet(JSString pk, JSNumber cents, JSString label);
   external JSPromise<JSString> payWallet(JSFunction getSecret);
   external void unmount();
@@ -70,10 +71,18 @@ class _WebStripePay implements StripePay {
   }
 
   @override
-  Future<Map<String, dynamic>> payCard(String clientSecret, String? email) async {
+  Future<Map<String, dynamic>> cardMethod(String? email) async {
     final pay = _pay;
     if (pay == null) return {'error': 'Pagamento indisponível.'};
-    final raw = (await pay.payCard(clientSecret.toJS, (email ?? '').toJS).toDart).toDart;
+    final raw = (await pay.cardMethod((email ?? '').toJS).toDart).toDart;
+    return jsonDecode(raw) as Map<String, dynamic>;
+  }
+
+  @override
+  Future<Map<String, dynamic>> payCard(String clientSecret, String? email, {String? paymentMethodId}) async {
+    final pay = _pay;
+    if (pay == null) return {'error': 'Pagamento indisponível.'};
+    final raw = (await pay.payCard(clientSecret.toJS, (email ?? '').toJS, (paymentMethodId ?? '').toJS).toDart).toDart;
     return jsonDecode(raw) as Map<String, dynamic>;
   }
 

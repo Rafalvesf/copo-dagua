@@ -3,7 +3,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
 import { confirmGiftOrder } from "../_shared/gifts.ts";
 import { reserveCents } from "../_shared/tickets.ts";
-import { fixedFeeCents, partnerRegionRates, tieredFeeCents } from "../_shared/fees.ts";
+import { fixedFeeCents, parseTiers, tieredFeeCents } from "../_shared/fees.ts";
 import { cancelOpenIntent, createInAppIntent, e164, intentJson, intentState } from "../_shared/inapp.ts";
 
 // Presentes da loja dos parceiros (migração 160).
@@ -130,11 +130,12 @@ Deno.serve(async (req) => {
   const { data: settings } = await admin.from("platform_settings").select("*").eq("id", 1).maybeSingle();
   const unitCents = Math.round(Number(p.price) * 100);
   const amountCents = unitCents * quantity;
-  // Migração 181: a taxa do parceiro da loja segue os escalões do país dele
-  // (até 2 000 € / acima); sem eles, `gift_fee_percentage`.
-  const regionRates = await partnerRegionRates(admin, stripe, p.partner_id as string, account, settings);
-  const platformPct = regionRates && amountCents > 0
-    ? (tieredFeeCents(amountCents, regionRates.partner) / amountCents) * 100
+  // Migração 181: a taxa do parceiro da loja segue os mesmos escalões das
+  // reservas (4% + 1 € até 2 000 €, 3% + 1 € acima); sem eles,
+  // `gift_fee_percentage`.
+  const partnerTiers = parseTiers(settings?.partner_fee_tiers);
+  const platformPct = partnerTiers.length && amountCents > 0
+    ? (tieredFeeCents(amountCents, partnerTiers) / amountCents) * 100
     : Number(settings?.gift_fee_percentage ?? 4);
   const { platformCents, applicationFeeCents } = reserveCents(amountCents, platformPct, fixedFeeCents(settings));
   const { data: buyer } = await admin.from("profiles").select("full_name").eq("id", user.id).maybeSingle();

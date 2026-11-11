@@ -260,8 +260,8 @@ export const MIGRATIONS: PendingMigration[] = [
   },
   {
     file: "181_fee_tiers_by_country.sql",
-    title: "Taxa de serviço: até 2 000 € / acima, por país",
-    what: "Portugal 4% / 3%, resto da Europa 5% / 4%, fora da Europa 6% / 5% (+ 1 €), para organizador, parceiro e Loja. Bilhetes iguais.",
+    title: "Taxa de serviço: escalões e cartão de quem paga",
+    what: "Até 2 000 € / acima (+ 1 €): cartão europeu 4% / 3%, do Reino Unido 5% / 4%, de fora da Europa 6% / 5%. Parceiro 4% / 3%. Bilhetes iguais.",
     check: { kind: "marker", id: "181" },
   },
 ];

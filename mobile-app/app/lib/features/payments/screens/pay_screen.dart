@@ -17,6 +17,7 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/sticker_icon.dart';
@@ -193,13 +194,61 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       _error = null;
     });
     try {
-      final info = await a.createIntent(PayMethod.card);
+      // Reservas (migração 181): primeiro o cartão, para a taxa de serviço
+      // seguir o país do cartão (Reino Unido e fora da Europa pagam mais;
+      // cartões europeus pagam sempre a base).
+      String? pmId;
+      if (a.isBooking) {
+        final pm = await _stripe.cardMethod(_email);
+        if (!mounted) return;
+        if (pm['id'] is! String) {
+          setState(() {
+            _step = _Step.card;
+            _error = (pm['error'] as String?) ?? 'O cartão não é válido.';
+          });
+          return;
+        }
+        pmId = pm['id'] as String;
+      }
+      final info = await a.createIntent(PayMethod.card, paymentMethodId: pmId);
+      if (!mounted) return;
+      final before = _amountCents ?? (a.amount * 100).round();
       _amountCents = info.amountCents;
-      final r = await _stripe.payCard(info.clientSecret, _email);
+      if (pmId != null && info.cardRegion != null && info.cardRegion != 'EEA' && info.amountCents > before) {
+        final ok = await _confirmCardFee(info);
+        if (!mounted) return;
+        if (!ok) {
+          setState(() {
+            _amountCents = info.baseAmountCents;
+            _step = _Step.card;
+          });
+          return;
+        }
+      }
+      final r = await _stripe.payCard(info.clientSecret, _email, paymentMethodId: pmId);
       _handleResult(r, back: _Step.card);
     } catch (e) {
       _fail(e, _Step.card);
     }
+  }
+
+  /// Cartão do Reino Unido ou de fora da Europa: mostra o novo total antes
+  /// de cobrar.
+  Future<bool> _confirmCardFee(PaymentIntentInfo info) async {
+    final where = info.cardRegion == 'GB' ? 'do Reino Unido' : 'de fora da Europa';
+    final total = euros(info.amountCents / 100, cents: true);
+    final ok = await showIslandDialog<bool>(
+      context: context,
+      builder: (ctx) => IslandAlert(
+        title: Text('Total: $total'),
+        content: Text('Os cartões $where têm uma taxa de serviço mais alta. Com este cartão pagas $total.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Usar outro cartão')),
+          FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text('Pagar $total')),
+        ],
+      ),
+    );
+    return ok == true;
   }
 
   /// Tem de abrir a janela do telemóvel logo no toque (sem esperas antes).

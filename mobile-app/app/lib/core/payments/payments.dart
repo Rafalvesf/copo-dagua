@@ -57,8 +57,10 @@ class PayArgs {
 
   String get title => titleOverride ?? (kind == 'deposit' ? 'Sinal' : 'Restante');
 
-  Future<PaymentIntentInfo> createIntent(PayMethod method, {String? phone}) =>
-      create != null ? create!(method, phone: phone) : createPaymentIntent(paymentId, method, phone: phone);
+  Future<PaymentIntentInfo> createIntent(PayMethod method, {String? phone, String? paymentMethodId}) =>
+      create != null
+          ? create!(method, phone: phone)
+          : createPaymentIntent(paymentId, method, phone: phone, paymentMethodId: paymentMethodId);
 
   Future<(String, MultibancoRef?)> currentState() => state != null ? state!() : paymentState(paymentId);
 
@@ -124,6 +126,11 @@ class PaymentIntentInfo {
   final int amountCents;
   final String? email;
   final MultibancoRef? multibanco;
+
+  /// Migração 181: valor com a taxa base (cartão europeu) e região do
+  /// cartão (`EEA`, `GB`, `OTHER`).
+  final int? baseAmountCents;
+  final String? cardRegion;
   const PaymentIntentInfo({
     this.status,
     required this.clientSecret,
@@ -131,18 +138,25 @@ class PaymentIntentInfo {
     required this.amountCents,
     this.email,
     this.multibanco,
+    this.baseAmountCents,
+    this.cardRegion,
   });
 }
 
 /// `create-payment-intent`: um PaymentIntent para o método escolhido.
 /// Erros legíveis chegam como [CheckoutUnavailable] (`method_unavailable`,
 /// `partner_not_onboarded`, `invalid_state`, `processing`, `not_configured`).
-Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method, {String? phone}) async {
+Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method, {String? phone, String? paymentMethodId}) async {
   final FunctionResponse res;
   try {
     res = await supabase.functions.invoke(
       'create-payment-intent',
-      body: {'payment_id': paymentId, 'method': method.code, if (phone != null) 'phone': phone},
+      body: {
+        'payment_id': paymentId,
+        'method': method.code,
+        if (phone != null) 'phone': phone,
+        if (paymentMethodId != null) 'payment_method': paymentMethodId,
+      },
     );
   } on FunctionException catch (e) {
     final d = e.details;
@@ -158,6 +172,8 @@ Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method
     amountCents: cents,
     email: d['email'] as String?,
     multibanco: MultibancoRef.fromJson(d['multibanco'], amountCents: cents),
+    baseAmountCents: (d['base_amount_cents'] as num?)?.toInt(),
+    cardRegion: d['card_region'] as String?,
   );
 }
 

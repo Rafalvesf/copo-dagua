@@ -475,10 +475,21 @@
             return 'ok';
           });
         },
-        payCard: function (secret, email) {
+        // Migração 181: o método de pagamento primeiro, para o servidor ver
+        // de onde é o cartão antes de fixar a taxa de serviço.
+        cardMethod: function (email) {
           if (!stripe || !parts.number) return Promise.resolve(JSON.stringify({ error: 'Os campos do cartão não carregaram.' }));
+          return stripe.createPaymentMethod({ type: 'card', card: parts.number, billing_details: { email: email || undefined } })
+            .then(function (r) {
+              if (r.error) return JSON.stringify({ error: r.error.message || 'O cartão não é válido.' });
+              return JSON.stringify({ id: r.paymentMethod.id });
+            })
+            .catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'Não foi possível ler o cartão.' }); });
+        },
+        payCard: function (secret, email, pmId) {
+          if (!stripe || (!parts.number && !pmId)) return Promise.resolve(JSON.stringify({ error: 'Os campos do cartão não carregaram.' }));
           return stripe.confirmCardPayment(secret, {
-            payment_method: { card: parts.number, billing_details: { email: email || undefined } }
+            payment_method: pmId ? pmId : { card: parts.number, billing_details: { email: email || undefined } }
           }).then(result).catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'Pagamento falhou.' }); });
         },
         // Apple Pay / Google Pay disponível neste telemóvel? '' se não.

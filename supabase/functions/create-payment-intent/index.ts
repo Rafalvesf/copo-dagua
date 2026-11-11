@@ -1,7 +1,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { stripeClient } from "../_shared/stripe.ts";
-import { type FeeTier, fixedFeeCents, parseTiers, partnerRegionRates, paymentFeeCents } from "../_shared/fees.ts";
+import { cardRegion, type FeeTier, fixedFeeCents, organizerTiersForCard, parseTiers, paymentFeeCents } from "../_shared/fees.ts";
 
 // Pagamento DENTRO da app (pedido 2026-10-19: "não quero que a app abra o
 // browser"). Em vez de uma Checkout Session hospedada, cria um
@@ -166,23 +166,33 @@ Deno.serve(async (req) => {
   // deste pagamento; sem escalões, a percentagem fixa.
   // + valor fixo por transação (4% + 1 €, 3% + 1 €; 2026-11-08).
   const fixedCents = fixedFeeCents(sett);
-  // Migração 180: a taxa depende do país do parceiro (Portugal, resto da
-  // Europa, fora da Europa) — nunca do cartão de quem paga.
-  const regionRates = await partnerRegionRates(
-    admin, stripe, payment.partner_id as string, partner.stripe_account_id, sett,
-  );
-  const organizerTiers: FeeTier[] = regionRates
-    ? regionRates.organizer
-    : parseTiers(sett.organizer_fee_tiers);
-  const partnerTiers: FeeTier[] = regionRates
-    ? regionRates.partner
-    : parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers);
-  const applicationFeeCents = paymentFeeCents(
+  // Migração 181: a taxa do organizador depende do cartão. A app cria
+  // primeiro o método de pagamento (`payment_method`) e só então pede o
+  // pagamento; cartões do Espaço Económico Europeu pagam sempre a taxa base
+  // (a lei não deixa cobrar mais), só os do Reino Unido e de fora da Europa
+  // pagam mais. Sem cartão (MB WAY, Multibanco, Apple/Google Pay): base.
+  const pmId = method === "card" && typeof body.payment_method === "string" && body.payment_method.startsWith("pm_")
+    ? body.payment_method
+    : null;
+  let region: "EEA" | "GB" | "OTHER" = "EEA";
+  if (pmId) {
+    try {
+      const pm = await stripe.paymentMethods.retrieve(pmId);
+      region = cardRegion(pm.card?.country ?? null);
+    } catch (e) {
+      console.error("payment method lookup failed", e);
+      return json({ error: "card_error" }, 400);
+    }
+  }
+  const feeFor = (tiers: FeeTier[]) => paymentFeeCents(
     partnerAmountCents,
     Math.max(bookingTotalCents, partnerAmountCents),
-    organizerTiers,
+    tiers,
     commissionPct,
   ) + fixedCents;
+  const applicationFeeCents = feeFor(organizerTiersForCard(sett, region));
+  const baseChargeCents = partnerAmountCents + feeFor(organizerTiersForCard(sett, "EEA"));
+  const partnerTiers: FeeTier[] = parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers);
   const totalChargeCents = partnerAmountCents + applicationFeeCents;
   // Escalões sobre o valor total da reserva (migração 126); cada pagamento
   // leva a parte proporcional. Sem escalões, a percentagem fixa (123).
@@ -240,6 +250,7 @@ Deno.serve(async (req) => {
       amount: totalChargeCents,
       ...(extended ? { payment_method_options: { card: { request_extended_authorization: "if_available" } } as never } : {}),
       currency: "eur",
+      ...(pmId ? { payment_method: pmId } : {}),
       ...(holdDeposit ? { capture_method: "manual" as const } : {}),
       ...(method === "all"
         ? { automatic_payment_methods: { enabled: true, allow_redirects: "never" as const } }
@@ -267,6 +278,7 @@ Deno.serve(async (req) => {
         partner_fee_cents: String(partnerFeeCents),
         fixed_fee_cents: String(fixedCents),
         held: holdDeposit ? "1" : "0",
+        card_region: region,
       },
     }, method === "mb_way" ? { apiVersion: "2025-09-30.clover" as never } : undefined);
   try {
@@ -311,6 +323,8 @@ Deno.serve(async (req) => {
     publishable_key: publishableKey,
     payment_intent_id: intent.id,
     amount_cents: totalChargeCents,
+    base_amount_cents: baseChargeCents,
+    card_region: region,
     email: user.email ?? null,
     status: intent.status,
     ...(mbNew ? { multibanco: { entity: mbNew.entity, reference: mbNew.reference, expires_at: mbNew.expires_at } } : {}),

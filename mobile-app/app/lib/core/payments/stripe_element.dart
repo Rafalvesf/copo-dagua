@@ -31,8 +31,14 @@ abstract class StripePay {
 
   Future<void> mountCard(String publishableKey, void Function(CardFieldsState s) onChange);
 
-  /// Devolve `{status}` ou `{error}`.
-  Future<Map<String, dynamic>> payCard(String clientSecret, String? email);
+  /// Cria o método de pagamento com o cartão escrito (migração 181: o
+  /// servidor vê de onde é o cartão antes de fixar a taxa de serviço).
+  /// Devolve `{id}` ou `{error}`.
+  Future<Map<String, dynamic>> cardMethod(String? email);
+
+  /// Devolve `{status}` ou `{error}`. Com [paymentMethodId], usa esse
+  /// método (de [cardMethod]) em vez de ler os campos outra vez.
+  Future<Map<String, dynamic>> payCard(String clientSecret, String? email, {String? paymentMethodId});
 
   /// `apple_pay`, `google_pay` ou `''` (não disponível neste telemóvel).
   Future<String> wallet(String publishableKey, int amountCents, String label);
