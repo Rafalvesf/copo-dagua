@@ -6,7 +6,6 @@ import '../../../shared/widgets/dense_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/tasks/task_models.dart' show taskPriorityWeight, taskPriorityFromDb;
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart';
-import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/search_pill.dart';
 import '../../../shared/public_link.dart';
 import 'package:share_plus/share_plus.dart';
@@ -53,6 +52,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
   // Descobrir: procurar por nome ou zona e filtrar por data (2026-11).
   final _search = TextEditingController();
   _When _when = _When.any;
+  bool _free = false;
 
   @override
   void initState() {
@@ -67,6 +67,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
   }
 
   bool _matches(PublicEvent e) {
+    if (_free && e.isPaid) return false;
     final q = _search.text.trim().toLowerCase();
     if (q.isNotEmpty) {
       final hay = [e.displayNames, e.venue ?? '', e.location ?? '', e.eventType.label].join(' ').toLowerCase();
@@ -89,33 +90,6 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
     }
   }
 
-  Future<void> _pickWhen() async {
-    final picked = await showIslandSheet<_When>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 18, 20, 6),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Quando', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              ),
-            ),
-            for (final w in _When.values)
-              ListTile(
-                title: Text(w.label),
-                trailing: w == _when ? Icon(Hi.check, color: AppTheme.accentOliveDark) : null,
-                onTap: () => Navigator.pop(ctx, w),
-              ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-    if (picked != null) setState(() => _when = picked);
-  }
 
   Future<void> _refresh() async {
     ref.invalidate(guestWeddingsProvider);
@@ -140,7 +114,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
         .where((e) => !joinedIds.contains(e.weddingId))
         .toList();
     final publicEvents = allPublic.where(_matches).toList();
-    final filtering = _search.text.trim().isNotEmpty || _when != _When.any;
+    final filtering = _search.text.trim().isNotEmpty || _when != _When.any || _free;
     final hasMine = myEvents.isNotEmpty || invited.isNotEmpty;
 
     // Os meus eventos por data: os próximos primeiro, os passados no fim.
@@ -164,53 +138,42 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
 
     final content = <Widget>[
       if (pending.isNotEmpty) _Pad(_InviteNotice(wedding: pending.first, more: pending.length - 1)),
-      if (hasMine)
-        const _Pad(_ActionsRow())
-      else
-        const _Pad(_StartCard()),
-      if (!hasMine) const _Pad(_InviteTile()),
+      // Igual ao mockup "Página de eventos" (2026-11-11): o cartão verde
+      // com 3 tipos e "Recebeste um convite?", com ou sem eventos.
+      const _Pad(_CelebrateCard()),
+      const _Pad(_InviteTile()),
       if (hasMine) ...[
         const _Title('Os meus eventos'),
         SnapCarousel(
-          height: 352,
           itemCount: own.length + guest.length,
-          itemBuilder: (context, i) => Align(
-            alignment: Alignment.topCenter,
-            child: i < own.length
-                ? _MyEventCard(wedding: own[i], active: own[i].id == activeId)
-                : _InvitedEventCard(wedding: guest[i - own.length]),
-          ),
+          itemBuilder: (context, i) => i < own.length
+              ? _MyEventCard(wedding: own[i], active: own[i].id == activeId)
+              : _InvitedEventCard(wedding: guest[i - own.length]),
         ),
       ],
       const _Title('Descobrir', subtitle: 'Eventos abertos a que podes ir'),
       Padding(
         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 0),
-        child: Row(children: [
-          Expanded(child: SearchPill(controller: _search, hint: 'Procurar por nome ou zona')),
-          const SizedBox(width: 10),
-          SnappyTap(
-            onTap: _pickWhen,
-            child: Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: _when == _When.any ? Colors.white : AppTheme.accentOliveDark,
-                borderRadius: BorderRadius.circular(999),
-                boxShadow: const [BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6))],
+        child: SearchPill(controller: _search, hint: 'Procurar por nome ou zona'),
+      ),
+      const SizedBox(height: 12),
+      SizedBox(
+        height: 40,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+          children: [
+            for (final w in _When.values) ...[
+              _FilterChip(
+                label: w == _When.any ? 'Todos' : w.label,
+                on: _when == w,
+                onTap: () => setState(() => _when = w),
               ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Hi.calendar,
-                    size: 18, color: _when == _When.any ? AppTheme.ink : Colors.white),
-                const SizedBox(width: 6),
-                Text(_when.short,
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: _when == _When.any ? AppTheme.ink : Colors.white)),
-              ]),
-            ),
-          ),
-        ]),
+              const SizedBox(width: 8),
+            ],
+            _FilterChip(label: 'Grátis', on: _free, onTap: () => setState(() => _free = !_free)),
+          ],
+        ),
       ),
       const SizedBox(height: 18),
       if (publicAsync.isLoading && publicAsync.value == null)
@@ -505,107 +468,77 @@ class _Title extends StatelessWidget {
       );
 }
 
-/// "Criar evento" e "Tenho um código", lado a lado.
-class _ActionsRow extends StatelessWidget {
-  const _ActionsRow();
+/// "O que vamos celebrar?" (mockup 2026-11-11): cartão verde com
+/// Casamento, Aniversário e Outro; cada um abre a criação já com o tipo.
+class _CelebrateCard extends StatelessWidget {
+  const _CelebrateCard();
 
-  Widget _box(BuildContext context, {required bool dark, required IconData icon, required String label, required VoidCallback onTap}) =>
-      Expanded(
+  Widget _tile(BuildContext context, IconData icon, String label, EventType type) => Expanded(
         child: SnappyTap(
-          onTap: onTap,
+          onTap: () => context.push('/novo-evento?tipo=${type.name}'),
           child: Container(
-            height: 96,
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-            decoration: BoxDecoration(
-              color: dark ? _brandGreen : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: dark ? null : const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(color: dark ? Colors.white : AppTheme.surface, shape: BoxShape.circle),
-                  child: Icon(icon, size: 18, color: AppTheme.ink),
-                ),
-                Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dark ? Colors.white : AppTheme.ink)),
-              ],
-            ),
+            height: 92,
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(icon, size: 26, color: _brandGreen),
+              const SizedBox(height: 8),
+              Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+            ]),
           ),
         ),
       );
 
   @override
-  Widget build(BuildContext context) => Row(children: [
-        _box(context, dark: true, icon: Hi.plus, label: 'Criar evento', onTap: () => context.push('/novo-evento')),
-        const SizedBox(width: 10),
-        _box(context, dark: false, icon: Hi.qrCode, label: 'Tenho um código', onTap: () => showGuestModeSheet(context)),
-      ]);
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.fromLTRB(16, 22, 16, 16),
+        decoration: BoxDecoration(color: _brandGreen, borderRadius: BorderRadius.circular(26)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('NOVO EVENTO',
+                  style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w800, color: Color(0xFFDDE5D3))),
+              SizedBox(height: 4),
+              Text('O que vamos celebrar?',
+                  style: TextStyle(fontSize: 26, height: 1.15, fontWeight: FontWeight.w800, color: Colors.white)),
+              SizedBox(height: 4),
+              Text('Escolhe e fica pronto em 1 minuto.',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),
+            ]),
+          ),
+          const SizedBox(height: 16),
+          Row(children: [
+            _tile(context, Hi.heart, 'Casamento', EventType.wedding),
+            const SizedBox(width: 8),
+            _tile(context, Hi.cake, 'Aniversário', EventType.birthday),
+            const SizedBox(width: 8),
+            _tile(context, Hi.plus, 'Outro', EventType.other),
+          ]),
+        ]),
+      );
 }
 
-/// Conta sem eventos: convite a criar o primeiro.
-class _StartCard extends StatelessWidget {
-  const _StartCard();
-
-  static const _types = ['Casamento', 'Aniversário', 'Despedida', 'Jantar de grupo', 'Batizado', 'Outro'];
+/// Filtro do Descobrir (Todos, Esta semana, Este mês, Grátis…).
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool on;
+  final VoidCallback onTap;
+  const _FilterChip({required this.label, required this.on, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
-        decoration: BoxDecoration(color: _brandGreen, borderRadius: BorderRadius.circular(26)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(color: const Color(0xFFF7EACA), borderRadius: BorderRadius.circular(18)),
-                padding: const EdgeInsets.all(6),
-                child: Image.asset('assets/mascot/duo_clink.png', fit: BoxFit.contain),
-              ),
-              const SizedBox(width: 14),
-              const Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('O que vamos celebrar?',
-                      style: TextStyle(fontSize: 20, height: 1.2, fontWeight: FontWeight.w800, color: Colors.white)),
-                  SizedBox(height: 4),
-                  Text('Cria o teu evento em 1 minuto.',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),
-                ]),
-              ),
-            ]),
-            const SizedBox(height: 16),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final t in _types)
-                SnappyTap(
-                  onTap: () => context.push('/novo-evento'),
-                  child: Container(
-                    height: 40,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0x99FFFFFF), width: 1.5),
-                    ),
-                    child: Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white)),
-                  ),
-                ),
-            ]),
-            const SizedBox(height: 16),
-            SnappyTap(
-              onTap: () => context.push('/novo-evento'),
-              child: Container(
-                height: 50,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(25)),
-                child: const Text('Criar evento', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-              ),
-            ),
-          ],
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: on ? AppTheme.ink : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: on ? null : Border.all(color: const Color(0xFFE6E0D2), width: 1.5),
+          ),
+          child: Text(label,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: on ? Colors.white : AppTheme.ink)),
         ),
       );
 }
@@ -617,9 +550,9 @@ class _InviteTile extends StatelessWidget {
   Widget build(BuildContext context) => SnappyTap(
         onTap: () => showGuestModeSheet(context),
         child: Container(
-          height: 64,
+          height: 60,
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: softCard(),
+          decoration: softCard(radius: 18),
           child: const Row(children: [
             Icon(Hi.qrCode, size: 22, color: AppTheme.ink),
             SizedBox(width: 12),

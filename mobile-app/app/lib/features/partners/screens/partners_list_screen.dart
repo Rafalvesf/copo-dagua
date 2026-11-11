@@ -753,8 +753,10 @@ class _FeaturedCard extends StatelessWidget {
           ? null
           : PhotoPill(rating, icon: Hi.star, muted: partner.reviewCount > 0 ? '(${partner.reviewCount})' : null),
       title: partner.name,
-      subtitle: [partner.primaryCategoryLabel, if (partner.location.isNotEmpty) partner.location].join(' · '),
-      chips: partner.categoryLabels.skip(1).take(3).toList(),
+      subtitle: partner.location.isNotEmpty ? partner.location : partner.primaryCategoryLabel,
+      // As categorias em todos os cartões (2026-11-11), não só nos que têm
+      // mais do que uma.
+      chips: (partner.categoryLabels.isEmpty ? [partner.primaryCategoryLabel] : partner.categoryLabels).take(3).toList(),
       price: _priceLabel(partner),
     );
   }

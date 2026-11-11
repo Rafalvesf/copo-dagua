@@ -381,7 +381,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Criar mais um evento (vários por conta, 2026-11).
       GoRoute(
         path: '/novo-evento',
-        builder: (context, state) =>lazyPage([l34.loadLibrary], () =>  l34.OnboardingWizardScreen(newEvent: true)),
+        builder: (context, state) =>lazyPage([l34.loadLibrary], () =>  l34.OnboardingWizardScreen(newEvent: true, initialType: state.uri.queryParameters['tipo'])),
       ),
       tabRoute(
         path: '/eventos',
