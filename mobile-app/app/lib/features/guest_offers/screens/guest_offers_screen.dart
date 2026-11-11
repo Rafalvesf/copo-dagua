@@ -47,10 +47,9 @@ class GuestOffersScreen extends ConsumerWidget {
                 child: LockedFeatureCard(
                   text: 'Em breve vais poder reservar e pagar aqui o alojamento e o transporte que os anfitriões combinarem.',
                 ),
-              )
-            else
+              ),
  ],
- body: RefreshIndicator(
+ body: !enabled ? const SizedBox.shrink() : RefreshIndicator(
                 onRefresh: refresh,
                 child: offersAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
