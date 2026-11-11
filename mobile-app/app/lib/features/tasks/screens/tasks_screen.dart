@@ -1,6 +1,7 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:copo_dagua_app/shared/widgets/v2_kit.dart';
+import '../../../shared/widgets/partner_suggestion_card.dart';
+import '../../../shared/widgets/snap_carousel.dart';
 import 'package:copo_dagua_app/features/partners/screens/partner_detail_screen.dart';
 import 'package:copo_dagua_app/core/wedding/wedding_controller.dart';
 import 'package:copo_dagua_app/core/partners/partner_providers.dart';
@@ -612,7 +613,7 @@ class _PartnerSuggestions extends ConsumerWidget {
     if (picks == null || picks.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: 18),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
           child: Text('Sugestões para ti',
@@ -622,50 +623,11 @@ class _PartnerSuggestions extends ConsumerWidget {
           padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 2, AppTheme.screenMargin, 10),
           child: Text('Com base no que tens procurado.', style: TextStyle(fontSize: AppFontSize.sm + 1, color: AppTheme.inkMuted)),
         ),
-        SizedBox(
-          height: 150,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-            itemCount: picks.length,
-            separatorBuilder: (context, i) => const SizedBox(width: 10),
-            itemBuilder: (context, i) {
-              final k = picks[i];
-              return SnappyTap(
-                onTap: () => _open(context, ref, k),
-                semanticLabel: '${k.name}, ${k.categoryLabel ?? ''}',
-                child: Container(
-                  width: 140,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: softCard(radius: 18),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    SizedBox(
-                      height: 82,
-                      child: k.coverPhotoUrl == null
-                          ? Container(color: AppTheme.accentTint, child: Icon(Hi.buildingStorefront, color: AppTheme.accentOliveDark))
-                          : Image.network(k.coverPhotoUrl!, fit: BoxFit.cover, cacheWidth: 420,
-                              errorBuilder: (context, error, stack) => Container(color: AppTheme.accentTint)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-                      child: Text(k.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 1, 10, 0),
-                      child: Text(k.categoryLabel ?? '',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                    ),
-                  ]),
-                ),
-              );
-            },
-          ),
+        // O mesmo cartão das sugestões do painel (2026-11-11).
+        SnapCarousel(
+          height: PartnerSuggestionCard.height,
+          itemCount: picks.length,
+          itemBuilder: (context, i) => PartnerSuggestionCard(pick: picks[i], onTap: () => _open(context, ref, picks[i])),
         ),
       ]),
     );

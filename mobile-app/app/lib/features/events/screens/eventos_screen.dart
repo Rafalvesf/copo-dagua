@@ -353,7 +353,7 @@ class _PosterCard extends StatelessWidget {
         decoration: softCard(radius: 22),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           SizedBox(
-            height: 124,
+            height: 144,
             child: Stack(fit: StackFit.expand, children: [
               e.coverPhotoUrl == null
                   ? _PosterPlaceholder(type: e.eventType, seed: e.weddingId.hashCode)
@@ -814,7 +814,7 @@ class _MyEventCard extends ConsumerWidget {
             id: wedding.id,
             type: wedding.eventType,
             photo: wedding.coverPhotoUrl,
-            height: 104,
+            height: 120,
             badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Organizador')],
           ),
           Padding(
@@ -880,7 +880,7 @@ class _InvitedEventCard extends ConsumerWidget {
             id: wedding.weddingId,
             type: wedding.eventType,
             photo: wedding.coverPhotoUrl,
-            height: 104,
+            height: 120,
             badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Convidado')],
           ),
           Padding(

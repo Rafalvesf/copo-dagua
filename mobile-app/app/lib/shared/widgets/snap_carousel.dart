@@ -33,9 +33,9 @@ class _SnapCarouselState extends State<SnapCarousel> {
   }
 
   PageController _controllerFor(double width) {
-    // Cada cartão ocupa a largura do ecrã menos as margens; 6 de cada lado
-    // separam os cartões.
-    final fraction = ((width - 2 * AppTheme.screenMargin + 12) / width).clamp(0.5, 1.0);
+    // Página da largura do ecrã: os cartões do lado só aparecem ao deslizar
+    // (2026-11-11: "não mostres os cartões da esquerda e da direita").
+    const fraction = 1.0;
     if (_controller == null || (fraction - _fraction).abs() > 0.001) {
       _controller?.dispose();
       _fraction = fraction;
@@ -65,7 +65,7 @@ class _SnapCarouselState extends State<SnapCarousel> {
               onPageChanged: (i) => setState(() => _page = i),
               itemBuilder: (context, i) {
                 final card = Padding(
-                  padding: const EdgeInsets.fromLTRB(6, 0, 6, _shadowPad),
+                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, _shadowPad),
                   child: widget.itemBuilder(context, i),
                 );
                 if (widget.height != null) return card;

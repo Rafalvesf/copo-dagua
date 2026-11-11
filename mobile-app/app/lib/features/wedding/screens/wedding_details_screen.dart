@@ -3,6 +3,7 @@ import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/partner_suggestion_card.dart';
 import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,7 +31,6 @@ import '../../../shared/widgets/photo_adjust_screen.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/snap_carousel.dart';
-import '../../../shared/widgets/dense_card.dart' show FeaturedOverlayCard, PhotoPill;
 import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/seating/seating_controller.dart';
@@ -3296,45 +3296,11 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
         ),
         const SizedBox(height: 10),
         SnapCarousel(
-          height: _SuggestionCard.height,
+          height: PartnerSuggestionCard.height,
           itemCount: list.length,
-          itemBuilder: (context, i) => _SuggestionCard(pick: list[i], onTap: () => _open(list[i])),
+          itemBuilder: (context, i) => PartnerSuggestionCard(pick: list[i], onTap: () => _open(list[i])),
         ),
       ]),
-    );
-  }
-}
-
-/// Sugestão (2026-11-11): o mesmo cartão dos eventos do Descobrir e do
-/// "Em destaque" — nota à esquerda e preço à direita por cima da foto.
-class _SuggestionCard extends ConsumerWidget {
-  final FeaturedPick pick;
-  final VoidCallback onTap;
-  const _SuggestionCard({required this.pick, required this.onTap});
-
-  static const double height = FeaturedOverlayCard.height;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final k = pick;
-    final p = ref.watch(partnerByIdProvider(k.partnerId)).value;
-    final rating = p?.rating;
-    final price = p == null
-        ? null
-        : (p.startingPrice != null ? ('DESDE', euros(p.startingPrice!)) : ('POR', 'Orçamento'));
-    return FeaturedOverlayCard(
-      onTap: onTap,
-      image: k.coverPhotoUrl == null
-          ? Container(color: const Color(0xFFDDE5D3), child: const Icon(Hi.buildingStorefront, color: _green))
-          : SizedNetworkImage(k.coverPhotoUrl!, fit: BoxFit.cover),
-      badge: rating == null || rating <= 0
-          ? null
-          : PhotoPill(rating.toStringAsFixed(1).replaceAll('.', ','),
-              icon: Hi.star, muted: (p?.reviewCount ?? 0) > 0 ? '(${p!.reviewCount})' : null),
-      price: price,
-      title: k.name,
-      subtitle: p?.location ?? '',
-      chips: [if (k.categoryLabel != null) k.categoryLabel!],
     );
   }
 }
