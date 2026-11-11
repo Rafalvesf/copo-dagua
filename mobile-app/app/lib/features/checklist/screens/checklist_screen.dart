@@ -103,13 +103,13 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
-                SafeArea(
+                SafeArea(top: false, 
                   bottom: false,
                   child: EdgeFade(
                     topFadeHeight: 8,
                     bottomFadeHeight: 140,
                     child: ListView(
-                      padding: EdgeInsets.zero,
+                      padding: ( EdgeInsets.zero).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
                       children: [
                         PageHeader(
                           title: 'Tarefas',

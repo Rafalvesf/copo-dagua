@@ -73,10 +73,10 @@ class _SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return GradientScaffold(
       gradientOverride: const LinearGradient(colors: [_pageBackground, _pageBackground]),
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
         child: ListView(
-          padding: EdgeInsets.zero,
+          padding: ( EdgeInsets.zero).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
           children: [
             PageHeader(title: title, centered: true),
             Padding(

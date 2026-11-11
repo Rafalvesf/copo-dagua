@@ -49,10 +49,10 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
       background: AppBackground.subtle,
       body: Stack(
         children: [
-          SafeArea(
+          SafeArea(top: false, 
             bottom: false,
             child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
                 const PageHeader(title: 'Mensagens', showBack: false, centered: true),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(

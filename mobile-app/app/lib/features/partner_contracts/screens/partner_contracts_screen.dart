@@ -114,9 +114,9 @@ class PartnerContractsScreen extends ConsumerWidget {
     final async = ref.watch(partnerContractsProvider);
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
             const PageHeader(title: 'Contratos', centered: true)
  ],
  body: async.when(

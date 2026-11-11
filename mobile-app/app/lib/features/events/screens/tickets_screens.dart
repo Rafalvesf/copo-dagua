@@ -395,9 +395,9 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
     final summary = wedding == null ? null : ref.watch(ticketSummaryProvider(wedding.id)).value;
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 40),
+          padding: ( const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
           children: [
             const PageHeader(title: 'Bilhetes', centered: true),
             Container(

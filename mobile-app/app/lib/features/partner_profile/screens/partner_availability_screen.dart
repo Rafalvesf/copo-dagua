@@ -75,9 +75,9 @@ class _PartnerAvailabilityScreenState extends ConsumerState<PartnerAvailabilityS
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 40),
+          padding: ( const EdgeInsets.only(bottom: 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
           children: [
             const PageHeader(title: 'Disponibilidade', centered: true),
             Padding(

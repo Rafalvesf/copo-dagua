@@ -47,10 +47,10 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
       gradientOverride: guestPageGradient,
       body: Stack(
         children: [
-          SafeArea(
+          SafeArea(top: false, 
             bottom: false,
             child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
                 PageHeader(title: 'Programa', centered: true, subtitle: preview ? 'Pré-visualização · como os convidados veem' : null)
  ],
  body: ListView(

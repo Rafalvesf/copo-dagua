@@ -104,9 +104,9 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
     final saving = (pro.priceMonthly * 12 - pro.priceYearly).clamp(0, double.infinity);
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 40),
+          padding: ( const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
           children: [
             const PageHeader(title: 'À Nossa! Premium', subtitle: 'Pagas menos taxa de serviço, apareces mais e sabes mais.', centered: true),
             const SizedBox(height: 12),

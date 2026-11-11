@@ -60,10 +60,10 @@ class OrganizerGiftListScreen extends ConsumerWidget {
     final givers = ref.watch(giftGiversProvider(weddingId)).value ?? const <GiftGiver>[];
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
         child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
           const PageHeader(title: 'Lista de presentes', centered: true)
  ],
  body: listAsync.when(

@@ -137,7 +137,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
     final async = ref.watch(partnerConnectStatusProvider);
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: RefreshIndicator(
           color: AppTheme.accentOliveDark,
           onRefresh: () async {
@@ -146,7 +146,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
             await ref.read(partnerConnectStatusProvider.future);
           },
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(0, 8, 0, 40),
+            padding: ( const EdgeInsets.fromLTRB(0, 8, 0, 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
             children: [
               const PageHeader(title: 'Pagamentos', centered: true),
               const SizedBox(height: 12),

@@ -90,10 +90,10 @@ class PartnerReviewsScreen extends ConsumerWidget {
 
     return GradientScaffold(
       background: AppBackground.feed,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
         child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
             PageHeader(
               title: 'Avaliações',
               subtitle: 'O que os clientes dizem sobre ti.',

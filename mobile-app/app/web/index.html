@@ -167,9 +167,13 @@
        o topo da app ficava por baixo das horas (2026-10-25). A faixa da
        barra mostra o fundo da página, que acompanha a cor do topo do ecrã
        visível (tchinSetThemeColor). Sem barra (computador), não muda nada. */
+    /* 2026-11-11 ("conteúdo a passar por baixo das horas"): a app ocupa
+       o ecrã todo; a altura da barra das horas passa para a app em
+       window.tchinSafeTop e cada página começa abaixo dela, mas o conteúdo
+       sobe por baixo das horas com um nevoeiro. */
     #app-host {
       position: fixed;
-      top: env(safe-area-inset-top, 0px);
+      top: 0;
       left: 0;
       right: 0;
       bottom: 0;
@@ -676,6 +680,18 @@
     })();
   </script>
   <div id="app-host"></div>
+  <div id="tt-safe" style="position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top, 0px);visibility:hidden;pointer-events:none"></div>
+  <script>
+    (function () {
+      function read() {
+        var el = document.getElementById('tt-safe');
+        window.tchinSafeTop = el ? el.getBoundingClientRect().height : 0;
+      }
+      read();
+      window.addEventListener('resize', read);
+      window.addEventListener('orientationchange', function () { setTimeout(read, 300); });
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
   <script>
     // Teclado no telemóvel (2026-11-08: "puxa a caixa de mensagem para

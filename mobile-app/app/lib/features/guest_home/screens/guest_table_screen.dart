@@ -55,9 +55,9 @@ class GuestTableScreen extends ConsumerWidget {
 
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
             const PageHeader(title: 'A tua mesa', centered: true)
  ],
  body: rosterAsync.when(

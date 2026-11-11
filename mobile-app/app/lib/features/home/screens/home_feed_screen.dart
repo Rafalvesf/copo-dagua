@@ -105,18 +105,18 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
-                SafeArea(
+                SafeArea(top: false, 
                   bottom: false,
                   child: EdgeFade(
                     topFadeHeight: 24,
                     bottomFadeHeight: 140,
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(
+                      padding: ( const EdgeInsets.fromLTRB(
                         AppTheme.screenMargin,
                         20,
                         AppTheme.screenMargin,
                         140,
-                      ),
+                      )).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
                       children: [
                         if (guestMode) ...[
                           const Align(alignment: Alignment.centerLeft, child: GuestEventsPill()),

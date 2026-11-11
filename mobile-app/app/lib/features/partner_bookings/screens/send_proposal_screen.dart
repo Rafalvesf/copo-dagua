@@ -171,9 +171,9 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
   Widget build(BuildContext context) {
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
           PageHeader(
             title: 'Enviar proposta',
             subtitle: 'Para ${widget.booking.clientName}',

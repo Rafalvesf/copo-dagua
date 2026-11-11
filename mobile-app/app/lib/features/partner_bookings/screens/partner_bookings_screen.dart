@@ -68,10 +68,10 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
       background: AppBackground.subtle,
       body: Stack(
         children: [
-          SafeArea(
+          SafeArea(top: false, 
             bottom: false,
             child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
                 const PageHeader(title: 'Pedidos', centered: true, showBack: false)
  ],
  body: bookingsAsync.when(

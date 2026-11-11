@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'shared/widgets/keep_field_visible.dart';
+import 'shared/widgets/safe_top.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'core/pending_deep_link.dart';
 import 'core/invite/public_invite.dart' show PendingInvite;
@@ -95,7 +96,7 @@ class CopoDaguaApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: router,
-      builder: (context, child) => PhoneFrame(child: BrindeGate(child: KeepFieldVisible(child: child ?? const SizedBox.shrink()))),
+      builder: (context, child) => PhoneFrame(child: BrindeGate(child: SafeTop(child: KeepFieldVisible(child: child ?? const SizedBox.shrink())))),
     );
   }
 }

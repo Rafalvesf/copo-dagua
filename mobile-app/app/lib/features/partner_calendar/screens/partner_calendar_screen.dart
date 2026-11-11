@@ -35,10 +35,10 @@ class _PartnerCalendarScreenState
 
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
         child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
             const PageHeader(title: 'Calendário', centered: true),
             const SizedBox(height: 18)
  ],

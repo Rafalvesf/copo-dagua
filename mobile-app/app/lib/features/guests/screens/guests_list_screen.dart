@@ -102,12 +102,12 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
-                SafeArea(
+                SafeArea(top: false, 
                   bottom: false,
                   // A página inteira desliza, como no Orçamento e nos Lugares
                   // (pedido 2026-11-08): cabeçalho e cartão sobem com a lista.
                   child: CustomScrollView(
-                    slivers: [
+                    slivers: [SliverToBoxAdapter(child: SizedBox(height: MediaQuery.paddingOf(context).top)),
                       SliverToBoxAdapter(child: Column(children: [
                       PageHeader(
                         title: 'Convidados',

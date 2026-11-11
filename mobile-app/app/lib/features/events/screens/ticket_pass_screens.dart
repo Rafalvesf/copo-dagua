@@ -86,9 +86,9 @@ class TicketPassScreen extends StatelessWidget {
     final size = (w - 2 * AppTheme.screenMargin - 48).clamp(180.0, 300.0);
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 40),
+          padding: ( const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
           children: [
             Align(
               alignment: Alignment.centerLeft,

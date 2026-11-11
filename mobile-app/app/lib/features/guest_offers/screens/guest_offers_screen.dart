@@ -36,10 +36,10 @@ class GuestOffersScreen extends ConsumerWidget {
 
     return GradientScaffold(
       gradientOverride: const LinearGradient(colors: [Colors.white, Colors.white]),
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
         child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
             const PageHeader(title: 'Alojamento e transporte', centered: true),
             if (!enabled)
               const Padding(

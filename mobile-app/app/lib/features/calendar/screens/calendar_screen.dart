@@ -53,10 +53,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     return GradientScaffold(
       background: AppBackground.feed,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
         child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
             const PageHeader(
               title: 'Calendário',
               centered: true,

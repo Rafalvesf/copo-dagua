@@ -195,12 +195,12 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
       background: AppBackground.subtle,
       body: Stack(
         children: [
-          SafeArea(
+          SafeArea(top: false, 
             bottom: false,
             child: RefreshIndicator(
               onRefresh: _refresh,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 150),
+                padding: ( const EdgeInsets.fromLTRB(0, 0, 0, 150)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
                 children: [
                   const PageHeader(title: 'Eventos', showBack: false, centered: true),
                   const SizedBox(height: 14),
@@ -934,9 +934,9 @@ class PublicEventScreen extends ConsumerWidget {
     final e = async.value?.where((x) => x.weddingId == id).firstOrNull;
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 40),
+          padding: ( const EdgeInsets.only(bottom: 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
           children: [
             const PageHeader(title: 'Evento', centered: true),
             if (async.isLoading && e == null)
