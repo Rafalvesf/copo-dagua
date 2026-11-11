@@ -287,7 +287,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         child: _ModeTile(
                           icon: Hi.gift,
                           title: 'Lojas',
-                          subtitle: 'Presentes e produtos',
+                          subtitle: 'Comprar presentes',
                           on: _tab == 1,
                           onTap: () => setState(() => _tab = 1),
                         ),
