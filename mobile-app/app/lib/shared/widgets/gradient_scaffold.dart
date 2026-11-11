@@ -95,11 +95,70 @@ class GradientScaffold extends StatelessWidget {
         backgroundColor: Colors.transparent,
         extendBodyBehindAppBar: extendBodyBehindAppBar,
         appBar: appBar,
-        body: body,
+        // Nevoeiro no topo (2026-11-11, "como no Claude"): o conteúdo que
+        // sobe com o scroll desvanece por baixo das horas e da bateria,
+        // em vez de ser cortado a direito.
+        body: _FogBody(color: _topColor, child: body),
         floatingActionButton: floatingActionButton,
         bottomNavigationBar: bottomNavigationBar,
         resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       ),
     );
+  }
+}
+
+/// Nevoeiro no topo (2026-11-11, "como no Claude"): quando a página já
+/// subiu, o conteúdo desvanece por baixo do topo do ecrã (horas, bateria)
+/// em vez de ser cortado a direito. Com a página no início não aparece,
+/// para não tapar o título nem os botões.
+class _FogBody extends StatefulWidget {
+  final Color color;
+  final Widget child;
+  const _FogBody({required this.color, required this.child});
+
+  @override
+  State<_FogBody> createState() => _FogBodyState();
+}
+
+class _FogBodyState extends State<_FogBody> {
+  bool _scrolled = false;
+
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final s = n.metrics.pixels > 6;
+    if (s != _scrolled) setState(() => _scrolled = s);
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = widget.color;
+    return Stack(children: [
+      Positioned.fill(
+        child: NotificationListener<ScrollNotification>(onNotification: _onScroll, child: widget.child),
+      ),
+      Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        height: MediaQuery.paddingOf(context).top + 34,
+        child: IgnorePointer(
+          child: AnimatedOpacity(
+            opacity: _scrolled ? 1 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [c, c.withValues(alpha: 0.85), c.withValues(alpha: 0)],
+                  stops: const [0, 0.4, 1],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ]);
   }
 }

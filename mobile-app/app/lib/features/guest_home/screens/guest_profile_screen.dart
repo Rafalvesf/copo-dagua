@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -48,16 +49,16 @@ class GuestProfileScreen extends ConsumerWidget {
         children: [
           SafeArea(
             bottom: false,
-            child: Column(
-              children: [
+            child: ScrollingHeader(
+ header: [
                 // Ecrã raiz da navbar (Perfil) — sem seta de voltar,
                 // mesma convenção de todos os outros separadores raiz
                 // da app (Chat, Tarefas, Pedidos, "O meu perfil" do
                 // parceiro, Mensagens, Galeria). `trailing` com a roda
                 // de definições mantém a linha de ícones (senão o
                 // título subia, tal como em `gallery_screen.dart`).
-                Expanded(
-                  child: weddingsAsync.when(
+ ],
+ body: weddingsAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider)),
                     data: (weddings) {
@@ -70,9 +71,7 @@ class GuestProfileScreen extends ConsumerWidget {
                       return _GuestProfileBody(weddingId: resolvedWeddingId, profile: profile, onMore: () => _openSettings(context, ref, isCouple));
                     },
                   ),
-                ),
-              ],
-            ),
+),
           ),
         ],
       ),

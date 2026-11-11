@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
@@ -48,11 +49,11 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
         children: [
           SafeArea(
             bottom: false,
-            child: Column(
-              children: [
-                PageHeader(title: 'Programa', centered: true, subtitle: preview ? 'Pré-visualização · como os convidados veem' : null),
-                Expanded(
-                  child: ListView(
+            child: ScrollingHeader(
+ header: [
+                PageHeader(title: 'Programa', centered: true, subtitle: preview ? 'Pré-visualização · como os convidados veem' : null)
+ ],
+ body: ListView(
                     padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 120),
                     children: [
                       // Redesign 2026-10-19 (canvas "Convidado — programa
@@ -122,9 +123,7 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                       ],
                     ],
                   ),
-                ),
-              ],
-            ),
+),
           ),
           if (!preview)
             const Positioned(

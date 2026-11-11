@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -50,8 +51,8 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
         children: [
           SafeArea(
             bottom: false,
-            child: Column(
-              children: [
+            child: ScrollingHeader(
+ header: [
                 const PageHeader(title: 'Mensagens', showBack: false, centered: true),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -62,9 +63,9 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                   ),
                   child: SearchPill(controller: _search, hint: 'Pesquisar conversas'),
                 ),
-                const TeamThreadEntry(),
-                Expanded(
-                  child: conversationsAsync.when(
+                const TeamThreadEntry()
+ ],
+ body: conversationsAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (err, st) => AsyncErrorView(
                       onRetry: () => ref.invalidate(partnerConversationsProvider),
@@ -108,9 +109,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                       );
                     },
                   ),
-                ),
-              ],
-            ),
+),
           ),
           const Positioned(
             left: 0,

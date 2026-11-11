@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import '../../../shared/widgets/snap_carousel.dart';
 import '../../../shared/widgets/dense_card.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
@@ -223,8 +224,8 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
             onNotification: _onScroll,
             child: SafeArea(
             bottom: false,
-            child: Column(
-              children: [
+            child: ScrollingHeader(
+              header: [
                 // Redesign 2026-10: título "Parceiros" com a localização
                 // ao lado direito, na mesma linha.
                 PageHeader(
@@ -293,9 +294,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       ),
                     ]),
                   ),
-                if (_tab == 1 && !widget.selectionMode)
-                  const Expanded(child: GiftShopView(bottomPadding: 190, showListLink: true))
-                else ...[
+                if (!(_tab == 1 && !widget.selectionMode)) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppTheme.screenMargin,
@@ -467,9 +466,12 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
-                  ),
-                Expanded(
-                  child: partnersAsync.when(
+                  )
+                ],
+              ],
+              body: _tab == 1 && !widget.selectionMode
+                  ? const GiftShopView(bottomPadding: 190, showListLink: true)
+                  : partnersAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
                     error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar parceiros.', onRetry: () => ref.invalidate(
@@ -605,9 +607,6 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       );
                     },
                   ),
-                ),
-                ],
-              ],
             ),
           ),
           ),

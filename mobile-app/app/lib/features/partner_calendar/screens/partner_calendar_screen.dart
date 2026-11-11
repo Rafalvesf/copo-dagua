@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -36,12 +37,12 @@ class _PartnerCalendarScreenState
       background: AppBackground.subtle,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
+        child: ScrollingHeader(
+ header: [
             const PageHeader(title: 'Calendário', centered: true),
-            const SizedBox(height: 18),
-            Expanded(
-              child: bookingsAsync.when(
+            const SizedBox(height: 18)
+ ],
+ body: bookingsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerBookingsProvider(null))),
                 data: (bookings) {
@@ -106,9 +107,7 @@ class _PartnerCalendarScreenState
                   );
                 },
               ),
-            ),
-          ],
-        ),
+),
       ),
     );
   }

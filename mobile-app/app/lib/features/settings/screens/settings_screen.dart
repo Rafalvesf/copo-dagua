@@ -4,6 +4,7 @@ import '../../../core/notifications/push.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/gradient_scaffold.dart';
 import '../../../core/wedding/organizers.dart' show myWeddingPermsProvider;
 import '../../../core/events/events_providers.dart';
 import 'package:flutter/services.dart';
@@ -70,8 +71,8 @@ class _SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _pageBackground,
+    return GradientScaffold(
+      gradientOverride: const LinearGradient(colors: [_pageBackground, _pageBackground]),
       body: SafeArea(
         bottom: false,
         child: ListView(

@@ -1532,8 +1532,8 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           child: Container(
             width: 48,
             height: 48,
-            decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
-            child: Icon(icon, color: AppTheme.ink),
+            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+            child: Icon(icon, color: Colors.white),
           ),
         ),
       );

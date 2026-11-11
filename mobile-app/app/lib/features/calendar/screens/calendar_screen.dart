@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/checklist/checklist_controller.dart';
@@ -54,16 +55,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       background: AppBackground.feed,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
+        child: ScrollingHeader(
+ header: [
             const PageHeader(
               title: 'Calendário',
               centered: true,
               subtitle: 'As reuniões e prazos do vosso casamento.',
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: SingleChildScrollView(
+            const SizedBox(height: 16)
+ ],
+ body: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(
                   AppTheme.screenMargin,
                   0,
@@ -113,9 +114,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
+),
       ),
     );
   }

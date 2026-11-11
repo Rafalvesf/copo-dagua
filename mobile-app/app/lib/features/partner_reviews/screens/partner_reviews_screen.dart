@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
@@ -91,16 +92,16 @@ class PartnerReviewsScreen extends ConsumerWidget {
       background: AppBackground.feed,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
+        child: ScrollingHeader(
+ header: [
             PageHeader(
               title: 'Avaliações',
               subtitle: 'O que os clientes dizem sobre ti.',
               trailing: const AccountSwitcherBadge(),
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: reviewsAsync.when(
+            const SizedBox(height: 12)
+ ],
+ body: reviewsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerReviewsProvider)),
                 data: (reviews) => ListView(
@@ -142,9 +143,7 @@ class PartnerReviewsScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
+),
       ),
     );
   }

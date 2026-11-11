@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -69,11 +70,11 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
         children: [
           SafeArea(
             bottom: false,
-            child: Column(
-              children: [
-                const PageHeader(title: 'Pedidos', centered: true, showBack: false),
-                Expanded(
-                  child: bookingsAsync.when(
+            child: ScrollingHeader(
+ header: [
+                const PageHeader(title: 'Pedidos', centered: true, showBack: false)
+ ],
+ body: bookingsAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
                     error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerBookingsProvider(null))),
@@ -126,9 +127,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                       );
                     },
                   ),
-                ),
-              ],
-            ),
+),
           ),
           Positioned(
             left: 0,

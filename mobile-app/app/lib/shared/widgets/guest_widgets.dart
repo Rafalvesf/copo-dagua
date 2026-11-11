@@ -180,7 +180,8 @@ class CompanionLimitRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget btn(IconData icon, VoidCallback? onTap) => Material(
-          color: onTap == null ? const Color(0xFFF2F0EB) : const Color(0xFFEEF2E9),
+          // Botões pretos com ícone branco (2026-11-11: "botões claros").
+          color: onTap == null ? const Color(0xFFE4E1D8) : const Color(0xFF171713),
           shape: const CircleBorder(),
           child: InkWell(
             customBorder: const CircleBorder(),
@@ -188,7 +189,7 @@ class CompanionLimitRow extends StatelessWidget {
             child: SizedBox(
               width: 38,
               height: 38,
-              child: Icon(icon, size: 20, color: onTap == null ? const Color(0xFFB5B0A6) : const Color(0xFF4F6B4A)),
+              child: Icon(icon, size: 20, color: onTap == null ? const Color(0xFFB5B0A6) : Colors.white),
             ),
           ),
         );

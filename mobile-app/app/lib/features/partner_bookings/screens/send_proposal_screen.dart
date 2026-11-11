@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import '../../../shared/widgets/vat_confirm.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -171,14 +172,14 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
-        child: Column(
-          children: [
+        child: ScrollingHeader(
+ header: [
           PageHeader(
             title: 'Enviar proposta',
             subtitle: 'Para ${widget.booking.clientName}',
-          ),
-          Expanded(
-            child: SingleChildScrollView(
+          )
+ ],
+ body: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -244,9 +245,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
             ],
           ),
             ),
-          ),
-          ],
-        ),
+),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -96,8 +97,10 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: ListView(
+Expanded(child: ScrollingHeader(
+ header: [
+ ],
+ body: ListView(
                 padding: const EdgeInsets.fromLTRB(28, 20, 28, 24),
                 children: [
                   // Canvas "Parceiro — pedido (redesign)".
@@ -187,7 +190,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                   ],
                 ],
               ),
-            ),
+)),
             Container(
               padding: const EdgeInsets.fromLTRB(28, 14, 28, 24),
               child: Column(

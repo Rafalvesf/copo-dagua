@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,13 +39,15 @@ class SupportScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
+Expanded(child: ScrollingHeader(
+ header: [
             const PageHeader(
               title: 'Falar com a equipa',
               subtitle: 'Os vossos pedidos de ajuda.',
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ticketsAsync.when(
+            const SizedBox(height: 16)
+ ],
+ body: ticketsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(coupleSupportTicketsProvider)),
                 data: (tickets) {
@@ -75,7 +78,7 @@ class SupportScreen extends ConsumerWidget {
                   );
                 },
               ),
-            ),
+)),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppTheme.screenMargin,
