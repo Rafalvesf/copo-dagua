@@ -336,7 +336,7 @@ class _PosterCard extends StatelessWidget {
         ? null
         : '${_weekdaysShort[date.weekday - 1]} ${date.day} ${_monthsShort[date.month - 1]}${e.time?.isNotEmpty == true ? ' · ${e.time}' : ''}';
     final price = e.isPaid ? e.priceLabel.replaceAll(' por pessoa', '') : 'Grátis';
-    final cta = e.mine ? 'O teu evento' : (e.joined ? 'Abrir' : 'Ver');
+    final cta = e.mine ? 'O teu evento' : (e.joined ? 'Abrir' : 'Ver evento');
     return SnappyTap(
       onTap: onTap ?? () {},
       child: Container(
@@ -659,12 +659,16 @@ final _orgSummaryProvider = FutureProvider.autoDispose.family<_OrgSummary, Strin
 /// oferecer um presente.
 class _GuestSteps {
   final bool answered;
+  final bool declined;
+  final bool hasMenu;
   final bool hasGifts;
   final bool gave;
-  const _GuestSteps({this.answered = true, this.hasGifts = false, this.gave = false});
+  const _GuestSteps({this.answered = true, this.declined = false, this.hasMenu = true, this.hasGifts = false, this.gave = false});
 
+  // Presença, menu e presente com o visto verde (mockup 2026-11-11).
   List<(String, String, bool)> get steps => [
         ('rsvp', 'Presença', answered),
+        if (!declined) ('menu', 'Menu', hasMenu),
         if (hasGifts) ('gift', 'Presente', gave),
       ];
 }
@@ -681,7 +685,7 @@ final _guestStepsProvider = FutureProvider.autoDispose.family<_GuestSteps, Strin
   }
 
   final r = await Future.wait([
-    safe(supabase.from('guests').select('rsvp_status').eq('wedding_id', id).eq('linked_profile_id', me).limit(1)),
+    safe(supabase.from('guests').select('rsvp_status, menu_selection').eq('wedding_id', id).eq('linked_profile_id', me).limit(1)),
     safe(supabase.rpc('gift_list', params: {'p_wedding': id})),
     safe(supabase.from('gift_claims').select('id').eq('wedding_id', id).eq('guest_id', me).limit(1)),
     safe(supabase.from('gift_envelopes').select('id').eq('wedding_id', id).eq('guest_profile_id', me).limit(1)),
@@ -690,6 +694,8 @@ final _guestStepsProvider = FutureProvider.autoDispose.family<_GuestSteps, Strin
   final row = r[0].isEmpty ? null : r[0].first as Map<String, dynamic>;
   return _GuestSteps(
     answered: row == null || row['rsvp_status'] != 'pending',
+    declined: row == null || row['rsvp_status'] == 'declined',
+    hasMenu: (row?['menu_selection'] as String?)?.isNotEmpty == true,
     hasGifts: r[1].isNotEmpty,
     gave: r[2].isNotEmpty || r[3].isNotEmpty || r[4].isNotEmpty,
   );
@@ -865,8 +871,16 @@ class _InvitedEventCard extends ConsumerWidget {
               if (showAlert) ...[
                 const SizedBox(height: 10),
                 AlertStrip(
-                  text: next!.$1 == 'rsvp' ? 'Diz se vais' : 'Escolhe um presente',
-                  cta: next!.$1 == 'rsvp' ? 'Responder' : 'Ver',
+                  text: switch (next!.$1) {
+                    'rsvp' => 'Diz se vais',
+                    'menu' => 'Escolhe o teu menu',
+                    _ => 'Escolhe um presente',
+                  },
+                  cta: switch (next!.$1) {
+                    'rsvp' => 'Responder',
+                    'menu' => 'Escolher',
+                    _ => 'Ver',
+                  },
                   onTap: () {
                     ref.read(_seenAlertsProvider.notifier).add(alertKey!);
                     context.go(open);
