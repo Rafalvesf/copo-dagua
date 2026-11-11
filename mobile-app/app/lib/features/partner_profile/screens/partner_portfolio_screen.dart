@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -180,7 +181,7 @@ class _RequirementBanner extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            complete ? Icons.check_circle : Icons.info_outline,
+            complete ? Hi.checkCircle : Hi.informationCircle,
             size: 18,
             color: AppTheme.ink,
           ),
@@ -244,7 +245,7 @@ class _PortfolioTile extends StatelessWidget {
             Container(
               color: AppTheme.ink,
               alignment: Alignment.center,
-              child: const Icon(Icons.play_circle_outline, color: Colors.white, size: 40),
+              child: const Icon(Hi.playCircle, color: Colors.white, size: 40),
             )
           else
             SizedNetworkImage(
@@ -263,7 +264,7 @@ class _PortfolioTile extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                child: const Icon(Icons.close, size: 16, color: Colors.white),
+                child: const Icon(Hi.xMark, size: 16, color: Colors.white),
               ),
             ),
           ),

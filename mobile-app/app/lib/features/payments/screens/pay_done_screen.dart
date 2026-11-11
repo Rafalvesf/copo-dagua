@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -80,7 +81,7 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProvider
                   child: IconButton(
                     tooltip: 'Fechar',
                     onPressed: () => context.go(a.primaryRoute),
-                    icon: const Icon(Icons.close_rounded, color: Colors.white),
+                    icon: const Icon(Hi.xMark, color: Colors.white),
                   ),
                 ),
                 const Spacer(flex: 2),
@@ -106,7 +107,7 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProvider
                                   BoxShadow(color: Color(0x33171713), blurRadius: 30, offset: Offset(0, 14)),
                                 ],
                               ),
-                              child: const Icon(Icons.check_rounded, size: 64, color: _green),
+                              child: const Icon(Hi.check, size: 64, color: _green),
                             ),
                           ),
                         ),
@@ -143,12 +144,12 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProvider
                       child: Column(children: [
                         for (final (i, (icon, text)) in (a.lines ?? [
                           (
-                            deposit ? Icons.event_available_outlined : Icons.verified_outlined,
+                            deposit ? Hi.calendarDays : Hi.checkBadge,
                             deposit
                                 ? 'A reserva está confirmada. O restante paga-se até 30 dias antes do evento.'
                                 : 'A reserva está paga na totalidade.',
                           ),
-                          (Icons.receipt_long_outlined, 'Vês este pagamento no Orçamento, em Pagas.'),
+                          (Hi.documentText, 'Vês este pagamento no Orçamento, em Pagas.'),
                         ]).indexed) ...[
                           if (i > 0) const SizedBox(height: 10),
                           _Line(icon: icon, text: text),

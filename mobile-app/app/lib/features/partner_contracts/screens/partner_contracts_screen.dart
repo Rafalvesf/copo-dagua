@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -137,7 +138,7 @@ class PartnerContractsScreen extends ConsumerWidget {
                                 value: euros(total),
                                 suffix: '${list.length} ${list.length == 1 ? 'contrato' : 'contratos'}',
                                 progress: total <= 0 ? 0 : paid / total,
-                                doodles: const [Icons.description_outlined, Icons.favorite_border, Icons.auto_awesome_outlined],
+                                doodles: const [Hi.documentText, Hi.heartOutline, Hi.sparkles],
                                 footer: Wrap(spacing: 8, runSpacing: 8, children: [
                                   HeroPill('Recebido ${euros(paid)}', solid: true),
                                   HeroPill('Falta ${euros((total - paid).clamp(0, double.infinity))}'),
@@ -253,7 +254,7 @@ class _ContractCard extends StatelessWidget {
                     Navigator.of(sheet).pop();
                     context.go('/partner-messages');
                   },
-                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                  icon: const Icon(Hi.chatBubbleOvalLeft, size: 18),
                   label: const Text('Falar com o cliente'),
                 ),
               ],
@@ -276,7 +277,7 @@ class _Empty extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const StickerIcon(Icons.description_outlined, size: 96, turns: -0.016),
+            const StickerIcon(Hi.documentText, size: 96, turns: -0.016),
             const SizedBox(height: 24),
             const Text(
               'Ainda sem contratos',

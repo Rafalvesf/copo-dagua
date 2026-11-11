@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
@@ -63,7 +64,7 @@ class _PushOptInCardState extends State<PushOptInCard> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(Icons.notifications_active_outlined, color: AppTheme.accentOliveDark),
+        Icon(Hi.bellAlert, color: AppTheme.accentOliveDark),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

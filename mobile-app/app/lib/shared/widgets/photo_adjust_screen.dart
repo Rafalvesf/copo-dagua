@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -69,7 +70,7 @@ class _PhotoAdjustScreenState extends State<_PhotoAdjustScreen> {
                   IconButton(
                     tooltip: 'Fechar',
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: const Icon(Hi.xMark, color: Colors.white),
                   ),
                   const Spacer(),
                   const Text(

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../core/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,8 +58,8 @@ class PartnerBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _NavIcon(
-                    icon: Icons.home_outlined,
-                    activeIcon: Icons.home_rounded,
+                    icon: Hi.home,
+                    activeIcon: Hi.home,
                     active: current == PartnerTab.home,
                     onTap: () => context.go('/partner-home'),
                     label: 'Início',
@@ -68,8 +69,8 @@ class PartnerBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _NavIcon(
-                    icon: Icons.inbox_outlined,
-                    activeIcon: Icons.inbox_rounded,
+                    icon: Hi.inbox,
+                    activeIcon: Hi.inbox,
                     active: current == PartnerTab.requests,
                     onTap: () => context.go('/partner-requests'),
                     label: 'Pedidos',
@@ -79,8 +80,8 @@ class PartnerBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _NavIcon(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    activeIcon: Icons.chat_bubble_rounded,
+                    icon: Hi.chatBubbleOvalLeft,
+                    activeIcon: Hi.chatBubbleOvalLeft,
                     active: current == PartnerTab.chat,
                     badgeCount: unreadCount,
                     onTap: () => context.go('/partner-messages'),
@@ -91,8 +92,8 @@ class PartnerBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _NavIcon(
-                    icon: Icons.person_outline_rounded,
-                    activeIcon: Icons.person_rounded,
+                    icon: Hi.user,
+                    activeIcon: Hi.user,
                     active: current == PartnerTab.profile,
                     onTap: () => context.go('/partner-profile'),
                     label: 'Perfil',

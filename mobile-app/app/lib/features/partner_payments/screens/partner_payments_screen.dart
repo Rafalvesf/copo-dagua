@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -42,11 +43,11 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
           Text(_eur(s.availableCents),
               style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 12),
-          _SheetRow(icon: Icons.account_balance_outlined, text: 'Para o IBAN •••• ${s.bankLast4 ?? '—'}'),
+          _SheetRow(icon: Hi.buildingLibrary, text: 'Para o IBAN •••• ${s.bankLast4 ?? '—'}'),
           const SizedBox(height: 8),
-          const _SheetRow(icon: Icons.schedule, text: 'Chega em 1 a 3 dias úteis'),
+          const _SheetRow(icon: Hi.clock, text: 'Chega em 1 a 3 dias úteis'),
           const SizedBox(height: 8),
-          const _SheetRow(icon: Icons.money_off_csred_outlined, text: 'Sem custos de levantamento'),
+          const _SheetRow(icon: Hi.banknotes, text: 'Sem custos de levantamento'),
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
@@ -71,13 +72,13 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
           subtitle: '${_eur(p.amountCents)} a caminho do teu IBAN',
           lines: [
             (
-              Icons.event_outlined,
+              Hi.calendar,
               arrival == null
                   ? 'Chega em 1 a 3 dias úteis.'
                   : 'Previsto até ${arrival.day.toString().padLeft(2, '0')}/${arrival.month.toString().padLeft(2, '0')}.',
             ),
-            (Icons.account_balance_outlined, 'IBAN •••• ${s.bankLast4 ?? '—'}'),
-            (Icons.history_rounded, 'Acompanha o estado em Pagamentos › Levantamentos.'),
+            (Hi.buildingLibrary, 'IBAN •••• ${s.bankLast4 ?? '—'}'),
+            (Hi.clock, 'Acompanha o estado em Pagamentos › Levantamentos.'),
           ],
           primaryLabel: 'Ver pagamentos',
           primaryRoute: '/partner-payments',
@@ -183,20 +184,20 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
         GreenHero(
           label: 'RECEBE NA APP',
           value: 'Ativa os pagamentos',
-          doodles: const [Icons.euro_rounded, Icons.auto_awesome_outlined, Icons.favorite_border],
+          doodles: const [Hi.currencyEuro, Hi.sparkles, Hi.heartOutline],
           footer: const Wrap(spacing: 6, runSpacing: 6, children: [
             HeroPill('Sinais pagos na app', solid: true),
             HeroPill('Levantas quando quiseres'),
           ]),
         ),
         const SectionTitle('Como funciona'),
-        const _Step(i: 0, icon: Icons.fact_check_outlined, title: 'Confirma os teus dados',
+        const _Step(i: 0, icon: Hi.clipboardDocumentCheck, title: 'Confirma os teus dados',
             text: 'Identidade, morada e IBAN — pedidos pela Stripe, cerca de 5 minutos.'),
         const SizedBox(height: 10),
-        const _Step(i: 1, icon: Icons.favorite_border, title: 'Os clientes pagam na app',
+        const _Step(i: 1, icon: Hi.heartOutline, title: 'Os clientes pagam na app',
             text: 'O sinal e o restante entram no teu saldo, já sem a taxa de serviço.'),
         const SizedBox(height: 10),
-        const _Step(i: 2, icon: Icons.account_balance_outlined, title: 'Levantas para o IBAN',
+        const _Step(i: 2, icon: Hi.buildingLibrary, title: 'Levantas para o IBAN',
             text: 'Um toque em Levantar e o dinheiro chega em 1 a 3 dias úteis.'),
         const SizedBox(height: 20),
         _PillButton(
@@ -211,7 +212,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
       GreenHero(
         label: 'DISPONÍVEL PARA LEVANTAR',
         value: _eur(s.availableCents),
-        doodles: const [Icons.euro_rounded, Icons.auto_awesome_outlined, Icons.favorite_border],
+        doodles: const [Hi.currencyEuro, Hi.sparkles, Hi.heartOutline],
         footer: Wrap(spacing: 6, runSpacing: 6, children: [
           HeroPill('A chegar ${_eur(s.pendingCents)}', solid: true),
           if (s.bankLast4 != null) HeroPill('IBAN •••• ${s.bankLast4}'),
@@ -228,7 +229,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
                   : s.availableCents > 0
                       ? 'Levantar ${_eur(s.availableCents)}'
                       : 'Sem saldo para levantar',
-          icon: Icons.south_rounded,
+          icon: Hi.arrowDown,
           onPressed: canWithdraw ? () => _withdraw(s) : null,
         )
       else
@@ -236,7 +237,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(22)),
           child: Row(children: [
-            Icon(Icons.autorenew_rounded, color: AppTheme.accentOliveDark),
+            Icon(Hi.arrowPath, color: AppTheme.accentOliveDark),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -249,7 +250,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
       if (s.needsData) ...[
         const SizedBox(height: 14),
         _ActionCard(
-          icon: Icons.priority_high_rounded,
+          icon: Hi.exclamationCircle,
           title: 'A Stripe precisa de mais dados',
           text: 'Completa para não ficares com os pagamentos parados.',
           color: AppColors.yellow,
@@ -274,7 +275,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
         ],
       const SectionTitle('Conta'),
       _ActionCard(
-        icon: Icons.tune_rounded,
+        icon: Hi.adjustmentsHorizontal,
         title: 'Modo de levantamento',
         text: PayoutMode.of(s.payoutSchedule).label,
         color: Colors.white,
@@ -282,7 +283,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
       ),
       const SizedBox(height: 10),
       _ActionCard(
-        icon: Icons.verified_user_outlined,
+        icon: Hi.shieldCheck,
         title: 'Os meus dados na Stripe',
         text: s.needsData ? 'Há dados em falta' : 'Identidade, morada e IBAN confirmados',
         color: Colors.white,
@@ -352,7 +353,7 @@ class _PayoutRow extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: whiteLineCard(),
       child: Row(children: [
-        StickerIcon(Icons.south_rounded, size: 36, turns: StickerIcon.tilt(index)),
+        StickerIcon(Hi.arrowDown, size: 36, turns: StickerIcon.tilt(index)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -422,7 +423,7 @@ class _ActionCard extends StatelessWidget {
                 Text(text, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
               ]),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
+            const Icon(Hi.chevronRight, color: AppTheme.inkMuted),
           ]),
         ),
       );
@@ -512,7 +513,7 @@ class _ModeSheetState extends State<_ModeSheet> {
                 width: _sel == m ? 2 : 1,
               ),
               child: Row(children: [
-                Icon(m == PayoutMode.manual ? Icons.touch_app_outlined : Icons.autorenew_rounded,
+                Icon(m == PayoutMode.manual ? Hi.cursorArrowRays : Hi.arrowPath,
                     color: AppTheme.accentOliveDark),
                 const SizedBox(width: 12),
                 Expanded(

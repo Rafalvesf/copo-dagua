@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -62,7 +63,7 @@ class GuestEventsScreen extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.qr_code_2_rounded, size: 20, color: AppTheme.accentOliveDark),
+                        Icon(Hi.qrCode, size: 20, color: AppTheme.accentOliveDark),
                         SizedBox(width: 10),
                         Text('Tenho um código',
                             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
@@ -137,10 +138,10 @@ class GuestEventCard extends ConsumerWidget {
           children: [
             wedding.coverPhotoUrl == null
                 ? StickerIcon(switch (wedding.eventType) {
-                    EventType.wedding => Icons.favorite_border,
-                    EventType.birthday => Icons.cake_outlined,
-                    EventType.baptism => Icons.water_drop_outlined,
-                    _ => Icons.celebration_outlined,
+                    EventType.wedding => Hi.heartOutline,
+                    EventType.birthday => Hi.cake,
+                    EventType.baptism => Hi.sparkles,
+                    _ => Hi.sparkles,
                   }, turns: StickerIcon.tilt(wedding.weddingId.hashCode))
                 : ClipRRect(
                     borderRadius: BorderRadius.circular(14),

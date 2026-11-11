@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -178,7 +179,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                   _GroupedCard(
                     rows: [
                       _InfoRow(
-                        icon: Icons.sell_outlined,
+                        icon: Hi.tag,
                         label: 'Nome do negócio',
                         value: _profile.businessName?.isEmpty ?? true
                             ? '—'
@@ -193,7 +194,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                         ),
                       ),
                       _InfoRow(
-                        icon: Icons.camera_alt_outlined,
+                        icon: Hi.camera,
                         label: 'Categoria (até 5)',
                         value: _profile.categoryLabels.isEmpty
                             ? '—'
@@ -202,7 +203,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                         onTap: _editCategories,
                       ),
                       _InfoRow(
-                        icon: Icons.description_outlined,
+                        icon: Hi.documentText,
                         label: 'Descrição',
                         value: _profile.businessDescription?.isEmpty ?? true
                             ? '—'
@@ -216,7 +217,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                         ),
                       ),
                       _InfoRow(
-                        icon: Icons.place_outlined,
+                        icon: Hi.mapPin,
                         label: 'Localização',
                         value: ref.watch(partnerLocationProvider).maybeWhen(
                               data: (l) => l == null || l.isEmpty ? 'Adicionar morada' : l.summary,
@@ -226,7 +227,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                         onTap: () => context.push('/partner-location'),
                       ),
                       _InfoRow(
-                        icon: Icons.radar_outlined,
+                        icon: Hi.signal,
                         label: 'Área de serviço',
                         value: serviceAreas.isEmpty ? '—' : serviceAreas,
                         editable: true,
@@ -243,7 +244,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                         ),
                       ),
                       _InfoRow(
-                        icon: Icons.star_border_rounded,
+                        icon: Hi.starOutline,
                         label: 'Anos de experiência',
                         value: _profile.yearsExperience == null
                             ? '—'
@@ -266,7 +267,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                           _profile.categoryLabels.isEmpty ? null : _profile.categoryLabels.first,
                         );
                         return _InfoRow(
-                          icon: Icons.tag_rounded,
+                          icon: Hi.hashtag,
                           label: figure.question,
                           value: _profile.keyFigure == null ? '—' : figure.format(_profile.keyFigure!),
                           editable: true,
@@ -281,7 +282,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                         );
                       }),
                       _InfoRow(
-                        icon: Icons.language,
+                        icon: Hi.language,
                         label: 'Website',
                         value: (_profile.website == null ||
                                 _profile.website!.isEmpty)
@@ -296,7 +297,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                         ),
                       ),
                       _InfoRow(
-                        icon: Icons.camera_outlined,
+                        icon: Hi.camera,
                         label: 'Instagram',
                         value: _profile.instagram ?? '—',
                         editable: true,
@@ -308,7 +309,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                         ),
                       ),
                       _InfoRow(
-                        icon: Icons.call_outlined,
+                        icon: Hi.phone,
                         label: 'Telefone profissional',
                         value: _profile.phone ?? '—',
                         editable: true,
@@ -320,7 +321,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                         ),
                       ),
                       _InfoRow(
-                        icon: Icons.mail_outline,
+                        icon: Hi.envelope,
                         label: 'Email de contacto',
                         value: _profile.contactEmail ?? '—',
                         editable: true,
@@ -490,7 +491,7 @@ class _InfoRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Icon(
-              editable ? Icons.edit_outlined : Icons.chevron_right_rounded,
+              editable ? Hi.pencil : Hi.chevronRight,
               size: editable ? 16 : 20,
               color: AppTheme.inkMuted,
             ),

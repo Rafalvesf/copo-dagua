@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,7 +29,7 @@ class GuestEventsPill extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.menu_rounded, size: 20, color: AppTheme.ink),
+              const Icon(Hi.bars3, size: 20, color: AppTheme.ink),
               const SizedBox(width: 8),
               Text(
                 count > 1 ? 'Os meus eventos ($count)' : 'Os meus eventos',

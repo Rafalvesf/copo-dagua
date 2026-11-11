@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/guest_offers/guest_offers.dart';
@@ -20,7 +21,7 @@ BoxDecoration offerCardDecoration({Color? border}) => BoxDecoration(
     );
 
 IconData offerIcon(GuestOfferKind kind) =>
-    kind == GuestOfferKind.lodging ? Icons.hotel_outlined : Icons.directions_bus_outlined;
+    kind == GuestOfferKind.lodging ? Hi.homeModern : Hi.truck;
 
 class ThinProgress extends StatelessWidget {
   final double value;
@@ -88,7 +89,7 @@ class LockedFeatureCard extends StatelessWidget {
       decoration: offerCardDecoration(),
       child: Column(
         children: [
-          const StickerIcon(Icons.lock_outline, size: 48),
+          const StickerIcon(Hi.lockClosed, size: 48),
           const SizedBox(height: 12),
           const Text('Em breve',
               style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),

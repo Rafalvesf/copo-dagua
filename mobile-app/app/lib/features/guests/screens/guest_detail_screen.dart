@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import '../../../core/guest_home/guest_home_providers.dart' show guestCompanionsProvider, ageGroupLabel;
@@ -111,7 +112,7 @@ class _GuestDetailHeader extends ConsumerWidget {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.edit_outlined, size: 16, color: AppTheme.ink),
+                  Icon(Hi.pencil, size: 16, color: AppTheme.ink),
                   SizedBox(width: 6),
                   Text(
                     'Editar',
@@ -124,7 +125,7 @@ class _GuestDetailHeader extends ConsumerWidget {
           const SizedBox(width: 8),
           PopupMenuButton<String>(
             padding: EdgeInsets.zero,
-            icon: const Icon(Icons.more_vert, color: AppTheme.ink),
+            icon: const Icon(Hi.ellipsisVertical, color: AppTheme.ink),
             onSelected: (value) {
               if (value == 'copy_link') _copyInviteLink(context);
             },
@@ -332,7 +333,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             SnappyTap(
               onTap: () => setState(() => _favorited = !_favorited),
               child: Icon(
-                _favorited ? Icons.favorite : Icons.favorite_border,
+                _favorited ? Hi.heart : Hi.heartOutline,
                 color: _favorited ? AppStatusColors.declined : AppTheme.ink,
               ),
             ),
@@ -343,7 +344,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
           children: [
             Expanded(
               child: _ContactActionButton(
-                icon: Icons.chat_bubble_outline,
+                icon: Hi.chatBubbleOvalLeft,
                 label: 'Mensagem',
                 onTap: guest.phone == null
                     ? null
@@ -353,7 +354,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             const SizedBox(width: 10),
             Expanded(
               child: _ContactActionButton(
-                icon: Icons.call_outlined,
+                icon: Hi.phone,
                 label: 'Ligar',
                 onTap: guest.phone == null
                     ? null
@@ -363,7 +364,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             const SizedBox(width: 10),
             Expanded(
               child: _ContactActionButton(
-                icon: Icons.email_outlined,
+                icon: Hi.envelope,
                 label: 'Email',
                 onTap: guest.email == null
                     ? null
@@ -383,7 +384,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
               // Limite de acompanhantes, editável aqui (091), e quem o
               // convidado indicou que traz.
               _InfoRow(
-                icon: Icons.people_outline,
+                icon: Hi.users,
                 label: () {
                   final names = ref.watch(guestCompanionsProvider(guest.id)).asData?.value
                           .map((c) => [
@@ -396,24 +397,24 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
                   final limit = guest.maxCompanions == 0 ? 'Vem sozinho' : 'Pode trazer ${CompanionLimitRow.label(guest.maxCompanions)}';
                   return names.isEmpty ? limit : '$limit · traz ${names.join(', ')}';
                 }(),
-                trailing: const Icon(Icons.chevron_right, color: AppTheme.inkMuted),
+                trailing: const Icon(Hi.chevronRight, color: AppTheme.inkMuted),
                 onTap: () => _editCompanionLimit(context, guest),
               ),
               // Menu e restrições vêm do próprio convidado (antes mostrava
               // sempre "Menu normal" quando não havia restrições).
               _InfoRow(
-                icon: Icons.restaurant_outlined,
+                icon: Hi.buildingStorefront,
                 label: guest.menuSelection?.isNotEmpty == true
                     ? 'Menu: ${guest.menuSelection}'
                     : 'Menu por escolher',
               ),
               if (guest.dietaryRestrictions?.isNotEmpty == true)
                 _InfoRow(
-                  icon: Icons.no_food_outlined,
+                  icon: Hi.noSymbol,
                   label: guest.dietaryRestrictions!,
                 ),
               _InfoRow(
-                icon: Icons.edit_note_outlined,
+                icon: Hi.pencilSquare,
                 label: 'Notas',
                 subtitle: guest.notes?.isNotEmpty == true ? guest.notes : 'Toca para adicionar notas privadas',
                 onTap: _editNotes,
@@ -459,7 +460,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.edit_outlined, size: 18, color: AppTheme.ink),
+                Icon(Hi.pencil, size: 18, color: AppTheme.ink),
                 SizedBox(width: 8),
                 Text('Editar convidado', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ],
@@ -480,7 +481,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.delete_outline, size: 18, color: AppStatusColors.declined),
+                Icon(Hi.trash, size: 18, color: AppStatusColors.declined),
                 const SizedBox(width: 8),
                 Text(
                   'Remover convidado',
@@ -500,7 +501,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
       final declined = guest.rsvpStatus == RsvpStatus.declined;
       entries.add(
         _HistoryEntry(
-          icon: declined ? Icons.cancel : Icons.check_circle,
+          icon: declined ? Hi.xCircle : Hi.checkCircle,
           color: declined ? AppStatusColors.declined : AppStatusColors.confirmed,
           label: declined ? 'Recusou o convite' : 'Confirmou presença',
           time: guest.rsvpRespondedAt!,
@@ -510,7 +511,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
     if (guest.inviteSentAt != null) {
       entries.add(
         _HistoryEntry(
-          icon: Icons.mail_outline,
+          icon: Hi.envelope,
           color: AppTheme.inkMuted,
           label: 'Convite enviado',
           time: guest.inviteSentAt!,
@@ -520,7 +521,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
     if (guest.createdAt != null) {
       entries.add(
         _HistoryEntry(
-          icon: Icons.person_add_alt_outlined,
+          icon: Hi.userPlus,
           color: AppTheme.inkMuted,
           label: 'Convidado adicionado',
           time: guest.createdAt!,

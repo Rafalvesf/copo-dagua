@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -49,7 +50,7 @@ class EnvelopesScreen extends ConsumerWidget {
                 label: 'ENVELOPES',
                 value: envelopeEuros(total),
                 suffix: '${list.length} ${list.length == 1 ? 'envelope' : 'envelopes'}',
-                doodles: const [Icons.mail_outline_rounded, Icons.favorite_border, Icons.card_giftcard_outlined],
+                doodles: const [Hi.envelope, Hi.heartOutline, Hi.gift],
                 footer: Wrap(spacing: 8, runSpacing: 8, children: [
                   HeroPill('${envelopeEuros(received)} confirmado', solid: true),
                   if (toThank > 0) HeroPill('$toThank por agradecer'),

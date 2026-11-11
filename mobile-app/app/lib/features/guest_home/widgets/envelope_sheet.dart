@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -102,7 +103,7 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
                     Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ]),
                 ),
-                Icon(Icons.copy_rounded, size: 18, color: AppTheme.accentOliveDark, semanticLabel: 'Copiar $what'),
+                Icon(Hi.documentDuplicate, size: 18, color: AppTheme.accentOliveDark, semanticLabel: 'Copiar $what'),
               ]),
             ),
           ),
@@ -122,7 +123,7 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
         ),
         const SizedBox(height: 14),
         Row(children: [
-          Icon(Icons.mail_outline_rounded, color: green),
+          Icon(Hi.envelope, color: green),
           const SizedBox(width: 8),
           Expanded(
             child: Text(_step2 ? 'Faz a transferência' : 'Envelope digital',

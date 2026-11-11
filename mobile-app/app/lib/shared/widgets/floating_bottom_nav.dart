@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../core/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,8 +76,8 @@ class FloatingBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _NavIcon(
-                    icon: Icons.spa_outlined,
-                    activeIcon: Icons.spa_rounded,
+                    icon: Hi.sparkles,
+                    activeIcon: Hi.sparkles,
                     active: current == AppTab.partners,
                     accent: menuColor.color,
                     onAccent: menuColor.on,
@@ -89,8 +90,8 @@ class FloatingBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _NavIcon(
-                    icon: Icons.explore_outlined,
-                    activeIcon: Icons.explore_rounded,
+                    icon: Hi.globeEuropeAfrica,
+                    activeIcon: Hi.globeEuropeAfrica,
                     // O painel de cada evento abre a partir de Eventos
                     // (separador "O meu evento" retirado, 2026-11-10).
                     active: current == AppTab.events || current == AppTab.wedding,
@@ -104,8 +105,8 @@ class FloatingBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _NavIcon(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    activeIcon: Icons.chat_bubble_rounded,
+                    icon: Hi.chatBubbleOvalLeft,
+                    activeIcon: Hi.chatBubbleOvalLeft,
                     active: current == AppTab.chat,
                     accent: menuColor.color,
                     onAccent: menuColor.on,
@@ -118,8 +119,8 @@ class FloatingBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _NavIcon(
-                    icon: Icons.person_outline_rounded,
-                    activeIcon: Icons.person_rounded,
+                    icon: Hi.user,
+                    activeIcon: Hi.user,
                     active: current == AppTab.home,
                     accent: menuColor.color,
                     onAccent: menuColor.on,

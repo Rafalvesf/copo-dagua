@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/events/event_pass.dart' show myEventPassProvider;
@@ -85,7 +86,7 @@ class GroupsScreen extends ConsumerWidget {
                                   width: 48,
                                   height: 48,
                                   decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
-                                  child: Icon(Icons.groups_rounded, color: AppTheme.accentOliveDark),
+                                  child: Icon(Hi.userGroup, color: AppTheme.accentOliveDark),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -131,7 +132,7 @@ class _Empty extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.groups_rounded, size: 56, color: AppTheme.accentOliveDark),
+            Icon(Hi.userGroup, size: 56, color: AppTheme.accentOliveDark),
             const SizedBox(height: 12),
             Text(title, style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 6),
@@ -213,7 +214,7 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
                 if (others.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.all(16),
-                    child: InfoNote('Ainda não há convidados com conta neste evento.', icon: Icons.info_outline_rounded),
+                    child: InfoNote('Ainda não há convidados com conta neste evento.', icon: Hi.informationCircle),
                   );
                 }
                 return ListView(children: [
@@ -309,13 +310,13 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
             ),
             TextButton.icon(
               onPressed: () => Navigator.of(context).pop('add'),
-              icon: const Icon(Icons.person_add_alt_1_rounded),
+              icon: const Icon(Hi.userPlus),
               label: const Text('Adicionar pessoas'),
             ),
             TextButton.icon(
               onPressed: () => Navigator.of(context).pop('leave'),
               style: TextButton.styleFrom(foregroundColor: const Color(0xFFA3412E)),
-              icon: const Icon(Icons.logout_rounded),
+              icon: const Icon(Hi.arrowRightStartOnRectangle),
               label: const Text('Sair do grupo'),
             ),
           ]),

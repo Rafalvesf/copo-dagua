@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,8 +39,8 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
             padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 8),
             child: SegmentedButton<int>(
               segments: [
-                const ButtonSegment(value: 0, label: Text('Produtos'), icon: Icon(Icons.inventory_2_outlined)),
-                ButtonSegment(value: 1, label: Text(toShip > 0 ? 'Encomendas ($toShip)' : 'Encomendas'), icon: const Icon(Icons.local_shipping_outlined)),
+                const ButtonSegment(value: 0, label: Text('Produtos'), icon: Icon(Hi.archiveBox)),
+                ButtonSegment(value: 1, label: Text(toShip > 0 ? 'Encomendas ($toShip)' : 'Encomendas'), icon: const Icon(Hi.truck)),
               ],
               selected: {_tab},
               onSelectionChanged: (s) => setState(() => _tab = s.first),
@@ -82,7 +83,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                           }),
                           FilledButton.icon(
                             onPressed: () => _edit(context, null),
-                            icon: const Icon(Icons.add_rounded),
+                            icon: const Icon(Hi.plus),
                             label: const Text('Novo produto'),
                             style: FilledButton.styleFrom(backgroundColor: green, minimumSize: const Size.fromHeight(48), shape: const StadiumBorder()),
                           ),
@@ -99,7 +100,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                                   leading: ClipRRect(
                                     borderRadius: BorderRadius.circular(10),
                                     child: p.photoUrl == null
-                                        ? Container(width: 52, height: 52, color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, color: green))
+                                        ? Container(width: 52, height: 52, color: AppTheme.accentTint, child: Icon(Hi.gift, color: green))
                                         : Image.network(p.photoUrl!, width: 52, height: 52, fit: BoxFit.cover, cacheWidth: 156),
                                   ),
                                   title: Text(p.title, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -110,7 +111,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                                       if (!p.active) 'escondido',
                                     ].join(' · '),
                                   ),
-                                  trailing: const Icon(Icons.chevron_right),
+                                  trailing: const Icon(Hi.chevronRight),
                                   onTap: () => _edit(context, p),
                                 ),
                               ),
@@ -177,7 +178,7 @@ class _Orders extends ConsumerWidget {
                 const SizedBox(height: 10),
                 if (o.shippedAt != null)
                   Row(children: [
-                    Icon(Icons.check_circle_rounded, size: 18, color: green),
+                    Icon(Hi.checkCircle, size: 18, color: green),
                     const SizedBox(width: 6),
                     Text('Enviado', style: TextStyle(fontWeight: FontWeight.w700, color: green)),
                   ])
@@ -193,7 +194,7 @@ class _Orders extends ConsumerWidget {
                         }
                       }
                     },
-                    icon: const Icon(Icons.local_shipping_outlined, size: 18),
+                    icon: const Icon(Hi.truck, size: 18),
                     label: const Text('Marcar como enviado'),
                     style: FilledButton.styleFrom(backgroundColor: green, shape: const StadiumBorder()),
                   ),
@@ -320,7 +321,7 @@ class _ProductSheetState extends ConsumerState<_ProductSheet> {
                       height: 140,
                       color: AppTheme.accentTint,
                       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.add_a_photo_outlined, color: green),
+                        Icon(Hi.camera, color: green),
                         const SizedBox(height: 6),
                         const Text('Foto', style: TextStyle(color: AppTheme.ink)),
                       ]),

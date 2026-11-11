@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -196,7 +197,7 @@ const _copy = {
     second: 'Convidar quem organiza contigo',
     secondSub: 'Partilhem tarefas, convidados e orçamento',
     secondCta: 'Convidar',
-    secondIcon: Icons.person_add_alt_outlined,
+    secondIcon: Hi.userPlus,
     finalCta: 'Começar a organizar',
   ),
   TourRole.partner: _Copy(
@@ -212,7 +213,7 @@ const _copy = {
     second: 'Ativar pagamentos',
     secondSub: 'Sem isto não podes receber sinais',
     secondCta: 'Ativar',
-    secondIcon: Icons.account_balance_wallet_outlined,
+    secondIcon: Hi.wallet,
     finalCta: 'Ir para o painel',
   ),
   TourRole.guest: _Copy(
@@ -228,7 +229,7 @@ const _copy = {
     second: 'Confirmar presença',
     secondSub: 'Os anfitriões agradecem saber cedo',
     secondCta: 'Confirmar',
-    secondIcon: Icons.check_rounded,
+    secondIcon: Hi.check,
     finalCta: 'Ver o evento',
   ),
 };
@@ -406,7 +407,7 @@ class _TourOverlayState extends State<_TourOverlay> {
             width: 52,
             height: 52,
             decoration: BoxDecoration(color: AppTheme.accentTint, shape: BoxShape.circle),
-            child: Icon(Icons.celebration_outlined, color: AppTheme.accentOliveDark),
+            child: Icon(Hi.sparkles, color: AppTheme.accentOliveDark),
           ),
           const SizedBox(height: 14),
           Text(_c.welcomeTitle, style: const TextStyle(fontSize: AppFontSize.xl + 4, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -462,7 +463,7 @@ class _TourOverlayState extends State<_TourOverlay> {
         const SizedBox(height: 14),
         if (showPush) ...[
           _actionRow(
-            icon: Icons.notifications_active_outlined,
+            icon: Hi.bellAlert,
             title: 'Ativar notificações',
             sub: _push == PushStatus.iosInstall
                 ? 'No iPhone, adiciona a app ao ecrã principal primeiro'

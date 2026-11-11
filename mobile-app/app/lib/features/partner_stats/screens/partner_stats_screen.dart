@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -141,7 +142,7 @@ class _Dashboard extends StatelessWidget {
           GreenHero(
             label: 'RECEITA · RESERVAS CONFIRMADAS',
             value: _eur(a.revenue),
-            doodles: const [Icons.trending_up_rounded, Icons.euro_rounded, Icons.auto_awesome_outlined],
+            doodles: const [Hi.arrowTrendingUp, Hi.currencyEuro, Hi.sparkles],
             footer: Wrap(spacing: 8, runSpacing: 8, children: [
               if (revenueDelta != null) HeroPill(_pctText(revenueDelta) ?? '', solid: true),
               HeroPill('vs. ${_eur(a.previousRevenue)} antes'),
@@ -284,7 +285,7 @@ class _Dashboard extends StatelessWidget {
             decoration: softCard(),
             child: Row(
               children: [
-                const StickerIcon(Icons.star_border_rounded),
+                const StickerIcon(Hi.starOutline),
                 const SizedBox(width: 12),
                 Text(
                   a.averageRating == null
@@ -306,8 +307,8 @@ class _Dashboard extends StatelessWidget {
                           for (var i = 1; i <= 5; i++)
                             Icon(
                               (a.averageRating ?? 0) >= i - 0.25
-                                  ? Icons.star_rounded
-                                  : Icons.star_outline_rounded,
+                                  ? Hi.star
+                                  : Hi.starOutline,
                               size: 18,
                               color: AppTheme.ink,
                             ),
@@ -377,7 +378,7 @@ class _DeltaLabel extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
-          up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+          up ? Hi.arrowUp : Hi.arrowDown,
           size: fontSize,
           color: color,
         ),
@@ -569,7 +570,7 @@ class _ProInsights extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             decoration: softCard(),
             child: Row(children: [
-              Icon(Icons.lock_outline_rounded, color: green),
+              Icon(Hi.lockClosed, color: green),
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
@@ -577,7 +578,7 @@ class _ProInsights extends ConsumerWidget {
                   style: TextStyle(fontSize: 13.5, height: 1.4, color: AppTheme.ink),
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppTheme.inkMuted),
+              const Icon(Hi.chevronRight, color: AppTheme.inkMuted),
             ]),
           ),
         ),
@@ -603,7 +604,7 @@ class _ProInsights extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(28, 24, 28, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Icon(Icons.workspace_premium_rounded, size: 18, color: green),
+          Icon(Hi.trophy, size: 18, color: green),
           const SizedBox(width: 6),
           const Text('Premium · últimos 30 dias', style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -65,7 +66,7 @@ class TicketPassCard extends StatelessWidget {
                 ),
               ]),
             ),
-            const Icon(Icons.chevron_right, color: Colors.white),
+            const Icon(Hi.chevronRight, color: Colors.white),
           ]),
         ),
       ),
@@ -93,7 +94,7 @@ class TicketPassScreen extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: IconButton(
                 onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Icons.arrow_back_rounded),
+                icon: const Icon(Hi.arrowLeft),
                 tooltip: 'Voltar',
               ),
             ),
@@ -167,32 +168,32 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
             final c = snap.data!;
             final (IconData icon, Color color, String title, String text) = switch (c.result) {
               CheckInResult.ok => (
-                  Icons.check_circle_rounded,
+                  Hi.checkCircle,
                   AppTheme.accentOliveDark,
                   'Entrada válida',
                   '${c.name ?? 'Convidado'} · ${c.quantity == 1 ? '1 pessoa' : '${c.quantity} pessoas'}',
                 ),
               CheckInResult.already => (
-                  Icons.info_rounded,
+                  Hi.informationCircle,
                   const Color(0xFF9A5B00),
                   'Já entrou',
                   '${c.name ?? 'Convidado'} entrou às ${c.at == null ? '—' : _hhmm(c.at!)}.',
                 ),
               CheckInResult.refunded => (
-                  Icons.cancel_rounded,
+                  Hi.xCircle,
                   const Color(0xFFB3261E),
                   'Bilhete reembolsado',
                   'Este bilhete foi reembolsado e já não dá entrada.',
                 ),
-              CheckInResult.notPaid => (Icons.cancel_rounded, const Color(0xFFB3261E), 'Bilhete por pagar', 'O pagamento deste bilhete não foi concluído.'),
-              CheckInResult.notFound => (Icons.cancel_rounded, const Color(0xFFB3261E), 'Bilhete inválido', 'Este código não corresponde a nenhum bilhete.'),
+              CheckInResult.notPaid => (Hi.xCircle, const Color(0xFFB3261E), 'Bilhete por pagar', 'O pagamento deste bilhete não foi concluído.'),
+              CheckInResult.notFound => (Hi.xCircle, const Color(0xFFB3261E), 'Bilhete inválido', 'Este código não corresponde a nenhum bilhete.'),
               CheckInResult.notOrganizer => (
-                  Icons.lock_outline_rounded,
+                  Hi.lockClosed,
                   AppTheme.inkMuted,
                   'Só o organizador',
                   'Só quem organiza o evento, com a permissão de bilhetes e entradas, pode validar. Entra com essa conta.',
                 ),
-              CheckInResult.error => (Icons.wifi_off_rounded, AppTheme.inkMuted, 'Não foi possível validar', 'Verifica a ligação e tenta outra vez.'),
+              CheckInResult.error => (Hi.signalSlash, AppTheme.inkMuted, 'Não foi possível validar', 'Verifica a ligação e tenta outra vez.'),
             };
             return ListView(
               padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 60, AppTheme.screenMargin, 40),

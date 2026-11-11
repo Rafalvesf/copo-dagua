@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -200,12 +201,12 @@ class _GroupsEntry extends StatelessWidget {
             BoxShadow(color: Color(0x14171713), blurRadius: 18, offset: Offset(0, 6)),
           ]),
           child: Row(children: [
-            Icon(Icons.groups_rounded, color: AppTheme.accentOliveDark),
+            Icon(Hi.userGroup, color: AppTheme.accentOliveDark),
             SizedBox(width: 12),
             Expanded(
               child: Text('Grupos do evento', style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
-            Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
+            Icon(Hi.chevronRight, color: AppTheme.inkMuted),
           ]),
         ),
       );

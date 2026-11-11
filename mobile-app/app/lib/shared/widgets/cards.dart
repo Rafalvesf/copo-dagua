@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/models/models.dart';
@@ -97,7 +98,7 @@ class RoleSelectorCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
-            if (selected) Icon(Icons.check_circle, color: colorScheme.primary),
+            if (selected) Icon(Hi.checkCircle, color: colorScheme.primary),
           ],
         ),
       ),

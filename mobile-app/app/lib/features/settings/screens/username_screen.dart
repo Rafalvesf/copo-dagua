@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -91,15 +92,15 @@ class _UsernameScreenState extends ConsumerState<UsernameScreen> {
     }
     final locked = mine != null && mine.username != null && !mine.canChange;
     final (msg, color, icon) = switch (_formatError != null ? 'format' : _status) {
-      'format' => (_formatError!, const Color(0xFFB3261E), Icons.error_outline),
-      'checking' => ('A verificar…', AppTheme.inkMuted, Icons.hourglass_empty_rounded),
-      'ok' => ('Está livre. Fica só teu.', const Color(0xFF3F7A50), Icons.verified_rounded),
-      'mine' => ('É o teu @.', const Color(0xFF3F7A50), Icons.verified_rounded),
-      'taken' => ('Já é de outra conta.', const Color(0xFFB3261E), Icons.block),
-      'reserved' => ('Este @ está reservado.', const Color(0xFFB3261E), Icons.block),
-      'invalid' => ('Este @ não é válido.', const Color(0xFFB3261E), Icons.error_outline),
-      'error' => ('Não foi possível verificar. Tenta outra vez.', const Color(0xFFB3261E), Icons.error_outline),
-      _ => ('', AppTheme.inkMuted, Icons.info_outline),
+      'format' => (_formatError!, const Color(0xFFB3261E), Hi.exclamationCircle),
+      'checking' => ('A verificar…', AppTheme.inkMuted, Hi.clock),
+      'ok' => ('Está livre. Fica só teu.', const Color(0xFF3F7A50), Hi.checkBadge),
+      'mine' => ('É o teu @.', const Color(0xFF3F7A50), Hi.checkBadge),
+      'taken' => ('Já é de outra conta.', const Color(0xFFB3261E), Hi.noSymbol),
+      'reserved' => ('Este @ está reservado.', const Color(0xFFB3261E), Hi.noSymbol),
+      'invalid' => ('Este @ não é válido.', const Color(0xFFB3261E), Hi.exclamationCircle),
+      'error' => ('Não foi possível verificar. Tenta outra vez.', const Color(0xFFB3261E), Hi.exclamationCircle),
+      _ => ('', AppTheme.inkMuted, Hi.informationCircle),
     };
     final canSave = !locked && !_saving && _formatError == null && _status == 'ok';
     return GradientScaffold(

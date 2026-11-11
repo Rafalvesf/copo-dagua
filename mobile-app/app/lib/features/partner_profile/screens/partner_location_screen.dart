@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -158,7 +159,7 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                         children: [
                           _locating
                               ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
-                              : Icon(Icons.my_location, color: AppTheme.accentOliveDark),
+                              : Icon(Hi.viewfinderCircle, color: AppTheme.accentOliveDark),
                           const SizedBox(width: 12),
                           const Expanded(
                             child: Column(
@@ -190,7 +191,7 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                     onChanged: _onSearch,
                     decoration: const InputDecoration(
                       hintText: 'Rua, localidade ou código postal',
-                      prefixIcon: Icon(Icons.search),
+                      prefixIcon: Icon(Hi.magnifyingGlass),
                     ),
                   ),
                   for (final (label, loc) in _results)
@@ -204,7 +205,7 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.place_outlined, size: 20, color: AppTheme.inkMuted),
+                            const Icon(Hi.mapPin, size: 20, color: AppTheme.inkMuted),
                             const SizedBox(width: 10),
                             Expanded(child: Text(label, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.ink))),
                           ],
@@ -229,7 +230,7 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        Icon(Icons.check_circle, size: 16, color: AppTheme.accentOliveDark),
+                        Icon(Hi.checkCircle, size: 16, color: AppTheme.accentOliveDark),
                         const SizedBox(width: 6),
                         Text(
                           'Localização no mapa definida (${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)})',

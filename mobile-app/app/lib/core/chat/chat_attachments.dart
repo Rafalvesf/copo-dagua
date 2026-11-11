@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
@@ -83,10 +84,10 @@ Future<ChatAttachment?> pickChatAttachment(BuildContext context) async {
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-          _AttachOption(icon: Icons.photo_rounded, label: 'Foto', value: 'photo'),
-          _AttachOption(icon: Icons.attach_file_rounded, label: 'Ficheiro', value: 'file'),
-          _AttachOption(icon: Icons.emoji_emotions_outlined, label: 'Sticker', value: 'sticker'),
-          _AttachOption(icon: Icons.gif_box_outlined, label: 'GIF', value: 'gif'),
+          _AttachOption(icon: Hi.photo, label: 'Foto', value: 'photo'),
+          _AttachOption(icon: Hi.paperClip, label: 'Ficheiro', value: 'file'),
+          _AttachOption(icon: Hi.faceSmile, label: 'Sticker', value: 'sticker'),
+          _AttachOption(icon: Hi.gif, label: 'GIF', value: 'gif'),
         ]),
       ]),
     ),
@@ -251,7 +252,7 @@ class _GifPickerState extends State<_GifPicker> {
             controller: _q,
             textInputAction: TextInputAction.search,
             onSubmitted: _search,
-            decoration: const InputDecoration(hintText: 'Pesquisar GIFs', prefixIcon: Icon(Icons.search_rounded)),
+            decoration: const InputDecoration(hintText: 'Pesquisar GIFs', prefixIcon: Icon(Hi.magnifyingGlass)),
           ),
           const SizedBox(height: 10),
           Expanded(
@@ -319,7 +320,7 @@ class ChatAttachmentView extends StatelessWidget {
                 width: maxW,
                 height: 120,
                 color: const Color(0xFFF2F0EB),
-                child: const Icon(Icons.broken_image_outlined, color: AppTheme.inkMuted),
+                child: const Icon(Hi.photo, color: AppTheme.inkMuted),
               ),
             ),
           ),
@@ -338,7 +339,7 @@ class ChatAttachmentView extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.insert_drive_file_outlined, color: isMe ? Colors.white : AppTheme.accentOliveDark),
+          Icon(Hi.document, color: isMe ? Colors.white : AppTheme.accentOliveDark),
           const SizedBox(width: 8),
           Flexible(
             child: Text(name ?? 'Ficheiro',
@@ -347,7 +348,7 @@ class ChatAttachmentView extends StatelessWidget {
                 style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: isMe ? Colors.white : AppTheme.ink)),
           ),
           const SizedBox(width: 6),
-          Icon(Icons.download_rounded, size: 18, color: isMe ? Colors.white : AppTheme.inkMuted),
+          Icon(Hi.arrowDownTray, size: 18, color: isMe ? Colors.white : AppTheme.inkMuted),
         ]),
       ),
     );

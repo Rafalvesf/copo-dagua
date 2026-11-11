@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -79,9 +80,9 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
               : 'A Stripe está a verificar os teus dados.',
           lines: [
             if (!s.active)
-              (Icons.hourglass_top_rounded, 'A verificação costuma demorar minutos, às vezes 1–2 dias úteis.'),
-            if (s.bankLast4 != null) (Icons.account_balance_outlined, 'IBAN terminado em ${s.bankLast4}'),
-            (Icons.payments_outlined, 'Os sinais pagos pelos clientes ficam no teu saldo para levantares.'),
+              (Hi.clock, 'A verificação costuma demorar minutos, às vezes 1–2 dias úteis.'),
+            if (s.bankLast4 != null) (Hi.buildingLibrary, 'IBAN terminado em ${s.bankLast4}'),
+            (Hi.banknotes, 'Os sinais pagos pelos clientes ficam no teu saldo para levantares.'),
           ],
           primaryLabel: 'Ver pagamentos',
           primaryRoute: '/partner-payments',
@@ -132,7 +133,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
           value: '${s.groupsDone}',
           suffix: 'de $total confirmados',
           progress: s.groupsDone / total,
-          doodles: const [Icons.verified_user_outlined, Icons.euro_rounded, Icons.auto_awesome_outlined],
+          doodles: const [Hi.shieldCheck, Hi.currencyEuro, Hi.sparkles],
           footer: Wrap(spacing: 6, runSpacing: 6, children: [
             HeroPill(s.chargesEnabled ? 'Recebe pagamentos · ativo' : 'Recebe pagamentos', solid: s.chargesEnabled),
             HeroPill(s.payoutsEnabled ? 'Levantamentos · ativo' : 'Levantamentos', solid: s.payoutsEnabled),
@@ -176,7 +177,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
                   borderRadius: BorderRadius.circular(7),
                   border: Border.all(color: _agreed ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: 2),
                 ),
-                child: _agreed ? const Icon(Icons.check, size: 15, color: Colors.white) : null,
+                child: _agreed ? const Icon(Hi.check, size: 15, color: Colors.white) : null,
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -274,7 +275,7 @@ class _Note extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Icon(Icons.lock_outline, size: 16, color: AppTheme.inkMuted),
+        const Icon(Hi.lockClosed, size: 16, color: AppTheme.inkMuted),
         const SizedBox(width: 8),
         Expanded(
           child: Text(text, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4)),
@@ -291,7 +292,7 @@ class _Warn extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(color: AppColors.pink, borderRadius: BorderRadius.circular(16)),
         child: Row(children: [
-          const Icon(Icons.error_outline, size: 18, color: Color(0xFFB3261E)),
+          const Icon(Hi.exclamationCircle, size: 18, color: Color(0xFFB3261E)),
           const SizedBox(width: 8),
           Expanded(child: Text(text, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink))),
         ]),

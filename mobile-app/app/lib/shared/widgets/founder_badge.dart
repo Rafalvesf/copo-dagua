@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,7 +22,7 @@ class FounderBadge extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(5, 2, 8, 2),
         decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(999)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.workspace_premium_rounded, size: 13, color: green),
+          Icon(Hi.trophy, size: 13, color: green),
           const SizedBox(width: 3),
           Text(long ? 'Parceiro Fundador' : 'Fundador',
               style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w800, color: green)),

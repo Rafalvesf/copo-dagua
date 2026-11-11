@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -61,7 +62,7 @@ class GuestProfileScreen extends ConsumerWidget {
                     error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider)),
                     data: (weddings) {
                       if (weddings.isEmpty || profile == null) {
-                        return const EmptyStateView(message: 'Ainda sem casamento associado.', icon: Icons.favorite_border);
+                        return const EmptyStateView(message: 'Ainda sem casamento associado.', icon: Hi.heartOutline);
                       }
                       final resolvedWeddingId = weddingId == null
                           ? weddings.first.weddingId
@@ -366,7 +367,7 @@ class _GuestProfileBody extends ConsumerWidget {
                 decoration: softCard(),
                 child: Column(children: [
               _InfoLine(
-                icon: Icons.table_restaurant_outlined,
+                icon: Hi.tableCells,
                 label: 'A tua mesa',
                 value: tableAsync.maybeWhen(data: (t) => t == null ? 'Por atribuir' : 'Mesa $t', orElse: () => '…'),
                 onTap: tableAsync.maybeWhen(data: (t) => t, orElse: () => null) == null
@@ -377,7 +378,7 @@ class _GuestProfileBody extends ConsumerWidget {
               ),
               const Divider(height: 1, thickness: 1, color: Color(0xFFEEF2EC)),
               _InfoLine(
-                icon: Icons.phone_outlined,
+                icon: Hi.phone,
                 label: 'Telemóvel',
                 value: guest.phone?.isNotEmpty == true ? guest.phone! : 'Adicionar',
                 onTap: () => _editField(
@@ -401,7 +402,7 @@ class _GuestProfileBody extends ConsumerWidget {
               const GuestAccountSections()
             else ...[
               const _Caps('Conta'),
-              _InfoLine(icon: Icons.settings_outlined, label: 'Definições do teu evento', value: '', onTap: onMore),
+              _InfoLine(icon: Hi.cog6Tooth, label: 'Definições do teu evento', value: '', onTap: onMore),
             ],
           ],
         );
@@ -419,7 +420,7 @@ class _GuestProfileBody extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.restaurant_outlined),
+              leading: const Icon(Hi.buildingStorefront),
               title: const Text('Menu'),
               subtitle: Text(guest.menuSelection ?? 'Por escolher'),
               onTap: () {
@@ -428,7 +429,7 @@ class _GuestProfileBody extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.no_food_outlined),
+              leading: const Icon(Hi.noSymbol),
               title: const Text('Alergias ou restrições'),
               subtitle: Text(guest.dietaryRestrictions ?? 'Sem alergias'),
               onTap: () {
@@ -539,7 +540,7 @@ class _InfoLine extends StatelessWidget {
           Expanded(child: Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.ink))),
           Text(value, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted)),
           const SizedBox(width: 6),
-          SizedBox(width: 18, child: onTap == null ? null : const Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6))),
+          SizedBox(width: 18, child: onTap == null ? null : const Icon(Hi.chevronRight, size: 18, color: Color(0xFFB5B0A6))),
         ],
       ),
     );
@@ -670,7 +671,7 @@ class _GuestHeader extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                     ),
-                    child: const Icon(Icons.camera_alt_outlined, size: 16, color: Colors.white),
+                    child: const Icon(Hi.camera, size: 16, color: Colors.white),
                   ),
                 ),
               ),

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -161,7 +162,7 @@ class _TableTypeCard extends StatelessWidget {
             onTap: onEdit,
             child: const Padding(
               padding: EdgeInsets.all(4),
-              child: Icon(Icons.edit_outlined, size: 18, color: AppTheme.inkMuted),
+              child: Icon(Hi.pencil, size: 18, color: AppTheme.inkMuted),
             ),
           ),
           const SizedBox(width: 4),
@@ -169,7 +170,7 @@ class _TableTypeCard extends StatelessWidget {
             onTap: onDelete,
             child: const Padding(
               padding: EdgeInsets.all(4),
-              child: Icon(Icons.delete_outline, size: 18, color: AppTheme.inkMuted),
+              child: Icon(Hi.trash, size: 18, color: AppTheme.inkMuted),
             ),
           ),
         ],

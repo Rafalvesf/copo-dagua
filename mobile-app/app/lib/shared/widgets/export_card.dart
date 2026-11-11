@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/exports/export_files.dart' deferred as files;
@@ -47,7 +48,7 @@ class _ExportCardState extends State<ExportCard> {
       decoration: softCard(radius: 22),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _Row(
-          icon: Icons.picture_as_pdf_outlined,
+          icon: Hi.document,
           title: '${widget.reportLabel} · PDF',
           subtitle: 'Resumo, reservas e pagamentos',
           busy: _busy == 'pdf',
@@ -55,7 +56,7 @@ class _ExportCardState extends State<ExportCard> {
         ),
         const Divider(height: 18),
         _Row(
-          icon: Icons.table_chart_outlined,
+          icon: Hi.tableCells,
           title: '${widget.reportLabel} · Excel',
           subtitle: 'Uma folha por tabela, pronta a filtrar',
           busy: _busy == 'xlsx',
@@ -63,7 +64,7 @@ class _ExportCardState extends State<ExportCard> {
         ),
         const Divider(height: 18),
         _Row(
-          icon: Icons.receipt_long_outlined,
+          icon: Hi.documentText,
           title: 'Comprovativos de pagamento · PDF',
           subtitle: 'Um por pagamento feito na app (não substitui a fatura)',
           busy: _busy == 'rec',
@@ -109,7 +110,7 @@ class _Row extends StatelessWidget {
           ),
           busy
               ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.accentOliveDark))
-              : Icon(Icons.download_rounded, size: 20, color: AppTheme.accentOliveDark),
+              : Icon(Hi.arrowDownTray, size: 20, color: AppTheme.accentOliveDark),
         ]),
       ),
     );

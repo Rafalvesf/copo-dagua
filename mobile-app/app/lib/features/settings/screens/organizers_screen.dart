@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -199,7 +200,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
             IconButton(
               onPressed: _remove,
               tooltip: 'Retirar organizador',
-              icon: const Icon(Icons.person_remove_outlined, color: AppTheme.inkMuted),
+              icon: const Icon(Hi.userMinus, color: AppTheme.inkMuted),
             ),
         ]),
         if (widget.editable) ...[
@@ -236,7 +237,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(p.icon, color: perms.can(p) ? green : AppTheme.inkMuted),
                   title: Text(p.label, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  trailing: Icon(perms.can(p) ? Icons.check_rounded : Icons.block_rounded,
+                  trailing: Icon(perms.can(p) ? Hi.check : Hi.noSymbol,
                       color: perms.can(p) ? green : AppTheme.inkMuted, semanticLabel: perms.can(p) ? 'Pode' : 'Não pode'),
                 ),
       ]),
@@ -262,7 +263,7 @@ class PermissionGate extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(28),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.lock_outline_rounded, size: 56, color: AppTheme.inkMuted),
+              const Icon(Hi.lockClosed, size: 56, color: AppTheme.inkMuted),
               const SizedBox(height: 14),
               Text('Sem acesso a ${perm.label.toLowerCase()}',
                   textAlign: TextAlign.center,
@@ -353,7 +354,7 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
           Expanded(
             child: FilledButton.icon(
               onPressed: _busy ? null : _share,
-              icon: const Icon(Icons.ios_share, size: 18),
+              icon: const Icon(Hi.arrowUpOnSquare, size: 18),
               label: const FittedBox(child: Text('Enviar link', maxLines: 1, style: TextStyle(fontWeight: FontWeight.w700))),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,

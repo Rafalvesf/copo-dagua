@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -332,7 +333,7 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: const Color(0xFFE9E8E4), borderRadius: BorderRadius.circular(14)),
             child: Row(children: [
-              const Icon(Icons.info_outline_rounded, size: 18, color: AppTheme.ink),
+              const Icon(Hi.informationCircle, size: 18, color: AppTheme.ink),
               const SizedBox(width: 8),
               Expanded(child: Text(_error!, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink))),
             ]),
@@ -376,7 +377,7 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
           const _Title('Como trabalhas?', 'Escolhe como recebes os pagamentos dos clientes.'),
           _Choice(
             selected: _type == 'individual',
-            icon: Icons.person_outline_rounded,
+            icon: Hi.user,
             title: 'Em nome individual',
             sub: 'Trabalhador independente ou empresário em nome individual',
             onTap: () => setState(() => _type = 'individual'),
@@ -384,7 +385,7 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
           const SizedBox(height: 10),
           _Choice(
             selected: _type == 'company',
-            icon: Icons.business_outlined,
+            icon: Hi.buildingOffice,
             title: 'Empresa',
             sub: 'Sociedade (Lda., Unipessoal, S.A.) com NIPC',
             onTap: () => setState(() => _type = 'company'),
@@ -475,7 +476,7 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
             ),
           const SizedBox(height: 10),
           const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Icon(Icons.lock_outline, size: 16, color: AppTheme.inkMuted),
+            Icon(Hi.lockClosed, size: 16, color: AppTheme.inkMuted),
             SizedBox(width: 8),
             Expanded(
               child: Text('Enviados de forma segura. A À Nossa! não guarda o teu IBAN completo nem o NIF.',
@@ -642,7 +643,7 @@ class _DocPick extends StatelessWidget {
             border: Border.all(color: file != null ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: file != null ? 2 : 1),
           ),
           child: Row(children: [
-            Icon(file != null ? Icons.check_circle_rounded : Icons.photo_camera_outlined, color: AppTheme.accentOliveDark),
+            Icon(file != null ? Hi.checkCircle : Hi.camera, color: AppTheme.accentOliveDark),
             const SizedBox(width: 12),
             Expanded(
               child: Text(file != null ? '$label · ${file!.name}' : label,

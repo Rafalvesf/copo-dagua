@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -153,7 +154,7 @@ class _Tiles extends StatelessWidget {
           Positioned(
             left: w / 2 - 18,
             top: h / 2 - 36,
-            child: const Icon(Icons.location_on_rounded, size: 36, color: Color(0xFF4F6B4A),
+            child: const Icon(Hi.mapPin, size: 36, color: Color(0xFF4F6B4A),
                 shadows: [Shadow(color: Color(0x40000000), blurRadius: 6, offset: Offset(0, 2))]),
           ),
           Positioned(

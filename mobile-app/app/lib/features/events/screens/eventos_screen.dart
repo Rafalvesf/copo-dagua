@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/snap_carousel.dart';
@@ -105,7 +106,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             for (final w in _When.values)
               ListTile(
                 title: Text(w.label),
-                trailing: w == _when ? Icon(Icons.check_rounded, color: AppTheme.accentOliveDark) : null,
+                trailing: w == _when ? Icon(Hi.check, color: AppTheme.accentOliveDark) : null,
                 onTap: () => Navigator.pop(ctx, w),
               ),
             const SizedBox(height: 8),
@@ -198,7 +199,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
                 boxShadow: const [BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6))],
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.calendar_today_outlined,
+                Icon(Hi.calendar,
                     size: 18, color: _when == _When.any ? AppTheme.ink : Colors.white),
                 const SizedBox(width: 6),
                 Text(_when.short,
@@ -285,10 +286,10 @@ class _EmptyNote extends StatelessWidget {
 }
 
 IconData _typeIcon(EventType t) => switch (t) {
-      EventType.wedding => Icons.favorite_border,
-      EventType.birthday => Icons.cake_outlined,
-      EventType.baptism => Icons.water_drop_outlined,
-      _ => Icons.celebration_outlined,
+      EventType.wedding => Hi.heartOutline,
+      EventType.birthday => Hi.cake,
+      EventType.baptism => Hi.sparkles,
+      _ => Hi.sparkles,
     };
 
 class _PublicEventCard extends ConsumerStatefulWidget {
@@ -414,7 +415,7 @@ class _PosterCard extends StatelessWidget {
                   child: IconButton(
                     tooltip: 'Partilhar',
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.ios_share_rounded, size: 18, color: AppTheme.ink),
+                    icon: const Icon(Hi.arrowUpOnSquare, size: 18, color: AppTheme.ink),
                     onPressed: () => sharePublicEvent(context, e),
                   ),
                 ),
@@ -430,8 +431,8 @@ class _PosterCard extends StatelessWidget {
                   style: const TextStyle(fontSize: 17, height: 1.2, fontWeight: FontWeight.w800, color: AppTheme.ink)),
               const SizedBox(height: 4),
               MetaRow([
-                if (when != null) (Icons.calendar_today_outlined, when),
-                if (e.place != null) (Icons.place_outlined, e.place!),
+                if (when != null) (Hi.calendar, when),
+                if (e.place != null) (Hi.mapPin, e.place!),
               ]),
               const SizedBox(height: 10),
               Wrap(spacing: 6, runSpacing: 6, children: [
@@ -539,9 +540,9 @@ class _ActionsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(children: [
-        _box(context, dark: true, icon: Icons.add_rounded, label: 'Criar evento', onTap: () => context.push('/novo-evento')),
+        _box(context, dark: true, icon: Hi.plus, label: 'Criar evento', onTap: () => context.push('/novo-evento')),
         const SizedBox(width: 10),
-        _box(context, dark: false, icon: Icons.qr_code_2_rounded, label: 'Tenho um código', onTap: () => showGuestModeSheet(context)),
+        _box(context, dark: false, icon: Hi.qrCode, label: 'Tenho um código', onTap: () => showGuestModeSheet(context)),
       ]);
 }
 
@@ -620,7 +621,7 @@ class _InviteTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: softCard(),
           child: const Row(children: [
-            Icon(Icons.qr_code_2_rounded, size: 22, color: AppTheme.ink),
+            Icon(Hi.qrCode, size: 22, color: AppTheme.ink),
             SizedBox(width: 12),
             Expanded(
               child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -628,7 +629,7 @@ class _InviteTile extends StatelessWidget {
                 Text('Entra com o código ou o link', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
               ]),
             ),
-            Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
+            Icon(Hi.chevronRight, color: AppTheme.inkMuted),
           ]),
         ),
       );
@@ -797,12 +798,12 @@ Widget _cardTitle(String text) => Text(text,
 List<(IconData, String)> _cardMeta(DateTime? date, String? time, String? place) => [
       if (date != null)
         (
-          Icons.calendar_today_outlined,
+          Hi.calendar,
           '${_weekdaysShort[date.weekday - 1]} ${date.day} ${_monthsShort[date.month - 1]}'
               '${date.year != DateTime.now().year ? ' ${date.year}' : ''}'
               '${time?.isNotEmpty == true ? ' · $time' : ''}',
         ),
-      if (place != null) (Icons.place_outlined, place),
+      if (place != null) (Hi.mapPin, place),
     ];
 
 /// Evento que organizo: abre o painel desse evento.
@@ -1007,7 +1008,7 @@ class PublicEventScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 0),
                 child: TextButton.icon(
                   onPressed: () => context.go('/eventos'),
-                  icon: const Icon(Icons.explore_outlined),
+                  icon: const Icon(Hi.globeEuropeAfrica),
                   label: const Text('Ver mais eventos'),
                 ),
               ),
@@ -1053,7 +1054,7 @@ class _InviteNotice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            const Icon(Icons.mail_outline_rounded, size: 18, color: Colors.white),
+            const Icon(Hi.envelope, size: 18, color: Colors.white),
             const SizedBox(width: 6),
             Text(more > 0 ? 'CONVITES POR RESPONDER · ${more + 1}' : 'CONVITE POR RESPONDER',
                 style: const TextStyle(fontSize: 11, letterSpacing: 1.2, fontWeight: FontWeight.w800, color: Color(0xFFDDE5D3))),

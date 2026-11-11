@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -65,7 +66,7 @@ class _PasswordFieldState extends State<PasswordField> {
         helperText: widget.helperText,
         suffixIcon: IconButton(
           tooltip: _obscure ? 'Mostrar palavra-passe' : 'Esconder palavra-passe',
-          icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+          icon: Icon(_obscure ? Hi.eye : Hi.eyeSlash),
           onPressed: () => setState(() => _obscure = !_obscure),
         ),
       ),

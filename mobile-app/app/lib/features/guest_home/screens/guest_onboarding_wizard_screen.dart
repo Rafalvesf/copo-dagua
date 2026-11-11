@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../../../core/events/event_pass.dart' show myEventPassProvider, GuestSections;
 import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
@@ -64,12 +65,12 @@ const _childMenus = ['Menu criança', 'Carne', 'Peixe'];
 // quem não tem alergias diz que não tem.
 const _allergyOptions = ['Nenhuma', 'Glúten', 'Lactose', 'Marisco', 'Frutos secos', 'Outra'];
 const _relationOptions = <(String, IconData)>[
-  ('Família', Icons.favorite_border),
-  ('Amigos', Icons.groups_2_outlined),
-  ('Trabalho', Icons.work_outline),
-  ('Vizinhos', Icons.home_outlined),
-  ('Escola / Faculdade', Icons.school_outlined),
-  ('Outro', Icons.star_border_rounded),
+  ('Família', Hi.heartOutline),
+  ('Amigos', Hi.userGroup),
+  ('Trabalho', Hi.briefcase),
+  ('Vizinhos', Hi.home),
+  ('Escola / Faculdade', Hi.academicCap),
+  ('Outro', Hi.starOutline),
 ];
 
 class _Person {
@@ -555,9 +556,9 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
               : (sub.isEmpty ? null : sub),
           child: Row(
             children: [
-              Expanded(child: _BigChoice(icon: Icons.check_circle_outline, label: 'Sim, vou!', selected: _going, onTap: () => setState(() => _going = true))),
+              Expanded(child: _BigChoice(icon: Hi.checkCircle, label: 'Sim, vou!', selected: _going, onTap: () => setState(() => _going = true))),
               const SizedBox(width: 12),
-              Expanded(child: _BigChoice(icon: Icons.close_rounded, label: 'Não vou poder ir', selected: !_going, onTap: () => setState(() => _going = false))),
+              Expanded(child: _BigChoice(icon: Hi.xMark, label: 'Não vou poder ir', selected: !_going, onTap: () => setState(() => _going = false))),
             ],
           ),
         );
@@ -591,7 +592,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add, size: 18, color: AppTheme.accentOliveDark),
+                          Icon(Hi.plus, size: 18, color: AppTheme.accentOliveDark),
                           SizedBox(width: 8),
                           Text('Adicionar acompanhante', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
                         ],
@@ -740,7 +741,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                 if (i > 0) const SizedBox(width: 12),
                 Expanded(
                   child: _BigChoice(
-                    icon: side == WeddingSide.both ? Icons.groups_2_outlined : Icons.person_outline,
+                    icon: side == WeddingSide.both ? Hi.userGroup : Hi.user,
                     label: label,
                     height: 110,
                     selected: _side == side,

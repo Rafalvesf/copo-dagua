@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -71,19 +72,19 @@ Future<void> showModerationSheet(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           ListTile(
-            leading: const Icon(Icons.flag_outlined, color: Color(0xFFB3261E)),
+            leading: const Icon(Hi.flag, color: Color(0xFFB3261E)),
             title: Text('Denunciar ${kind.noun}', style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFFB3261E))),
             onTap: () => Navigator.of(ctx).pop('report'),
           ),
           if (allowBlock && authorId != null)
             ListTile(
-              leading: const Icon(Icons.block, color: AppTheme.ink),
+              leading: const Icon(Hi.noSymbol, color: AppTheme.ink),
               title: Text('Bloquear $who', style: const TextStyle(fontWeight: FontWeight.w700)),
               subtitle: const Text('Deixas de ver as fotografias, comentários e mensagens desta pessoa.'),
               onTap: () => Navigator.of(ctx).pop('block'),
             ),
           ListTile(
-            leading: const Icon(Icons.close),
+            leading: const Icon(Hi.xMark),
             title: const Text('Cancelar'),
             onTap: () => Navigator.of(ctx).pop(),
           ),
@@ -199,11 +200,11 @@ Future<void> showReportPicker(
               for (final m in items)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.chat_bubble_outline, color: AppTheme.inkMuted),
+                  leading: const Icon(Hi.chatBubbleOvalLeft, color: AppTheme.inkMuted),
                   title: Text(m.text.trim().isEmpty ? 'Anexo' : m.text.trim(),
                       maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.ink)),
                   subtitle: m.authorName == null ? null : Text(m.authorName!),
-                  trailing: const Icon(Icons.flag_outlined, color: Color(0xFFB3261E)),
+                  trailing: const Icon(Hi.flag, color: Color(0xFFB3261E)),
                   onTap: () => Navigator.of(ctx).pop(m),
                 ),
             ]),

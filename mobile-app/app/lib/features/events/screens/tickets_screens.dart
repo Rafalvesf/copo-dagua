@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:flutter/material.dart';
 import '../../../core/payments/payments.dart';
@@ -123,7 +124,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
                 IconButton.outlined(
                   tooltip: 'Menos',
                   onPressed: _qty > 1 && !_busy ? () => setState(() => _qty--) : null,
-                  icon: const Icon(Icons.remove_rounded),
+                  icon: const Icon(Hi.minus),
                 ),
                 SizedBox(
                   width: 44,
@@ -134,7 +135,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
                 IconButton.outlined(
                   tooltip: 'Mais',
                   onPressed: _qty < 10 && !_busy ? () => setState(() => _qty++) : null,
-                  icon: const Icon(Icons.add_rounded),
+                  icon: const Icon(Hi.plus),
                 ),
               ],
             ),
@@ -215,7 +216,7 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
               if (_status == 'checking')
                 const CircularProgressIndicator()
               else
-                Icon(paid ? Icons.confirmation_number_rounded : Icons.hourglass_top_rounded,
+                Icon(paid ? Hi.ticket : Hi.clock,
                     size: 64, color: AppTheme.accentOliveDark),
               const SizedBox(height: 18),
               Text(
@@ -486,7 +487,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                 onPressed: _cancelling ? null : () => _cancelEvent(wedding.id, summary),
                 icon: _cancelling
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.event_busy_outlined),
+                    : const Icon(Hi.calendar),
                 label: const Text('Cancelar evento e reembolsar'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFFB4432E),

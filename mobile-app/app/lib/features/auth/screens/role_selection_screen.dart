@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -27,8 +28,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           // Conta única (2026-11): o mesmo utilizador organiza os seus
           // eventos e junta-se aos dos outros (internamente `guest` até
           // criar um evento — ver `become_organizer`, migração 141).
-          (UserRole.guest, Icons.celebration_outlined, 'Utilizador', 'Organiza os teus eventos e junta-te aos dos outros'),
-          (UserRole.partner, Icons.storefront_outlined, 'Parceiro', 'Espaços, catering, fotografia e outros serviços'),
+          (UserRole.guest, Hi.sparkles, 'Utilizador', 'Organiza os teus eventos e junta-te aos dos outros'),
+          (UserRole.partner, Hi.buildingStorefront, 'Parceiro', 'Espaços, catering, fotografia e outros serviços'),
         ])
           Padding(
             padding: const EdgeInsets.only(bottom: 12),

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -86,7 +87,7 @@ class ChatHeader extends StatelessWidget {
             IconButton(
               tooltip: 'Denunciar',
               onPressed: onReport,
-              icon: const Icon(Icons.flag_outlined, color: AppTheme.inkMuted),
+              icon: const Icon(Hi.flag, color: AppTheme.inkMuted),
             ),
         ],
       ),

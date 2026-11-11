@@ -98,6 +98,10 @@ flutter:
   # (OFL, ver assets/fonts/roboto/OFL.txt), instanciados por peso e
   # reduzidos a Latin + Latin-1 + Latin Extended-A + pontuação/€.
   fonts:
+    # Ícones Heroicons Solid (lib/shared/hero_icons.dart).
+    - family: HeroiconsSolid
+      fonts:
+        - asset: assets/fonts/heroicons/HeroiconsSolid.ttf
     # Fonte principal da app (redesign 2026-10): Louis George Café,
     # grátis para uso pessoal e comercial (assets/fonts/louis_george_cafe/
     # LICENSE.txt). Subset Latin + Latin-1 + Latin Ext-A. A Roboto fica como

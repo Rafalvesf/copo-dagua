@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -213,7 +214,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                                       child: _wedding
                                           ? Text(_monogram,
                                               style: TextStyle(fontSize: w * 0.06, fontWeight: FontWeight.w700, color: _paper))
-                                          : Icon(Icons.wine_bar_outlined, size: w * 0.08, color: _paper),
+                                          : Icon(Hi.beaker, size: w * 0.08, color: _paper),
                                     ),
                                   ),
                                   color: sealColor,

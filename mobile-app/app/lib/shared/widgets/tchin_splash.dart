@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -135,7 +136,7 @@ class TchinSplash extends StatelessWidget {
                         opacity: spark.clamp(0.0, 1.0),
                         child: Transform.scale(
                           scale: 0.5 + spark,
-                          child: const Icon(Icons.auto_awesome, color: Color(0xFFF2D98D), size: 34),
+                          child: const Icon(Hi.sparkles, color: Color(0xFFF2D98D), size: 34),
                         ),
                       ),
                   ],

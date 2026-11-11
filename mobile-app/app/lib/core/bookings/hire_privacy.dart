@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -100,7 +101,7 @@ class _HirePrivacyCardState extends ConsumerState<HirePrivacyCard> {
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
       decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.lg)),
       child: Row(children: [
-        Icon(_private ? Icons.lock_outline : Icons.group_outlined, color: AppTheme.accentOliveDark),
+        Icon(_private ? Hi.lockClosed : Hi.userGroup, color: AppTheme.accentOliveDark),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

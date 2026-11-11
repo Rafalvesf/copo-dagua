@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/booked_partner_badge.dart';
 import 'package:copo_dagua_app/core/wedding/wedding_controller.dart';
@@ -247,7 +248,7 @@ class _SummaryCard extends StatelessWidget {
       value: euros(budget.remaining.abs()),
       suffix: 'de ${euros(budget.total)}',
       progress: budget.progress,
-      doodles: const [Icons.savings_outlined, Icons.toll_outlined, Icons.favorite_border],
+      doodles: const [Hi.banknotes, Hi.currencyEuro, Hi.heartOutline],
       footer: Row(
         children: [
           Expanded(
@@ -305,7 +306,7 @@ class _CategoriesSection extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  expanded ? Icons.expand_less : Icons.expand_more,
+                  expanded ? Hi.chevronUp : Hi.chevronDown,
                   size: 18,
                   color: AppTheme.accentOliveDark,
                 ),
@@ -333,7 +334,7 @@ class _CategoryRow extends ConsumerWidget {
     final partners = [for (final slug in slugsForBudgetCategory(category.base.partnerCategory)) ...?booked[slug]];
     final ratio = allocated == 0 ? 0.0 : category.amount / allocated;
     final icon = category.base.partnerCategory == null
-        ? Icons.receipt_long_outlined
+        ? Hi.documentText
         : iconForPartnerCategory(category.base.partnerCategory!);
 
     return SnappyTap(
@@ -432,9 +433,9 @@ class _BookedPartnerCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 child: partner.photoUrl == null
-                    ? ColoredBox(color: Colors.white, child: Icon(Icons.storefront_rounded, color: green))
+                    ? ColoredBox(color: Colors.white, child: Icon(Hi.buildingStorefront, color: green))
                     : Image.network(partner.photoUrl!, fit: BoxFit.cover, cacheWidth: 144,
-                        errorBuilder: (_, __, ___) => ColoredBox(color: Colors.white, child: Icon(Icons.storefront_rounded, color: green))),
+                        errorBuilder: (_, __, ___) => ColoredBox(color: Colors.white, child: Icon(Hi.buildingStorefront, color: green))),
               ),
             ),
             const SizedBox(width: 12),
@@ -446,7 +447,7 @@ class _BookedPartnerCard extends StatelessWidget {
                     style: const TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                 const SizedBox(height: 3),
                 Row(children: [
-                  Icon(Icons.check_circle_rounded, size: 14, color: green),
+                  Icon(Hi.checkCircle, size: 14, color: green),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
@@ -459,7 +460,7 @@ class _BookedPartnerCard extends StatelessWidget {
                 ]),
               ]),
             ),
-            Icon(Icons.chevron_right_rounded, color: green),
+            Icon(Hi.chevronRight, color: green),
           ]),
         ),
       ),
@@ -558,7 +559,7 @@ class _ExpenseRow extends StatelessWidget {
     final icon = expense.categorySlug != null
         ? iconForCategorySlug(expense.categorySlug!)
         : expense.category == null
-        ? Icons.receipt_long_outlined
+        ? Hi.documentText
         : iconForPartnerCategory(expense.category!);
     final pink = !expense.paid && due != null && due.difference(DateTime.now()).inDays <= 30;
 
@@ -846,7 +847,7 @@ class _CategorySheet extends ConsumerWidget {
             if (expenses.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
-                child: InfoNote('Ainda não há despesas nesta categoria.', icon: Icons.info_outline_rounded),
+                child: InfoNote('Ainda não há despesas nesta categoria.', icon: Hi.informationCircle),
               )
             else
               for (final e in expenses)

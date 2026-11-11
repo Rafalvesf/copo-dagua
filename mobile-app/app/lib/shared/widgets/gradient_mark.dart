@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,7 +9,7 @@ class GradientMark extends StatelessWidget {
   final double size;
   final IconData icon;
 
-  const GradientMark({super.key, this.size = 40, this.icon = Icons.favorite});
+  const GradientMark({super.key, this.size = 40, this.icon = Hi.heart});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +45,7 @@ class AccountSwitcherBadge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<String>(
-      icon: const GradientMark(size: 40, icon: Icons.storefront_outlined),
+      icon: const GradientMark(size: 40, icon: Hi.buildingStorefront),
       onSelected: (value) {
         if (value == 'logout') {
           ref.read(authControllerProvider.notifier).logout();

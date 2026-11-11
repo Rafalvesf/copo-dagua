@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -78,7 +79,7 @@ class _PartnerCalendarScreenState
                         SectionTitle(_dayTitle(_selected)),
                         if (dayBookings.isEmpty)
                           const V2RowCard(
-                            lead: StickerIcon(Icons.event_busy_outlined),
+                            lead: StickerIcon(Hi.calendar),
                             title: 'Sem compromissos neste dia',
                             sub: 'Os dias com reservas aparecem marcados no mês.',
                           )

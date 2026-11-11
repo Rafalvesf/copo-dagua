@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../../settings/screens/settings_screen.dart' show PartnerAccountSections;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -165,7 +166,7 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
-                  child: const Icon(Icons.photo_camera_rounded, size: 15, color: Colors.white),
+                  child: const Icon(Hi.camera, size: 15, color: Colors.white),
                 ),
               ),
             ]),
@@ -277,7 +278,7 @@ class _PaymentsRequiredCard extends ConsumerWidget {
         padding: const EdgeInsets.all(14),
         decoration: softCard(radius: 18),
         child: Row(children: [
-          Icon(Icons.credit_card_rounded, color: AppTheme.accentOliveDark),
+          Icon(Hi.creditCard, color: AppTheme.accentOliveDark),
           const SizedBox(width: 12),
           const Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

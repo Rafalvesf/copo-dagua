@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -92,7 +93,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                   if (bookings.isEmpty && proposals.isEmpty) {
                     return whole(const EmptyStateView(
                       message: 'Ainda sem parceiros reservados.',
-                      icon: Icons.storefront_outlined,
+                      icon: Hi.buildingStorefront,
                     ));
                   }
                   return ListView(
@@ -113,7 +114,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                           value: '$handled',
                           suffix: 'de ${active.length} ${active.length == 1 ? 'serviço' : 'serviços'}',
                           progress: active.isEmpty ? 0 : handled / active.length,
-                          doodles: const [Icons.work_outline, Icons.photo_camera_outlined, Icons.music_note_outlined],
+                          doodles: const [Hi.briefcase, Hi.camera, Hi.musicalNote],
                           footer: Wrap(spacing: 8, runSpacing: 8, children: [
                             HeroPill('$urgent ${urgent == 1 ? 'pagamento urgente' : 'pagamentos urgentes'}', solid: true),
                             HeroPill('${proposals.length} ${proposals.length == 1 ? 'proposta' : 'propostas'}'),
@@ -231,21 +232,21 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
   IconData get _icon {
     final label = booking.category?.toLowerCase() ?? '';
     if (label.contains('foto') || label.contains('víde')) {
-      return Icons.camera_alt_outlined;
+      return Hi.camera;
     }
     if (label.contains('cater') || label.contains('bolo')) {
-      return Icons.restaurant_outlined;
+      return Hi.buildingStorefront;
     }
     if (label.contains('músic') || label.contains('dj')) {
-      return Icons.music_note_outlined;
+      return Hi.musicalNote;
     }
     if (label.contains('flor') || label.contains('decor')) {
-      return Icons.local_florist_outlined;
+      return Hi.sparkles;
     }
     if (label.contains('espaç') || label.contains('venue')) {
-      return Icons.villa_outlined;
+      return Hi.homeModern;
     }
-    return Icons.celebration_outlined;
+    return Hi.sparkles;
   }
 
   /// Abre o pagamento dentro da app (escolher método → Stripe embutida →
@@ -310,7 +311,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                         // Contratação em segredo (2026-10-21).
                         if (booking.isPrivate) ...[
                           const SizedBox(width: 6),
-                          const Icon(Icons.lock_outline, size: 14, color: AppTheme.inkMuted),
+                          const Icon(Hi.lockClosed, size: 14, color: AppTheme.inkMuted),
                           const SizedBox(width: 2),
                           const Text('Surpresa', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
                         ],
@@ -442,7 +443,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton.icon(
                   onPressed: _openPartnerForNewQuote,
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  icon: const Icon(Hi.arrowPath, size: 18),
                   label: const Text('Pedir nova proposta'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.accentOliveDark,
@@ -579,7 +580,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
           // Política de reembolso escolhida pelo parceiro (migração 108).
           Row(children: [
             Icon(
-              proposal.depositRefundable ? Icons.replay_rounded : Icons.block_rounded,
+              proposal.depositRefundable ? Hi.arrowUturnLeft : Hi.noSymbol,
               size: 14,
               color: proposal.depositRefundable ? AppTheme.accentOliveDark : const Color(0xFFA3412E),
             ),
@@ -653,7 +654,7 @@ class ReviewAction extends ConsumerWidget {
                 const SizedBox(width: 6),
                 _InlineStars(rating: review.rating),
                 const SizedBox(width: 6),
-                const Icon(Icons.edit_outlined, size: 14, color: AppTheme.inkMuted),
+                const Icon(Hi.pencil, size: 14, color: AppTheme.inkMuted),
               ],
             ),
           );
@@ -706,7 +707,7 @@ class _InlineStars extends StatelessWidget {
       children: [
         for (var i = 1; i <= 5; i++)
           Icon(
-            i <= rating ? Icons.star_rounded : Icons.star_border_rounded,
+            i <= rating ? Hi.star : Hi.starOutline,
             size: 15,
             color: Colors.amber,
           ),
@@ -832,8 +833,8 @@ class ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Icon(
                       i <= _rating
-                          ? Icons.star_rounded
-                          : Icons.star_border_rounded,
+                          ? Hi.star
+                          : Hi.starOutline,
                       size: 34,
                       color: Colors.amber,
                     ),

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -21,7 +22,7 @@ class ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, color: colorScheme.onErrorContainer, size: 20),
+          Icon(Hi.exclamationCircle, color: colorScheme.onErrorContainer, size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Text(message, style: TextStyle(color: colorScheme.onErrorContainer)),
@@ -51,7 +52,7 @@ class PersistentWarningBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: colorScheme.onTertiaryContainer, size: 18),
+          Icon(Hi.informationCircle, color: colorScheme.onTertiaryContainer, size: 18),
           const SizedBox(width: 8),
           Expanded(child: Text(message, style: TextStyle(color: colorScheme.onTertiaryContainer))),
           if (actionLabel != null)
@@ -86,7 +87,7 @@ class AsyncErrorView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
-              Icons.cloud_off_outlined,
+              Hi.signalSlash,
               size: 32,
               color: AppTheme.navIconMuted,
             ),
@@ -103,7 +104,7 @@ class AsyncErrorView extends StatelessWidget {
               const SizedBox(height: 8),
               TextButton.icon(
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh, size: 18),
+                icon: const Icon(Hi.arrowPath, size: 18),
                 label: const Text('Tentar de novo'),
                 style: TextButton.styleFrom(
                   foregroundColor: AppTheme.accentOliveDark,
@@ -157,7 +158,7 @@ class EmptyStateView extends StatelessWidget {
   const EmptyStateView({
     super.key,
     required this.message,
-    this.icon = Icons.inbox_outlined,
+    this.icon = Hi.inbox,
   });
 
   @override

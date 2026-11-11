@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../core/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,8 +76,8 @@ class GuestBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _GuestNavIcon(
-                    icon: Icons.home_outlined,
-                    activeIcon: Icons.home_rounded,
+                    icon: Hi.home,
+                    activeIcon: Hi.home,
                     active: current == GuestTab.home,
                     onTap: () => context.go(_path('/guest-home')),
                     label: 'Início',
@@ -87,8 +88,8 @@ class GuestBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _GuestNavIcon(
-                    icon: Icons.photo_library_outlined,
-                    activeIcon: Icons.photo_library_rounded,
+                    icon: Hi.rectangleStack,
+                    activeIcon: Hi.rectangleStack,
                     active: current == GuestTab.gallery,
                     onTap: () => context.go(_path('/guest-gallery')),
                     label: 'Galeria',
@@ -99,8 +100,8 @@ class GuestBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _GuestNavIcon(
-                    icon: Icons.card_giftcard_outlined,
-                    activeIcon: Icons.card_giftcard_rounded,
+                    icon: Hi.gift,
+                    activeIcon: Hi.gift,
                     active: current == GuestTab.gifts,
                     onTap: () => context.go(_path('/guest-gifts')),
                     label: 'Presentes',
@@ -110,8 +111,8 @@ class GuestBottomNav extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: _GuestNavIcon(
-                    icon: Icons.person_outline_rounded,
-                    activeIcon: Icons.person_rounded,
+                    icon: Hi.user,
+                    activeIcon: Hi.user,
                     active: current == GuestTab.profile,
                     onTap: () => context.go(_path('/guest-profile')),
                     label: 'Perfil',

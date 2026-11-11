@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -151,7 +152,7 @@ class _BugReportFormState extends ConsumerState<_BugReportForm> {
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
           Row(children: [
-            Icon(Icons.bug_report_outlined, color: AppTheme.accentOliveDark),
+            Icon(Hi.bugAnt, color: AppTheme.accentOliveDark),
             const SizedBox(width: 10),
             const Text('Reportar um erro', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ]),
@@ -203,7 +204,7 @@ class _BugReportFormState extends ConsumerState<_BugReportForm> {
                             width: 24,
                             height: 24,
                             decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-                            child: const Icon(Icons.close_rounded, size: 14, color: Colors.white),
+                            child: const Icon(Hi.xMark, size: 14, color: Colors.white),
                           ),
                         ),
                       ),
@@ -213,7 +214,7 @@ class _BugReportFormState extends ConsumerState<_BugReportForm> {
               if (_photos.length < _maxPhotos)
                 OutlinedButton.icon(
                   onPressed: _sending ? null : _addPhotos,
-                  icon: const Icon(Icons.add_photo_alternate_outlined, size: 20),
+                  icon: const Icon(Hi.photo, size: 20),
                   label: Text(_photos.isEmpty ? 'Anexar fotografias' : 'Mais uma'),
                   style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
                 ),
@@ -362,7 +363,7 @@ class _RatingFormState extends State<_RatingForm> {
                 tooltip: '$i ${i == 1 ? 'estrela' : 'estrelas'}',
                 iconSize: 38,
                 onPressed: () => setState(() => _stars = i),
-                icon: Icon(i <= _stars ? Icons.star_rounded : Icons.star_outline_rounded,
+                icon: Icon(i <= _stars ? Hi.star : Hi.starOutline,
                     color: i <= _stars ? const Color(0xFFE0B23A) : AppTheme.inkMuted),
               ),
           ]),

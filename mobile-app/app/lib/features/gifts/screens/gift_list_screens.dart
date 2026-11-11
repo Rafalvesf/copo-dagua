@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/snap_carousel.dart';
 import '../../../core/payments/payments.dart';
@@ -31,7 +32,7 @@ Widget _photo(String? url, {double size = 56}) => ClipRRect(
               width: size,
               height: size,
               color: AppTheme.accentTint,
-              child: Icon(Icons.card_giftcard_outlined, color: _green),
+              child: Icon(Hi.gift, color: _green),
             )
           : Image.network(url, width: size, height: size, fit: BoxFit.cover, cacheWidth: (size * 3).round(),
               errorBuilder: (_, e, s) => Container(width: size, height: size, color: AppTheme.accentTint)),
@@ -87,7 +88,7 @@ class OrganizerGiftListScreen extends ConsumerWidget {
                         Expanded(
                           child: FilledButton.icon(
                             onPressed: () => showWishSheet(context, ref, weddingId: weddingId),
-                            icon: const Icon(Icons.edit_note_rounded, size: 20),
+                            icon: const Icon(Hi.pencilSquare, size: 20),
                             label: const Text('Desejo'),
                             style: FilledButton.styleFrom(backgroundColor: _green, minimumSize: const Size(0, 46), shape: const StadiumBorder()),
                           ),
@@ -96,7 +97,7 @@ class OrganizerGiftListScreen extends ConsumerWidget {
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () => context.push('/gift-shop'),
-                            icon: const Icon(Icons.storefront_outlined, size: 20),
+                            icon: const Icon(Hi.buildingStorefront, size: 20),
                             label: const Text('Da loja'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppTheme.ink,
@@ -184,7 +185,7 @@ class _OrganizerItemTile extends ConsumerWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(color: const Color(0xFFF4EBD9), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.sticky_note_2_outlined, color: Color(0xFF8A6A2F)),
+                child: const Icon(Hi.documentText, color: Color(0xFF8A6A2F)),
               ),
         const SizedBox(width: 12),
         Expanded(
@@ -380,9 +381,9 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
           ),
           const SizedBox(width: 14),
           const Text('Quantidade', style: TextStyle(color: AppTheme.inkMuted)),
-          IconButton(onPressed: _qty > 1 ? () => setState(() => _qty--) : null, icon: const Icon(Icons.remove_circle_outline), tooltip: 'Menos'),
+          IconButton(onPressed: _qty > 1 ? () => setState(() => _qty--) : null, icon: const Icon(Hi.minusCircle), tooltip: 'Menos'),
           Text('$_qty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          IconButton(onPressed: _qty < 50 ? () => setState(() => _qty++) : null, icon: const Icon(Icons.add_circle_outline), tooltip: 'Mais'),
+          IconButton(onPressed: _qty < 50 ? () => setState(() => _qty++) : null, icon: const Icon(Hi.plusCircle), tooltip: 'Mais'),
         ]),
         if (_error != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(_error!, style: const TextStyle(color: Color(0xFFB3261E)))),
         const SizedBox(height: 14),
@@ -470,7 +471,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
           if (p.deliveryNote?.isNotEmpty == true) ...[
             const SizedBox(height: 8),
             Row(children: [
-              const Icon(Icons.local_shipping_outlined, size: 18, color: AppTheme.inkMuted),
+              const Icon(Hi.truck, size: 18, color: AppTheme.inkMuted),
               const SizedBox(width: 6),
               Expanded(child: Text(p.deliveryNote!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
             ]),
@@ -483,7 +484,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                     Navigator.of(sheetContext).pop();
                     await _add(p, weddingId);
                   },
-            icon: Icon(added ? Icons.check_rounded : Icons.add_rounded),
+            icon: Icon(added ? Hi.check : Hi.plus),
             label: Text(added ? 'Já está na vossa lista' : (p.inStock ? 'Pôr na lista de presentes' : 'Esgotado')),
             style: FilledButton.styleFrom(backgroundColor: _green, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
           ),
@@ -521,7 +522,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Cerâmica, mantas, vinho…',
-                  prefixIcon: const Icon(Icons.search, size: 20),
+                  prefixIcon: const Icon(Hi.magnifyingGlass, size: 20),
                   filled: true,
                   fillColor: Colors.white,
                   border: pill,
@@ -552,7 +553,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                     isLabelVisible: (list?.length ?? 0) > 0,
                     backgroundColor: AppTheme.accentOliveDark,
                     label: Text('${list?.length ?? 0}'),
-                    child: const Icon(Icons.checklist_rtl_rounded, size: 20, color: AppTheme.ink),
+                    child: const Icon(Hi.clipboardDocumentList, size: 20, color: AppTheme.ink),
                   ),
                 ),
               ),
@@ -647,7 +648,7 @@ class _ProductRow extends StatelessWidget {
               width: 76,
               height: 76,
               child: p.photoUrl == null
-                  ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, color: _green))
+                  ? Container(color: AppTheme.accentTint, child: Icon(Hi.gift, color: _green))
                   : Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 700, semanticLabel: p.title, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
             ),
           ),
@@ -677,7 +678,7 @@ class _ProductRow extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: const [BoxShadow(color: Color(0x14171713), blurRadius: 10, offset: Offset(0, 3))],
                 ),
-                child: Icon(added ? Icons.check_rounded : Icons.add_rounded,
+                child: Icon(added ? Hi.check : Hi.plus,
                     size: 19, color: added ? Colors.white : (canAdd ? AppTheme.accentOliveDark : AppTheme.inkMuted)),
               ),
             ),
@@ -702,7 +703,7 @@ class _FeaturedProductCard extends StatelessWidget {
     return FeaturedOverlayCard(
       onTap: onTap,
       image: p.photoUrl == null
-          ? Container(color: AppTheme.accentTint, child: Icon(Icons.card_giftcard_outlined, size: 40, color: _green))
+          ? Container(color: AppTheme.accentTint, child: Icon(Hi.gift, size: 40, color: _green))
           : Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 700, semanticLabel: p.title, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
       badge: added
           ? Container(
@@ -767,7 +768,7 @@ class _GuestItemCard extends ConsumerWidget {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(color: const Color(0xFFF4EBD9), borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.sticky_note_2_outlined, color: Color(0xFF8A6A2F)),
+                  child: const Icon(Hi.documentText, color: Color(0xFF8A6A2F)),
                 ),
           const SizedBox(width: 12),
           Expanded(
@@ -797,7 +798,7 @@ class _GuestItemCard extends ConsumerWidget {
           if (!i.isProduct && i.linkUrl != null)
             OutlinedButton.icon(
               onPressed: () => launchUrl(Uri.parse(i.linkUrl!), mode: LaunchMode.externalApplication),
-              icon: const Icon(Icons.open_in_new_rounded, size: 18),
+              icon: const Icon(Hi.arrowTopRightOnSquare, size: 18),
               label: const Text('Ver na loja'),
               style: OutlinedButton.styleFrom(foregroundColor: AppTheme.ink, shape: const StadiumBorder()),
             ),
@@ -917,9 +918,9 @@ class _OfferSheetState extends ConsumerState<_OfferSheet> {
           const SizedBox(height: 10),
           Row(children: [
             const Expanded(child: Text('Quantidade', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink))),
-            IconButton(onPressed: _qty > 1 ? () => setState(() => _qty--) : null, icon: const Icon(Icons.remove_circle_outline), tooltip: 'Menos'),
+            IconButton(onPressed: _qty > 1 ? () => setState(() => _qty--) : null, icon: const Icon(Hi.minusCircle), tooltip: 'Menos'),
             Text('$_qty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            IconButton(onPressed: _qty < max ? () => setState(() => _qty++) : null, icon: const Icon(Icons.add_circle_outline), tooltip: 'Mais'),
+            IconButton(onPressed: _qty < max ? () => setState(() => _qty++) : null, icon: const Icon(Hi.plusCircle), tooltip: 'Mais'),
           ]),
         ],
         const SizedBox(height: 8),
@@ -990,7 +991,7 @@ class _GiftReturnScreenState extends ConsumerState<GiftReturnScreen> {
               if (_status == 'checking')
                 const CircularProgressIndicator()
               else
-                Icon(paid ? Icons.card_giftcard_rounded : Icons.schedule_rounded, size: 72, color: paid ? _green : AppTheme.inkMuted),
+                Icon(paid ? Hi.gift : Hi.clock, size: 72, color: paid ? _green : AppTheme.inkMuted),
               const SizedBox(height: 16),
               Text(
                 _status == 'checking' ? 'A confirmar o pagamento…' : (paid ? 'Presente oferecido!' : 'Pagamento por confirmar'),

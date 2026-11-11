@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:async';
 
@@ -228,7 +229,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                   tooltip: 'Cancelar',
                   onPressed: () => _finish(save: false),
                   style: IconButton.styleFrom(backgroundColor: AppTheme.surface, fixedSize: const Size(44, 44)),
-                  icon: const Icon(Icons.close_rounded, color: AppTheme.ink),
+                  icon: const Icon(Hi.xMark, color: AppTheme.ink),
                 ),
                 Expanded(
                   child: Column(
@@ -251,7 +252,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                   ),
                   icon: _saving
                       ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: color.on))
-                      : Icon(Icons.check_rounded, color: color.on),
+                      : Icon(Hi.check, color: color.on),
                 ),
               ],
             ),
@@ -368,7 +369,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                         ),
                         child: DecoratedBox(
                           decoration: BoxDecoration(color: c.color, shape: BoxShape.circle),
-                          child: selected ? Center(child: Icon(Icons.check, color: c.on, size: 22)) : null,
+                          child: selected ? Center(child: Icon(Hi.check, color: c.on, size: 22)) : null,
                         ),
                       ),
                     ),
@@ -559,7 +560,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      Icons.add_photo_alternate_outlined,
+                                      Hi.photo,
                                       size: 30,
                                       color: look.accent,
                                     ),
@@ -602,7 +603,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.camera_alt_outlined,
+                          Hi.camera,
                           size: 15,
                           color: look.accent,
                         ),
@@ -706,7 +707,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Icon(Icons.favorite, size: 12, color: look.on),
+                    child: Icon(Hi.heart, size: 12, color: look.on),
                   ),
                   Expanded(
                     child: Divider(color: look.on.withValues(alpha: 0.24)),
@@ -904,15 +905,15 @@ List<_Shortcut> _shortcuts(WidgetRef ref) {
   String plural(int n, String one, String many) => n == 1 ? one : many;
   final decor = EventDecor.of(ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType)) ?? EventType.wedding);
   return [
-    _Shortcut(Icons.savings_outlined, 'Orçamento',
+    _Shortcut(Hi.banknotes, 'Orçamento',
         budget == null || budget.total == 0 ? 'Por definir' : '${euros(budget.spent)} de ${euros(budget.total)}', '/budget'),
-    _Shortcut(Icons.people_outline, 'Convidados',
+    _Shortcut(Hi.users, 'Convidados',
         guests.isEmpty ? 'Ainda sem convidados' : '$confirmed ${plural(confirmed, 'confirmado', 'confirmados')} de ${guests.length}', '/guests'),
-    _Shortcut(Icons.event_seat_outlined, 'Lugares', guests.isEmpty || seated == 0 ? decor.seatingEmpty : '$seated de ${guests.length} sentados', '/seating'),
-    _Shortcut(Icons.photo_library_outlined, 'Galeria',
+    _Shortcut(Hi.ticket, 'Lugares', guests.isEmpty || seated == 0 ? decor.seatingEmpty : '$seated de ${guests.length} sentados', '/seating'),
+    _Shortcut(Hi.rectangleStack, 'Galeria',
         pending > 0 ? '$pending ${plural(pending, 'foto por aprovar', 'fotos por aprovar')}' : approved == 0 ? decor.galleryEmpty : '$approved ${plural(approved, 'foto', 'fotos')}', '/gallery'),
-    const _Shortcut(Icons.card_giftcard_outlined, 'Para os convidados', 'Programa e presentes', '/guest-page'),
-    _Shortcut(Icons.checklist_rtl_outlined, 'Serviços tratados',
+    const _Shortcut(Hi.gift, 'Para os convidados', 'Programa e presentes', '/guest-page'),
+    _Shortcut(Hi.clipboardDocumentList, 'Serviços tratados',
         handled == null ? '—' : handled == 0 ? 'Nenhum ainda' : '$handled ${plural(handled, 'categoria', 'categorias')}', '/service-preferences'),
   ];
 }
@@ -1073,7 +1074,7 @@ class _ShareWeddingButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Dois copos a brindar — o "tchin tchin".
-            Icon(Icons.wine_bar_outlined, size: 22, color: on),
+            Icon(Hi.beaker, size: 22, color: on),
             const SizedBox(width: 10),
             Text(
               'Partilhar convite',
@@ -1189,7 +1190,7 @@ class _TaskRow extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF6E6A63)),
+            const Icon(Hi.chevronRight, size: 18, color: Color(0xFF6E6A63)),
           ],
         ),
       ),
@@ -1478,16 +1479,16 @@ class _BookingsSection extends ConsumerWidget {
   /// Ícone por categoria do parceiro (canvas: casa, máquina, nota…).
   static IconData _categoryIcon(String? category) {
     final c = category?.toLowerCase() ?? '';
-    if (c.contains('foto') || c.contains('víde')) return Icons.photo_camera_outlined;
-    if (c.contains('músic') || c.contains('dj')) return Icons.music_note_outlined;
-    if (c.contains('som') || c.contains('luz')) return Icons.mic_none_outlined;
-    if (c.contains('flor') || c.contains('decor')) return Icons.local_florist_outlined;
-    if (c.contains('bolo') || c.contains('doce') || c.contains('pastel')) return Icons.cake_outlined;
-    if (c.contains('cater') || c.contains('jantar') || c.contains('bebida') || c.contains('bar')) return Icons.wine_bar_outlined;
-    if (c.contains('espaç') || c.contains('quinta') || c.contains('venue')) return Icons.home_outlined;
-    if (c.contains('aloj') || c.contains('hotel')) return Icons.hotel_outlined;
-    if (c.contains('transp')) return Icons.directions_bus_outlined;
-    return Icons.auto_awesome_outlined;
+    if (c.contains('foto') || c.contains('víde')) return Hi.camera;
+    if (c.contains('músic') || c.contains('dj')) return Hi.musicalNote;
+    if (c.contains('som') || c.contains('luz')) return Hi.microphone;
+    if (c.contains('flor') || c.contains('decor')) return Hi.sparkles;
+    if (c.contains('bolo') || c.contains('doce') || c.contains('pastel')) return Hi.cake;
+    if (c.contains('cater') || c.contains('jantar') || c.contains('bebida') || c.contains('bar')) return Hi.beaker;
+    if (c.contains('espaç') || c.contains('quinta') || c.contains('venue')) return Hi.home;
+    if (c.contains('aloj') || c.contains('hotel')) return Hi.homeModern;
+    if (c.contains('transp')) return Hi.truck;
+    return Hi.sparkles;
   }
 }
 
@@ -1599,7 +1600,7 @@ class _CoverPhoto extends ConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.add_photo_alternate_outlined, size: 28, color: look.accent),
+                      Icon(Hi.photo, size: 28, color: look.accent),
                       const SizedBox(height: 4),
                       Text('Adicionar ${EventDecor.of(wedding.eventType).coverHint}', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent)),
                     ],
@@ -2309,7 +2310,7 @@ List<_TodoItem> _todoItems(WidgetRef ref) {
   if (due.isNotEmpty) {
     final (e, payId) = due.first;
     items.add(_TodoItem(
-      Icons.payments_outlined, const Color(0xFFF7EACA), const Color(0xFF6B4A10),
+      Hi.banknotes, const Color(0xFFF7EACA), const Color(0xFF6B4A10),
       e.title,
       '${euros(e.amount, cents: payId != null)} até ${_shortDay(e.dueDate!)}${due.length > 1 ? ' · mais ${due.length - 1}' : ''}',
       'Pagar',
@@ -2320,7 +2321,7 @@ List<_TodoItem> _todoItems(WidgetRef ref) {
   }
   if (requests > 0) {
     items.add(_TodoItem(
-      Icons.how_to_reg_outlined, const Color(0xFFF3DEE0), const Color(0xFF6B2C33),
+      Hi.userPlus, const Color(0xFFF3DEE0), const Color(0xFF6B2C33),
       '$requests ${requests == 1 ? 'pedido para entrar' : 'pedidos para entrar'}',
       'Responderam pelo link',
       'Aceitar',
@@ -2329,7 +2330,7 @@ List<_TodoItem> _todoItems(WidgetRef ref) {
   }
   if (noAnswer > 0) {
     items.add(_TodoItem(
-      Icons.notifications_none_rounded, const Color(0xFFECE7DC), const Color(0xFF4A3F2A),
+      Hi.bell, const Color(0xFFECE7DC), const Color(0xFF4A3F2A),
       '$noAnswer sem resposta',
       'Convidados que ainda não responderam',
       'Lembrar',
@@ -2392,7 +2393,7 @@ class _UrgentStrip extends ConsumerWidget {
                 style: const TextStyle(fontSize: 15, height: 1, fontWeight: FontWeight.w700, color: Color(0xFF5A3E0C)),
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF5A3E0C)),
+            const Icon(Hi.chevronRight, color: Color(0xFF5A3E0C)),
           ],
         ),
       ),
@@ -2649,12 +2650,12 @@ class _ManageList extends ConsumerWidget {
     String sub(String label) => s.firstWhere((x) => x.label == label, orElse: () => const _Shortcut(Icons.circle, '', '', '')).subtitle;
     final fourth = _fourthOf(w.eventType);
     final rows = <(IconData, String, String, String)>[
-      (Icons.card_giftcard_outlined, 'Página dos convidados', 'programa e presentes', '/guest-page'),
-      if (fourth == _Fourth.gifts) (Icons.redeem_outlined, 'Lista de presentes', '', '/gift-list'),
-      if (fourth == _Fourth.tickets) (Icons.confirmation_number_outlined, 'Bilhetes', '', '/bilhetes'),
-      (Icons.photo_library_outlined, 'Galeria', sub('Galeria'), '/gallery'),
-      (Icons.handshake_outlined, 'Serviços tratados', sub('Serviços tratados'), '/service-preferences'),
-      (Icons.group_add_outlined, 'Organizadores', 'convidar quem ajuda', '/organizadores'),
+      (Hi.gift, 'Página dos convidados', 'programa e presentes', '/guest-page'),
+      if (fourth == _Fourth.gifts) (Hi.giftTop, 'Lista de presentes', '', '/gift-list'),
+      if (fourth == _Fourth.tickets) (Hi.ticket, 'Bilhetes', '', '/bilhetes'),
+      (Hi.rectangleStack, 'Galeria', sub('Galeria'), '/gallery'),
+      (Hi.handRaised, 'Serviços tratados', sub('Serviços tratados'), '/service-preferences'),
+      (Hi.userPlus, 'Organizadores', 'convidar quem ajuda', '/organizadores'),
     ];
     return _Section(
       child: Column(
@@ -2688,7 +2689,7 @@ class _ManageList extends ConsumerWidget {
                                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                               ),
                               const SizedBox(width: 4),
-                              const Icon(Icons.chevron_right_rounded, size: 20, color: AppTheme.inkMuted),
+                              const Icon(Hi.chevronRight, size: 20, color: AppTheme.inkMuted),
                             ],
                           ),
                         ),
@@ -2888,7 +2889,7 @@ class _RemindSheetState extends State<_RemindSheet> {
         else ...[
           if (!_failed)
             block(
-              icon: Icons.notifications_active_outlined,
+              icon: Hi.bellAlert,
               title: '$withApp ${withApp == 1 ? 'tem' : 'têm'} a app',
               sub: canRemind == withApp
                   ? 'Recebem uma notificação no telemóvel a pedir a resposta.'
@@ -2897,19 +2898,19 @@ class _RemindSheetState extends State<_RemindSheet> {
                       : '$canRemind ainda não foram lembrados hoje.',
               action: FilledButton.icon(
                 onPressed: _sending || canRemind == 0 ? null : _remind,
-                icon: const Icon(Icons.send_rounded, size: 18),
+                icon: const Icon(Hi.paperAirplane, size: 18),
                 label: Text(canRemind == 0 ? 'Lembrete enviado' : 'Enviar lembrete na app'),
                 style: filled(),
               ),
             ),
           const SizedBox(height: 12),
           block(
-            icon: Icons.ios_share,
+            icon: Hi.arrowUpOnSquare,
             title: _failed ? 'Enviar o convite outra vez' : '$withoutApp sem a app',
             sub: 'Envia-lhes o convite por WhatsApp ou mensagem. Respondem pelo link, sem conta.',
             action: OutlinedButton.icon(
               onPressed: () => shareWeddingInvite(context, widget.wedding),
-              icon: const Icon(Icons.ios_share, size: 18),
+              icon: const Icon(Hi.arrowUpOnSquare, size: 18),
               label: const Text('Enviar convite por mensagem'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.ink,
@@ -3014,7 +3015,7 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
                   color: look.tint,
                   alignment: Alignment.center,
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.add_photo_alternate_outlined, size: 28, color: look.accent),
+                    Icon(Hi.photo, size: 28, color: look.accent),
                     const SizedBox(height: 10),
                     Container(
                       height: 40,
@@ -3039,9 +3040,9 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
           right: 16,
           top: 12,
           child: Row(children: [
-            _round(Icons.chevron_left_rounded, 'Voltar a Eventos', () => context.go('/eventos')),
+            _round(Hi.chevronLeft, 'Voltar a Eventos', () => context.go('/eventos')),
             const Spacer(),
-            _round(Icons.settings_outlined, 'Definições do evento', () => context.push('/settings')),
+            _round(Hi.cog6Tooth, 'Definições do evento', () => context.push('/settings')),
           ]),
         ),
         Padding(
@@ -3361,7 +3362,7 @@ class _SuggestionCard extends ConsumerWidget {
             child: SizedBox(
               width: 84,
               child: k.coverPhotoUrl == null
-                  ? Container(color: const Color(0xFFDDE5D3), child: const Icon(Icons.storefront_rounded, color: _green))
+                  ? Container(color: const Color(0xFFDDE5D3), child: const Icon(Hi.buildingStorefront, color: _green))
                   : SizedNetworkImage(k.coverPhotoUrl!, fit: BoxFit.cover),
             ),
           ),

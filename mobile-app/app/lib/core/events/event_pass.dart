@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
@@ -8,12 +9,12 @@ import '../supabase/supabase_config.dart';
 /// Partes da página do evento que o organizador pode mostrar ou esconder
 /// aos convidados (migração 158, `weddings.guest_sections`).
 enum GuestSection {
-  programa('programa', 'Programa', 'Horários, local e como chegar', Icons.schedule_outlined),
-  mesa('mesa', 'A tua mesa', 'Onde cada convidado fica sentado', Icons.table_restaurant_outlined),
-  presentes('presentes', 'Presentes', 'Lista de presentes e envelope digital', Icons.card_giftcard_outlined),
-  galeria('galeria', 'Galeria', 'Fotos do evento, partilhadas por todos', Icons.photo_library_outlined),
-  grupos('grupos', 'Grupos', 'Conversa entre os convidados', Icons.groups_outlined),
-  estadia('estadia', 'Estadia', 'Alojamento perto do evento', Icons.hotel_outlined);
+  programa('programa', 'Programa', 'Horários, local e como chegar', Hi.clock),
+  mesa('mesa', 'A tua mesa', 'Onde cada convidado fica sentado', Hi.tableCells),
+  presentes('presentes', 'Presentes', 'Lista de presentes e envelope digital', Hi.gift),
+  galeria('galeria', 'Galeria', 'Fotos do evento, partilhadas por todos', Hi.rectangleStack),
+  grupos('grupos', 'Grupos', 'Conversa entre os convidados', Hi.userGroup),
+  estadia('estadia', 'Estadia', 'Alojamento perto do evento', Hi.homeModern);
 
   final String key;
   final String label;

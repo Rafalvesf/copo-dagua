@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -225,7 +226,7 @@ class _DateShortcut extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.calendar_today_outlined,
+              Hi.calendar,
               size: 15,
               color: AppTheme.accentOliveDark,
             ),
@@ -313,7 +314,7 @@ class _OverallProgressCard extends StatelessWidget {
           Opacity(
             opacity: 0.3,
             child: Icon(
-              Icons.eco_outlined,
+              Hi.globeEuropeAfrica,
               size: 46,
               color: AppTheme.accentOliveDark,
             ),
@@ -409,7 +410,7 @@ class _StatusGroup extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  expanded ? Icons.expand_less : Icons.expand_more,
+                  expanded ? Hi.chevronUp : Hi.chevronDown,
                   size: 18,
                   color: AppTheme.accentOliveDark,
                 ),
@@ -488,7 +489,7 @@ class _TaskTile extends StatelessWidget {
           PopupMenuButton<String>(
             padding: EdgeInsets.zero,
             icon: const Icon(
-              Icons.more_horiz,
+              Hi.ellipsisHorizontal,
               size: 18,
               color: AppTheme.inkMuted,
             ),
@@ -522,7 +523,7 @@ class _StatusIndicator extends StatelessWidget {
       return const CircleAvatar(
         radius: 12,
         backgroundColor: AppStatusColors.confirmed,
-        child: Icon(Icons.check, size: 14, color: Colors.white),
+        child: Icon(Hi.check, size: 14, color: Colors.white),
       );
     }
     final progress = item.progressPercent;

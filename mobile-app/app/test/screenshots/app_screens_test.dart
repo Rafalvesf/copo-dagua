@@ -10,6 +10,7 @@
 @Tags(['screenshots'])
 library;
 
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -830,14 +831,14 @@ void main() {
     ('66_sub_mesa', couple, '/seating', _tapAdd()),
     ('67_sub_reserva', couple, '/bookings', _tapText('Quinta do Lago Azul')),
     ('68_sub_suporte_novo', couple, '/support', _tapText('Novo pedido de suporte')),
-    ('69_sub_partilhar', couple, '/guests', _tapIcon(Icons.ios_share)),
+    ('69_sub_partilhar', couple, '/guests', _tapIcon(Hi.arrowUpOnSquare)),
     ('70_sub_modo_convidado', guest, '/guest-events', _tapText('Tenho um código')),
     ('71_sub_editar_convidado', couple, '/guests/g0', _tapText('Editar convidado')),
     ('72_sub_pacote', partner, '/partner-pricing', _tapText('+ Adicionar pacote')),
     ('73_sub_negocio_editar', partner, '/partner-business-info', _tapText('Quinta do Lago Azul')),
     ('74_sub_bloquear_data', partner, '/partner-calendar', _tapText('20')),
     ('75_sub_mesa_local', partner, '/partner-venue-tables', _tapAdd()),
-    ('76_sub_avaliacao', partner, '/partner-reviews', _tapIcon(Icons.more_horiz)),
+    ('76_sub_avaliacao', partner, '/partner-reviews', _tapIcon(Hi.ellipsisHorizontal)),
     ('77_sub_tua_mesa', guest, '/guest-profile', _tapText('A tua mesa')),
     ('78_sub_editar_eu', guest, '/guest-profile', _tapText('Tu')),
     ('79_sub_icone_barra', couple, '/settings', _tapText('Ícone da barra')),

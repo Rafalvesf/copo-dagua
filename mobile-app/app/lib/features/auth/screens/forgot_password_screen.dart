@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
@@ -104,7 +105,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     return AuthPage(
       children: [
         AuthHeading(
-          icon: Icons.lock_reset_rounded,
+          icon: Hi.key,
           title: _sent ? 'Cria uma password nova' : 'Esqueceste-te da password?',
           subtitle: _sent
               ? 'Enviámos um código de 6 dígitos para ${_email.text.trim()}. Escreve-o aqui com a password nova.'

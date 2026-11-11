@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -752,7 +753,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                         ? Image.memory(_pickedLogoBytes!, fit: BoxFit.cover)
                         : (_existingLogoUrl?.isNotEmpty ?? false)
                             ? SizedNetworkImage(_existingLogoUrl!, fit: BoxFit.cover)
-                            : const Icon(Icons.storefront_outlined, size: 40, color: AppTheme.inkMuted),
+                            : const Icon(Hi.buildingStorefront, size: 40, color: AppTheme.inkMuted),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -820,7 +821,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                               ? Container(
                                   color: AppTheme.ink,
                                   alignment: Alignment.center,
-                                  child: const Icon(Icons.play_circle_outline, color: Colors.white, size: 28),
+                                  child: const Icon(Hi.playCircle, color: Colors.white, size: 28),
                                 )
                               : _localMedia[item.id] != null
                                   ? Image.memory(_localMedia[item.id]!.bytes, fit: BoxFit.cover)
@@ -838,7 +839,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                                 width: 22,
                                 height: 22,
                                 decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                                child: const Icon(Icons.close, size: 13, color: Colors.white),
+                                child: const Icon(Hi.xMark, size: 13, color: Colors.white),
                               ),
                             ),
                           ),
@@ -853,7 +854,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                         child: Center(
                           child: i == 0 && _portfolioBusy
                               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                              : const Icon(Icons.add, color: AppTheme.inkMuted),
+                              : const Icon(Hi.plus, color: AppTheme.inkMuted),
                         ),
                       ),
                     ),
@@ -976,7 +977,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                         ),
                         GestureDetector(
                           onTap: _pricingBusy ? null : () => _removePackage(pkg),
-                          child: const Icon(Icons.close, size: 18, color: AppTheme.inkMuted),
+                          child: const Icon(Hi.xMark, size: 18, color: AppTheme.inkMuted),
                         ),
                       ],
                     ),
@@ -1116,18 +1117,18 @@ class _StepScaffold extends StatelessWidget {
 
 IconData _categoryIcon(String slug) {
   final s = slug.toLowerCase();
-  if (s.contains('espac') || s.contains('venue') || s.contains('quinta')) return Icons.villa_outlined;
-  if (s.contains('cater')) return Icons.restaurant_outlined;
-  if (s.contains('foto') || s.contains('photo')) return Icons.photo_camera_outlined;
-  if (s.contains('video')) return Icons.videocam_outlined;
-  if (s.contains('dj') || s.contains('music') || s.contains('banda')) return Icons.music_note_outlined;
-  if (s.contains('flor') || s.contains('decor')) return Icons.local_florist_outlined;
-  if (s.contains('bolo') || s.contains('cake')) return Icons.cake_outlined;
-  if (s.contains('planner')) return Icons.event_note_outlined;
-  if (s.contains('transp')) return Icons.directions_car_outlined;
-  if (s.contains('beleza') || s.contains('beauty')) return Icons.face_retouching_natural_outlined;
-  if (s.contains('convite') || s.contains('invit')) return Icons.mail_outline;
-  return Icons.star_outline_rounded;
+  if (s.contains('espac') || s.contains('venue') || s.contains('quinta')) return Hi.homeModern;
+  if (s.contains('cater')) return Hi.buildingStorefront;
+  if (s.contains('foto') || s.contains('photo')) return Hi.camera;
+  if (s.contains('video')) return Hi.videoCamera;
+  if (s.contains('dj') || s.contains('music') || s.contains('banda')) return Hi.musicalNote;
+  if (s.contains('flor') || s.contains('decor')) return Hi.sparkles;
+  if (s.contains('bolo') || s.contains('cake')) return Hi.cake;
+  if (s.contains('planner')) return Hi.calendarDays;
+  if (s.contains('transp')) return Hi.truck;
+  if (s.contains('beleza') || s.contains('beauty')) return Hi.faceSmile;
+  if (s.contains('convite') || s.contains('invit')) return Hi.envelope;
+  return Hi.starOutline;
 }
 
 class _CategoryTile extends StatelessWidget {
@@ -1192,7 +1193,7 @@ class _Pill extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (selected) ...[
-              const Icon(Icons.check, size: 16, color: Colors.white),
+              const Icon(Hi.check, size: 16, color: Colors.white),
               const SizedBox(width: 6),
             ],
             Text(
@@ -1421,7 +1422,7 @@ class _NumberStepper extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: v <= 0 ? null : () => onChanged(v - 1 <= 0 ? null : v - 1),
-                icon: const Icon(Icons.remove_rounded),
+                icon: const Icon(Hi.minus),
                 tooltip: 'Menos',
               ),
               Expanded(
@@ -1434,7 +1435,7 @@ class _NumberStepper extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () => onChanged(v + (v >= 50 ? 10 : 1)),
-                icon: const Icon(Icons.add_rounded),
+                icon: const Icon(Hi.plus),
                 tooltip: 'Mais',
               ),
             ],

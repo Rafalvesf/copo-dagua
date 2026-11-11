@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -482,7 +483,7 @@ class _OnboardingWizardScreenState
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.lock_outline_rounded,
+                    const Icon(Hi.lockClosed,
                         size: 14, color: AppTheme.inkMuted),
                     const SizedBox(width: 6),
                     Text(
@@ -603,15 +604,15 @@ class _OnboardingWizardScreenState
             children: [
               if (_eventType.canBePublic)
                 _ChoicePair(
-                  left: ('Privado', Icons.lock_outline_rounded, 'Só quem convidares'),
-                  right: ('Público', Icons.public_rounded, 'Aparece a todos em Descobrir'),
+                  left: ('Privado', Hi.lockClosed, 'Só quem convidares'),
+                  right: ('Público', Hi.globeEuropeAfrica, 'Aparece a todos em Descobrir'),
                   rightSelected: _isPublic,
                   onChanged: (v) => setState(() => _isPublic = v),
                 )
               else
                 Row(
                   children: [
-                    const Icon(Icons.lock_outline_rounded, size: 18, color: AppTheme.inkMuted),
+                    const Icon(Hi.lockClosed, size: 18, color: AppTheme.inkMuted),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -626,8 +627,8 @@ class _OnboardingWizardScreenState
                   style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 10),
               _ChoicePair(
-                left: ('Grátis', Icons.celebration_outlined, 'Sem custo para quem vai'),
-                right: ('Pago', Icons.confirmation_number_outlined, 'Com preço por pessoa'),
+                left: ('Grátis', Hi.sparkles, 'Sem custo para quem vai'),
+                right: ('Pago', Hi.ticket, 'Com preço por pessoa'),
                 rightSelected: _isPaid,
                 onChanged: (v) => setState(() => _isPaid = v),
               ),
@@ -996,20 +997,20 @@ class _EventTypeTile extends StatelessWidget {
   const _EventTypeTile({required this.type, required this.selected, required this.onTap});
 
   IconData get _icon => switch (type) {
-        EventType.wedding => Icons.favorite_border_rounded,
-        EventType.baptism => Icons.water_drop_outlined,
-        EventType.birthday => Icons.cake_outlined,
-        EventType.communion => Icons.church_outlined,
-        EventType.engagement => Icons.diamond_outlined,
-        EventType.vowRenewal => Icons.all_inclusive_rounded,
-        EventType.graduation => Icons.school_outlined,
-        EventType.corporate => Icons.business_center_outlined,
-        EventType.babyShower => Icons.child_friendly_outlined,
-        EventType.party => Icons.celebration_outlined,
-        EventType.nightlife => Icons.nightlife_outlined,
-        EventType.concert => Icons.mic_external_on_outlined,
-        EventType.festival => Icons.festival_outlined,
-        EventType.other => Icons.auto_awesome_outlined,
+        EventType.wedding => Hi.heartOutline,
+        EventType.baptism => Hi.sparkles,
+        EventType.birthday => Hi.cake,
+        EventType.communion => Hi.buildingLibrary,
+        EventType.engagement => Hi.sparkles,
+        EventType.vowRenewal => Hi.sparkles,
+        EventType.graduation => Hi.academicCap,
+        EventType.corporate => Hi.briefcase,
+        EventType.babyShower => Hi.faceSmile,
+        EventType.party => Hi.sparkles,
+        EventType.nightlife => Hi.musicalNote,
+        EventType.concert => Hi.microphone,
+        EventType.festival => Hi.musicalNote,
+        EventType.other => Hi.sparkles,
       };
 
   @override
@@ -1344,12 +1345,12 @@ class _MonthCalendar extends StatelessWidget {
               ),
             ),
             _ArrowButton(
-              icon: Icons.chevron_left_rounded,
+              icon: Hi.chevronLeft,
               label: 'Mês anterior',
               onTap: canGoBack ? () => onMonth(DateTime(month.year, month.month - 1)) : null,
             ),
             _ArrowButton(
-              icon: Icons.chevron_right_rounded,
+              icon: Hi.chevronRight,
               label: 'Mês seguinte',
               onTap: () => onMonth(DateTime(month.year, month.month + 1)),
             ),
@@ -1418,12 +1419,12 @@ class _MonthPicker extends StatelessWidget {
               ),
             ),
             _ArrowButton(
-              icon: Icons.chevron_left_rounded,
+              icon: Hi.chevronLeft,
               label: 'Ano anterior',
               onTap: year > today.year ? () => onYear(year - 1) : null,
             ),
             _ArrowButton(
-              icon: Icons.chevron_right_rounded,
+              icon: Hi.chevronRight,
               label: 'Ano seguinte',
               onTap: () => onYear(year + 1),
             ),
@@ -1496,7 +1497,7 @@ class _RegionStep extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.search_rounded, size: 18, color: AppTheme.inkMuted),
+              const Icon(Hi.magnifyingGlass, size: 18, color: AppTheme.inkMuted),
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
@@ -1575,7 +1576,7 @@ class _RegionStep extends StatelessWidget {
                                 color: AppTheme.accentOliveDark,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.check_rounded, size: 13, color: Colors.white),
+                              child: const Icon(Hi.check, size: 13, color: Colors.white),
                             ),
                         ],
                       ),
@@ -1633,7 +1634,7 @@ class _GuestEstimate extends StatelessWidget {
         Row(
           children: [
             stepButton(
-              Icons.remove_rounded,
+              Hi.minus,
               'Menos 10',
               current == null || current <= 10 ? null : current - 10,
             ),
@@ -1657,7 +1658,7 @@ class _GuestEstimate extends StatelessWidget {
                 ],
               ),
             ),
-            stepButton(Icons.add_rounded, 'Mais 10', (current ?? 0) + 10),
+            stepButton(Hi.plus, 'Mais 10', (current ?? 0) + 10),
           ],
         ),
         const SizedBox(height: 32),
@@ -1724,7 +1725,7 @@ class _GuestEstimate extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline_rounded, size: 20, color: AppTheme.accentOliveDark),
+                Icon(Hi.informationCircle, size: 20, color: AppTheme.accentOliveDark),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -1802,7 +1803,7 @@ class _BookedStep extends ConsumerWidget {
                               ),
                             ),
                             Icon(
-                              on ? Icons.check_circle_rounded : Icons.circle_outlined,
+                              on ? Hi.checkCircle : Icons.circle_outlined,
                               size: 22,
                               color: on ? AppTheme.accentOliveDark : AppTheme.borderMuted,
                             ),

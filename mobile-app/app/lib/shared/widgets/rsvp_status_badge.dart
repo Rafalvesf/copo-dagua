@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/models/models.dart';
@@ -13,9 +14,9 @@ import '../../core/theme/app_theme.dart';
 
 IconData rsvpStatusIcon(RsvpStatus status) {
   return switch (status) {
-    RsvpStatus.confirmed => Icons.check_circle,
-    RsvpStatus.pending => Icons.schedule,
-    RsvpStatus.declined => Icons.cancel,
+    RsvpStatus.confirmed => Hi.checkCircle,
+    RsvpStatus.pending => Hi.clock,
+    RsvpStatus.declined => Hi.xCircle,
   };
 }
 

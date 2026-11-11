@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -20,7 +21,7 @@ class GreenHero extends StatelessWidget {
     this.suffix,
     this.progress,
     this.footer,
-    this.doodles = const [Icons.favorite_border, Icons.auto_awesome_outlined, Icons.eco_outlined],
+    this.doodles = const [Hi.heartOutline, Hi.sparkles, Hi.globeEuropeAfrica],
   });
 
   @override

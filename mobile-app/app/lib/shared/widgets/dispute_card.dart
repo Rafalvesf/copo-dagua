@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
@@ -65,7 +66,7 @@ class DisputeCard extends ConsumerWidget {
 
     if (info.open) {
       return _box(
-        icon: Icons.gavel_rounded,
+        icon: Hi.scale,
         color: const Color(0xFFA3412E),
         title: 'Em disputa',
         body: 'A equipa À Nossa! está a analisar: ${_reasons[d?['reason']] ?? 'disputa aberta'}. '
@@ -74,7 +75,7 @@ class DisputeCard extends ConsumerWidget {
     }
     if (d != null && d['status'] == 'resolved' && !info.canOpen) {
       return _box(
-        icon: Icons.verified_rounded,
+        icon: Hi.checkBadge,
         color: AppTheme.accentOliveDark,
         title: _resolutions[d['resolution']] ?? 'Disputa resolvida',
         body: (d['admin_note'] as String?) ?? '',
@@ -85,7 +86,7 @@ class DisputeCard extends ConsumerWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       if (d != null && d['status'] == 'resolved') ...[
         _box(
-          icon: Icons.verified_rounded,
+          icon: Hi.checkBadge,
           color: AppTheme.accentOliveDark,
           title: _resolutions[d['resolution']] ?? 'Disputa resolvida',
           body: (d['admin_note'] as String?) ?? '',
@@ -101,7 +102,7 @@ class DisputeCard extends ConsumerWidget {
           );
           if (opened == true) ref.invalidate(_disputeProvider(bookingId));
         },
-        icon: const Icon(Icons.flag_outlined, size: 18),
+        icon: const Icon(Hi.flag, size: 18),
         label: const Text('Há um problema com esta reserva? Abrir disputa'),
         style: TextButton.styleFrom(foregroundColor: v2Muted),
       ),

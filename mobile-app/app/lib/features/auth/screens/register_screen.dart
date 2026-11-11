@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
@@ -349,7 +350,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: _acceptedTerms ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: 1.5),
                 ),
-                child: _acceptedTerms ? const Icon(Icons.check_rounded, size: 16, color: Colors.white) : null,
+                child: _acceptedTerms ? const Icon(Hi.check, size: 16, color: Colors.white) : null,
               ),
               const SizedBox(width: 10),
               Expanded(

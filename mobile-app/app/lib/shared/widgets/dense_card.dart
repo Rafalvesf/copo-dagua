@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -24,7 +25,7 @@ class DenseChip extends StatelessWidget {
         decoration: BoxDecoration(color: done ? _doneBg : _chipBg, borderRadius: BorderRadius.circular(999)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           if (done) ...[
-            const Icon(Icons.check_rounded, size: 13, color: _doneInk),
+            const Icon(Hi.check, size: 13, color: _doneInk),
             const SizedBox(width: 3),
           ],
           Flexible(

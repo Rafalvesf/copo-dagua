@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -225,7 +226,7 @@ class _TchinClinkState extends State<TchinClink> with SteadyTickerProviderStateM
                           scale: 0.6 + spark * 0.7,
                           child: Opacity(
                             opacity: spark,
-                            child: const Icon(Icons.auto_awesome, color: Color(0xFFE8B44C), size: 32),
+                            child: const Icon(Hi.sparkles, color: Color(0xFFE8B44C), size: 32),
                           ),
                         ),
                       ),

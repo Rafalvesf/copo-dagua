@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -325,7 +326,7 @@ class _DuoClinkState extends State<DuoClink> with SteadyTickerProviderStateMixin
                             scale: 1.4 * spark,
                             child: Transform.rotate(
                               angle: spark * math.pi / 4,
-                              child: Icon(Icons.auto_awesome, size: 24 * s, color: const Color(0xFFE8B44C)),
+                              child: Icon(Hi.sparkles, size: 24 * s, color: const Color(0xFFE8B44C)),
                             ),
                           ),
                         ),
@@ -333,12 +334,12 @@ class _DuoClinkState extends State<DuoClink> with SteadyTickerProviderStateMixin
                         Positioned(
                           left: 20 * s,
                           top: 20 * s,
-                          child: Opacity(opacity: spark2, child: Icon(Icons.star_rounded, size: 13 * s, color: const Color(0xFFA9BC8F))),
+                          child: Opacity(opacity: spark2, child: Icon(Hi.star, size: 13 * s, color: const Color(0xFFA9BC8F))),
                         ),
                         Positioned(
                           left: 168 * s,
                           top: 26 * s,
-                          child: Opacity(opacity: spark2, child: Icon(Icons.star_rounded, size: 12 * s, color: const Color(0xFFF3B9C1))),
+                          child: Opacity(opacity: spark2, child: Icon(Hi.star, size: 12 * s, color: const Color(0xFFF3B9C1))),
                         ),
                       ],
                     ],
@@ -366,7 +367,7 @@ class ProntoRow extends StatelessWidget {
       decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16)),
       child: Row(
         children: [
-          Icon(Icons.check_rounded, size: 18, color: AppTheme.accentOliveDark),
+          Icon(Hi.check, size: 18, color: AppTheme.accentOliveDark),
           const SizedBox(width: 12),
           Expanded(child: Text(text, style: const TextStyle(fontSize: 14, color: AppTheme.ink))),
           ?trailing,
@@ -466,7 +467,7 @@ class _SentBadgeState extends State<SentBadge> with SteadyTickerProviderStateMix
                     angle: prot,
                     child: Transform.scale(
                       scale: pscale,
-                      child: Icon(Icons.send_outlined, size: 40, color: AppTheme.accentOliveDark),
+                      child: Icon(Hi.paperAirplane, size: 40, color: AppTheme.accentOliveDark),
                     ),
                   ),
                 ),
