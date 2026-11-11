@@ -668,7 +668,7 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: 20,
         right: 20,

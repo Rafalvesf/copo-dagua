@@ -247,7 +247,9 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: accentOliveDark,
+          // Botões de texto a preto (deep fix 2026-11-11); o verde fica
+          // para seleção, progresso e etiquetas.
+          foregroundColor: ink,
           textStyle: const TextStyle(
             fontFamily: fontFamily,
             fontFamilyFallback: fontFamilyFallback,

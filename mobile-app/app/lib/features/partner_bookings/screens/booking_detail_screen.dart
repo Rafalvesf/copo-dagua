@@ -359,9 +359,9 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                               : null,
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size.fromHeight(48),
-                            backgroundColor: const Color(0xFFF7E3DC),
+                            backgroundColor: Colors.white,
                             foregroundColor: const Color(0xFFA3412E),
-                            side: BorderSide.none,
+                            side: const BorderSide(color: Color(0xFFA3412E), width: 1.5),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),

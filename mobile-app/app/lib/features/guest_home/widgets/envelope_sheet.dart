@@ -180,7 +180,7 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
           const SizedBox(height: 8),
           FilledButton(
             onPressed: valid ? () => setState(() => _step2 = true) : null,
-            style: FilledButton.styleFrom(backgroundColor: green, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
             child: Text(valid ? 'Continuar · ${envelopeEuros(v)}' : 'Continuar'),
           ),
         ] else ...[
@@ -199,7 +199,7 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
           const SizedBox(height: 12),
           FilledButton(
             onPressed: _sending ? null : _confirm,
-            style: FilledButton.styleFrom(backgroundColor: green, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
             child: _sending
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : const Text('Já fiz a transferência'),

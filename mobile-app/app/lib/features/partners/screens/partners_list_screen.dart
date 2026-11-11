@@ -11,7 +11,6 @@ import '../../../shared/widgets/permissions_step.dart' show ensurePermission, Ap
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 import '../../gifts/screens/gift_list_screens.dart' show GiftShopView;
-import '../../../shared/widgets/floating_filter_bar.dart' show FilterChipsRow, FilterBarItem;
 import '../../partner_pro/partner_pro_screen.dart' show ProBadge;
 
 import '../../../core/models/models.dart';
@@ -623,19 +622,8 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                   offset: _navHidden ? const Offset(0, 1.3) : Offset.zero,
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOutCubic,
-                  child: FloatingBottomNav(
-                    current: AppTab.partners,
-                    top: FilterChipsRow(
-                      items: const [FilterBarItem('Empresas'), FilterBarItem('Lojas')],
-                      selected: _tab,
-                      infinite: false,
-                      visible: 2,
-                      onSelected: (i) => setState(() {
-                        _tab = i;
-                        _navHidden = false;
-                      }),
-                    ),
-                  ),
+                  // Empresas / Lojas só no topo da página (2026-11-11).
+                  child: const FloatingBottomNav(current: AppTab.partners),
                 ),
               ),
             ),

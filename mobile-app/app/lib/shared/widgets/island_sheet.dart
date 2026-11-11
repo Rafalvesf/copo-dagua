@@ -88,15 +88,18 @@ class IslandAlert extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = AppTheme.accentOliveDark;
+    // Botões pretos com letra branca; o secundário branco com contorno
+    // (deep fix 2026-11-11).
+    const c = AppTheme.ink;
     final base = Theme.of(context);
     const pill = StadiumBorder();
     final theme = base.copyWith(
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           minimumSize: const Size.fromHeight(50),
-          backgroundColor: const Color(0xFFF2F0EB),
+          backgroundColor: Colors.white,
           foregroundColor: AppTheme.ink,
+          side: const BorderSide(color: AppTheme.ink, width: 1.5),
           shape: pill,
           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
         ),

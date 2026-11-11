@@ -203,8 +203,8 @@ class AddActionButton extends StatelessWidget {
           width: 44,
           height: 44,
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: AppTheme.accentOliveDark,
+          decoration: const BoxDecoration(
+            color: AppTheme.ink,
             shape: BoxShape.circle,
           ),
           child: const Icon(Hi.plus, size: 24, color: Colors.white),

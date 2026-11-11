@@ -1,4 +1,5 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
+import 'hide_while_typing.dart';
 import '../../core/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,7 +30,7 @@ class PartnerBottomNav extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) =>
       // Fica fixa por cima enquanto a página anima (page_transitions.dart).
-      StayOverNav(child: TourHost(role: TourRole.partner, child: _buildNav(context, ref)));
+      StayOverNav(child: HideWhileTyping(child: TourHost(role: TourRole.partner, child: _buildNav(context, ref))));
 
   Widget _buildNav(BuildContext context, WidgetRef ref) {
     final unreadCount = ref

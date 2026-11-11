@@ -3,6 +3,7 @@ import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -1108,7 +1109,8 @@ class _UpcomingTasksSection extends ConsumerWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: Colors.white,
+          boxShadow: softCard().boxShadow,
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: const Text('Sem tarefas pendentes — bom trabalho! 🎉'),
@@ -2485,7 +2487,7 @@ class _TodoNow extends ConsumerWidget {
                       FilledButton(
                         onPressed: () => it.onTap(context, ref),
                         style: FilledButton.styleFrom(
-                          backgroundColor: it.primary ? AppTheme.ink : _green,
+                          backgroundColor: AppTheme.ink,
                           foregroundColor: Colors.white,
                           minimumSize: const Size(0, 40),
                           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -2872,7 +2874,7 @@ class _RemindSheetState extends State<_RemindSheet> {
           ]),
         );
     ButtonStyle filled() => FilledButton.styleFrom(
-          backgroundColor: _green,
+          backgroundColor: AppTheme.ink,
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(46),
           shape: const StadiumBorder(),

@@ -238,10 +238,11 @@ class ChatProposalCard extends StatelessWidget {
                           alignment: Alignment.center,
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
-                            color: actions[i].primary && actions[i].onTap != null
-                                ? AppTheme.accentOliveDark
-                                : const Color(0xFFF2F0EB),
+                            color: actions[i].primary && actions[i].onTap != null ? AppTheme.ink : Colors.white,
                             borderRadius: BorderRadius.circular(999),
+                            border: actions[i].primary && actions[i].onTap != null
+                                ? null
+                                : Border.all(color: actions[i].onTap == null ? const Color(0xFFE4E1D8) : AppTheme.ink, width: 1.5),
                           ),
                           child: Text(
                             actions[i].label,
@@ -339,8 +340,8 @@ class ChatComposer extends StatelessWidget {
                   width: 44,
                   height: 44,
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentOliveDark,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.ink,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Hi.arrowUp, color: Colors.white, size: 20),

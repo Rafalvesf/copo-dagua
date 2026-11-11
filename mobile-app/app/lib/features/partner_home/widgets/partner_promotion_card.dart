@@ -177,7 +177,7 @@ class _PartnerPromotionCardState extends ConsumerState<PartnerPromotionCard> {
                 icon: const Icon(Hi.sparkles, size: 18),
                 label: const Text('Pôr em destaque'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: green,
+                  backgroundColor: AppTheme.ink,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(46),
                   shape: const StadiumBorder(),

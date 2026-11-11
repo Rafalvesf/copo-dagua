@@ -183,7 +183,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
               const SizedBox(height: 12),
               FilledButton(
                 onPressed: _busy ? null : () => _subscribe(pro),
-                style: FilledButton.styleFrom(backgroundColor: green, minimumSize: const Size.fromHeight(52), shape: const StadiumBorder()),
+                style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(52), shape: const StadiumBorder()),
                 child: Text(_busy ? 'A abrir…' : 'Ser Premium'),
               ),
             ] else if (pro.hasSubscription) ...[
