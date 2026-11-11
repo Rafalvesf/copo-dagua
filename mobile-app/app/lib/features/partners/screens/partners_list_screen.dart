@@ -1264,27 +1264,22 @@ class _ModeTile extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             height: 60,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
               color: on ? Colors.white : Colors.transparent,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: on ? AppTheme.ink : const Color(0xFFE4E1D8), width: on ? 1.5 : 1),
             ),
             child: Row(children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(color: on ? AppTheme.accentOliveDark : const Color(0xFFEDEAE3), shape: BoxShape.circle),
-                child: Icon(icon, size: 18, color: on ? Colors.white : AppTheme.inkMuted),
-              ),
-              const SizedBox(width: 10),
+              Icon(icon, size: 22, color: on ? AppTheme.accentOliveDark : AppTheme.inkMuted),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                   Text(subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                 ]),
               ),
             ]),
