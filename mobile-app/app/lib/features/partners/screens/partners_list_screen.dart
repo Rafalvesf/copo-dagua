@@ -267,6 +267,33 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                     ),
                   ),
                 ),
+                // Empresas (contratar, reservar) vs Lojas (presentes e
+                // produtos), por cima das categorias (2026-11-11).
+                if (!widget.selectionMode)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, AppTheme.screenMargin, 0),
+                    child: Row(children: [
+                      Expanded(
+                        child: _ModeTile(
+                          icon: Hi.briefcase,
+                          title: 'Empresas',
+                          subtitle: 'Contratar e reservar',
+                          on: _tab == 0,
+                          onTap: () => setState(() => _tab = 0),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _ModeTile(
+                          icon: Hi.gift,
+                          title: 'Lojas',
+                          subtitle: 'Comprar presentes',
+                          on: _tab == 1,
+                          onTap: () => setState(() => _tab = 1),
+                        ),
+                      ),
+                    ]),
+                  ),
                 if (_tab == 1 && !widget.selectionMode)
                   const Expanded(child: GiftShopView(bottomPadding: 190, showListLink: true))
                 else ...[
@@ -1217,4 +1244,46 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
       ),
     );
   }
+}
+
+/// Escolha Empresas / Lojas no topo de Parceiros: o que se faz em cada uma.
+class _ModeTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool on;
+  final VoidCallback onTap;
+  const _ModeTile({required this.icon, required this.title, required this.subtitle, required this.on, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        selected: on,
+        child: SnappyTap(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            height: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: on ? Colors.white : Colors.transparent,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: on ? AppTheme.ink : const Color(0xFFE4E1D8), width: on ? 1.5 : 1),
+            ),
+            child: Row(children: [
+              Icon(icon, size: 22, color: on ? AppTheme.accentOliveDark : AppTheme.inkMuted),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                  Text(subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                ]),
+              ),
+            ]),
+          ),
+        ),
+      );
 }

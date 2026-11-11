@@ -183,8 +183,15 @@ class _NavIcon extends StatelessWidget {
         child: InkWell(
       borderRadius: BorderRadius.circular(AppRadius.md),
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      // Pill cinzenta no separador ativo (2026-11-11: "para ser mais
+      // percetível").
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFFEDEAE3) : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

@@ -18,6 +18,8 @@ class SnapCarousel extends StatefulWidget {
   State<SnapCarousel> createState() => _SnapCarouselState();
 }
 
+const double _shadowPad = 18;
+
 class _SnapCarouselState extends State<SnapCarousel> {
   int _page = 0;
   PageController? _controller;
@@ -52,14 +54,18 @@ class _SnapCarouselState extends State<SnapCarousel> {
           builder: (context, c) => AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOut,
-            height: widget.height ?? _heights[page] ?? (_heights.isEmpty ? 300 : _heights.values.first),
+            // + espaço por baixo para a sombra dos cartões não ficar cortada
+            // (2026-11-11: "olha a sombra por baixo delas").
+            height: widget.height != null
+                ? widget.height! + _shadowPad
+                : (_heights[page] ?? (_heights.isEmpty ? 300 + _shadowPad : _heights.values.first)),
             child: PageView.builder(
               controller: _controllerFor(c.maxWidth),
               itemCount: widget.itemCount,
               onPageChanged: (i) => setState(() => _page = i),
               itemBuilder: (context, i) {
                 final card = Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.fromLTRB(6, 0, 6, _shadowPad),
                   child: widget.itemBuilder(context, i),
                 );
                 if (widget.height != null) return card;
@@ -80,7 +86,7 @@ class _SnapCarouselState extends State<SnapCarousel> {
           ),
         ),
         if (widget.itemCount > 1) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 2),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

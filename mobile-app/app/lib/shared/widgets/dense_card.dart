@@ -23,7 +23,8 @@ class DenseChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        height: 26,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(color: done ? _doneBg : _chipBg, borderRadius: BorderRadius.circular(999)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           if (done) ...[
