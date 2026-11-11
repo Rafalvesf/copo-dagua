@@ -246,6 +246,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Os cartões dos eventos abertos mostram quantas pessoas já vão.",
     check: { kind: "marker", id: "178" },
   },
+  {
+    file: "179_chat_delete.sql",
+    title: "Apagar mensagens, grupos e conversas",
+    what: "Quem enviou apaga a mensagem; quem criou o grupo apaga-o; cada lado esconde uma conversa com parceiro só para si.",
+    check: { kind: "column", table: "conversations", column: "couple_hidden_at" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
