@@ -7,6 +7,7 @@ import '../../../core/wedding/organizers.dart' show myWeddingPermsProvider;
 import '../../../core/events/events_providers.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/seating/seating_controller.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -581,7 +582,10 @@ class _PanelPage extends ConsumerWidget {
           value: w.panelShows(key),
           onChanged: (v) => c.setPanelShown(key, v),
         );
-    final stats = w.panelShows('stats');
+    // Só mesas e presentes se podem desligar; mesas só aparecem com mais
+    // de uma mesa (2026-11-11).
+    final tables = ref.watch(seatingControllerProvider).tables.length;
+    final canFourth = fourth == 'Presentes' || (fourth == 'Mesas' && tables > 1);
     return _SettingsPage(
       title: 'Painel do evento',
       children: [
@@ -589,16 +593,8 @@ class _PanelPage extends ConsumerWidget {
             style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
         const SizedBox(height: 8),
         tile('countdown', 'Contagem decrescente', 'Dias, horas, minutos e segundos'),
-        tile('stats', 'Números', 'Só aparecem os que são maiores que 0'),
-        if (stats) ...[
-          tile('stat_guests', 'Convidados', 'Confirmados', indent: true),
-          tile('stat_budget', 'Orçamento', 'Gasto e total', indent: true),
-          tile('stat_partners', 'Parceiros', 'Reservados e propostas', indent: true),
-          tile('stat_fourth', fourth, fourth == 'Mesas' ? 'Pessoas sentadas' : fourth == 'Bilhetes' ? 'Bilhetes vendidos' : 'Já oferecidos', indent: true),
-        ],
-        const SizedBox(height: 8),
-        const Text('Os próximos passos, o convite, as sugestões, as reservas e Gerir (com a página dos convidados e a galeria) aparecem sempre.',
-            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        if (canFourth)
+          tile('stat_fourth', fourth, fourth == 'Mesas' ? 'Pessoas sentadas, nos números do painel' : 'Já oferecidos, nos números do painel'),
       ],
     );
   }
