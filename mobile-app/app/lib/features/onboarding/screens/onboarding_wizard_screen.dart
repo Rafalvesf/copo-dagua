@@ -77,7 +77,10 @@ class OnboardingWizardScreen extends ConsumerStatefulWidget {
   /// inicial, sem permissões e sem marcar o onboarding.
   final bool newEvent;
 
-  const OnboardingWizardScreen({super.key, this.initialStep = 0, this.newEvent = false});
+  /// Tipo já escolhido no cartão "O que vamos celebrar?" (`?tipo=`).
+  final String? initialType;
+
+  const OnboardingWizardScreen({super.key, this.initialStep = 0, this.newEvent = false, this.initialType});
 
   @override
   ConsumerState<OnboardingWizardScreen> createState() =>
@@ -127,6 +130,10 @@ class _OnboardingWizardScreenState
   void initState() {
     super.initState();
     Funnel.track(widget.newEvent ? 'event_create_start' : 'onboarding_start');
+    final t = EventType.values.where((e) => e.name == widget.initialType).firstOrNull;
+    if (t != null) _eventTypes
+      ..clear()
+      ..add(t);
     for (final c in [_ownName, _partnerName, _location, _budget, _otherLabel, _ownPhone, _partnerPhone, _price]) {
       c.addListener(() => setState(() {}));
     }

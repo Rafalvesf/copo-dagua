@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -7,9 +8,11 @@ import '../../core/theme/app_theme.dart';
 /// Eventos, Parceiros, Loja e sugestões do painel).
 class SnapCarousel extends StatefulWidget {
   final int itemCount;
-  final double height;
+  /// Altura fixa; sem ela, o carrossel fica com a altura do cartão que
+  /// está à vista (cartões de alturas diferentes, sem espaço vazio).
+  final double? height;
   final IndexedWidgetBuilder itemBuilder;
-  const SnapCarousel({super.key, required this.itemCount, required this.height, required this.itemBuilder});
+  const SnapCarousel({super.key, required this.itemCount, this.height, required this.itemBuilder});
 
   @override
   State<SnapCarousel> createState() => _SnapCarouselState();
@@ -18,6 +21,7 @@ class SnapCarousel extends StatefulWidget {
 class _SnapCarouselState extends State<SnapCarousel> {
   int _page = 0;
   PageController? _controller;
+  final Map<int, double> _heights = {};
   double _fraction = 0;
 
   @override
@@ -45,16 +49,33 @@ class _SnapCarouselState extends State<SnapCarousel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         LayoutBuilder(
-          builder: (context, c) => SizedBox(
-            height: widget.height,
+          builder: (context, c) => AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            height: widget.height ?? _heights[page] ?? (_heights.isEmpty ? 300 : _heights.values.first),
             child: PageView.builder(
               controller: _controllerFor(c.maxWidth),
               itemCount: widget.itemCount,
               onPageChanged: (i) => setState(() => _page = i),
-              itemBuilder: (context, i) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: widget.itemBuilder(context, i),
-              ),
+              itemBuilder: (context, i) {
+                final card = Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: widget.itemBuilder(context, i),
+                );
+                if (widget.height != null) return card;
+                return OverflowBox(
+                  alignment: Alignment.topCenter,
+                  minHeight: 0,
+                  maxHeight: double.infinity,
+                  child: _Measure(
+                    onHeight: (h) {
+                      if (!mounted || _heights[i] == h) return;
+                      setState(() => _heights[i] = h);
+                    },
+                    child: card,
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -79,5 +100,32 @@ class _SnapCarouselState extends State<SnapCarousel> {
         ],
       ],
     );
+  }
+}
+
+/// Diz a altura do filho depois de cada layout.
+class _Measure extends SingleChildRenderObjectWidget {
+  final ValueChanged<double> onHeight;
+  const _Measure({required this.onHeight, required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderMeasure(onHeight);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderMeasure renderObject) => renderObject.onHeight = onHeight;
+}
+
+class _RenderMeasure extends RenderProxyBox {
+  _RenderMeasure(this.onHeight);
+  ValueChanged<double> onHeight;
+  double? _last;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    final h = size.height;
+    if (h == _last) return;
+    _last = h;
+    WidgetsBinding.instance.addPostFrameCallback((_) => onHeight(h));
   }
 }
