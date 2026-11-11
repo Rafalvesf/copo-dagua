@@ -1,4 +1,7 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 
 import 'browser_back_stub.dart' if (dart.library.js_interop) 'browser_back_web.dart' as back;
@@ -21,7 +24,7 @@ void installBrowserBackDetection() => back.listenBrowserBack(() => _browserBackA
 /// Ordem dos separadores de cada navbar (organizadores, parceiros e
 /// convidados). Decide para que lado desliza a troca de separador.
 const Map<String, int> _tabOrder = {
-  '/partners': 0, '/wedding': 1, '/chat': 2, '/home': 3,
+  '/partners': 0, '/eventos': 1, '/wedding': 1, '/chat': 2, '/home': 3,
   '/partner-home': 0, '/partner-requests': 1, '/partner-messages': 2, '/partner-profile': 3,
   '/guest-home': 0, '/guest-gallery': 1, '/guest-gifts': 2, '/guest-profile': 3,
 };
@@ -37,7 +40,27 @@ int? _tabIndexForPath(String path) {
 int _currentTab = 0;
 int _tabDir = 1;
 
-const _tabDuration = Duration(milliseconds: 320);
+// Mais lenta, como um carrossel (2026-11-11: "está muito rápida").
+const _tabDuration = Duration(milliseconds: 460);
+
+/// Fotografia da página que sai, para deslizar ao lado da que entra
+/// (2026-11-11: "vê-se o conteúdo da página anterior e aparece o novo").
+final Map<ValueKey<String>, GlobalKey> _boundaryKeys = {};
+ValueKey<String>? _shownPage;
+final Map<ValueKey<String>, ui.Image> _leavingShots = {};
+
+ui.Image? _snapshot(ValueKey<String>? key) {
+  if (key == null) return null;
+  final ctx = _boundaryKeys[key]?.currentContext;
+  final ro = ctx?.findRenderObject();
+  if (ro is! RenderRepaintBoundary || !ro.attached) return null;
+  try {
+    final dpr = ctx != null ? MediaQuery.maybeDevicePixelRatioOf(ctx) ?? 1.0 : 1.0;
+    return ro.toImageSync(pixelRatio: dpr.clamp(1.0, 2.0));
+  } catch (_) {
+    return null;
+  }
+}
 const _pushDuration = Duration(milliseconds: 380);
 
 /// Rota de um separador da navbar: troca com slide horizontal, sem sombra.
@@ -62,16 +85,27 @@ GoRoute tabRoute({
           child: child,
         );
       }
-      if (index != _currentTab) {
-        _tabDir = index > _currentTab ? 1 : -1;
-        _currentTab = index;
+      final pageKey = state.pageKey;
+      if (_shownPage != pageKey) {
+        if (index != _currentTab) {
+          _tabDir = index > _currentTab ? 1 : -1;
+          _currentTab = index;
+        }
+        final shot = _snapshot(_shownPage);
+        if (shot != null) {
+          _leavingShots.remove(pageKey)?.dispose();
+          _leavingShots[pageKey] = shot;
+        }
+        _shownPage = pageKey;
       }
+      final boundary = _boundaryKeys.putIfAbsent(pageKey, () => GlobalKey());
       return CustomTransitionPage<void>(
-        key: state.pageKey,
+        key: pageKey,
         transitionDuration: _tabDuration,
         reverseTransitionDuration: _tabDuration,
-        transitionsBuilder: (context, animation, secondary, child) => _TabSlide(animation: animation, child: child),
-        child: child,
+        transitionsBuilder: (context, animation, secondary, child) =>
+            _TabSlide(animation: animation, pageKey: pageKey, child: child),
+        child: RepaintBoundary(key: boundary, child: child),
       );
     },
   );
@@ -79,8 +113,9 @@ GoRoute tabRoute({
 
 class _TabSlide extends StatelessWidget {
   final Animation<double> animation;
+  final ValueKey<String> pageKey;
   final Widget child;
-  const _TabSlide({required this.animation, required this.child});
+  const _TabSlide({required this.animation, required this.pageKey, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -88,18 +123,33 @@ class _TabSlide extends StatelessWidget {
       animation: animation,
       child: child,
       builder: (context, child) {
-        // A entrar vem do lado da direção; a sair vai para o lado oposto.
+        // A entrar vem do lado do separador tocado; a sair vai para o
+        // lado oposto.
         final leaving = animation.status == AnimationStatus.reverse;
         // Voltar com o gesto do Safari: o Safari já animou; a app não
         // mostra a página a sair (evita o "piscar", reportado 2026-10-20).
         if (_fromBrowserBack) {
           return leaving ? Opacity(opacity: 0, child: child) : child!;
         }
-        final t = Curves.easeOutCubic.transform(animation.value);
-        final dx = (leaving ? -_tabDir : _tabDir) * (1 - t);
+        final t = Curves.easeInOutCubic.transform(animation.value);
+        final dir = leaving ? -_tabDir : _tabDir;
+        if (!leaving && animation.isCompleted) {
+          _leavingShots.remove(pageKey)?.dispose();
+        }
+        final shot = leaving || animation.isCompleted ? null : _leavingShots[pageKey];
         return LayoutBuilder(builder: (context, c) {
-          final o = Offset(dx * c.maxWidth, 0);
-          return Transform.translate(offset: o, child: PageMotion(offset: o, child: child!));
+          final w = c.maxWidth;
+          final o = Offset(dir * (1 - t) * w, 0);
+          final page = Transform.translate(offset: o, child: PageMotion(offset: o, child: child!));
+          if (shot == null) return page;
+          // A página anterior sai para o outro lado, ao mesmo tempo.
+          return Stack(fit: StackFit.expand, children: [
+            Transform.translate(
+              offset: Offset(-dir * t * w, 0),
+              child: IgnorePointer(child: RawImage(image: shot, fit: BoxFit.fill)),
+            ),
+            page,
+          ]);
         });
       },
     );
