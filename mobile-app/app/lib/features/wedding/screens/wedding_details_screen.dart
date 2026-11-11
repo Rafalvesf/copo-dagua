@@ -2485,7 +2485,7 @@ class _TodoNow extends ConsumerWidget {
                       FilledButton(
                         onPressed: () => it.onTap(context, ref),
                         style: FilledButton.styleFrom(
-                          backgroundColor: it.primary ? AppTheme.ink : _green,
+                          backgroundColor: AppTheme.ink,
                           foregroundColor: Colors.white,
                           minimumSize: const Size(0, 40),
                           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -2872,7 +2872,7 @@ class _RemindSheetState extends State<_RemindSheet> {
           ]),
         );
     ButtonStyle filled() => FilledButton.styleFrom(
-          backgroundColor: _green,
+          backgroundColor: AppTheme.ink,
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(46),
           shape: const StadiumBorder(),

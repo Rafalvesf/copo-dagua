@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/v2_kit.dart' show softCard;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -218,10 +219,7 @@ class _DateShortcut extends StatelessWidget {
         height: 46,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-        ),
+        decoration: softCard(radius: AppRadius.pill),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -263,10 +261,7 @@ class _OverallProgressCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
+      decoration: softCard(radius: AppRadius.lg),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -440,10 +435,7 @@ class _TaskTile extends StatelessWidget {
     final due = item.dueDate;
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
+      decoration: softCard(radius: AppRadius.md),
       child: Row(
         children: [
           SnappyTap(
@@ -596,7 +588,7 @@ class _AddTaskSheetState extends State<_AddTaskSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: 20,
         right: 20,

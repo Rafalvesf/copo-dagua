@@ -800,7 +800,7 @@ class ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.existingReview != null;
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: 20,
         right: 20,

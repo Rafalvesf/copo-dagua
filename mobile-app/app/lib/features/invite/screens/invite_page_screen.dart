@@ -241,7 +241,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
               Navigator.of(sheet).pop(v);
             }
 
-            return Padding(
+            return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 24, AppTheme.screenMargin, 24 + MediaQuery.of(sheet).viewInsets.bottom),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

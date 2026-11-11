@@ -1,4 +1,5 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
+import 'hide_while_typing.dart';
 import '../../core/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,7 +52,7 @@ class GuestBottomNav extends ConsumerWidget {
     final sections = id == null ? const GuestSections() : (ref.watch(myEventPassProvider(id)).value?.sections ?? const GuestSections());
     // Fica fixa por cima enquanto a página anima (page_transitions.dart).
     return StayOverNav(
-      child: TourHost(role: TourRole.guest, guestWeddingId: weddingId, child: _buildNav(context, sections)),
+      child: HideWhileTyping(child: TourHost(role: TourRole.guest, guestWeddingId: weddingId, child: _buildNav(context, sections))),
     );
   }
 

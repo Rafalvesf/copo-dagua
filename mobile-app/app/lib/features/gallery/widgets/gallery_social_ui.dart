@@ -788,7 +788,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                         width: 44,
                         height: 44,
                         alignment: Alignment.center,
-                        decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle),
+                        decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
                         child: const Icon(Hi.arrowUp, color: Colors.white, size: 20),
                       ),
                     ),

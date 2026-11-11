@@ -85,7 +85,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                             onPressed: () => _edit(context, null),
                             icon: const Icon(Hi.plus),
                             label: const Text('Novo produto'),
-                            style: FilledButton.styleFrom(backgroundColor: green, minimumSize: const Size.fromHeight(48), shape: const StadiumBorder()),
+                            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(48), shape: const StadiumBorder()),
                           ),
                           const SizedBox(height: 12),
                           if (list.isEmpty)
@@ -196,7 +196,7 @@ class _Orders extends ConsumerWidget {
                     },
                     icon: const Icon(Hi.truck, size: 18),
                     label: const Text('Marcar como enviado'),
-                    style: FilledButton.styleFrom(backgroundColor: green, shape: const StadiumBorder()),
+                    style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
                   ),
               ]),
             ),
@@ -366,7 +366,7 @@ class _ProductSheetState extends ConsumerState<_ProductSheet> {
         const SizedBox(height: 10),
         FilledButton(
           onPressed: _busy ? null : _save,
-          style: FilledButton.styleFrom(backgroundColor: green, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+          style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
           child: Text(_busy ? 'A guardar…' : 'Guardar'),
         ),
         if (widget.existing != null)

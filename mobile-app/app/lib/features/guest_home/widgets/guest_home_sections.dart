@@ -233,7 +233,7 @@ class GuestAnswerCard extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: edit,
-            style: FilledButton.styleFrom(backgroundColor: guestButtonGreen, foregroundColor: Colors.white, shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, foregroundColor: Colors.white, shape: const StadiumBorder()),
             child: Text(declined ? 'Mudar' : 'Responder'),
           ),
         ]),
@@ -378,7 +378,7 @@ class GuestPlaceCard extends ConsumerWidget {
           icon: const Icon(Hi.map, size: 19),
           label: const Text('Como chegar'),
           style: FilledButton.styleFrom(
-            backgroundColor: guestButtonGreen,
+            backgroundColor: AppTheme.ink,
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(46),
             shape: const StadiumBorder(),
@@ -553,7 +553,7 @@ class GuestPhotosCta extends StatelessWidget {
         icon: const Icon(Hi.camera),
         label: const Text('Tirar e partilhar fotos'),
         style: FilledButton.styleFrom(
-          backgroundColor: guestButtonGreen,
+          backgroundColor: AppTheme.ink,
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(52),
           shape: const StadiumBorder(),

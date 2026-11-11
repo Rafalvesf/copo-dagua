@@ -534,7 +534,7 @@ class _NewUserTaskSheetState extends State<_NewUserTaskSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: 20,
         right: 20,

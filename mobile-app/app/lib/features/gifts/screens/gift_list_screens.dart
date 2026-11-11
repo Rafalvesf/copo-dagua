@@ -90,7 +90,7 @@ class OrganizerGiftListScreen extends ConsumerWidget {
                             onPressed: () => showWishSheet(context, ref, weddingId: weddingId),
                             icon: const Icon(Hi.pencilSquare, size: 20),
                             label: const Text('Desejo'),
-                            style: FilledButton.styleFrom(backgroundColor: _green, minimumSize: const Size(0, 46), shape: const StadiumBorder()),
+                            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size(0, 46), shape: const StadiumBorder()),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -389,7 +389,7 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
         const SizedBox(height: 14),
         FilledButton(
           onPressed: _saving ? null : _save,
-          style: FilledButton.styleFrom(backgroundColor: _green, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+          style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
           child: Text(_saving ? 'A guardar…' : 'Guardar'),
         ),
       ]),
@@ -486,7 +486,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                   },
             icon: Icon(added ? Hi.check : Hi.plus),
             label: Text(added ? 'Já está na vossa lista' : (p.inStock ? 'Pôr na lista de presentes' : 'Esgotado')),
-            style: FilledButton.styleFrom(backgroundColor: _green, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -819,7 +819,7 @@ class _GuestItemCard extends ConsumerWidget {
                 isScrollControlled: true,
                 builder: (_) => _OfferSheet(item: i, weddingId: weddingId),
               ),
-              style: FilledButton.styleFrom(backgroundColor: _green, shape: const StadiumBorder()),
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
               child: Text(i.isProduct ? 'Oferecer · ${giftEuros(i.price ?? 0)}' : 'Vou oferecer'),
             ),
         ]),
@@ -934,7 +934,7 @@ class _OfferSheetState extends ConsumerState<_OfferSheet> {
         const SizedBox(height: 12),
         FilledButton(
           onPressed: _busy ? null : _go,
-          style: FilledButton.styleFrom(backgroundColor: _green, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+          style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
           child: _busy
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
               : Text(i.isProduct ? 'Pagar ${giftEuros((i.price ?? 0) * _qty)}' : 'Reservar'),
@@ -1010,7 +1010,7 @@ class _GiftReturnScreenState extends ConsumerState<GiftReturnScreen> {
               if (_status != 'checking')
                 FilledButton(
                   onPressed: () => context.go(_weddingId != null ? '/guest-gifts/$_weddingId' : '/guest-gifts'),
-                  style: FilledButton.styleFrom(backgroundColor: _green, shape: const StadiumBorder()),
+                  style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
                   child: const Text('Voltar aos presentes'),
                 ),
             ]),

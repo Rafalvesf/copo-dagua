@@ -454,15 +454,15 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             padding: const EdgeInsets.symmetric(vertical: 16),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppTheme.surface,
+              color: AppTheme.ink,
               borderRadius: BorderRadius.circular(AppRadius.pill),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Hi.pencil, size: 18, color: AppTheme.ink),
+                Icon(Hi.pencil, size: 18, color: Colors.white),
                 SizedBox(width: 8),
-                Text('Editar convidado', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text('Editar convidado', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
               ],
             ),
           ),
@@ -475,8 +475,9 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             padding: const EdgeInsets.symmetric(vertical: 16),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppStatusColors.declined.withValues(alpha: 0.12),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(AppRadius.pill),
+              border: Border.all(color: AppStatusColors.declined, width: 1.5),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
