@@ -568,8 +568,7 @@ class _ProfileRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      color: Colors.white,
-      boxShadow: softCard().boxShadow,
+      color: AppTheme.surface,
       child: Row(
         children: [
           Icon(icon, size: 20, color: AppTheme.inkMuted),

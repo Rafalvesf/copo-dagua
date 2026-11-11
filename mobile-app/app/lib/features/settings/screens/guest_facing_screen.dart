@@ -983,8 +983,7 @@ class _PreviewButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        color: Colors.white,
-        boxShadow: softCard().boxShadow,
+        color: AppTheme.surface,
         child: Row(
           children: [
             Icon(icon, size: 20, color: AppTheme.inkMuted),
@@ -1838,8 +1837,7 @@ class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
     final green = AppTheme.accentOliveDark;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-      color: Colors.white,
-      boxShadow: softCard().boxShadow,
+      color: AppTheme.surface,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
           Icon(Hi.adjustmentsHorizontal, size: 20, color: green),

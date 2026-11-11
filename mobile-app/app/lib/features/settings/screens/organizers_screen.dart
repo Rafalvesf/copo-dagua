@@ -1,7 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
-import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard;
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -87,8 +86,7 @@ class _OwnerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(14),
-        color: Colors.white,
-        boxShadow: softCard().boxShadow,
+        color: AppTheme.surface,
         child: Row(children: [
           _Avatar(o.name),
           const SizedBox(width: 12),
@@ -183,8 +181,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
     final pending = o.status == 'pending';
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
-      color: Colors.white,
-      boxShadow: softCard().boxShadow,
+      color: AppTheme.surface,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
           _Avatar(o.name),
