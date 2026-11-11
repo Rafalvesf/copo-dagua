@@ -25,7 +25,6 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/sticker_icon.dart';
@@ -103,7 +102,9 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
   @override
   Widget build(BuildContext context) {
     final role = ref.watch(authControllerProvider.select((s) => s.profile?.role));
-    final organizer = role == UserRole.couple;
+    // Já não há contas só de convidado (2026-11-11): organizadores e
+    // convidados são a mesma conta, com a mesma barra de baixo.
+    final organizer = role != UserRole.partner;
     final weddingState = ref.watch(weddingControllerProvider);
     final myEvents = organizer ? weddingState.events : const <Wedding>[];
     final activeId = weddingState.wedding?.id;
@@ -205,7 +206,6 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
                   const SizedBox(height: 14),
                   const TeamBannerCard(),
                   // Quem não tem Chat vê aqui a conversa com a equipa.
-                  if (!organizer) const TeamThreadEntry(padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 14)),
                   ...content,
                 ],
               ),
@@ -215,9 +215,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: organizer
-                ? const FloatingBottomNav(current: AppTab.events)
-                : const GuestBottomNav(current: GuestTab.events),
+            child: const FloatingBottomNav(current: AppTab.events),
           ),
         ],
       ),
