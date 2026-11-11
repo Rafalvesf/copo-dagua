@@ -50,6 +50,12 @@ class _BuyTicketSheet extends StatefulWidget {
 class _BuyTicketSheetState extends State<_BuyTicketSheet> {
   int _qty = 1;
   bool _busy = false;
+
+  /// Até 10, e nunca mais do que os lugares que restam (migração 182).
+  int get _maxQty {
+    final left = widget.event.spotsLeft;
+    return left == null ? 10 : left.clamp(1, 10);
+  }
   String? _error;
 
   Future<void> _pay() async {
@@ -134,7 +140,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
                 ),
                 IconButton.outlined(
                   tooltip: 'Mais',
-                  onPressed: _qty < 10 && !_busy ? () => setState(() => _qty++) : null,
+                  onPressed: _qty < _maxQty && !_busy ? () => setState(() => _qty++) : null,
                   icon: const Icon(Hi.plus),
                 ),
               ],

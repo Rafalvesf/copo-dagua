@@ -28,6 +28,13 @@ class PublicEvent {
   /// Quantas pessoas já vão (migração 178; 0 antes de correr).
   final int goingCount;
 
+  /// Limite de pessoas (migração 182; null = sem limite) e lugares ocupados.
+  final int? maxAttendees;
+  final int spotsTaken;
+
+  bool get isFull => maxAttendees != null && spotsTaken >= maxAttendees!;
+  int? get spotsLeft => maxAttendees == null ? null : (maxAttendees! - spotsTaken).clamp(0, maxAttendees!);
+
   const PublicEvent({
     required this.weddingId,
     required this.eventType,
@@ -44,6 +51,8 @@ class PublicEvent {
     this.entryPrice,
     this.mine = false,
     this.goingCount = 0,
+    this.maxAttendees,
+    this.spotsTaken = 0,
   });
 
   /// "Grátis" ou "25 € por pessoa".
@@ -78,6 +87,8 @@ class PublicEvent {
       entryPrice: (r['entry_price'] as num?)?.toDouble(),
       mine: r['mine'] == true,
       goingCount: (r['going_count'] as num?)?.toInt() ?? 0,
+      maxAttendees: (r['max_attendees'] as num?)?.toInt(),
+      spotsTaken: (r['spots_taken'] as num?)?.toInt() ?? (r['going_count'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -113,6 +124,23 @@ final eventIsPublicProvider = FutureProvider.family<bool, String>((ref, weddingI
 Future<void> setEventPublic(String weddingId, bool value) async {
   await supabase.from('weddings').update({'is_public': value}).eq('id', weddingId);
 }
+
+/// Limite de pessoas do evento que organizo (migração 182; null = sem limite).
+final eventMaxAttendeesProvider = FutureProvider.family<int?, String>((ref, weddingId) async {
+  try {
+    final row = await supabase.from('weddings').select('max_attendees').eq('id', weddingId).maybeSingle();
+    return (row?['max_attendees'] as num?)?.toInt();
+  } on PostgrestException {
+    return null;
+  }
+});
+
+Future<void> setEventMaxAttendees(String weddingId, int? value) async {
+  await supabase.from('weddings').update({'max_attendees': value}).eq('id', weddingId);
+}
+
+/// O evento já não tem lugares (`event_full`, migração 182).
+bool isEventFull(Object e) => e is PostgrestException && e.message.contains('event_full');
 
 /// Pedido para entrar num evento privado (migração 143): a pessoa já
 /// entrou com o código/link; o organizador confirma ou recusa.

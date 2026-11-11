@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/events/events_providers.dart' show setEventMaxAttendees;
 import '../../../core/models/models.dart';
 import '../../../core/partner_profile/partner_profile_controller.dart';
 import '../../../core/partners/partner_providers.dart';
@@ -107,6 +108,14 @@ class _OnboardingWizardScreenState
   bool _isPaid = false;
   final _price = TextEditingController();
 
+  /// Limite de pessoas (migração 182, pedido 2026-11-11).
+  bool _limited = false;
+  final _maxPeople = TextEditingController();
+  int? get _maxValue {
+    final v = int.tryParse(_maxPeople.text.trim().replaceAll(' ', '').replaceAll('.', ''));
+    return v == null || v < 1 ? null : v;
+  }
+
   final _ownName = TextEditingController();
   final _partnerName = TextEditingController();
   final _location = TextEditingController();
@@ -134,7 +143,7 @@ class _OnboardingWizardScreenState
     if (t != null) _eventTypes
       ..clear()
       ..add(t);
-    for (final c in [_ownName, _partnerName, _location, _budget, _otherLabel, _ownPhone, _partnerPhone, _price]) {
+    for (final c in [_ownName, _partnerName, _location, _budget, _otherLabel, _ownPhone, _partnerPhone, _price, _maxPeople]) {
       c.addListener(() => setState(() {}));
     }
   }
@@ -149,6 +158,7 @@ class _OnboardingWizardScreenState
     _ownPhone.dispose();
     _partnerPhone.dispose();
     _price.dispose();
+    _maxPeople.dispose();
     super.dispose();
   }
 
@@ -170,7 +180,7 @@ class _OnboardingWizardScreenState
         // "o nome do par não é opcional" (2026-10-17) — num casamento.
         _WizardStep.names => _ownName.text.trim().isNotEmpty &&
             (!_isWedding || _partnerName.text.trim().isNotEmpty),
-        _WizardStep.access => !_isPaid || (_priceValue ?? 0) > 0,
+        _WizardStep.access => (!_isPaid || (_priceValue ?? 0) > 0) && (!_limited || _maxValue != null),
         _ => true,
       };
 
@@ -264,6 +274,12 @@ class _OnboardingWizardScreenState
             'entry_price': _isPaid ? _priceValue : null,
           }).eq('id', wedding.id);
         } catch (_) {}
+        // Limite de pessoas (migração 182) — à parte, para não falhar o resto.
+        if (_limited && _maxValue != null) {
+          try {
+            await setEventMaxAttendees(wedding.id, _maxValue);
+          } catch (_) {}
+        }
         // Utilizador que cria o primeiro evento passa a organizar.
         if (ref.read(authControllerProvider).profile?.role == UserRole.guest) {
           await ref.read(authControllerProvider.notifier).becomeOrganizer();
@@ -649,6 +665,26 @@ class _OnboardingWizardScreenState
                   suffix: '€',
                   // Na web, o foco automático deixa o campo sem teclado no iPhone.
                   autofocus: !kIsWeb,
+                ),
+              ],
+              const SizedBox(height: 22),
+              const Text('Limite de pessoas',
+                  style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 10),
+              _ChoicePair(
+                left: ('Sem limite', Hi.users, 'Entra quem quiser'),
+                right: ('Com limite', Hi.userGroup, 'Fecha quando enche'),
+                rightSelected: _limited,
+                onChanged: (v) => setState(() => _limited = v),
+              ),
+              if (_limited) ...[
+                const SizedBox(height: 16),
+                _LabeledField(
+                  label: 'Máximo de pessoas',
+                  controller: _maxPeople,
+                  hint: 'Ex.: 150',
+                  keyboardType: TextInputType.number,
+                  suffix: 'pessoas',
                 ),
               ],
             ],

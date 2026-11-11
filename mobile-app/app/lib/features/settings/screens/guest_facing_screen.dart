@@ -1789,8 +1789,163 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
             ),
           ],
         ],
+        const SizedBox(height: 18),
+        _CapacityBlock(weddingId: _id, segment: _segment, choice: _choice, stepBtn: _stepBtn),
       ]),
     );
+  }
+}
+
+/// Limite de pessoas (migração 182, pedido 2026-11-11): sem limite ou um
+/// máximo; quando enche, ninguém mais entra nem compra bilhete.
+class _CapacityBlock extends ConsumerStatefulWidget {
+  final String weddingId;
+  final Widget Function(List<Widget>) segment;
+  final Widget Function({required String label, required String hint, required bool selected, required VoidCallback onTap}) choice;
+  final Widget Function(IconData, String, VoidCallback) stepBtn;
+  const _CapacityBlock({required this.weddingId, required this.segment, required this.choice, required this.stepBtn});
+
+  @override
+  ConsumerState<_CapacityBlock> createState() => _CapacityBlockState();
+}
+
+class _CapacityBlockState extends ConsumerState<_CapacityBlock> {
+  final _max = TextEditingController();
+  bool _loaded = false;
+  bool? _limitedLocal;
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _max.dispose();
+    super.dispose();
+  }
+
+  int? get _value {
+    final v = int.tryParse(_max.text.trim().replaceAll(' ', '').replaceAll('.', ''));
+    return v == null || v < 1 ? null : v;
+  }
+
+  void _toast(String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+  Future<void> _save(int? v) async {
+    setState(() => _saving = true);
+    try {
+      await setEventMaxAttendees(widget.weddingId, v);
+      ref.invalidate(eventMaxAttendeesProvider(widget.weddingId));
+      ref.invalidate(publicEventsProvider);
+      if (!mounted) return;
+      FocusScope.of(context).unfocus();
+      _toast(v == null ? 'Sem limite de pessoas.' : 'Limite: $v pessoas.');
+    } catch (_) {
+      _toast('Não foi possível guardar. Tenta outra vez.');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _bump(int delta) {
+    final next = ((_value ?? 0) + delta).clamp(1, 100000);
+    setState(() => _max.text = '$next');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final async = ref.watch(eventMaxAttendeesProvider(widget.weddingId));
+    final saved = async.value;
+    if (!_loaded && async.hasValue) {
+      _loaded = true;
+      if (saved != null) _max.text = '$saved';
+    }
+    final limited = _limitedLocal ?? saved != null;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const Text('Limite de pessoas', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+      const SizedBox(height: 8),
+      widget.segment([
+        widget.choice(
+          label: 'Sem limite',
+          hint: 'Entra quem quiser.',
+          selected: !limited,
+          onTap: () {
+            if (!limited) return;
+            setState(() => _limitedLocal = false);
+            if (saved != null) _save(null);
+          },
+        ),
+        widget.choice(
+          label: 'Com limite',
+          hint: 'Fecha quando enche.',
+          selected: limited,
+          onTap: () {
+            if (limited) return;
+            setState(() {
+              _limitedLocal = true;
+              if (_max.text.isEmpty) _max.text = '100';
+            });
+          },
+        ),
+      ]),
+      if (limited) ...[
+        const SizedBox(height: 12),
+        Row(children: [
+          widget.stepBtn(Hi.minus, 'Menos 10', () => _bump(-10)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppTheme.accentOliveDark, width: 1.5),
+              ),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Expanded(
+                  child: TextField(
+                    controller: _max,
+                    textAlign: TextAlign.right,
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
+                    onChanged: (_) => setState(() {}),
+                    onSubmitted: (_) => _value == null ? null : _save(_value),
+                    style: const TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                    decoration: const InputDecoration(
+                      hintText: '100',
+                      filled: false,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      isCollapsed: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Expanded(
+                  child: Text('pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                ),
+              ]),
+            ),
+          ),
+          const SizedBox(width: 10),
+          widget.stepBtn(Hi.plus, 'Mais 10', () => _bump(10)),
+        ]),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 50,
+          child: FilledButton(
+            onPressed: _saving || _value == null ? null : () => _save(_value),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.ink,
+              foregroundColor: Colors.white,
+              shape: const StadiumBorder(),
+            ),
+            child: _saving
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : const Text('Guardar limite', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+          ),
+        ),
+      ],
+    ]);
   }
 }
 
