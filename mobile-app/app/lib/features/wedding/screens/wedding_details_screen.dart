@@ -28,6 +28,7 @@ import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/photo_adjust_screen.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
+import '../../../shared/widgets/dense_card.dart' show CtaPill;
 import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/seating/seating_controller.dart';
@@ -3394,13 +3395,7 @@ class _SuggestionCard extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                 ),
-                Container(
-                  height: 32,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(16)),
-                  child: const Text('Ver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
-                ),
+                const CtaPill('Ver', height: 32),
               ]),
             ]),
           ),

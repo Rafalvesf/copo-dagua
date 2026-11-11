@@ -74,7 +74,8 @@ class MetaRow extends StatelessWidget {
       ]);
 }
 
-/// Botão pequeno preto com letra branca (regra dos botões).
+/// Botão dos cartões: branco, contorno e letra pretos ("Ver evento",
+/// pedido 2026-11-11 — o mesmo em todos os cartões).
 class CtaPill extends StatelessWidget {
   final String text;
   final double height;
@@ -85,8 +86,12 @@ class CtaPill extends StatelessWidget {
         height: height,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(height / 2)),
-        child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(height / 2),
+          border: Border.all(color: AppTheme.ink, width: 1.5),
+        ),
+        child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.ink)),
       );
 }
 
