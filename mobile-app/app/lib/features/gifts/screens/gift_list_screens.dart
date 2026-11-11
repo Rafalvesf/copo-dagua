@@ -403,14 +403,16 @@ class GiftShopScreen extends StatelessWidget {
   const GiftShopScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const GradientScaffold(
+  Widget build(BuildContext context) => GradientScaffold(
         background: AppBackground.subtle,
-        body: SafeArea(
+        body: SafeArea(top: false, 
           bottom: false,
-          child: Column(children: [
-            PageHeader(title: 'Loja', centered: true),
-            Expanded(child: GiftShopView()),
-          ]),
+          child: ScrollingHeader(
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
+            PageHeader(title: 'Loja', centered: true)
+ ],
+ body: GiftShopView(),
+),
         ),
       );
 }

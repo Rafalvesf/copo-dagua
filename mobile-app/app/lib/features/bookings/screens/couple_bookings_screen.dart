@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
@@ -71,12 +72,12 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
             const SizedBox(height: 16),
           ];
           if (_guests) {
-            return Column(children: [
-              ...top,
-              Expanded(
-                child: weddingId == null ? const SizedBox.shrink() : OrganizerGuestOffers(weddingId: weddingId),
-              ),
-            ]);
+            return ScrollingHeader(
+ header: [
+              ...top
+ ],
+ body: weddingId == null ? const SizedBox.shrink() : OrganizerGuestOffers(weddingId: weddingId),
+);
           }
           Widget whole(Widget body) => CustomScrollView(slivers: [
                 SliverToBoxAdapter(child: Column(children: top)),

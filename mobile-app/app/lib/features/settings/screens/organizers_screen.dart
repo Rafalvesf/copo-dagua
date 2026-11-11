@@ -1,6 +1,7 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,12 +27,13 @@ class OrganizersScreen extends ConsumerWidget {
     final mine = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
-        child: Column(children: [
-          const PageHeader(title: 'Organizadores', centered: true),
-          Expanded(
-            child: listAsync == null
+        child: ScrollingHeader(
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
+          const PageHeader(title: 'Organizadores', centered: true)
+ ],
+ body: listAsync == null
                 ? const SizedBox.shrink()
                 : listAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
@@ -63,8 +65,7 @@ class OrganizersScreen extends ConsumerWidget {
                       );
                     },
                   ),
-          ),
-        ]),
+),
       ),
     );
   }
