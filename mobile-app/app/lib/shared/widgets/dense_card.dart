@@ -209,6 +209,53 @@ class AvatarDots extends StatelessWidget {
   }
 }
 
+/// Ninguém vai ainda: três lugares livres tracejados, sobrepostos como
+/// as bolinhas de [AvatarDots] (cada um tapa o tracejado do anterior).
+class GhostDots extends StatelessWidget {
+  const GhostDots({super.key});
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: 24 + 2 * 17,
+        height: 24,
+        child: Stack(children: [
+          for (var i = 0; i < 3; i++)
+            Positioned(
+              left: i * 17,
+              child: Container(
+                width: 24,
+                height: 24,
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                child: const CustomPaint(painter: _DashedCircle()),
+              ),
+            ),
+        ]),
+      );
+}
+
+class _DashedCircle extends CustomPainter {
+  const _DashedCircle();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFBDB8AD)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final r = size.width / 2 - 0.75;
+    final c = Offset(size.width / 2, size.height / 2);
+    const dashes = 10;
+    const sweep = 3.14159265 * 2 / dashes;
+    for (var i = 0; i < dashes; i++) {
+      canvas.drawArc(Rect.fromCircle(center: c, radius: r), i * sweep, sweep * 0.55, false, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 /// Três números pequenos lado a lado (só os que existem).
 class MiniStats extends StatelessWidget {
   final List<(String, String)> items;

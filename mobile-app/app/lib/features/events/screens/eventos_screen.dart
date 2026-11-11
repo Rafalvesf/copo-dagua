@@ -409,6 +409,16 @@ class _PosterCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(e.goingCount == 1 ? '1 vai' : '${e.goingCount} vão',
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                ] else ...[
+                  // Ainda ninguém vai: lugares livres (mockup B, 2026-11-11).
+                  const GhostDots(),
+                  const SizedBox(width: 8),
+                  const Flexible(
+                    child: Text('Sê o primeiro a ir!',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+                  ),
                 ],
                 const Spacer(),
                 busy
