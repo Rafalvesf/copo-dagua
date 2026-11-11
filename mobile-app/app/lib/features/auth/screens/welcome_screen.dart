@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:flutter/material.dart';
@@ -193,13 +194,13 @@ class _WelcomeContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 22),
                   const _Feature(
-                    icon: Icons.groups_2_outlined,
+                    icon: Hi.userGroup,
                     title: 'Convidados e lugares',
                     subtitle: 'Confirmações, menus e mesas',
                   ),
                   const SizedBox(height: 14),
                   const _Feature(
-                    icon: Icons.storefront_outlined,
+                    icon: Hi.buildingStorefront,
                     title: 'Parceiros de confiança',
                     subtitle: 'Pede orçamentos e reserva',
                   ),

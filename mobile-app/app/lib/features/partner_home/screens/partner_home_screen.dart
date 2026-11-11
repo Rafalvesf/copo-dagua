@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -141,7 +142,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                         PopupMenuItem(value: 'logout', child: Text('Terminar sessão')),
                       ],
                       child: const IgnorePointer(
-                        child: V2RoundButton(icon: Icons.more_horiz, tooltip: 'Mais opções'),
+                        child: V2RoundButton(icon: Hi.ellipsisHorizontal, tooltip: 'Mais opções'),
                       ),
                     ),
                   ],
@@ -191,7 +192,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                     label: 'VENDAS ESTE MÊS',
                     value: stats == null ? '—' : euros(stats.revenue),
                     suffix: stats == null ? null : '${stats.bookings} ${stats.bookings == 1 ? 'reserva confirmada' : 'reservas confirmadas'}',
-                    doodles: const [Icons.storefront_outlined, Icons.auto_awesome_outlined, Icons.favorite_border],
+                    doodles: const [Hi.buildingStorefront, Hi.sparkles, Hi.heartOutline],
                     footer: Wrap(spacing: 8, runSpacing: 8, children: [
                       HeroPill('${newRequests.length} ${newRequests.length == 1 ? 'pedido novo' : 'pedidos novos'}', solid: true),
                       HeroPill('$pending ${pending == 1 ? 'reserva pendente' : 'reservas pendentes'}'),
@@ -202,10 +203,10 @@ class PartnerHomeScreen extends ConsumerWidget {
                 _WeekStrip(bookings: thisWeek),
                 const SectionTitle('O teu negócio'),
                 _BizGrid(items: [
-                  (Icons.event_available_outlined, 'Reservas', pending == 0 ? 'Tudo em dia' : '$pending ${pending == 1 ? 'pendente' : 'pendentes'}',
+                  (Hi.calendarDays, 'Reservas', pending == 0 ? 'Tudo em dia' : '$pending ${pending == 1 ? 'pendente' : 'pendentes'}',
                       '/partner-requests', newRequests.length),
                   (
-                    Icons.calendar_month_outlined,
+                    Hi.calendarDays,
                     'Calendário',
                     thisWeek.isNotEmpty
                         ? '${thisWeek.length} ${thisWeek.length == 1 ? 'evento' : 'eventos'} esta semana'
@@ -215,8 +216,8 @@ class PartnerHomeScreen extends ConsumerWidget {
                     '/partner-calendar',
                     0,
                   ),
-                  (Icons.payments_outlined, 'Pagamentos', 'Saldo e levantamentos', '/partner-payments', 0),
-                  (Icons.description_outlined, 'Contratos', 'Reservas assinadas', '/partner-contracts', 0),
+                  (Hi.banknotes, 'Pagamentos', 'Saldo e levantamentos', '/partner-payments', 0),
+                  (Hi.documentText, 'Contratos', 'Reservas assinadas', '/partner-contracts', 0),
                 ]),
                 const SectionTitle('A tua montra'),
                 _ValueList(items: [
@@ -536,7 +537,7 @@ class _ProBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.workspace_premium_rounded, size: 12, color: fg),
+          Icon(Hi.trophy, size: 12, color: fg),
           const SizedBox(width: 3),
           Text('PREMIUM', style: TextStyle(fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.w700, color: fg)),
         ],
@@ -667,7 +668,7 @@ class _ProSavingsCard extends StatelessWidget {
           children: [
             const Row(
               children: [
-                Icon(Icons.workspace_premium_outlined, size: 20, color: _goldInk),
+                Icon(Hi.trophy, size: 20, color: _goldInk),
                 SizedBox(width: 8),
                 Text('O PREMIUM ESTE MÊS', style: TextStyle(fontSize: 12, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: _goldInk)),
               ],

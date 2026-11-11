@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
@@ -245,7 +246,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.location_on_outlined, size: 16, color: AppTheme.inkMuted),
+                          const Icon(Hi.mapPin, size: 16, color: AppTheme.inkMuted),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
@@ -260,7 +261,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             ),
                           ),
                           const SizedBox(width: 2),
-                          const Icon(Icons.expand_more, size: 16, color: AppTheme.inkMuted),
+                          const Icon(Hi.chevronDown, size: 16, color: AppTheme.inkMuted),
                         ],
                       ),
                     ),
@@ -285,7 +286,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             controller: _search,
                             decoration: InputDecoration(
                               hintText: 'Espaços, fotografia, flores…',
-                              prefixIcon: const Icon(Icons.search, size: 20),
+                              prefixIcon: const Icon(Hi.magnifyingGlass, size: 20),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
@@ -319,7 +320,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             // a margem direita fica alinhada (2026-11).
                             decoration: softCard(radius: 999),
                             child: const Icon(
-                              Icons.favorite_border,
+                              Hi.heartOutline,
                               size: 20,
                               color: AppTheme.ink,
                             ),
@@ -335,7 +336,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                           alignment: Alignment.center,
                           decoration: softCard(radius: 999),
                           child: const Icon(
-                            Icons.tune,
+                            Hi.adjustmentsHorizontal,
                             size: 20,
                             color: AppTheme.ink,
                           ),
@@ -515,7 +516,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 14),
                                 child: InfoNote(
                                   'Ainda não há parceiros em $effectiveLocation. Mostramos todos os parceiros.',
-                                  icon: Icons.info_outline_rounded,
+                                  icon: Hi.informationCircle,
                                 ),
                               ),
                             if (!widget.selectionMode && query.isEmpty && partners.isNotEmpty && featuredList.isNotEmpty) ...[
@@ -750,7 +751,7 @@ class _FeaturedCard extends StatelessWidget {
       image: _PartnerPhoto(partner),
       topRight: rating == null
           ? null
-          : PhotoPill(rating, icon: Icons.star_rounded, muted: partner.reviewCount > 0 ? '(${partner.reviewCount})' : null),
+          : PhotoPill(rating, icon: Hi.star, muted: partner.reviewCount > 0 ? '(${partner.reviewCount})' : null),
       title: partner.name,
       subtitle: [partner.primaryCategoryLabel, if (partner.location.isNotEmpty) partner.location].join(' · '),
       chips: partner.categoryLabels.skip(1).take(3).toList(),
@@ -814,7 +815,7 @@ class FeaturedOverlayCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                     const SizedBox(height: 3),
-                    MetaRow([(Icons.place_outlined, subtitle)]),
+                    MetaRow([(Hi.mapPin, subtitle)]),
                     if (chips.isNotEmpty) ...[
                       const SizedBox(height: 10),
                       DenseChipRow([for (final c in chips) DenseChip(c)]),
@@ -888,7 +889,7 @@ class _PartnerCard extends ConsumerWidget {
                         const TextSpan(text: ' · '),
                         WidgetSpan(
                           alignment: PlaceholderAlignment.middle,
-                          child: Icon(Icons.star_rounded, size: 13, color: AppTheme.accentOliveDark),
+                          child: Icon(Hi.star, size: 13, color: AppTheme.accentOliveDark),
                         ),
                         TextSpan(text: ' $rating (${partner.reviewCount})'),
                       ],
@@ -921,7 +922,7 @@ class _PartnerCard extends ConsumerWidget {
                   width: 38,
                   height: 38,
                   decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: softShadow),
-                  child: Icon(favorited ? Icons.favorite : Icons.favorite_border,
+                  child: Icon(favorited ? Hi.heart : Hi.heartOutline,
                       size: 18, color: favorited ? const Color(0xFFA3412E) : AppTheme.accentOliveDark),
                 ),
               ),
@@ -975,7 +976,7 @@ class _FavoritesSheet extends ConsumerWidget {
                     children: [
                       Text('Favoritos', style: Theme.of(context).textTheme.titleLarge),
                       const Spacer(),
-                      Icon(Icons.favorite, size: 18, color: AppTheme.accentOliveDark),
+                      Icon(Hi.heart, size: 18, color: AppTheme.accentOliveDark),
                     ],
                   ),
                 ),
@@ -1259,7 +1260,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
               const Text('Onde procurar parceiros?', style: TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 8),
               _tile(
-                Icons.my_location,
+                Hi.viewfinderCircle,
                 'Usar a minha localização atual',
                 subtitle: 'Parceiros perto de onde estás',
                 leading: _locating
@@ -1268,21 +1269,21 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
                 onTap: _locating ? () {} : _useCurrent,
               ),
               if (event.isNotEmpty)
-                _tile(Icons.celebration_outlined, 'Local do evento', subtitle: event, onTap: () => Navigator.of(context).pop(event)),
-              _tile(Icons.public, 'Todas as localizações', onTap: () => Navigator.of(context).pop('')),
+                _tile(Hi.sparkles, 'Local do evento', subtitle: event, onTap: () => Navigator.of(context).pop(event)),
+              _tile(Hi.globeEuropeAfrica, 'Todas as localizações', onTap: () => Navigator.of(context).pop('')),
               const SizedBox(height: 8),
               TextField(
                 controller: _query,
                 onChanged: _onSearch,
-                decoration: const InputDecoration(hintText: 'Escreve uma localidade', prefixIcon: Icon(Icons.search)),
+                decoration: const InputDecoration(hintText: 'Escreve uma localidade', prefixIcon: Icon(Hi.magnifyingGlass)),
               ),
               for (final r in _results)
-                _tile(Icons.location_on_outlined, r, onTap: () => Navigator.of(context).pop(r)),
+                _tile(Hi.mapPin, r, onTap: () => Navigator.of(context).pop(r)),
               if (widget.options.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 const Text('ONDE HÁ PARCEIROS', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF6E6A63))),
                 for (final o in widget.options)
-                  _tile(Icons.location_on_outlined, o, onTap: () => Navigator.of(context).pop(o)),
+                  _tile(Hi.mapPin, o, onTap: () => Navigator.of(context).pop(o)),
               ],
             ],
           ),

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -412,7 +413,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
     final giftUrl = _giftUrlOn ? t(_giftUrl.text) : null;
     return [
       _Part(
-        icon: Icons.waving_hand_outlined,
+        icon: Hi.handRaised,
         title: 'Boas-vindas',
         status: welcome == null ? 'Falta escrever' : '"${welcome.length > 40 ? '${welcome.substring(0, 40)}…' : welcome}"',
         missing: welcome == null,
@@ -431,7 +432,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
             ]),
       ),
       _Part(
-        icon: Icons.schedule_rounded,
+        icon: Hi.clock,
         title: 'Programa',
         section: GuestSection.programa,
         status: _info.programAvailable
@@ -444,14 +445,14 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
       ),
       if (_info.programAvailable) ...[
         _Part(
-          icon: Icons.place_outlined,
+          icon: Hi.mapPin,
           title: 'Local',
           status: address ?? 'Falta a morada',
           missing: address == null && _lat == null,
           onOpen: () => _openPart('Local', _placeSection),
         ),
         _Part(
-          icon: Icons.checkroom_outlined,
+          icon: Hi.shoppingBag,
           title: 'Dress code',
           status: dress ?? (_colors.isEmpty ? 'Falta escrever' : '${_colors.length} ${_colors.length == 1 ? 'cor' : 'cores'}'),
           missing: dress == null && _colors.isEmpty,
@@ -460,7 +461,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
       ],
       if (_info.giftsAvailable)
         _Part(
-          icon: Icons.card_giftcard_outlined,
+          icon: Hi.gift,
           title: 'Presentes',
           section: GuestSection.presentes,
           status: [if (iban != null) 'IBAN para envelopes', if (giftUrl != null) 'lista noutra loja'].join(' · ').isEmpty
@@ -469,7 +470,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
           onOpen: () => _openPart('Presentes', () => [
                 _PreviewButton(
                   onTap: () => context.push('/gift-list'),
-                  icon: Icons.checklist_rtl_rounded,
+                  icon: Hi.clipboardDocumentList,
                   title: 'Lista na app',
                   subtitle: 'Desejos e produtos das lojas parceiras · Gerir',
                 ),
@@ -507,21 +508,21 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                 // Envelope digital (migração 156).
                 _PreviewButton(
                   onTap: () => context.push('/envelopes'),
-                  icon: Icons.mail_outline_rounded,
+                  icon: Hi.envelope,
                   title: 'Envelopes recebidos',
                   subtitle: 'Quem ofereceu, quanto e a mensagem.',
                 ),
               ]),
         ),
       _Part(
-        icon: Icons.table_restaurant_outlined,
+        icon: Hi.tableCells,
         title: 'A tua mesa',
         section: GuestSection.mesa,
         status: 'Cada convidado vê a sua mesa',
         onOpen: () => _openPart('A tua mesa', () => [
               _PreviewButton(
                 onTap: () => context.push('/seating'),
-                icon: Icons.event_seat_outlined,
+                icon: Hi.ticket,
                 title: 'Mesas e lugares',
                 subtitle: 'Sentar quem ainda não tem lugar',
               ),
@@ -544,7 +545,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
             ]),
       ),
       _Part(
-        icon: Icons.photo_library_outlined,
+        icon: Hi.rectangleStack,
         title: 'Galeria',
         section: GuestSection.galeria,
         status: 'Fotos do evento, partilhadas por todos',
@@ -566,14 +567,14 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
               const SizedBox(height: 10),
               _PreviewButton(
                 onTap: () => context.push('/gallery'),
-                icon: Icons.photo_library_outlined,
+                icon: Hi.rectangleStack,
                 title: 'Ver a galeria',
                 subtitle: 'As fotos já partilhadas',
               ),
             ]),
       ),
       _Part(
-        icon: Icons.groups_outlined,
+        icon: Hi.userGroup,
         title: 'Grupos',
         section: GuestSection.grupos,
         status: 'Conversa entre os convidados',
@@ -588,7 +589,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
             ]),
       ),
       // Ainda não disponível (pedido 2026-11-08: "bloqueia").
-      const _Part(icon: Icons.hotel_outlined, title: 'Dormir e transporte', status: 'Ainda não disponível', locked: true),
+      const _Part(icon: Hi.homeModern, title: 'Dormir e transporte', status: 'Ainda não disponível', locked: true),
     ];
   }
 
@@ -629,7 +630,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
           children: [
             for (final s in suggestions)
               if (!used.contains(s.toLowerCase())) _SuggestChip(label: s, onTap: () => _addMoment(s)),
-            _SuggestChip(label: 'Outro momento', icon: Icons.add, onTap: () => _addMoment('')),
+            _SuggestChip(label: 'Outro momento', icon: Hi.plus, onTap: () => _addMoment('')),
           ],
         ),
       ],
@@ -648,7 +649,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
           decoration: BoxDecoration(color: const Color(0xFFEEF2E9), borderRadius: BorderRadius.circular(AppRadius.lg)),
           child: Row(
             children: [
-              const Icon(Icons.storefront_outlined, size: 20, color: _olive),
+              const Icon(Hi.buildingStorefront, size: 20, color: _olive),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -666,7 +667,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                 usingVenue
                     ? const Padding(
                         padding: EdgeInsets.only(left: 6),
-                        child: Icon(Icons.check_circle, size: 20, color: _olive),
+                        child: Icon(Hi.checkCircle, size: 20, color: _olive),
                       )
                     : TextButton(
                         onPressed: () => setState(() => _useVenue(venue, markDirty: true)),
@@ -685,7 +686,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
           onPressed: _address.text.trim().isEmpty && _lat == null
               ? null
               : () => showNavigationSheet(context, label: placeName, address: _address.text.trim(), latitude: _lat, longitude: _lng),
-          icon: const Icon(Icons.near_me_outlined, size: 18),
+          icon: const Icon(Hi.paperAirplane, size: 18),
           label: const Text('Experimentar o "Como chegar"'),
         ),
       ),
@@ -865,11 +866,11 @@ class _InviteLinkCard extends ConsumerWidget {
         const SizedBox(height: 6),
         // Regras primeiro (pedido 2026-11-03), depois o link.
         for (final rule in [
-          (Icons.public_rounded, code?.isNotEmpty == true
+          (Hi.globeEuropeAfrica, code?.isNotEmpty == true
               ? 'Evento público: quem abre o link (ou escreve o código na app) entra logo.'
               : 'Evento público: quem abre o link entra logo.'),
-          (Icons.lock_outline_rounded, 'Evento privado: a pessoa pede para entrar e tu aceitas em Convidados › Pedidos para entrar.'),
-          (Icons.confirmation_number_outlined, 'Evento pago: paga o bilhete e entra logo, mesmo sendo privado.'),
+          (Hi.lockClosed, 'Evento privado: a pessoa pede para entrar e tu aceitas em Convidados › Pedidos para entrar.'),
+          (Hi.ticket, 'Evento pago: paga o bilhete e entra logo, mesmo sendo privado.'),
         ])
           Padding(
             padding: const EdgeInsets.only(top: 6),
@@ -918,7 +919,7 @@ class _InviteLinkCard extends ConsumerWidget {
                           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
                     ]),
                   ),
-                  const Icon(Icons.copy_rounded, size: 18, color: Colors.white, semanticLabel: 'Copiar código'),
+                  const Icon(Hi.documentDuplicate, size: 18, color: Colors.white, semanticLabel: 'Copiar código'),
                 ]),
               ),
             ),
@@ -934,7 +935,7 @@ class _InviteLinkCard extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
                 }
               },
-              icon: const Icon(Icons.copy_rounded, size: 18),
+              icon: const Icon(Hi.documentDuplicate, size: 18),
               label: const Text('Copiar'),
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white.withValues(alpha: 0.18),
@@ -948,7 +949,7 @@ class _InviteLinkCard extends ConsumerWidget {
           Expanded(
             child: FilledButton.icon(
               onPressed: onShare,
-              icon: const Icon(Icons.ios_share_rounded, size: 18),
+              icon: const Icon(Hi.arrowUpOnSquare, size: 18),
               label: const Text('Partilhar'),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -971,7 +972,7 @@ class _PreviewButton extends StatelessWidget {
   final String subtitle;
   const _PreviewButton({
     required this.onTap,
-    this.icon = Icons.visibility_outlined,
+    this.icon = Hi.eye,
     this.title = 'Ver como os convidados',
     this.subtitle = 'Pré-visualiza o Programa antes de guardar',
   });
@@ -996,7 +997,7 @@ class _PreviewButton extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6)),
+            const Icon(Hi.chevronRight, size: 18, color: Color(0xFFB5B0A6)),
           ],
         ),
       ),
@@ -1111,7 +1112,7 @@ class _MomentRow extends StatelessWidget {
                     ),
                     PopupMenuButton<String>(
                       tooltip: 'Opções',
-                      icon: const Icon(Icons.more_horiz, size: 20, color: AppTheme.inkMuted),
+                      icon: const Icon(Hi.ellipsisHorizontal, size: 20, color: AppTheme.inkMuted),
                       onSelected: (v) => switch (v) {
                         'up' => onUp?.call(),
                         'down' => onDown?.call(),
@@ -1154,7 +1155,7 @@ class _SuggestChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon ?? Icons.add, size: 16, color: _olive),
+            Icon(icon ?? Hi.plus, size: 16, color: _olive),
             const SizedBox(width: 6),
             Text(label, style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: _olive)),
           ],
@@ -1199,7 +1200,7 @@ class _Swatch extends StatelessWidget {
                 border: Border.all(color: const Color(0x14000000)),
               ),
               alignment: Alignment.center,
-              child: selected ? const Icon(Icons.check, size: 18, color: _olive) : null,
+              child: selected ? const Icon(Hi.check, size: 18, color: _olive) : null,
             ),
           ),
         ),
@@ -1404,7 +1405,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(color: const Color(0xFFDDE5D3), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.group_outlined, size: 19, color: _heroGreen),
+                child: const Icon(Hi.userGroup, size: 19, color: _heroGreen),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1413,7 +1414,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
                   Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
                 ]),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
+              const Icon(Hi.chevronRight, color: AppTheme.inkMuted),
             ]),
           ),
         ),
@@ -1705,7 +1706,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           const Text('Preço por pessoa', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           const SizedBox(height: 8),
           Row(children: [
-            _stepBtn(Icons.remove_rounded, 'Menos 1 €', () => _bump(-1)),
+            _stepBtn(Hi.minus, 'Menos 1 €', () => _bump(-1)),
             const SizedBox(width: 10),
             Expanded(
               child: Container(
@@ -1749,7 +1750,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
               ),
             ),
             const SizedBox(width: 10),
-            _stepBtn(Icons.add_rounded, 'Mais 1 €', () => _bump(1)),
+            _stepBtn(Hi.plus, 'Mais 1 €', () => _bump(1)),
           ]),
           const SizedBox(height: 10),
           Wrap(
@@ -1839,7 +1840,7 @@ class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
       decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.lg)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
-          Icon(Icons.tune_rounded, size: 20, color: green),
+          Icon(Hi.adjustmentsHorizontal, size: 20, color: green),
           const SizedBox(width: 8),
           const Expanded(
             child: Text('O que os convidados veem',
@@ -1941,7 +1942,7 @@ class _CodeHero extends ConsumerWidget {
                     },
                     child: const Padding(
                       padding: EdgeInsets.all(10),
-                      child: Icon(Icons.copy_rounded, size: 18, color: Colors.white, semanticLabel: 'Copiar código'),
+                      child: Icon(Hi.documentDuplicate, size: 18, color: Colors.white, semanticLabel: 'Copiar código'),
                     ),
                   ),
                 ),
@@ -1955,7 +1956,7 @@ class _CodeHero extends ConsumerWidget {
             // Um por linha (2026-11-08: "Ver como convidado desformatado").
             FilledButton.icon(
               onPressed: onShare,
-              icon: const Icon(Icons.ios_share, size: 18),
+              icon: const Icon(Hi.arrowUpOnSquare, size: 18),
               label: const Text('Partilhar convite', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -1967,7 +1968,7 @@ class _CodeHero extends ConsumerWidget {
             const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: onPreview,
-              icon: const Icon(Icons.visibility_outlined, size: 18),
+              icon: const Icon(Hi.eye, size: 18),
               label: const Text('Ver como convidado', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white,
@@ -2097,7 +2098,7 @@ class _PartsListState extends ConsumerState<_PartsList> {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(999)),
                         child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                          Icon(Icons.lock_outline_rounded, size: 13, color: AppTheme.inkMuted),
+                          Icon(Hi.lockClosed, size: 13, color: AppTheme.inkMuted),
                           SizedBox(width: 4),
                           Text('Em breve', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                         ]),
@@ -2109,7 +2110,7 @@ class _PartsListState extends ConsumerState<_PartsList> {
                         onChanged: (v) => _set(sections.withSection(p.section!, v)),
                       )
                     else if (p.onOpen != null)
-                      const Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
+                      const Icon(Hi.chevronRight, color: AppTheme.inkMuted),
                   ]),
                 ),
               ),

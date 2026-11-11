@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
@@ -88,7 +89,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                 await copyText(iban.replaceAll(' ', ''));
                 if (context.mounted) Navigator.of(context).pop();
               },
-              icon: const Icon(Icons.copy, size: 18),
+              icon: const Icon(Hi.documentDuplicate, size: 18),
               label: const Text('Copiar IBAN'),
             ),
           ],
@@ -131,7 +132,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                       GreenHero(
                         label: 'DOS ANFITRIÕES',
                         value: '',
-                        doodles: const [Icons.card_giftcard_outlined, Icons.favorite_border, Icons.wb_sunny_outlined],
+                        doodles: const [Hi.gift, Hi.heartOutline, Hi.sun],
                         footer: Text(
                           message?.isNotEmpty == true
                               ? message!
@@ -150,7 +151,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                           decoration: softCard(),
                           child: Row(
                             children: [
-                              const StickerIcon(Icons.card_giftcard_outlined),
+                              const StickerIcon(Hi.gift),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -164,7 +165,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                              const Icon(Icons.chevron_right, size: 18, color: AppTheme.inkMuted),
+                              const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
                             ],
                           ),
                         ),
@@ -180,7 +181,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Row(children: [
-                              StickerIcon(Icons.credit_card_outlined, turns: StickerIcon.tilt(1)),
+                              StickerIcon(Hi.creditCard, turns: StickerIcon.tilt(1)),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -200,7 +201,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                             if (iban?.isNotEmpty == true && wedding != null) ...[
                               FilledButton.icon(
                                 onPressed: () => showEnvelopeSheet(context, wedding!),
-                                icon: const Icon(Icons.mail_outline_rounded, size: 18),
+                                icon: const Icon(Hi.envelope, size: 18),
                                 label: const Text('Oferecer um envelope'),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppTheme.ink,
@@ -232,7 +233,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                                           ],
                                         ),
                                       ),
-                                      Icon(Icons.copy_rounded, size: 18, color: AppTheme.accentOliveDark),
+                                      Icon(Hi.documentDuplicate, size: 18, color: AppTheme.accentOliveDark),
                                     ],
                                   ),
                                 ),
@@ -279,7 +280,7 @@ class _MyEnvelopes extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 3),
             child: Row(children: [
-              Icon(e.received ? Icons.check_circle_rounded : Icons.schedule_rounded,
+              Icon(e.received ? Hi.checkCircle : Hi.clock,
                   size: 16, color: e.received ? AppTheme.accentOliveDark : AppTheme.inkMuted),
               const SizedBox(width: 6),
               Expanded(

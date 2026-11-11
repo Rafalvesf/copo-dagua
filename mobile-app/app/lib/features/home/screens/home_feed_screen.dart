@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
@@ -142,7 +143,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                   child: IconButton(
                                     tooltip: 'Notificações',
                                     onPressed: () => _openNotifications(context),
-                                    icon: const Icon(Icons.notifications_none_rounded, size: 26, color: AppTheme.ink),
+                                    icon: const Icon(Hi.bell, size: 26, color: AppTheme.ink),
                                   ),
                                 ),
                                 if (unreadNotifications > 0)
@@ -222,7 +223,7 @@ class _PresenceCard extends StatelessWidget {
             CircleAvatar(
               radius: 22,
               backgroundColor: AppTheme.accentTint,
-              child: Icon(Icons.how_to_reg_outlined, color: AppTheme.accentOliveDark),
+              child: Icon(Hi.userPlus, color: AppTheme.accentOliveDark),
             ),
             const SizedBox(width: 14),
             const Expanded(
@@ -237,7 +238,7 @@ class _PresenceCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppTheme.ink),
+            const Icon(Hi.chevronRight, color: AppTheme.ink),
           ],
         ),
       ),
@@ -274,7 +275,7 @@ class _SupportSummaryCard extends ConsumerWidget {
         child: Row(
           children: [
             const Icon(
-              Icons.support_agent_outlined,
+              Hi.lifebuoy,
               size: 20,
               color: AppTheme.inkMuted,
             ),
@@ -286,7 +287,7 @@ class _SupportSummaryCard extends ConsumerWidget {
               ),
             ),
             const Icon(
-              Icons.chevron_right,
+              Hi.chevronRight,
               size: 18,
               color: AppTheme.inkMuted,
             ),
@@ -368,7 +369,7 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
                     const Spacer(),
                     SnappyTap(
                       onTap: () => ref.read(taskEngineControllerProvider.notifier).markAllNotificationsRead(),
-                      child: const Icon(Icons.done_all, color: AppTheme.ink),
+                      child: const Icon(Hi.checkBadge, color: AppTheme.ink),
                     ),
                   ],
                 ),
@@ -409,7 +410,7 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
                     ? const Center(
                         child: Padding(
                           padding: EdgeInsets.all(24),
-                          child: InfoNote('Sem notificações por agora.', icon: Icons.notifications_none_rounded),
+                          child: InfoNote('Sem notificações por agora.', icon: Hi.bell),
                         ),
                       )
                     : ListView(
@@ -517,11 +518,11 @@ class _NotificationRow extends ConsumerWidget {
   const _NotificationRow({required this.notification});
 
   IconData get _icon => switch (notification.type) {
-    'new_message' => Icons.chat_bubble_outline_rounded,
-    'support_reply' => Icons.support_agent_rounded,
-    'new_task' => Icons.star_outline_rounded,
-    'task_completed' => Icons.check_circle_outline,
-    _ => Icons.notifications_outlined,
+    'new_message' => Hi.chatBubbleOvalLeft,
+    'support_reply' => Hi.lifebuoy,
+    'new_task' => Hi.starOutline,
+    'task_completed' => Hi.checkCircle,
+    _ => Hi.bell,
   };
 
   @override
@@ -590,7 +591,7 @@ class _NotificationRow extends ConsumerWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: AppTheme.inkMuted),
+            const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
           ],
         ),
       ),
@@ -639,7 +640,7 @@ class _ProfileHeader extends StatelessWidget {
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
-                  child: const Icon(Icons.photo_camera_rounded, size: 15, color: Colors.white),
+                  child: const Icon(Hi.camera, size: 15, color: Colors.white),
                 ),
               ),
             ]),

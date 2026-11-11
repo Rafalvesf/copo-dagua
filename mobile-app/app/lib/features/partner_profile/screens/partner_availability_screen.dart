@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -89,10 +90,10 @@ class _PartnerAvailabilityScreenState extends ConsumerState<PartnerAvailabilityS
                     decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.lg)),
                     child: Column(
                       children: [
-                        _switch(Icons.event_available_outlined, 'Aceitar novos pedidos', 'Recebe pedidos de orçamento dos clientes.', _accepting,
+                        _switch(Hi.calendarDays, 'Aceitar novos pedidos', 'Recebe pedidos de orçamento dos clientes.', _accepting,
                             (v) => setState(() => _accepting = v)),
                         const Divider(height: 1, color: AppTheme.borderMuted),
-                        _switch(Icons.directions_car_outlined, 'Deslocações', 'Disponível para ir ao local do evento.', _travels,
+                        _switch(Hi.truck, 'Deslocações', 'Disponível para ir ao local do evento.', _travels,
                             (v) => setState(() => _travels = v)),
                       ],
                     ),

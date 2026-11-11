@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
@@ -104,13 +105,13 @@ class ConnectStatus {
 /// confirmação. Cada requisito da Stripe (`individual.dob.day`,
 /// `external_account`, …) cai num destes grupos.
 enum ConnectGroup {
-  identity(Icons.badge_outlined, 'Identidade', 'Nome completo, data de nascimento e NIF do responsável'),
-  contact(Icons.alternate_email, 'Contacto', 'Email e telemóvel'),
-  address(Icons.home_outlined, 'Morada', 'Morada fiscal completa com código postal'),
-  business(Icons.storefront_outlined, 'Atividade', 'Tipo de negócio (empresário ou empresa) e descrição do serviço'),
-  bank(Icons.account_balance_outlined, 'Conta bancária', 'IBAN em teu nome ou da tua empresa'),
-  document(Icons.document_scanner_outlined, 'Documento de identificação', 'Cartão de Cidadão ou passaporte, se a Stripe pedir'),
-  terms(Icons.handshake_outlined, 'Termos da Stripe', 'Aceitar o contrato de conta da Stripe');
+  identity(Hi.identification, 'Identidade', 'Nome completo, data de nascimento e NIF do responsável'),
+  contact(Hi.atSymbol, 'Contacto', 'Email e telemóvel'),
+  address(Hi.home, 'Morada', 'Morada fiscal completa com código postal'),
+  business(Hi.buildingStorefront, 'Atividade', 'Tipo de negócio (empresário ou empresa) e descrição do serviço'),
+  bank(Hi.buildingLibrary, 'Conta bancária', 'IBAN em teu nome ou da tua empresa'),
+  document(Hi.documentMagnifyingGlass, 'Documento de identificação', 'Cartão de Cidadão ou passaporte, se a Stripe pedir'),
+  terms(Hi.handRaised, 'Termos da Stripe', 'Aceitar o contrato de conta da Stripe');
 
   final IconData icon;
   final String title;

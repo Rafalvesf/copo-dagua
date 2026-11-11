@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -70,7 +71,7 @@ class AuthBackButton extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: const BoxDecoration(color: _fieldFill, shape: BoxShape.circle),
-          child: const Icon(Icons.chevron_left_rounded, color: AppTheme.ink),
+          child: const Icon(Hi.chevronLeft, color: AppTheme.ink),
         ),
       ),
     );
@@ -211,7 +212,7 @@ class _AuthFieldState extends State<AuthField> {
                   SnappyTap(
                     onTap: () => setState(() => _obscure = !_obscure),
                     child: Icon(
-                      _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _obscure ? Hi.eye : Hi.eyeSlash,
                       size: 20,
                       color: AppTheme.inkMuted,
                     ),

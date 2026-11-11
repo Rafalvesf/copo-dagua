@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/models/models.dart';
@@ -208,12 +209,12 @@ class CompanionLimitRow extends StatelessWidget {
               ],
             ),
           ),
-          btn(Icons.remove_rounded, value > 0 ? () => onChanged(value - 1) : null),
+          btn(Hi.minus, value > 0 ? () => onChanged(value - 1) : null),
           SizedBox(
             width: 36,
             child: Text('$value', textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF171713))),
           ),
-          btn(Icons.add_rounded, value < max ? () => onChanged(value + 1) : null),
+          btn(Hi.plus, value < max ? () => onChanged(value + 1) : null),
         ],
       ),
     );

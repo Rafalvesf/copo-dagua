@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -114,7 +115,7 @@ class PartnerReviewsScreen extends ConsumerWidget {
                         padding: EdgeInsets.all(24),
                         child: InfoNote(
                           'Ainda não tens avaliações.',
-                          icon: Icons.star_outline_rounded,
+                          icon: Hi.starOutline,
                         ),
                       )
                     else ...[

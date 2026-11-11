@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,7 +24,7 @@ class PartnerNotificationBell extends ConsumerWidget {
       children: [
         IconButton(
           tooltip: 'Notificações',
-          icon: const Icon(Icons.notifications_none_rounded, color: AppTheme.ink),
+          icon: const Icon(Hi.bell, color: AppTheme.ink),
           onPressed: () => showIslandSheet(
             context: context,
             isScrollControlled: true,
@@ -90,7 +91,7 @@ class _PartnerNotificationsSheet extends ConsumerWidget {
                   error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerNotificationsProvider)),
                   data: (notifications) {
                     if (notifications.isEmpty) {
-                      return const EmptyStateView(message: 'Sem notificações.', icon: Icons.notifications_none_outlined);
+                      return const EmptyStateView(message: 'Sem notificações.', icon: Hi.bell);
                     }
                     return ListView.builder(
                       controller: scrollController,
@@ -101,10 +102,10 @@ class _PartnerNotificationsSheet extends ConsumerWidget {
                         return ListTile(
                           leading: Icon(
                             switch (n.type) {
-                              'new_message' => n.read ? Icons.chat_bubble_outline_rounded : Icons.chat_bubble_rounded,
-                              'support_reply' => Icons.support_agent_rounded,
-                              'admin_message' => Icons.campaign_outlined,
-                              _ => n.read ? Icons.notifications_none_rounded : Icons.notifications_active_rounded,
+                              'new_message' => n.read ? Hi.chatBubbleOvalLeft : Hi.chatBubbleOvalLeft,
+                              'support_reply' => Hi.lifebuoy,
+                              'admin_message' => Hi.megaphone,
+                              _ => n.read ? Hi.bell : Hi.bellAlert,
                             },
                             color: n.read ? AppTheme.inkMuted : AppTheme.accentOliveDark,
                           ),

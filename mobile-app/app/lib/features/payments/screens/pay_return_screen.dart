@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -84,7 +85,7 @@ class _PayReturnScreenState extends ConsumerState<PayReturnScreen> {
             padding: const EdgeInsets.all(28),
             child: _gaveUp
                 ? Column(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.hourglass_top_rounded, size: 40, color: AppTheme.accentOliveDark),
+                    Icon(Hi.clock, size: 40, color: AppTheme.accentOliveDark),
                     const SizedBox(height: 14),
                     const Text('A confirmar o pagamento',
                         style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w800, color: AppTheme.ink)),

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/models/models.dart';
@@ -30,30 +31,30 @@ Color colorForCategorySlug(String slug) => switch (slug) {
 };
 
 IconData iconForCategorySlug(String slug) => switch (slug) {
-  'photography' => Icons.camera_alt_outlined,
-  'videography' => Icons.videocam_outlined,
-  'catering' => Icons.restaurant_outlined,
-  'cake' => Icons.cake_outlined,
-  'music_dj' => Icons.music_note_outlined,
-  'flowers_decor' => Icons.local_florist_outlined,
-  'venue' => Icons.villa_outlined,
-  'beauty' => Icons.face_retouching_natural_outlined,
-  'officiant' => Icons.record_voice_over_outlined,
-  'invitations' => Icons.mail_outline,
-  'rentals' => Icons.chair_outlined,
-  'transport' => Icons.directions_car_outlined,
-  'wedding_planner' => Icons.event_note_outlined,
-  'restaurants' => Icons.restaurant_menu_rounded,
-  'bars_nightlife' => Icons.local_bar_outlined,
-  'adventure_activities' => Icons.terrain_outlined,
-  'experiences_tours' => Icons.sailing_outlined,
-  'games_escape' => Icons.extension_outlined,
-  'lodging' => Icons.hotel_outlined,
-  'spa_wellness' => Icons.spa_outlined,
-  'kids_entertainment' => Icons.child_care_outlined,
-  'bands_musicians' => Icons.queue_music_outlined,
-  'photobooth_entertainment' => Icons.photo_camera_front_outlined,
-  _ => Icons.storefront_outlined,
+  'photography' => Hi.camera,
+  'videography' => Hi.videoCamera,
+  'catering' => Hi.buildingStorefront,
+  'cake' => Hi.cake,
+  'music_dj' => Hi.musicalNote,
+  'flowers_decor' => Hi.sparkles,
+  'venue' => Hi.homeModern,
+  'beauty' => Hi.faceSmile,
+  'officiant' => Hi.megaphone,
+  'invitations' => Hi.envelope,
+  'rentals' => Hi.user,
+  'transport' => Hi.truck,
+  'wedding_planner' => Hi.calendarDays,
+  'restaurants' => Hi.buildingStorefront,
+  'bars_nightlife' => Hi.beaker,
+  'adventure_activities' => Hi.map,
+  'experiences_tours' => Hi.flag,
+  'games_escape' => Hi.puzzlePiece,
+  'lodging' => Hi.homeModern,
+  'spa_wellness' => Hi.sparkles,
+  'kids_entertainment' => Hi.faceSmile,
+  'bands_musicians' => Hi.queueList,
+  'photobooth_entertainment' => Hi.camera,
+  _ => Hi.buildingStorefront,
 };
 
 /// Ponte para o antigo enum de 5 categorias, ainda usado por
@@ -77,15 +78,15 @@ String slugForPartnerCategory(PartnerCategory category) => switch (category) {
 IconData iconForPartnerCategory(PartnerCategory category) {
   switch (category) {
     case PartnerCategory.photography:
-      return Icons.camera_alt_outlined;
+      return Hi.camera;
     case PartnerCategory.catering:
-      return Icons.restaurant_outlined;
+      return Hi.buildingStorefront;
     case PartnerCategory.music:
-      return Icons.music_note_outlined;
+      return Hi.musicalNote;
     case PartnerCategory.decoration:
-      return Icons.local_florist_outlined;
+      return Hi.sparkles;
     case PartnerCategory.venue:
-      return Icons.villa_outlined;
+      return Hi.homeModern;
   }
 }
 

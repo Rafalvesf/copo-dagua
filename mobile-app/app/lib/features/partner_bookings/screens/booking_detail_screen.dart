@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -137,7 +138,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                   ),
                   const SizedBox(height: 10),
                   V2RowCard(
-                    lead: StickerIcon(Icons.storefront_outlined, turns: StickerIcon.tilt(1)),
+                    lead: StickerIcon(Hi.buildingStorefront, turns: StickerIcon.tilt(1)),
                     title: booking.category ?? 'Serviço',
                     sub: booking.packageLabel.isEmpty ? null : booking.packageLabel,
                   ),
@@ -149,7 +150,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                       decoration: softCard(),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Row(children: [
-                          StickerIcon(Icons.chat_bubble_outline, size: 36, turns: StickerIcon.tilt(2)),
+                          StickerIcon(Hi.chatBubbleOvalLeft, size: 36, turns: StickerIcon.tilt(2)),
                           const SizedBox(width: 10),
                           const Text('Mensagem do cliente',
                               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),

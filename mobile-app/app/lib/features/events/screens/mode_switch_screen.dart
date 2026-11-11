@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -78,7 +79,7 @@ class _ModeSwitchScreenState extends State<ModeSwitchScreen> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     final guest = widget.mode == AppMode.guest;
-    final icon = guest ? Icons.local_activity_outlined : Icons.edit_calendar_outlined;
+    final icon = guest ? Hi.ticket : Hi.calendarDays;
     final title = guest ? 'Modo convidado' : 'Modo organizador';
     final subtitle = guest ? 'Vais ver o evento como os convidados o veem.' : 'De volta aos teus eventos.';
     final fade = CurvedAnimation(parent: _anim, curve: const Interval(0, 0.45, curve: Curves.easeOut));

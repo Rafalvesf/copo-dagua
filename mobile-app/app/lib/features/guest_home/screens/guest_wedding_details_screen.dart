@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -61,7 +62,7 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                         GreenHero(
                           label: 'DOS ANFITRIÕES',
                           value: '',
-                          doodles: const [Icons.favorite_border, Icons.local_bar_outlined, Icons.auto_awesome_outlined],
+                          doodles: const [Hi.heartOutline, Hi.beaker, Hi.sparkles],
                           footer: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             Text('“${wedding.welcomeMessage}”',
                                 style: const TextStyle(fontSize: 17, height: 25 / 17, fontStyle: FontStyle.italic, color: Colors.white)),
@@ -98,7 +99,7 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                       if (wedding.themeColors.isNotEmpty) ...[
                         const SizedBox(height: 10),
                         V2RowCard(
-                          lead: StickerIcon(Icons.checkroom_outlined, turns: StickerIcon.tilt(2)),
+                          lead: StickerIcon(Hi.shoppingBag, turns: StickerIcon.tilt(2)),
                           title: 'Dress code',
                           sub: wedding.dressCode?.isNotEmpty == true ? wedding.dressCode! : 'Cores do evento',
                           trailing: wedding.themeColors.isEmpty
@@ -164,12 +165,12 @@ class _ProgramCard extends StatelessWidget {
 
   IconData get _icon {
     final t = title.toLowerCase();
-    if (t.contains('cerim') || t.contains('igreja') || t.contains('missa')) return Icons.church_outlined;
-    if (t.contains('cocktail') || t.contains('aperitivo') || t.contains('brinde')) return Icons.local_bar_outlined;
-    if (t.contains('jantar') || t.contains('almoço') || t.contains('refei')) return Icons.restaurant_outlined;
-    if (t.contains('bolo') || t.contains('festa') || t.contains('dança')) return Icons.cake_outlined;
-    if (t.contains('foto')) return Icons.photo_camera_outlined;
-    return Icons.schedule_outlined;
+    if (t.contains('cerim') || t.contains('igreja') || t.contains('missa')) return Hi.buildingLibrary;
+    if (t.contains('cocktail') || t.contains('aperitivo') || t.contains('brinde')) return Hi.beaker;
+    if (t.contains('jantar') || t.contains('almoço') || t.contains('refei')) return Hi.buildingStorefront;
+    if (t.contains('bolo') || t.contains('festa') || t.contains('dança')) return Hi.cake;
+    if (t.contains('foto')) return Hi.camera;
+    return Hi.clock;
   }
 
   @override
@@ -213,7 +214,7 @@ class _PlaceCard extends StatelessWidget {
     final title = name?.isNotEmpty == true ? name! : (address ?? '');
     final sub = name?.isNotEmpty == true ? address : null;
     return V2RowCard(
-      lead: StickerIcon(Icons.place_outlined, turns: StickerIcon.tilt(1)),
+      lead: StickerIcon(Hi.mapPin, turns: StickerIcon.tilt(1)),
       title: title,
       sub: sub,
       trailing: GestureDetector(

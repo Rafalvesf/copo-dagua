@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -82,7 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: _keep ? AppTheme.accentOliveDark : const Color(0xFF6E6A63), width: 1.5),
                       ),
-                      child: _keep ? const Icon(Icons.check_rounded, size: 15, color: Colors.white) : null,
+                      child: _keep ? const Icon(Hi.check, size: 15, color: Colors.white) : null,
                     ),
                     const SizedBox(width: 10),
                     const Flexible(

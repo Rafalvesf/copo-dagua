@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart' show openTicketPurchase;
@@ -155,7 +156,7 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 16),
           const InfoNote(
             'Ainda não entraste em nenhum evento. Vê os eventos públicos ou entra com o código que o organizador te deu.',
-            icon: Icons.info_outline_rounded,
+            icon: Hi.informationCircle,
           ),
           const SizedBox(height: 16),
           PrimaryButton(label: 'Ver eventos', onPressed: () => context.go('/eventos')),
@@ -163,7 +164,7 @@ class _EmptyState extends StatelessWidget {
           Center(
             child: TextButton.icon(
               onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-              icon: const Icon(Icons.logout),
+              icon: const Icon(Hi.arrowRightStartOnRectangle),
               label: const Text('Sair'),
             ),
           ),
@@ -218,11 +219,11 @@ class _GuestHomeBody extends ConsumerWidget {
 
     final shortcuts = [
       if (show(GuestSection.programa))
-        GuestShortcut(Icons.schedule_outlined, 'Programa',
+        GuestShortcut(Hi.clock, 'Programa',
             wedding.program.isEmpty ? 'Horários' : '${wedding.program.length} momentos', const Color(0xFFDDE5D3),
             () => context.push('/guest-wedding-details', extra: wedding)),
       if (show(GuestSection.mesa))
-        GuestShortcut(Icons.table_restaurant_outlined, table == null ? 'Mesa' : 'Mesa $table',
+        GuestShortcut(Hi.tableCells, table == null ? 'Mesa' : 'Mesa $table',
             !tableShown
                 ? (passOpts.tableReveal == 'day' ? 'no dia' : '1 semana antes')
                 : table == null
@@ -231,10 +232,10 @@ class _GuestHomeBody extends ConsumerWidget {
             const Color(0xFFF2D98D),
             openTable),
       if (show(GuestSection.presentes))
-        GuestShortcut(Icons.card_giftcard_outlined, 'Presentes', 'lista', const Color(0xFFF3C9CF),
+        GuestShortcut(Hi.gift, 'Presentes', 'lista', const Color(0xFFF3C9CF),
             () => context.go('/guest-gifts/${wedding.weddingId}')),
       if (show(GuestSection.galeria))
-        GuestShortcut(Icons.photo_library_outlined, 'Fotos', isToday ? 'partilhar' : 'no dia', const Color(0xFFDCE4F0), openPhotos),
+        GuestShortcut(Hi.rectangleStack, 'Fotos', isToday ? 'partilhar' : 'no dia', const Color(0xFFDCE4F0), openPhotos),
     ];
 
     final tail = <Widget>[
@@ -246,13 +247,13 @@ class _GuestHomeBody extends ConsumerWidget {
             padding: const EdgeInsets.all(14),
             decoration: guestCard(),
             child: const Row(children: [
-              Icon(Icons.groups_outlined, color: guestHeroGreen),
+              Icon(Hi.userGroup, color: guestHeroGreen),
               SizedBox(width: 12),
               Expanded(
                 child: Text('Grupo · conversa com os outros convidados',
                     style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
-              Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
+              Icon(Hi.chevronRight, color: AppTheme.inkMuted),
             ]),
           ),
         ),
@@ -466,7 +467,7 @@ class _StayCard extends ConsumerWidget {
           decoration: softCard(),
           child: Row(
             children: [
-              StickerIcon(hasLodging ? Icons.hotel_outlined : Icons.directions_bus_outlined, turns: StickerIcon.tilt(4)),
+              StickerIcon(hasLodging ? Hi.homeModern : Hi.truck, turns: StickerIcon.tilt(4)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -482,7 +483,7 @@ class _StayCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppTheme.inkMuted),
+              const Icon(Hi.chevronRight, color: AppTheme.inkMuted),
             ],
           ),
         ),
@@ -504,7 +505,7 @@ class _StayLockedCard extends StatelessWidget {
         decoration: softCard(),
         child: Row(
           children: [
-            const StickerIcon(Icons.lock_outline, color: AppTheme.inkMuted),
+            const StickerIcon(Hi.lockClosed, color: AppTheme.inkMuted),
             const SizedBox(width: 12),
             const Expanded(
               child: Column(

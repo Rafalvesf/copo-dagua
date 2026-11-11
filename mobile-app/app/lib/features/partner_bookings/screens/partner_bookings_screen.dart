@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -99,7 +100,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                             label: 'PEDIDOS RECEBIDOS',
                             value: '$received',
                             suffix: received == 1 ? 'pedido no total' : 'pedidos no total',
-                            doodles: const [Icons.inbox_outlined, Icons.favorite_border, Icons.auto_awesome_outlined],
+                            doodles: const [Hi.inbox, Hi.heartOutline, Hi.sparkles],
                             footer: Wrap(spacing: 8, runSpacing: 8, children: [
                               HeroPill('$toAnswer por responder', solid: true),
                               HeroPill('$sent ${sent == 1 ? 'proposta enviada' : 'propostas enviadas'}'),
@@ -108,7 +109,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                           const SizedBox(height: 16),
                           if (bookings.isEmpty)
                             const V2RowCard(
-                              lead: StickerIcon(Icons.event_note_outlined),
+                              lead: StickerIcon(Hi.calendarDays),
                               title: 'Sem pedidos nesta categoria',
                               sub: 'Muda o filtro em baixo para ver os outros.',
                             )

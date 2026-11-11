@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -45,7 +46,7 @@ class PartnerInviteCard extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
             decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(999)),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.workspace_premium_rounded, size: 16, color: green),
+              Icon(Hi.trophy, size: 16, color: green),
               const SizedBox(width: 5),
               Text('Parceiro Fundador #${stats.founderNumber}',
                   style: TextStyle(fontSize: AppFontSize.sm + 1, fontWeight: FontWeight.w800, color: green)),
@@ -100,14 +101,14 @@ class PartnerInviteCard extends ConsumerWidget {
             IconButton(
               tooltip: 'Copiar link',
               onPressed: copy,
-              icon: Icon(Icons.copy_rounded, size: 18, color: green),
+              icon: Icon(Hi.documentDuplicate, size: 18, color: green),
             ),
           ]),
         ),
         const SizedBox(height: 12),
         FilledButton.icon(
           onPressed: share,
-          icon: const Icon(Icons.ios_share_rounded, size: 18),
+          icon: const Icon(Hi.arrowUpOnSquare, size: 18),
           label: const Text('Partilhar convite'),
           style: FilledButton.styleFrom(
             backgroundColor: green,

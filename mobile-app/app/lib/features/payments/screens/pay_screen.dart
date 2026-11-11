@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:async';
 
@@ -322,7 +323,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                   GreenHero(
                     label: '${a.title.toUpperCase()} · ${a.partnerName.toUpperCase()}',
                     value: _amountLabel,
-                    doodles: const [Icons.lock_outline, Icons.auto_awesome_outlined, Icons.favorite_border],
+                    doodles: const [Hi.lockClosed, Hi.sparkles, Hi.heartOutline],
                     footer: Wrap(spacing: 6, runSpacing: 6, children: [
                       const HeroPill('Pagamento seguro', solid: true),
                       if (a.isBooking) HeroPill(a.kind == 'deposit' ? 'Confirma a reserva' : 'Fecha a reserva'),
@@ -458,7 +459,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
             padding: const EdgeInsets.all(20),
             decoration: whiteLineCard(),
             child: Column(children: [
-              const StickerIcon(Icons.phone_iphone, size: 56),
+              const StickerIcon(Hi.devicePhoneMobile, size: 56),
               const SizedBox(height: 14),
               const Text('Aprova na app MB WAY',
                   style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -502,7 +503,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(color: AppColors.yellow, borderRadius: BorderRadius.circular(18)),
             child: const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(Icons.schedule, size: 20, color: AppTheme.ink),
+              Icon(Hi.clock, size: 20, color: AppTheme.ink),
               SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -525,7 +526,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       case _Step.select:
         if (_method == PayMethod.wallet) {
           label = 'Pagar com $_walletName';
-          icon = _wallet == 'apple_pay' ? Icons.apple : Icons.account_balance_wallet_outlined;
+          icon = _wallet == 'apple_pay' ? Icons.apple : Hi.wallet;
           onTap = _payWallet;
         } else {
           label = 'Continuar';
@@ -533,7 +534,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         }
       case _Step.card:
         label = 'Pagar $_amountLabel';
-        icon = Icons.lock_outline;
+        icon = Hi.lockClosed;
         onTap = _cardMounted && _card.complete ? _payCard : null;
       case _Step.confirming:
         label = 'A pagar…';
@@ -640,10 +641,10 @@ class _MethodTile extends StatelessWidget {
   const _MethodTile({required this.method, this.label, this.icon, required this.selected, required this.onTap});
 
   IconData get _icon => icon ?? switch (method) {
-    PayMethod.wallet => Icons.account_balance_wallet_outlined,
-    PayMethod.card => Icons.credit_card,
-    PayMethod.mbWay => Icons.phone_iphone,
-    PayMethod.multibanco => Icons.account_balance_outlined,
+    PayMethod.wallet => Hi.wallet,
+    PayMethod.card => Hi.creditCard,
+    PayMethod.mbWay => Hi.devicePhoneMobile,
+    PayMethod.multibanco => Hi.buildingLibrary,
   };
 
   @override
@@ -678,7 +679,7 @@ class _MethodTile extends StatelessWidget {
               color: selected ? AppTheme.accentOliveDark : Colors.white,
               border: Border.all(color: selected ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: 2),
             ),
-            child: selected ? const Icon(Icons.check, size: 15, color: Colors.white) : null,
+            child: selected ? const Icon(Hi.check, size: 15, color: Colors.white) : null,
           ),
         ]),
       ),
@@ -704,7 +705,7 @@ class _RefRow extends StatelessWidget {
         IconButton(
           tooltip: 'Copiar',
           visualDensity: VisualDensity.compact,
-          icon: Icon(Icons.copy_rounded, size: 18, color: AppTheme.accentOliveDark),
+          icon: Icon(Hi.documentDuplicate, size: 18, color: AppTheme.accentOliveDark),
           onPressed: () async {
             await copyText(copy!);
             if (context.mounted) {
@@ -723,7 +724,7 @@ class _SecureNote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Icon(Icons.lock_outline, size: 16, color: AppTheme.inkMuted),
+      Icon(Hi.lockClosed, size: 16, color: AppTheme.inkMuted),
       SizedBox(width: 8),
       Expanded(
         child: Text(
@@ -746,7 +747,7 @@ class _ErrorNote extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: AppColors.pink, borderRadius: BorderRadius.circular(16)),
       child: Row(children: [
-        const Icon(Icons.error_outline, size: 18, color: Color(0xFFB3261E)),
+        const Icon(Hi.exclamationCircle, size: 18, color: Color(0xFFB3261E)),
         const SizedBox(width: 8),
         Expanded(child: Text(text, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink))),
       ]),

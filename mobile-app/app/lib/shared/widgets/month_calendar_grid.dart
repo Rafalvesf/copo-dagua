@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -83,13 +84,13 @@ class MonthCalendarGrid extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () => onMonthChanged(DateTime(visibleMonth.year, visibleMonth.month - 1)),
-                icon: const Icon(Icons.chevron_left),
+                icon: const Icon(Hi.chevronLeft),
                 color: AppTheme.ink,
                 tooltip: 'Mês anterior',
               ),
               IconButton(
                 onPressed: () => onMonthChanged(DateTime(visibleMonth.year, visibleMonth.month + 1)),
-                icon: const Icon(Icons.chevron_right),
+                icon: const Icon(Hi.chevronRight),
                 color: AppTheme.ink,
                 tooltip: 'Mês seguinte',
               ),

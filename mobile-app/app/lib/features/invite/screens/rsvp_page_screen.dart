@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
@@ -255,7 +256,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                                   Expanded(child: Divider(color: Color(0xFFCBD5BE), thickness: 1)),
                                   Padding(
                                     padding: EdgeInsets.symmetric(horizontal: 10),
-                                    child: Icon(Icons.favorite, size: 14, color: AppTheme.accentOliveDark),
+                                    child: Icon(Hi.heart, size: 14, color: AppTheme.accentOliveDark),
                                   ),
                                   Expanded(child: Divider(color: Color(0xFFCBD5BE), thickness: 1)),
                                 ],
@@ -276,7 +277,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Icon(Icons.place_outlined, size: 16, color: AppTheme.inkMuted),
+                                    const Icon(Hi.mapPin, size: 16, color: AppTheme.inkMuted),
                                     const SizedBox(width: 4),
                                     Flexible(child: Text(location, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted))),
                                   ],
@@ -308,7 +309,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                       if (kIsWeb) const SizedBox(height: 10),
                       if (kIsWeb) OutlinedButton.icon(
                         onPressed: () => showInstallAppSheet(context),
-                        icon: const Icon(Icons.download_rounded, size: 18),
+                        icon: const Icon(Hi.arrowDownTray, size: 18),
                         label: const Text('Instalar a app'),
                       ),
                     ],

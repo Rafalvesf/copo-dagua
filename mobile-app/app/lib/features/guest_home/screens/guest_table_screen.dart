@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -43,7 +44,7 @@ class GuestTableScreen extends ConsumerWidget {
                 message: hidden
                     ? 'A tua mesa aparece ${opts.tableReveal == 'day' ? 'no dia do evento' : 'uma semana antes do evento'}.'
                     : (tableNumber == null ? 'Ainda não foste colocado em nenhuma mesa.' : 'Ficas na mesa $tableNumber.'),
-                icon: Icons.table_restaurant_outlined,
+                icon: Hi.tableCells,
               ),
             ),
           ]),
@@ -65,7 +66,7 @@ class GuestTableScreen extends ConsumerWidget {
                   if (roster.isEmpty) {
                     return const EmptyStateView(
                       message: 'Ainda não foste colocado em nenhuma mesa.',
-                      icon: Icons.table_restaurant_outlined,
+                      icon: Hi.tableCells,
                     );
                   }
                   final groups = roster.map((m) => m.group).where((g) => g.isNotEmpty).toSet().toList();
@@ -81,7 +82,7 @@ class GuestTableScreen extends ConsumerWidget {
                         label: tableNumber == null ? 'A TUA MESA' : 'MESA $tableNumber',
                         value: groups.isEmpty ? 'Os teus lugares' : groups.join(' e '),
                         suffix: '${roster.length} ${roster.length == 1 ? 'lugar' : 'lugares'}',
-                        doodles: const [Icons.table_restaurant_outlined, Icons.favorite_border, Icons.eco_outlined],
+                        doodles: const [Hi.tableCells, Hi.heartOutline, Hi.globeEuropeAfrica],
                       ),
                       const SizedBox(height: 14),
                       Container(

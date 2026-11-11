@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -144,16 +145,16 @@ class _PermissionsStepState extends State<PermissionsStep> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    _HeroIcon(icon: Icons.notifications_none_rounded, big: false, turn: -0.02),
+                    _HeroIcon(icon: Hi.bell, big: false, turn: -0.02),
                     const SizedBox(width: 14),
                     _HeroIcon(
-                      icon: widget.role == TourRole.guest ? Icons.photo_camera_outlined : Icons.location_on_outlined,
+                      icon: widget.role == TourRole.guest ? Hi.camera : Hi.mapPin,
                       big: true,
                       accent: accent,
                     ),
                     const SizedBox(width: 14),
                     _HeroIcon(
-                      icon: widget.role == TourRole.guest ? Icons.location_on_outlined : Icons.photo_camera_outlined,
+                      icon: widget.role == TourRole.guest ? Hi.mapPin : Hi.camera,
                       big: false,
                       turn: 0.02,
                     ),
@@ -395,17 +396,17 @@ class _SinglePermissionSheetState extends State<_SinglePermissionSheet> {
 
   ({IconData icon, String title, String body}) get _copy => switch (widget.permission) {
         AppPermission.notifications => (
-            icon: Icons.notifications_none_rounded,
+            icon: Hi.bell,
             title: 'Ativar notificações',
             body: 'Para receberes mensagens, propostas e pagamentos mesmo com a app fechada.',
           ),
         AppPermission.location => (
-            icon: Icons.location_on_outlined,
+            icon: Hi.mapPin,
             title: 'Usar a localização',
             body: 'Para encontrarmos a morada e as distâncias certas sem teres de escrever.',
           ),
         AppPermission.camera => (
-            icon: Icons.photo_camera_outlined,
+            icon: Hi.camera,
             title: 'Usar a câmara',
             body: 'Para tirares fotos diretamente na app.',
           ),

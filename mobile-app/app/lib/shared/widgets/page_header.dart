@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -51,7 +52,7 @@ class PageHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6),
-        Icon(Icons.favorite, size: 15, color: AppTheme.accentOliveDark),
+        Icon(Hi.heart, size: 15, color: AppTheme.accentOliveDark),
       ],
     );
   }
@@ -206,7 +207,7 @@ class AddActionButton extends StatelessWidget {
             color: AppTheme.accentOliveDark,
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.add_rounded, size: 24, color: Colors.white),
+          child: const Icon(Hi.plus, size: 24, color: Colors.white),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/models/models.dart';
@@ -185,7 +186,7 @@ class ChatProposalCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                StickerIcon(Icons.request_quote_outlined, size: 38, turns: StickerIcon.tilt(1)),
+                StickerIcon(Hi.documentCurrencyEuro, size: 38, turns: StickerIcon.tilt(1)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -300,7 +301,7 @@ class ChatComposer extends StatelessWidget {
                     height: 44,
                     alignment: Alignment.center,
                     decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
-                    child: const Icon(Icons.add_rounded, color: AppTheme.ink, size: 22),
+                    child: const Icon(Hi.plus, color: AppTheme.ink, size: 22),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -342,7 +343,7 @@ class ChatComposer extends StatelessWidget {
                     color: AppTheme.accentOliveDark,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 20),
+                  child: const Icon(Hi.arrowUp, color: Colors.white, size: 20),
                 ),
               ),
             ],

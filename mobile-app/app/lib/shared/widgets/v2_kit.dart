@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -347,7 +348,7 @@ class V2SetRow extends StatelessWidget {
           )
         else if (onTap != null) ...[
           const SizedBox(width: 4),
-          const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFF6E6A63)),
+          const Icon(Hi.chevronRight, size: 20, color: Color(0xFF6E6A63)),
         ],
       ]),
     );

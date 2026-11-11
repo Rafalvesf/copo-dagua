@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/features/partners/screens/partner_detail_screen.dart';
@@ -111,7 +112,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                         value: '${doneItems.length}',
                         suffix: 'de $total feitas',
                         progress: total == 0 ? 0 : doneItems.length / total,
-                        doodles: const [Icons.checklist_rounded, Icons.favorite_border, Icons.auto_awesome_outlined],
+                        doodles: const [Hi.clipboardDocumentList, Hi.heartOutline, Hi.sparkles],
                         footer: Transform.rotate(
                           angle: -0.035,
                           alignment: Alignment.centerLeft,
@@ -142,7 +143,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                   ),
                                 )
                               else if (state.systemActive.isEmpty)
-                                const InfoNote('Sem tarefas recomendadas por agora — bom trabalho!', icon: Icons.check_circle_outline_rounded)
+                                const InfoNote('Sem tarefas recomendadas por agora — bom trabalho!', icon: Hi.checkCircle)
                               else
                                 for (final (i, task) in state.systemActive.indexed) ...[
                                   _TaskRow(
@@ -370,7 +371,7 @@ class _TaskRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF6E6A63)),
+            const Icon(Hi.chevronRight, size: 18, color: Color(0xFF6E6A63)),
           ],
         ),
       ),
@@ -413,7 +414,7 @@ class _DoneTaskRow extends StatelessWidget {
               color: AppTheme.accentOliveDark,
               borderRadius: BorderRadius.circular(9),
             ),
-            child: const Icon(Icons.check_rounded, size: 16, color: Colors.white),
+            child: const Icon(Hi.check, size: 16, color: Colors.white),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -642,7 +643,7 @@ class _PartnerSuggestions extends ConsumerWidget {
                     SizedBox(
                       height: 82,
                       child: k.coverPhotoUrl == null
-                          ? Container(color: AppTheme.accentTint, child: Icon(Icons.storefront_rounded, color: AppTheme.accentOliveDark))
+                          ? Container(color: AppTheme.accentTint, child: Icon(Hi.buildingStorefront, color: AppTheme.accentOliveDark))
                           : Image.network(k.coverPhotoUrl!, fit: BoxFit.cover, cacheWidth: 420,
                               errorBuilder: (context, error, stack) => Container(color: AppTheme.accentTint)),
                     ),

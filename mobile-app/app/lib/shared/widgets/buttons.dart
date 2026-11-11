@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -55,7 +56,7 @@ class ArrowCtaButton extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.arrow_forward,
+                Hi.arrowRight,
                 color: AppTheme.ink,
                 size: 18,
               ),
@@ -143,7 +144,7 @@ class CircleBackButton extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
-          child: const Icon(Icons.chevron_left_rounded, color: AppTheme.ink, size: 26),
+          child: const Icon(Hi.chevronLeft, color: AppTheme.ink, size: 26),
         ),
       ),
     );

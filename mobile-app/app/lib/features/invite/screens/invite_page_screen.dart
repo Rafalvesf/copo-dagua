@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -380,7 +381,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
               decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(AppRadius.sm)),
               child: Row(
                 children: [
-                  Icon(Icons.check_rounded, size: 18, color: AppTheme.accentOliveDark),
+                  Icon(Hi.check, size: 18, color: AppTheme.accentOliveDark),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text('Código ${ev.code} aplicado',
@@ -405,9 +406,9 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
             style: const TextStyle(fontSize: AppFontSize.lg, height: 1.45, color: AppTheme.inkMuted),
           ),
           const SizedBox(height: 18),
-          const _Benefit(icon: Icons.notifications_none_rounded, text: 'Avisos se a hora ou o local mudarem'),
-          const _Benefit(icon: Icons.photo_outlined, text: 'Fotos da festa e lista de presentes'),
-          const _Benefit(icon: Icons.event_outlined, text: 'Todos os teus convites num só sítio'),
+          const _Benefit(icon: Hi.bell, text: 'Avisos se a hora ou o local mudarem'),
+          const _Benefit(icon: Hi.photo, text: 'Fotos da festa e lista de presentes'),
+          const _Benefit(icon: Hi.calendar, text: 'Todos os teus convites num só sítio'),
           const SizedBox(height: 26),
           if (native) ...[
             PrimaryButton(label: 'Criar conta', onPressed: () => _createAccount(ev)),
@@ -417,7 +418,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.check_rounded, size: 16, color: AppTheme.accentOliveDark),
+                Icon(Hi.check, size: 16, color: AppTheme.accentOliveDark),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text('Código ${ev.code} entra sozinho na app',
@@ -470,7 +471,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
         if (ev.venue != null || ev.address != null || ev.location != null) ...[
           const SizedBox(height: 14),
           _Section(
-            icon: Icons.place_outlined,
+            icon: Hi.mapPin,
             title: 'Local',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -500,7 +501,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                       latitude: ev.latitude,
                       longitude: ev.longitude,
                     ),
-                    icon: const Icon(Icons.directions_outlined, size: 20),
+                    icon: const Icon(Hi.map, size: 20),
                     label: const Text('Como chegar'),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.ink,
@@ -518,7 +519,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                         copyText(ev.address ?? ev.location!);
                         _snack('Morada copiada.');
                       },
-                      icon: const Icon(Icons.copy_rounded, size: 16),
+                      icon: const Icon(Hi.documentDuplicate, size: 16),
                       label: const Text('Copiar morada'),
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.accentOliveDark,
@@ -534,7 +535,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
         if (ev.program.isNotEmpty) ...[
           const SizedBox(height: 14),
           _Section(
-            icon: Icons.schedule_rounded,
+            icon: Hi.clock,
             title: 'Programa',
             child: Column(
               children: [
@@ -573,9 +574,9 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
         // Uma linha para cada (pedido 2026-11-08).
         _DetailsList(items: [
           if (ev.dressCode != null || ev.themeColors.isNotEmpty)
-            (Icons.checkroom_outlined, 'Dress code', ev.dressCode ?? 'Cores do evento', ev.themeColors),
+            (Hi.shoppingBag, 'Dress code', ev.dressCode ?? 'Cores do evento', ev.themeColors),
           (
-            Icons.group_outlined,
+            Hi.userGroup,
             'Acompanhantes',
             ev.maxCompanions <= 0
                 ? 'Só tu'
@@ -583,12 +584,12 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
             const <String>[],
           ),
           (
-            Icons.confirmation_number_outlined,
+            Hi.ticket,
             'Entrada',
             ev.isPaid ? (ev.entryPrice == null ? 'Com bilhete' : '${_euros(ev.entryPrice!)} por pessoa') : 'Grátis',
             const <String>[],
           ),
-          (Icons.favorite_border_rounded, 'Organização', ev.displayNames, const <String>[]),
+          (Hi.heartOutline, 'Organização', ev.displayNames, const <String>[]),
         ]),
         const SizedBox(height: 14),
         _CodeBox(code: ev.code, onCopied: () => _snack('Código copiado.')),
@@ -669,7 +670,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle),
-            child: Icon(a.declined ? Icons.mail_outline_rounded : Icons.check_rounded, color: Colors.white, size: 30),
+            child: Icon(a.declined ? Hi.envelope : Hi.check, color: Colors.white, size: 30),
           ),
         ),
         const SizedBox(height: 14),
@@ -688,7 +689,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
         ),
         const SizedBox(height: 22),
         _Section(
-          icon: Icons.assignment_turned_in_outlined,
+          icon: Hi.clipboardDocumentCheck,
           title: 'A tua resposta',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -723,7 +724,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.notifications_none_rounded, color: AppTheme.accentOliveDark),
+                    Icon(Hi.bell, color: AppTheme.accentOliveDark),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Column(
@@ -821,7 +822,7 @@ class _EventSummary extends StatelessWidget {
             height: 60,
             decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(AppRadius.sm)),
             child: d == null
-                ? const Icon(Icons.celebration_outlined, color: Colors.white)
+                ? const Icon(Hi.sparkles, color: Colors.white)
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -1065,7 +1066,7 @@ class _CodeBox extends StatelessWidget {
                 onCopied();
               },
               style: IconButton.styleFrom(backgroundColor: Colors.white, minimumSize: const Size(44, 44)),
-              icon: const Icon(Icons.copy_rounded, size: 20, color: AppTheme.ink),
+              icon: const Icon(Hi.documentDuplicate, size: 20, color: AppTheme.ink),
             ),
           ],
         ),

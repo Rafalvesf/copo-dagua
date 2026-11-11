@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,7 +60,7 @@ class GalleryScreen extends ConsumerWidget {
     if (resolvedWeddingId == null) {
       return GradientScaffold(
         background: AppBackground.subtle,
-        body: const EmptyStateView(message: 'Sem casamento associado.', icon: Icons.favorite_border),
+        body: const EmptyStateView(message: 'Sem casamento associado.', icon: Hi.heartOutline),
       );
     }
 
@@ -117,12 +118,12 @@ class GalleryScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.photo_camera_outlined),
+              leading: const Icon(Hi.camera),
               title: const Text('Tirar fotografia'),
               onTap: () => Navigator.of(context).pop(ImageSource.camera),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
+              leading: const Icon(Hi.rectangleStack),
               title: const Text('Escolher da galeria'),
               onTap: () => Navigator.of(context).pop(ImageSource.gallery),
             ),
@@ -239,7 +240,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.schedule_rounded, size: 18, color: Color(0xFF7A5000)),
+                    const Icon(Hi.clock, size: 18, color: Color(0xFF7A5000)),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -356,7 +357,7 @@ class _PendingPhotoCard extends ConsumerWidget {
           ),
           IconButton(
             tooltip: 'Aprovar foto',
-            icon: const Icon(Icons.check_circle_outline, color: AppStatusColors.confirmed),
+            icon: const Icon(Hi.checkCircle, color: AppStatusColors.confirmed),
             onPressed: () async {
               await moderateGalleryPhoto(photo.id, true);
               ref.invalidate(weddingGalleryPhotosProvider(weddingId));
@@ -364,7 +365,7 @@ class _PendingPhotoCard extends ConsumerWidget {
           ),
           IconButton(
             tooltip: 'Recusar foto',
-            icon: const Icon(Icons.cancel_outlined, color: AppStatusColors.declined),
+            icon: const Icon(Hi.xCircle, color: AppStatusColors.declined),
             onPressed: () async {
               await moderateGalleryPhoto(photo.id, false);
               ref.invalidate(weddingGalleryPhotosProvider(weddingId));

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,7 +31,7 @@ class BookedPartnerBadge extends StatelessWidget {
                 border: Border.all(color: green.withValues(alpha: 0.25)),
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.check_circle_rounded, size: 13, color: green),
+                Icon(Hi.checkCircle, size: 13, color: green),
                 const SizedBox(width: 5),
                 Flexible(
                   child: Text(n,
@@ -38,7 +39,7 @@ class BookedPartnerBadge extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: AppFontSize.sm + 2, fontWeight: FontWeight.w800, color: green)),
                 ),
-                Icon(Icons.chevron_right_rounded, size: 16, color: green),
+                Icon(Hi.chevronRight, size: 16, color: green),
               ]),
             ),
           ),

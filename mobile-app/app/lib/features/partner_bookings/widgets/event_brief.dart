@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,7 +47,7 @@ class PartnerEventBrief extends ConsumerWidget {
           ])),
           const SizedBox(height: 10),
           _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _title(Icons.restaurant_menu_rounded, 'Menus'),
+            _title(Hi.buildingStorefront, 'Menus'),
             const SizedBox(height: 8),
             if (menus.isEmpty) const Text('Ainda ninguém escolheu menu.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             for (final m in menus)
@@ -60,7 +61,7 @@ class PartnerEventBrief extends ConsumerWidget {
           ])),
           const SizedBox(height: 10),
           _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _title(Icons.health_and_safety_outlined, 'Alergias e restrições'),
+            _title(Hi.shieldCheck, 'Alergias e restrições'),
             const SizedBox(height: 8),
             if (dietary.isEmpty) const Text('Nenhuma indicada.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             for (final d in dietary)
@@ -76,7 +77,7 @@ class PartnerEventBrief extends ConsumerWidget {
           if (tables.isNotEmpty) ...[
             const SizedBox(height: 10),
             _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              _title(Icons.event_seat_outlined, 'Mesas'),
+              _title(Hi.ticket, 'Mesas'),
               for (final t in tables)
                 Theme(
                   data: Theme.of(context).copyWith(dividerColor: Colors.transparent),

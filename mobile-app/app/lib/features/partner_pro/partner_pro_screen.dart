@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -114,7 +115,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
               decoration: BoxDecoration(color: green, borderRadius: BorderRadius.circular(AppRadius.lg)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
-                  const Icon(Icons.workspace_premium_rounded, color: Colors.white),
+                  const Icon(Hi.trophy, color: Colors.white),
                   const SizedBox(width: 8),
                   Text(pro.active ? 'És Premium' : 'Premium', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
                 ]),
@@ -133,15 +134,15 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
             ),
             const SizedBox(height: 16),
             for (final b in [
-              (Icons.percent_rounded, 'Taxa de serviço mais baixa',
+              (Hi.percentBadge, 'Taxa de serviço mais baixa',
                   '−${_pts(pro.feeDiscount)}% em todas as reservas (ex.: 5% passa a ${_pts(5 - pro.feeDiscount)}%).'),
-              (Icons.group_add_outlined, 'Convites valem mais',
+              (Hi.userPlus, 'Convites valem mais',
                   'Cada ${pro.proReferralFreeEvery}.º cliente que trazes fica sem taxa de serviço (sem o Premium, o ${pro.referralFreeEvery}.º).'),
-              (Icons.campaign_outlined, 'Destaque mais barato',
+              (Hi.megaphone, 'Destaque mais barato',
                   '+${_pts(pro.proPromotionExtraPct)}% nas reservas que vêm do destaque (sem o Premium, +${_pts(pro.promotionExtraPct)}%).'),
-              (Icons.workspace_premium_outlined, 'Selo Premium e mais visibilidade', 'Selo no perfil e na pesquisa, e apareces antes dos outros parceiros.'),
-              (Icons.insights_outlined, 'Estatísticas detalhadas', 'Visitas ao perfil por semana, pedidos começados e conversão.'),
-              (Icons.storefront_outlined, 'Loja sem limites', 'Se vendes produtos: sem o Premium até ${pro.freeShopProducts}, com o Premium os que quiseres.'),
+              (Hi.trophy, 'Selo Premium e mais visibilidade', 'Selo no perfil e na pesquisa, e apareces antes dos outros parceiros.'),
+              (Hi.chartBar, 'Estatísticas detalhadas', 'Visitas ao perfil por semana, pedidos começados e conversão.'),
+              (Hi.buildingStorefront, 'Loja sem limites', 'Se vendes produtos: sem o Premium até ${pro.freeShopProducts}, com o Premium os que quiseres.'),
             ])
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -224,7 +225,7 @@ class ProBadge extends ConsumerWidget {
       message: 'Parceiro verificado',
       child: Container(
         margin: const EdgeInsets.only(left: 4),
-        child: Icon(Icons.workspace_premium_rounded, size: 17, color: AppTheme.accentOliveDark, semanticLabel: 'Premium'),
+        child: Icon(Hi.trophy, size: 17, color: AppTheme.accentOliveDark, semanticLabel: 'Premium'),
       ),
     );
   }

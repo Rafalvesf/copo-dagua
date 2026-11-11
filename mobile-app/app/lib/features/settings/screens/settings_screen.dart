@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../../core/exports/export_files.dart' show deliverFile;
 import '../../../core/notifications/push.dart';
 import 'dart:typed_data';
@@ -213,7 +214,7 @@ class _Row extends StatelessWidget {
           const SizedBox(width: 6),
           SizedBox(
             width: 18,
-            child: onTap == null ? null : const Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6)),
+            child: onTap == null ? null : const Icon(Hi.chevronRight, size: 18, color: Color(0xFFB5B0A6)),
           ),
         ],
       ),
@@ -242,7 +243,7 @@ class _SignOut extends ConsumerWidget {
             ),
           ),
           child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.logout_rounded, size: 18),
+            Icon(Hi.arrowRightStartOnRectangle, size: 18),
             SizedBox(width: 8),
             Text('Terminar sessão'),
           ]),
@@ -266,27 +267,27 @@ class _HelpGroup extends ConsumerWidget {
       children: [
         // Guia da primeira entrada outra vez (2026-10-25).
         _Row(
-          icon: Icons.explore_outlined,
+          icon: Hi.globeEuropeAfrica,
           label: 'Ver o guia da app',
           onTap: () => FirstRunTour.replay(context, role),
         ),
         _Row(
-          icon: Icons.support_agent_outlined,
+          icon: Hi.lifebuoy,
           label: 'Falar com a equipa À Nossa!',
           onTap: () => context.push('/support'),
         ),
         _Row(
-          icon: Icons.bug_report_outlined,
+          icon: Hi.bugAnt,
           label: 'Reportar um erro',
           onTap: () => showBugReportSheet(context, ref),
         ),
         _Row(
-          icon: Icons.star_outline_rounded,
+          icon: Hi.starOutline,
           label: 'Classificar a app',
           onTap: () => RatingPrompt.show(context, ref),
         ),
-        _Row(icon: Icons.description_outlined, label: 'Termos e Condições', onTap: () => context.push('/termos')),
-        _Row(icon: Icons.privacy_tip_outlined, label: 'Política de Privacidade', onTap: () => context.push('/privacidade')),
+        _Row(icon: Hi.documentText, label: 'Termos e Condições', onTap: () => context.push('/termos')),
+        _Row(icon: Hi.shieldExclamation, label: 'Política de Privacidade', onTap: () => context.push('/privacidade')),
       ],
     );
   }
@@ -303,30 +304,30 @@ class _CoupleSettings extends ConsumerWidget {
         children: [
           // Quem organiza e o que pode fazer (migração 159).
           _Row(
-            icon: Icons.admin_panel_settings_outlined,
+            icon: Hi.shieldCheck,
             label: wedding.eventType == EventType.wedding ? 'Organizadores e o teu par' : 'Organizadores',
             value: 'Convidar',
             onTap: () => context.push('/organizadores'),
           ),
           _Row(
-            icon: Icons.calendar_today_outlined,
+            icon: Hi.calendar,
             label: 'Detalhes do evento',
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EditEventPage(wedding: wedding))),
           ),
           _Row(
-            icon: Icons.dashboard_customize_outlined,
+            icon: Hi.squaresPlus,
             label: 'Painel do evento',
             value: 'O que aparece',
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const _PanelPage())),
           ),
           _Row(
-            icon: Icons.palette_outlined,
+            icon: Hi.swatch,
             label: 'Aparência do menu',
             onTap: () => context.go('/wedding?aparencia=1'),
           ),
           // Público/privado e entrada passaram para "Para os convidados" (2026-11-03).
           _Row(
-            icon: Icons.confirmation_number_outlined,
+            icon: Hi.ticket,
             label: 'Acesso e entrada',
             value: 'Para os convidados',
             onTap: () => context.push('/guest-page'),
@@ -404,10 +405,10 @@ class PartnerAccountSections extends ConsumerWidget {
         const _SectionTitle('Negócio'),
         _Group(
           children: [
-            _Row(icon: Icons.storefront_outlined, label: 'Informações do negócio', onTap: () => context.push('/partner-business-info')),
-            _Row(icon: Icons.event_busy_outlined, label: 'Regras de cancelamento', onTap: () => context.push('/partner-cancellation')),
+            _Row(icon: Hi.buildingStorefront, label: 'Informações do negócio', onTap: () => context.push('/partner-business-info')),
+            _Row(icon: Hi.calendar, label: 'Regras de cancelamento', onTap: () => context.push('/partner-cancellation')),
             _Row(
-              icon: Icons.place_outlined,
+              icon: Hi.mapPin,
               label: 'Localização',
               value: ref.watch(partnerLocationProvider).maybeWhen(
                     data: (l) => l == null || l.isEmpty ? null : (l.city.isNotEmpty ? l.city : l.summary),
@@ -416,14 +417,14 @@ class PartnerAccountSections extends ConsumerWidget {
               onTap: () => context.push('/partner-location'),
             ),
             _Row(
-              icon: Icons.event_available_outlined,
+              icon: Hi.calendarDays,
               label: 'Disponibilidade',
               value: profile == null ? null : (profile.acceptingRequests ? 'A aceitar pedidos' : 'Em pausa'),
               onTap: () => context.push('/partner-availability'),
             ),
             if (profile?.categoryLabels.contains('Espaço / Quinta') ?? false)
-              _Row(icon: Icons.event_seat_outlined, label: 'Mesas do local', onTap: () => context.push('/partner-venue-tables')),
-            _Row(icon: Icons.calendar_month_outlined, label: 'Calendário e datas bloqueadas', onTap: () => context.push('/partner-calendar')),
+              _Row(icon: Hi.ticket, label: 'Mesas do local', onTap: () => context.push('/partner-venue-tables')),
+            _Row(icon: Hi.calendarDays, label: 'Calendário e datas bloqueadas', onTap: () => context.push('/partner-calendar')),
           ],
         ),
         const _SectionTitle('Conta'),
@@ -452,8 +453,8 @@ class GuestAccountSections extends StatelessWidget {
         const _SectionTitle('Eventos'),
         _Group(
           children: [
-            _Row(icon: Icons.celebration_outlined, label: 'Os teus eventos', onTap: () => context.go('/eventos')),
-            _Row(icon: Icons.key_outlined, label: 'Juntar-me a outro evento', onTap: () => showGuestModeSheet(context)),
+            _Row(icon: Hi.sparkles, label: 'Os teus eventos', onTap: () => context.go('/eventos')),
+            _Row(icon: Hi.key, label: 'Juntar-me a outro evento', onTap: () => showGuestModeSheet(context)),
           ],
         ),
         if (help) ...[
@@ -629,11 +630,11 @@ class _PartnerSettings extends ConsumerWidget {
         const _SectionTitle('Negócio'),
         _Group(
           children: [
-            _Row(icon: Icons.storefront_outlined, label: 'Informações do negócio', onTap: () => context.push('/partner-business-info')),
-            _Row(icon: Icons.event_busy_outlined, label: 'Regras de cancelamento', onTap: () => context.push('/partner-cancellation')),
-            _Row(icon: Icons.euro, label: 'Preços e pacotes', onTap: () => context.push('/partner-pricing')),
+            _Row(icon: Hi.buildingStorefront, label: 'Informações do negócio', onTap: () => context.push('/partner-business-info')),
+            _Row(icon: Hi.calendar, label: 'Regras de cancelamento', onTap: () => context.push('/partner-cancellation')),
+            _Row(icon: Hi.currencyEuro, label: 'Preços e pacotes', onTap: () => context.push('/partner-pricing')),
             _Row(
-              icon: Icons.place_outlined,
+              icon: Hi.mapPin,
               label: 'Localização',
               value: ref.watch(partnerLocationProvider).maybeWhen(
                     data: (l) => l == null || l.isEmpty ? null : (l.city.isNotEmpty ? l.city : l.summary),
@@ -642,26 +643,26 @@ class _PartnerSettings extends ConsumerWidget {
               onTap: () => context.push('/partner-location'),
             ),
             _Row(
-              icon: Icons.route_outlined,
+              icon: Hi.map,
               label: 'Área de deslocação',
               value: profile?.maxTravelDistanceKm == null ? null : 'até ${profile!.maxTravelDistanceKm} km',
               onTap: () => context.push('/partner-business-info'),
             ),
-            _Row(icon: Icons.photo_library_outlined, label: 'Fotos e vídeos', onTap: () => context.push('/partner-portfolio')),
+            _Row(icon: Hi.rectangleStack, label: 'Fotos e vídeos', onTap: () => context.push('/partner-portfolio')),
           ],
         ),
         const _SectionTitle('Pedidos'),
         _Group(
           children: [
-            _Row(icon: Icons.calendar_month_outlined, label: 'Calendário e datas bloqueadas', onTap: () => context.push('/partner-calendar')),
-            _Row(icon: Icons.star_outline, label: 'Avaliações', onTap: () => context.push('/partner-reviews')),
+            _Row(icon: Hi.calendarDays, label: 'Calendário e datas bloqueadas', onTap: () => context.push('/partner-calendar')),
+            _Row(icon: Hi.starOutline, label: 'Avaliações', onTap: () => context.push('/partner-reviews')),
           ],
         ),
         const _SectionTitle('Pagamentos'),
         _Group(
           children: [
-            _Row(icon: Icons.credit_card, label: 'Pagamentos e conta Stripe', onTap: () => context.push('/partner-payments')),
-            _Row(icon: Icons.description_outlined, label: 'Contratos', onTap: () => context.push('/partner-contracts')),
+            _Row(icon: Hi.creditCard, label: 'Pagamentos e conta Stripe', onTap: () => context.push('/partner-payments')),
+            _Row(icon: Hi.documentText, label: 'Contratos', onTap: () => context.push('/partner-contracts')),
           ],
         ),
         const _SectionTitle('Conta'),
@@ -689,8 +690,8 @@ class _GuestSettings extends StatelessWidget {
         const _SectionTitle('Eventos'),
         _Group(
           children: [
-            _Row(icon: Icons.celebration_outlined, label: 'Os teus eventos', onTap: () => context.go('/eventos')),
-            _Row(icon: Icons.key_outlined, label: 'Juntar-me a outro evento', onTap: () => showGuestModeSheet(context)),
+            _Row(icon: Hi.sparkles, label: 'Os teus eventos', onTap: () => context.go('/eventos')),
+            _Row(icon: Hi.key, label: 'Juntar-me a outro evento', onTap: () => showGuestModeSheet(context)),
           ],
         ),
         const _SectionTitle('Ajuda'),
@@ -753,14 +754,14 @@ class _AccountSection extends ConsumerWidget {
     return _Group(
       children: [
         _Row(
-          icon: Icons.person_outline,
+          icon: Hi.user,
           label: 'Nome',
           value: profile.fullName,
           onTap: () => _editName(context, ref, profile.fullName),
         ),
         // @ único (migração 163).
         _Row(
-          icon: Icons.alternate_email_rounded,
+          icon: Hi.atSymbol,
           label: 'Nome de utilizador',
           value: switch (ref.watch(myUsernameProvider).value?.username) {
             final u? => '@$u',
@@ -768,9 +769,9 @@ class _AccountSection extends ConsumerWidget {
           },
           onTap: () => context.push('/username'),
         ),
-        _Row(icon: Icons.mail_outline, label: 'Email', value: profile.email),
+        _Row(icon: Hi.envelope, label: 'Email', value: profile.email),
         _Row(
-          icon: Icons.lock_outline,
+          icon: Hi.lockClosed,
           label: 'Mudar password',
           onTap: () => _resetPassword(context, ref, profile.email),
         ),
@@ -778,7 +779,7 @@ class _AccountSection extends ConsumerWidget {
         // Organizadores e convidados (cada um o seu NIF). Parceiros: NIF da verificação.
         if (profile.role != UserRole.partner)
           _Row(
-            icon: Icons.receipt_long_outlined,
+            icon: Hi.documentText,
             label: 'Dados de faturação',
             value: ref.watch(billingDetailsProvider).value?.nif ?? 'Consumidor final',
             onTap: () => _editBilling(context, ref),
@@ -786,7 +787,7 @@ class _AccountSection extends ConsumerWidget {
         // Pessoas bloqueadas (migração 130, exigência das lojas).
         if ((ref.watch(blockedProfilesProvider).value ?? const <String>{}).isNotEmpty)
           _Row(
-            icon: Icons.block,
+            icon: Hi.noSymbol,
             label: 'Pessoas bloqueadas',
             value: '${ref.watch(blockedProfilesProvider).value!.length}',
             onTap: () => _blockedList(context, ref),
@@ -795,13 +796,13 @@ class _AccountSection extends ConsumerWidget {
         const _PushRow(),
         // Direito de acesso e portabilidade (RGPD, migração 167).
         _Row(
-          icon: Icons.download_outlined,
+          icon: Hi.arrowDownTray,
           label: 'Descarregar os meus dados',
           onTap: () => _exportData(context),
         ),
         // Direito ao apagamento (RGPD, 2026-10-25).
         _Row(
-          icon: Icons.delete_outline_rounded,
+          icon: Hi.trash,
           label: 'Apagar conta',
           color: const Color(0xFFA3412E),
           onTap: () => _deleteAccount(context, ref),
@@ -1038,7 +1039,7 @@ class _PushRowState extends State<_PushRow> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(children: [
-        StickerIcon(Icons.notifications_none_rounded, size: 36, turns: StickerIcon.tilt(12)),
+        StickerIcon(Hi.bell, size: 36, turns: StickerIcon.tilt(12)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import '../widgets/join_requests_card.dart';
@@ -150,7 +151,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                                   textAlignVertical: TextAlignVertical.center,
                                   decoration: const InputDecoration(
                                     hintText: 'Pesquisar convidados...',
-                                    prefixIcon: Icon(Icons.search, size: 20),
+                                    prefixIcon: Icon(Hi.magnifyingGlass, size: 20),
                                     filled: false,
                                     isCollapsed: true,
                                     border: InputBorder.none,
@@ -168,7 +169,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                               const SizedBox(width: 10),
                               CircleIconButton(
                                 semanticLabel: 'Partilhar',
-                                icon: Icons.ios_share,
+                                icon: Hi.arrowUpOnSquare,
                                 background: Colors.white,
                                 size: 46,
                                 onTap: () => _shareInvite(wedding),
@@ -194,7 +195,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                       else if (visible.isEmpty)
                         const SliverFillRemaining(
                           hasScrollBody: false,
-                          child: EmptyStateView(message: 'Sem convidados nesta categoria.', icon: Icons.people_outline),
+                          child: EmptyStateView(message: 'Sem convidados nesta categoria.', icon: Hi.users),
                         )
                       else
                         SliverPadding(
@@ -299,7 +300,7 @@ class _ListHero extends StatelessWidget {
         label: 'A VOSSA LISTA',
         value: '$total',
         suffix: total == 1 ? 'convidado' : 'convidados',
-        doodles: const [Icons.people_outline, Icons.favorite_border, Icons.wine_bar_outlined],
+        doodles: const [Hi.users, Hi.heartOutline, Hi.beaker],
         footer: Column(
           children: [
             ClipRRect(
@@ -426,7 +427,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
           const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: _copyLink,
-            icon: Icon(_linkCopied ? Icons.check : Icons.copy, size: 18),
+            icon: Icon(_linkCopied ? Hi.check : Hi.documentDuplicate, size: 18),
             label: Text(_linkCopied ? 'Copiado!' : 'Copiar link'),
           ),
           ],
@@ -467,7 +468,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: () => _copyCode(guestCode),
-              icon: Icon(_codeCopied ? Icons.check : Icons.copy, size: 18),
+              icon: Icon(_codeCopied ? Hi.check : Hi.documentDuplicate, size: 18),
               label: Text(_codeCopied ? 'Copiado!' : 'Copiar código'),
             ),
           ],

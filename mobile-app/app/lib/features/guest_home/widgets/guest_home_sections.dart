@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -355,7 +356,7 @@ class GuestPlaceCard extends ConsumerWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(color: const Color(0xFFDDE5D3), borderRadius: BorderRadius.circular(13)),
-            child: const Icon(Icons.place_outlined, color: guestHeroGreen),
+            child: const Icon(Hi.mapPin, color: guestHeroGreen),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -374,7 +375,7 @@ class GuestPlaceCard extends ConsumerWidget {
         const SizedBox(height: 12),
         FilledButton.icon(
           onPressed: () => showNavigationSheet(context, label: title, address: address, latitude: lat, longitude: lng),
-          icon: const Icon(Icons.directions_outlined, size: 19),
+          icon: const Icon(Hi.map, size: 19),
           label: const Text('Como chegar'),
           style: FilledButton.styleFrom(
             backgroundColor: guestButtonGreen,
@@ -549,7 +550,7 @@ class GuestPhotosCta extends StatelessWidget {
   @override
   Widget build(BuildContext context) => FilledButton.icon(
         onPressed: onTap,
-        icon: const Icon(Icons.photo_camera_outlined),
+        icon: const Icon(Hi.camera),
         label: const Text('Tirar e partilhar fotos'),
         style: FilledButton.styleFrom(
           backgroundColor: guestButtonGreen,

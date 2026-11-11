@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -21,17 +22,17 @@ Future<void> showNavigationSheet(
   final options = <(String, IconData, Uri)>[
     (
       'Google Maps',
-      Icons.map_outlined,
+      Hi.map,
       Uri.https('www.google.com', '/maps/dir/', {'api': '1', 'destination': ll ?? query}),
     ),
     (
       'Apple Maps',
-      Icons.explore_outlined,
+      Hi.globeEuropeAfrica,
       Uri.https('maps.apple.com', '/', {'daddr': ll ?? query, if (hasCoords) 'q': label}),
     ),
     (
       'Waze',
-      Icons.navigation_outlined,
+      Hi.paperAirplane,
       Uri.https('waze.com', '/ul', {if (hasCoords) 'll': ll! else 'q': query, 'navigate': 'yes'}),
     ),
   ];
@@ -80,7 +81,7 @@ Future<void> showNavigationSheet(
                           Icon(icon, size: 22, color: AppTheme.accentOliveDark),
                           const SizedBox(width: 12),
                           Expanded(child: Text(name, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-                          const Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6)),
+                          const Icon(Hi.chevronRight, size: 18, color: Color(0xFFB5B0A6)),
                         ],
                       ),
                     ),

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -136,7 +137,7 @@ class _PartnerPromotionCardState extends ConsumerState<PartnerPromotionCard> {
       decoration: softCard(radius: 24),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
-          Icon(Icons.auto_awesome_rounded, color: green, size: 20),
+          Icon(Hi.sparkles, color: green, size: 20),
           const SizedBox(width: 8),
           const Expanded(
             child: Text('Destaque', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
@@ -173,7 +174,7 @@ class _PartnerPromotionCardState extends ConsumerState<PartnerPromotionCard> {
               )
             : FilledButton.icon(
                 onPressed: _busy ? null : () => _start(p),
-                icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+                icon: const Icon(Hi.sparkles, size: 18),
                 label: const Text('Pôr em destaque'),
                 style: FilledButton.styleFrom(
                   backgroundColor: green,

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../../../core/events/event_pass.dart' show myEventPassProvider, GuestSections;
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
@@ -52,7 +53,7 @@ class GuestGalleryScreen extends ConsumerWidget {
       error: (err, st) => Scaffold(body: AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider))),
       data: (weddings) {
         if (weddings.isEmpty) {
-          return const Scaffold(body: EmptyStateView(message: 'Sem casamento associado.', icon: Icons.favorite_border));
+          return const Scaffold(body: EmptyStateView(message: 'Sem casamento associado.', icon: Hi.heartOutline));
         }
         return _GuestGalleryBody(weddingId: weddings.first.weddingId);
       },
@@ -80,12 +81,12 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.photo_camera_outlined),
+              leading: const Icon(Hi.camera),
               title: const Text('Tirar fotografia'),
               onTap: () => Navigator.of(context).pop(ImageSource.camera),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
+              leading: const Icon(Hi.rectangleStack),
               title: const Text('Escolher da galeria'),
               onTap: () => Navigator.of(context).pop(ImageSource.gallery),
             ),
@@ -143,12 +144,12 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                   title: 'Galeria',
                   showBack: false,
                   centered: true,
-                  trailing: canUpload ? V2RoundButton(icon: Icons.add_rounded, tooltip: 'Partilhar fotos', solid: true, onTap: _upload) : null,
+                  trailing: canUpload ? V2RoundButton(icon: Hi.plus, tooltip: 'Partilhar fotos', solid: true, onTap: _upload) : null,
                 ),
                 const SizedBox(height: 16),
                 Expanded(
                   child: !open
-                      ? const EmptyStateView(message: 'A galeria abre no dia do evento.', icon: Icons.photo_library_outlined)
+                      ? const EmptyStateView(message: 'A galeria abre no dia do evento.', icon: Hi.rectangleStack)
                       : photosAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId))),

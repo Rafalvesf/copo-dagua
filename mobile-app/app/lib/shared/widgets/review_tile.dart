@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/models/models.dart';
@@ -72,7 +73,7 @@ class ReviewTile extends StatelessWidget {
         const SizedBox(height: 10),
         Row(children: [
           for (var i = 1; i <= 5; i++)
-            Icon(i <= r.rating ? Icons.star_rounded : Icons.star_border_rounded, size: 18, color: const Color(0xFFF2B33D)),
+            Icon(i <= r.rating ? Hi.star : Hi.starOutline, size: 18, color: const Color(0xFFF2B33D)),
           if (partnerSide) ...[
             const SizedBox(width: 8),
             Text(_date(r.createdAt), style: const TextStyle(fontSize: AppFontSize.xs, color: v2Muted)),
@@ -112,7 +113,7 @@ class ReviewTile extends StatelessWidget {
           Row(children: [
             if (onRespond != null)
               _Pill(
-                icon: r.response == null ? Icons.reply_rounded : Icons.edit_outlined,
+                icon: r.response == null ? Hi.arrowUturnLeft : Hi.pencil,
                 label: r.response == null ? 'Responder' : 'Editar resposta',
                 onTap: onRespond!,
               ),
@@ -121,7 +122,7 @@ class ReviewTile extends StatelessWidget {
               TextButton.icon(
                 onPressed: onReport,
                 style: TextButton.styleFrom(foregroundColor: v2Muted),
-                icon: const Icon(Icons.flag_outlined, size: 16),
+                icon: const Icon(Hi.flag, size: 16),
                 label: const Text('Denunciar', style: TextStyle(fontSize: AppFontSize.sm)),
               ),
           ]),
@@ -140,7 +141,7 @@ class _RatingChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
         decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(99)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.star_rounded, size: 14, color: Colors.white),
+          const Icon(Hi.star, size: 14, color: Colors.white),
           const SizedBox(width: 3),
           Text('$rating,0', style: const TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: Colors.white)),
         ]),
@@ -192,7 +193,7 @@ class _Reply extends StatelessWidget {
                           style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     const SizedBox(width: 6),
-                    Icon(Icons.verified_rounded, size: 14, color: AppTheme.accentOliveDark),
+                    Icon(Hi.checkBadge, size: 14, color: AppTheme.accentOliveDark),
                     if (date != null) ...[
                       const SizedBox(width: 6),
                       Text(_date(date!), style: const TextStyle(fontSize: AppFontSize.xxs, color: v2Muted)),
@@ -254,7 +255,7 @@ class ReviewSummaryCard extends StatelessWidget {
               style: AppTypography.displaySerif(fontSize: 44, color: AppTheme.ink)),
           Row(mainAxisSize: MainAxisSize.min, children: [
             for (var i = 1; i <= 5; i++)
-              Icon(i <= avg.round() ? Icons.star_rounded : Icons.star_border_rounded, size: 16, color: const Color(0xFFF2B33D)),
+              Icon(i <= avg.round() ? Hi.star : Hi.starOutline, size: 16, color: const Color(0xFFF2B33D)),
           ]),
           const SizedBox(height: 4),
           Text('$n ${n == 1 ? 'avaliação' : 'avaliações'}', style: const TextStyle(fontSize: AppFontSize.xs, color: v2Muted)),

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../shared/widgets/feedback.dart';
 import 'package:flutter/material.dart';
@@ -74,7 +75,7 @@ class GuestOffersScreen extends ConsumerWidget {
                       ],
                       const SizedBox(height: 20),
                       if (offers.isEmpty)
-                        const InfoNote('Ainda não há opções de alojamento ou transporte.', icon: Icons.info_outline_rounded)
+                        const InfoNote('Ainda não há opções de alojamento ou transporte.', icon: Hi.informationCircle)
                       else
                         for (final kind in GuestOfferKind.values)
                           if (offers.any((o) => o.kind == kind)) ...[
@@ -323,14 +324,14 @@ class _Stepper extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: Text(label, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.ink))),
-        btn(Icons.remove, 'Menos', value > min ? value - 1 : null),
+        btn(Hi.minus, 'Menos', value > min ? value - 1 : null),
         SizedBox(
           width: 40,
           child: Text('$value',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ),
-        btn(Icons.add, 'Mais', value < max ? value + 1 : null),
+        btn(Hi.plus, 'Mais', value < max ? value + 1 : null),
       ],
     );
   }

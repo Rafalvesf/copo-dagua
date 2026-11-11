@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart' show openTicketPurchase;
 import 'package:copo_dagua_app/core/events/tickets.dart';
@@ -174,7 +175,7 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
                             width: 40,
                             height: 40,
                             decoration: const BoxDecoration(color: AppColors.gray, shape: BoxShape.circle),
-                            child: Icon(Icons.celebration_outlined, size: 20, color: AppTheme.accentOliveDark),
+                            child: Icon(Hi.sparkles, size: 20, color: AppTheme.accentOliveDark),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -192,7 +193,7 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
                               ],
                             ),
                           ),
-                          const Icon(Icons.chevron_right, size: 18, color: Color(0xFFB5B0A6)),
+                          const Icon(Hi.chevronRight, size: 18, color: Color(0xFFB5B0A6)),
                         ],
                       ),
                     ),

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
@@ -7,12 +8,12 @@ import 'wedding_controller.dart';
 
 /// O que cada co-organizador pode fazer (migração 159). O dono pode tudo.
 enum OrganizerPerm {
-  evento('evento', 'Editar o evento', 'Nomes, data, local, programa, capa, galeria e o que os convidados veem', Icons.edit_calendar_outlined),
-  convidados('convidados', 'Gerir os convidados', 'Lista, pedidos para entrar e mesas', Icons.people_outline_rounded),
-  tarefas('tarefas', 'Tarefas', 'Ver e fazer as tarefas partilhadas', Icons.checklist_rounded),
-  conversas('conversas', 'Conversar com parceiros', 'Conversas do evento e pedidos de orçamento', Icons.chat_bubble_outline_rounded),
-  bilhetes('bilhetes', 'Bilhetes e entradas', 'Ver os bilhetes vendidos e validar entradas com o QR', Icons.qr_code_scanner_rounded),
-  orcamento('orcamento', 'Orçamento', 'Orçamento, despesas e parceiros favoritos', Icons.account_balance_wallet_outlined);
+  evento('evento', 'Editar o evento', 'Nomes, data, local, programa, capa, galeria e o que os convidados veem', Hi.calendarDays),
+  convidados('convidados', 'Gerir os convidados', 'Lista, pedidos para entrar e mesas', Hi.users),
+  tarefas('tarefas', 'Tarefas', 'Ver e fazer as tarefas partilhadas', Hi.clipboardDocumentList),
+  conversas('conversas', 'Conversar com parceiros', 'Conversas do evento e pedidos de orçamento', Hi.chatBubbleOvalLeft),
+  bilhetes('bilhetes', 'Bilhetes e entradas', 'Ver os bilhetes vendidos e validar entradas com o QR', Hi.viewfinderCircle),
+  orcamento('orcamento', 'Orçamento', 'Orçamento, despesas e parceiros favoritos', Hi.wallet);
 
   final String key;
   final String label;

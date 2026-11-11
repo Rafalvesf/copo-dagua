@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -99,7 +100,7 @@ class TeamBannerCard extends ConsumerWidget {
               width: 38,
               height: 38,
               decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
-              child: const Icon(Icons.campaign_outlined, color: Colors.white, size: 20),
+              child: const Icon(Hi.megaphone, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -127,7 +128,7 @@ class TeamBannerCard extends ConsumerWidget {
             IconButton(
               tooltip: 'Fechar',
               onPressed: () => _dismiss(ref, b.id),
-              icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 20),
+              icon: const Icon(Hi.xMark, color: Colors.white70, size: 20),
             ),
           ],
         ),
@@ -413,7 +414,7 @@ class _TeamThreadScreenState extends ConsumerState<TeamThreadScreen> {
                     onPressed: _sending ? null : () => _send(items),
                     icon: _sending
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.send_rounded),
+                        : const Icon(Hi.paperAirplane),
                   ),
                 ]),
               ),

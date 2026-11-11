@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:math' as math;
 import '../../../shared/widgets/feedback.dart';
@@ -214,7 +215,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                         alignment: Alignment.center,
                                         decoration: whiteLineCard(radius: 999),
                                         child: const Icon(
-                                          Icons.more_horiz,
+                                          Hi.ellipsisHorizontal,
                                           color: AppTheme.ink,
                                         ),
                                       ),
@@ -310,7 +311,7 @@ class _StatsHero extends StatelessWidget {
       value: '$seated',
       suffix: 'de $totalGuests ${totalGuests == 1 ? 'convidado' : 'convidados'}',
       progress: totalGuests == 0 ? 0 : seated / totalGuests,
-      doodles: const [Icons.table_restaurant_outlined, Icons.favorite_border, Icons.wine_bar_outlined],
+      doodles: const [Hi.tableCells, Hi.heartOutline, Hi.beaker],
       footer: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -391,7 +392,7 @@ Widget _hiddenNote(int hidden) => Padding(
 
 Widget _noneOfShape(TableShape shape) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 18),
-      child: InfoNote('Ainda não há mesas ${shape.label.toLowerCase()}s desbloqueadas.', icon: Icons.info_outline_rounded),
+      child: InfoNote('Ainda não há mesas ${shape.label.toLowerCase()}s desbloqueadas.', icon: Hi.informationCircle),
     );
 
 /// Planta da sala: Mesa de Honra em cima, mesas desenhadas com os
@@ -628,7 +629,7 @@ class _TableCell extends StatelessWidget {
                   painter: _TablePainter(seats: seatsPerTable, taken: count, color: fg, fill: fill, shape: shape),
                   child: Center(
                     child: locked
-                        ? const Icon(Icons.lock_outline_rounded, size: 16, color: AppTheme.inkMuted)
+                        ? const Icon(Hi.lockClosed, size: 16, color: AppTheme.inkMuted)
                         : Text('$count/$seatsPerTable', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
                   ),
                 ),
@@ -780,7 +781,7 @@ class _TableListView extends StatelessWidget {
                             boxShadow: StickerIcon.shadow,
                           ),
                           child: locked
-                              ? const Icon(Icons.lock_outline_rounded, size: 18, color: AppTheme.inkMuted)
+                              ? const Icon(Hi.lockClosed, size: 18, color: AppTheme.inkMuted)
                               : Text('${index + 1}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c)),
                         ),
                       ),
@@ -1030,7 +1031,7 @@ class _SelectedTableCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700)),
                       ),
-                      const Icon(Icons.edit_outlined, size: 14, color: AppTheme.inkMuted),
+                      const Icon(Hi.pencil, size: 14, color: AppTheme.inkMuted),
                     ],
                   ),
                 ),
@@ -1356,10 +1357,10 @@ class _GuestPickRow extends StatelessWidget {
               tooltip: 'Nome nos Lugares',
               visualDensity: VisualDensity.compact,
               onPressed: onRename,
-              icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.inkMuted),
+              icon: const Icon(Hi.pencil, size: 18, color: AppTheme.inkMuted),
             ),
           Icon(
-            selected ? Icons.check_circle : Icons.circle_outlined,
+            selected ? Hi.checkCircle : Icons.circle_outlined,
             color: selected ? AppStatusColors.confirmed : AppTheme.inkMuted,
           ),
         ],
@@ -1398,14 +1399,14 @@ Future<void> _showMoreOptions(BuildContext context) async {
         children: [
           const SizedBox(height: 8),
           ListTile(
-            leading: const Icon(Icons.copy_all_outlined),
+            leading: const Icon(Hi.documentDuplicate),
             title: const Text('Copiar lista das mesas'),
             subtitle: const Text('Para enviar ao local ou ao catering.'),
             enabled: tables.isNotEmpty,
             onTap: () => Navigator.of(context).pop('copy'),
           ),
           ListTile(
-            leading: const Icon(Icons.restart_alt, color: AppStatusColors.declined),
+            leading: const Icon(Hi.arrowPath, color: AppStatusColors.declined),
             title: const Text('Recomeçar distribuição', style: TextStyle(color: AppStatusColors.declined)),
             subtitle: const Text('Remove todas as mesas preenchidas.'),
             enabled: tables.isNotEmpty,

@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
@@ -333,7 +334,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                const Icon(Icons.star_rounded, size: 14, color: Colors.white),
+                                const Icon(Hi.star, size: 14, color: Colors.white),
                                 const SizedBox(width: 3),
                                 Text(ratingText,
                                     style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
@@ -639,7 +640,7 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
             child: Semantics(
               label: widget.favorited ? 'Remover dos favoritos' : 'Guardar nos favoritos',
               child: CircleIconButton(
-                icon: widget.favorited ? Icons.favorite : Icons.favorite_border,
+                icon: widget.favorited ? Hi.heart : Hi.heartOutline,
                 background: Colors.white,
                 foreground: widget.favorited ? AppStatusColors.declined : AppTheme.ink,
                 size: 44,
@@ -920,7 +921,7 @@ class _PackageButton extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: Colors.white)),
               const SizedBox(width: 4),
-              const Icon(Icons.chat_bubble_outline_rounded, size: 14, color: Colors.white),
+              const Icon(Hi.chatBubbleOvalLeft, size: 14, color: Colors.white),
             ]),
           ),
         ),

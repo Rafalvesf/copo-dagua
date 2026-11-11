@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'feedback.dart';
 
@@ -53,7 +54,7 @@ class GalleryEmptyState extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.photo_outlined, size: 18, color: AppTheme.inkMuted),
+              const Icon(Hi.photo, size: 18, color: AppTheme.inkMuted),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(

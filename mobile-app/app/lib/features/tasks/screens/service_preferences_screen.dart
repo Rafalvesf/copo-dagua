@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/booked_partner_badge.dart';
 import 'package:copo_dagua_app/core/budget/booked_partners.dart';
@@ -148,7 +149,7 @@ class _ServicePreferencesScreenState extends ConsumerState<ServicePreferencesScr
                           value: '$done',
                           suffix: 'de ${categories.length - skipped} ${categories.length - skipped == 1 ? 'serviço' : 'serviços'}',
                           progress: categories.length - skipped == 0 ? 0 : done / (categories.length - skipped),
-                          doodles: const [Icons.task_alt_rounded, Icons.storefront_outlined, Icons.celebration_outlined],
+                          doodles: const [Hi.checkCircle, Hi.buildingStorefront, Hi.sparkles],
                           footer: Wrap(spacing: 8, runSpacing: 8, children: [
                             HeroPill('$needed por tratar', solid: true),
                             if (skipped > 0) HeroPill('$skipped não precisam'),
@@ -171,7 +172,7 @@ class _ServicePreferencesScreenState extends ConsumerState<ServicePreferencesScr
                                     onTapOutside: (_) => _saveExternalName(category.slug),
                                     decoration: const InputDecoration(
                                       isDense: true,
-                                      prefixIcon: Icon(Icons.storefront_outlined, size: 18),
+                                      prefixIcon: Icon(Hi.buildingStorefront, size: 18),
                                       hintText: 'Com quem? (opcional)',
                                     ),
                                   )
@@ -221,9 +222,9 @@ class _CategoryPreferenceCard extends StatelessWidget {
       _ => ('Por tratar', const Color(0xFFB7791F)),
     };
     const options = [
-      ('needed', 'Precisamos', Icons.search_rounded),
-      ('already_booked', 'Já tratámos', Icons.check_circle_outline_rounded),
-      ('not_needed', 'Dispensamos', Icons.block_rounded),
+      ('needed', 'Precisamos', Hi.magnifyingGlass),
+      ('already_booked', 'Já tratámos', Hi.checkCircle),
+      ('not_needed', 'Dispensamos', Hi.noSymbol),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),

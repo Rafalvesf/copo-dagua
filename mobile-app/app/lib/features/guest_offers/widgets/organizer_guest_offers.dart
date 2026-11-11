@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -343,7 +344,7 @@ class _AddButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.add, size: 18, color: c),
+              Icon(Hi.plus, size: 18, color: c),
               const SizedBox(width: 8),
               Text('Adicionar alojamento ou transporte',
                   style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: c)),
@@ -472,7 +473,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
             }
             onPicked(picked);
           },
-          icon: Icon(withTime ? Icons.schedule_outlined : Icons.event_outlined, size: 18, color: c),
+          icon: Icon(withTime ? Hi.clock : Hi.calendar, size: 18, color: c),
           label: Text(text, style: TextStyle(color: value == null ? AppTheme.inkMuted : AppTheme.ink)),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(0, 48),
@@ -504,8 +505,8 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
               const SizedBox(height: 16),
               SegmentedButton<GuestOfferKind>(
                 segments: const [
-                  ButtonSegment(value: GuestOfferKind.lodging, label: Text('Alojamento'), icon: Icon(Icons.hotel_outlined)),
-                  ButtonSegment(value: GuestOfferKind.transport, label: Text('Transporte'), icon: Icon(Icons.directions_bus_outlined)),
+                  ButtonSegment(value: GuestOfferKind.lodging, label: Text('Alojamento'), icon: Icon(Hi.homeModern)),
+                  ButtonSegment(value: GuestOfferKind.transport, label: Text('Transporte'), icon: Icon(Hi.truck)),
                 ],
                 selected: {_kind},
                 onSelectionChanged: (s) => setState(() => _kind = s.first),

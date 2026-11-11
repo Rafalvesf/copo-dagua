@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -159,7 +160,7 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(14)),
                       child: Row(children: [
-                        Icon(Icons.visibility_outlined, size: 18, color: AppTheme.accentOliveDark),
+                        Icon(Hi.eye, size: 18, color: AppTheme.accentOliveDark),
                         const SizedBox(width: 10),
                         Expanded(child: Text(preview, style: const TextStyle(fontSize: 13.5, color: AppTheme.ink))),
                       ]),

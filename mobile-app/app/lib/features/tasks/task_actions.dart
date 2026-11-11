@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../partners/partner_style.dart' show companyCategoryLabel, iconForCategorySlug;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,17 +38,17 @@ final taskTemplatesByIdProvider = FutureProvider<Map<String, TaskTemplate>>((ref
 });
 
 IconData taskIcon(String? category) => switch (category) {
-      'orcamento' => Icons.savings_outlined,
-      'convidados' => Icons.people_outline,
-      'lugares' => Icons.event_seat_outlined,
-      'parceiros' => Icons.storefront_outlined,
-      'pagamentos' => Icons.euro_rounded,
-      'cerimonia' => Icons.church_outlined,
-      'festa' => Icons.celebration_outlined,
-      'programa' => Icons.schedule_outlined,
+      'orcamento' => Hi.banknotes,
+      'convidados' => Hi.users,
+      'lugares' => Hi.ticket,
+      'parceiros' => Hi.buildingStorefront,
+      'pagamentos' => Hi.currencyEuro,
+      'cerimonia' => Hi.buildingLibrary,
+      'festa' => Hi.sparkles,
+      'programa' => Hi.clock,
       // Categoria de empresa escolhida ao criar (2026-11-08).
       final c? when companyCategoryLabel(c) != null => iconForCategorySlug(c),
-      _ => Icons.task_alt_outlined,
+      _ => Hi.checkCircle,
     };
 
 String? _categoryRoute(String? category) => switch (category) {
@@ -117,7 +118,7 @@ Future<void> openTask(BuildContext context, WidgetRef ref, WeddingTask task) asy
             const SizedBox(height: 18),
             FilledButton.icon(
               onPressed: () => Navigator.of(ctx).pop('done'),
-              icon: const Icon(Icons.check_rounded),
+              icon: const Icon(Hi.check),
               label: const Text('Marcar como feita'),
             ),
             if (route != null) ...[

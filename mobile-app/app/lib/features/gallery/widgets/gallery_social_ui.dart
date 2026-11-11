@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -79,7 +80,7 @@ class GallerySocialGrid extends ConsumerWidget {
                     top: 5,
                     right: 6,
                     child: Icon(
-                      m.likedByMe ? Icons.favorite : Icons.chat_bubble,
+                      m.likedByMe ? Hi.heart : Hi.chatBubbleOvalLeft,
                       size: 16,
                       color: m.likedByMe ? AppStatusColors.declined : Colors.white,
                       shadows: const [Shadow(blurRadius: 4, color: Colors.black38)],
@@ -324,7 +325,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                     if (widget.photo.uploadedBy != ref.watch(authControllerProvider).profile?.id)
                       IconButton(
                         tooltip: 'Denunciar ou bloquear',
-                        icon: const Icon(Icons.more_horiz, color: AppTheme.inkMuted),
+                        icon: const Icon(Hi.ellipsisHorizontal, color: AppTheme.inkMuted),
                         onPressed: () => showModerationSheet(context, ref,
                             kind: ReportKind.galleryPhoto, targetId: widget.photo.id, authorId: widget.photo.uploadedBy, authorName: name),
                       ),
@@ -360,7 +361,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                             opacity: opacity.clamp(0.0, 1.0),
                             child: Transform.scale(
                               scale: scale,
-                              child: const Icon(Icons.favorite, size: 96, color: Colors.white, shadows: [Shadow(color: Color(0x40000000), blurRadius: 16, offset: Offset(0, 6))]),
+                              child: const Icon(Hi.heart, size: 96, color: Colors.white, shadows: [Shadow(color: Color(0x40000000), blurRadius: 16, offset: Offset(0, 6))]),
                             ),
                           ),
                         );
@@ -376,22 +377,22 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
             Row(
               children: [
                 _Action(
-                  icon: liked ? Icons.favorite : Icons.favorite_border,
+                  icon: liked ? Hi.heart : Hi.heartOutline,
                   color: liked ? AppStatusColors.declined : AppTheme.ink,
                   label: likes > 0 ? '$likes' : null,
                   tooltip: liked ? 'Retirar gosto' : 'Gosto',
                   onTap: _toggleLike,
                 ),
                 _Action(
-                  icon: Icons.chat_bubble_outline_rounded,
+                  icon: Hi.chatBubbleOvalLeft,
                   label: comments > 0 ? '$comments' : null,
                   tooltip: 'Comentar',
                   onTap: () => showGalleryComments(context, weddingId: widget.weddingId, photoId: widget.photo.id),
                 ),
-                _Action(icon: Icons.ios_share_rounded, tooltip: 'Partilhar', onTap: _share),
+                _Action(icon: Hi.arrowUpOnSquare, tooltip: 'Partilhar', onTap: _share),
                 const Spacer(),
                 _Action(
-                  icon: Icons.download_rounded,
+                  icon: Hi.arrowDownTray,
                   tooltip: 'Descarregar',
                   onTap: () => launchUrl(_downloadUri(widget.photo.imageUrl), mode: LaunchMode.platformDefault, webOnlyWindowName: '_self'),
                 ),
@@ -671,7 +672,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                 data: (list) => list.isEmpty
                     ? const Padding(
                         padding: EdgeInsets.symmetric(vertical: 28),
-                        child: InfoNote('Ainda sem comentários. Sê o primeiro!', icon: Icons.chat_bubble_outline_rounded),
+                        child: InfoNote('Ainda sem comentários. Sê o primeiro!', icon: Hi.chatBubbleOvalLeft),
                       )
                     : ListView(
                         shrinkWrap: true,
@@ -718,7 +719,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                                         tooltip: 'Denunciar ou bloquear',
                                         visualDensity: VisualDensity.compact,
                                         iconSize: 18,
-                                        icon: const Icon(Icons.more_horiz, color: AppTheme.inkMuted),
+                                        icon: const Icon(Hi.ellipsisHorizontal, color: AppTheme.inkMuted),
                                         onPressed: () => showModerationSheet(context, ref,
                                             kind: ReportKind.galleryComment, targetId: c.id, authorId: c.profileId, authorName: c.authorName),
                                       ),
@@ -788,7 +789,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                         height: 44,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle),
-                        child: const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 20),
+                        child: const Icon(Hi.arrowUp, color: Colors.white, size: 20),
                       ),
                     ),
                   ],
@@ -887,7 +888,7 @@ class _MemberSheet extends ConsumerWidget {
                   ),
                   const SizedBox(height: 18),
                   if (theirs.isEmpty)
-                    const InfoNote('Ainda sem fotos publicadas.', icon: Icons.photo_outlined)
+                    const InfoNote('Ainda sem fotos publicadas.', icon: Hi.photo)
                   else
                     GallerySocialGrid(weddingId: weddingId, photos: theirs),
                 ],
