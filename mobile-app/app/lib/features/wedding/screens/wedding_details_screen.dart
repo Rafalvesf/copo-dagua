@@ -28,7 +28,7 @@ import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/photo_adjust_screen.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
-import '../../../shared/widgets/dense_card.dart' show CtaPill;
+import '../../../shared/widgets/dense_card.dart' show FeaturedOverlayCard, PhotoPill;
 import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/seating/seating_controller.dart';
@@ -3330,77 +3330,36 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
   }
 }
 
-/// Sugestão compacta (cartões densos, 2026-11-11): foto à esquerda,
-/// categoria, nome, zona · nota, preço e "Ver".
+/// Sugestão (2026-11-11): o mesmo cartão dos eventos do Descobrir e do
+/// "Em destaque" — nota à esquerda e preço à direita por cima da foto.
 class _SuggestionCard extends ConsumerWidget {
   final FeaturedPick pick;
   final VoidCallback onTap;
   const _SuggestionCard({required this.pick, required this.onTap});
 
-  static const double height = 132;
+  static const double height = FeaturedOverlayCard.height;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final k = pick;
     final p = ref.watch(partnerByIdProvider(k.partnerId)).value;
     final rating = p?.rating;
-    final meta = [
-      if (p != null && p.location.isNotEmpty) p.location,
-      if (rating != null && rating > 0) '★ ${rating.toStringAsFixed(1).replaceAll('.', ',')}',
-    ].join(' · ');
     final price = p?.startingPrice != null
-        ? 'desde ${euros(p!.startingPrice!)}'
-        : (p?.averageQuotePrice != null ? 'média ${euros(p!.averageQuotePrice!)}' : 'Pedir orçamento');
-    return SnappyTap(
+        ? ('DESDE', euros(p!.startingPrice!))
+        : (p?.averageQuotePrice != null ? ('MÉDIA', euros(p!.averageQuotePrice!)) : null);
+    return FeaturedOverlayCard(
       onTap: onTap,
-      semanticLabel: '${k.name}, ${k.categoryLabel ?? ''}',
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: _card(),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: SizedBox(
-              width: 84,
-              child: k.coverPhotoUrl == null
-                  ? Container(color: const Color(0xFFDDE5D3), child: const Icon(Hi.buildingStorefront, color: _green))
-                  : SizedNetworkImage(k.coverPhotoUrl!, fit: BoxFit.cover),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              if (k.categoryLabel != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
-                  child: Text(k.categoryLabel!.toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 11, letterSpacing: 0.5, fontWeight: FontWeight.w800, color: _greenDark)),
-                ),
-              Text(k.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-              if (meta.isNotEmpty)
-                Text(meta,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-              Row(children: [
-                Expanded(
-                  child: Text(p == null ? '' : price,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                ),
-                const CtaPill('Ver', height: 32),
-              ]),
-            ]),
-          ),
-        ]),
-      ),
+      image: k.coverPhotoUrl == null
+          ? Container(color: const Color(0xFFDDE5D3), child: const Icon(Hi.buildingStorefront, color: _green))
+          : SizedNetworkImage(k.coverPhotoUrl!, fit: BoxFit.cover),
+      badge: rating == null || rating <= 0
+          ? null
+          : PhotoPill(rating.toStringAsFixed(1).replaceAll('.', ','),
+              icon: Hi.star, muted: (p?.reviewCount ?? 0) > 0 ? '(${p!.reviewCount})' : null),
+      price: price,
+      title: k.name,
+      subtitle: p?.location ?? '',
+      chips: [if (k.categoryLabel != null) k.categoryLabel!],
     );
   }
 }

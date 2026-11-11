@@ -2,6 +2,8 @@ import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'snappy_tap.dart';
+import 'v2_kit.dart' show softCard;
 
 /// Peças dos cartões compactos (mockup "Cartões densos", 2026-11-11):
 /// menos espaço vazio, mais informação útil em cada cartão.
@@ -230,4 +232,94 @@ class MiniStats extends StatelessWidget {
           ),
         ],
       ]);
+}
+
+/// Preço por cima da foto, como o dia (mockup "Eventos — com eventos",
+/// 2026-11-11): caixa branca com a etiqueta pequena ("DESDE",
+/// "ENTRADA") e o valor um pouco maior do que o número do dia.
+class PriceBox extends StatelessWidget {
+  final String label;
+  final String value;
+  const PriceBox(this.label, this.value, {super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        constraints: const BoxConstraints(minWidth: 52),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(label,
+              style: const TextStyle(fontSize: 10, letterSpacing: 0.5, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+          Text(value, style: const TextStyle(fontSize: 20, height: 1.05, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+        ]),
+      );
+}
+
+/// Cartão de parceiro, produto ou sugestão — o mesmo desenho dos
+/// eventos do Descobrir: foto com a nota à esquerda e o preço à direita;
+/// por baixo nome, zona, etiquetas e "Ver".
+class FeaturedOverlayCard extends StatelessWidget {
+  final VoidCallback onTap;
+  final Widget image;
+  final Widget? badge;
+  final (String, String)? price;
+  final String title;
+  final String subtitle;
+  final List<String> chips;
+  const FeaturedOverlayCard({
+    super.key,
+    required this.onTap,
+    required this.image,
+    required this.title,
+    required this.subtitle,
+    this.badge,
+    this.price,
+    this.chips = const [],
+  });
+
+  static const double height = 248;
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Semantics(
+          button: true,
+          label: [title, subtitle, if (price != null) '${price!.$1} ${price!.$2}'].join(', '),
+          excludeSemantics: true,
+          child: Container(
+            height: height,
+            clipBehavior: Clip.antiAlias,
+            decoration: softCard(radius: 22),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              SizedBox(
+                height: 120,
+                child: Stack(fit: StackFit.expand, children: [
+                  image,
+                  if (badge != null) Positioned(left: 12, top: 12, child: badge!),
+                  if (price != null) Positioned(right: 12, top: 12, child: PriceBox(price!.$1, price!.$2)),
+                ]),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                    const SizedBox(height: 3),
+                    if (subtitle.isNotEmpty) MetaRow([(Hi.mapPin, subtitle)]),
+                    const Spacer(),
+                    Row(children: [
+                      Expanded(child: DenseChipRow([for (final c in chips) DenseChip(c)])),
+                      const SizedBox(width: 8),
+                      const CtaPill('Ver'),
+                    ]),
+                  ]),
+                ),
+              ),
+            ]),
+          ),
+        ),
+      );
 }

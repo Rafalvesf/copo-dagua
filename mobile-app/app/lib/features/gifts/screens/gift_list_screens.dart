@@ -12,7 +12,7 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
-import '../../partners/screens/partners_list_screen.dart' show FeaturedOverlayCard;
+import '../../../shared/widgets/dense_card.dart' show FeaturedOverlayCard;
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart' show softCard;
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
@@ -718,7 +718,7 @@ class _FeaturedProductCard extends StatelessWidget {
         if (p.deliveryNote?.isNotEmpty == true) p.deliveryNote!,
         if (p.stock != null && p.stock! > 0 && p.stock! <= 5) 'Últimas ${p.stock}',
       ],
-      price: giftEuros(p.price),
+      price: ('PREÇO', giftEuros(p.price)),
     );
   }
 }
