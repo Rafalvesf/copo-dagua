@@ -247,7 +247,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     final minPackage = packages.isEmpty
         ? null
         : packages.map((p) => p.price).reduce((a, b) => a < b ? a : b);
-    final fromPrice = minPackage ?? partner.startingPrice ?? partner.averageQuotePrice;
+    final fromPrice = minPackage ?? partner.startingPrice;
 
     final figureText = figureValue == null ? null : figure.format(figureValue);
     final ratingText = summary.count > 0
@@ -368,7 +368,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                             ),
                             const SizedBox(width: 8),
                             _InfoTile(
-                              label: 'Desde',
+                              label: fromPrice == null ? 'Por' : 'Desde',
                               value: fromPrice == null ? 'Orçamento' : euros(fromPrice),
                             ),
                           ],

@@ -3319,9 +3319,9 @@ class _SuggestionCard extends ConsumerWidget {
     final k = pick;
     final p = ref.watch(partnerByIdProvider(k.partnerId)).value;
     final rating = p?.rating;
-    final price = p?.startingPrice != null
-        ? ('DESDE', euros(p!.startingPrice!))
-        : (p?.averageQuotePrice != null ? ('MÉDIA', euros(p!.averageQuotePrice!)) : null);
+    final price = p == null
+        ? null
+        : (p.startingPrice != null ? ('DESDE', euros(p.startingPrice!)) : ('POR', 'Orçamento'));
     return FeaturedOverlayCard(
       onTap: onTap,
       image: k.coverPhotoUrl == null
