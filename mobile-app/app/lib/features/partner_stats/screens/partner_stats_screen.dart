@@ -54,10 +54,10 @@ class _PartnerStatsScreenState extends ConsumerState<PartnerStatsScreen> {
     final async = ref.watch(partnerAnalyticsProvider(_period));
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
+          padding: ( const EdgeInsets.fromLTRB(0, 0, 0, 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
           children: [
             const PageHeader(title: 'Resultados', centered: true),
             Padding(

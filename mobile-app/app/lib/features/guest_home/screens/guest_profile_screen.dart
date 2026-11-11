@@ -47,10 +47,10 @@ class GuestProfileScreen extends ConsumerWidget {
       background: AppBackground.subtle,
       body: Stack(
         children: [
-          SafeArea(
+          SafeArea(top: false, 
             bottom: false,
             child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
                 // Ecrã raiz da navbar (Perfil) — sem seta de voltar,
                 // mesma convenção de todos os outros separadores raiz
                 // da app (Chat, Tarefas, Pedidos, "O meu perfil" do

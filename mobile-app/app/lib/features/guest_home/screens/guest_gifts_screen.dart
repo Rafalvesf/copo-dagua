@@ -116,10 +116,10 @@ class GuestGiftsScreen extends ConsumerWidget {
       background: AppBackground.subtle,
       body: Stack(
         children: [
-          SafeArea(
+          SafeArea(top: false, 
             bottom: false,
             child: ListView(
-              padding: const EdgeInsets.only(bottom: 140),
+              padding: ( const EdgeInsets.only(bottom: 140)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
               children: [
                 const GuestEventsPillRow(),
                 const PageHeader(title: 'Presentes', showBack: false, centered: true),

@@ -116,13 +116,13 @@ class _ServicePreferencesScreenState extends ConsumerState<ServicePreferencesScr
 
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
         child: EdgeFade(
           topFadeHeight: 24,
           bottomFadeHeight: 40,
           child: ListView(
-            padding: EdgeInsets.zero,
+            padding: ( EdgeInsets.zero).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
             children: [
               const PageHeader(
                 title: 'Já têm tratado?',

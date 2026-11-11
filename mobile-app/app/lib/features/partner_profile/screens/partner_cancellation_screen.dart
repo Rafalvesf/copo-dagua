@@ -93,9 +93,9 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
     final preview = CancellationRule(_kind, hours: _hours, note: _note.text.trim()).summary(_slug);
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 40),
+          padding: ( const EdgeInsets.only(bottom: 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
           children: [
             const PageHeader(title: 'Regras de cancelamento', centered: true),
             if (!_loaded)

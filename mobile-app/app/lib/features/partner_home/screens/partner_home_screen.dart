@@ -87,10 +87,10 @@ class PartnerHomeScreen extends ConsumerWidget {
       background: AppBackground.subtle,
       body: Stack(
         children: [
-          SafeArea(
+          SafeArea(top: false, 
             bottom: false,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 140),
+              padding: ( const EdgeInsets.fromLTRB(20, 20, 20, 140)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
               children: [
                 Row(
                   children: [

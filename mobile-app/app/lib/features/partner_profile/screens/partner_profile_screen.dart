@@ -48,10 +48,10 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
       background: AppBackground.subtle,
       body: Stack(
         children: [
-          SafeArea(
+          SafeArea(top: false, 
             bottom: false,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(28, 20, 28, 140),
+              padding: ( const EdgeInsets.fromLTRB(28, 20, 28, 140)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
               children: [
                 // Redesign 2026-10, igual ao canvas "Parceiro — perfil".
                 // Canvas "Parceiro — perfil (redesign)": título ao centro.

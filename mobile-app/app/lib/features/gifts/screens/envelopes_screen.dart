@@ -37,13 +37,13 @@ class EnvelopesScreen extends ConsumerWidget {
 
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: RefreshIndicator(
           onRefresh: () async {
             if (weddingId != null) ref.invalidate(weddingEnvelopesProvider(weddingId));
           },
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 40),
+            padding: ( const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
             children: [
               const PageHeader(title: 'Envelopes', centered: true),
               GreenHero(

@@ -222,10 +222,10 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
         children: [
           NotificationListener<UserScrollNotification>(
             onNotification: _onScroll,
-            child: SafeArea(
+            child: SafeArea(top: false, 
             bottom: false,
             child: ScrollingHeader(
-              header: [
+              header: [SizedBox(height: MediaQuery.paddingOf(context).top),
                 // Redesign 2026-10: título "Parceiros" com a localização
                 // ao lado direito, na mesma linha.
                 PageHeader(

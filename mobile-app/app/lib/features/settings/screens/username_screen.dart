@@ -106,9 +106,9 @@ class _UsernameScreenState extends ConsumerState<UsernameScreen> {
     return GradientScaffold(
       background: AppBackground.subtle,
       appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0, title: const Text('O teu @')),
-      body: SafeArea(
+      body: SafeArea(top: false, 
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 32),
+          padding: ( const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 32)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
           children: [
             TextField(
               controller: _ctrl,

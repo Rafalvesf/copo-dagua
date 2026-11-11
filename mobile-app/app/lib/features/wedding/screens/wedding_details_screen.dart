@@ -1505,16 +1505,16 @@ class _WeddingSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        SafeArea(
+        SafeArea(top: false, 
           bottom: false,
           child: ListView(
             physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
+            padding: ( const EdgeInsets.fromLTRB(
               AppTheme.screenMargin,
               16,
               AppTheme.screenMargin,
               140,
-            ),
+            )).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
             children: [
               SkeletonBox(
                 height: 380,

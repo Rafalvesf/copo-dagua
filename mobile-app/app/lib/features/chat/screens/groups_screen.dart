@@ -45,10 +45,10 @@ class GroupsScreen extends ConsumerWidget {
     final canCreate = organizer || (ref.watch(myEventPassProvider(weddingId)).value?.sections.groupsCreate ?? true);
     return GradientScaffold(
       background: AppBackground.feed,
-      body: SafeArea(
+      body: SafeArea(top: false, 
         bottom: false,
         child: ScrollingHeader(
- header: [
+ header: [SizedBox(height: MediaQuery.paddingOf(context).top),
           PageHeader(
             title: 'Grupos',
             centered: true,

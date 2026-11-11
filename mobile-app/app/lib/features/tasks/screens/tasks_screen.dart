@@ -82,15 +82,15 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       background: AppBackground.feed,
       body: Stack(
         children: [
-          SafeArea(
+          SafeArea(top: false, 
             bottom: false,
             child: EdgeFade(
               topFadeHeight: 8,
               bottomFadeHeight: 140,
               child: ListView(
-                padding: EdgeInsets.only(
+                padding: ( EdgeInsets.only(
                   bottom: FloatingFilterBar.bottomPadding(aboveNav: false),
-                ),
+                )).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
                 children: [
                   PageHeader(
                     title: 'Tarefas',
