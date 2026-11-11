@@ -549,9 +549,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                               ),
                             if (!widget.selectionMode && query.isEmpty && partners.isNotEmpty && featuredList.isNotEmpty) ...[
                               _SectionHeader(
-                                title: _filter != null && selectedLabel != null
-                                    ? 'Em destaque · $selectedLabel'
-                                    : effectiveLocation.isEmpty || noneNear
+                                // A categoria escolhida já aparece em cima
+                                // (pedido 2026-11-11: não repetir no título).
+                                title: effectiveLocation.isEmpty || noneNear
                                         ? 'Em destaque'
                                         : 'Em destaque perto de ti',
                                 strong: true,
