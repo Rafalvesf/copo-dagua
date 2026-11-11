@@ -17,6 +17,7 @@ import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -114,6 +115,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
   Future<void> _refresh() async {
     ref.invalidate(guestWeddingsProvider);
     ref.invalidate(publicEventsProvider);
+    ref.invalidate(_pendingInvitesProvider);
     await ref.read(publicEventsProvider.future);
   }
 
@@ -148,7 +150,13 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
 
     // Uma só página (pedido 2026-11-10): criar / código, os meus eventos
     // e "Descobrir" — nunca vazia, mesmo numa conta nova.
+    // Convites por responder (a pessoa está ligada a um convidado deste
+    // evento e ainda não disse se vai) — 2026-11-11.
+    final pendingIds = ref.watch(_pendingInvitesProvider).value ?? const <String>{};
+    final pending = [for (final w in guest) if (pendingIds.contains(w.weddingId)) w];
+
     final content = <Widget>[
+      if (pending.isNotEmpty) _Pad(_InviteNotice(wedding: pending.first, more: pending.length - 1)),
       if (hasMine)
         const _Pad(_ActionsRow())
       else
@@ -883,6 +891,69 @@ class PublicEventScreen extends ConsumerWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+/// Eventos em que a pessoa é convidada e ainda não respondeu.
+final _pendingInvitesProvider = FutureProvider<Set<String>>((ref) async {
+  final me = ref.watch(authControllerProvider.select((s) => s.profile?.id));
+  if (me == null) return const {};
+  try {
+    final rows = await supabase.from('guests').select('wedding_id').eq('linked_profile_id', me).eq('rsvp_status', 'pending');
+    return {for (final r in (rows as List).cast<Map<String, dynamic>>()) r['wedding_id'] as String};
+  } catch (_) {
+    return const {};
+  }
+});
+
+/// "Convite por responder": quem convidou, para quê e o botão para ir
+/// confirmar.
+class _InviteNotice extends StatelessWidget {
+  final GuestWedding wedding;
+  final int more;
+  const _InviteNotice({required this.wedding, required this.more});
+
+  @override
+  Widget build(BuildContext context) {
+    final two = wedding.partnerName2 != null && wedding.partnerName2!.isNotEmpty;
+    final noun = wedding.eventType.noun;
+    final fem = noun.startsWith('festa') || noun.startsWith('comunhão') || noun.startsWith('renovação');
+    final what = noun == 'evento' ? 'um evento' : '${fem ? 'a' : 'o'} $noun';
+    final date = wedding.weddingDate == null ? null : formatWeddingDateCaps(wedding.weddingDate!);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(22)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Icon(Icons.mail_outline_rounded, size: 18, color: Colors.white),
+            const SizedBox(width: 6),
+            Text(more > 0 ? 'CONVITES POR RESPONDER · ${more + 1}' : 'CONVITE POR RESPONDER',
+                style: const TextStyle(fontSize: 11, letterSpacing: 1.2, fontWeight: FontWeight.w800, color: Color(0xFFDDE5D3))),
+          ]),
+          const SizedBox(height: 8),
+          Text('${wedding.displayNames} ${two ? 'convidaram' : 'convidou'}-te para $what!',
+              style: const TextStyle(fontSize: 18, height: 1.25, fontWeight: FontWeight.w800, color: Colors.white)),
+          if (date != null) ...[
+            const SizedBox(height: 2),
+            Text(date, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFDDE5D3))),
+          ],
+          const SizedBox(height: 12),
+          SnappyTap(
+            onTap: () => context.go('/guest-home/${wedding.weddingId}'),
+            child: Container(
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+              child: const Text('Ver e confirmar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+            ),
+          ),
+        ],
       ),
     );
   }
