@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/snap_carousel.dart';
 import '../../../core/payments/payments.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -574,23 +575,17 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                         child: Text('Em destaque',
                             style: AppTypography.displaySerif(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                       ),
-                      SizedBox(
+                      SnapCarousel(
                         height: FeaturedOverlayCard.height,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          clipBehavior: Clip.none,
-                          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                          itemCount: featured(items).length,
-                          separatorBuilder: (context, i) => const SizedBox(width: 10),
-                          itemBuilder: (context, i) {
-                            final p = featured(items)[i];
-                            return _FeaturedProductCard(
-                              product: p,
-                              added: inList.contains(p.id),
-                              onTap: () => _showProduct(p, weddingId, inList.contains(p.id)),
-                            );
-                          },
-                        ),
+                        itemCount: featured(items).length,
+                        itemBuilder: (context, i) {
+                          final p = featured(items)[i];
+                          return _FeaturedProductCard(
+                            product: p,
+                            added: inList.contains(p.id),
+                            onTap: () => _showProduct(p, weddingId, inList.contains(p.id)),
+                          );
+                        },
                       ),
                       const SizedBox(height: 14),
                     ],
