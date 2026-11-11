@@ -28,6 +28,7 @@ import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/photo_adjust_screen.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
+import '../../../shared/widgets/snap_carousel.dart';
 import '../../../shared/widgets/dense_card.dart' show FeaturedOverlayCard, PhotoPill;
 import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/guests/guest_controller.dart';
@@ -3265,7 +3266,6 @@ class _Suggestions extends ConsumerStatefulWidget {
 }
 
 class _SuggestionsState extends ConsumerState<_Suggestions> {
-  int _page = 0;
 
   Future<void> _open(FeaturedPick k) async {
     if (k.paid) trackPromotionClick(k.partnerId);
@@ -3285,7 +3285,6 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
     };
     final list = [for (final k in picks ?? const <FeaturedPick>[]) if (!booked.contains(k.partnerId)) k];
     if (list.isEmpty) return const SizedBox.shrink();
-    final page = _page.clamp(0, list.length - 1);
     return Padding(
       padding: const EdgeInsets.only(top: 18),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -3294,37 +3293,11 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
           child: Text('Sugestões para ti', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         ),
         const SizedBox(height: 10),
-        LayoutBuilder(builder: (context, c) {
-          final fraction = ((c.maxWidth - 2 * AppTheme.screenMargin + 12) / c.maxWidth).clamp(0.5, 1.0);
-          return SizedBox(
-            height: _SuggestionCard.height,
-            child: PageView.builder(
-              controller: PageController(viewportFraction: fraction),
-              itemCount: list.length,
-              onPageChanged: (i) => setState(() => _page = i),
-              itemBuilder: (context, i) {
-                final k = list[i];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: _SuggestionCard(pick: k, onTap: () => _open(k)),
-                );
-              },
-            ),
-          );
-        }),
-        if (list.length > 1) ...[
-          const SizedBox(height: 10),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            for (var i = 0; i < list.length; i++)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: i == page ? 20 : 8,
-                height: 8,
-                decoration: BoxDecoration(color: i == page ? _green : const Color(0xFFCFC8B8), borderRadius: BorderRadius.circular(4)),
-              ),
-          ]),
-        ],
+        SnapCarousel(
+          height: _SuggestionCard.height,
+          itemCount: list.length,
+          itemBuilder: (context, i) => _SuggestionCard(pick: list[i], onTap: () => _open(list[i])),
+        ),
       ]),
     );
   }
