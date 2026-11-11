@@ -305,6 +305,14 @@ class Wedding {
   /// de [inviteUrl] (RSVP sem conta).
   final String? guestCode;
 
+  /// Nome do tipo quando é "Outro" (ex.: "Despedida", migração 081) —
+  /// aparece no topo do painel em vez de "Outro".
+  final String? eventTypeOther;
+
+  /// Blocos do painel que o organizador escondeu (Definições → Painel do
+  /// evento, migração 177).
+  final List<String> panelHidden;
+
   const Wedding({
     required this.id,
     required this.ownerId,
@@ -325,7 +333,18 @@ class Wedding {
     this.profilePhotoUrl,
     this.updatedAt,
     this.guestCode,
+    this.eventTypeOther,
+    this.panelHidden = const [],
   });
+
+  /// O que aparece no topo do painel: o nome escolhido em "Outro" ou o
+  /// tipo de evento.
+  String get typeLabel =>
+      eventType == EventType.other && eventTypeOther != null && eventTypeOther!.trim().isNotEmpty
+          ? eventTypeOther!.trim()
+          : eventType.label;
+
+  bool panelShows(String key) => !panelHidden.contains(key);
 
   /// URL pronto a usar em `Image.network`, já com o cache-buster de
   /// [updatedAt] anexado quando presente.
@@ -383,6 +402,8 @@ class Wedding {
     String? profilePhotoUrl,
     DateTime? updatedAt,
     String? guestCode,
+    String? eventTypeOther,
+    List<String>? panelHidden,
   }) {
     return Wedding(
       id: id,
@@ -408,6 +429,8 @@ class Wedding {
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
       updatedAt: updatedAt ?? this.updatedAt,
       guestCode: guestCode ?? this.guestCode,
+      eventTypeOther: eventTypeOther ?? this.eventTypeOther,
+      panelHidden: panelHidden ?? this.panelHidden,
     );
   }
 }

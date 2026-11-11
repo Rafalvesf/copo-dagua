@@ -313,6 +313,12 @@ class _CoupleSettings extends ConsumerWidget {
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EditEventPage(wedding: wedding))),
           ),
           _Row(
+            icon: Icons.dashboard_customize_outlined,
+            label: 'Painel do evento',
+            value: 'O que aparece',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const _PanelPage())),
+          ),
+          _Row(
             icon: Icons.palette_outlined,
             label: 'Aparência do menu',
             onTap: () => context.go('/wedding?aparencia=1'),
@@ -475,6 +481,7 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
   late final _quote = TextEditingController(text: widget.wedding.quote ?? '');
   late DateTime? _date = widget.wedding.weddingDate;
   late CeremonyType _ceremonyType = widget.wedding.ceremonyType;
+  late final _typeName = TextEditingController(text: widget.wedding.eventTypeOther ?? '');
 
   @override
   void dispose() {
@@ -483,6 +490,7 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
     _location.dispose();
     _venue.dispose();
     _quote.dispose();
+    _typeName.dispose();
     super.dispose();
   }
 
@@ -493,6 +501,11 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
     return _SettingsPage(
       title: 'Detalhes do evento',
       children: [
+        // "Outro": o nome que aparece no topo do evento (ex.: Despedida).
+        if (widget.wedding.eventType == EventType.other) ...[
+          AuthTextField(label: 'Tipo de evento (ex.: Despedida)', controller: _typeName),
+          const SizedBox(height: 12),
+        ],
         AuthTextField(label: 'O teu nome', controller: _partner1),
         const SizedBox(height: 12),
         AuthTextField(label: isWedding ? 'Nome do teu par' : 'Quem organiza contigo', controller: _partner2),
@@ -533,11 +546,62 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
                     ceremonyType: _ceremonyType,
                   ),
                 );
+            if (widget.wedding.eventType == EventType.other) {
+              await ref.read(weddingControllerProvider.notifier).setEventTypeOther(_typeName.text);
+            }
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Evento atualizado.')));
             Navigator.of(context).pop();
           },
         ),
+      ],
+    );
+  }
+}
+
+/// Definições → Painel do evento: o organizador escolhe o que aparece no
+/// painel (2026-11-11). Esconder não apaga nada.
+class _PanelPage extends ConsumerWidget {
+  const _PanelPage();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final w = ref.watch(weddingControllerProvider).wedding;
+    if (w == null) return const SizedBox.shrink();
+    final c = ref.read(weddingControllerProvider.notifier);
+    final fourth = switch (w.eventType) {
+      EventType.wedding || EventType.vowRenewal || EventType.baptism || EventType.communion || EventType.corporate => 'Mesas',
+      EventType.graduation || EventType.party || EventType.nightlife || EventType.concert || EventType.festival => 'Bilhetes',
+      _ => 'Presentes',
+    };
+    Widget tile(String key, String label, String sub, {bool indent = false}) => SwitchListTile(
+          contentPadding: EdgeInsets.only(left: indent ? 32 : 4, right: 4),
+          title: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          subtitle: Text(sub, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          value: w.panelShows(key),
+          onChanged: (v) => c.setPanelShown(key, v),
+        );
+    final stats = w.panelShows('stats');
+    return _SettingsPage(
+      title: 'Painel do evento',
+      children: [
+        const Text('Escolhe o que aparece no painel. Esconder não apaga nada.',
+            style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+        const SizedBox(height: 8),
+        tile('countdown', 'Contagem decrescente', 'Dias, horas, minutos e segundos'),
+        tile('stats', 'Números', 'Só aparecem os que são maiores que 0'),
+        if (stats) ...[
+          tile('stat_guests', 'Convidados', 'Confirmados', indent: true),
+          tile('stat_budget', 'Orçamento', 'Gasto e total', indent: true),
+          tile('stat_partners', 'Parceiros', 'Reservados e propostas', indent: true),
+          tile('stat_fourth', fourth, fourth == 'Mesas' ? 'Pessoas sentadas' : fourth == 'Bilhetes' ? 'Bilhetes vendidos' : 'Já oferecidos', indent: true),
+        ],
+        tile('suggestions', 'Sugestões de parceiros', 'Para o tipo de evento e a zona'),
+        tile('guest_page', 'Página dos convidados', 'Em Gerir'),
+        tile('gallery', 'Galeria', 'Em Gerir'),
+        const SizedBox(height: 8),
+        const Text('Os próximos passos, o convite, as reservas e Gerir aparecem sempre.',
+            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
       ],
     );
   }
