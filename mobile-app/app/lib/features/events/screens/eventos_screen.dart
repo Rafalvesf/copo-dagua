@@ -429,11 +429,12 @@ class _PosterCard extends StatelessWidget {
                   // Ainda ninguém vai: lugares livres (mockup B, 2026-11-11).
                   const GhostDots(),
                   const SizedBox(width: 8),
+                  // Em duas linhas se não couber (cortava "Sê o prime…").
                   const Flexible(
                     child: Text('Sê o primeiro a ir!',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+                        maxLines: 2,
+                        softWrap: true,
+                        style: TextStyle(fontSize: 12.5, height: 1.15, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
                   ),
                 ],
                 const Spacer(),
