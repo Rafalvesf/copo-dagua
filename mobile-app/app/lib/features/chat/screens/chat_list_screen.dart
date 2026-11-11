@@ -7,6 +7,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/chat/chat_list_controller.dart';
+import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/v2_kit.dart' show softCard, V2Avatar;
+import '../../../shared/widgets/snappy_tap.dart';
+import '../../../core/auth/auth_controller.dart';
+import '../../../core/chat/group_chat.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
@@ -91,6 +96,40 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     }
   }
 
+  /// "+": falar com um parceiro ou criar um grupo num dos eventos.
+  Future<void> _newMenu(List<(String, String)> events) async {
+    if (events.isEmpty) return _startNewConversation();
+    final mine = ref.read(weddingControllerProvider).events.map((w) => w.id).toSet();
+    final choice = await showIslandSheet<String>(
+      context: context,
+      builder: (sheet) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const Text('Nova conversa', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 12),
+          if (mine.isNotEmpty)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Hi.buildingStorefront, color: AppTheme.ink),
+              title: const Text('Falar com um parceiro'),
+              onTap: () => Navigator.of(sheet).pop('partner'),
+            ),
+          for (final (id, name) in events)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Hi.userGroup, color: AppTheme.ink),
+              title: Text(events.length == 1 ? 'Novo grupo' : 'Novo grupo · $name', maxLines: 1, overflow: TextOverflow.ellipsis),
+              onTap: () => Navigator.of(sheet).pop('group:$id'),
+            ),
+        ]),
+      ),
+    );
+    if (!mounted || choice == null) return;
+    if (choice == 'partner') return _startNewConversation();
+    await context.push('/groups/${choice.substring(6)}');
+    ref.invalidate(myChatGroupsProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(chatListControllerProvider);
@@ -100,6 +139,19 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         : state.conversations
               .where((c) => c.name.toLowerCase().contains(query))
               .toList();
+
+    // Grupos como conversas normais, na mesma lista (2026-11-11).
+    final allGroups = ref.watch(myChatGroupsProvider).value ?? const <ChatGroup>[];
+    final groups = query.isEmpty ? allGroups : allGroups.where((g) => g.name.toLowerCase().contains(query)).toList();
+    final items = <(DateTime?, Object)>[
+      for (final c in conversations) (c.lastMessageAt, c),
+      for (final g in groups) (g.lastMessageAt, g),
+    ]..sort((a, b) {
+        if (a.$1 == null && b.$1 == null) return 0;
+        if (a.$1 == null) return 1;
+        if (b.$1 == null) return -1;
+        return b.$1!.compareTo(a.$1!);
+      });
 
     final mine = ref.watch(weddingControllerProvider).events;
     final invited = ref.watch(guestWeddingsProvider).value ?? const [];
@@ -125,7 +177,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   // nos outros ecrãs; a pesquisa ocupa a largura toda
                   // (design "Mensagens").
                   trailing: AddActionButton(
-                    onTap: _startingConversation ? () {} : _startNewConversation,
+                    onTap: _startingConversation ? () {} : () => _newMenu(groupEvents),
                   ),
                 ),
                 Padding(
@@ -137,22 +189,12 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   ),
                   child: SearchPill(controller: _search, hint: 'Pesquisar conversas'),
                 ),
-                // Grupos de cada evento onde estou — os meus e aqueles
-                // onde sou convidado (conta única, 2026-11-11).
-                for (final (id, name) in groupEvents)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
-                    child: _GroupsEntry(
-                      label: groupEvents.length == 1 ? 'Grupos do evento' : 'Grupos · $name',
-                      onTap: () => context.push('/groups/$id'),
-                    ),
-                  ),
                 // Mensagens diretas da equipa (migração 146).
                 const TeamThreadEntry()
  ],
- body: state.loading && state.conversations.isEmpty
+ body: state.loading && items.isEmpty
                       ? const Center(child: CircularProgressIndicator())
-                      : conversations.isEmpty && query.isEmpty
+                      : items.isEmpty && query.isEmpty
                       ? IllustratedEmptyState(
                           mascot: MascotPose.chat,
                           circularImage: false,
@@ -162,7 +204,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                           primaryLabel: 'Explorar parceiros',
                           onPrimary: () => context.go('/partners'),
                         )
-                      : conversations.isEmpty
+                      : items.isEmpty
                       ? Center(
                           child: Text('Sem conversas para "${_search.text.trim()}".'),
                         )
@@ -171,17 +213,24 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                           bottomFadeHeight: 140,
                           child: ListView.builder(
                             padding: const EdgeInsets.fromLTRB(0, 12, 0, 140),
-                            itemCount: conversations.length,
-                            itemBuilder: (context, index) => Padding(
-                              padding: EdgeInsets.zero,
-                              child: ConversationListItem(
-                                conversation: conversations[index],
-                                onTap: () => context.push(
-                                  '/chat/${conversations[index].id}',
-                                  extra: conversations[index],
-                                ),
-                              ),
-                            ),
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              final it = items[index].$2;
+                              if (it is ChatGroup) {
+                                return _GroupListItem(
+                                  group: it,
+                                  onTap: () async {
+                                    await context.push('/group/${it.id}', extra: it);
+                                    ref.invalidate(myChatGroupsProvider);
+                                  },
+                                );
+                              }
+                              final c = it as ChatConversation;
+                              return ConversationListItem(
+                                conversation: c,
+                                onTap: () => context.push('/chat/${c.id}', extra: c),
+                              );
+                            },
                           ),
                         ),
 ),
@@ -198,29 +247,87 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
   }
 }
 
-/// Entrada para os grupos do evento (organizadores e convidados).
-class _GroupsEntry extends StatelessWidget {
-  final String label;
+/// Grupo na lista das Mensagens, igual a uma conversa: as caras de quem
+/// está no grupo, o nome, a última mensagem e a hora.
+class _GroupListItem extends ConsumerWidget {
+  final ChatGroup group;
   final VoidCallback onTap;
-  const _GroupsEntry({required this.label, required this.onTap});
+  const _GroupListItem({required this.group, required this.onTap});
+
+  String? get _time {
+    final at = group.lastMessageAt;
+    if (at == null) return null;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(at.year, at.month, at.day);
+    if (day == today) return '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';
+    if (today.difference(day).inDays == 1) return 'Ontem';
+    return '${at.day.toString().padLeft(2, '0')}/${at.month.toString().padLeft(2, '0')}';
+  }
 
   @override
-  Widget build(BuildContext context) => InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final me = ref.watch(authControllerProvider.select((s) => s.profile?.id));
+    final people = ref.watch(groupPeopleProvider(group.id)).value?.values.where((p) => p.id != me).toList() ?? const <EventPerson>[];
+    final shown = people.take(3).toList();
+    return SnappyTap(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 10),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: const [
-            BoxShadow(color: Color(0x14171713), blurRadius: 18, offset: Offset(0, 6)),
-          ]),
+          padding: const EdgeInsets.all(14),
+          decoration: softCard(),
           child: Row(children: [
-            Icon(Hi.userGroup, color: AppTheme.accentOliveDark),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            SizedBox(
+              width: 48,
+              height: 48,
+              child: shown.isEmpty
+                  ? const V2Avatar('Grupo', size: 48)
+                  : Stack(children: [
+                      for (var i = 0; i < shown.length; i++)
+                        Positioned(
+                          left: shown.length == 1 ? 0 : (i == 0 ? 0 : (i == 1 ? 16 : 8)),
+                          top: shown.length == 1 ? 0 : (i == 0 ? 0 : (i == 1 ? 16 : 24)),
+                          child: Container(
+                            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                            child: V2Avatar(shown[i].name, size: shown.length == 1 ? 44 : 30, imageUrl: shown[i].avatarUrl),
+                          ),
+                        ),
+                    ]),
             ),
-            Icon(Hi.chevronRight, color: AppTheme.inkMuted),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(group.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 15, fontWeight: group.unread ? FontWeight.w700 : FontWeight.w400, color: AppTheme.ink)),
+                const SizedBox(height: 3),
+                Text(
+                  group.lastMessage ?? (people.isEmpty ? 'Grupo' : people.map((p) => p.name.split(' ').first).take(4).join(', ')),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                ),
+              ]),
+            ),
+            const SizedBox(width: 12),
+            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              if (_time != null)
+                Text(_time!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: group.unread ? AppTheme.accentOliveDark : AppTheme.inkMuted,
+                      fontWeight: group.unread ? FontWeight.w700 : FontWeight.w400,
+                    )),
+              if (group.unread) ...[
+                const SizedBox(height: 6),
+                Container(width: 10, height: 10, decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle)),
+              ],
+            ]),
           ]),
         ),
-      );
+      ),
+    );
+  }
 }

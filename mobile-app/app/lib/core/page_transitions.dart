@@ -47,6 +47,9 @@ const _tabDuration = Duration(milliseconds: 460);
 /// (2026-11-11: "vê-se o conteúdo da página anterior e aparece o novo").
 final Map<ValueKey<String>, GlobalKey> _boundaryKeys = {};
 ValueKey<String>? _shownPage;
+DateTime? _tabSwitchAt;
+bool get _tabSwitching =>
+    _tabSwitchAt != null && DateTime.now().difference(_tabSwitchAt!) < _tabDuration + const Duration(milliseconds: 150);
 final Map<ValueKey<String>, ui.Image> _leavingShots = {};
 
 ui.Image? _snapshot(ValueKey<String>? key) {
@@ -97,6 +100,7 @@ GoRoute tabRoute({
           _leavingShots[pageKey] = shot;
         }
         _shownPage = pageKey;
+        _tabSwitchAt = DateTime.now();
       }
       final boundary = _boundaryKeys.putIfAbsent(pageKey, () => GlobalKey());
       return CustomTransitionPage<void>(
@@ -104,7 +108,7 @@ GoRoute tabRoute({
         transitionDuration: _tabDuration,
         reverseTransitionDuration: _tabDuration,
         transitionsBuilder: (context, animation, secondary, child) =>
-            _TabSlide(animation: animation, pageKey: pageKey, child: child),
+            _TabSlide(animation: animation, secondary: secondary, pageKey: pageKey, child: child),
         child: RepaintBoundary(key: boundary, child: child),
       );
     },
@@ -113,18 +117,20 @@ GoRoute tabRoute({
 
 class _TabSlide extends StatelessWidget {
   final Animation<double> animation;
+  final Animation<double> secondary;
   final ValueKey<String> pageKey;
   final Widget child;
-  const _TabSlide({required this.animation, required this.pageKey, required this.child});
+  const _TabSlide({required this.animation, required this.secondary, required this.pageKey, required this.child});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: animation,
+      animation: Listenable.merge([animation, secondary]),
       child: child,
       builder: (context, child) {
         // A entrar vem do lado do separador tocado; a sair vai para o
-        // lado oposto.
+        // lado oposto. A página que está à vista é arrastada para fora
+        // pela nova (2026-11-11), em vez de a nova passar por cima.
         final leaving = animation.status == AnimationStatus.reverse;
         // Voltar com o gesto do Safari: o Safari já animou; a app não
         // mostra a página a sair (evita o "piscar", reportado 2026-10-20).
@@ -133,13 +139,20 @@ class _TabSlide extends StatelessWidget {
         }
         final t = Curves.easeInOutCubic.transform(animation.value);
         final dir = leaving ? -_tabDir : _tabDir;
+        // Esta página está a ser tapada por outro separador: sai para o
+        // lado oposto ao mesmo ritmo.
+        // Só quando quem chega é outro separador (não uma página aberta
+        // por um botão, que desce de cima).
+        final pushed = _tabSwitching && secondary.status == AnimationStatus.forward
+            ? Curves.easeInOutCubic.transform(secondary.value)
+            : (secondary.isCompleted && _tabSwitching ? 1.0 : 0.0);
         if (!leaving && animation.isCompleted) {
           _leavingShots.remove(pageKey)?.dispose();
         }
         final shot = leaving || animation.isCompleted ? null : _leavingShots[pageKey];
         return LayoutBuilder(builder: (context, c) {
           final w = c.maxWidth;
-          final o = Offset(dir * (1 - t) * w, 0);
+          final o = Offset(dir * (1 - t) * w - _tabDir * pushed * w, 0);
           final page = Transform.translate(offset: o, child: PageMotion(offset: o, child: child!));
           if (shot == null) return page;
           // A página anterior sai para o outro lado, ao mesmo tempo.
