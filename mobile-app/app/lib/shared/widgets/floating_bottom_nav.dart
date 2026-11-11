@@ -77,7 +77,7 @@ class FloatingBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _NavIcon(
                     icon: Hi.sparkles,
-                    activeIcon: Hi.sparkles,
+                    activeIcon: Hi.sparklesOutline,
                     active: current == AppTab.partners,
                     accent: menuColor.color,
                     onAccent: menuColor.on,
@@ -91,7 +91,7 @@ class FloatingBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _NavIcon(
                     icon: Hi.globeEuropeAfrica,
-                    activeIcon: Hi.globeEuropeAfrica,
+                    activeIcon: Hi.globeEuropeAfricaOutline,
                     // O painel de cada evento abre a partir de Eventos
                     // (separador "O meu evento" retirado, 2026-11-10).
                     active: current == AppTab.events || current == AppTab.wedding,
@@ -106,7 +106,7 @@ class FloatingBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _NavIcon(
                     icon: Hi.chatBubbleOvalLeft,
-                    activeIcon: Hi.chatBubbleOvalLeft,
+                    activeIcon: Hi.chatBubbleOvalLeftOutline,
                     active: current == AppTab.chat,
                     accent: menuColor.color,
                     onAccent: menuColor.on,
@@ -120,7 +120,7 @@ class FloatingBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _NavIcon(
                     icon: Hi.user,
-                    activeIcon: Hi.user,
+                    activeIcon: Hi.userOutline,
                     active: current == AppTab.home,
                     accent: menuColor.color,
                     onAccent: menuColor.on,
@@ -168,9 +168,9 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Redesign 2026-10 ("botão quando selecionado deve ser bolha
-    // verde"): o ativo fica numa bolha verde com o ícone a branco.
-    final color = active ? onAccent : AppTheme.navIconMuted;
+    // Sem bolha (2026-11-11): ícones preenchidos; o separador ativo
+    // fica com o ícone só com contorno.
+    final color = active ? AppTheme.ink : AppTheme.navIconMuted;
     return Semantics(
       button: true,
       selected: active,
@@ -198,16 +198,11 @@ class _NavIcon extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Center(
-                    child: NavBubble(
-                      active: active,
-                      size: 42,
-                      color: accent,
-                      child: Icon(
+                    child: Icon(
                         active ? activeIcon : icon,
                         color: color,
-                        size: active ? 22 : 28,
+                        size: 28,
                       ),
-                    ),
                   ),
                   if (badgeCount > 0)
                     Positioned(
