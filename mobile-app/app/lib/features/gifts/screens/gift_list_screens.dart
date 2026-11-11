@@ -712,7 +712,12 @@ class _FeaturedProductCard extends StatelessWidget {
             )
           : null,
       title: p.title,
-      subtitle: '${p.partnerName} · ${giftEuros(p.price)}',
+      subtitle: [p.partnerName, if (p.city?.isNotEmpty == true) p.city!].join(' · '),
+      chips: [
+        if (p.deliveryNote?.isNotEmpty == true) p.deliveryNote!,
+        if (p.stock != null && p.stock! > 0 && p.stock! <= 5) 'Últimas ${p.stock}',
+      ],
+      price: giftEuros(p.price),
     );
   }
 }

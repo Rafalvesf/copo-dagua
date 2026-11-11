@@ -1,6 +1,9 @@
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/snap_carousel.dart';
+import '../../../shared/widgets/dense_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/tasks/task_models.dart' show taskPriorityWeight, taskPriorityFromDb;
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/search_pill.dart';
@@ -117,6 +120,8 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
     ref.invalidate(guestWeddingsProvider);
     ref.invalidate(publicEventsProvider);
     ref.invalidate(_pendingInvitesProvider);
+    ref.invalidate(_orgSummaryProvider);
+    ref.invalidate(_guestStepsProvider);
     await ref.read(publicEventsProvider.future);
   }
 
@@ -166,11 +171,14 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
       if (hasMine) ...[
         const _Title('Os meus eventos'),
         SnapCarousel(
-          height: 330,
+          height: 352,
           itemCount: own.length + guest.length,
-          itemBuilder: (context, i) => i < own.length
-              ? _MyEventCard(wedding: own[i], showPlanning: own[i].id == activeId)
-              : _InvitedEventCard(wedding: guest[i - own.length]),
+          itemBuilder: (context, i) => Align(
+            alignment: Alignment.topCenter,
+            child: i < own.length
+                ? _MyEventCard(wedding: own[i], active: own[i].id == activeId)
+                : _InvitedEventCard(wedding: guest[i - own.length]),
+          ),
         ),
       ],
       const _Title('Descobrir', subtitle: 'Eventos abertos a que podes ir'),
@@ -283,11 +291,6 @@ IconData _typeIcon(EventType t) => switch (t) {
       _ => Icons.celebration_outlined,
     };
 
-String _meta(DateTime? date, String? place) => [
-      if (date != null) formatWeddingDateCaps(date),
-      if (place != null) place,
-    ].join(' · ');
-
 class _PublicEventCard extends ConsumerStatefulWidget {
   final PublicEvent event;
   const _PublicEventCard({required this.event});
@@ -353,10 +356,10 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
 }
 
 const _months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
-const _weekdays = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
 
-/// Cartaz de um evento público (inspirado na Shotgun): imagem grande,
-/// data em destaque, preço por cima e título/local por baixo.
+/// Evento aberto em "Descobrir" (cartões densos, 2026-11-11): foto mais
+/// baixa com a data e o preço por cima; por baixo, nome, quando e onde,
+/// tipo, quantos vão e "Ver".
 class _PosterCard extends StatelessWidget {
   final PublicEvent event;
   final bool busy;
@@ -367,113 +370,97 @@ class _PosterCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final e = event;
     final date = e.date;
-    final sub = [
-      if (date != null) '${_weekdays[date.weekday - 1]} ${date.day} ${_months[date.month - 1]}${e.time?.isNotEmpty == true ? ' · ${e.time}' : ''}',
-      if (e.place != null) e.place!,
-    ].join(' · ');
+    final when = date == null
+        ? null
+        : '${_weekdaysShort[date.weekday - 1]} ${date.day} ${_monthsShort[date.month - 1]}${e.time?.isNotEmpty == true ? ' · ${e.time}' : ''}';
+    final price = e.isPaid ? e.priceLabel.replaceAll(' por pessoa', '') : 'Grátis';
+    final cta = e.mine ? 'O teu evento' : (e.joined ? 'Abrir' : 'Ver');
     return SnappyTap(
       onTap: onTap ?? () {},
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AspectRatio(
-            aspectRatio: 4 / 3,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  e.coverPhotoUrl == null
-                      ? _PosterPlaceholder(type: e.eventType, seed: e.weddingId.hashCode)
-                      : SizedNetworkImage(e.coverPhotoUrl!, fit: BoxFit.cover),
-                  // Escurece o fundo para o texto por cima se ler bem.
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0x33000000), Color(0x00000000), Color(0x66000000)],
-                        stops: [0, 0.45, 1],
-                      ),
-                    ),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: softCard(radius: 22),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          SizedBox(
+            height: 124,
+            child: Stack(fit: StackFit.expand, children: [
+              e.coverPhotoUrl == null
+                  ? _PosterPlaceholder(type: e.eventType, seed: e.weddingId.hashCode)
+                  : SizedNetworkImage(e.coverPhotoUrl!, fit: BoxFit.cover),
+              if (date != null)
+                Positioned(
+                  left: 12,
+                  top: 12,
+                  child: Container(
+                    width: 46,
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    child: Column(children: [
+                      Text(_months[date.month - 1],
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+                      Text('${date.day}',
+                          style: const TextStyle(fontSize: 18, height: 1.1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                    ]),
                   ),
-                  // Partilhar o evento por link (2026-11).
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Material(
-                      color: Colors.white,
-                      shape: const CircleBorder(),
-                      child: IconButton(
-                        tooltip: 'Partilhar',
-                        icon: const Icon(Icons.ios_share_rounded, size: 20, color: AppTheme.ink),
-                        onPressed: () => sharePublicEvent(context, e),
-                      ),
-                    ),
+                ),
+              Positioned(right: 12, top: 12, child: PhotoPill(price, dark: true)),
+              // Partilhar o evento por link (2026-11).
+              Positioned(
+                right: 8,
+                bottom: 8,
+                child: Material(
+                  color: Colors.white,
+                  shape: const CircleBorder(),
+                  child: IconButton(
+                    tooltip: 'Partilhar',
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.ios_share_rounded, size: 18, color: AppTheme.ink),
+                    onPressed: () => sharePublicEvent(context, e),
                   ),
-                  if (date != null)
-                    Positioned(
-                      left: 12,
-                      top: 12,
-                      child: Container(
-                        width: 54,
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
-                        child: Column(
-                          children: [
-                            Text('${date.day}',
-                                style: const TextStyle(fontSize: 22, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                            const SizedBox(height: 2),
-                            Text(_months[date.month - 1],
-                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppTheme.accentOliveDark)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  Positioned(
-                    right: 12,
-                    bottom: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: e.isPaid || e.mine ? Colors.white : AppTheme.accentOliveDark,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: busy
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                          : Text(
-                              e.mine ? 'O teu evento' : e.joined ? 'Abrir' : (e.isPaid ? e.priceLabel.replaceAll(' por pessoa', '') : 'Grátis'),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: e.isPaid || e.mine ? AppTheme.ink : Colors.white,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ]),
           ),
-          const SizedBox(height: 10),
-          Text(
-            e.eventType.label.toUpperCase(),
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(e.displayNames,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 17, height: 1.2, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+              const SizedBox(height: 4),
+              MetaRow([
+                if (when != null) (Icons.calendar_today_outlined, when),
+                if (e.place != null) (Icons.place_outlined, e.place!),
+              ]),
+              const SizedBox(height: 10),
+              Wrap(spacing: 6, runSpacing: 6, children: [
+                DenseChip(e.eventType.label),
+                if (e.venue?.isNotEmpty == true && e.location?.isNotEmpty == true) DenseChip(e.location!),
+              ]),
+              const SizedBox(height: 12),
+              Row(children: [
+                if (e.goingCount > 0) ...[
+                  AvatarDots(e.goingCount),
+                  const SizedBox(width: 8),
+                  Text(e.goingCount == 1 ? '1 vai' : '${e.goingCount} vão',
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                ],
+                const Spacer(),
+                busy
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : CtaPill(cta),
+              ]),
+            ]),
           ),
-          const SizedBox(height: 2),
-          Text(e.displayNames,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 19, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          if (sub.isNotEmpty) ...[
-            const SizedBox(height: 3),
-            Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-          ],
-        ],
+        ]),
       ),
     );
   }
 }
+
+const _weekdaysShort = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+const _monthsShort = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
 /// Sem foto de capa: fundo de cor com o símbolo do tipo de evento.
 class _PosterPlaceholder extends StatelessWidget {
@@ -688,11 +675,146 @@ Widget _pill(String text, {bool dark = false}) => Container(
       child: Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: dark ? Colors.white : AppTheme.ink)),
     );
 
+/// Números de um evento que organizo, para o cartão (cartões densos,
+/// 2026-11-11): convidados, confirmados, reservas e o planeamento.
+class _OrgSummary {
+  final int guests;
+  final int confirmed;
+  final int bookings;
+  final int done;
+  final int total;
+  final ({String id, String title})? next;
+  const _OrgSummary({this.guests = 0, this.confirmed = 0, this.bookings = 0, this.done = 0, this.total = 0, this.next});
+}
+
+final _orgSummaryProvider = FutureProvider.autoDispose.family<_OrgSummary, String>((ref, id) async {
+  try {
+    Future<List> list(Future<dynamic> q) async => (await q) as List;
+    final r = await Future.wait([
+      list(supabase.from('guests').select('rsvp_status').eq('wedding_id', id)),
+      list(supabase.from('bookings').select('status').eq('wedding_id', id)),
+      list(supabase
+          .from('wedding_tasks')
+          .select('id, title, status, priority, created_at')
+          .eq('wedding_id', id)
+          .eq('source', 'system')
+          .inFilter('status', ['active', 'completed'])),
+    ]);
+    final guests = r[0].cast<Map<String, dynamic>>();
+    final bookings = r[1].cast<Map<String, dynamic>>();
+    final tasks = r[2].cast<Map<String, dynamic>>();
+    final active = tasks.where((t) => t['status'] == 'active').toList()
+      ..sort((a, b) {
+        final pw = taskPriorityWeight(taskPriorityFromDb(b['priority'] as String)) -
+            taskPriorityWeight(taskPriorityFromDb(a['priority'] as String));
+        if (pw != 0) return pw;
+        return (a['created_at'] as String).compareTo(b['created_at'] as String);
+      });
+    return _OrgSummary(
+      guests: guests.length,
+      confirmed: guests.where((g) => g['rsvp_status'] == 'confirmed').length,
+      bookings: bookings.where((b) => b['status'] == 'confirmed' || b['status'] == 'completed').length,
+      done: tasks.length - active.length,
+      total: tasks.length,
+      next: active.isEmpty ? null : (id: active.first['id'] as String, title: active.first['title'] as String),
+    );
+  } catch (_) {
+    return const _OrgSummary();
+  }
+});
+
+/// Os passos de quem é convidado: responder e, se houver lista,
+/// oferecer um presente.
+class _GuestSteps {
+  final bool answered;
+  final bool hasGifts;
+  final bool gave;
+  const _GuestSteps({this.answered = true, this.hasGifts = false, this.gave = false});
+
+  List<(String, String, bool)> get steps => [
+        ('rsvp', 'Presença', answered),
+        if (hasGifts) ('gift', 'Presente', gave),
+      ];
+}
+
+final _guestStepsProvider = FutureProvider.autoDispose.family<_GuestSteps, String>((ref, id) async {
+  final me = supabase.auth.currentUser?.id;
+  if (me == null) return const _GuestSteps();
+  Future<List> safe(Future<dynamic> f) async {
+    try {
+      return (await f) as List;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  final r = await Future.wait([
+    safe(supabase.from('guests').select('rsvp_status').eq('wedding_id', id).eq('linked_profile_id', me).limit(1)),
+    safe(supabase.rpc('gift_list', params: {'p_wedding': id})),
+    safe(supabase.from('gift_claims').select('id').eq('wedding_id', id).eq('guest_id', me).limit(1)),
+    safe(supabase.from('gift_envelopes').select('id').eq('wedding_id', id).eq('guest_profile_id', me).limit(1)),
+    safe(supabase.from('gift_orders').select('id').eq('wedding_id', id).eq('buyer_id', me).limit(1)),
+  ]);
+  final row = r[0].isEmpty ? null : r[0].first as Map<String, dynamic>;
+  return _GuestSteps(
+    answered: row == null || row['rsvp_status'] != 'pending',
+    hasGifts: r[1].isNotEmpty,
+    gave: r[2].isNotEmpty || r[3].isNotEmpty || r[4].isNotEmpty,
+  );
+});
+
+/// Alertas dos cartões já tocados: depois de selecionado, desaparece
+/// (pedido 2026-11-11). Fica guardado neste dispositivo.
+class _SeenAlerts extends Notifier<Set<String>> {
+  static const _key = 'eventos_alerts_seen';
+
+  @override
+  Set<String> build() {
+    SharedPreferences.getInstance().then((p) {
+      final saved = p.getStringList(_key);
+      if (saved != null && ref.mounted) state = {...state, ...saved};
+    }).catchError((_) {});
+    return const <String>{};
+  }
+
+  Future<void> add(String key) async {
+    state = {...state, key};
+    try {
+      final p = await SharedPreferences.getInstance();
+      final list = state.toList();
+      await p.setStringList(_key, list.length > 200 ? list.sublist(list.length - 200) : list);
+    } catch (_) {}
+  }
+}
+
+final _seenAlertsProvider = NotifierProvider<_SeenAlerts, Set<String>>(_SeenAlerts.new);
+
+Widget _cardTitle(String text) => Text(text,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink));
+
+List<(IconData, String)> _cardMeta(DateTime? date, String? time, String? place) => [
+      if (date != null)
+        (
+          Icons.calendar_today_outlined,
+          '${_weekdaysShort[date.weekday - 1]} ${date.day} ${_monthsShort[date.month - 1]}'
+              '${date.year != DateTime.now().year ? ' ${date.year}' : ''}'
+              '${time?.isNotEmpty == true ? ' · $time' : ''}',
+        ),
+      if (place != null) (Icons.place_outlined, place),
+    ];
+
 /// Evento que organizo: abre o painel desse evento.
 class _MyEventCard extends ConsumerWidget {
   final Wedding wedding;
-  final bool showPlanning;
-  const _MyEventCard({required this.wedding, required this.showPlanning});
+  final bool active;
+  const _MyEventCard({required this.wedding, required this.active});
+
+  Future<void> _open(BuildContext context, WidgetRef ref) async {
+    await ref.read(weddingControllerProvider.notifier).select(wedding.id);
+    if (context.mounted) context.go('/wedding');
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -700,67 +822,57 @@ class _MyEventCard extends ConsumerWidget {
         ? wedding.venue
         : (wedding.location?.isNotEmpty == true ? wedding.location : null);
     final left = _daysLeft(wedding.weddingDate);
-    final tasks = showPlanning ? ref.watch(taskEngineControllerProvider) : null;
-    final done = tasks?.systemDone.length ?? 0;
-    final total = done + (tasks?.systemActive.length ?? 0);
-    final next = tasks?.systemActive.firstOrNull;
+    final summary = ref.watch(_orgSummaryProvider(wedding.id)).value ?? const _OrgSummary();
+    // No evento aberto, o motor de tarefas é a fonte mais fresca.
+    final engine = active ? ref.watch(taskEngineControllerProvider) : null;
+    final engineTotal = engine == null ? 0 : engine.systemDone.length + engine.systemActive.length;
+    final done = engineTotal > 0 ? engine!.systemDone.length : summary.done;
+    final total = engineTotal > 0 ? engineTotal : summary.total;
+    final engineNext = engine?.systemActive.firstOrNull;
+    final next = engineNext != null ? (id: engineNext.id, title: engineNext.title) : summary.next;
+    final seen = ref.watch(_seenAlertsProvider);
+    final showAlert = next != null && !seen.contains('task:${next.id}');
+    final stats = [
+      if (summary.guests > 0) ('${summary.guests}', summary.guests == 1 ? 'convidado' : 'convidados'),
+      if (summary.confirmed > 0) ('${summary.confirmed}', summary.confirmed == 1 ? 'confirmado' : 'confirmados'),
+      if (summary.bookings > 0) ('${summary.bookings}', summary.bookings == 1 ? 'reserva' : 'reservas'),
+    ];
     return SnappyTap(
-      onTap: () async {
-        await ref.read(weddingControllerProvider.notifier).select(wedding.id);
-        if (context.mounted) context.go('/wedding');
-      },
+      onTap: () => _open(context, ref),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: softCard(radius: 22),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           _Cover(
             id: wedding.id,
             type: wedding.eventType,
             photo: wedding.coverPhotoUrl,
-            height: 150,
+            height: 104,
             badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Organizador')],
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(wedding.displayNames,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-              const SizedBox(height: 2),
-              Text(_meta(wedding.weddingDate, place),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-              if (total > 0) ...[
-                const SizedBox(height: 12),
-                Row(children: [
-                  const Text('Planeamento', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                  const Spacer(),
-                  Text('${(done * 100 / total).round()}%',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.accentOliveDark)),
-                ]),
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: done / total,
-                    minHeight: 8,
-                    color: AppTheme.accentOliveDark,
-                    backgroundColor: const Color(0xFFE2DED4),
-                  ),
-                ),
-              ],
-              if (next != null) ...[
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              _cardTitle(wedding.displayNames),
+              const SizedBox(height: 3),
+              MetaRow(_cardMeta(wedding.weddingDate, null, place)),
+              if (stats.isNotEmpty) ...[
                 const SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(color: const Color(0xFFF7EACA), borderRadius: BorderRadius.circular(12)),
-                  child: Text('Para fazer: ${next.title}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF5A3E0C))),
+                MiniStats(stats),
+              ],
+              if (total > 0) ...[
+                const SizedBox(height: 10),
+                ProgressLine(label: 'Planeamento', value: '${(done * 100 / total).round()}%', progress: done / total),
+              ],
+              if (showAlert) ...[
+                const SizedBox(height: 10),
+                AlertStrip(
+                  text: 'Para fazer: ${next!.title}',
+                  cta: 'Fazer',
+                  onTap: () {
+                    ref.read(_seenAlertsProvider.notifier).add('task:${next!.id}');
+                    _open(context, ref);
+                  },
                 ),
               ],
             ]),
@@ -771,42 +883,64 @@ class _MyEventCard extends ConsumerWidget {
   }
 }
 
-/// Evento onde sou convidado: abre a página de convidado.
-class _InvitedEventCard extends StatelessWidget {
+/// Evento onde sou convidado: abre a página de convidado, com os meus
+/// passos (presença, presente) e o próximo em alerta.
+class _InvitedEventCard extends ConsumerWidget {
   final GuestWedding wedding;
   const _InvitedEventCard({required this.wedding});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final place = wedding.venue?.isNotEmpty == true
         ? wedding.venue
         : (wedding.location?.isNotEmpty == true ? wedding.location : null);
     final left = _daysLeft(wedding.weddingDate);
+    final open = '/guest-home/${wedding.weddingId}';
+    final stepsAsync = ref.watch(_guestStepsProvider(wedding.weddingId));
+    final steps = stepsAsync.value?.steps ?? const <(String, String, bool)>[];
+    final done = steps.where((s) => s.$3).length;
+    final next = steps.where((s) => !s.$3).firstOrNull;
+    final seen = ref.watch(_seenAlertsProvider);
+    final alertKey = next == null ? null : 'guest:${wedding.weddingId}:${next.$1}';
+    final showAlert = alertKey != null && !seen.contains(alertKey);
     return SnappyTap(
-      onTap: () => context.go('/guest-home/${wedding.weddingId}'),
+      onTap: () => context.go(open),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: softCard(radius: 22),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           _Cover(
             id: wedding.weddingId,
             type: wedding.eventType,
             photo: wedding.coverPhotoUrl,
-            height: 150,
+            height: 104,
             badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Convidado')],
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(wedding.displayNames,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-              const SizedBox(height: 2),
-              Text(_meta(wedding.weddingDate, place),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              _cardTitle(wedding.displayNames),
+              const SizedBox(height: 3),
+              MetaRow(_cardMeta(wedding.weddingDate, wedding.ceremonyTime, place)),
+              if (steps.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                ProgressLine(label: 'Os teus passos', value: '$done de ${steps.length}', progress: done / steps.length),
+                const SizedBox(height: 10),
+                Wrap(spacing: 6, runSpacing: 6, children: [
+                  for (final s in steps) DenseChip(s.$2, done: s.$3),
+                ]),
+              ],
+              if (showAlert) ...[
+                const SizedBox(height: 10),
+                AlertStrip(
+                  text: next!.$1 == 'rsvp' ? 'Diz se vais' : 'Escolhe um presente',
+                  cta: next!.$1 == 'rsvp' ? 'Responder' : 'Ver',
+                  onTap: () {
+                    ref.read(_seenAlertsProvider.notifier).add(alertKey!);
+                    context.go(open);
+                  },
+                ),
+              ],
             ]),
           ),
         ]),

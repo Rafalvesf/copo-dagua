@@ -3295,7 +3295,7 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
         LayoutBuilder(builder: (context, c) {
           final fraction = ((c.maxWidth - 2 * AppTheme.screenMargin + 12) / c.maxWidth).clamp(0.5, 1.0);
           return SizedBox(
-            height: 300,
+            height: _SuggestionCard.height,
             child: PageView.builder(
               controller: PageController(viewportFraction: fraction),
               itemCount: list.length,
@@ -3304,46 +3304,7 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
                 final k = list[i];
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: SnappyTap(
-                    onTap: () => _open(k),
-                    semanticLabel: '${k.name}, ${k.categoryLabel ?? ''}',
-                    child: Container(
-                      clipBehavior: Clip.antiAlias,
-                      decoration: _card(),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                        SizedBox(
-                          height: 180,
-                          child: k.coverPhotoUrl == null
-                              ? Container(color: const Color(0xFFDDE5D3), child: const Icon(Icons.storefront_rounded, color: _green))
-                              : SizedNetworkImage(k.coverPhotoUrl!, fit: BoxFit.cover),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-                            child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                              Expanded(
-                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.end, children: [
-                                  if (k.categoryLabel != null)
-                                    Text(k.categoryLabel!, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
-                                  Text(k.name, maxLines: 2, overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                                ]),
-                              ),
-                              const SizedBox(width: 10),
-                              Container(
-                                height: 36,
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
-                                child: const Text('Ver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
-                              ),
-                            ]),
-                          ),
-                        ),
-                      ]),
-                    ),
-                  ),
+                  child: _SuggestionCard(pick: k, onTap: () => _open(k)),
                 );
               },
             ),
@@ -3363,6 +3324,87 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
           ]),
         ],
       ]),
+    );
+  }
+}
+
+/// Sugestão compacta (cartões densos, 2026-11-11): foto à esquerda,
+/// categoria, nome, zona · nota, preço e "Ver".
+class _SuggestionCard extends ConsumerWidget {
+  final FeaturedPick pick;
+  final VoidCallback onTap;
+  const _SuggestionCard({required this.pick, required this.onTap});
+
+  static const double height = 132;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final k = pick;
+    final p = ref.watch(partnerByIdProvider(k.partnerId)).value;
+    final rating = p?.rating;
+    final meta = [
+      if (p != null && p.location.isNotEmpty) p.location,
+      if (rating != null && rating > 0) '★ ${rating.toStringAsFixed(1).replaceAll('.', ',')}',
+    ].join(' · ');
+    final price = p?.startingPrice != null
+        ? 'desde ${euros(p!.startingPrice!)}'
+        : (p?.averageQuotePrice != null ? 'média ${euros(p!.averageQuotePrice!)}' : 'Pedir orçamento');
+    return SnappyTap(
+      onTap: onTap,
+      semanticLabel: '${k.name}, ${k.categoryLabel ?? ''}',
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: _card(),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              width: 84,
+              child: k.coverPhotoUrl == null
+                  ? Container(color: const Color(0xFFDDE5D3), child: const Icon(Icons.storefront_rounded, color: _green))
+                  : SizedNetworkImage(k.coverPhotoUrl!, fit: BoxFit.cover),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              if (k.categoryLabel != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
+                  child: Text(k.categoryLabel!.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11, letterSpacing: 0.5, fontWeight: FontWeight.w800, color: _greenDark)),
+                ),
+              Text(k.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+              if (meta.isNotEmpty)
+                Text(meta,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              Row(children: [
+                Expanded(
+                  child: Text(p == null ? '' : price,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                ),
+                Container(
+                  height: 32,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(16)),
+                  child: const Text('Ver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
+                ),
+              ]),
+            ]),
+          ),
+        ]),
+      ),
     );
   }
 }
