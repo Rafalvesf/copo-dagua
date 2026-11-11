@@ -812,7 +812,11 @@ class _PersonRow extends StatelessWidget {
     final row = Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE4E1D8)),
+      ),
       child: Row(
         children: [
           Container(
@@ -1025,13 +1029,13 @@ class _CompanionPageState extends State<_CompanionPage> {
         const SizedBox(height: 22),
         AuthField(label: 'Nome', controller: _name, topGap: 24),
         const SizedBox(height: 24),
-        _RadioRow(label: 'Adulto', selected: _group == 'adult', onTap: () => setState(() => _group = 'adult')),
+        // Idade em etiquetas, como os filtros do resto da app (2026-11-11).
+        const Text('Idade', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         const SizedBox(height: 10),
-        _RadioRow(label: 'Criança', selected: _group == 'child', onTap: () => setState(() => _group = 'child')),
-        const SizedBox(height: 10),
-        _RadioRow(label: 'Adolescente', selected: _group == 'teen', onTap: () => setState(() => _group = 'teen')),
-        const SizedBox(height: 10),
-        _RadioRow(label: 'Sénior', selected: _group == 'senior', onTap: () => setState(() => _group = 'senior')),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          for (final (k, l) in const [('adult', 'Adulto'), ('child', 'Criança'), ('teen', 'Adolescente'), ('senior', 'Sénior')])
+            _AgeChip(label: l, selected: _group == k, onTap: () => setState(() => _group = k)),
+        ]),
         if (_child) AuthField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
         // Telemóvel do acompanhante (opcional, 2026-10-19): permite-lhe
         // entrar na app depois e ficar ligado a esta resposta.
@@ -1063,6 +1067,42 @@ class _CompanionPageState extends State<_CompanionPage> {
   }
 }
 
+/// Etiqueta de idade do acompanhante: verde quando escolhida.
+class _AgeChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _AgeChip({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        inMutuallyExclusiveGroup: true,
+        checked: selected,
+        button: true,
+        child: SnappyTap(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            decoration: BoxDecoration(
+              color: selected ? AppTheme.accentOliveDark : Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFFE4E1D8)),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              if (selected) ...[
+                const Icon(Hi.check, size: 16, color: Colors.white),
+                const SizedBox(width: 6),
+              ],
+              Text(label,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
+            ]),
+          ),
+        ),
+      );
+}
+
 class _RadioRow extends StatelessWidget {
   final String label;
   final bool selected;
@@ -1083,9 +1123,9 @@ class _RadioRow extends StatelessWidget {
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFFEEF2E9) : AppTheme.surface,
+            color: selected ? const Color(0xFFEEF2E9) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: selected ? AppTheme.accentOliveDark : Colors.transparent, width: 1.5),
+            border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFFE4E1D8), width: selected ? 1.5 : 1),
           ),
           child: Row(
             children: [
@@ -1154,7 +1194,8 @@ class _BigChoice extends StatelessWidget {
         height: height,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
+          color: selected ? AppTheme.accentOliveDark : Colors.white,
+          border: selected ? null : Border.all(color: const Color(0xFFE4E1D8)),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
