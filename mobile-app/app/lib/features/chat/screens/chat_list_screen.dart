@@ -322,7 +322,7 @@ class _GroupListItem extends ConsumerWidget {
                     )),
               if (group.unread) ...[
                 const SizedBox(height: 6),
-                Container(width: 10, height: 10, decoration: const BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle)),
+                Container(width: 10, height: 10, decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle)),
               ],
             ]),
           ]),
