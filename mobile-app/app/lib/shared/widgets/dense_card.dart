@@ -325,7 +325,7 @@ class FeaturedOverlayCard extends StatelessWidget {
     this.chips = const [],
   });
 
-  static const double height = 248;
+  static const double height = 268;
 
   @override
   Widget build(BuildContext context) => SnappyTap(
@@ -339,8 +339,9 @@ class FeaturedOverlayCard extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             decoration: softCard(radius: 22),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              // Foto um pouco maior (2026-11-11).
               SizedBox(
-                height: 120,
+                height: 140,
                 child: Stack(fit: StackFit.expand, children: [
                   image,
                   if (badge != null) Positioned(left: 12, top: 12, child: badge!),
