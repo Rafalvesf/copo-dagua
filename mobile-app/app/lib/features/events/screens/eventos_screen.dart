@@ -531,9 +531,10 @@ class _FilterChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: on ? AppTheme.ink : Colors.white,
+            // Filtros iguais aos de Parceiros: verde quando escolhido.
+            color: on ? AppTheme.accentOliveDark : Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: on ? null : Border.all(color: const Color(0xFFE6E0D2), width: 1.5),
+            border: Border.all(color: on ? AppTheme.accentOliveDark : const Color(0xFFE4E1D8)),
           ),
           child: Text(label,
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: on ? Colors.white : AppTheme.ink)),

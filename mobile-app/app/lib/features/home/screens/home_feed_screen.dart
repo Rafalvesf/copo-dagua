@@ -269,7 +269,8 @@ class _SupportSummaryCard extends ConsumerWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: Colors.white,
+          boxShadow: softCard().boxShadow,
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Row(

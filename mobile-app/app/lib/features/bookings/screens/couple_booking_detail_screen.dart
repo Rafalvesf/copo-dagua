@@ -167,7 +167,8 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppTheme.surface,
+                        color: Colors.white,
+                        boxShadow: softCard().boxShadow,
                         borderRadius: BorderRadius.circular(AppRadius.lg),
                       ),
                       child: ReviewAction(booking: booking),

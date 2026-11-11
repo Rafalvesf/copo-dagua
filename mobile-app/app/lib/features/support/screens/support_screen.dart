@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/home/home_providers.dart';
@@ -119,7 +120,8 @@ class _TicketRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: Colors.white,
+        boxShadow: softCard().boxShadow,
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Column(
