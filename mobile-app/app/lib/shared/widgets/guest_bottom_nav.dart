@@ -165,15 +165,19 @@ class _GuestNavIcon extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: SizedBox(
-          height: 42,
-          child: Center(
-            child: Icon(
-                active ? activeIcon : icon,
-                color: color,
-                size: 28,
-              ),
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 32,
+              child: Center(child: Icon(active ? activeIcon : icon, color: color, size: 26)),
+            ),
+            const SizedBox(height: 2),
+            Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11.5, fontWeight: active ? FontWeight.w800 : FontWeight.w600, color: color)),
+          ],
         ),
       ),
     )));

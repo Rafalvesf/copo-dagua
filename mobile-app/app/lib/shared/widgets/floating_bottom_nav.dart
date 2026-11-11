@@ -193,7 +193,7 @@ class _NavIcon extends StatelessWidget {
             // de "Os noivos" (ícone Material vs avatar), desalinhando
             // o texto entre os separadores.
             SizedBox(
-              height: 42,
+              height: 32,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -201,7 +201,7 @@ class _NavIcon extends StatelessWidget {
                     child: Icon(
                         active ? activeIcon : icon,
                         color: color,
-                        size: 28,
+                        size: 26,
                       ),
                   ),
                   if (badgeCount > 0)
@@ -213,6 +213,11 @@ class _NavIcon extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 2),
+            Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11.5, fontWeight: active ? FontWeight.w800 : FontWeight.w600, color: color)),
           ],
         ),
       ),
