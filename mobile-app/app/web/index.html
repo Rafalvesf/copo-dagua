@@ -85,6 +85,18 @@
         var v = versioned ? uri.replace(/(main\.dart\.js_\d+\.part\.js)/, 'v/' + window.tchinBuild + '/$1') : uri;
         add(v, ok, function (e) { if (v !== uri) add(uri, ok, err); else err(e); });
       };
+      // Listas de fontes e imagens por versão (2026-11-11: depois de
+      // publicar os ícones novos, o telemóvel usava a lista antiga em cache
+      // e os ícones não apareciam).
+      if (versioned && window.fetch) {
+        var f0 = window.fetch.bind(window);
+        window.fetch = function (input, init) {
+          if (typeof input === 'string' && /assets\/(FontManifest\.json|AssetManifest[^?/]*)$/.test(input)) {
+            input = input + '?v=' + window.tchinBuild;
+          }
+          return f0(input, init);
+        };
+      }
       // Último recurso: recarrega a página uma vez por minuto, já sem a
       // abertura (a app pede isto quando um ecrã não carrega).
       window.tchinReloadForNewVersion = function () {
