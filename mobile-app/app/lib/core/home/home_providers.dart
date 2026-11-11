@@ -381,7 +381,7 @@ final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
     if (uid != null) {
       final rates = await ref.read(partnerFeeRatesProvider(uid).future);
       if (rates != null) {
-        feeBase = FeeConfig(tiers: [(upTo: null, pct: rates.partner)], flatPct: rates.partner, freeUntil: freeUntil);
+        feeBase = FeeConfig(tiers: rates.partner.tiers, flatPct: rates.partner.flatPct, freeUntil: freeUntil);
       }
     }
     // Plano Pro (migração 161): comissão `pro_fee_discount` pontos mais baixa.
@@ -408,12 +408,18 @@ final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
 /// Taxas pelo país do parceiro (migração 180): Portugal, resto da Europa
 /// ou fora da Europa — nunca pelo cartão de quem paga. null antes da
 /// migração (ficam os escalões gerais).
-final partnerFeeRatesProvider = FutureProvider.family<({double organizer, double partner})?, String>((ref, partnerId) async {
+final partnerFeeRatesProvider = FutureProvider.family<({FeeConfig organizer, FeeConfig partner})?, String>((ref, partnerId) async {
   try {
     final r = await supabase.rpc('partner_fee_rates', params: {'p_partner_id': partnerId});
     if (r is! Map) return null;
-    final o = (r['organizer'] as num?)?.toDouble();
-    final p = (r['partner'] as num?)?.toDouble();
+    // Migração 181: escalões (até 2 000 € / acima); 180: um número.
+    FeeConfig? cfg(Object? v) {
+      if (v is num) return FeeConfig(tiers: [(upTo: null, pct: v.toDouble())], flatPct: v.toDouble());
+      final c = FeeConfig.parse(v);
+      return c.tiers.isEmpty ? null : FeeConfig(tiers: c.tiers, flatPct: c.tiers.first.pct);
+    }
+    final o = cfg(r['organizer']);
+    final p = cfg(r['partner']);
     if (o == null || p == null) return null;
     return (organizer: o, partner: p);
   } catch (_) {
@@ -425,7 +431,7 @@ final partnerFeeRatesProvider = FutureProvider.family<({double organizer, double
 /// `create-payment-intent`).
 final organizerFeeForPartnerProvider = FutureProvider.family<FeeConfig, String>((ref, partnerId) async {
   final rates = await ref.watch(partnerFeeRatesProvider(partnerId).future);
-  if (rates != null) return FeeConfig(tiers: [(upTo: null, pct: rates.organizer)], flatPct: rates.organizer);
+  if (rates != null) return rates.organizer;
   return ref.watch(organizerFeeConfigProvider.future);
 });
 

@@ -44,50 +44,28 @@ export function fixedFeeCents(settings: Record<string, unknown> | null | undefin
   return Number.isFinite(v) && v >= 0 ? Math.round(v) : 100;
 }
 
-/// Taxa pelo país do parceiro (migração 180): Portugal, resto da Europa ou
-/// fora da Europa — nunca pelo cartão de quem paga. Devolve null antes da
-/// migração (sem `region_fees`), e aí ficam os escalões de sempre.
-const EUROPE = new Set([
+/// Taxa do organizador pelo cartão de quem paga (migração 181, pedido
+/// 2026-11-11). Cartões do Espaço Económico Europeu (e da Suíça) pagam
+/// sempre a taxa base — a lei proíbe cobrar mais por eles. Só os do Reino
+/// Unido e de fora da Europa têm uma taxa mais alta.
+const EEA = new Set([
   "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU",
-  "MT", "NL", "PL", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO", "CH", "GB",
+  "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO", "CH",
 ]);
 
-export function feeRegion(country: string | null | undefined): "PT" | "EUROPE" | "OTHER" {
+export function cardRegion(country: string | null | undefined): "EEA" | "GB" | "OTHER" {
   const c = (country ?? "").toUpperCase();
-  if (c === "" || c === "PT") return "PT";
-  return EUROPE.has(c) ? "EUROPE" : "OTHER";
+  if (c === "" || EEA.has(c)) return "EEA";
+  return c === "GB" ? "GB" : "OTHER";
 }
 
-// deno-lint-ignore no-explicit-any
-type Admin = { from: (t: string) => any };
-type StripeLike = { accounts: { retrieve: (id: string) => Promise<{ country?: string | null }> } };
-
-export async function partnerRegionRates(
-  admin: Admin,
-  stripe: StripeLike,
-  partnerId: string,
-  stripeAccountId: string | null | undefined,
+/// Escalões do organizador para esta região de cartão; sem
+/// `region_fees` (antes da migração 181) ou sem região, os gerais.
+export function organizerTiersForCard(
   settings: Record<string, unknown> | null | undefined,
-): Promise<{ organizer: number; partner: number } | null> {
-  const rf = settings?.region_fees as Record<string, { organizer?: number; partner?: number }> | undefined;
-  if (!rf || typeof rf !== "object") return null;
-  let country: string | null = null;
-  try {
-    const { data } = await admin.from("partner_profiles").select("country").eq("id", partnerId).maybeSingle();
-    country = (data?.country as string | null) ?? null;
-    if (!country && stripeAccountId) {
-      const acct = await stripe.accounts.retrieve(stripeAccountId);
-      if (acct.country && /^[A-Za-z]{2}$/.test(acct.country)) {
-        country = acct.country.toUpperCase();
-        await admin.from("partner_profiles").update({ country }).eq("id", partnerId);
-      }
-    }
-  } catch (e) {
-    console.error("partner country lookup failed", e);
-  }
-  const r = rf[feeRegion(country)];
-  const organizer = Number(r?.organizer);
-  const partner = Number(r?.partner);
-  if (!Number.isFinite(organizer) || !Number.isFinite(partner)) return null;
-  return { organizer, partner };
+  region: "EEA" | "GB" | "OTHER",
+): FeeTier[] {
+  const rf = settings?.region_fees as Record<string, { organizer?: unknown }> | undefined;
+  const t = rf && typeof rf === "object" ? parseTiers(rf[region]?.organizer) : [];
+  return t.length ? t : parseTiers(settings?.organizer_fee_tiers);
 }

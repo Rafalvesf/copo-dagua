@@ -425,6 +425,7 @@ Future<({String orderId, PaymentIntentInfo info})> createGiftIntent({
   String? phone,
   String? message,
   String? previousId,
+  String? paymentMethodId,
 }) async {
   final d = await invokePayFunction('create-gift-checkout', {
     'action': 'intent',
@@ -434,6 +435,7 @@ Future<({String orderId, PaymentIntentInfo info})> createGiftIntent({
     if (phone != null) 'phone': phone,
     if (message != null && message.trim().isNotEmpty) 'message': message.trim(),
     if (previousId != null) 'previous_id': previousId,
+    if (paymentMethodId != null) 'payment_method': paymentMethodId,
   });
   return (orderId: d['order_id'] as String, info: paymentIntentInfoFromJson(d));
 }

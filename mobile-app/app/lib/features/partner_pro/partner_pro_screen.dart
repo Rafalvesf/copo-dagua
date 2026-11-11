@@ -52,7 +52,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
       amount: yearly ? pro.priceYearly : pro.priceMonthly,
       titleOverride: yearly ? 'Premium anual' : 'Premium mensal',
       methods: const [PayMethod.wallet, PayMethod.card],
-      create: (m, {phone}) => createProIntent(yearly: yearly),
+      create: (m, {phone, paymentMethodId}) => createProIntent(yearly: yearly),
       state: proPayState,
       onPaid: (ctx) => ctx.pushReplacement('/partner-pro?ok=1'),
       errorText: (c) => const {'method_unavailable', 'declined', 'not_configured'}.contains(c) ? payErrorMessage(c) : ProError(c).message,

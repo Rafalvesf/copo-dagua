@@ -869,8 +869,10 @@ class _OfferSheetState extends ConsumerState<_OfferSheet> {
           kind: 'gift',
           amount: (i.price ?? 0) * qty,
           titleOverride: 'Presente',
-          create: (m, {phone}) async {
-            final r = await createGiftIntent(itemId: i.id, quantity: qty, method: m, phone: phone, message: message, previousId: orderId);
+          cardFee: true,
+          create: (m, {phone, paymentMethodId}) async {
+            final r = await createGiftIntent(
+                itemId: i.id, quantity: qty, method: m, phone: phone, message: message, previousId: orderId, paymentMethodId: paymentMethodId);
             orderId = r.orderId;
             return r.info;
           },

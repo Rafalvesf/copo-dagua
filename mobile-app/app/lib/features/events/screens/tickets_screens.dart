@@ -70,7 +70,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
         kind: 'ticket',
         amount: (e.entryPrice ?? 0) * qty,
         titleOverride: qty == 1 ? 'Bilhete' : '$qty bilhetes',
-        create: (m, {phone}) async {
+        create: (m, {phone, paymentMethodId}) async {
           final r = await createTicketIntent(
             weddingId: e.weddingId,
             quantity: qty,

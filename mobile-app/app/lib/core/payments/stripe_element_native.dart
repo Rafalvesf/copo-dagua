@@ -68,13 +68,33 @@ class _NativeStripePay implements StripePay {
   }
 
   @override
-  Future<Map<String, dynamic>> payCard(String clientSecret, String? email) async {
+  Future<Map<String, dynamic>> cardMethod(String? email) async {
+    try {
+      final pm = await Stripe.instance.createPaymentMethod(
+        params: PaymentMethodParams.card(
+          paymentMethodData: PaymentMethodData(billingDetails: BillingDetails(email: email)),
+        ),
+      );
+      return {'id': pm.id};
+    } on StripeException catch (e) {
+      return {'error': e.error.localizedMessage ?? 'O cartão não é válido.'};
+    } catch (_) {
+      return {'error': 'Não foi possível ler o cartão. Tenta outra vez.'};
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> payCard(String clientSecret, String? email, {String? paymentMethodId}) async {
     try {
       final pi = await Stripe.instance.confirmPayment(
         paymentIntentClientSecret: clientSecret,
-        data: PaymentMethodParams.card(
-          paymentMethodData: PaymentMethodData(billingDetails: BillingDetails(email: email)),
-        ),
+        data: paymentMethodId != null
+            ? PaymentMethodParams.cardFromMethodId(
+                paymentMethodData: PaymentMethodDataCardFromMethod(paymentMethodId: paymentMethodId),
+              )
+            : PaymentMethodParams.card(
+                paymentMethodData: PaymentMethodData(billingDetails: BillingDetails(email: email)),
+              ),
       );
       return {'status': _status(pi.status)};
     } on StripeException catch (e) {
