@@ -91,7 +91,7 @@
       if (versioned && window.fetch) {
         var f0 = window.fetch.bind(window);
         window.fetch = function (input, init) {
-          if (typeof input === 'string' && /assets\/(FontManifest\.json|AssetManifest[^?/]*)$/.test(input)) {
+          if (typeof input === 'string' && /assets\/(FontManifest\.json|AssetManifest[^?/]*|fonts\/heroicons\/[^?]+)$/.test(input)) {
             input = input + '?v=' + window.tchinBuild;
           }
           return f0(input, init);

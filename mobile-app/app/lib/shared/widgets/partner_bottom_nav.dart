@@ -59,7 +59,7 @@ class PartnerBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _NavIcon(
                     icon: Hi.home,
-                    activeIcon: Hi.home,
+                    activeIcon: Hi.homeOutline,
                     active: current == PartnerTab.home,
                     onTap: () => context.go('/partner-home'),
                     label: 'Início',
@@ -70,7 +70,7 @@ class PartnerBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _NavIcon(
                     icon: Hi.inbox,
-                    activeIcon: Hi.inbox,
+                    activeIcon: Hi.inboxOutline,
                     active: current == PartnerTab.requests,
                     onTap: () => context.go('/partner-requests'),
                     label: 'Pedidos',
@@ -81,7 +81,7 @@ class PartnerBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _NavIcon(
                     icon: Hi.chatBubbleOvalLeft,
-                    activeIcon: Hi.chatBubbleOvalLeft,
+                    activeIcon: Hi.chatBubbleOvalLeftOutline,
                     active: current == PartnerTab.chat,
                     badgeCount: unreadCount,
                     onTap: () => context.go('/partner-messages'),
@@ -93,7 +93,7 @@ class PartnerBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _NavIcon(
                     icon: Hi.user,
-                    activeIcon: Hi.user,
+                    activeIcon: Hi.userOutline,
                     active: current == PartnerTab.profile,
                     onTap: () => context.go('/partner-profile'),
                     label: 'Perfil',
@@ -133,7 +133,7 @@ class _NavIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     // Redesign 2026-10 ("botão quando selecionado deve ser bolha
     // verde"): o ativo fica numa bolha verde com o ícone a branco.
-    final color = active ? Colors.white : AppTheme.navIconMuted;
+    final color = active ? AppTheme.ink : AppTheme.navIconMuted;
     return Semantics(
       button: true,
       selected: active,
@@ -157,15 +157,11 @@ class _NavIcon extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Center(
-                    child: NavBubble(
-                      active: active,
-                      size: 42,
-                      child: Icon(
+                    child: Icon(
                         active ? activeIcon : icon,
                         color: color,
-                        size: active ? 22 : 28,
+                        size: 28,
                       ),
-                    ),
                   ),
                   if (badgeCount > 0)
                     Positioned(

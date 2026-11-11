@@ -77,7 +77,7 @@ class GuestBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _GuestNavIcon(
                     icon: Hi.home,
-                    activeIcon: Hi.home,
+                    activeIcon: Hi.homeOutline,
                     active: current == GuestTab.home,
                     onTap: () => context.go(_path('/guest-home')),
                     label: 'Início',
@@ -89,7 +89,7 @@ class GuestBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _GuestNavIcon(
                     icon: Hi.rectangleStack,
-                    activeIcon: Hi.rectangleStack,
+                    activeIcon: Hi.rectangleStackOutline,
                     active: current == GuestTab.gallery,
                     onTap: () => context.go(_path('/guest-gallery')),
                     label: 'Galeria',
@@ -101,7 +101,7 @@ class GuestBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _GuestNavIcon(
                     icon: Hi.gift,
-                    activeIcon: Hi.gift,
+                    activeIcon: Hi.giftOutline,
                     active: current == GuestTab.gifts,
                     onTap: () => context.go(_path('/guest-gifts')),
                     label: 'Presentes',
@@ -112,7 +112,7 @@ class GuestBottomNav extends ConsumerWidget {
                 child: Center(
                   child: _GuestNavIcon(
                     icon: Hi.user,
-                    activeIcon: Hi.user,
+                    activeIcon: Hi.userOutline,
                     active: current == GuestTab.profile,
                     onTap: () => context.go(_path('/guest-profile')),
                     label: 'Perfil',
@@ -148,9 +148,9 @@ class _GuestNavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Redesign 2026-10 ("botão quando selecionado deve ser bolha
-    // verde"): o ativo fica numa bolha verde com o ícone a branco.
-    final color = active ? Colors.white : AppTheme.navIconMuted;
+    // Sem bolha (2026-11-11): ícones preenchidos; o separador ativo
+    // fica com o ícone só com contorno.
+    final color = active ? AppTheme.ink : AppTheme.navIconMuted;
     return Semantics(
       button: true,
       selected: active,
@@ -168,15 +168,11 @@ class _GuestNavIcon extends StatelessWidget {
         child: SizedBox(
           height: 42,
           child: Center(
-            child: NavBubble(
-              active: active,
-              size: 42,
-              child: Icon(
+            child: Icon(
                 active ? activeIcon : icon,
                 color: color,
-                size: active ? 22 : 28,
+                size: 28,
               ),
-            ),
           ),
         ),
       ),
