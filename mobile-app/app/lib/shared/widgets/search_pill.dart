@@ -35,6 +35,7 @@ class SearchPill extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
+              textInputAction: TextInputAction.search,
               style: const TextStyle(fontSize: 15, color: AppTheme.ink),
               decoration: InputDecoration(
                 hintText: hint,
