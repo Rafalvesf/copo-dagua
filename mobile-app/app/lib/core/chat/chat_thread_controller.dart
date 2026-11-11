@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import 'chat_attachments.dart';
+import 'chat_delete.dart';
 import 'chat_list_controller.dart' show unreadMessagesCountProvider;
 
 class ChatThreadState {
@@ -42,10 +43,20 @@ class ChatThreadController extends Notifier<ChatThreadState> {
         .select()
         .eq('conversation_id', conversationId)
         .order('created_at', ascending: true);
+    // Conversa apagada deste lado (`couple_hidden_at`, 179): o histórico
+    // até esse momento deixa de aparecer. Antes da migração a coluna não
+    // existe — mostra tudo.
+    DateTime? hiddenAt;
+    try {
+      final c = await supabase.from('conversations').select('couple_hidden_at').eq('id', conversationId).maybeSingle();
+      final h = c?['couple_hidden_at'] as String?;
+      if (h != null) hiddenAt = DateTime.parse(h);
+    } catch (_) {}
     state = ChatThreadState(
       loading: false,
       messages: (rows as List)
           .map((r) => _fromRow(r as Map<String, dynamic>))
+          .where((m) => hiddenAt == null || m.sentAt.isAfter(hiddenAt))
           .toList(),
     );
     // Abrir a conversa marca-a como lida — `mark_conversation_read()`
@@ -99,6 +110,12 @@ class ChatThreadController extends Notifier<ChatThreadState> {
         .select()
         .single();
     state = state.copyWith(messages: [...state.messages, _fromRow(row)]);
+  }
+
+  /// Apaga uma mensagem minha (`delete_message`, 179).
+  Future<void> delete(String id) async {
+    await deleteMessage(id);
+    state = state.copyWith(messages: [for (final m in state.messages) if (m.id != id) m]);
   }
 
   ChatMessage _fromRow(Map<String, dynamic> row) {

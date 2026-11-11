@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/chat/chat_delete.dart';
 import '../../../core/moderation/moderation.dart';
 import '../../../core/chat/chat_attachments.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -103,6 +105,20 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     }
   }
 
+  /// Toque longo numa mensagem minha: apagar (`delete_message`, 179).
+  Widget _ownDeletable(bool isMe, ChatMessage message, Widget child) {
+    if (!isMe) return child;
+    return GestureDetector(
+      onLongPress: () async {
+        final ok = await confirmChatDelete(context,
+            title: 'Apagar a mensagem?', body: 'A mensagem desaparece para os dois lados.', cta: 'Apagar mensagem');
+        if (!ok || !mounted) return;
+        await runChatDelete(context, () => ref.read(chatThreadControllerProvider(widget.conversation.id).notifier).delete(message.id));
+      },
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chat = ref.watch(chatThreadControllerProvider(_conversationKey));
@@ -155,7 +171,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                       // significa "veio da outra parte".
                       isMine: (m) => !m.fromPartner,
                       content: (message, isMe) => message.hasAttachment
-                          ? ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe)
+                          ? _ownDeletable(
+                              isMe,
+                              message,
+                              ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
+                            )
                           : message.isProposal
                           ? _ProposalCard(message: message, partnerId: widget.conversation.partnerId, onRequestNew: _openPartnerProfile)
                           : message.isQuoteRequestNotice
@@ -164,7 +184,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               child: ChatBubble(text: message.text ?? '', isMe: isMe),
                             )
                           : isMe
-                          ? ChatBubble(text: message.text ?? '', isMe: isMe)
+                          ? _ownDeletable(isMe, message, ChatBubble(text: message.text ?? '', isMe: isMe))
                           : GestureDetector(
                               // Toque longo: denunciar a mensagem.
                               onLongPress: () => showModerationSheet(context, ref,
