@@ -429,7 +429,7 @@ class _PageBody extends ConsumerWidget {
           },
         ),
       _NextSteps(wedding: wedding),
-      if (wedding.panelShows('stats')) _StatBlocks(wedding: wedding),
+      _StatBlocks(wedding: wedding),
       _InviteCodeCard(wedding: wedding),
       _Suggestions(wedding: wedding),
       const _BookingsSection(),
@@ -2550,10 +2550,11 @@ class _StatBlocks extends ConsumerWidget {
       ));
     }
 
-    if (w.panelShows('stat_guests') && confirmed > 0) {
+    // Convidados, orçamento e parceiros não se desligam (2026-11-11).
+    if (confirmed > 0) {
       add('Convidados', '$confirmed', '/ ${guests.length}', 'confirmados', '/guests', subColor: _green);
     }
-    if (w.panelShows('stat_budget')) {
+    {
       final spent = budget?.spent ?? 0;
       final total = budget?.total ?? 0;
       final estimate = w.estimatedBudget ?? 0;
@@ -2565,22 +2566,25 @@ class _StatBlocks extends ConsumerWidget {
         add('Orçamento', euros(estimate), null, 'estimativa', '/budget');
       }
     }
-    if (w.panelShows('stat_partners') && partners > 0) {
+    if (partners > 0) {
       final proposals = partners - reserved;
       add('Parceiros', '$reserved', null,
           [reserved == 1 ? 'reservado' : 'reservados', if (proposals > 0) '$proposals ${proposals == 1 ? 'proposta' : 'propostas'}'].join(' · '),
           '/bookings');
     }
-    if (w.panelShows('stat_fourth')) {
+    {
       switch (_fourthOf(w.eventType)) {
         case _Fourth.seats:
-          final seated = ref.watch(seatingControllerProvider).tables.fold<int>(0, (n, t) => n + t.guestIds.length);
-          if (seated > 0) add('Mesas', '$seated', guests.isEmpty ? null : '/ ${guests.length}', 'sentados', '/seating');
+          // Só faz sentido com mais de uma mesa; com uma (ex.: jantar de
+          // grupo) a caixa nem aparece. Pode desligar-se nas Definições.
+          final tables = ref.watch(seatingControllerProvider).tables;
+          final seated = tables.fold<int>(0, (n, t) => n + t.guestIds.length);
+          if (tables.length > 1 && seated > 0 && w.panelShows('stat_fourth')) add('Mesas', '$seated', guests.isEmpty ? null : '/ ${guests.length}', 'sentados', '/seating');
         case _Fourth.gifts:
           final items = ref.watch(giftListProvider(w.id)).value ?? const <GiftItem>[];
           final taken = items.fold<int>(0, (n, g) => n + g.taken);
           final wanted = items.fold<int>(0, (n, g) => n + g.wanted);
-          if (taken > 0) add('Presentes', '$taken', '/ $wanted', 'já oferecidos', '/gift-list');
+          if (taken > 0 && w.panelShows('stat_fourth')) add('Presentes', '$taken', '/ $wanted', 'já oferecidos', '/gift-list');
         case _Fourth.tickets:
           final sold = ref.watch(ticketSummaryProvider(w.id)).value?.sold ?? 0;
           if (sold > 0) add('Bilhetes', '$sold', null, 'vendidos', '/bilhetes');
