@@ -111,6 +111,9 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
 - **Fotos de perfil:** redondas, **planas** (cor suave fixa por nome, sem aro
   nem sombra) — `V2Avatar` (`flat` é o padrão). Lista de mensagens 52, perfil
   76, listas 44, avaliações 40, "seguido por" 24 sobrepostas.
+- **Números nos cartões de evento** (`MiniStats`: "2 convidados", "2 confirmados"):
+  fundo branco, linha preta 1,5 px à volta, cantos 12, conteúdo ao centro
+  (número 16 negrito, rótulo 11). Exceção pedida à regra "sem linha".
 - **Preço:** caixa `DESDE` (rótulo 9, valor 16) ou "Por orçamento".
 - **Navbar:** branca, flutuante, margens 16 laterais / 20 em baixo, cantos 35;
   ícone 24 + texto 11 negrito; inativo `#57534E`, ativo `#171713` com pílula
