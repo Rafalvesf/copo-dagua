@@ -414,7 +414,7 @@ class _WeekStrip extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: b == null ? FontWeight.w600 : FontWeight.w700,
+                      fontWeight: b == null ? FontWeight.w700 : FontWeight.w700,
                       color: b == null ? AppTheme.inkMuted : AppTheme.ink,
                     )),
                 if (b != null)

@@ -115,6 +115,10 @@ class AppTheme {
       return t.copyWith(fontWeight: w.value < 600 ? FontWeight.w600 : w);
     }
 
+    // Títulos (cartões, listas, ecrãs) sempre a negrito (pedido
+    // 2026-11-12: "os cartões precisam de um título a negrito").
+    TextStyle? bold(TextStyle? t) => t?.copyWith(fontWeight: FontWeight.w700);
+
     final theme = ThemeData(
       useMaterial3: true,
       // Páginas abertas por botões descem de cima, com sombra
@@ -187,7 +191,7 @@ class AppTheme {
           color: ink,
           fontSize: AppFontSize.h3,
           height: 28 / 22,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
         ),
       ),
       // Campos, diálogos, folhas e avisos no estilo novo em toda a app —
@@ -459,15 +463,15 @@ class AppTheme {
     final tt = theme.textTheme;
     return theme.copyWith(
       textTheme: tt.copyWith(
-        displayLarge: heavy(tt.displayLarge),
-        displayMedium: heavy(tt.displayMedium),
-        displaySmall: heavy(tt.displaySmall),
-        headlineLarge: heavy(tt.headlineLarge),
-        headlineMedium: heavy(tt.headlineMedium),
-        headlineSmall: heavy(tt.headlineSmall),
-        titleLarge: heavy(tt.titleLarge),
-        titleMedium: heavy(tt.titleMedium),
-        titleSmall: heavy(tt.titleSmall),
+        displayLarge: bold(tt.displayLarge),
+        displayMedium: bold(tt.displayMedium),
+        displaySmall: bold(tt.displaySmall),
+        headlineLarge: bold(tt.headlineLarge),
+        headlineMedium: bold(tt.headlineMedium),
+        headlineSmall: bold(tt.headlineSmall),
+        titleLarge: bold(tt.titleLarge),
+        titleMedium: bold(tt.titleMedium),
+        titleSmall: bold(tt.titleSmall),
         bodyLarge: heavy(tt.bodyLarge),
         bodyMedium: heavy(tt.bodyMedium),
         bodySmall: heavy(tt.bodySmall),
@@ -487,7 +491,7 @@ class AppTypography {
   static const cardTitle = TextStyle(
     fontSize: AppFontSize.h3,
     height: 28 / 22,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w700,
   );
   static const cardSubtitle = TextStyle(
     fontSize: AppFontSize.base,
@@ -502,7 +506,7 @@ class AppTypography {
   static const moduleTitle = TextStyle(
     fontSize: AppFontSize.xl,
     height: 24 / 18,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w700,
   );
   static const moduleDescription = TextStyle(
     fontSize: AppFontSize.base,

@@ -84,7 +84,7 @@ class MessageRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                             fontSize: 16,
-                            fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w600,
+                            fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w700,
                             color: AppTheme.ink)),
                   ),
                   if (time != null) ...[

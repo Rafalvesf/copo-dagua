@@ -125,7 +125,8 @@ class SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(top: 24, bottom: 12),
       child: Row(
         children: [
-          Text(text, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          // Títulos de secção como "Os meus eventos" / "Descobrir" (22, negrito).
+          Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           if (trailing != null) ...[const SizedBox(width: 8), Expanded(child: Align(alignment: Alignment.centerRight, child: trailing!))],
         ],
       ),
