@@ -241,10 +241,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (location == '/partner-home' && role != UserRole.partner) return homeForRole;
           if (location == '/guest-home' && role != UserRole.guest) return homeForRole;
           if (location == '/eventos' && role == UserRole.partner) return homeForRole;
-          // Conta que organiza a saltar entre o seu evento e o de outra
-          // pessoa como convidado: ecrã de transição pelo meio (2026-11).
+          // Sem ecrã de transição entre modo organizador e convidado
+          // (pedido 2026-11-12: "remove a animação"); só se regista o modo.
           if (role == UserRole.couple && location != '/modo') {
-            return AppModeTracker.interceptFor(location, state.uri.toString());
+            AppModeTracker.current = AppModeTracker.modeOf(location) ?? AppModeTracker.current;
+            return null;
           }
           if (role != UserRole.couple) AppModeTracker.current = null;
           return null;

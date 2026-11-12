@@ -230,6 +230,8 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                 // ao lado direito, na mesma linha.
                 PageHeader(
                   title: widget.selectionMode ? null : 'Parceiros',
+                  // Um pouco mais pequeno (pedido 2026-11-12), como Eventos.
+                  titleFontSize: 28,
                   topPadding: 8,
                   showBack: widget.selectionMode,
                   trailing: SnappyTap(
@@ -581,7 +583,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                     Expanded(
                                       child: Text(
                                         '${partners.length} ${partners.length == 1 ? 'parceiro' : 'parceiros'}',
-                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
                                       ),
                                     ),
                                     SnappyTap(
@@ -709,8 +711,8 @@ class _SectionHeader extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: strong
-                      ? AppTypography.displaySerif(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)
-                      : const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      ? const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)
+                      : const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
             if (trailing != null) ...[
               const SizedBox(width: 8),
@@ -814,7 +816,7 @@ class _PartnerCard extends ConsumerWidget {
                       child: Text(partner.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink)),
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: AppTheme.ink)),
                     ),
                     const SizedBox(width: 6),
                     FounderBadge(partner.id),
