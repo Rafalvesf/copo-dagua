@@ -3,6 +3,9 @@ import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../events/widgets/event_actions_sheet.dart';
+import '../../../shared/text_case.dart';
+import '../../../core/auth/auth_controller.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/partner_suggestion_card.dart';
 import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard;
@@ -3055,6 +3058,12 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
           child: Row(children: [
             _round(Hi.chevronLeft, 'Voltar a Eventos', () => context.go('/eventos')),
             const Spacer(),
+            // Arquivar ou apagar o evento (185).
+            _round(Hi.ellipsisHorizontal, 'Mais opções', () => showEventActionsSheet(context, ref,
+                weddingId: w.id,
+                name: capFirst(w.displayNames),
+                isOwner: w.ownerId == ref.read(authControllerProvider).profile?.id)),
+            const SizedBox(width: 8),
             _round(Hi.cog6Tooth, 'Definições do evento', () => context.push('/settings')),
           ]),
         ),

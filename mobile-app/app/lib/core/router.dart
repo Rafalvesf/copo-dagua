@@ -654,6 +654,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => lazyPage([lacct.loadLibrary], () => lacct.AccountSettingsScreen()),
       ),
       GoRoute(
+        path: '/eventos-arquivados',
+        builder: (context, state) => lazyPage([l57.loadLibrary], () => l57.HiddenEventsScreen()),
+      ),
+      GoRoute(
         path: '/u/:id',
         builder: (context, state) =>
             lazyPage([lpub.loadLibrary], () => lpub.PublicProfileScreen(profileId: state.pathParameters['id']!)),

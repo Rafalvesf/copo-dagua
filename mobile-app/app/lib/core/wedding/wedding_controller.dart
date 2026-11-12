@@ -89,7 +89,9 @@ class WeddingController extends Notifier<WeddingState> {
     final collab = collabIds.isEmpty
         ? const <Map<String, dynamic>>[]
         : (await supabase.from('weddings').select().inFilter('id', collabIds)).cast<Map<String, dynamic>>();
-    final events = [for (final r in [...owned, ...collab]) _fromRow(r)];
+    // Arquivados e apagados (185) só aparecem nas Definições.
+    bool visible(Map<String, dynamic> r) => r['archived_at'] == null && r['deleted_at'] == null;
+    final events = [for (final r in [...owned, ...collab]) if (visible(r)) _fromRow(r)];
     final wanted = activeId ?? state.wedding?.id ?? await savedF;
     final active = events.where((e) => e.id == wanted).firstOrNull ?? events.firstOrNull;
     state = WeddingState(loading: false, wedding: active, events: events);
