@@ -5,6 +5,8 @@ import '../../../core/chat/chat_delete.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/chat/partner_chat_thread_controller.dart';
+import '../../../core/chat/presence.dart';
+import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
@@ -54,6 +56,7 @@ class _PartnerChatThreadScreenState
     final text = _messageController.text;
     if (text.trim().isEmpty) return;
     _messageController.clear();
+    ref.read(typingNowProvider('c:${widget.conversation.id}').notifier).stop();
     await ref
         .read(
           partnerChatThreadControllerProvider(widget.conversation.id).notifier,
@@ -161,7 +164,20 @@ class _PartnerChatThreadScreenState
                     ).reversed.toList(),
                   ),
           ),
-          ChatComposer(controller: _messageController, onSend: _send, onAttach: _attach),
+          ColoredBox(
+            color: const Color(0xFFF2F0EB),
+            child: ChatTypingLine(typingLine(ref.watch(typingNowProvider('c:${widget.conversation.id}')))),
+          ),
+          ChatComposer(
+            controller: _messageController,
+            onSend: _send,
+            onAttach: _attach,
+            onChanged: (_) {
+              final p = ref.read(authControllerProvider).profile;
+              final name = (p?.businessName?.trim().isNotEmpty ?? false) ? p!.businessName!.trim() : (p?.fullName ?? '');
+              ref.read(typingNowProvider('c:${widget.conversation.id}').notifier).typing(name);
+            },
+          ),
         ],
       ),
     );

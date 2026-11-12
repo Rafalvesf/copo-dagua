@@ -83,6 +83,7 @@ import '../features/partner_stats/screens/partner_stats_screen.dart' deferred as
 import '../features/partner_venue_tables/screens/partner_venue_tables_screen.dart' deferred as l54;
 import '../features/seating/screens/seating_screen.dart' deferred as l55;
 import '../features/partners/screens/partners_list_screen.dart' deferred as l56;
+import '../features/partners/screens/partner_detail_screen.dart' deferred as lpd;
 import '../features/settings/screens/guest_facing_screen.dart' show GuestPageRoute;
 import '../features/settings/screens/settings_screen.dart' deferred as l57;
 import '../features/profile/screens/account_settings_screen.dart' deferred as lacct;
@@ -151,6 +152,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Convite de um parceiro aos seus clientes (migração 151) — público.
       if (location.startsWith('/p/')) return null;
+
+      // Página pública de um parceiro ("Partilhar perfil", 2026-11-12).
+      if (location.startsWith('/parceiro/')) return null;
 
       // Link "Convidar o teu par" (079) — também público.
       if (location.startsWith('/juntar/')) return null;
@@ -380,6 +384,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Envelopes recebidos (migração 156).
       GoRoute(path: '/envelopes', builder: (context, state) =>lazyPage([l24.loadLibrary], () =>  l24.EnvelopesScreen())),
       GoRoute(path: '/p/:code', builder: (context, state) =>lazyPage([l23.loadLibrary], () =>  l23.PartnerInviteScreen(code: state.pathParameters['code']!))),
+      GoRoute(
+          path: '/parceiro/:id',
+          builder: (context, state) =>
+              lazyPage([lpd.loadLibrary], () => lpd.PublicPartnerScreen(id: state.pathParameters['id']!))),
       GoRoute(path: '/evento/:id', builder: (context, state) =>lazyPage([l16.loadLibrary], () =>  l16.PublicEventScreen(id: state.pathParameters['id']!))),
       // Criar mais um evento (vários por conta, 2026-11).
       GoRoute(

@@ -82,7 +82,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                       child: ProfileCard(
-                        avatar: V2Avatar(p.name, size: 76, imageUrl: p.avatarUrl),
+                        avatar: V2Avatar(p.name, size: 76, imageUrl: p.avatarUrl, flat: true),
                         name: p.name,
                         handleLine: p.city ?? '',
                         bio: p.bio,

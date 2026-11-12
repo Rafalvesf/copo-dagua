@@ -20,20 +20,16 @@ import '../../../core/models/models.dart';
 import '../../../core/moderation/moderation.dart';
 import '../../../core/partner_profile/partner_location.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/public_link.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
-import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/first_run_tour.dart' show FirstRunTour, TourRole;
-import '../../../shared/widgets/v2_kit.dart';
 import '../../../core/supabase/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
-import '../../../core/profile/username.dart';
 
 /// Definições — uma por tipo de conta (organizadores, parceiros,
 /// convidados). Redesign 2026-10-17 (canvas "Organizadores · Definições",
@@ -61,7 +57,9 @@ class SettingsScreen extends ConsumerWidget {
 // Fundo branco e linhas soltas com divisórias, como em "Convidado ·
 // Definições" — pedido 2026-10-17: "gostei destas definições, aplica no
 // resto" (parceiro e organizador usam os mesmos componentes).
-const _pageBackground = Colors.white;
+// Mockup "Definições (botão)" (2026-11-12): fundo creme, grupos brancos
+// de cantos 22, linhas de 56 sem ícones, títulos de secção espaçados.
+const _pageBackground = Color(0xFFF2F0EB);
 
 class _SettingsPage extends StatelessWidget {
   final String title;
@@ -70,66 +68,48 @@ class _SettingsPage extends StatelessWidget {
   const _SettingsPage({required this.title, required this.children});
 
   @override
+  Widget build(BuildContext context) => SettingsScaffold(title: title, children: children);
+}
+
+/// Página de definições com o estilo do mockup: voltar redondo branco e
+/// título de 28 à esquerda. Partilhada com as Definições do Perfil.
+class SettingsScaffold extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+  const SettingsScaffold({super.key, required this.title, required this.children});
+
+  @override
   Widget build(BuildContext context) {
     return GradientScaffold(
       gradientOverride: const LinearGradient(colors: [_pageBackground, _pageBackground]),
-      body: SafeArea(top: false, 
-        bottom: false,
-        child: ListView(
-          padding: ( EdgeInsets.zero).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
-          children: [
-            PageHeader(title: title, centered: true),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, AppTheme.screenMargin, 60),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, MediaQuery.paddingOf(context).top + 16, AppTheme.screenMargin, 60),
+        children: [
+          Row(children: [
+            SnappyTap(
+              onTap: () => Navigator.of(context).maybePop(),
+              child: Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                child: const Icon(Hi.chevronLeft, size: 20, color: AppTheme.ink),
+              ),
             ),
-          ],
-        ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ),
+          ]),
+          const SizedBox(height: 6),
+          ...children,
+        ],
       ),
     );
   }
-}
-
-/// Cartão do topo das Definições, igual para organizadores e parceiros:
-/// degradê suave, etiqueta, ação à direita, nome e uma linha de detalhe.
-class _HeaderCard extends StatelessWidget {
-  final String chip;
-  final String action;
-  final String title;
-  final String meta;
-  final VoidCallback onTap;
-  const _HeaderCard({required this.chip, required this.action, required this.title, required this.meta, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => SnappyTap(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-            gradient: LinearGradient(
-              begin: const Alignment(-0.6, -1),
-              end: const Alignment(0.6, 1),
-              colors: [AppTheme.accentTint, const Color(0xFFF7EACA), const Color(0xFFF3DEE0)],
-              stops: const [0, 0.6, 1],
-            ),
-          ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(999)),
-                child: Text(chip, style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
-              ),
-              const Spacer(),
-              Text(action, style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: Color(0xFF3E5539))),
-            ]),
-            const SizedBox(height: 10),
-            Text(title, style: const TextStyle(fontSize: AppFontSize.h2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
-          ]),
-        ),
-      );
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -137,12 +117,20 @@ class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text);
 
   @override
+  Widget build(BuildContext context) => SettingsSectionTitle(text);
+}
+
+class SettingsSectionTitle extends StatelessWidget {
+  final String text;
+  const SettingsSectionTitle(this.text, {super.key});
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 24, 0, 12),
+      padding: const EdgeInsets.fromLTRB(4, 20, 4, 12),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted),
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted),
       ),
     );
   }
@@ -152,17 +140,24 @@ class _Group extends StatelessWidget {
   final List<Widget> children;
   const _Group({required this.children});
 
-  // Redesign 2026-10-19 (canvas "definições (redesign)"): cada grupo é
-  // um cartão branco com sombra suave e linhas com autocolantes.
+  @override
+  Widget build(BuildContext context) => SettingsGroup(children: children);
+}
+
+/// Grupo branco de cantos 22 com divisórias finas (mockup).
+class SettingsGroup extends StatelessWidget {
+  final List<Widget> children;
+  const SettingsGroup({super.key, required this.children});
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-      decoration: softCard(),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(
         children: [
           for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const Divider(height: 1, thickness: 1, color: Color(0xFFEEF2EC)),
+            if (i > 0) const Divider(height: 1, thickness: 1, color: Color(0xFFECE7DC)),
             children[i],
           ],
         ],
@@ -172,6 +167,8 @@ class _Group extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
+  // O ícone já não aparece (mockup sem ícones); fica para não mexer em
+  // todas as linhas.
   final IconData icon;
   final String label;
   final String? value;
@@ -181,42 +178,49 @@ class _Row extends StatelessWidget {
   const _Row({required this.icon, required this.label, this.value, this.onTap, this.color});
 
   @override
+  Widget build(BuildContext context) => SettingsRow(label: label, value: value, onTap: onTap, color: color);
+}
+
+/// Linha de 56: nome à esquerda, valor e seta à direita (mockup).
+class SettingsRow extends StatelessWidget {
+  final String label;
+  final String? value;
+  final VoidCallback? onTap;
+  final Color? color;
+
+  const SettingsRow({super.key, required this.label, this.value, this.onTap, this.color});
+
+  @override
   Widget build(BuildContext context) {
-    final row = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 11),
+    final row = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
       child: Row(
         children: [
-          StickerIcon(icon, size: 36, color: color, turns: StickerIcon.tilt(label.length)),
-          const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: AppFontSize.base + 1, color: color ?? AppTheme.ink),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: color ?? AppTheme.ink),
             ),
           ),
-          // Valor encostado à direita, sempre no mesmo sítio, e a seta
-          // (ou o espaço dela) sempre na mesma coluna — antes o valor
-          // ficava a meio da linha e desalinhado entre linhas.
           if (value != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.42),
+              constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.45),
               child: Text(
                 value!,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
               ),
             ),
           ],
-          const SizedBox(width: 6),
-          SizedBox(
-            width: 18,
-            child: onTap == null ? null : const Icon(Hi.chevronRight, size: 18, color: Color(0xFFB5B0A6)),
-          ),
+          if (onTap != null) ...[
+            const SizedBox(width: 12),
+            const Icon(Hi.chevronRight, size: 16, color: AppTheme.inkMuted),
+          ],
         ],
       ),
     );
@@ -230,24 +234,18 @@ class _SignOut extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24),
-      child: Center(
-        child: TextButton(
-          onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-          style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFFA3412E),
-            textStyle: const TextStyle(
-              fontFamily: AppTheme.fontFamily,
-              fontFamilyFallback: AppTheme.fontFamilyFallback,
-              fontSize: AppFontSize.base + 1,
-              fontWeight: FontWeight.w700,
-            ),
+      padding: const EdgeInsets.only(top: 20),
+      child: SnappyTap(
+        onTap: () => ref.read(authControllerProvider.notifier).logout(),
+        child: Container(
+          height: 52,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: AppTheme.ink, width: 1.5),
           ),
-          child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Hi.arrowRightStartOnRectangle, size: 18),
-            SizedBox(width: 8),
-            Text('Terminar sessão'),
-          ]),
+          child: const Text('Terminar sessão', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ),
       ),
     ).withVersion();
@@ -298,7 +296,8 @@ class _CoupleSettings extends ConsumerWidget {
   final bool fromGuestMode;
   const _CoupleSettings({required this.fromGuestMode});
 
-  List<Widget> _sections(BuildContext context, WidgetRef ref, Wedding wedding, {bool help = true, bool signOut = true}) {
+  List<Widget> _sections(BuildContext context, WidgetRef ref, Wedding wedding,
+      {bool help = true, bool signOut = true, List<Widget> afterOrganization = const []}) {
     return [
       const _SectionTitle('Organização'),
       _Group(
@@ -335,6 +334,8 @@ class _CoupleSettings extends ConsumerWidget {
           ),
         ],
       ),
+      // "Perfil" entre Organização e Conta (mockup).
+      ...afterOrganization,
       const _SectionTitle('Conta'),
       const _AccountSection(),
       if (help) ...[
@@ -351,21 +352,9 @@ class _CoupleSettings extends ConsumerWidget {
     if (wedding == null) {
       return const Scaffold(backgroundColor: _pageBackground, body: Center(child: CircularProgressIndicator()));
     }
-    final meta = [
-      if (wedding.weddingDate != null) formatWeddingDateCaps(wedding.weddingDate!),
-      if (wedding.venue?.isNotEmpty == true) wedding.venue! else if (wedding.location?.isNotEmpty == true) wedding.location!,
-      if (wedding.estimatedGuests != null) '${wedding.estimatedGuests} convidados',
-    ].join(' · ');
     return _SettingsPage(
       title: 'Definições',
       children: [
-        _HeaderCard(
-          chip: wedding.eventType.label,
-          action: 'Editar',
-          title: wedding.displayNames,
-          meta: meta,
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EditEventPage(wedding: wedding))),
-        ),
         ..._sections(context, ref, wedding),
       ],
     );
@@ -378,7 +367,8 @@ class _CoupleSettings extends ConsumerWidget {
 class CoupleAccountSections extends ConsumerWidget {
   final bool help;
   final bool signOut;
-  const CoupleAccountSections({super.key, this.help = true, this.signOut = true});
+  final List<Widget> afterOrganization;
+  const CoupleAccountSections({super.key, this.help = true, this.signOut = true, this.afterOrganization = const []});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -386,7 +376,8 @@ class CoupleAccountSections extends ConsumerWidget {
     if (wedding == null) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: const _CoupleSettings(fromGuestMode: false)._sections(context, ref, wedding, help: help, signOut: signOut),
+      children: const _CoupleSettings(fromGuestMode: false)
+          ._sections(context, ref, wedding, help: help, signOut: signOut, afterOrganization: afterOrganization),
     );
   }
 }
@@ -610,24 +601,9 @@ class _PartnerSettings extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(authControllerProvider).profile;
-    final name = profile?.businessName?.isNotEmpty == true ? profile!.businessName! : (profile?.fullName ?? '');
     return _SettingsPage(
       title: 'Definições',
       children: [
-        // Mesmo cartão do organizador (pedido 2026-11-08: "mantém igual").
-        _HeaderCard(
-          chip: 'Parceiro',
-          action: 'Ver perfil',
-          title: name,
-          meta: [
-            ...?profile?.categoryLabels,
-            ?ref.watch(partnerLocationProvider).maybeWhen(
-                  data: (l) => l == null || l.isEmpty || l.city.isEmpty ? null : l.city,
-                  orElse: () => null,
-                ),
-          ].join(' · '),
-          onTap: () => context.push('/partner-profile'),
-        ),
         const _SectionTitle('Negócio'),
         _Group(
           children: [
@@ -759,16 +735,6 @@ class _AccountSection extends ConsumerWidget {
           label: 'Nome',
           value: profile.fullName,
           onTap: () => _editName(context, ref, profile.fullName),
-        ),
-        // @ único (migração 163).
-        _Row(
-          icon: Hi.atSymbol,
-          label: 'Nome de utilizador',
-          value: switch (ref.watch(myUsernameProvider).value?.username) {
-            final u? => '@$u',
-            _ => 'Escolher',
-          },
-          onTap: () => context.push('/username'),
         ),
         _Row(icon: Hi.envelope, label: 'Email', value: profile.email),
         _Row(
@@ -1037,15 +1003,13 @@ class _PushRowState extends State<_PushRow> {
       PushStatus.denied => 'Bloqueadas nas definições do telemóvel',
       _ => on ? 'Mensagens, pedidos e lembretes' : 'Desligadas neste dispositivo',
     };
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
       child: Row(children: [
-        StickerIcon(Hi.bell, size: 36, turns: StickerIcon.tilt(12)),
-        const SizedBox(width: 12),
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Notificações', style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w600, color: AppTheme.ink)),
-            Text(sub, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            const Text('Notificações', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(sub, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           ]),
         ),
         Switch.adaptive(

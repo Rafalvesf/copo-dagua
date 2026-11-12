@@ -8,6 +8,9 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/chat/chat_thread_controller.dart';
+import '../../../core/chat/presence.dart';
+import '../../../core/auth/auth_controller.dart';
+import '../../../core/social/social.dart' show partnerPublicStatsProvider;
 import '../../../core/home/home_providers.dart';
 import '../../../core/bookings/hire_privacy.dart';
 import '../../../core/chat/chat_helpers.dart' show PartnerUnavailableException;
@@ -81,10 +84,17 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     await _send();
   }
 
+  /// Nome que o parceiro vê em "… está a escrever".
+  String _myName() {
+    final p = ref.read(authControllerProvider).profile;
+    return (p?.fullName ?? '').trim();
+  }
+
   Future<void> _send() async {
     final text = _messageController.text;
     if (text.trim().isEmpty) return;
     _messageController.clear();
+    ref.read(typingNowProvider('c:${widget.conversation.id}').notifier).stop();
     try {
       await ref
           .read(chatThreadControllerProvider(_conversationKey).notifier)
@@ -144,6 +154,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         ? null
         : [ev.displayNames, if (evDate != null) '${evDate.day} ${months[evDate.month - 1]} ${evDate.year}'].join(' · ');
     final hasProposal = chat.messages.any((m) => m.isProposal);
+    final partnerId = widget.conversation.partnerId;
+    final online = partnerId != null && ref.watch(isOnlineProvider(partnerId));
+    final responds = partnerId == null ? null : responseLabel(ref.watch(partnerPublicStatsProvider(partnerId)).value?.responseMinutes);
+    final respondsLower = responds == null ? null : responds[0].toLowerCase() + responds.substring(1);
+    final typing = typingLine(ref.watch(typingNowProvider('c:${widget.conversation.id}')));
 
     ref.listen(chatThreadControllerProvider(_conversationKey), (
       previous,
@@ -164,10 +179,14 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
             child: ChatHeader(
               name: widget.conversation.name,
               avatarUrl: widget.conversation.avatarUrl,
-              subtitle: partner == null
-                  ? null
-                  : [if (partner.categoryLabels.isNotEmpty) partner.categoryLabels.first, if ((partner.location ?? '').isNotEmpty) partner.location!]
-                      .join(' · '),
+              // Online agora (presença) e "responde em ~1 h" (184).
+              subtitle: online
+                  ? ['Online', ?respondsLower].join(' · ')
+                  : partner == null
+                      ? null
+                      : [if (partner.categoryLabels.isNotEmpty) partner.categoryLabels.first, if ((partner.location ?? '').isNotEmpty) partner.location!]
+                          .join(' · '),
+              subtitleOnline: online,
               onOpenProfile: widget.conversation.partnerId == null
                   ? null
                   : _openPartnerProfile,
@@ -230,6 +249,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                   ),
             ),
           ),
+          ColoredBox(color: const Color(0xFFF2F0EB), child: ChatTypingLine(typing)),
           if (widget.conversation.partnerId != null)
             ColoredBox(
               color: const Color(0xFFF2F0EB),
@@ -244,7 +264,12 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                 ]),
               ),
             ),
-          ChatComposer(controller: _messageController, onSend: _send, onAttach: _attach),
+          ChatComposer(
+            controller: _messageController,
+            onSend: _send,
+            onAttach: _attach,
+            onChanged: (_) => ref.read(typingNowProvider('c:${widget.conversation.id}').notifier).typing(_myName()),
+          ),
         ],
       ),
     );
