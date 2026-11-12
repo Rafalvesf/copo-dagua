@@ -377,6 +377,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
       background: AppBackground.subtle,
       body: Column(children: [
         SafeArea(
+          top: false,
           bottom: false,
           child: ChatHeader(
             name: widget.group.name,

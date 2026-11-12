@@ -5,6 +5,7 @@ import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import '../money.dart';
 import 'snappy_tap.dart';
+import 'dense_card.dart' show PriceBox;
 import 'v2_kit.dart';
 
 /// Peças da conversa exatamente como no design (canvas "Conversa"):
@@ -37,6 +38,10 @@ List<Widget> chatTimeline({
   required List<ChatMessage> messages,
   required bool Function(ChatMessage m) isMine,
   required Widget Function(ChatMessage m, bool isMe) content,
+  /// Até quando a outra parte leu: "Visto" nas minhas mensagens.
+  DateTime? seenUntil,
+  /// Texto em vez de "Visto" (grupos: "Visto por 4").
+  String Function(ChatMessage m)? seenLabel,
 }) {
   final out = <Widget>[];
   for (var i = 0; i < messages.length; i++) {
@@ -50,10 +55,15 @@ List<Widget> chatTimeline({
       out.add(
         Padding(
           padding: EdgeInsets.only(top: i == 0 ? 0 : 8, bottom: 12),
+          // Pílula do dia (mockup "Conversa", 2026-11-12).
           child: Center(
-            child: Text(
-              _dayLabel(local),
-              style: const TextStyle(fontSize: AppFontSize.xs, color: AppTheme.inkMuted),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(color: const Color(0xFFE9E5DC), borderRadius: BorderRadius.circular(999)),
+              child: Text(
+                _dayLabel(local),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
+              ),
             ),
           ),
         ),
@@ -71,14 +81,17 @@ List<Widget> chatTimeline({
       ),
     );
     if (lastOfGroup) {
+      final seen = me && seenLabel != null
+          ? seenLabel(m)
+          : (me && seenUntil != null && !seenUntil.isBefore(m.sentAt) ? 'Visto' : '');
       out.add(
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: Align(
             alignment: me ? Alignment.centerRight : Alignment.centerLeft,
             child: Text(
-              _hhmm(local),
-              style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted),
+              seen.isEmpty ? _hhmm(local) : '${_hhmm(local)} · $seen',
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
             ),
           ),
         ),
@@ -103,7 +116,8 @@ class ChatBubble extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isMe ? AppTheme.accentOliveDark : const Color(0xFFF2F0EB),
+          // As minhas a preto, as da outra parte a branco (mockup).
+          color: isMe ? AppTheme.ink : Colors.white,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
@@ -116,6 +130,7 @@ class ChatBubble extends StatelessWidget {
           style: TextStyle(
             fontSize: 15,
             height: 21 / 15,
+            fontWeight: FontWeight.w600,
             color: isMe ? Colors.white : AppTheme.ink,
           ),
         ),
@@ -152,119 +167,111 @@ class ChatProposalCard extends StatelessWidget {
     required this.deposit,
     this.actions = const [],
     this.note,
+    this.imageUrl,
   });
 
   /// Linha pequena por baixo dos valores (ex.: "Inclui a comissão …").
   final String? note;
 
-  Widget _row(String label, String value, {bool big = false}) => Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: [
-          Expanded(
-            child: Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-          ),
-          Text(
-            value,
-            style: TextStyle(fontSize: big ? 17 : 14, fontWeight: FontWeight.w700, color: AppTheme.ink),
-          ),
-        ],
+  /// Foto do parceiro no topo do cartão (mockup "Conversa").
+  final String? imageUrl;
+
+  Widget _chip(String t) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(999)),
+        child: Text(t, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
       );
 
   @override
   Widget build(BuildContext context) {
-    // Redesign 2026-10-19: cartão branco com sombra suave (sem linha),
-    // autocolante, valores e botões em pílula — igual para casal e
-    // parceiro.
+    // Mockup "Conversa com parceiro" (2026-11-12): o cartão dos eventos —
+    // foto com "Proposta" e o total, título, etiquetas e os botões.
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.8,
+      width: MediaQuery.of(context).size.width * 0.84,
       child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: softCard(radius: 20),
+        clipBehavior: Clip.antiAlias,
+        decoration: softCard(radius: 22),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                StickerIcon(Hi.documentCurrencyEuro, size: 38, turns: StickerIcon.tilt(1)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        eyebrow,
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.6,
-                          color: AppTheme.accentOliveDark,
-                        ),
-                      ),
-                      Text(title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      if (subtitle != null && subtitle!.isNotEmpty)
-                        Text(subtitle!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                    ],
+            SizedBox(
+              height: 120,
+              child: Stack(fit: StackFit.expand, children: [
+                imageUrl == null
+                    ? Container(color: const Color(0xFFE7D9C3))
+                    : Image.network(imageUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => Container(color: const Color(0xFFE7D9C3))),
+                Positioned(
+                  left: 12,
+                  top: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(999)),
+                    child: Text(eyebrow == 'PROPOSTA' ? 'Proposta' : eyebrow,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                 ),
-              ],
+                Positioned(right: 12, top: 12, child: PriceBox('TOTAL', price == null ? '—' : euros(price!))),
+              ]),
             ),
-            const SizedBox(height: 12),
-            _row('Total', price == null ? '—' : euros(price!), big: true),
-            const SizedBox(height: 2),
-            _row('Sinal para reservar', deposit == null ? '—' : euros(deposit!)),
-            if (note != null) ...[
-              const SizedBox(height: 6),
-              Text(note!, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
-            ],
-            if (actions.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  for (var i = 0; i < actions.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 8),
-                    Expanded(
-                      flex: actions[i].primary ? 3 : 2,
-                      child: SnappyTap(
-                        onTap: actions[i].onTap,
-                        child: Container(
-                          height: 40,
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: actions[i].primary && actions[i].onTap != null ? AppTheme.ink : Colors.white,
-                            borderRadius: BorderRadius.circular(999),
-                            border: actions[i].primary && actions[i].onTap != null
-                                ? null
-                                : Border.all(color: actions[i].onTap == null ? const Color(0xFFE4E1D8) : AppTheme.ink, width: 1.5),
-                          ),
-                          child: Text(
-                            actions[i].label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: actions[i].onTap == null
-                                  ? AppTheme.inkMuted
-                                  : actions[i].primary
-                                      ? Colors.white
-                                      : AppTheme.ink,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                Text(title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                const SizedBox(height: 10),
+                Wrap(spacing: 6, runSpacing: 6, children: [
+                  if (subtitle != null && subtitle!.isNotEmpty) _chip(subtitle!),
+                  if (deposit != null) _chip('Sinal ${euros(deposit!)}'),
+                ]),
+                if (note != null) ...[
+                  const SizedBox(height: 8),
+                  Text(note!, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
+                ],
+                if (actions.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      for (var i = 0; i < actions.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 8),
+                        Expanded(
+                          child: SnappyTap(
+                            onTap: actions[i].onTap,
+                            child: Container(
+                              height: 40,
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: actions[i].primary && actions[i].onTap != null ? AppTheme.ink : Colors.white,
+                                borderRadius: BorderRadius.circular(999),
+                                border: actions[i].primary && actions[i].onTap != null
+                                    ? null
+                                    : Border.all(color: actions[i].onTap == null ? const Color(0xFFE4E1D8) : AppTheme.ink, width: 1.5),
+                              ),
+                              child: Text(
+                                actions[i].label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: actions[i].onTap == null
+                                      ? AppTheme.inkMuted
+                                      : actions[i].primary
+                                          ? Colors.white
+                                          : AppTheme.ink,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
+                      ],
+                    ],
+                  ),
                 ],
-              ),
-            ],
+              ]),
+            ),
           ],
         ),
       ),
