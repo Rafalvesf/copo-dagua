@@ -46,6 +46,18 @@ contadores). **Nunca** para botões.
 
 ## 3. Letra
 
+**Regra do mesmo tamanho:** cada tipo de texto tem **um só tamanho e um só
+peso em toda a app** (organizador, parceiro e convidado), os da tabela
+abaixo. O título de um cartão de evento é 19 no Descobrir, em "Os meus
+eventos", no perfil de um amigo e em qualquer outro sítio; uma linha de lista
+é 16 em todas as listas; a meta é 13 em todo o lado; e assim por diante. Não
+há tamanhos intermédios (12,5, 13,5, 17…). Antes de escrever um tamanho,
+ver nesta tabela qual é o do elemento.
+
+**Maiúscula:** o título dos cartões e linhas de eventos começa sempre com
+letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
+(`capFirst` em `shared/text_case.dart`).
+
 - Família: **Louis George Café** (só fina 300, normal 400, negrito 700).
   - `w500`/`w600` = normal (mapeado no `pubspec.yaml`); `w700`+ = negrito.
   - Nunca usar a fina (300).

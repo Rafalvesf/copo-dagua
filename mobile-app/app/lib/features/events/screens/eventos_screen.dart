@@ -1,6 +1,7 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/text_case.dart';
 import 'package:copo_dagua_app/shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/snap_carousel.dart';
 import '../../../shared/widgets/dense_card.dart';
@@ -397,7 +398,7 @@ class _PosterCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(e.displayNames,
+              Text(capFirst(e.displayNames),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   // Mesmo título que "Os meus eventos" (DESIGN.md: 19 negrito).
@@ -763,7 +764,7 @@ class _SeenAlerts extends Notifier<Set<String>> {
 
 final _seenAlertsProvider = NotifierProvider<_SeenAlerts, Set<String>>(_SeenAlerts.new);
 
-Widget _cardTitle(String text) => Text(text,
+Widget _cardTitle(String text) => Text(capFirst(text),
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
     style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink));
