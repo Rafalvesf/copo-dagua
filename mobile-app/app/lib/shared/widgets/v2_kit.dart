@@ -16,8 +16,7 @@ export 'sticker_icon.dart' show StickerIcon, DateSticker;
 /// e listas agrupadas.
 
 const softShadow = [
-  BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6)),
-  BoxShadow(color: Color(0x0D171713), blurRadius: 3, offset: Offset(0, 1)),
+  BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
 ];
 
 BoxDecoration softCard({double radius = 22, Color color = Colors.white}) => BoxDecoration(

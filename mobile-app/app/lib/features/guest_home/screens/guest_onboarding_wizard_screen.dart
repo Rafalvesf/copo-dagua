@@ -410,7 +410,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 34),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -913,7 +913,7 @@ class _PersonChoices extends StatelessWidget {
                 o,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 13, fontWeight: on ? FontWeight.w700 : FontWeight.w400, color: on ? Colors.white : AppTheme.ink),
+                style: TextStyle(fontSize: 13, fontWeight: on ? FontWeight.w700 : FontWeight.w600, color: on ? Colors.white : AppTheme.ink),
               ),
             ),
           ],
@@ -1142,7 +1142,7 @@ class _RadioRow extends StatelessWidget {
                     : null,
               ),
               const SizedBox(width: 12),
-              Text(label, style: TextStyle(fontSize: 15, fontWeight: selected ? FontWeight.w700 : FontWeight.w400, color: AppTheme.ink)),
+              Text(label, style: TextStyle(fontSize: 15, fontWeight: selected ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink)),
             ],
           ),
         ),
@@ -1167,7 +1167,7 @@ class _StepScaffold extends StatelessWidget {
         Text(question, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         if (subtitle != null) ...[
           const SizedBox(height: 8),
-          Text(subtitle!, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted)),
+          Text(subtitle!, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
         ],
         const SizedBox(height: 20),
         child,
@@ -1228,7 +1228,7 @@ class _ConfirmedView extends StatelessWidget {
           const Positioned.fill(child: FallingConfetti(delay: Duration(milliseconds: 1900))),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 34),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -1249,7 +1249,7 @@ class _ConfirmedView extends StatelessWidget {
                       rsvp
                           ? 'A tua resposta foi enviada aos anfitriões.'
                           : 'Os anfitriões já sabem. Podes mudar as respostas no teu perfil.',
-                      style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
+                      style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
                     ),
                   ),
                   const SizedBox(height: 24),

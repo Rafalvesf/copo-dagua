@@ -240,7 +240,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                   style: TextStyle(
                     fontSize: 13,
                     letterSpacing: _wedding ? 2.4 : 0,
-                    fontWeight: _wedding ? FontWeight.w700 : FontWeight.w400,
+                    fontWeight: _wedding ? FontWeight.w700 : FontWeight.w600,
                     color: _muted,
                   ),
                 ),

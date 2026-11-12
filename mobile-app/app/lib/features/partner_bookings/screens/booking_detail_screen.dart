@@ -101,7 +101,7 @@ Expanded(child: ScrollingHeader(
  header: [
  ],
  body: ListView(
-                padding: const EdgeInsets.fromLTRB(28, 20, 28, 24),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                 children: [
                   // Canvas "Parceiro — pedido (redesign)".
                   const Row(children: [
@@ -192,7 +192,7 @@ Expanded(child: ScrollingHeader(
               ),
 )),
             Container(
-              padding: const EdgeInsets.fromLTRB(28, 14, 28, 24),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

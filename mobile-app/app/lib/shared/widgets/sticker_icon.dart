@@ -15,8 +15,7 @@ class StickerIcon extends StatelessWidget {
   static double tilt(int index) => const [-0.014, 0.011, -0.008, 0.016][index % 4];
 
   static const shadow = [
-    BoxShadow(color: Color(0x14171713), offset: Offset(0, 3)),
-    BoxShadow(color: Color(0x1A171713), blurRadius: 12, offset: Offset(0, 4)),
+    BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
   ];
 
   @override
@@ -40,8 +39,7 @@ BoxDecoration whiteLineCard({double radius = 22, Color? line, double width = 1})
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(color: line ?? AppTheme.accentOliveDark.withValues(alpha: 0.45), width: width),
       boxShadow: const [
-        BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6)),
-        BoxShadow(color: Color(0x0D171713), blurRadius: 3, offset: Offset(0, 1)),
+        BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
       ],
     );
 

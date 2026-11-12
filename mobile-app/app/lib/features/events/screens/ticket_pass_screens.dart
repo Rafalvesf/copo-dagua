@@ -105,7 +105,7 @@ class TicketPassScreen extends StatelessWidget {
             const SizedBox(height: 4),
             const Text('O teu bilhete',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 20),
             Center(
               child: Container(

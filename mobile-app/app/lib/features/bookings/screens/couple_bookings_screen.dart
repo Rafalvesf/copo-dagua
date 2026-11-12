@@ -916,7 +916,7 @@ class _TabSwitch extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: c.withValues(alpha: 0.45)),
-        boxShadow: const [BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6))],
+        boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
       ),
       child: Row(children: [tab('Serviços', !guests, false), const SizedBox(width: 4), tab('Convidados', guests, true)]),
     );

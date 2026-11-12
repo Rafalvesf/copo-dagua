@@ -1094,7 +1094,7 @@ class _NoTablesCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppTheme.inkMuted,
-                fontWeight: FontWeight.w300,
+                fontWeight: FontWeight.w600,
                 fontSize: AppFontSize.base,
                 height: 1.5,
               ),

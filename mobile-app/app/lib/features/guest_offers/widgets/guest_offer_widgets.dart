@@ -15,8 +15,7 @@ BoxDecoration offerCardDecoration({Color? border}) => BoxDecoration(
       borderRadius: BorderRadius.circular(22),
       border: Border.all(color: border ?? AppTheme.accentOliveDark.withValues(alpha: 0.45), width: border == null ? 1 : 2),
       boxShadow: const [
-        BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6)),
-        BoxShadow(color: Color(0x0D171713), blurRadius: 3, offset: Offset(0, 1)),
+        BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
       ],
     );
 

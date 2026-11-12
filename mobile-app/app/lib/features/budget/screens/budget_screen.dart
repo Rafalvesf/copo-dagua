@@ -497,7 +497,7 @@ class _ExpenseList extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: AppFontSize.base,
-                fontWeight: FontWeight.w300,
+                fontWeight: FontWeight.w600,
                 color: AppTheme.inkMuted,
               ),
             ),
@@ -571,7 +571,7 @@ class _ExpenseRow extends StatelessWidget {
             ? BoxDecoration(
                 color: const Color(0xFFF6E3DF),
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: const [BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6))],
+                boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
               )
             : whiteLineCard(radius: 20),
         child: Row(

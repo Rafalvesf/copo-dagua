@@ -410,7 +410,7 @@ class _FilterBarChip extends StatelessWidget {
                 item.label,
                 style: TextStyle(
                   fontSize: AppFontSize.base,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                   color: fg,
                 ),
               ),

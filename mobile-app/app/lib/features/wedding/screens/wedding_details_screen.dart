@@ -78,7 +78,7 @@ final _lookProvider = Provider<_Look>((ref) {
 
 /// Sombra suave dos cartões (canvas, 2026-10-17).
 const _softShadow = [
-  BoxShadow(color: Color(0x14171713), blurRadius: 10, offset: Offset(0, 4)),
+  BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
 ];
 
 /// "Os noivos" — cartão banner "O nosso casamento" (foto de capa +
@@ -517,7 +517,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
       decoration: BoxDecoration(
         color: look.color,
         borderRadius: BorderRadius.circular(AppRadius.xxl),
-        boxShadow: const [BoxShadow(color: Color(0x24171713), blurRadius: 28, offset: Offset(0, 10))],
+        boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
       ),
       child: Stack(
         children: [
@@ -624,7 +624,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(999),
-                          boxShadow: const [BoxShadow(color: Color(0x1A171713), offset: Offset(0, 4))],
+                          boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -1014,7 +1014,7 @@ class _QuickLinkTile extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
-                        boxShadow: const [BoxShadow(color: Color(0x14171713), offset: Offset(0, 3))],
+                        boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
                       ),
                       child: Icon(icon, size: 22, color: accent),
                     ),
@@ -1071,7 +1071,7 @@ class _ShareWeddingButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: const [BoxShadow(color: Color(0x29171713), blurRadius: 20, offset: Offset(0, 8))],
+          boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1634,7 +1634,7 @@ class _Polaroid extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(4),
-          boxShadow: const [BoxShadow(color: Color(0x26171713), blurRadius: 26, offset: Offset(0, 10))],
+          boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
         ),
         child: child,
       ),
@@ -1669,7 +1669,7 @@ Widget _roundSticker(IconData icon, Color bg, Color fg, double angle) => Transfo
           color: bg,
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 3),
-          boxShadow: const [BoxShadow(color: Color(0x1F171713), blurRadius: 14, offset: Offset(0, 6))],
+          boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
         ),
         child: Icon(icon, size: 26, color: fg),
       ),
@@ -1690,7 +1690,7 @@ class _StickersTop extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Olá, $first!', style: const TextStyle(fontSize: 30, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text('Olá, $first!', style: const TextStyle(fontSize: 28, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 6),
         if (days != null)
           Wrap(
@@ -1813,7 +1813,7 @@ class _MuralTop extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Olá, $first!', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
-                  const Text('O nosso mural', style: TextStyle(fontSize: 26, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  const Text('O nosso mural', style: TextStyle(fontSize: 22, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ],
               ),
             ),
@@ -1904,7 +1904,7 @@ class _MuralTop extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(4),
-                          boxShadow: const [BoxShadow(color: Color(0x1F171713), blurRadius: 16, offset: Offset(0, 6))],
+                          boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2247,7 +2247,7 @@ BoxDecoration _card({double radius = 22}) => BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(color: _cardBorder),
-      boxShadow: const [BoxShadow(color: Color(0x1A171713), blurRadius: 14, offset: Offset(0, 4))],
+      boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
     );
 
 const _monthsShort = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];

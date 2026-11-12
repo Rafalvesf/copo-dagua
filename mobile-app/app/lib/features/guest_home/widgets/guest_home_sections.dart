@@ -30,7 +30,7 @@ BoxDecoration guestCard({double radius = 20}) => BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(color: const Color(0xFFDCD8CE)),
-      boxShadow: const [BoxShadow(color: Color(0x1A171713), blurRadius: 14, offset: Offset(0, 4))],
+      boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
     );
 
 /// "17:00", "17h00", "17h" → minutos desde a meia-noite.
@@ -162,7 +162,7 @@ class GuestShortcutsRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: it.color,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: const [BoxShadow(color: Color(0x14171713), blurRadius: 12, offset: Offset(0, 4))],
+                boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Container(

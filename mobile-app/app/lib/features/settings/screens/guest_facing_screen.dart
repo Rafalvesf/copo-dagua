@@ -1614,10 +1614,10 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           child: Row(children: [
             Expanded(
               child: Text(a,
-                  style: TextStyle(fontSize: bold ? 14.5 : 13.5, fontWeight: bold ? FontWeight.w700 : FontWeight.w400, color: muted ? AppTheme.inkMuted : AppTheme.ink)),
+                  style: TextStyle(fontSize: bold ? 14.5 : 13.5, fontWeight: bold ? FontWeight.w700 : FontWeight.w600, color: muted ? AppTheme.inkMuted : AppTheme.ink)),
             ),
             Text(b,
-                style: TextStyle(fontSize: bold ? 14.5 : 13.5, fontWeight: bold || !muted ? FontWeight.w700 : FontWeight.w400, color: muted ? AppTheme.inkMuted : AppTheme.ink)),
+                style: TextStyle(fontSize: bold ? 14.5 : 13.5, fontWeight: bold || !muted ? FontWeight.w700 : FontWeight.w600, color: muted ? AppTheme.inkMuted : AppTheme.ink)),
           ]),
         );
     return Container(
@@ -2041,7 +2041,7 @@ BoxDecoration _whiteCard() => BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(20),
       border: Border.all(color: const Color(0xFFDCD8CE)),
-      boxShadow: const [BoxShadow(color: Color(0x1A171713), blurRadius: 14, offset: Offset(0, 4))],
+      boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
     );
 
 /// Cartão verde: código em grande, Partilhar convite e Ver como convidado.
@@ -2242,7 +2242,7 @@ class _PartsListState extends ConsumerState<_PartsList> {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 12.5,
-                                fontWeight: p.missing ? FontWeight.w700 : FontWeight.w400,
+                                fontWeight: p.missing ? FontWeight.w700 : FontWeight.w600,
                                 color: p.missing ? amber : AppTheme.inkMuted,
                               )),
                         ]),

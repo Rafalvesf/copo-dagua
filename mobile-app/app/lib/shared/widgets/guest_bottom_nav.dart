@@ -59,7 +59,7 @@ class GuestBottomNav extends ConsumerWidget {
   Widget _buildNav(BuildContext context, GuestSections sections) {
     return SafeArea(
       top: false,
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 20),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -168,7 +168,7 @@ class _GuestNavIcon extends StatelessWidget {
       // percetível").
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: active ? const Color(0xFFEDEAE3) : Colors.transparent,
           borderRadius: BorderRadius.circular(kNavRadius - 10),
@@ -177,14 +177,14 @@ class _GuestNavIcon extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              height: 32,
-              child: Center(child: Icon(active ? activeIcon : icon, color: color, size: 26)),
+              height: 26,
+              child: Center(child: Icon(active ? activeIcon : icon, color: color, size: 24)),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11.5, fontWeight: active ? FontWeight.w800 : FontWeight.w600, color: color)),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
           ],
         ),
       ),

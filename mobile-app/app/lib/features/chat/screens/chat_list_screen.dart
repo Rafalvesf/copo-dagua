@@ -197,7 +197,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         decoration: BoxDecoration(
           color: on ? AppTheme.accentOliveDark : Colors.white,
           borderRadius: BorderRadius.circular(19),
-          border: on ? null : Border.all(color: const Color(0xFFE6E0D2), width: 1.5),
+          
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),

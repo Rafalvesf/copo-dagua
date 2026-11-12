@@ -169,7 +169,7 @@ class _WelcomeContent extends StatelessWidget {
           child: SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(28, 26, 28, 24),
+              padding: const EdgeInsets.fromLTRB(20, 26, 20, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -188,7 +188,7 @@ class _WelcomeContent extends StatelessWidget {
                     style: TextStyle(
                       fontSize: AppFontSize.base + 1,
                       height: 22 / 15,
-                      fontWeight: FontWeight.w300,
+                      fontWeight: FontWeight.w600,
                       color: AppTheme.inkMuted,
                     ),
                   ),

@@ -23,7 +23,8 @@ class AppTheme {
   static const fontFamily = 'LouisGeorgeCafe';
   static const fontFamilyFallback = ['Roboto'];
 
-  static const background = Colors.white;
+  // Creme liso dos mockups (2026-11-12): fundo de todas as páginas.
+  static const background = Color(0xFFF2F0EB);
   static const ink = Color(0xFF171713);
 
   /// Texto secundário (legendas, descrições). Cinzento quente — antes era
@@ -60,7 +61,8 @@ class AppTheme {
 
   /// Margem lateral partilhada por todos os ecrãs principais — o
   /// conteúdo e a navbar flutuante alinham-se a esta mesma largura.
-  static const screenMargin = 28.0;
+  // Margem lateral dos mockups (2026-11-12).
+  static const screenMargin = 20.0;
 
   /// Pedido explícito do utilizador 2026-08-31: "remove shadows from
   /// boxes" — cards não têm sombra; a separação do fundo branco vem da
@@ -75,9 +77,8 @@ class AppTheme {
   /// Sombra exclusiva das barras de pesquisa — pedido explícito do
   /// utilizador 2026-08-31: "only leave the shadow on the
   /// searchbar(s)" (todas as outras caixas ficaram sem sombra).
-  static const searchBarShadow = [
-    BoxShadow(color: Color(0x1F3F4A30), blurRadius: 24, offset: Offset(0, 10)),
-  ];
+  // Mockups (2026-11-12): a pesquisa não tem sombra.
+  static const searchBarShadow = <BoxShadow>[];
 
   /// Sombra virada para cima — para elementos ancorados ao fundo do
   /// ecrã (FloatingBottomNav/PartnerBottomNav). Uma sombra normal projeta
@@ -86,8 +87,9 @@ class AppTheme {
   /// fora do ecrã. Pedido explícito do utilizador: "add a shadow to
   /// the navbar to add contrast" (depois de o fundo ter passado a
   /// branco liso, a doca branca deixou de se destacar sem isto).
+  // Sombra da navbar dos mockups: 0 8 24 rgba(23,23,19,.12).
   static const navBarShadow = [
-    BoxShadow(color: Color(0x293F4A30), blurRadius: 20, offset: Offset(0, -6)),
+    BoxShadow(color: Color(0x1F171713), blurRadius: 24, offset: Offset(0, 8)),
   ];
 
   static ThemeData get light {
@@ -105,7 +107,15 @@ class AppTheme {
       fontFamilyFallback: fontFamilyFallback,
     );
 
-    return ThemeData(
+    // Mockups (2026-11-12): nenhum texto fino — o corpo é semi-negrito
+    // (w600, que na Louis George Café é o Bold) e os títulos negrito.
+    TextStyle? heavy(TextStyle? t) {
+      if (t == null) return null;
+      final w = t.fontWeight ?? FontWeight.w600;
+      return t.copyWith(fontWeight: w.value < 600 ? FontWeight.w600 : w);
+    }
+
+    final theme = ThemeData(
       useMaterial3: true,
       // Páginas abertas por botões descem de cima, com sombra
       // (`page_transitions.dart`).
@@ -149,7 +159,7 @@ class AppTheme {
         bodyMedium: baseText.bodyMedium?.copyWith(
           fontSize: AppFontSize.base,
           height: 20 / 14,
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w600,
           letterSpacing: 0,
           color: inkMuted,
         ),
@@ -161,7 +171,7 @@ class AppTheme {
         labelLarge: baseText.labelLarge?.copyWith(
           fontSize: AppFontSize.lg,
           height: 24 / 16,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           letterSpacing: 0,
           color: ink,
         ),
@@ -401,34 +411,28 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          minimumSize: const Size.fromHeight(54),
+          minimumSize: const Size.fromHeight(52),
           backgroundColor: ink,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
+          shape: const StadiumBorder(),
           textStyle: buttonText,
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(54),
+          minimumSize: const Size.fromHeight(52),
           backgroundColor: ink,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
+          shape: const StadiumBorder(),
           textStyle: buttonText,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(54),
+          minimumSize: const Size.fromHeight(52),
           foregroundColor: ink,
           side: BorderSide(color: ink),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
+          shape: const StadiumBorder(),
           textStyle: buttonText,
         ),
       ),
@@ -447,8 +451,29 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: surface,
         selectedColor: AppColors.green,
-        side: const BorderSide(color: borderMuted),
+        // Sem linhas nas etiquetas (mockups).
+        side: BorderSide.none,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+      ),
+    );
+    final tt = theme.textTheme;
+    return theme.copyWith(
+      textTheme: tt.copyWith(
+        displayLarge: heavy(tt.displayLarge),
+        displayMedium: heavy(tt.displayMedium),
+        displaySmall: heavy(tt.displaySmall),
+        headlineLarge: heavy(tt.headlineLarge),
+        headlineMedium: heavy(tt.headlineMedium),
+        headlineSmall: heavy(tt.headlineSmall),
+        titleLarge: heavy(tt.titleLarge),
+        titleMedium: heavy(tt.titleMedium),
+        titleSmall: heavy(tt.titleSmall),
+        bodyLarge: heavy(tt.bodyLarge),
+        bodyMedium: heavy(tt.bodyMedium),
+        bodySmall: heavy(tt.bodySmall),
+        labelLarge: heavy(tt.labelLarge),
+        labelMedium: heavy(tt.labelMedium),
+        labelSmall: heavy(tt.labelSmall),
       ),
     );
   }
@@ -467,11 +492,11 @@ class AppTypography {
   static const cardSubtitle = TextStyle(
     fontSize: AppFontSize.base,
     height: 20 / 14,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w600,
   );
   static const buttonLabel = TextStyle(
-    fontSize: AppFontSize.lg,
-    height: 24 / 16,
+    fontSize: 15,
+    height: 20 / 15,
     fontWeight: FontWeight.w700,
   );
   static const moduleTitle = TextStyle(
@@ -482,7 +507,7 @@ class AppTypography {
   static const moduleDescription = TextStyle(
     fontSize: AppFontSize.base,
     height: 20 / 14,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w600,
   );
   static const iconSize = 24.0;
 
@@ -520,11 +545,11 @@ class AppFontSize {
   static const double xl = 18; // títulos de módulo
   static const double xxl = 20;
   static const double h3 = 22; // título de card/ecrã
-  static const double h2 = 24;
+  static const double h2 = 22; // mockups 2026-11-12: sem 24
   static const double h1 = 28;
-  static const double display = 34;
-  static const double displayLg = 42;
-  static const double hero = 50; // saudação (headlineMedium)
+  static const double display = 30;
+  static const double displayLg = 36;
+  static const double hero = 40; // saudação (headlineMedium)
 }
 
 /// Raios de canto — os únicos valores de `BorderRadius.circular` a usar.
@@ -571,11 +596,12 @@ class AppColors {
 class AppGradients {
   /// Fundo da app toda (pedido 2026-10-25): cinzento claro em cima,
   /// branco em baixo. A barra do telemóvel fica com o cinzento do topo.
-  static const appTop = Color(0xFFEDECE8);
+  // Mockups (2026-11-12): creme liso #F2F0EB em todas as páginas.
+  static const appTop = Color(0xFFF2F0EB);
   static const appBackground = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [appTop, Colors.white],
+    colors: [appTop, appTop],
   );
 
   /// Verde-sálvia → branco, diagonal (creme antes, ver nota em

@@ -15,7 +15,7 @@ class SearchPill extends StatelessWidget {
   /// Como no mockup das Mensagens (2026-11-12): sem sombra e lupa de traço.
   final bool flat;
 
-  const SearchPill({super.key, required this.controller, required this.hint, this.flat = false});
+  const SearchPill({super.key, required this.controller, required this.hint, this.flat = true});
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +30,7 @@ class SearchPill extends StatelessWidget {
         boxShadow: flat
             ? null
             : const [
-          BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6)),
-          BoxShadow(color: Color(0x0D171713), blurRadius: 3, offset: Offset(0, 1)),
+          BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
         ],
       ),
       child: Row(

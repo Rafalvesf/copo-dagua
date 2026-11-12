@@ -61,7 +61,7 @@ class _PartnerStatsScreenState extends ConsumerState<PartnerStatsScreen> {
           children: [
             const PageHeader(title: 'Resultados', centered: true),
             Padding(
-              padding: const EdgeInsets.fromLTRB(28, 18, 28, 0),
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
               child: _PeriodSwitch(
                 value: _period,
                 onChanged: (p) => setState(() => _period = p),
@@ -135,7 +135,7 @@ class _Dashboard extends StatelessWidget {
     final revenueDelta = _deltaPct(a.revenue, a.previousRevenue);
     final noData = a.revenue == 0 && a.requests == 0 && a.bookings == 0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 20, 28, 0),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -562,7 +562,7 @@ class _ProInsights extends ConsumerWidget {
     final green = AppTheme.accentOliveDark;
     if (!pro.active) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(28, 24, 28, 0),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
         child: InkWell(
           onTap: () => context.push('/partner-pro'),
           borderRadius: BorderRadius.circular(22),
@@ -601,7 +601,7 @@ class _ProInsights extends ConsumerWidget {
           ),
         );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 24, 28, 0),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Icon(Hi.trophy, size: 18, color: green),

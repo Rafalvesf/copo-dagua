@@ -389,7 +389,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(children: [
           Expanded(child: Text(label, style: TextStyle(fontSize: 14, color: strong ? AppTheme.ink : AppTheme.inkMuted))),
-          Text(value, style: TextStyle(fontSize: strong ? 17 : 14, fontWeight: strong ? FontWeight.w700 : FontWeight.w500, color: AppTheme.ink)),
+          Text(value, style: TextStyle(fontSize: strong ? 17 : 14, fontWeight: strong ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink)),
         ]),
       );
 

@@ -145,7 +145,7 @@ class _PartnerNotificationsSheet extends ConsumerWidget {
                           title: Text(
                             n.title,
                             style: TextStyle(
-                              fontWeight: n.read ? FontWeight.w500 : FontWeight.w700,
+                              fontWeight: n.read ? FontWeight.w600 : FontWeight.w700,
                             ),
                           ),
                           subtitle: n.body == null ? null : Text(n.body!, maxLines: 2, overflow: TextOverflow.ellipsis),

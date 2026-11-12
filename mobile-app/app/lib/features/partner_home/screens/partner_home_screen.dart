@@ -414,7 +414,7 @@ class _WeekStrip extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: b == null ? FontWeight.w500 : FontWeight.w700,
+                      fontWeight: b == null ? FontWeight.w600 : FontWeight.w700,
                       color: b == null ? AppTheme.inkMuted : AppTheme.ink,
                     )),
                 if (b != null)
@@ -631,7 +631,7 @@ class _ProHero extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: i == last.length - 1 ? FontWeight.w700 : FontWeight.w400,
+                        fontWeight: i == last.length - 1 ? FontWeight.w700 : FontWeight.w600,
                         color: i == last.length - 1 ? _gold : _proMuted,
                       ),
                     ),

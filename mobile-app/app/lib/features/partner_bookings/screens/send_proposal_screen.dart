@@ -296,7 +296,7 @@ class _DepositPreview extends ConsumerWidget {
                   label,
                   style: TextStyle(
                     fontSize: strong ? AppFontSize.base : AppFontSize.md,
-                    fontWeight: strong ? FontWeight.w700 : FontWeight.w400,
+                    fontWeight: strong ? FontWeight.w700 : FontWeight.w600,
                     color: strong ? AppTheme.ink : AppTheme.inkMuted,
                   ),
                 ),
@@ -305,7 +305,7 @@ class _DepositPreview extends ConsumerWidget {
                 value,
                 style: TextStyle(
                   fontSize: strong ? AppFontSize.base : AppFontSize.md,
-                  fontWeight: strong ? FontWeight.w700 : FontWeight.w400,
+                  fontWeight: strong ? FontWeight.w700 : FontWeight.w600,
                   color: muted ? AppTheme.inkMuted : AppTheme.ink,
                 ),
               ),

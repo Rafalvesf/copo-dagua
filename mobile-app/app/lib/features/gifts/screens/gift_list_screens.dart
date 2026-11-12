@@ -198,7 +198,7 @@ class _OrganizerItemTile extends ConsumerWidget {
                 if (i.price != null && i.price! > 0) (i.isProduct ? giftEuros(i.price!) : '~${giftEuros(i.price!)}'),
                 _progress(i),
               ].join(' · '),
-              style: TextStyle(fontSize: 12.5, color: i.complete ? _green : AppTheme.inkMuted, fontWeight: i.complete ? FontWeight.w700 : FontWeight.w400),
+              style: TextStyle(fontSize: 12.5, color: i.complete ? _green : AppTheme.inkMuted, fontWeight: i.complete ? FontWeight.w700 : FontWeight.w600),
             ),
             if (i.isProduct && !i.available)
               const Text('Indisponível na loja', style: TextStyle(fontSize: 12.5, color: Color(0xFFB3261E))),
@@ -679,7 +679,7 @@ class _ProductRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: added ? AppTheme.accentOliveDark : Colors.white,
                   shape: BoxShape.circle,
-                  boxShadow: const [BoxShadow(color: Color(0x14171713), blurRadius: 10, offset: Offset(0, 3))],
+                  boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
                 ),
                 child: Icon(added ? Hi.check : Hi.plus,
                     size: 19, color: added ? Colors.white : (canAdd ? AppTheme.accentOliveDark : AppTheme.inkMuted)),
