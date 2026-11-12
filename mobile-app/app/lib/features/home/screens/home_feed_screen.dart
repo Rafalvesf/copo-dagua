@@ -1,10 +1,15 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import 'package:share_plus/share_plus.dart';
+import '../../../core/social/social.dart';
+import '../../../shared/public_link.dart';
+import '../../events/screens/eventos_screen.dart' show MyEventsCarousel;
+import '../../profile/profile_widgets.dart';
 import 'package:copo_dagua_app/shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import '../../../shared/widgets/feedback.dart';
-import '../../settings/screens/settings_screen.dart' show CoupleAccountSections, GuestAccountSections;
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -113,85 +118,82 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                     bottomFadeHeight: 140,
                     child: ListView(
                       padding: ( const EdgeInsets.fromLTRB(
-                        AppTheme.screenMargin,
+                        0,
                         20,
-                        AppTheme.screenMargin,
+                        0,
                         140,
                       )).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
                       children: [
                         if (guestMode) ...[
-                          const Align(alignment: Alignment.centerLeft, child: GuestEventsPill()),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                            child: Align(alignment: Alignment.centerLeft, child: GuestEventsPill()),
+                          ),
                           const SizedBox(height: 12),
                         ],
-                        // Igual ao Perfil do parceiro (pedido 2026-11-08): título ao centro.
-                        SizedBox(
-                          height: 46,
+                        // Mockup "Perfil" (2026-11-12): título à esquerda,
+                        // avisos e Definições em botões redondos.
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                           child: Row(
-                            children: [
-                              const SizedBox(width: 48),
-                              const Expanded(
-                                child: Text(
-                                  'Perfil',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                                ),
-                              ),
-                            if (wedding != null) Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                TourAnchor(
-                                  id: 'bell',
-                                  child: IconButton(
-                                    tooltip: 'Notificações',
-                                    onPressed: () => _openNotifications(context),
-                                    icon: const Icon(Hi.bell, size: 26, color: AppTheme.ink),
-                                  ),
-                                ),
-                                if (unreadNotifications > 0)
-                                  Positioned(
-                                    top: 8,
-                                    right: 9,
-                                    child: Container(
-                                      width: 9,
-                                      height: 9,
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.accentOliveDark,
-                                        shape: BoxShape.circle,
-                                      ),
+                          children: [
+                            const Expanded(
+                              child: Text('Perfil',
+                                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            ),
+                            if (wedding != null)
+                              Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  TourAnchor(
+                                    id: 'bell',
+                                    child: _RoundIcon(
+                                      icon: Hi.bell,
+                                      tip: 'Notificações',
+                                      onTap: () => _openNotifications(context),
                                     ),
                                   ),
-                              ],
-                            ),
-                            // Sem evento meu: os avisos pessoais (convites, lembretes)
-                            // continuam a aparecer (2026-11-11).
-                            if (wedding == null) const PartnerNotificationBell(),
-                              if (wedding == null) const SizedBox(width: 48),
-                            ],
-                          ),
+                                  if (unreadNotifications > 0)
+                                    Positioned(
+                                      top: 9,
+                                      right: 10,
+                                      child: Container(
+                                        width: 9,
+                                        height: 9,
+                                        decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle),
+                                      ),
+                                    ),
+                                ],
+                              )
+                            else
+                              const PartnerNotificationBell(),
+                            const SizedBox(width: 10),
+                            _RoundIcon(icon: Hi.cog6Tooth, tip: 'Definições', onTap: () => context.push('/conta')),
+                          ],
+                        ),
                         ),
                         const SizedBox(height: 18),
-                        _ProfileHeader(
-                          name: profile?.fullName,
-                          email: profile?.email,
-                          avatarUrl: profile?.avatarUrl,
-                          createdWedding: profile != null &&
-                              wedding?.ownerId == profile.id,
-                          uploading: _uploadingProfilePhoto,
-                          onChangePhoto: _uploadingProfilePhoto
-                              ? null
-                              : _pickProfilePhoto,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                          child: _MyProfileCard(
+                            uploading: _uploadingProfilePhoto,
+                            onChangePhoto: _uploadingProfilePhoto ? null : _pickProfilePhoto,
+                          ),
                         ),
-                        const SizedBox(height: 24),
                         if (guestMode && presenceId != null) ...[
-                          _PresenceCard(onTap: () => context.push('/guest-presenca/$presenceId')),
                           const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                            child: _PresenceCard(onTap: () => context.push('/guest-presenca/$presenceId')),
+                          ),
                         ],
-                        const _SupportSummaryCard(),
-                        // Definições da conta dentro do Perfil (2026-10-17).
-                        if (organizer)
-                          const CoupleAccountSections()
-                        else
-                          const GuestAccountSections(),
+                        ProfileSectionTitle(
+                          'Os meus eventos',
+                          action: 'Ver todos',
+                          onAction: () => context.go('/eventos'),
+                        ),
+                        const MyEventsCarousel(),
+                        _MyFollowing(profileId: profile.id),
                       ],
                     ),
                   ),
@@ -250,8 +252,8 @@ class _PresenceCard extends StatelessWidget {
   }
 }
 
-class _SupportSummaryCard extends ConsumerWidget {
-  const _SupportSummaryCard();
+class SupportSummaryCard extends ConsumerWidget {
+  const SupportSummaryCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -605,67 +607,88 @@ class _NotificationRow extends ConsumerWidget {
 }
 
 
-class _ProfileHeader extends StatelessWidget {
-  final String? name;
-  final String? email;
-  final String? avatarUrl;
-  final bool createdWedding;
-  final bool uploading;
-  final VoidCallback? onChangePhoto;
-
-  const _ProfileHeader({
-    required this.name,
-    required this.email,
-    required this.avatarUrl,
-    required this.createdWedding,
-    required this.uploading,
-    required this.onChangePhoto,
-  });
+class _RoundIcon extends StatelessWidget {
+  final IconData icon;
+  final String tip;
+  final VoidCallback onTap;
+  const _RoundIcon({required this.icon, required this.tip, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
-    // Igual ao cabeçalho do Perfil do parceiro (pedido 2026-11-08).
-    return Column(
-      children: [
-        Semantics(
-          button: true,
-          label: 'Mudar foto de perfil',
-          child: GestureDetector(
-            onTap: onChangePhoto,
-            child: Stack(clipBehavior: Clip.none, children: [
-              V2Avatar(name ?? '', size: 84, imageUrl: avatarUrl),
-              if (uploading)
-                Positioned.fill(
-                  child: Center(child: SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.accentOliveDark))),
-                ),
-              Positioned(
-                right: -2,
-                bottom: -2,
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
-                  child: const Icon(Hi.camera, size: 15, color: Colors.white),
-                ),
-              ),
-            ]),
+  Widget build(BuildContext context) => Tooltip(
+        message: tip,
+        child: SnappyTap(
+          onTap: onTap,
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            child: Icon(icon, size: 22, color: AppTheme.ink),
           ),
         ),
-        const SizedBox(height: 10),
-        Text(
-          name ?? '—',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
+      );
+}
+
+/// Cartão do meu perfil (mockup "O meu perfil"): foto (toca para mudar),
+/// números, nome, @ · cidade, bio, "Editar perfil" e "Partilhar perfil".
+class _MyProfileCard extends ConsumerWidget {
+  final bool uploading;
+  final VoidCallback? onChangePhoto;
+  const _MyProfileCard({required this.uploading, required this.onChangePhoto});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(authControllerProvider.select((s) => s.profile));
+    if (profile == null) return const SizedBox.shrink();
+    final pub = ref.watch(publicProfileProvider(profile.id)).value;
+    final name = profile.fullName?.trim().isNotEmpty == true ? profile.fullName! : (pub?.name ?? '');
+    return ProfileCard(
+      avatar: Semantics(
+        button: true,
+        label: 'Mudar foto de perfil',
+        child: GestureDetector(
+          onTap: onChangePhoto,
+          child: Stack(children: [
+            V2Avatar(name, size: 76, imageUrl: profile.avatarUrl),
+            if (uploading)
+              const Positioned.fill(
+                child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))),
+              ),
+          ]),
         ),
-        if (email != null && email!.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Text(email!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-        ],
-        if (createdWedding) ...[
-          const SizedBox(height: 8),
-          const V2Chip('Criou o casamento'),
-        ],
+      ),
+      name: name,
+      handleLine: pub?.handleLine ?? '',
+      bio: pub?.bio,
+      events: pub?.events ?? 0,
+      followers: pub?.followers ?? 0,
+      following: pub?.following ?? 0,
+      buttons: [
+        ProfileButton('Editar perfil', onTap: pub == null ? null : () => showEditProfileSheet(context, ref, pub)),
+        ProfileButton('Partilhar perfil', dark: true, onTap: () async {
+          final link = publicLink('/u/${profile.id}');
+          try {
+            await SharePlus.instance.share(ShareParams(text: '$name na À Nossa!: $link', subject: name));
+          } catch (_) {
+            await Clipboard.setData(ClipboardData(text: link));
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
+            }
+          }
+        }),
       ],
     );
+  }
+}
+
+class _MyFollowing extends ConsumerWidget {
+  final String profileId;
+  const _MyFollowing({required this.profileId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pub = ref.watch(publicProfileProvider(profileId)).value;
+    if (pub == null) return const SizedBox.shrink();
+    return FollowingSection(profileId: profileId, people: pub.followingPeople, partners: pub.followingPartners);
   }
 }
