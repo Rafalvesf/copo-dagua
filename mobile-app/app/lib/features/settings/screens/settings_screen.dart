@@ -1,3 +1,5 @@
+import '../../../core/moderation/word_filter.dart';
+import '../../../shared/widgets/onb_kit.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../../core/exports/export_files.dart' show deliverFile;
 import '../../../core/notifications/push.dart';
@@ -478,8 +480,9 @@ class _EditEventPage extends ConsumerStatefulWidget {
 }
 
 class _EditEventPageState extends ConsumerState<_EditEventPage> {
-  late final _partner1 = TextEditingController(text: widget.wedding.partnerName1);
-  late final _partner2 = TextEditingController(text: widget.wedding.partnerName2 ?? '');
+  // Nome do evento (até 40) — o que aparece em todo o lado.
+  late final _name = TextEditingController(text: widget.wedding.displayNames);
+  late EventType _type = widget.wedding.eventType;
   late final _location = TextEditingController(text: widget.wedding.location ?? '');
   late final _venue = TextEditingController(text: widget.wedding.venue ?? '');
   late final _quote = TextEditingController(text: widget.wedding.quote ?? '');
@@ -489,8 +492,7 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
 
   @override
   void dispose() {
-    _partner1.dispose();
-    _partner2.dispose();
+    _name.dispose();
     _location.dispose();
     _venue.dispose();
     _quote.dispose();
@@ -505,14 +507,29 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
     return _SettingsPage(
       title: 'Detalhes do evento',
       children: [
-        // "Outro": o nome que aparece no topo do evento (ex.: Despedida).
-        if (widget.wedding.eventType == EventType.other) ...[
-          AuthTextField(label: 'Tipo de evento (ex.: Despedida)', controller: _typeName),
+        // Mesma grelha do criar evento; «Outro» pede o nome (até 24).
+        const OnbGroupLabel('Tipo de evento'),
+        const SizedBox(height: 8),
+        OnbTypeGrid(selected: _type, onTap: (t) => setState(() => _type = t)),
+        if (_type == EventType.other) ...[
           const SizedBox(height: 12),
+          OnbField(
+            controller: _typeName,
+            label: 'Que evento é?',
+            hint: 'Ex.: Despedida de solteira',
+            maxLength: 24,
+            error: WordFilter.allowed(_typeName.text) ? null : WordFilter.message,
+            onChanged: (_) => setState(() {}),
+          ),
         ],
-        AuthTextField(label: 'O teu nome', controller: _partner1),
-        const SizedBox(height: 12),
-        AuthTextField(label: isWedding ? 'Nome do teu par' : 'Quem organiza contigo', controller: _partner2),
+        const SizedBox(height: 16),
+        OnbField(
+          controller: _name,
+          label: 'Nome do evento',
+          maxLength: 40,
+          error: WordFilter.allowed(_name.text) ? null : WordFilter.message,
+          onChanged: (_) => setState(() {}),
+        ),
         const SizedBox(height: 12),
         DatePickerField(label: 'Data', value: _date, allowUnknown: false, onChanged: (d) => setState(() => _date = d)),
         const SizedBox(height: 12),
@@ -539,10 +556,19 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
           label: 'Guardar',
           loading: loading,
           onPressed: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            final name = _name.text.trim();
+            if (name.isEmpty || !WordFilter.allowed(name) || !WordFilter.allowed(_typeName.text)) {
+              messenger.showSnackBar(SnackBar(content: Text(name.isEmpty ? 'Escreve o nome do evento.' : WordFilter.message)));
+              return;
+            }
+            // Nome igual ao de antes: mantém os dois nomes do casal.
+            final same = name == widget.wedding.displayNames;
+            try {
             await ref.read(weddingControllerProvider.notifier).update(
                   widget.wedding.copyWith(
-                    partnerName1: _partner1.text.trim(),
-                    partnerName2: _partner2.text.trim(),
+                    partnerName1: same ? widget.wedding.partnerName1 : name,
+                    partnerName2: same ? (widget.wedding.partnerName2 ?? '') : '',
                     location: _location.text.trim(),
                     venue: _venue.text.trim(),
                     quote: _quote.text.trim(),
@@ -550,11 +576,15 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
                     ceremonyType: _ceremonyType,
                   ),
                 );
-            if (widget.wedding.eventType == EventType.other) {
-              await ref.read(weddingControllerProvider.notifier).setEventTypeOther(_typeName.text);
+            if (_type != widget.wedding.eventType || (_type == EventType.other && _typeName.text.trim() != (widget.wedding.eventTypeOther ?? ''))) {
+              await ref.read(weddingControllerProvider.notifier).setEventType(_type, otherLabel: _typeName.text);
+            }
+            } catch (e) {
+              messenger.showSnackBar(SnackBar(content: Text(WordFilter.serverMessage(e) ?? 'Não foi possível guardar.')));
+              return;
             }
             if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Evento atualizado.')));
+            messenger.showSnackBar(const SnackBar(content: Text('Evento atualizado.')));
             Navigator.of(context).pop();
           },
         ),

@@ -1,3 +1,4 @@
+import '../../core/moderation/word_filter.dart';
 import 'package:flutter/material.dart';
 import 'line_icon.dart';
 
@@ -318,6 +319,15 @@ class ChatComposer extends StatelessWidget {
   /// A cada tecla (para o "está a escrever…").
   final ValueChanged<String>? onChanged;
 
+  /// Palavras bloqueadas (186): avisa e não envia.
+  void _send(BuildContext context) {
+    if (!WordFilter.allowed(controller.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(WordFilter.message)));
+      return;
+    }
+    onSend();
+  }
+
   const ChatComposer({
     super.key,
     required this.controller,
@@ -364,7 +374,7 @@ class ChatComposer extends StatelessWidget {
                   child: TextField(
                     controller: controller,
                     onChanged: onChanged,
-                    onSubmitted: (_) => onSend(),
+                    onSubmitted: (_) => _send(context),
                     textInputAction: TextInputAction.send,
                     style: const TextStyle(fontSize: 15, color: AppTheme.ink),
                     decoration: InputDecoration(
@@ -381,7 +391,7 @@ class ChatComposer extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               SnappyTap(
-                onTap: onSend,
+                onTap: () => _send(context),
                 child: Container(
                   width: 44,
                   height: 44,

@@ -1,12 +1,11 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/auth_ui.dart';
-import '../../../shared/widgets/mascot.dart';
+import '../../../shared/widgets/mascot.dart' show ConfettiBurst;
+import '../../../shared/widgets/onb_kit.dart';
 import '../../../shared/theme_color/theme_color.dart';
 import '../../../shared/widgets/tchin_splash.dart';
 
@@ -83,7 +82,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
     super.didChangeDependencies();
     // Topo das boas-vindas (gradiente claro): a barra fica desta cor
     // quando a abertura a soltar, em vez de branca.
-    setRouteBarColor(ModalRoute.of(context), const Color(0xFFE3E6D0));
+    setRouteBarColor(ModalRoute.of(context), const Color(0xFFE9D8C4));
     // Pedido do utilizador (2026-10-17): a abertura acontece sempre,
     // todas as vezes — mesmo com "reduzir movimento" ligado no telemóvel.
     if (_showSplash && _splash.value == 0 && !_started) {
@@ -138,135 +137,75 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   }
 }
 
+/// Início (mockup "Onboarding · 1 Início", 2026-11-12): imagem de fundo
+/// em cima, título e os botões "Começar" e "Já tenho conta". A barra de
+/// progresso começa em 20%.
 class _WelcomeContent extends StatelessWidget {
   const _WelcomeContent();
 
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.of(context).padding.top;
-    return CustomScrollView(
-      slivers: [
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          height: 318 + top,
-          padding: EdgeInsets.only(top: top + 24),
+    final h = MediaQuery.sizeOf(context).height;
+    return Stack(children: [
+      // Fotografia de fundo (por enquanto o tom quente do mockup, até
+      // haver foto) que se funde com o fundo da página.
+      Positioned(
+        left: 0,
+        right: 0,
+        top: 0,
+        height: h * 0.71,
+        child: const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment(-0.4, -0.6),
+              radius: 1.2,
+              colors: [Color(0xFFE9D8C4), Color(0xFFCDB79C), Color(0xFF9C8468), Color(0xFF6E5C49)],
+              stops: [0, 0.38, 0.7, 1],
+            ),
+          ),
+        ),
+      ),
+      Positioned(
+        left: 0,
+        right: 0,
+        top: 0,
+        height: h * 0.71,
+        child: const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment(-0.6, -1),
-              end: Alignment(0.6, 1),
-              colors: [AppTheme.accentTint, Color(0xFFF7EACA), Color(0xFFF3DEE0)],
-              stops: [0, 0.55, 1],
-            ),
-          ),
-          alignment: Alignment.center,
-          child: const TchinMascot(pose: MascotPose.wave, width: 230),
-        ),
-        Expanded(
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 26, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'O teu evento, num só lugar',
-                    style: TextStyle(
-                      fontSize: AppFontSize.h1,
-                      height: 34 / 28,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.ink,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Casamentos, batizados, aniversários e mais. Convidados, orçamento, parceiros e fotos — tudo junto.',
-                    style: TextStyle(
-                      fontSize: AppFontSize.base + 1,
-                      height: 22 / 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.inkMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  const _Feature(
-                    icon: Hi.userGroup,
-                    title: 'Convidados e lugares',
-                    subtitle: 'Confirmações, menus e mesas',
-                  ),
-                  const SizedBox(height: 14),
-                  const _Feature(
-                    icon: Hi.buildingStorefront,
-                    title: 'Parceiros de confiança',
-                    subtitle: 'Pede orçamentos e reserva',
-                  ),
-                  const Spacer(),
-                  AuthPrimaryButton(label: 'Criar conta', onPressed: () => context.push('/role')),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 54,
-                    child: OutlinedButton(
-                      onPressed: () => context.push('/login'),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppTheme.accentOliveDark,
-                        side: BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
-                        shape: const StadiumBorder(),
-                        textStyle: const TextStyle(
-                          fontFamily: AppTheme.fontFamily,
-                          fontFamilyFallback: AppTheme.fontFamilyFallback,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      child: const Text('Já tenho conta'),
-                    ),
-                  ),
-                ],
-              ),
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0x00F2F0EB), AppTheme.background],
+              stops: [0.45, 1],
             ),
           ),
         ),
-      ],
-          ),
+      ),
+      SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, top > 0 ? 12 : 24, AppTheme.screenMargin, 24),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const SizedBox(height: 44, child: OnbProgress(value: 0.2, labelColor: Colors.white)),
+            const Spacer(),
+            const Text('À Nossa!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 8),
+            const Text('Organiza, convida e celebra.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 8),
+            const Text('Casamentos, aniversários e festas, com os convidados e os parceiros no mesmo sítio.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+            const SizedBox(height: 28),
+            OnbButton(label: 'Começar', onPressed: () => context.push('/comecar')),
+            const SizedBox(height: 10),
+            OnbButton(label: 'Já tenho conta', secondary: true, onPressed: () => context.push('/login')),
+          ]),
         ),
-      ],
-    );
-  }
-}
-
-class _Feature extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  const _Feature({required this.icon, required this.title, required this.subtitle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(color: const Color(0xFFEEF2E9), borderRadius: BorderRadius.circular(14)),
-          child: Icon(icon, color: AppTheme.accentOliveDark, size: 20),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 2),
-              Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
-            ],
-          ),
-        ),
-      ],
-    );
+      ),
+    ]);
   }
 }

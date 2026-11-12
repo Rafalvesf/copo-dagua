@@ -174,6 +174,7 @@ function buildGroups(pendingPartners: number, openDisputes: number, openTickets:
       items: [
         { href: "/categories", label: "Categorias", icon: icons.tag },
         { href: "/moderation", label: "Avaliações", icon: icons.star },
+        { href: "/blocked-words", label: "Palavras bloqueadas", icon: icons.scale },
         { href: "/reports", label: "Denúncias", icon: icons.scale, badge: openReports },
         { href: "/task-templates", label: "Tarefas", icon: icons.list, also: ["/task-analytics"] },
       ],

@@ -25,6 +25,7 @@ import '../features/auth/screens/register_screen.dart';
 import '../features/auth/screens/role_selection_screen.dart';
 import '../features/auth/screens/verify_email_screen.dart';
 import '../features/auth/screens/welcome_screen.dart';
+import '../features/auth/screens/start_flow_screen.dart';
 import '../features/bookings/screens/couple_booking_detail_screen.dart' deferred as l4;
 import '../features/bookings/screens/couple_bookings_screen.dart' deferred as l5;
 import '../features/payments/screens/pay_screen.dart' deferred as l6;
@@ -110,6 +111,7 @@ bool _deepLinkWorthKeeping(String location) =>
 
 const _authRoutes = {
   '/welcome',
+  '/comecar',
   '/role',
   '/register',
   '/login',
@@ -262,6 +264,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/welcome',
         builder: (context, state) => const WelcomeScreen(),
       ),
+      // Início da app depois de "Começar" (mockup Onboarding, 2026-11-12).
+      GoRoute(path: '/comecar', builder: (context, state) => const StartFlowScreen()),
       GoRoute(
         path: '/role',
         builder: (context, state) => const RoleSelectionScreen(),

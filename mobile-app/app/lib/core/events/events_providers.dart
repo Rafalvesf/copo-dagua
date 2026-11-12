@@ -135,8 +135,13 @@ final eventMaxAttendeesProvider = FutureProvider.family<int?, String>((ref, wedd
   }
 });
 
+/// O máximo de pessoas é um só número (pedido 2026-11-12): o limite de
+/// entradas e os convidados previstos andam sempre juntos.
 Future<void> setEventMaxAttendees(String weddingId, int? value) async {
-  await supabase.from('weddings').update({'max_attendees': value}).eq('id', weddingId);
+  await supabase.from('weddings').update({
+    'max_attendees': value,
+    if (value != null) 'estimated_guests': value,
+  }).eq('id', weddingId);
 }
 
 /// O evento já não tem lugares (`event_full`, migração 182).

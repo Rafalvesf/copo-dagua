@@ -319,6 +319,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Arquivar ou apagar um evento (página do evento ou toque longo); arquivados e apagados nas Definições, com restaurar.",
     check: { kind: "marker", id: "185" },
   },
+  {
+    file: "186_onboarding_profile_blocked_words.sql",
+    date: "2026-11-12",
+    title: "Onboarding novo e palavras bloqueadas",
+    what: "País, idade e tipos de eventos no perfil; asneiras bloqueadas no evento, perfil e mensagens; limites de 24/40 caracteres.",
+    check: { kind: "marker", id: "186" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
