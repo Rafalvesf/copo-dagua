@@ -424,7 +424,7 @@ class _BookedPartnerCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppTheme.accentTint.withValues(alpha: 0.55),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: green.withValues(alpha: 0.35)),
+
           ),
           child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
             ClipRRect(

@@ -37,7 +37,8 @@ class StickerIcon extends StatelessWidget {
 BoxDecoration whiteLineCard({double radius = 22, Color? line, double width = 1}) => BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: line ?? AppTheme.accentOliveDark.withValues(alpha: 0.45), width: width),
+      // Sem linha à volta (mockups 2026-11-12), só quando pedida.
+      border: line == null ? null : Border.all(color: line, width: width),
       boxShadow: const [
         BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
       ],
