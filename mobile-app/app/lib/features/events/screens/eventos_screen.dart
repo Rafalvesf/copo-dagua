@@ -400,8 +400,9 @@ class _PosterCard extends StatelessWidget {
               Text(e.displayNames,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 17, height: 1.2, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-              const SizedBox(height: 4),
+                  // Mesmo título que "Os meus eventos" (DESIGN.md: 19 negrito).
+                  style: const TextStyle(fontSize: 19, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 3),
               MetaRow([
                 if (when != null) (Hi.calendar, when),
                 if (e.place != null) (Hi.mapPin, e.place!),
@@ -425,7 +426,7 @@ class _PosterCard extends StatelessWidget {
                         ].join(' · '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ),
                 ] else ...[
                   // Ainda ninguém vai: lugares livres (mockup B, 2026-11-11).
@@ -436,7 +437,7 @@ class _PosterCard extends StatelessWidget {
                     child: Text('Sê o primeiro a ir!',
                         maxLines: 2,
                         softWrap: true,
-                        style: TextStyle(fontSize: 12.5, height: 1.15, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+                        style: TextStyle(fontSize: 13, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                   ),
                 ],
                 // O texto ocupa o meio (Expanded): o botão fica sempre
