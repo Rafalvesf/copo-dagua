@@ -348,6 +348,19 @@ class WeddingController extends Notifier<WeddingState> {
     );
   }
 
+  /// Tipo de evento (Definições → Detalhes do evento, 2026-11-12).
+  Future<void> setEventType(EventType type, {String? otherLabel}) async {
+    final w = state.wedding;
+    if (w == null) return;
+    final other = type == EventType.other ? ((otherLabel ?? '').trim().isEmpty ? null : otherLabel!.trim()) : null;
+    await supabase.from('weddings').update({
+      'event_type': type.dbValue,
+      'event_types': [type.dbValue],
+      'event_type_other': other,
+    }).eq('id', w.id);
+    _replace(w.copyWith(eventType: type, eventTypeOther: other));
+  }
+
   /// Nome do tipo quando é "Outro" (Definições → Detalhes do evento).
   Future<void> setEventTypeOther(String? label) async {
     final w = state.wedding;

@@ -1467,6 +1467,13 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
   }
 
   Future<void> _setPaid(bool paid) async {
+    if (paid && !await organizerPaymentsReady()) {
+      // Antes de pôr preço: ativar os pagamentos (para receber o dinheiro).
+      if (!mounted) return;
+      _toast('Para cobrar a entrada, ativa primeiro os pagamentos.');
+      context.push('/bilhetes/ativar');
+      return;
+    }
     if (paid) {
       // Fica "Pago" quando houver preço.
       setState(() => _paidLocal = true);
@@ -1678,6 +1685,9 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
             },
           ),
         ]),
+        // Casamentos, batizados, aniversários… não têm entrada paga
+        // (pedido 2026-11-12): sem Grátis/Pago.
+        if (canBePublic || paid) ...[
         const SizedBox(height: 10),
         _segment([
           _choice(
@@ -1788,6 +1798,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
               ),
             ),
           ],
+        ],
         ],
         const SizedBox(height: 18),
         _CapacityBlock(weddingId: _id, segment: _segment, choice: _choice, stepBtn: _stepBtn),

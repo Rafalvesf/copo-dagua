@@ -122,10 +122,21 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
   `#EDEAE3`.
 - **Ícones:** Heroicons Solid na app; nos ecrãs dos mockups (Perfil,
   Mensagens, Conversa, Definições, Parceiro) os ícones de traço dos mockups
-  (`LineIcon`). Sem emojis.
+  (`LineIcon`). Sem emojis (exceção: o "Parabéns! 🎉" do criar evento).
 - **Conversa:** bolha minha preta / dele branca, cantos 18 com o canto do lado
   a 6; dia numa pílula `#E9E5DC`; "hh:mm · Visto"; ilha do evento flutuante
   com cantos da navbar, esconde-se no scroll.
+- **Onboarding** (`shared/widgets/onb_kit.dart`, mockup "Onboarding"
+  2026-11-12): barra de progresso verde de **10** com a percentagem (12
+  negrito) à direita — começa sempre em 20%; botão de voltar redondo
+  branco 44; "1 DE 4" como título de grupo; título 28, subtítulo 14;
+  caixas de texto em pílula branca **52** (texto 15, contador 13 à
+  direita, erro = linha vermelha 1,5 + ponto + frase 13); cartões de
+  opção brancos (cantos 22, interior 16), **verdes quando escolhidos**;
+  grelha de tipos de evento em 3 colunas (82 de altura, ícone 24, texto
+  12 negrito); contador de pessoas com número 40.
+- **Emojis:** só no "Parabéns! 🎉" do fim do criar evento (pedido do
+  Rafael, 2026-11-12). Em mais lado nenhum.
 
 ## 7. Alertas
 

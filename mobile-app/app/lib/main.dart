@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'core/onboarding/intro_answers.dart';
 import 'core/chat/presence.dart';
 import 'shared/widgets/keep_field_visible.dart';
 import 'shared/widgets/safe_top.dart';
@@ -69,6 +70,8 @@ class CopoDaguaApp extends ConsumerWidget {
         // Convite de parceiro aberto antes de ter conta (migração 151).
         claimPendingPartnerReferral();
         Funnel.linkAccount();
+        // Respostas do início da app (país, idade, interesses) → perfil.
+        IntroAnswers.flushToProfile(next);
       }
       if (next != prev) setErrorReportingUser(next);
     });

@@ -1,81 +1,61 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
-import 'package:copo_dagua_app/shared/utils_clipboard.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
-import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
-import '../../../shared/widgets/first_run_tour.dart' show TourRole;
-import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:copo_dagua_app/shared/utils_clipboard.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/auth/auth_controller.dart';
-import '../../../core/events/events_providers.dart' show setEventMaxAttendees;
+import '../../../core/events/events_providers.dart' show organizerPaymentsReady, setEventMaxAttendees;
 import '../../../core/models/models.dart';
-import '../../../core/partner_profile/partner_profile_controller.dart';
-import '../../../core/partners/partner_providers.dart';
+import '../../../core/moderation/word_filter.dart';
+import '../../../core/onboarding/intro_answers.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/public_link.dart';
-import '../../../shared/widgets/buttons.dart';
-import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/first_run_tour.dart' show TourRole;
+import '../../../shared/widgets/line_icon.dart';
+import '../../../shared/widgets/onb_kit.dart';
+import '../../../shared/widgets/onboarding_exit.dart';
+import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_onboarding/screens/partner_welcome_screen.dart';
-import '../../../shared/widgets/pronto_kit.dart';
-import '../../../shared/widgets/onboarding_exit.dart';
 
-/// Onboarding do organizador — uma pergunta por ecrã, igual ao canvas
-/// aprovado (redesign 2026-10): tipo de evento, nome (+ par num
-/// casamento), data, região, convidados, orçamento e o que já está
-/// tratado; no fim, um resumo com os próximos passos.
-enum _WizardStep { event, names, date, region, access, guests, budget, booked }
+/// Criar evento (mockup "Onboarding", 2026-11-12): uma ou duas perguntas
+/// por ecrã, sem repetir o que já sabemos (nome e telemóvel da conta,
+/// zona do início da app):
+///   1. Que evento vais criar? (grelha; "Outro" → "Que evento é?", 24)
+///   2. Como se chama? (até 40, com sugestões)
+///   3. Quando e onde?
+///   4. Quantas pessoas, no máximo? (= convidados previstos e limite)
+///   ·  Quem pode ir? (só nos tipos que podem ser públicos)
+///   5. Organizas com alguém?
+/// e no fim "Parabéns! 🎉". Tudo se muda depois no evento.
+enum _Step { type, name, when, people, access, organizer }
 
-/// As perguntas agrupadas em 3 páginas (mockup "Criar evento —
-/// onboarding", 2026-11-11): tipo → detalhes → pessoas e orçamento. O
-/// "Pronto" é o 4.º passo.
-const _pages = [
-  [_WizardStep.event],
-  [_WizardStep.names, _WizardStep.date, _WizardStep.region, _WizardStep.access],
-  [_WizardStep.guests, _WizardStep.budget, _WizardStep.booked],
-];
+const _peopleChips = [30, 50, 80, 120, 200, 300];
 
-/// Passos que se podem saltar (o tipo de evento e o nome são precisos).
-const _skippable = {
-  _WizardStep.date,
-  _WizardStep.region,
-  _WizardStep.access,
-  _WizardStep.guests,
-  _WizardStep.budget,
-  _WizardStep.booked,
+/// Interesses do início da app → tipo pré-escolhido.
+const _interestType = {
+  'Casamento': EventType.wedding,
+  'Aniversário': EventType.birthday,
+  'Batizado': EventType.baptism,
+  'Festa': EventType.party,
+  'Evento de empresa': EventType.corporate,
+  'Despedida': EventType.other,
+  'Jantar': EventType.other,
+  'Outro': EventType.other,
 };
-
-const _regions = [
-  'Grande Lisboa',
-  'Grande Porto',
-  'Norte',
-  'Centro',
-  'Alentejo',
-  'Algarve',
-  'Madeira',
-  'Açores',
-];
-
-/// Categorias "grandes" perguntadas logo no onboarding (RN37/38 do motor
-/// de tarefas) — as restantes ficam para `/service-preferences`.
-const _majorCategorySlugs = ['venue', 'photography', 'catering', 'music_dj'];
-
-enum _DateMode { exact, month, unknown }
 
 class OnboardingWizardScreen extends ConsumerStatefulWidget {
   /// Só para as capturas de ecrã (`?step=N`).
   final int initialStep;
 
   /// `true` = criar mais um evento a partir do separador Eventos
-  /// (`/novo-evento`, vários eventos por conta, 2026-11) — sem pergunta
-  /// inicial, sem permissões e sem marcar o onboarding.
+  /// (`/novo-evento`) — sem pergunta inicial, sem permissões e sem marcar
+  /// o onboarding.
   final bool newEvent;
 
   /// Tipo já escolhido no cartão "O que vamos celebrar?" (`?tipo=`).
@@ -84,108 +64,151 @@ class OnboardingWizardScreen extends ConsumerStatefulWidget {
   const OnboardingWizardScreen({super.key, this.initialStep = 0, this.newEvent = false, this.initialType});
 
   @override
-  ConsumerState<OnboardingWizardScreen> createState() =>
-      _OnboardingWizardScreenState();
+  ConsumerState<OnboardingWizardScreen> createState() => _OnboardingWizardScreenState();
 }
 
-class _OnboardingWizardScreenState
-    extends ConsumerState<OnboardingWizardScreen> {
-  late int _step = widget.initialStep.clamp(0, _WizardStep.values.length - 1);
+class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen> {
+  late int _index = widget.initialStep;
   bool _saving = false;
-  bool _ownNamePrefilled = false;
   Wedding? _createdWedding;
-
-  /// Permissões pedidas no último passo, antes do ecrã de sucesso (2026-10-25).
   bool _permsDone = false;
-  final Set<String> _alreadyBookedSlugs = {};
-
-  /// Pergunta inicial do onboarding: criar o evento já ou mais tarde
-  /// (pedido 2026-11 — não obrigar logo a criar um evento).
   late bool _startAnswered = widget.newEvent || widget.initialStep > 0;
 
-  /// Acesso (2026-11): público ("Aberto a todos") ou privado; grátis ou pago.
-  bool _isPublic = false;
-  bool _isPaid = false;
-  final _price = TextEditingController();
-
-  /// Limite de pessoas (migração 182, pedido 2026-11-11).
-  bool _limited = false;
-  final _maxPeople = TextEditingController();
-  int? get _maxValue {
-    final v = int.tryParse(_maxPeople.text.trim().replaceAll(' ', '').replaceAll('.', ''));
-    return v == null || v < 1 ? null : v;
-  }
-
-  final _ownName = TextEditingController();
-  final _partnerName = TextEditingController();
-  final _location = TextEditingController();
-  final _budget = TextEditingController();
-  // Até 2 tipos (pedido 2026-10-17: "os organizadores podem selecionar
-  // mais que uma opção (até 2)"); o primeiro é o principal.
-  final List<EventType> _eventTypes = [EventType.wedding];
+  EventType? _type;
   final _otherLabel = TextEditingController();
-  final _ownPhone = TextEditingController();
-  final _partnerPhone = TextEditingController();
-  EventType get _eventType => _eventTypes.isEmpty ? EventType.other : _eventTypes.first;
-  _DateMode _dateMode = _DateMode.exact;
+  final _name = TextEditingController();
+  bool _nameTouched = false;
   DateTime? _date;
-  int? _guests;
-
-  bool get _isWedding => _eventType == EventType.wedding;
-  _WizardStep get _current => _pages[_step].first;
-  List<_WizardStep> get _currentSteps => _pages[_step];
+  final _location = TextEditingController();
+  int _people = 50;
+  bool _isPublic = false;
+  double? _price;
+  bool _inviteOrganizer = false;
 
   @override
   void initState() {
     super.initState();
     Funnel.track(widget.newEvent ? 'event_create_start' : 'onboarding_start');
-    final t = EventType.values.where((e) => e.name == widget.initialType).firstOrNull;
-    if (t != null) _eventTypes
-      ..clear()
-      ..add(t);
-    for (final c in [_ownName, _partnerName, _location, _budget, _otherLabel, _ownPhone, _partnerPhone, _price, _maxPeople]) {
+    _type = EventType.values.where((e) => e.name == widget.initialType).firstOrNull;
+    if (_type == null) {
+      for (final i in IntroAnswers.interests) {
+        final t = _interestType[i];
+        if (t != null) {
+          _type = t;
+          if (t == EventType.other && i != 'Outro') _otherLabel.text = i;
+          break;
+        }
+      }
+    }
+    _type ??= EventType.wedding;
+    _location.text = IntroAnswers.city;
+    for (final c in [_otherLabel, _name, _location]) {
       c.addListener(() => setState(() {}));
     }
+    if (_location.text.isEmpty) _loadCity();
+  }
+
+  /// Zona da conta (perfil) quando o início da app foi noutro aparelho.
+  Future<void> _loadCity() async {
+    final id = supabase.auth.currentUser?.id;
+    if (id == null) return;
+    try {
+      final row = await supabase.from('profiles').select('city').eq('id', id).maybeSingle();
+      final city = (row?['city'] as String?)?.trim() ?? '';
+      if (city.isNotEmpty && mounted && _location.text.isEmpty) _location.text = city;
+    } catch (_) {}
   }
 
   @override
   void dispose() {
-    _ownName.dispose();
-    _partnerName.dispose();
-    _location.dispose();
-    _budget.dispose();
     _otherLabel.dispose();
-    _ownPhone.dispose();
-    _partnerPhone.dispose();
-    _price.dispose();
-    _maxPeople.dispose();
+    _name.dispose();
+    _location.dispose();
     super.dispose();
   }
 
-  DateTime? get _savedDate => switch (_dateMode) {
-        _DateMode.unknown => null,
-        _ => _date,
+  EventType get _eventType => _type ?? EventType.other;
+
+  List<_Step> get _steps => [
+        _Step.type,
+        _Step.name,
+        _Step.when,
+        _Step.people,
+        if (_eventType.canBePublic) _Step.access,
+        _Step.organizer,
+      ];
+
+  _Step get _current => _steps[_index.clamp(0, _steps.length - 1)];
+
+  // Percentagens do mockup: tipo 20 (30 com «Outro» escrito), nome 40,
+  // quando 50, pessoas 60, quem pode ir 70, organizador 80, pronto 100.
+  double get _progress => switch (_current) {
+        _Step.type => _eventType == EventType.other && _otherLabel.text.trim().isNotEmpty ? 0.3 : 0.2,
+        _Step.name => 0.4,
+        _Step.when => 0.5,
+        _Step.people => 0.6,
+        _Step.access => 0.7,
+        _Step.organizer => 0.8,
       };
 
-  String _firstName(Profile profile) {
-    final typed = _ownName.text.trim();
-    return typed.isEmpty ? profile.fullName.split(' ').first : typed;
+  String _firstName(Profile p) => p.fullName.trim().split(' ').first;
+
+  String get _typeText {
+    if (_eventType == EventType.other && _otherLabel.text.trim().isNotEmpty) return _otherLabel.text.trim();
+    return _eventType.label;
   }
 
-  bool get _canContinue => _currentSteps.every(_stepOk);
+  List<String> _nameSuggestions(Profile p) {
+    final n = _firstName(p);
+    final t = _typeText;
+    final out = <String>[
+      switch (_eventType) {
+        EventType.wedding => 'O casamento do $n',
+        EventType.birthday => 'Os anos do $n',
+        _ => '$t do $n',
+      },
+      if (_eventType == EventType.wedding) '$n & …' else t,
+      '$t ${(DateTime.now().year + (DateTime.now().month > 9 ? 1 : 0))}',
+    ];
+    return [for (final s in out) if (s.length <= 40 && !s.contains('…')) s];
+  }
 
-  bool _stepOk(_WizardStep step) => switch (step) {
-        _WizardStep.event => _eventTypes.isNotEmpty &&
-            (!_eventTypes.contains(EventType.other) || _otherLabel.text.trim().isNotEmpty),
-        // "o nome do par não é opcional" (2026-10-17) — num casamento.
-        _WizardStep.names => _ownName.text.trim().isNotEmpty &&
-            (!_isWedding || _partnerName.text.trim().isNotEmpty),
-        _WizardStep.access => (!_isPaid || (_priceValue ?? 0) > 0) && (!_limited || _maxValue != null),
+  String? get _otherError {
+    if (_eventType != EventType.other) return null;
+    return WordFilter.allowed(_otherLabel.text) ? null : WordFilter.message;
+  }
+
+  String? get _nameError => WordFilter.allowed(_name.text) ? null : WordFilter.message;
+
+  bool get _canContinue => switch (_current) {
+        _Step.type => _type != null &&
+            (_eventType != EventType.other || (_otherLabel.text.trim().isNotEmpty && _otherError == null)),
+        _Step.name => _name.text.trim().isNotEmpty && _nameError == null,
+        _Step.when => WordFilter.allowed(_location.text),
         _ => true,
       };
 
-  double? get _priceValue =>
-      double.tryParse(_price.text.trim().replaceAll(' ', '').replaceAll('€', '').replaceAll(',', '.'));
+  void _back() {
+    if (_index > 0) {
+      setState(() => _index--);
+    } else if (widget.newEvent) {
+      context.go('/eventos');
+    } else {
+      setState(() => _startAnswered = false);
+    }
+  }
+
+  Future<void> _next(Profile profile) async {
+    if (_current == _Step.type && !_nameTouched) {
+      final s = _nameSuggestions(profile);
+      if (s.isNotEmpty) _name.text = s.first;
+    }
+    if (_index < _steps.length - 1) {
+      setState(() => _index++);
+      return;
+    }
+    await _create(profile);
+  }
 
   /// "Mais tarde": a conta fica criada sem evento e vai para Eventos.
   Future<void> _later() async {
@@ -201,29 +224,8 @@ class _OnboardingWizardScreenState
     if (mounted) setState(() => _saving = false);
   }
 
-  void _toggleType(EventType type) {
-    setState(() {
-      if (_eventTypes.remove(type)) return;
-      if (_eventTypes.length >= 2) _eventTypes.removeAt(0);
-      _eventTypes.add(type);
-    });
-  }
-
-  void _back() {
-    if (_step > 0) setState(() => _step--);
-  }
-
-  Future<void> _next(Profile profile) async {
-    if (_step < _pages.length - 1) {
-      setState(() => _step++);
-      return;
-    }
-    await _create(profile);
-  }
-
-  /// Cria o evento no fim das perguntas e mostra o resumo. Se já existir
-  /// um (ex: a app foi fechada no resumo), reaproveita-o em vez de criar
-  /// outro.
+  /// Cria o evento no fim das perguntas. Se já existir um (ex.: a app foi
+  /// fechada no fim), reaproveita-o em vez de criar outro.
   Future<void> _create(Profile profile) async {
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
@@ -241,87 +243,59 @@ class _OnboardingWizardScreenState
       final existing = widget.newEvent ? null : ref.read(weddingControllerProvider).wedding;
       final wedding = existing ??
           await ref.read(weddingControllerProvider.notifier).create(
-                partnerName1: _firstName(profile),
-                partnerName2: _partnerName.text.trim().isNotEmpty
-                    ? _partnerName.text.trim()
-                    : null,
-                weddingDate: _savedDate,
-                location: _location.text.trim().isEmpty
-                    ? null
-                    : _location.text.trim(),
-                estimatedGuests: _guests,
-                estimatedBudget: double.tryParse(
-                  _budget.text.trim().replaceAll(' ', '').replaceAll(',', '.'),
-                ),
+                // O nome do evento (até 40) é o nome que aparece em todo o lado.
+                partnerName1: _name.text.trim(),
+                weddingDate: _date,
+                location: _location.text.trim().isEmpty ? null : _location.text.trim(),
+                estimatedGuests: _people,
                 eventType: _eventType,
               );
       if (existing == null) {
         await ref.read(weddingControllerProvider.notifier).saveOnboardingExtras(
               weddingId: wedding.id,
-              eventTypes: List.of(_eventTypes),
-              otherLabel: _eventTypes.contains(EventType.other) ? _otherLabel.text.trim() : null,
-              phone1: _ownPhone.text.trim().isEmpty ? null : _ownPhone.text.trim(),
-              phone2: _partnerPhone.text.trim().isEmpty ? null : _partnerPhone.text.trim(),
+              eventTypes: [_eventType],
+              otherLabel: _eventType == EventType.other ? _otherLabel.text.trim() : null,
             );
-      }
-      if (existing == null) {
-        // Público/privado e grátis/pago (migrações 141/142) — ignora em
-        // silêncio enquanto as colunas não existirem.
+        // Público/privado e preço (141/142) — ignora em silêncio sem as colunas.
         try {
+          final public = _isPublic && _eventType.canBePublic;
           await supabase.from('weddings').update({
-            'is_public': _isPublic && _eventType.canBePublic,
-            'is_paid': _isPaid,
-            'entry_price': _isPaid ? _priceValue : null,
+            'is_public': public,
+            'is_paid': public && (_price ?? 0) > 0,
+            'entry_price': public && (_price ?? 0) > 0 ? _price : null,
           }).eq('id', wedding.id);
         } catch (_) {}
-        // Limite de pessoas (migração 182) — à parte, para não falhar o resto.
-        if (_limited && _maxValue != null) {
-          try {
-            await setEventMaxAttendees(wedding.id, _maxValue);
-          } catch (_) {}
-        }
-        // Utilizador que cria o primeiro evento passa a organizar.
+        // O máximo de pessoas é também o limite de entradas (182).
+        try {
+          await setEventMaxAttendees(wedding.id, _people);
+        } catch (_) {}
         if (ref.read(authControllerProvider).profile?.role == UserRole.guest) {
           await ref.read(authControllerProvider.notifier).becomeOrganizer();
         }
-      }
-      if (_alreadyBookedSlugs.isNotEmpty) {
-        await supabase.from('wedding_service_preferences').upsert([
-          for (final slug in _alreadyBookedSlugs)
-            {
-              'wedding_id': wedding.id,
-              'partner_category_slug': slug,
-              'preference': 'already_booked',
-              'updated_at': DateTime.now().toIso8601String(),
-            },
-        ]);
       }
       if (!mounted) return;
       setState(() {
         _createdWedding = wedding;
         _saving = false;
       });
+      if (_inviteOrganizer) _invite(wedding);
     } on SignupFailed catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Não foi possível criar o ${_eventType.noun}. Tenta novamente.',
-          ),
-        ),
-      );
+      messenger.showSnackBar(SnackBar(
+        content: Text(WordFilter.serverMessage(e) ?? 'Não foi possível criar o ${_eventType.noun}. Tenta novamente.'),
+      ));
     }
   }
 
   /// Marca o onboarding como feito e segue para [route].
-  Future<void> _finish(String route, {Object? extra}) async {
+  Future<void> _finish(String route) async {
     if (widget.newEvent) {
-      context.go(route, extra: extra);
+      context.go(route);
       return;
     }
     setState(() => _saving = true);
@@ -330,17 +304,15 @@ class _OnboardingWizardScreenState
       await ref.read(authControllerProvider.notifier).completeOnboarding();
     } catch (_) {
       if (mounted) setState(() => _saving = false);
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Não foi possível guardar. Tenta de novo.')),
-      );
+      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta de novo.')));
       return;
     }
     if (!mounted) return;
-    context.go(route, extra: extra);
+    context.go(route);
   }
 
-  /// Convida quem organiza contigo por link (079) — abre o menu de
-  /// partilha do telemóvel; sem menu, copia o link.
+  /// Convidar outro organizador por link (079): menu de partilha; sem
+  /// menu, copia o link.
   Future<void> _invite(Wedding wedding) async {
     final messenger = ScaffoldMessenger.of(context);
     String link;
@@ -354,30 +326,85 @@ class _OnboardingWizardScreenState
     var shared = false;
     try {
       final result = await SharePlus.instance.share(
-        ShareParams(text: 'Junta-te a mim para organizarmos o ${_eventType.noun} na app À Nossa!: $link'),
+        ShareParams(text: 'Junta-te a mim para organizarmos «${wedding.displayNames}» na app À Nossa!: $link'),
       );
       shared = result.status != ShareResultStatus.unavailable;
     } catch (_) {}
     if (!shared) {
       await copyText(link);
-      messenger.showSnackBar(const SnackBar(content: Text('Link copiado.')));
+      messenger.showSnackBar(const SnackBar(content: Text('Link para organizar contigo copiado.')));
     }
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final d = await showDatePicker(
+      context: context,
+      initialDate: _date ?? now.add(const Duration(days: 180)),
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(now.year + 5, 12, 31),
+      locale: const Locale('pt', 'PT'),
+    );
+    if (d != null) setState(() => _date = d);
+  }
+
+  Future<void> _editText({
+    required String title,
+    required TextEditingController target,
+    String? hint,
+    TextInputType? keyboard,
+  }) async {
+    final c = TextEditingController(text: target.text);
+    final v = await showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setD) {
+          final err = WordFilter.allowed(c.text) ? null : WordFilter.message;
+          return AlertDialog(
+            backgroundColor: AppTheme.background,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+            title: Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            content: OnbField(controller: c, hint: hint, autofocus: true, keyboardType: keyboard, error: err, onChanged: (_) => setD(() {})),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+              TextButton(onPressed: err == null ? () => Navigator.pop(ctx, c.text.trim()) : null, child: const Text('Guardar')),
+            ],
+          );
+        },
+      ),
+    );
+    if (v != null) setState(() => target.text = v);
+  }
+
+  Future<void> _editPrice() async {
+    // Antes de pôr preço: ativar os pagamentos para receber o dinheiro
+    // dos bilhetes (pedido 2026-11-12). Volta aqui depois.
+    if (_price == null && !await organizerPaymentsReady()) {
+      if (!mounted) return;
+      // Conta ainda por criar (fica criada no fim): ativa-se depois.
+      if (supabase.auth.currentUser == null || ref.read(authControllerProvider.notifier).hasPendingSignup) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Para cobrar a entrada, ativa os pagamentos depois de criar o evento, em Acesso e entrada.')));
+        return;
+      }
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Para cobrar a entrada, ativa primeiro os pagamentos.')));
+      await context.push('/bilhetes/ativar');
+      if (!mounted || !await organizerPaymentsReady()) return;
+    }
+    final c = TextEditingController(text: _price == null ? '' : _price!.toStringAsFixed(_price! % 1 == 0 ? 0 : 2));
+    await _editText(title: 'Preço da entrada (€)', target: c, hint: 'Vazio = grátis', keyboard: const TextInputType.numberWithOptions(decimal: true));
+    final v = double.tryParse(c.text.replaceAll('€', '').replaceAll(',', '.').trim());
+    setState(() => _price = v == null || v <= 0 ? null : v);
   }
 
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(authControllerProvider).profile;
     if (profile == null) {
-      return const GradientScaffold(
-        background: AppBackground.subtle,
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(backgroundColor: AppTheme.background, body: Center(child: CircularProgressIndicator()));
     }
     if (profile.role == UserRole.partner) return PartnerWelcomeScreen(initialStep: widget.initialStep);
-    if (!_ownNamePrefilled) {
-      _ownName.text = profile.fullName.split(' ').first;
-      _ownNamePrefilled = true;
-    }
 
     if (!_startAnswered) {
       return _StartChoice(
@@ -395,344 +422,316 @@ class _OnboardingWizardScreenState
     }
     if (created != null) {
       return _DoneView(
-        name: _firstName(profile),
-        wedding: created,
-        eventType: _eventType,
-        dateMode: _dateMode,
-        bookedSlugs: _alreadyBookedSlugs,
+        name: created.displayNames,
         saving: _saving,
-        onStart: (route, extra) => _finish(route, extra: extra),
-        onInvite: () => _invite(created),
+        onGuests: () => _finish('/guests'),
+        onEvent: () => _finish('/wedding'),
       );
     }
 
-    final total = _pages.length + 1;
-    return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                height: 44,
-                child: Row(
-                  children: [
-                    // Seta sempre visível: volta um passo, ou sai do
-                    // registo no primeiro (sem gravar nada).
-                    CircleBackButton(
-                      onTap: _step > 0
-                          ? _back
-                          : widget.newEvent
-                              ? () => context.go('/eventos')
-                              : () => setState(() => _startAnswered = false),
-                    ),
-                    const Spacer(),
-                    if (_currentSteps.every(_skippable.contains))
-                      TextButton(
-                        onPressed: _saving ? null : () => _next(profile),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppTheme.inkMuted,
-                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
-                            fontSize: AppFontSize.base,
-                            fontWeight: FontWeight.w600,
+    final kicker = '${_index + 1} de ${_steps.length}';
+    final cta = OnbButton(
+      label: _current == _Step.organizer ? 'Criar evento' : 'Continuar',
+      loading: _saving,
+      onPressed: _canContinue && !_saving ? () => _next(profile) : null,
+    );
+
+    switch (_current) {
+      case _Step.type:
+        final other = _eventType == EventType.other;
+        return OnbStep(
+          onBack: _back,
+          progress: _progress,
+          kicker: kicker,
+          title: 'Que evento vais criar?',
+          subtitle: other ? 'Escreve o que é, em poucas palavras.' : 'Já vem escolhido o que disseste no início.',
+          bottom: cta,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            OnbTypeGrid(selected: _type, onTap: (t) => setState(() => _type = t)),
+            if (other) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  const Text('Que evento é?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  const SizedBox(height: 12),
+                  OnbField(
+                    controller: _otherLabel,
+                    hint: 'Ex.: Despedida de solteira',
+                    maxLength: 24,
+                    fill: AppTheme.background,
+                    autofocus: _otherLabel.text.isEmpty,
+                    error: _otherError,
+                  ),
+                  if (_otherError == null) ...[
+                    const SizedBox(height: 12),
+                    Wrap(spacing: 6, runSpacing: 6, children: [
+                      for (final s in const ['Despedida', 'Jantar', 'Reunião de família', 'Workshop', 'Inauguração'])
+                        SnappyTap(
+                          onTap: () => _otherLabel.text = s,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(999)),
+                            child: Text(s, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
                           ),
                         ),
-                        child: const Text('Saltar'),
-                      ),
+                    ]),
                   ],
-                ),
+                  const SizedBox(height: 12),
+                  OnbMeta(_otherError == null
+                      ? 'Escreve o que quiseres, até nomes. Aparece no Descobrir e nos convites. Máximo 24 caracteres.'
+                      : 'Podes escrever o que quiseres, incluindo nomes de pessoas.'),
+                ]),
               ),
+            ],
+          ]),
+        );
+      case _Step.name:
+        final suggestions = _nameSuggestions(profile);
+        return OnbStep(
+          onBack: _back,
+          progress: _progress,
+          kicker: kicker,
+          title: 'Como se chama?',
+          subtitle: 'Escreve o que quiseres. É o nome que os convidados veem.',
+          bottom: cta,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            OnbField(
+              controller: _name,
+              label: 'Nome do evento',
+              maxLength: 40,
+              error: _nameError,
+              onChanged: (_) => _nameTouched = true,
+            ),
+            if (suggestions.isNotEmpty) ...[
               const SizedBox(height: 20),
-              Text(
-                'Passo ${_step + 1} de $total',
-                style: const TextStyle(
-                  fontSize: AppFontSize.md,
-                  color: AppTheme.inkMuted,
-                ),
-              ),
+              const OnbGroupLabel('Sugestões'),
               const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(end: (_step + 1) / total),
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, _) => LinearProgressIndicator(
-                    value: value,
-                    minHeight: 3,
-                    backgroundColor: AppTheme.borderMuted,
-                    color: AppTheme.accentOliveDark,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  // Cada pergunta começa sempre à mesma altura (antes o
-                  // passo ficava centrado e o título mudava de sítio).
-                  layoutBuilder: (current, previous) => Stack(
-                    alignment: Alignment.topCenter,
-                    children: [...previous, ?current],
-                  ),
-                  child: KeyedSubtree(
-                    key: ValueKey(_step),
-                    child: _currentSteps.length == 1
-                        ? _buildStep(context, _current)
-                        : SingleChildScrollView(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _InlineSteps(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 28),
-                                    child: Text(_step == 1 ? 'Os detalhes' : 'Pessoas e orçamento',
-                                        style: const TextStyle(fontSize: AppFontSize.h1, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(_step == 1 ? 'Tudo isto muda-se depois.' : 'Uma estimativa chega. Podes saltar.',
-                                      style: const TextStyle(fontSize: AppFontSize.base + 1, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
-                                  for (final st in _currentSteps) _buildStep(context, st),
-                                ],
-                              ),
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-              if (_currentSteps.contains(_WizardStep.names)) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Hi.lockClosed,
-                        size: 14, color: AppTheme.inkMuted),
-                    const SizedBox(width: 6),
-                    Text(
-                      _isWedding
-                          ? 'Só tu e o teu par veem estes dados'
-                          : 'Só tu e quem convidares veem estes dados',
-                      style: const TextStyle(
-                        fontSize: AppFontSize.sm,
-                        color: AppTheme.inkMuted,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-              ],
-              _BigButton(
-                label: _step == _pages.length - 1 ? 'Criar ${_eventType.noun}' : 'Continuar',
-                loading: _saving,
-                onPressed: _canContinue && !_saving ? () => _next(profile) : null,
+              OnbChips(
+                items: suggestions,
+                selected: {_name.text.trim()},
+                onTap: (s) => setState(() {
+                  _name.text = s;
+                  _nameTouched = true;
+                }),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStep(BuildContext context, _WizardStep step) {
-    switch (step) {
-      case _WizardStep.event:
-        return _StepScaffold(
-          question: 'O que estão a organizar?',
-          subtitle: 'Podem escolher até 2 — ex.: casamento e batizado no mesmo dia.',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 2.6,
-                children: [
-                  for (final type in EventType.values)
-                    _EventTypeTile(
-                      type: type,
-                      selected: _eventTypes.contains(type),
-                      onTap: () => _toggleType(type),
-                    ),
-                ],
-              ),
-              if (_eventTypes.contains(EventType.other)) ...[
-                const SizedBox(height: 16),
-                _LabeledField(label: 'Qual?', controller: _otherLabel, hint: 'Ex.: Chá de bebé, jantar de família…', autofocus: true),
-              ],
+          ]),
+        );
+      case _Step.when:
+        final days = _date?.difference(DateTime.now()).inDays;
+        return OnbStep(
+          onBack: _back,
+          progress: _progress,
+          kicker: kicker,
+          title: 'Quando e onde?',
+          subtitle: 'Se ainda não sabes a data, avança.',
+          skipLabel: 'Ainda não sei',
+          onSkip: () => setState(() {
+            _date = null;
+            _index++;
+          }),
+          bottom: cta,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            OnbRows(rows: [
+              ('Data', _date == null ? 'Escolher' : '${formatShortDatePt(_date!).replaceFirstMapped(RegExp(r' [A-Z]\w+$'), (m) => m[0]!.toLowerCase())} ${_date!.year}', _pickDate),
+              ('Onde', _location.text.trim().isEmpty ? 'Escolher' : _location.text.trim(),
+                  () => _editText(title: 'Onde é?', target: _location, hint: 'Ex.: Lisboa')),
+            ]),
+            if (days != null && days >= 0) ...[
               const SizedBox(height: 12),
-              Text(
-                '${_eventTypes.length} de 2 escolhidos',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
+                  child: Text('Faltam ${days + 1} dias',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+                ),
               ),
             ],
-          ),
+            if (IntroAnswers.city.isNotEmpty) ...[const SizedBox(height: 12), const OnbMeta('A zona vem da tua conta.')],
+          ]),
         );
-      case _WizardStep.names:
-        return _StepScaffold(
-          question: 'Quem organiza?',
-          subtitle: _isWedding
-              ? 'Tu e o teu par. O telemóvel liga as vossas contas, tal como nos convidados.'
-              : 'Tu e quem organiza contigo, se houver.',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _LabeledField(label: 'Primeiro nome', controller: _ownName, autofocus: true),
-              const SizedBox(height: 16),
-              _LabeledField(label: 'O teu telemóvel', controller: _ownPhone, hint: '912 345 678', keyboardType: TextInputType.phone),
-              const SizedBox(height: 16),
-              _LabeledField(
-                label: _isWedding ? 'Nome do teu par' : 'Quem organiza contigo · opcional',
-                controller: _partnerName,
-                hint: 'Ex.: Tomás',
-              ),
-              const SizedBox(height: 16),
-              _LabeledField(
-                label: _isWedding ? 'Telemóvel do teu par' : 'Telemóvel · opcional',
-                controller: _partnerPhone,
-                hint: '912 345 678',
-                keyboardType: TextInputType.phone,
-              ),
+      case _Step.people:
+        return OnbStep(
+          onBack: _back,
+          progress: _progress,
+          kicker: kicker,
+          title: 'Quantas pessoas, no máximo?',
+          subtitle: 'Uma estimativa chega.',
+          bottom: cta,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+              child: Row(children: [
+                _RoundStep(
+                  path: 'M5 12h14',
+                  dark: false,
+                  onTap: _people > 1 ? () => setState(() => _people = (_people - (_people > 20 ? 10 : 1)).clamp(1, 5000)) : null,
+                ),
+                Expanded(
+                  child: Column(children: [
+                    Text('$_people', style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    const SizedBox(height: 2),
+                    const Text('pessoas no máximo', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                  ]),
+                ),
+                _RoundStep(
+                  path: LineIcon.plus,
+                  dark: true,
+                  onTap: () => setState(() => _people = (_people + (_people >= 20 ? 10 : 1)).clamp(1, 5000)),
+                ),
+              ]),
+            ),
+            const SizedBox(height: 12),
+            OnbChips(
+              items: [for (final n in _peopleChips) n == 300 ? '300+' : '$n'],
+              selected: {_people == 300 ? '300+' : '$_people'},
+              onTap: (v) => setState(() => _people = int.parse(v.replaceAll('+', ''))),
+            ),
+            const SizedBox(height: 12),
+            const OnbMeta('É o limite de convidados e de entradas. Não voltamos a perguntar. Podes mudar mais tarde.'),
+          ]),
+        );
+      case _Step.access:
+        return OnbStep(
+          onBack: _back,
+          progress: _progress,
+          kicker: kicker,
+          title: 'Quem pode ir?',
+          subtitle: 'Só em festas, noites, concertos, festivais, empresas e «Outro».',
+          bottom: cta,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            OnbOption(
+              title: 'Só convidados',
+              subtitle: 'Entra quem tiver o teu link.',
+              selected: !_isPublic,
+              onTap: () => setState(() => _isPublic = false),
+            ),
+            const SizedBox(height: 12),
+            OnbOption(
+              title: 'Aberto a todos',
+              subtitle: 'Aparece no Descobrir. Limite: as $_people pessoas que puseste.',
+              selected: _isPublic,
+              onTap: () => setState(() => _isPublic = true),
+            ),
+            if (_isPublic) ...[
+              const SizedBox(height: 12),
+              OnbRows(rows: [
+                ('Entrada', _price == null ? 'Grátis' : '${_price!.toStringAsFixed(_price! % 1 == 0 ? 0 : 2)} €', _editPrice),
+              ]),
+              const SizedBox(height: 12),
+              const OnbMeta('Podes pôr preço na entrada.'),
             ],
-          ),
+          ]),
         );
-      case _WizardStep.date:
-        return _StepScaffold(
-          question: 'Quando é o ${_eventType.noun}?',
-          subtitle:
-              'Podes mudá-la depois.',
-          child: _DateStep(
-            mode: _dateMode,
-            date: _date,
-            onMode: (m) => setState(() => _dateMode = m),
-            onDate: (d) => setState(() => _date = d),
-          ),
-        );
-      case _WizardStep.region:
-        return _StepScaffold(
-          question: 'Onde vai ser?',
-          subtitle: 'Mostramos primeiro os parceiros desta zona.',
-          child: _RegionStep(controller: _location),
-        );
-      case _WizardStep.access:
-        return _StepScaffold(
-          question: 'Quem pode entrar?',
-          subtitle: 'Podes mudar isto depois nas Definições do evento.',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_eventType.canBePublic)
-                _ChoicePair(
-                  left: ('Privado', Hi.lockClosed, 'Só quem convidares'),
-                  right: ('Público', Hi.globeEuropeAfrica, 'Aparece a todos em Descobrir'),
-                  rightSelected: _isPublic,
-                  onChanged: (v) => setState(() => _isPublic = v),
-                )
-              else
-                Row(
-                  children: [
-                    const Icon(Hi.lockClosed, size: 18, color: AppTheme.inkMuted),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${_eventType.label} é sempre privado: só entra quem convidares. Públicos só festas, discotecas, concertos, festivais e eventos de empresa.',
-                        style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
-                      ),
+      case _Step.organizer:
+        return OnbStep(
+          onBack: _back,
+          progress: _progress,
+          kicker: kicker,
+          title: 'Organizas com alguém?',
+          subtitle: 'Partilham convidados, orçamento e conversas.',
+          bottom: cta,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+              child: Column(children: [
+                Container(
+                  constraints: const BoxConstraints(minHeight: 64),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFECE7DC)))),
+                  child: Row(children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: const BoxDecoration(color: Color(0xFFE7D9C3), shape: BoxShape.circle),
+                      alignment: Alignment.center,
+                      child: Text(_firstName(profile).isEmpty ? '?' : _firstName(profile)[0].toUpperCase(),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
-                  ],
+                    const SizedBox(width: 12),
+                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(_firstName(profile), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      const Text('Tu', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                    ]),
+                  ]),
                 ),
-              const SizedBox(height: 22),
-              const Text('Entrada',
-                  style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 10),
-              _ChoicePair(
-                left: ('Grátis', Hi.sparkles, 'Sem custo para quem vai'),
-                right: ('Pago', Hi.ticket, 'Com preço por pessoa'),
-                rightSelected: _isPaid,
-                onChanged: (v) => setState(() => _isPaid = v),
-              ),
-              if (_isPaid) ...[
-                const SizedBox(height: 16),
-                _LabeledField(
-                  label: 'Preço por pessoa',
-                  controller: _price,
-                  hint: 'Ex.: 25',
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  suffix: '€',
-                  // Na web, o foco automático deixa o campo sem teclado no iPhone.
-                  autofocus: !kIsWeb,
+                SnappyTap(
+                  onTap: () => setState(() => _inviteOrganizer = !_inviteOrganizer),
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 64),
+                    child: Row(children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                            color: _inviteOrganizer ? const Color(0xFF4F6B4A) : AppTheme.ink, shape: BoxShape.circle),
+                        alignment: Alignment.center,
+                        child: LineIcon(_inviteOrganizer ? LineIcon.check : LineIcon.plus, size: 20, color: Colors.white),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          const Text('Adicionar organizador',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          Text(
+                            _inviteOrganizer
+                                ? 'Ao criar, abrimos o link para lhe enviares.'
+                                : 'O teu par, família ou wedding planner. Recebe um link.',
+                            style: const TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
+                          ),
+                        ]),
+                      ),
+                    ]),
+                  ),
                 ),
-              ],
-              const SizedBox(height: 22),
-              const Text('Limite de pessoas',
-                  style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 10),
-              _ChoicePair(
-                left: ('Sem limite', Hi.users, 'Entra quem quiser'),
-                right: ('Com limite', Hi.userGroup, 'Fecha quando enche'),
-                rightSelected: _limited,
-                onChanged: (v) => setState(() => _limited = v),
-              ),
-              if (_limited) ...[
-                const SizedBox(height: 16),
-                _LabeledField(
-                  label: 'Máximo de pessoas',
-                  controller: _maxPeople,
-                  hint: 'Ex.: 150',
-                  keyboardType: TextInputType.number,
-                  suffix: 'pessoas',
-                ),
-              ],
-            ],
-          ),
-        );
-      case _WizardStep.guests:
-        return _StepScaffold(
-          question: 'Quantos convidados, mais ou menos?',
-          subtitle: 'Uma estimativa chega. A lista real fica em Convidados.',
-          child: _GuestEstimate(
-            value: _guests,
-            onChanged: (v) => setState(() => _guests = v),
-          ),
-        );
-      case _WizardStep.budget:
-        return _StepScaffold(
-          question: 'Quanto querem investir?',
-          subtitle:
-              'Um valor aproximado chega.',
-          child: _LabeledField(
-            label: 'Orçamento total',
-            controller: _budget,
-            hint: 'Ex.: 20 000',
-            keyboardType: TextInputType.number,
-            suffix: '€',
-          ),
-        );
-      case _WizardStep.booked:
-        return _StepScaffold(
-          question: 'Já têm alguma coisa tratada?',
-          subtitle: 'Para não vos sugerirmos o que já resolveram.',
-          child: _BookedStep(
-            selected: _alreadyBookedSlugs,
-            onToggle: (slug) => setState(() {
-              if (!_alreadyBookedSlugs.remove(slug)) {
-                _alreadyBookedSlugs.add(slug);
-              }
-            }),
-          ),
+              ]),
+            ),
+            const SizedBox(height: 12),
+            const OnbMeta('Também podes fazer isto depois, nas definições do evento.'),
+          ]),
         );
     }
   }
 }
 
-// ───────────────────────── peças partilhadas ─────────────────────────
+/// Botão redondo 44 do contador de pessoas (− contorno, + preto).
+class _RoundStep extends StatelessWidget {
+  final String path;
+  final bool dark;
+  final VoidCallback? onTap;
+  const _RoundStep({required this.path, required this.dark, this.onTap});
 
-/// Primeiro ecrã do onboarding depois dos dados da conta: criar já o
-/// evento ou mais tarde (pedido 2026-11).
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Opacity(
+          opacity: onTap == null ? 0.35 : 1,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: dark ? AppTheme.ink : Colors.white,
+              shape: BoxShape.circle,
+              border: dark ? null : Border.all(color: AppTheme.ink, width: 1.5),
+            ),
+            alignment: Alignment.center,
+            child: LineIcon(path, size: 20, color: dark ? Colors.white : AppTheme.ink),
+          ),
+        ),
+      );
+}
+
+/// Criar já ou mais tarde (a conta "Utilizador" não tem de criar logo
+/// um evento).
 class _StartChoice extends StatelessWidget {
   final String name;
   final bool saving;
@@ -740,1361 +739,58 @@ class _StartChoice extends StatelessWidget {
   final VoidCallback onLater;
   final VoidCallback onExit;
 
-  const _StartChoice({
-    required this.name,
-    required this.saving,
-    required this.onNow,
-    required this.onLater,
-    required this.onExit,
-  });
+  const _StartChoice({required this.name, required this.saving, required this.onNow, required this.onLater, required this.onExit});
 
   @override
   Widget build(BuildContext context) {
-    return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(height: 44, child: Row(children: [CircleBackButton(onTap: onExit)])),
-              const SizedBox(height: 32),
-              Text(
-                'Olá, $name! Queres criar um evento já?',
-                style: const TextStyle(fontSize: AppFontSize.h1, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Podes criar agora ou entrar primeiro e ver os eventos públicos. Crias um evento quando quiseres no separador Eventos.',
-                style: TextStyle(fontSize: AppFontSize.base, height: 1.4, color: AppTheme.inkMuted),
-              ),
-              const Spacer(),
-              _BigButton(label: 'Criar um evento agora', onPressed: saving ? null : onNow),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: saving ? null : onLater,
-                child: saving
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Mais tarde', style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Duas opções lado a lado (Privado/Público, Grátis/Pago).
-class _ChoicePair extends StatelessWidget {
-  final (String, IconData, String) left;
-  final (String, IconData, String) right;
-  final bool rightSelected;
-  final ValueChanged<bool> onChanged;
-
-  const _ChoicePair({required this.left, required this.right, required this.rightSelected, required this.onChanged});
-
-  Widget _tile((String, IconData, String) o, bool selected, VoidCallback onTap) {
-    final (label, icon, hint) = o;
-    return Expanded(
-      child: Semantics(
-        button: true,
-        selected: selected,
-        child: SnappyTap(
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(icon, size: 22, color: selected ? Colors.white : AppTheme.accentOliveDark),
-                const SizedBox(height: 8),
-                Text(label,
-                    style: TextStyle(
-                        fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
-                const SizedBox(height: 2),
-                Text(hint,
-                    style: TextStyle(fontSize: AppFontSize.sm, color: selected ? Colors.white70 : AppTheme.inkMuted)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          _tile(left, !rightSelected, () => onChanged(false)),
-          const SizedBox(width: 10),
-          _tile(right, rightSelected, () => onChanged(true)),
-        ],
-      );
-}
-
-class _StepScaffold extends StatelessWidget {
-  final String question;
-  final String? subtitle;
-  final Widget child;
-
-  const _StepScaffold({required this.question, this.subtitle, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    // Várias perguntas na mesma página: sem scroll próprio e com o título
-    // mais pequeno (o da página fica por cima).
-    final inline = context.dependOnInheritedWidgetOfExactType<_InlineSteps>() != null;
-    final column = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            question,
-            style: TextStyle(
-              fontSize: inline ? 18 : AppFontSize.h1,
-              height: 34 / 28,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.ink,
-            ),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              subtitle!,
-              style: const TextStyle(
-                fontSize: AppFontSize.base + 1,
-                height: 22 / 15,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.inkMuted,
-              ),
-            ),
-          ],
-          SizedBox(height: inline ? 14 : 24),
-          child,
-        ],
-      );
-    if (inline) return Padding(padding: const EdgeInsets.only(top: 28), child: column);
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(top: 32, bottom: 16),
-      child: column,
-    );
-  }
-}
-
-/// Marca as perguntas que aparecem juntas numa página (sem scroll próprio).
-class _InlineSteps extends InheritedWidget {
-  const _InlineSteps({required super.child});
-
-  @override
-  bool updateShouldNotify(_InlineSteps oldWidget) => false;
-}
-
-/// Botão principal do onboarding: 54 de altura, cheio, cantos 16.
-class _BigButton extends StatelessWidget {
-  final String label;
-  final bool loading;
-  final VoidCallback? onPressed;
-
-  const _BigButton({required this.label, this.loading = false, this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 54,
-      child: FilledButton(
-        onPressed: loading ? () {} : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: AppTheme.ink,
-          disabledBackgroundColor: AppTheme.surface,
-          disabledForegroundColor: AppTheme.inkMuted,
-          shape: const StadiumBorder(),
-          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
-            fontSize: AppFontSize.lg,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        child: loading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.4,
-                  color: Colors.white,
-                ),
-              )
-            : Text(label),
-      ),
-    );
-  }
-}
-
-class _LabeledField extends StatefulWidget {
-  final String label;
-  final TextEditingController controller;
-  final String? hint;
-  final bool autofocus;
-  final TextInputType? keyboardType;
-  final String? suffix;
-
-  const _LabeledField({
-    required this.label,
-    required this.controller,
-    this.hint,
-    this.autofocus = false,
-    this.keyboardType,
-    this.suffix,
-  });
-
-  @override
-  State<_LabeledField> createState() => _LabeledFieldState();
-}
-
-class _LabeledFieldState extends State<_LabeledField> {
-  final _focus = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    _focus.addListener(() => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _focus.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final focused = _focus.hasFocus;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.label,
-          style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
-        ),
-        const SizedBox(height: 8),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          height: 54,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          alignment: Alignment.centerLeft,
-          decoration: BoxDecoration(
-            color: focused ? Colors.white : AppTheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(
-              color: focused ? AppTheme.accentOliveDark : Colors.transparent,
-              width: 1.5,
-            ),
-            boxShadow: focused
-                ? [
-                    BoxShadow(
-                      color: AppTheme.accentOliveDark.withValues(alpha: 0.12),
-                      spreadRadius: 4,
-                    ),
-                  ]
-                : null,
-          ),
-          child: TextField(
-            controller: widget.controller,
-            focusNode: _focus,
-            autofocus: widget.autofocus,
-            keyboardType: widget.keyboardType,
-            textCapitalization: widget.keyboardType == null
-                ? TextCapitalization.words
-                : TextCapitalization.none,
-            style: const TextStyle(fontSize: AppFontSize.lg + 1, color: AppTheme.ink),
-            decoration: InputDecoration(
-              isCollapsed: true,
-              contentPadding: EdgeInsets.zero,
-              filled: false,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              hintText: widget.hint,
-              suffixText: widget.suffix,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ───────────────────────── tipo de evento ─────────────────────────
-
-class _EventTypeTile extends StatelessWidget {
-  final EventType type;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _EventTypeTile({required this.type, required this.selected, required this.onTap});
-
-  IconData get _icon => switch (type) {
-        EventType.wedding => Hi.heartOutline,
-        EventType.baptism => Hi.sparkles,
-        EventType.birthday => Hi.cake,
-        EventType.communion => Hi.buildingLibrary,
-        EventType.engagement => Hi.sparkles,
-        EventType.vowRenewal => Hi.sparkles,
-        EventType.graduation => Hi.academicCap,
-        EventType.corporate => Hi.briefcase,
-        EventType.babyShower => Hi.faceSmile,
-        EventType.party => Hi.sparkles,
-        EventType.nightlife => Hi.musicalNote,
-        EventType.concert => Hi.microphone,
-        EventType.festival => Hi.musicalNote,
-        EventType.other => Hi.sparkles,
-      };
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: SnappyTap(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
-          child: Row(
-            children: [
-              Icon(_icon, size: 20, color: selected ? Colors.white : AppTheme.accentOliveDark),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  type.label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: AppFontSize.base,
-                    height: 1.15,
-                    fontWeight: FontWeight.w700,
-                    color: selected ? Colors.white : AppTheme.ink,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ───────────────────────── data ─────────────────────────
-
-const _weekdayNamesPt = [
-  'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira',
-  'Sexta-feira', 'Sábado', 'Domingo',
-];
-
-String _longDate(DateTime d) =>
-    '${_weekdayNamesPt[d.weekday - 1]}, ${d.day} de '
-    '${monthNamesPt[d.month - 1].toLowerCase()} de ${d.year}';
-
-String _monthYear(DateTime d) => '${monthNamesPt[d.month - 1]} de ${d.year}';
-
-DateTime _today() {
-  final now = DateTime.now();
-  return DateTime(now.year, now.month, now.day);
-}
-
-class _DateStep extends StatefulWidget {
-  final _DateMode mode;
-  final DateTime? date;
-  final ValueChanged<_DateMode> onMode;
-  final ValueChanged<DateTime> onDate;
-
-  const _DateStep({
-    required this.mode,
-    required this.date,
-    required this.onMode,
-    required this.onDate,
-  });
-
-  @override
-  State<_DateStep> createState() => _DateStepState();
-}
-
-class _DateStepState extends State<_DateStep> {
-  late DateTime _visible = DateTime(
-    (widget.date ?? _today()).year,
-    widget.mode == _DateMode.month ? 1 : (widget.date ?? _today()).month,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    final date = widget.date;
-    String? summary;
-    String? days;
-    if (date != null && widget.mode != _DateMode.unknown) {
-      summary = widget.mode == _DateMode.exact ? _longDate(date) : _monthYear(date);
-      final diff = date.difference(_today()).inDays;
-      if (diff >= 0) {
-        days = widget.mode == _DateMode.exact
-            ? 'em $diff dias'
-            : 'daqui a ~${(diff / 30).round()} meses';
-      }
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _Segmented(
-          options: const ['Dia certo', 'Só o mês', 'Não sabemos'],
-          selected: widget.mode.index,
-          onSelected: (i) => widget.onMode(_DateMode.values[i]),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(color: AppTheme.borderMuted),
-          ),
-          child: switch (widget.mode) {
-            _DateMode.exact => _MonthCalendar(
-                month: _visible,
-                selected: date,
-                onMonth: (m) => setState(() => _visible = m),
-                onDay: widget.onDate,
-              ),
-            _DateMode.month => _MonthPicker(
-                year: _visible.year,
-                selected: date,
-                onYear: (y) => setState(() => _visible = DateTime(y, _visible.month)),
-                onMonth: widget.onDate,
-              ),
-            _DateMode.unknown => const Padding(
-                padding: EdgeInsets.all(12),
-                child: Text(
-                  'Sem problema — podem escolher a data mais tarde, em Definições.',
-                  style: TextStyle(
-                    fontSize: AppFontSize.base,
-                    height: 1.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.inkMuted,
-                  ),
-                ),
-              ),
-          },
-        ),
-        if (summary != null) ...[
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppTheme.borderMuted)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Data escolhida',
-                        style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        summary,
-                        style: const TextStyle(
-                          fontSize: AppFontSize.base + 1,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.ink,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (days != null)
-                  Text(
-                    days,
-                    style: TextStyle(
-                      fontSize: AppFontSize.md,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.accentOliveDark,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _Segmented extends StatelessWidget {
-  final List<String> options;
-  final int selected;
-  final ValueChanged<int> onSelected;
-
-  const _Segmented({required this.options, required this.selected, required this.onSelected});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-      ),
-      child: Row(
-        children: [
-          for (var i = 0; i < options.length; i++)
-            Expanded(
-              child: SnappyTap(
-                onTap: () => onSelected(i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  height: 36,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: i == selected ? Colors.white : Colors.transparent,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                    boxShadow: i == selected
-                        ? const [
-                            BoxShadow(
-                              color: Color(0x1F171713),
-                              blurRadius: 3,
-                              offset: Offset(0, 1),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Text(
-                    options[i],
-                    style: TextStyle(
-                      fontSize: AppFontSize.md,
-                      fontWeight: i == selected ? FontWeight.w700 : FontWeight.w600,
-                      color: i == selected ? AppTheme.ink : AppTheme.inkMuted,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ArrowButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  const _ArrowButton({required this.icon, required this.label, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: label,
-      onPressed: onTap,
-      icon: Icon(icon, size: 20),
-      color: AppTheme.ink,
-      disabledColor: AppTheme.borderMuted,
-    );
-  }
-}
-
-class _MonthCalendar extends StatelessWidget {
-  final DateTime month;
-  final DateTime? selected;
-  final ValueChanged<DateTime> onMonth;
-  final ValueChanged<DateTime> onDay;
-
-  const _MonthCalendar({
-    required this.month,
-    required this.selected,
-    required this.onMonth,
-    required this.onDay,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final today = _today();
-    final first = DateTime(month.year, month.month);
-    final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
-    final leading = first.weekday - 1; // segunda = 0
-    final canGoBack = first.isAfter(DateTime(today.year, today.month));
-    final sel = selected;
-    final cells = <Widget>[
-      for (var i = 0; i < leading; i++) const SizedBox(),
-      for (var d = 1; d <= daysInMonth; d++)
-        Builder(builder: (context) {
-          final day = DateTime(month.year, month.month, d);
-          final isSelected = sel != null &&
-              sel.year == day.year &&
-              sel.month == day.month &&
-              sel.day == day.day;
-          final past = day.isBefore(today);
-          return Center(
-            child: SnappyTap(
-              onTap: past ? null : () => onDay(day),
-              child: Container(
-                width: 36,
-                height: 36,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected ? AppTheme.accentOliveDark : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  '$d',
-                  style: TextStyle(
-                    fontSize: AppFontSize.base,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                    color: isSelected
-                        ? Colors.white
-                        : past
-                            ? AppTheme.borderMuted
-                            : AppTheme.ink,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }),
-    ];
-    return Column(
-      children: [
-        Row(
-          children: [
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                _monthYear(month),
-                style: const TextStyle(
-                  fontSize: AppFontSize.base + 1,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.ink,
-                ),
-              ),
-            ),
-            _ArrowButton(
-              icon: Hi.chevronLeft,
-              label: 'Mês anterior',
-              onTap: canGoBack ? () => onMonth(DateTime(month.year, month.month - 1)) : null,
-            ),
-            _ArrowButton(
-              icon: Hi.chevronRight,
-              label: 'Mês seguinte',
-              onTap: () => onMonth(DateTime(month.year, month.month + 1)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            for (final w in weekdayAbbrPt)
-              Expanded(
-                child: Text(
-                  w,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: AppFontSize.xs,
-                    letterSpacing: 0.4,
-                    color: AppTheme.inkMuted,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        GridView.count(
-          crossAxisCount: 7,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: 1.1,
-          children: cells,
-        ),
-      ],
-    );
-  }
-}
-
-class _MonthPicker extends StatelessWidget {
-  final int year;
-  final DateTime? selected;
-  final ValueChanged<int> onYear;
-  final ValueChanged<DateTime> onMonth;
-
-  const _MonthPicker({
-    required this.year,
-    required this.selected,
-    required this.onYear,
-    required this.onMonth,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final today = _today();
-    final sel = selected;
-    return Column(
-      children: [
-        Row(
-          children: [
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                '$year',
-                style: const TextStyle(
-                  fontSize: AppFontSize.base + 1,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.ink,
-                ),
-              ),
-            ),
-            _ArrowButton(
-              icon: Hi.chevronLeft,
-              label: 'Ano anterior',
-              onTap: year > today.year ? () => onYear(year - 1) : null,
-            ),
-            _ArrowButton(
-              icon: Hi.chevronRight,
-              label: 'Ano seguinte',
-              onTap: () => onYear(year + 1),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        GridView.count(
-          crossAxisCount: 3,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 2.4,
-          children: [
-            for (var m = 1; m <= 12; m++)
-              Builder(builder: (context) {
-                final past = year < today.year || (year == today.year && m < today.month);
-                final isSelected = sel != null && sel.year == year && sel.month == m;
-                return SnappyTap(
-                  onTap: past ? null : () => onMonth(DateTime(year, m)),
-                  child: Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppTheme.accentOliveDark : AppTheme.surface,
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                    child: Text(
-                      monthNamesPt[m - 1].substring(0, 3),
-                      style: TextStyle(
-                        fontSize: AppFontSize.base,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                        color: isSelected
-                            ? Colors.white
-                            : past
-                                ? AppTheme.borderMuted
-                                : AppTheme.ink,
-                      ),
-                    ),
-                  ),
-                );
-              }),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-// ───────────────────────── região ─────────────────────────
-
-class _RegionStep extends StatelessWidget {
-  final TextEditingController controller;
-
-  const _RegionStep({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final current = controller.text.trim();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            border: Border.all(color: AppTheme.accentOliveDark),
-            boxShadow: AppTheme.searchBarShadow,
-          ),
-          child: Row(
-            children: [
-              const Icon(Hi.magnifyingGlass, size: 18, color: AppTheme.inkMuted),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  textCapitalization: TextCapitalization.words,
-                  style: const TextStyle(fontSize: AppFontSize.lg, color: AppTheme.ink),
-                  decoration: const InputDecoration(
-                    isCollapsed: true,
-                    contentPadding: EdgeInsets.zero,
-                    filled: false,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    hintText: 'Procurar concelho ou cidade',
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        const Text(
-          'REGIÕES',
-          style: TextStyle(
-            fontSize: AppFontSize.xs,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-            color: AppTheme.inkMuted,
-          ),
-        ),
+    return OnbStep(
+      onBack: onExit,
+      progress: 0.2,
+      title: 'Olá, $name! Queres criar um evento já?',
+      subtitle: 'Podes criar agora ou entrar primeiro e ver os eventos públicos. Crias um evento quando quiseres no separador Eventos.',
+      bottom: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        OnbButton(label: 'Criar um evento agora', onPressed: saving ? null : onNow),
         const SizedBox(height: 10),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 3.3,
-          children: [
-            for (final region in _regions)
-              Builder(builder: (context) {
-                final selected = current == region;
-                return Semantics(
-                  button: true,
-                  selected: selected,
-                  child: SnappyTap(
-                    onTap: () => controller.text = region,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: selected ? AppColors.gray : Colors.white,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(
-                          color: selected ? AppTheme.accentOliveDark : AppTheme.borderMuted,
-                          width: selected ? 1.5 : 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              region,
-                              style: TextStyle(
-                                fontSize: AppFontSize.base + 1,
-                                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                                color: AppTheme.ink,
-                              ),
-                            ),
-                          ),
-                          if (selected)
-                            Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: AppTheme.accentOliveDark,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Hi.check, size: 13, color: Colors.white),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-          ],
-        ),
-      ],
+        OnbButton(label: 'Mais tarde', secondary: true, loading: saving, onPressed: onLater),
+      ]),
+      child: const SizedBox.shrink(),
     );
   }
 }
 
-// ───────────────────────── convidados ─────────────────────────
-
-class _GuestEstimate extends StatelessWidget {
-  final int? value;
-  final ValueChanged<int?> onChanged;
-
-  const _GuestEstimate({required this.value, required this.onChanged});
-
-  static const _scales = [
-    (label: 'Até 50', caption: 'Íntimo', value: 50, min: 0, max: 50),
-    (label: '50–150', caption: 'Médio', value: 100, min: 51, max: 150),
-    (label: '150–250', caption: 'Grande', value: 200, min: 151, max: 250),
-    (label: '250+', caption: 'Festa', value: 280, min: 251, max: 100000),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final current = value;
-    Widget stepButton(IconData icon, String label, int? next) => Semantics(
-          button: true,
-          label: label,
-          child: SnappyTap(
-            onTap: () => onChanged(next),
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.borderMuted),
-              ),
-              child: Icon(icon, size: 20, color: AppTheme.ink),
-            ),
-          ),
-        );
-    final tables = current == null ? null : (current / 10).ceil();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            stepButton(
-              Hi.minus,
-              'Menos 10',
-              current == null || current <= 10 ? null : current - 10,
-            ),
-            Expanded(
-              child: Column(
-                children: [
-                  Text(
-                    current == null ? '—' : '$current',
-                    style: const TextStyle(
-                      fontSize: 56,
-                      height: 64 / 56,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.ink,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  const Text(
-                    'convidados',
-                    style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
-                  ),
-                ],
-              ),
-            ),
-            stepButton(Hi.plus, 'Mais 10', (current ?? 0) + 10),
-          ],
-        ),
-        const SizedBox(height: 32),
-        Row(
-          children: [
-            for (var i = 0; i < _scales.length; i++) ...[
-              if (i > 0) const SizedBox(width: 8),
-              Expanded(
-                child: Builder(builder: (context) {
-                  final s = _scales[i];
-                  final selected = current != null && current >= s.min && current <= s.max;
-                  return SnappyTap(
-                    onTap: () => onChanged(s.value),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: selected ? AppColors.gray : Colors.white,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(
-                          color: selected ? AppTheme.accentOliveDark : AppTheme.borderMuted,
-                          width: selected ? 1.5 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              s.label,
-                              style: const TextStyle(
-                                fontSize: AppFontSize.base,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.ink,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            s.caption,
-                            style: TextStyle(
-                              fontSize: AppFontSize.xs,
-                              color: selected ? AppTheme.accentOliveDark : AppTheme.inkMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ],
-          ],
-        ),
-        if (tables != null) ...[
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Hi.informationCircle, size: 20, color: AppTheme.accentOliveDark),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Com cerca de $current convidados, contem com umas $tables mesas de 10 pessoas.',
-                    style: const TextStyle(
-                      fontSize: AppFontSize.base,
-                      height: 20 / 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.inkMuted,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-// ───────────────────────── já tratado ─────────────────────────
-
-class _BookedStep extends ConsumerWidget {
-  final Set<String> selected;
-  final ValueChanged<String> onToggle;
-
-  const _BookedStep({required this.selected, required this.onToggle});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ref.watch(partnerCategoryOptionsProvider).when(
-          loading: () => const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-          error: (err, st) => const Text(
-            'Não foi possível carregar as categorias. Podes indicar isto depois em Definições.',
-            style: TextStyle(color: AppTheme.inkMuted),
-          ),
-          data: (categories) {
-            final major = _majorCategorySlugs
-                .map((slug) => categories.where((c) => c.slug == slug).firstOrNull)
-                .whereType<PartnerCategoryOption>()
-                .toList();
-            return Column(
-              children: [
-                for (final category in major) ...[
-                  Builder(builder: (context) {
-                    final on = selected.contains(category.slug);
-                    return SnappyTap(
-                      onTap: () => onToggle(category.slug),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 160),
-                        height: 56,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: on ? AppColors.gray : Colors.white,
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          border: Border.all(
-                            color: on ? AppTheme.accentOliveDark : AppTheme.borderMuted,
-                            width: on ? 1.5 : 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                category.label,
-                                style: const TextStyle(
-                                  fontSize: AppFontSize.base + 1,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppTheme.ink,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              on ? Hi.checkCircle : Icons.circle_outlined,
-                              size: 22,
-                              color: on ? AppTheme.accentOliveDark : AppTheme.borderMuted,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 8),
-                ],
-              ],
-            );
-          },
-        );
-  }
-}
-
-// ───────────────────────── resumo final ─────────────────────────
-
-/// Próximo passo sugerido para uma categoria ainda por tratar.
-const _nextStepTitles = {
-  'venue': 'Reservar o espaço',
-  'photography': 'Escolher fotógrafo',
-  'catering': 'Escolher o catering',
-  'music_dj': 'Escolher música ou DJ',
-};
-
-typedef _NextStep = ({String title, String subtitle, VoidCallback onTap});
-
+/// "Parabéns! 🎉" (mockup Pronto).
 class _DoneView extends StatelessWidget {
   final String name;
-  final Wedding wedding;
-  final EventType eventType;
-  final _DateMode dateMode;
-  final Set<String> bookedSlugs;
   final bool saving;
-  final void Function(String route, Object? extra) onStart;
-  final VoidCallback onInvite;
-
-  const _DoneView({
-    required this.name,
-    required this.wedding,
-    required this.eventType,
-    required this.dateMode,
-    required this.bookedSlugs,
-    required this.saving,
-    required this.onStart,
-    required this.onInvite,
-  });
+  final VoidCallback onGuests;
+  final VoidCallback onEvent;
+  const _DoneView({required this.name, required this.saving, required this.onGuests, required this.onEvent});
 
   @override
   Widget build(BuildContext context) {
-    final date = wedding.weddingDate;
-    final days = date?.difference(_today()).inDays;
-    final firstOpen =
-        _majorCategorySlugs.where((s) => !bookedSlugs.contains(s)).firstOrNull;
-    final isWedding = eventType == EventType.wedding;
-    final partner = wedding.partnerName2;
-
-    final steps = <_NextStep>[
-      if (firstOpen != null)
-        (
-          title: _nextStepTitles[firstOpen]!,
-          subtitle: 'O primeiro passo do vosso plano',
-          onTap: () => onStart('/partners', PartnerPickerArgs(categorySlug: firstOpen)),
-        ),
-      (
-        title: 'Fazer a lista de convidados',
-        subtitle: 'Comecem pela família mais próxima',
-        onTap: () => onStart('/guests', null),
-      ),
-      (
-        title: isWedding && partner != null
-            ? 'Convidar $partner'
-            : 'Convidar alguém para organizar',
-        subtitle: 'Planeiam juntos, cada um no seu telemóvel',
-        onTap: onInvite,
-      ),
-    ];
-
-    // Canvas "Onboarding 5 · Pronto" — mesmas linhas e mesmos tempos.
-    final rows = <(String, Widget?)>[
-      (
-        [
-          eventType.label,
-          if (date != null)
-            dateMode == _DateMode.month ? _monthYear(date) : '${date.day} ${monthNamesPt[date.month - 1].substring(0, 3).toLowerCase()} ${date.year}',
-          if (days != null && days >= 0)
-            dateMode == _DateMode.month ? 'daqui a ~${(days / 30).round()} meses' : 'daqui a $days dias',
-        ].join(' · '),
-        null,
-      ),
-      if (wedding.estimatedGuests != null || (wedding.location ?? '').isNotEmpty)
-        (
-          [
-            if (wedding.estimatedGuests != null) '${wedding.estimatedGuests} convidados',
-            if ((wedding.location ?? '').isNotEmpty) wedding.location!,
-          ].join(' · '),
-          null,
-        ),
-      (
-        partner != null && partner.isNotEmpty ? '$name e $partner a organizar' : '$name a organizar',
-        SnappyTap(
-          onTap: saving ? () {} : onInvite,
-          child: Text(
-            partner != null && partner.isNotEmpty ? 'Convidar' : 'Convidar alguém',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
-          ),
-        ),
-      ),
-      ('Primeiro passo: ${steps.first.title.toLowerCase()}', null),
-    ];
-
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: FallingConfetti(delay: Duration(milliseconds: 1900))),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 34),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 84),
-                  const Center(child: DuoClink(width: 210)),
-                  const SizedBox(height: 20),
-                  UpIn(
-                    delay: const Duration(milliseconds: 400),
-                    child: Text(
-                      'Tudo pronto, $name.',
-                      style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  UpIn(
-                    delay: const Duration(milliseconds: 550),
-                    child: Text(
-                      '${isWedding ? 'O vosso evento está montado' : 'O teu ${eventType.noun} está montado'}. Começamos pelo que tem prazo mais curto.',
-                      style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  for (final (i, (text, trailing)) in rows.indexed)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: UpIn(
-                        delay: Duration(milliseconds: 720 + 120 * i),
-                        child: ProntoRow(text: text, trailing: trailing),
-                      ),
-                    ),
-                  const Spacer(),
-                  UpIn(
-                    delay: const Duration(milliseconds: 1200),
-                    child: ShineSweep(
-                      delay: const Duration(milliseconds: 1600),
-                      child: _BigButton(
-                        label: firstOpen == 'venue' ? 'Começar pelo espaço' : 'Começar: ${steps.first.title.toLowerCase()}',
-                        loading: saving,
-                        onPressed: steps.first.onTap,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  UpIn(
-                    delay: const Duration(milliseconds: 1350),
-                    child: SizedBox(
-                      height: 48,
-                      child: TextButton(
-                        onPressed: saving ? null : () => onStart('/wedding', null),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppTheme.inkMuted,
-                          textStyle: const TextStyle(
-                            fontFamily: AppTheme.fontFamily,
-                            fontFamilyFallback: AppTheme.fontFamilyFallback,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        child: Text('Ir para o ${eventType.noun}'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 24),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const SizedBox(height: 44, child: OnbProgress(value: 1)),
+            Expanded(
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                const Text('Parabéns! 🎉',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 35, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                const SizedBox(height: 16),
+                Text('$name está criado. Agora é convidar.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+              ]),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InviteSheet extends StatefulWidget {
-  final String title;
-
-  const _InviteSheet({required this.title});
-
-  @override
-  State<_InviteSheet> createState() => _InviteSheetState();
-}
-
-class _InviteSheetState extends State<_InviteSheet> {
-  final _email = TextEditingController();
-
-  @override
-  void dispose() {
-    _email.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        24,
-        24,
-        24,
-        24 + MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            widget.title,
-            style: const TextStyle(
-              fontSize: AppFontSize.h3,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.ink,
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Enviamos um convite para organizarem juntos.',
-            style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
-          ),
-          const SizedBox(height: 20),
-          _LabeledField(
-            label: 'Email',
-            controller: _email,
-            keyboardType: TextInputType.emailAddress,
-            autofocus: true,
-          ),
-          const SizedBox(height: 20),
-          _BigButton(
-            label: 'Enviar convite',
-            onPressed: () => Navigator.of(context).pop(_email.text.trim()),
-          ),
-        ],
+            OnbButton(label: 'Adicionar convidados', loading: saving, onPressed: onGuests),
+            const SizedBox(height: 10),
+            OnbButton(label: 'Ver o evento', secondary: true, onPressed: saving ? null : onEvent),
+          ]),
+        ),
       ),
     );
   }
