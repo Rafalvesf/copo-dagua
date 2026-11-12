@@ -292,13 +292,14 @@ class PriceBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        constraints: const BoxConstraints(minWidth: 52),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        // Proporcional à caixa da data (2026-11-12: "um pouco grandes").
+        constraints: const BoxConstraints(minWidth: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Text(label,
-              style: const TextStyle(fontSize: 10, letterSpacing: 0.5, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
-          Text(value, style: const TextStyle(fontSize: 20, height: 1.05, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 9, height: 1.2, letterSpacing: 0.4, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+          Text(value, style: const TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         ]),
       );
 }

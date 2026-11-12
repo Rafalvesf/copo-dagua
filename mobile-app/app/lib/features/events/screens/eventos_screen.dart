@@ -363,15 +363,16 @@ class _PosterCard extends StatelessWidget {
                 Positioned(
                   left: 12,
                   top: 12,
+                  // Mais pequeno e da mesma altura do preço (2026-11-12).
                   child: Container(
-                    width: 46,
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    width: 40,
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
                     child: Column(children: [
                       Text(_months[date.month - 1],
-                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+                          style: const TextStyle(fontSize: 9, height: 1.2, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
                       Text('${date.day}',
-                          style: const TextStyle(fontSize: 20, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ]),
                   ),
                 ),
