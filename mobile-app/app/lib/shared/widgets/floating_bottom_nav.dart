@@ -182,7 +182,7 @@ class _NavIcon extends StatelessWidget {
         message: label,
         excludeFromSemantics: true,
         child: InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.md),
+      borderRadius: BorderRadius.circular(kNavRadius - 10),
       onTap: onTap,
       // Pill cinzenta no separador ativo (2026-11-11: "para ser mais
       // percetível").
@@ -191,7 +191,7 @@ class _NavIcon extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
           color: active ? const Color(0xFFEDEAE3) : Colors.transparent,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(kNavRadius - 10),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

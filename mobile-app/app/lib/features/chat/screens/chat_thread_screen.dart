@@ -490,10 +490,10 @@ class _QuickReply extends StatelessWidget {
           height: 34,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           alignment: Alignment.center,
+          // Sem fundo, só o contorno (pedido 2026-11-12).
           decoration: BoxDecoration(
-            color: Colors.white,
             borderRadius: BorderRadius.circular(17),
-            border: Border.all(color: const Color(0xFFE6E0D2), width: 1.5),
+            border: Border.all(color: const Color(0xFFD6D0C2), width: 1.5),
           ),
           child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ),
