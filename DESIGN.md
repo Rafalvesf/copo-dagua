@@ -24,7 +24,9 @@ cores, sombras ou tamanhos à mão quando já existe um.
 | Texto secundário / ícones inativos | `#57534E` | `AppTheme.inkMuted` |
 | Verde da marca | `#4F6B4A` | `AppTheme.accentOliveDark` |
 | Verde claro (etiquetas "sucesso", "Responde em ~1 h") | fundo `#E6EDE1`, texto `#3F7A4F` | — |
-| Amarelo de aviso (dentro da conversa) | fundo `#F7EACA`, texto `#5A3E0C` | — |
+| Alerta pendente (linha) | `#F2A01B` | `AlertTone.pending` |
+| Alerta urgente (linha) | `#C8553D` | `AlertTone.urgent` |
+| Alerta de convite (linha) | `#4F6B4A` | `AlertTone.invite` |
 | Etiqueta neutra | fundo `#F2F0EB`, texto `#3A3733` | — |
 | Divisórias dentro de cartões | `#ECE7DC`, 1 px | — |
 | Pílula ativa da navbar | `#EDEAE3` | — |
@@ -125,7 +127,26 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
   a 6; dia numa pílula `#E9E5DC`; "hh:mm · Visto"; ilha do evento flutuante
   com cantos da navbar, esconde-se no scroll.
 
-## 7. Texto e tom
+## 7. Alertas
+
+- **Nunca** fundo amarelo. Todos os alertas, avisos e etiquetas de estado
+  pendente são **fundo branco + linha fina (1,5 px) da cor do tom**, com um
+  ponto da mesma cor antes do texto e o botão de ação preto
+  (`AlertOutline`, `AlertStrip`, `shared/widgets/alert_outline.dart`).
+- Tons:
+  - **Amarelo** `#F2A01B` — pendente (para fazer, falta o sinal,
+    "Proposta por responder", taxas a descontar…).
+  - **Vermelho** `#C8553D` — urgente: o prazo acaba em **3 dias ou menos**
+    (ou já acabou). `toneForDue(prazo)` decide.
+  - **Verde** `#4F6B4A` — convite para um evento.
+- **Brilho:** ao aparecer (entrar na aba), a linha brilha uns segundos e
+  depois fica parada. Amarelo e verde 3 vezes (2 s / 2,4 s), vermelho 4 vezes
+  (1,4 s). Nunca a piscar sem parar.
+- Convite: uma linha fina (envelope num círculo verde claro, "CONVITE POR
+  RESPONDER" 11, frase 15 negrito, data 13, botão preto "Ver" 36), nunca um
+  bloco verde cheio.
+
+## 8. Texto e tom
 
 - Português de Portugal. "Taxa de serviço", nunca "comissão".
 - Botões com verbos curtos ("Pedir orçamento", "Ver evento").

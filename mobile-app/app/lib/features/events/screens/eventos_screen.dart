@@ -1,6 +1,7 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/text_case.dart';
 import 'package:copo_dagua_app/shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/snap_carousel.dart';
@@ -842,6 +843,8 @@ class _MyEventCard extends ConsumerWidget {
               if (showAlert) ...[
                 const SizedBox(height: 10),
                 AlertStrip(
+                  // Vermelho a 3 dias ou menos do evento (DESIGN.md).
+                  tone: toneForDue(wedding.weddingDate),
                   text: 'Para fazer: ${next!.title}',
                   cta: 'Fazer',
                   onTap: () {
@@ -908,6 +911,7 @@ class _InvitedEventCard extends ConsumerWidget {
               if (showAlert) ...[
                 const SizedBox(height: 10),
                 AlertStrip(
+                  tone: toneForDue(wedding.weddingDate),
                   text: switch (next!.$1) {
                     'rsvp' => 'Diz se vais',
                     'menu' => 'Escolhe o teu menu',
@@ -1029,37 +1033,44 @@ class _InviteNotice extends StatelessWidget {
     final fem = noun.startsWith('festa') || noun.startsWith('comunhão') || noun.startsWith('renovação');
     final what = noun == 'evento' ? 'um evento' : '${fem ? 'a' : 'o'} $noun';
     final date = wedding.weddingDate == null ? null : formatWeddingDateCaps(wedding.weddingDate!);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(22)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            const Icon(Hi.envelope, size: 18, color: Colors.white),
-            const SizedBox(width: 6),
-            Text(more > 0 ? 'CONVITES POR RESPONDER · ${more + 1}' : 'CONVITE POR RESPONDER',
-                style: const TextStyle(fontSize: 11, letterSpacing: 1.2, fontWeight: FontWeight.w800, color: Color(0xFFDDE5D3))),
-          ]),
-          const SizedBox(height: 8),
-          Text('${wedding.displayNames} ${two ? 'convidaram' : 'convidou'}-te para $what!',
-              style: const TextStyle(fontSize: 18, height: 1.25, fontWeight: FontWeight.w800, color: Colors.white)),
-          if (date != null) ...[
-            const SizedBox(height: 2),
-            Text(date, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFDDE5D3))),
-          ],
-          const SizedBox(height: 12),
-          SnappyTap(
-            onTap: () => context.go('/guest-home/${wedding.weddingId}'),
-            child: Container(
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-              child: const Text('Ver e confirmar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-            ),
+    // Mockup "Alertas" (2026-11-12): uma linha fina, branca, com
+    // contorno verde que brilha uns segundos ao entrar.
+    return SnappyTap(
+      onTap: () => context.go('/guest-home/${wedding.weddingId}'),
+      child: AlertOutline(
+        tone: AlertTone.invite,
+        radius: 22,
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+        child: Row(children: [
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(color: Color(0xFFE6EDE1), shape: BoxShape.circle),
+            child: const Icon(Hi.envelope, size: 18, color: Color(0xFF3F7A4F)),
           ),
-        ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Text(more > 0 ? 'CONVITES POR RESPONDER · ${more + 1}' : 'CONVITE POR RESPONDER',
+                  style: const TextStyle(fontSize: 11, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+              Text('${capFirst(wedding.displayNames)} ${two ? 'convidaram' : 'convidou'}-te para $what',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 15, height: 1.25, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              if (date != null)
+                Text(date, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+            ]),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+            child: const Text('Ver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+          ),
+        ]),
       ),
     );
   }

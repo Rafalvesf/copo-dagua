@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/line_icon.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -155,6 +156,15 @@ class MessageChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pendente: branco com linha amarela que brilha ao aparecer (DESIGN.md).
+    if (tone == MessageChipTone.warn) {
+      return AlertOutline(
+        tone: AlertTone.pending,
+        radius: 999,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: Text(text, maxLines: 1, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      );
+    }
     final (bg, fg) = switch (tone) {
       MessageChipTone.warn => (const Color(0xFFF7EACA), const Color(0xFF5A3E0C)),
       MessageChipTone.done => (const Color(0xFFE6EDE1), const Color(0xFF3F7A4F)),
