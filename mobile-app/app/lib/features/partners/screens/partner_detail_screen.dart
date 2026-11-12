@@ -1,6 +1,11 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:flutter/services.dart';
+import '../../../shared/public_link.dart';
+import '../../../shared/widgets/line_icon.dart';
 import '../../../core/chat/presence.dart' show responseLabel;
 import '../../../core/pending_deep_link.dart';
 import '../../../shared/widgets/install_app_sheet.dart';
@@ -274,341 +279,315 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
 
     final figureText = figureValue == null ? null : figure.format(figureValue);
     final ratingText = summary.count > 0
-        ? '${summary.average.toStringAsFixed(1).replaceAll('.', ',')} · ${summary.count}'
-        : 'Novo';
-    final gallery = photos.length > 1 ? photos.skip(1).take(6).toList() : const <String>[];
+        ? '${summary.average.toStringAsFixed(1).replaceAll('.', ',')} (${summary.count})'
+        : null;
+    final stats = ref.watch(partnerPublicStatsProvider(partner.id)).value;
+    final dateChip = weddingDate == null
+        ? null
+        : '${_shortDate(weddingDate)} · ${switch (relationshipStatus) {
+            PartnerRelationshipStatus.booked => 'Reservado',
+            PartnerRelationshipStatus.requestPending => 'Pedido enviado',
+            _ => 'Perguntar',
+          }}';
+    const ink = AppTheme.ink;
+    const muted = Color(0xFF57534E);
+    const cream = Color(0xFFF2F0EB);
 
-    // Redesign 2026-10-19 (pedido do utilizador): foto a toda a largura
-    // no topo da folha, conteúdo num cartão branco que sobe por cima,
-    // galeria em grelha, pacotes com preço e dois botões em baixo.
+    Widget chip(String text, {bool green = false}) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: green ? const Color(0xFFE6EDE1) : cream,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(text,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: green ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733))),
+        );
+    Widget stat(int n, String label) => Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(12)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('$n', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
+              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: muted)),
+            ]),
+          ),
+        );
+    Widget sectionTitle(String t, {String? action, VoidCallback? onAction}) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Expanded(child: Text(t, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ink))),
+            if (action != null)
+              SnappyTap(
+                onTap: onAction,
+                child: Text(action, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+              ),
+          ]),
+        );
+
+    final mainLabel = widget.selectionMode
+        ? 'Escolher parceiro'
+        : alreadyRelated
+            ? 'Mensagem'
+            : 'Pedir orçamento';
+    void mainAction() {
+      if (pub) return _needAccount();
+      if (widget.selectionMode) return Navigator.of(context).pop(partner);
+      if (alreadyRelated) {
+        _openChat();
+      } else {
+        _requestQuote();
+      }
+    }
+
+    // Mockup "Perfil do parceiro" (2026-11-12), tal e qual: foto a toda a
+    // largura (300), cartão branco por cima com nome, preço "Desde",
+    // descrição, números, etiquetas, quem segue e os dois botões;
+    // depois Pacotes, Avaliações e Onde fica, em cartões brancos.
     return Material(
-      color: Colors.white,
-      child: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _PhotoCarousel(
-                    photos: photos,
-                    fallbackColor: colorForCategorySlug(partner.primaryCategorySlug),
-                    fallbackIcon: iconForCategorySlug(partner.primaryCategorySlug),
-                    favorited: favorited,
-                    publicView: pub,
-                    onFavorite: () {
-                      if (!favorited) {
-                        for (final slug in partner.categorySlugs) {
-                          trackInterest(slug, 'favorite', partnerId: partner.id);
-                        }
-                      }
-                      ref.read(favoritePartnersControllerProvider.notifier).toggle(partner.id);
-                    },
-                  ),
-                  Container(
-                    transform: Matrix4.translationValues(0, -24, 0),
-                    padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 0),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    partner.name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: AppFontSize.h2,
-                                      height: 1.2,
-                                      color: AppTheme.ink,
-                                    ),
+      color: cream,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _PhotoCarousel(
+              photos: photos,
+              fallbackColor: colorForCategorySlug(partner.primaryCategorySlug),
+              fallbackIcon: iconForCategorySlug(partner.primaryCategorySlug),
+              favorited: favorited,
+              publicView: pub,
+              onShare: () => _share(partner),
+              onFavorite: () {
+                if (!favorited) {
+                  for (final slug in partner.categorySlugs) {
+                    trackInterest(slug, 'favorite', partnerId: partner.id);
+                  }
+                }
+                ref.read(favoritePartnersControllerProvider.notifier).toggle(partner.id);
+              },
+            ),
+            Transform.translate(
+              offset: const Offset(0, -28),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(partner.name,
+                            style: const TextStyle(fontSize: 22, height: 1.15, fontWeight: FontWeight.w700, color: ink)),
+                        Row(mainAxisSize: MainAxisSize.min, children: [
+                          FounderBadge(partner.id, long: true),
+                          ProBadge(partner.id),
+                        ]),
+                        const SizedBox(height: 4),
+                        Row(children: [
+                          const LineIcon(LineIcon.pin, size: 14, color: muted, stroke: 2.2, circles: LineIcon.pinCircle),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text.rich(
+                              TextSpan(children: [
+                                TextSpan(text: [
+                                  if (partner.location.isNotEmpty) partner.location,
+                                  partner.primaryCategoryLabel,
+                                ].join(' · ')),
+                                // A fonte não tem ★: estrela desenhada.
+                                if (ratingText != null) ...[
+                                  const TextSpan(text: ' · '),
+                                  const WidgetSpan(
+                                    alignment: PlaceholderAlignment.middle,
+                                    child: LineIcon(LineIcon.star, size: 12, fill: true, color: muted),
                                   ),
-                                  Row(mainAxisSize: MainAxisSize.min, children: [
-                                    FounderBadge(partner.id, long: true),
-                                    ProBadge(partner.id),
-                                  ]),
-                                  // @ único do parceiro (migração 163).
-                                  if (ref.watch(usernameOfProvider(partner.id)).value case final u?)
-                                    Text('@$u', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    [
-                                      partner.primaryCategoryLabel,
-                                      if (partner.location.isNotEmpty) partner.location,
-                                    ].join(' · '),
-                                    style: const TextStyle(fontSize: 13, color: v2Muted),
-                                  ),
+                                  TextSpan(text: ' $ratingText'),
                                 ],
-                              ),
+                              ]),
+                              maxLines: 2,
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: muted),
                             ),
-                            const SizedBox(width: 10),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: AppTheme.accentOliveDark,
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                const Icon(Hi.star, size: 14, color: Colors.white),
-                                const SizedBox(width: 3),
-                                Text(ratingText,
-                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+                          ),
+                        ]),
+                      ]),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      constraints: const BoxConstraints(minWidth: 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(10)),
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        Text(fromPrice == null ? 'POR' : 'DESDE',
+                            style: const TextStyle(fontSize: 9, letterSpacing: .4, fontWeight: FontWeight.w700, color: muted)),
+                        Text(fromPrice == null ? 'Orçamento' : euros(fromPrice),
+                            style: const TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w700, color: ink)),
+                      ]),
+                    ),
+                  ]),
+                  const SizedBox(height: 12),
+                  Text(
+                    partner.description.isEmpty ? 'Sem descrição.' : partner.description,
+                    textAlign: TextAlign.justify,
+                    style: const TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: ink),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    stat(stats?.followers ?? 0, 'Seguidores'),
+                    const SizedBox(width: 6),
+                    stat(summary.count, 'Avaliações'),
+                    const SizedBox(width: 6),
+                    stat(stats?.eventsDone ?? 0, 'Eventos feitos'),
+                  ]),
+                  if (figureText != null || dateChip != null || responds != null) ...[
+                    const SizedBox(height: 12),
+                    Wrap(spacing: 6, runSpacing: 6, children: [
+                      if (figureText != null) chip(figureText),
+                      if (dateChip != null) chip(dateChip),
+                      if (responds != null) chip(responds, green: true),
+                    ]),
+                  ],
+                  if (!widget.selectionMode)
+                    _PartnerFollow(
+                      partnerId: partner.id,
+                      onNeedAccount: pub ? _needAccount : null,
+                      second: ProfileButton(mainLabel, onTap: _requestingQuote || _openingChat ? null : mainAction),
+                    )
+                  else ...[
+                    const SizedBox(height: 12),
+                    ProfileButton(mainLabel, dark: true, onTap: mainAction),
+                  ],
+                ]),
+              ),
+            ),
+            if (packages.isNotEmpty) ...[
+              Transform.translate(
+                offset: const Offset(0, -28),
+                child: sectionTitle('Pacotes', action: '${packages.length} ${packages.length == 1 ? 'pacote' : 'pacotes'}'),
+              ),
+              Transform.translate(
+                offset: const Offset(0, -28),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                  child: Column(children: [
+                    for (var i = 0; i < packages.length; i++)
+                      SnappyTap(
+                        // Tocar num pacote: pedir esse pacote (ou falar, se já há pedido).
+                        onTap: widget.selectionMode
+                            ? null
+                            : pub
+                                ? _needAccount
+                                : alreadyRelated
+                                    ? _openChat
+                                    : () => _requestQuote(
+                                          initialMessage:
+                                              'Olá! Tenho interesse no pacote "${packages[i].name}" (${packages[i].isStartingPrice ? 'desde ' : ''}${euros(packages[i].price)}).',
+                                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            border: i == packages.length - 1 ? null : const Border(bottom: BorderSide(color: Color(0xFFECE7DC))),
+                          ),
+                          child: Row(children: [
+                            Expanded(
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text(packages[i].name,
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
+                                if (packages[i].description.trim().isNotEmpty)
+                                  Text(packages[i].description.trim(),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: muted)),
                               ]),
                             ),
-                          ],
+                            const SizedBox(width: 12),
+                            Text(
+                              packages[i].isStartingPrice ? 'desde ${euros(packages[i].price)}' : euros(packages[i].price),
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink),
+                            ),
+                          ]),
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          partner.description.isEmpty ? 'Sem descrição.' : partner.description,
-                          textAlign: TextAlign.justify,
-                          style: const TextStyle(fontSize: AppFontSize.base, height: 1.5, color: Color(0xFF3F3B37)),
-                        ),
-                        // "Responde em ~1 h" (184, mockup "Perfil do parceiro").
-                        if (responds != null) ...[
-                          const SizedBox(height: 12),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
-                              child: Text(responds,
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
-                            ),
-                          ),
-                        ],
-                        // Seguir (mockup "Perfil do parceiro", 2026-11-12).
-                        if (!widget.selectionMode) _PartnerFollow(partnerId: partner.id, onNeedAccount: pub ? _needAccount : null),
-                        const SizedBox(height: 16),
-                        // Capacidade ao lado do estado da data e do preço
-                        // "Desde" (pedido do utilizador, 2026-10-19).
-                        Row(
-                          children: [
-                            _InfoTile(
-                              label: figure.label,
-                              value: figureText ?? '—',
-                            ),
-                            const SizedBox(width: 8),
-                            _InfoTile(
-                              label: weddingDate == null ? 'Data' : _shortDate(weddingDate),
-                              value: switch (relationshipStatus) {
-                                PartnerRelationshipStatus.booked => 'Reservado',
-                                PartnerRelationshipStatus.requestPending => 'Pedido',
-                                _ => weddingDate == null ? 'Por definir' : 'Perguntar',
-                              },
-                              highlight: true,
-                            ),
-                            const SizedBox(width: 8),
-                            _InfoTile(
-                              label: fromPrice == null ? 'Por' : 'Desde',
-                              value: fromPrice == null ? 'Orçamento' : euros(fromPrice),
-                            ),
-                          ],
-                        ),
-                        if (gallery.isNotEmpty) ...[
-                          const SizedBox(height: 22),
-                          const _Heading('Galeria'),
-                          const SizedBox(height: 10),
-                          GridView.count(
-                            crossAxisCount: 3,
-                            mainAxisSpacing: 6,
-                            crossAxisSpacing: 6,
-                            shrinkWrap: true,
-                            padding: EdgeInsets.zero,
-                            physics: const NeverScrollableScrollPhysics(),
-                            children: [
-                              for (final url in gallery)
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(14),
-                                  child: Container(
-                                    color: colorForCategorySlug(partner.primaryCategorySlug),
-                                    child: SizedNetworkImage(url,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) => const SizedBox.shrink()),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                        if (packages.isNotEmpty) ...[
-                          const SizedBox(height: 22),
-                          _Heading('Pacotes', trailing: '${packages.length}'),
-                          const SizedBox(height: 10),
-                          for (final pk in packages) ...[
-                            Container(
-                              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                              decoration: softCard(radius: 18),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(pk.name,
-                                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                                        if (pk.description.trim().isNotEmpty)
-                                          Text(pk.description.trim(),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(fontSize: 12, color: v2Muted)),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        pk.isStartingPrice ? 'desde ${euros(pk.price)}' : euros(pk.price),
-                                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
-                                      ),
-                                      if (!widget.selectionMode) ...[
-                                        const SizedBox(height: 8),
-                                        // Pedir este pacote (ou falar sobre ele, se já
-                                        // há pedido/reserva) — pedido do utilizador,
-                                        // 2026-10-20.
-                                        _PackageButton(
-                                          label: alreadyRelated ? 'Falar' : 'Pedir',
-                                          busy: _requestingQuote || _openingChat,
-                                          onTap: pub
-                                              ? _needAccount
-                                              : alreadyRelated
-                                              ? _openChat
-                                              : () => _requestQuote(
-                                                    initialMessage:
-                                                        'Olá! Tenho interesse no pacote "${pk.name}" (${pk.isStartingPrice ? 'desde ' : ''}${euros(pk.price)}).',
-                                                  ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                        ],
-                        const SizedBox(height: 22),
-                        const _Heading('Avaliações'),
-                        const SizedBox(height: 10),
-                        _ReviewsSection(partnerId: partner.id, partnerName: partner.name, partnerAvatarUrl: partner.imageUrl),
-                        if (pub)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 18),
-                            child: Text(
-                              '"Seguir" e "Pedir orçamento" pedem para entrar ou criar conta, e voltam a esta página.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SafeArea(
-            top: false,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 14),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0x00FFFFFF), Colors.white],
-                  stops: [0, 0.35],
+                      ),
+                  ]),
                 ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: SizedBox(
-                      height: 52,
-                      child: FilledButton(
-                        onPressed: pub ? _needAccount : (_openingChat ? null : _openChat),
-                        child: const Text('Mensagem'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFF2F0EB),
-                          foregroundColor: AppTheme.ink,
-                          shape: const StadiumBorder(),
-                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback,
-                              fontSize: AppFontSize.md, fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    flex: 3,
-                    child: SizedBox(
-                      height: 52,
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.ink,
-                          shape: const StadiumBorder(),
-                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback,
-                              fontSize: AppFontSize.md, fontWeight: FontWeight.w700),
-                        ),
-                        onPressed: _requestingQuote || alreadyRelated
-                            ? null
-                            : () {
-                                if (pub) {
-                                  _needAccount();
-                                } else if (widget.selectionMode) {
-                                  Navigator.of(context).pop(partner);
-                                } else {
-                                  _requestQuote();
-                                }
-                              },
-                        child: Text(
-                          widget.selectionMode
-                              ? 'Escolher parceiro'
-                              : switch (relationshipStatus) {
-                                  PartnerRelationshipStatus.booked => 'Já reservado',
-                                  PartnerRelationshipStatus.requestPending => 'Pedido já enviado',
-                                  _ => 'Pedir orçamento',
-                                },
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+            ],
+            Transform.translate(
+              offset: const Offset(0, -28),
+              child: _ReviewsSection(
+                partnerId: partner.id,
+                partnerName: partner.name,
+                partnerAvatarUrl: partner.imageUrl,
+                title: (count, action, onAction) => sectionTitle('Avaliações', action: action, onAction: onAction),
               ),
             ),
-          ),
-        ],
+            if (partner.location.isNotEmpty)
+              Transform.translate(
+                offset: const Offset(0, -28),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  sectionTitle('Onde fica'),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      Container(
+                        height: 130,
+                        color: const Color(0xFFDDE5D3),
+                        alignment: Alignment.center,
+                        child: const LineIcon(LineIcon.pin, size: 30, color: Color(0xFF4F6B4A), circles: LineIcon.pinCircle),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                        child: Row(children: [
+                          Expanded(
+                            child: Text(partner.location,
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ink)),
+                          ),
+                          const SizedBox(width: 10),
+                          SnappyTap(
+                            onTap: () => launchUrl(
+                              Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent('${partner.name} ${partner.location}')}'),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: Text('Abrir mapa',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                          ),
+                        ]),
+                      ),
+                    ]),
+                  ),
+                ]),
+              ),
+            if (pub)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
+                child: Text(
+                  '"Seguir" e "Pedir orçamento" pedem para entrar ou criar conta, e voltam a esta página.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
-}
 
-class _Heading extends StatelessWidget {
-  final String text;
-  final String? trailing;
-  const _Heading(this.text, {this.trailing});
-
-  @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Expanded(
-            child: Text(text, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          ),
-          if (trailing != null)
-            Text(trailing!, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-        ],
-      );
+  Future<void> _share(Partner partner) async {
+    final link = publicLink('/parceiro/${partner.id}');
+    try {
+      await SharePlus.instance.share(ShareParams(text: '${partner.name} na À Nossa!: $link', subject: partner.name));
+    } catch (_) {
+      await Clipboard.setData(ClipboardData(text: link));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
+    }
+  }
 }
 
 const _monthAbbrPt = [
@@ -626,6 +605,7 @@ class _PhotoCarousel extends StatefulWidget {
   final IconData fallbackIcon;
   final bool favorited;
   final VoidCallback onFavorite;
+  final VoidCallback? onShare;
   final bool publicView;
 
   const _PhotoCarousel({
@@ -634,6 +614,7 @@ class _PhotoCarousel extends StatefulWidget {
     required this.fallbackIcon,
     required this.favorited,
     required this.onFavorite,
+    this.onShare,
     this.publicView = false,
   });
 
@@ -644,18 +625,30 @@ class _PhotoCarousel extends StatefulWidget {
 class _PhotoCarouselState extends State<_PhotoCarousel> {
   int _page = 0;
 
+  Widget _round(Widget icon, String label, VoidCallback onTap) => Semantics(
+        button: true,
+        label: label,
+        child: SnappyTap(
+          onTap: onTap,
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            child: icon,
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final photos = widget.photos;
     final top = MediaQuery.of(context).padding.top;
-    // Foto com cantos arredondados (pedido do utilizador, 2026-10-20).
+    // Mockup "Perfil do parceiro": foto a toda a largura, 300 de altura,
+    // botões brancos redondos e "1 / N fotos" em baixo à esquerda.
     return SizedBox(
-      height: 270 + top,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(10, top + 8, 10, 0),
-        child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: Stack(
+      height: 300 + top,
+      child: Stack(
         fit: StackFit.expand,
         children: [
           Container(
@@ -672,23 +665,11 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
                 errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
               ),
             ),
-          // Sombra suave no topo para a pega e o botão se lerem sobre a foto.
-          const IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment(0, -0.3),
-                  colors: [Color(0x40171713), Color(0x00171713)],
-                ),
-              ),
-            ),
-          ),
           if (widget.publicView) ...[
             // Página pública: marca à esquerda, "Abrir na app" à direita.
             Positioned(
-              top: 12,
-              left: 16,
+              top: top + 20,
+              left: 20,
               child: Container(
                 height: 44,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -699,8 +680,8 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
             ),
             if (kIsWeb)
               Positioned(
-                top: 12,
-                right: 16,
+                top: top + 20,
+                right: 20,
                 child: SnappyTap(
                   onTap: () {
                     PendingDeepLink.save(GoRouterState.of(context).uri.toString());
@@ -717,98 +698,54 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
                 ),
               ),
           ] else ...[
-          Positioned(
-            top: 12,
-            left: 16,
-            child: const CircleBackButton(),
-          ),
-          Positioned(
-            top: 12,
-            right: 16,
-            child: Semantics(
-              label: widget.favorited ? 'Remover dos favoritos' : 'Guardar nos favoritos',
-              child: CircleIconButton(
-                icon: widget.favorited ? Hi.heart : Hi.heartOutline,
-                background: Colors.white,
-                foreground: widget.favorited ? AppStatusColors.declined : AppTheme.ink,
-                size: 44,
-                onTap: widget.onFavorite,
-              ),
-            ),
-          ),
-          ],
-          if (photos.length > 1)
             Positioned(
-              right: 16,
-              bottom: 36,
+              top: top + 20,
+              left: 20,
+              child: _round(const LineIcon(LineIcon.back, stroke: 2.2), 'Voltar', () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                } else {
+                  context.go('/partners');
+                }
+              }),
+            ),
+            Positioned(
+              top: top + 20,
+              right: 20,
+              child: Row(children: [
+                if (widget.onShare != null) ...[
+                  _round(const LineIcon(LineIcon.share, size: 18, stroke: 2.2), 'Partilhar', widget.onShare!),
+                  const SizedBox(width: 8),
+                ],
+                _round(
+                  LineIcon(LineIcon.heart,
+                      size: 18,
+                      stroke: 2.2,
+                      fill: widget.favorited,
+                      color: widget.favorited ? AppStatusColors.declined : AppTheme.ink),
+                  widget.favorited ? 'Remover dos favoritos' : 'Guardar nos favoritos',
+                  widget.onFavorite,
+                ),
+              ]),
+            ),
+          ],
+          if (photos.isNotEmpty)
+            Positioned(
+              left: 20,
+              bottom: 44,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: const Color(0x66171713), borderRadius: BorderRadius.circular(999)),
-                child: Text('${_page + 1} / ${photos.length}',
+                decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(999)),
+                child: Text('${_page + 1} / ${photos.length} ${photos.length == 1 ? 'foto' : 'fotos'}',
                     style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
               ),
             ),
         ],
       ),
-        ),
-      ),
     );
   }
 }
 
-/// Quadrado de informação do topo (canvas: Capacidade / data / Desde),
-/// com os dados que a app tem de cada parceiro.
-class _InfoTile extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool highlight;
-
-  const _InfoTile({
-    required this.label,
-    required this.value,
-    this.highlight = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = highlight ? AppTheme.accentOliveDark : AppTheme.ink;
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: highlight
-            ? BoxDecoration(color: const Color(0xFFDCE4D8), borderRadius: BorderRadius.circular(18))
-            : softCard(radius: 18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: AppFontSize.sm,
-                color: highlight ? AppTheme.accentOliveDark : AppTheme.inkMuted,
-              ),
-            ),
-            const SizedBox(height: 2),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                value,
-                style: TextStyle(
-                  fontSize: AppFontSize.lg,
-                  fontWeight: FontWeight.w700,
-                  color: fg,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 
 
@@ -821,38 +758,48 @@ class _InfoTile extends StatelessWidget {
 /// Marketplace, pedido explícito do utilizador (2026-09-13), confirmado
 /// mesmo sabendo que expõe isso além de a quem tem uma relação real com
 /// o casal (o próprio parceiro avaliado).
-class _ReviewsSection extends ConsumerWidget {
+class _ReviewsSection extends ConsumerStatefulWidget {
   final String partnerId;
   final String partnerName;
   final String? partnerAvatarUrl;
 
-  const _ReviewsSection({required this.partnerId, required this.partnerName, this.partnerAvatarUrl});
+  /// Título "Avaliações" com "Ver todas (N)" (mockup).
+  final Widget Function(int count, String? action, VoidCallback? onAction) title;
+
+  const _ReviewsSection({required this.partnerId, required this.partnerName, this.partnerAvatarUrl, required this.title});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reviewsAsync = ref.watch(publicReviewsForPartnerProvider(partnerId));
-    return reviewsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, st) => const _ComingSoonSection(
-        message: 'Não foi possível carregar as avaliações.',
+  ConsumerState<_ReviewsSection> createState() => _ReviewsSectionState();
+}
+
+class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
+  bool _all = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final reviews = ref.watch(publicReviewsForPartnerProvider(widget.partnerId)).value ?? const <Review>[];
+    final shown = _all ? reviews : reviews.take(1).toList();
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      widget.title(
+        reviews.length,
+        reviews.length > 1 && !_all ? 'Ver todas (${reviews.length})' : null,
+        () => setState(() => _all = true),
       ),
-      data: (reviews) {
-        if (reviews.isEmpty) {
-          return const _ComingSoonSection(
-            message:
-                'Ainda sem avaliações — sê o primeiro a partilhar a tua experiência.',
-          );
-        }
-        return Column(
-          children: [
-            for (final review in reviews) ...[
-              ReviewTile(review: review, partnerName: partnerName, partnerAvatarUrl: partnerAvatarUrl),
-              const SizedBox(height: 12),
-            ],
-          ],
-        );
-      },
-    );
+      if (reviews.isEmpty)
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          child: const Text('Ainda sem avaliações.',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF57534E))),
+        )
+      else
+        for (final r in shown)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+            child: ReviewTile(review: r, partnerName: widget.partnerName, partnerAvatarUrl: widget.partnerAvatarUrl),
+          ),
+    ]);
   }
 }
 
@@ -981,74 +928,16 @@ class _RequestQuoteSheetState extends State<_RequestQuoteSheet> {
     );
   }
 }
-/// Botão pequeno de cada pacote: abre o pedido (ou a conversa) já sobre
-/// esse pacote.
-class _PackageButton extends StatelessWidget {
-  final String label;
-  final bool busy;
-  final VoidCallback onTap;
-  const _PackageButton({required this.label, required this.busy, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      child: Material(
-        color: AppTheme.accentOliveDark,
-        shape: const StadiumBorder(),
-        child: InkWell(
-          customBorder: const StadiumBorder(),
-          onTap: busy ? null : onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 6, 10, 6),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Text(label,
-                  style: const TextStyle(
-                      fontFamily: AppTheme.fontFamily,
-                      fontFamilyFallback: AppTheme.fontFamilyFallback,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
-              const SizedBox(width: 4),
-              const Icon(Hi.chatBubbleOvalLeft, size: 14, color: Colors.white),
-            ]),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ComingSoonSection extends StatelessWidget {
-  final String message;
-
-  const _ComingSoonSection({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: kInfoNoteColor,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Text(
-        message,
-        textAlign: TextAlign.center,
-        style: const TextStyle(color: AppTheme.ink, height: 1.4),
-      ),
-    );
-  }
-}
-
 /// Seguidores, amigos que seguem e o botão Seguir / A seguir.
 class _PartnerFollow extends ConsumerStatefulWidget {
   final String partnerId;
 
   /// Página pública sem sessão: o botão pede para entrar.
   final VoidCallback? onNeedAccount;
-  const _PartnerFollow({required this.partnerId, this.onNeedAccount});
+
+  /// Segundo botão ao lado de "Seguir" (mockup: "Pedir orçamento").
+  final Widget? second;
+  const _PartnerFollow({required this.partnerId, this.onNeedAccount, this.second});
 
   @override
   ConsumerState<_PartnerFollow> createState() => _PartnerFollowState();
@@ -1062,21 +951,28 @@ class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
     if (widget.onNeedAccount != null) {
       final followers = ref.watch(partnerPublicStatsProvider(widget.partnerId)).value?.followers ?? 0;
       return Padding(
-        padding: const EdgeInsets.only(top: 14),
+        padding: const EdgeInsets.only(top: 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (followers > 0) ...[
             Text('Seguido por $followers ${followers == 1 ? 'pessoa' : 'pessoas'} na À Nossa!',
                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
             const SizedBox(height: 12),
           ],
-          ProfileButton(followers > 0 ? 'Seguir · $followers' : 'Seguir', dark: true, onTap: widget.onNeedAccount),
+          Row(children: [
+            Expanded(child: ProfileButton('Seguir', dark: true, onTap: widget.onNeedAccount)),
+            if (widget.second != null) ...[const SizedBox(width: 8), Expanded(child: widget.second!)],
+          ]),
         ]),
       );
     }
     final info = ref.watch(partnerFollowInfoProvider(widget.partnerId)).value;
-    if (info == null) return const SizedBox.shrink();
+    if (info == null) {
+      return widget.second == null
+          ? const SizedBox.shrink()
+          : Padding(padding: const EdgeInsets.only(top: 12), child: widget.second!);
+    }
     return Padding(
-      padding: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.only(top: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (info.friends.isNotEmpty) ...[
           FollowedByRow(people: info.friends, text: followedByLine(info.friends, info.friendsCount, female: false)),
@@ -1085,7 +981,7 @@ class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
         Row(children: [
           Expanded(
             child: ProfileButton(
-              info.iFollow ? 'A seguir · ${info.followers}' : 'Seguir · ${info.followers}',
+              info.iFollow ? 'A seguir' : 'Seguir',
               dark: !info.iFollow,
               onTap: _busy
                   ? null
@@ -1105,6 +1001,7 @@ class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
                     },
             ),
           ),
+          if (widget.second != null) ...[const SizedBox(width: 8), Expanded(child: widget.second!)],
         ]),
       ]),
     );

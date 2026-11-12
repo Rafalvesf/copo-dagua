@@ -393,7 +393,6 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             decoration: BoxDecoration(
                               color: on ? AppTheme.accentOliveDark : Colors.white,
                               borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: on ? AppTheme.accentOliveDark : const Color(0xFFE4E1D8)),
                             ),
                             child: Text(o?.label ?? 'Todos',
                                 style: TextStyle(
@@ -436,13 +435,6 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 bottom: 0,
                                 width: todosW,
                                 child: pill(null),
-                              ),
-                              // Separador fino entre "Todos" e as categorias.
-                              Positioned(
-                                left: fadeStart + 8,
-                                top: 8,
-                                bottom: 8,
-                                child: Container(width: 1, color: const Color(0xFFDCD8CE)),
                               ),
                             ],
                           ),

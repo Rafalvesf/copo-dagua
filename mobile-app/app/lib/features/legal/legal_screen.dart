@@ -31,7 +31,7 @@ class LegalScreen extends StatelessWidget {
                 for (final s in doc.sections) ...[
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: whiteLineCard(radius: 18, line: AppTheme.borderMuted),
+                    decoration: whiteLineCard(radius: 18),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(s.title,
                           style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),

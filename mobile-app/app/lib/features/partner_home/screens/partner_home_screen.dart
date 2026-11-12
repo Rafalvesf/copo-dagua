@@ -344,8 +344,8 @@ class _RespondFirstCard extends StatelessWidget {
                     minimumSize: const Size.fromHeight(44),
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     foregroundColor: AppTheme.ink,
-                    side: const BorderSide(color: Color(0xFFE6E0D2)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                    shape: const StadiumBorder(),
                   ),
                   child: const Text('Recusar', style: TextStyle(fontWeight: FontWeight.w700)),
                 ),
@@ -359,7 +359,7 @@ class _RespondFirstCard extends StatelessWidget {
                     minimumSize: const Size.fromHeight(44),
                     backgroundColor: AppTheme.ink,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: const StadiumBorder(),
                   ),
                   child: const Text('Enviar orçamento', style: TextStyle(fontWeight: FontWeight.w700)),
                 ),
@@ -414,7 +414,7 @@ class _WeekStrip extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: b == null ? FontWeight.w500 : FontWeight.w700,
+                      fontWeight: b == null ? FontWeight.w600 : FontWeight.w700,
                       color: b == null ? AppTheme.inkMuted : AppTheme.ink,
                     )),
                 if (b != null)
@@ -631,7 +631,7 @@ class _ProHero extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: i == last.length - 1 ? FontWeight.w700 : FontWeight.w400,
+                        fontWeight: i == last.length - 1 ? FontWeight.w700 : FontWeight.w600,
                         color: i == last.length - 1 ? _gold : _proMuted,
                       ),
                     ),
@@ -814,7 +814,7 @@ class _ProUpsellCard extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: _gold,
                 foregroundColor: _proInk,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: const StadiumBorder(),
               ),
               child: const Text('Ser Premium', style: TextStyle(fontWeight: FontWeight.w700)),
             ),

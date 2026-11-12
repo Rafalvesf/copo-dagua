@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'line_icon.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -34,7 +35,7 @@ class PartnerNotificationBell extends ConsumerWidget {
             height: 44,
             decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
             child: Stack(children: [
-              const Center(child: Icon(Hi.bell, size: 20, color: AppTheme.ink)),
+              const Center(child: LineIcon(LineIcon.bell)),
               if (unread > 0)
                 Positioned(
                   top: 9,
@@ -144,7 +145,7 @@ class _PartnerNotificationsSheet extends ConsumerWidget {
                           title: Text(
                             n.title,
                             style: TextStyle(
-                              fontWeight: n.read ? FontWeight.w500 : FontWeight.w700,
+                              fontWeight: n.read ? FontWeight.w600 : FontWeight.w700,
                             ),
                           ),
                           subtitle: n.body == null ? null : Text(n.body!, maxLines: 2, overflow: TextOverflow.ellipsis),

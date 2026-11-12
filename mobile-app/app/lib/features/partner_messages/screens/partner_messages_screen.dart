@@ -51,7 +51,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
     final query = _search.text.trim().toLowerCase();
 
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.cream,
       body: Stack(
         children: [
           SafeArea(top: false, 
@@ -66,7 +66,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                     AppTheme.screenMargin,
                     0,
                   ),
-                  child: SearchPill(controller: _search, hint: 'Pesquisar conversas'),
+                  child: SearchPill(flat: true, controller: _search, hint: 'Pesquisar conversas'),
                 ),
                 const TeamThreadEntry()
  ],
@@ -113,7 +113,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                               decoration: BoxDecoration(
                                 color: on ? AppTheme.accentOliveDark : Colors.white,
                                 borderRadius: BorderRadius.circular(19),
-                                border: on ? null : Border.all(color: const Color(0xFFE6E0D2), width: 1.5),
+                                
                               ),
                               child: Row(mainAxisSize: MainAxisSize.min, children: [
                                 Text(label,

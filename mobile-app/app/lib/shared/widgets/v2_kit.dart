@@ -16,8 +16,7 @@ export 'sticker_icon.dart' show StickerIcon, DateSticker;
 /// e listas agrupadas.
 
 const softShadow = [
-  BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6)),
-  BoxShadow(color: Color(0x0D171713), blurRadius: 3, offset: Offset(0, 1)),
+  BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
 ];
 
 BoxDecoration softCard({double radius = 22, Color color = Colors.white}) => BoxDecoration(
@@ -161,7 +160,7 @@ class V2Avatar extends StatelessWidget {
   /// Plana, como nos mockups das Mensagens (2026-11-12): fundo de cor
   /// suave (sempre a mesma para o mesmo nome), sem aro nem sombra.
   final bool flat;
-  const V2Avatar(this.name, {super.key, this.size = 44, this.imageUrl, this.filled = false, this.flat = false});
+  const V2Avatar(this.name, {super.key, this.size = 44, this.imageUrl, this.filled = false, this.flat = true});
 
   static const _tints = [Color(0xFFE7D9C3), Color(0xFFDDE5D3), Color(0xFFF3DEE0), Color(0xFFE6EDE1), Color(0xFFEFE3CC), Color(0xFFE4E0EC)];
   static Color tintFor(String name) {
@@ -202,7 +201,7 @@ class V2Avatar extends StatelessWidget {
           ? null
           : Text(initials(name),
               style: TextStyle(
-                fontSize: flat ? (size >= 48 ? 16 : (size >= 40 ? 14 : 11)) : (size >= 40 ? 14 : 11),
+                fontSize: flat ? (size >= 70 ? 24 : (size >= 48 ? 16 : (size >= 40 ? 14 : 11))) : (size >= 40 ? 14 : 11),
                 fontWeight: FontWeight.w700,
                 color: filled ? Colors.white : AppTheme.accentOliveDark,
               )),
@@ -421,7 +420,7 @@ class V2BigButton extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               child: _label(),
@@ -431,7 +430,7 @@ class V2BigButton extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.ink,
                 side: BorderSide(color: AppTheme.ink, width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               child: _label(),

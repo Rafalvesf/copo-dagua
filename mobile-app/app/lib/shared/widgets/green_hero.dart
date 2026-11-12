@@ -34,7 +34,7 @@ class GreenHero extends StatelessWidget {
       decoration: BoxDecoration(
         color: c,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: const [BoxShadow(color: Color(0x24171713), blurRadius: 28, offset: Offset(0, 10))],
+        boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
       ),
       child: Stack(
         children: [

@@ -1,5 +1,5 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'line_icon.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'floating_bottom_nav.dart' show kNavRadius;
@@ -64,7 +64,7 @@ class ChatHeader extends StatelessWidget {
         ),
       ],
     );
-    Widget roundBtn(IconData icon, String tip, VoidCallback onTap) => Tooltip(
+    Widget roundBtn(Widget icon, String tip, VoidCallback onTap) => Tooltip(
           message: tip,
           child: SnappyTap(
             onTap: onTap,
@@ -73,7 +73,7 @@ class ChatHeader extends StatelessWidget {
               height: 44,
               alignment: Alignment.center,
               decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
-              child: Icon(icon, size: 22, color: AppTheme.ink),
+              child: icon,
             ),
           ),
         );
@@ -86,7 +86,7 @@ class ChatHeader extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(
           children: [
-            roundBtn(Hi.chevronLeft, 'Voltar', () => Navigator.of(context).maybePop()),
+            roundBtn(const LineIcon(LineIcon.back, stroke: 2.2), 'Voltar', () => Navigator.of(context).maybePop()),
             const SizedBox(width: 10),
             Expanded(child: onOpenProfile == null ? info : SnappyTap(onTap: onOpenProfile, child: info)),
             if (onReport != null) ...[
@@ -101,7 +101,7 @@ class ChatHeader extends StatelessWidget {
                   height: 44,
                   alignment: Alignment.center,
                   decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
-                  child: const Icon(Hi.ellipsisHorizontal, size: 22, color: AppTheme.ink),
+                  child: const LineIcon(LineIcon.dots, stroke: 2.4),
                 ),
               ),
             ],

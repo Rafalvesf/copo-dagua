@@ -94,7 +94,7 @@ Expanded(child: ScrollingHeader(
                     backgroundColor: AppTheme.ink,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+                    shape: const StadiumBorder(),
                   ),
                   child: const Text('Novo pedido de suporte'),
                 ),

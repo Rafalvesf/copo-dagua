@@ -8,7 +8,8 @@ import '../../core/theme/app_theme.dart';
 
 /// Qual tratamento de fundo em gradiente um ecrã deve usar — ver
 /// AppGradients para os valores concretos de cada um.
-enum AppBackground { hero, feed, subtle, mood }
+/// [cream]: creme liso #F2F0EB dos mockups (Perfil, Mensagens, Definições).
+enum AppBackground { hero, feed, subtle, mood, cream }
 
 /// Scaffold com fundo em gradiente. ThemeData.scaffoldBackgroundColor só
 /// aceita uma Color sólida, por isso este widget pinta o gradiente num
@@ -51,6 +52,8 @@ class GradientScaffold extends StatelessWidget {
         return AppGradients.subtle;
       case AppBackground.mood:
         return null;
+      case AppBackground.cream:
+        return const LinearGradient(colors: [Color(0xFFF2F0EB), Color(0xFFF2F0EB)]);
     }
   }
 

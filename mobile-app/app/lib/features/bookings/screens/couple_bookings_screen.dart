@@ -389,9 +389,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     backgroundColor: AppTheme.ink,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
+                    shape: const StadiumBorder(),
                   ),
                   child: Text(
                     'Pagar sinal — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}',
@@ -413,9 +411,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     backgroundColor: AppTheme.ink,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
+                    shape: const StadiumBorder(),
                   ),
                   child: Text(
                     'Pagar restante — ${euros(amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct), cents: true)}',
@@ -616,9 +612,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
                 backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                ),
+                shape: const StadiumBorder(),
               ),
               child: Text(_accepting ? 'A aceitar...' : 'Aceitar proposta'),
             ),
@@ -676,9 +670,7 @@ class ReviewAction extends ConsumerWidget {
               foregroundColor: AppTheme.accentOliveDark,
               side: BorderSide(color: AppTheme.accentOliveDark),
               padding: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
+              shape: const StadiumBorder(),
             ),
             child: Text('Avaliar ${booking.partnerName}'),
           ),
@@ -866,9 +858,7 @@ class ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
               backgroundColor: AppTheme.ink,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
+              shape: const StadiumBorder(),
             ),
             child: Text(
               _submitting
@@ -916,7 +906,7 @@ class _TabSwitch extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: c.withValues(alpha: 0.45)),
-        boxShadow: const [BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6))],
+        boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
       ),
       child: Row(children: [tab('Serviços', !guests, false), const SizedBox(width: 4), tab('Convidados', guests, true)]),
     );

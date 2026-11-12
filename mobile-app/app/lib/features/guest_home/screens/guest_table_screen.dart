@@ -135,7 +135,7 @@ class GuestTableScreen extends ConsumerWidget {
                                       Text(me ? 'Tu' : roster[k].fullName.split(' ').first,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(fontSize: 10, fontWeight: me ? FontWeight.w700 : FontWeight.w400, color: AppTheme.ink)),
+                                          style: TextStyle(fontSize: 10, fontWeight: me ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink)),
                                     ]),
                                   ),
                                 );

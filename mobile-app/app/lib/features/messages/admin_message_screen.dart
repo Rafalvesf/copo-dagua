@@ -108,7 +108,7 @@ class _AdminMessageScreenState extends State<AdminMessageScreen> {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(18),
-                            decoration: whiteLineCard(radius: 20, line: AppTheme.borderMuted),
+                            decoration: whiteLineCard(radius: 20),
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               if ((m['image_url'] as String?)?.isNotEmpty == true) ...[
                                 ClipRRect(

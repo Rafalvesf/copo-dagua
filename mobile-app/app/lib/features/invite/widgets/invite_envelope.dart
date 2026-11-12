@@ -240,7 +240,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                   style: TextStyle(
                     fontSize: 13,
                     letterSpacing: _wedding ? 2.4 : 0,
-                    fontWeight: _wedding ? FontWeight.w700 : FontWeight.w400,
+                    fontWeight: _wedding ? FontWeight.w700 : FontWeight.w600,
                     color: _muted,
                   ),
                 ),
@@ -253,7 +253,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                     style: FilledButton.styleFrom(
                       backgroundColor: _paper,
                       foregroundColor: _ink,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: const StadiumBorder(),
                       textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
                     ),
                     child: const Text('Abrir convite'),

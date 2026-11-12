@@ -221,7 +221,7 @@ class TeamThreadEntry extends ConsumerWidget {
             borderRadius: BorderRadius.circular(20),
             // Conversa fixa: contorno verde (mockup 2026-11).
             border: Border.all(color: AppTheme.accentOliveDark, width: 1.5),
-            boxShadow: const [BoxShadow(color: Color(0x14171713), blurRadius: 18, offset: Offset(0, 6))],
+            boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
           ),
           child: Row(children: [
             ClipOval(child: Image.asset('assets/mascot/duo_clink.png', width: 40, height: 40, fit: BoxFit.cover)),
@@ -248,7 +248,7 @@ class TeamThreadEntry extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontSize: 13,
-                        fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+                        fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
                         color: unread ? AppTheme.ink : AppTheme.inkMuted)),
               ]),
             ),

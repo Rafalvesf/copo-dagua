@@ -51,7 +51,7 @@ class FloatingBottomNav extends ConsumerWidget {
       // `minimum` garante a margem da ilha mesmo em ambientes sem
       // inset de safe-area real (ex: preview web) — soma-se ao inset
       // real do dispositivo quando existe (ex: home indicator do iOS).
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 20),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -188,7 +188,7 @@ class _NavIcon extends StatelessWidget {
       // percetível").
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: active ? const Color(0xFFEDEAE3) : Colors.transparent,
           borderRadius: BorderRadius.circular(kNavRadius - 10),
@@ -201,7 +201,7 @@ class _NavIcon extends StatelessWidget {
             // de "Os noivos" (ícone Material vs avatar), desalinhando
             // o texto entre os separadores.
             SizedBox(
-              height: 32,
+              height: 26,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -209,7 +209,7 @@ class _NavIcon extends StatelessWidget {
                     child: Icon(
                         active ? activeIcon : icon,
                         color: color,
-                        size: 26,
+                        size: 24,
                       ),
                   ),
                   if (badgeCount > 0)
@@ -221,11 +221,11 @@ class _NavIcon extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11.5, fontWeight: active ? FontWeight.w800 : FontWeight.w600, color: color)),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
           ],
         ),
       ),

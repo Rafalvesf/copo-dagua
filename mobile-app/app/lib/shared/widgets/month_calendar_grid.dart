@@ -106,7 +106,7 @@ class MonthCalendarGrid extends StatelessWidget {
                       label,
                       style: const TextStyle(
                         fontSize: 10,
-                        fontWeight: FontWeight.w400,
+                        fontWeight: FontWeight.w600,
                         color: AppTheme.inkMuted,
                       ),
                     ),

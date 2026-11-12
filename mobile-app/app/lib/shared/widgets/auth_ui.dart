@@ -28,7 +28,7 @@ class AuthPage extends StatelessWidget {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, c) => SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 34),
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: c.maxHeight - 46),
               child: IntrinsicHeight(
@@ -103,7 +103,7 @@ class AuthHeading extends StatelessWidget {
           const SizedBox(height: 28),
         Text(title, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 8),
-        Text(subtitle, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted)),
+        Text(subtitle, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
       ],
     );
   }
@@ -247,7 +247,7 @@ class AuthPrimaryButton extends StatelessWidget {
           backgroundColor: AppTheme.ink,
           disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.45),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: const StadiumBorder(),
           textStyle: const TextStyle(
             fontFamily: AppTheme.fontFamily,
             fontFamilyFallback: AppTheme.fontFamilyFallback,
@@ -284,7 +284,7 @@ class AuthSocialButton extends StatelessWidget {
             backgroundColor: Colors.white,
             foregroundColor: AppTheme.ink,
             side: const BorderSide(color: AppTheme.borderMuted),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: const StadiumBorder(),
             textStyle: const TextStyle(
               fontFamily: AppTheme.fontFamily,
               fontFamilyFallback: AppTheme.fontFamilyFallback,

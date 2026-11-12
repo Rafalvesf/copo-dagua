@@ -603,7 +603,7 @@ class _InfoRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: const TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w500)),
+                  Text(label, style: const TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w600)),
                   if (subtitle != null) ...[
                     const SizedBox(height: 4),
                     Text(subtitle!, style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md)),

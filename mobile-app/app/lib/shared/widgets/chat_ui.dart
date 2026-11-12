@@ -1,5 +1,5 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'line_icon.dart';
 
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
@@ -347,7 +347,7 @@ class ChatComposer extends StatelessWidget {
                     height: 44,
                     alignment: Alignment.center,
                     decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
-                    child: const Icon(Hi.plus, color: AppTheme.ink, size: 22),
+                    child: const LineIcon(LineIcon.plus, stroke: 2.4),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -390,7 +390,7 @@ class ChatComposer extends StatelessWidget {
                     color: AppTheme.ink,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Hi.arrowUp, color: Colors.white, size: 20),
+                  child: const LineIcon(LineIcon.sendUp, size: 18, color: Colors.white, stroke: 2.4),
                 ),
               ),
             ],

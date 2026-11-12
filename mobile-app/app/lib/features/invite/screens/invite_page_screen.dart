@@ -448,7 +448,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.blue,
                 foregroundColor: AppTheme.ink,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               child: const Text('Continuar aqui'),
@@ -622,7 +622,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                     minimumSize: const Size(0, 54),
                     foregroundColor: AppTheme.ink,
                     side: const BorderSide(color: AppTheme.ink, width: 1.5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                    shape: const StadiumBorder(),
                   ),
                   child: const Text('Não vou poder'),
                 ),
@@ -635,7 +635,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(0, 54),
                     backgroundColor: AppTheme.ink,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                    shape: const StadiumBorder(),
                   ),
                   child: _busy
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
@@ -747,7 +747,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                         style: FilledButton.styleFrom(
                           minimumSize: const Size(0, 44),
                           backgroundColor: AppTheme.ink,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                          shape: const StadiumBorder(),
                         ),
                         child: Text(kIsWeb && !widget.fromInstall ? 'Criar conta aqui' : 'Criar conta'),
                       ),
@@ -761,7 +761,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                             minimumSize: const Size(0, 44),
                             foregroundColor: AppTheme.ink,
                             side: const BorderSide(color: AppTheme.ink, width: 1.5),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                            shape: const StadiumBorder(),
                           ),
                           child: const Text('Ter a app'),
                         ),

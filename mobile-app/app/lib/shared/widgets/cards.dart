@@ -219,7 +219,7 @@ class ConversationListItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+                        fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
                         color: AppTheme.ink,
                       ),
                     ),
@@ -243,7 +243,7 @@ class ConversationListItem extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         color: unread ? AppTheme.accentOliveDark : AppTheme.inkMuted,
-                        fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+                        fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
                       ),
                     ),
                   if (unread) ...[
@@ -350,7 +350,7 @@ class ConversationListItem extends StatelessWidget {
                             _timeLabel!,
                             style: TextStyle(
                               color: unread ? AppTheme.accentOliveDark : AppTheme.inkMuted,
-                              fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+                              fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
                               fontSize: AppFontSize.xs,
                             ),
                           ),
@@ -368,7 +368,7 @@ class ConversationListItem extends StatelessWidget {
                             style: const TextStyle(
                               color: AppTheme.inkMuted,
                               fontSize: 14,
-                              fontWeight: FontWeight.w300,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),

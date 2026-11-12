@@ -36,7 +36,7 @@ class PublicStateView extends StatelessWidget {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 26, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                style: const TextStyle(fontSize: 22, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink),
               ),
               if (message != null) ...[
                 const SizedBox(height: 10),

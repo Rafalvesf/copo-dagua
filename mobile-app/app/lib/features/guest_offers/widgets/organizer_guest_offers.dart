@@ -136,7 +136,7 @@ class _Hero extends StatelessWidget {
       decoration: BoxDecoration(
         color: c,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: const [BoxShadow(color: Color(0x24171713), blurRadius: 28, offset: Offset(0, 10))],
+        boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,8 +181,7 @@ class _ReservationRow extends StatelessWidget {
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(color: Color(0x14171713), offset: Offset(0, 3)),
-          BoxShadow(color: Color(0x1A171713), blurRadius: 12, offset: Offset(0, 4)),
+          BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
         ],
       ),
       alignment: Alignment.center,
@@ -477,7 +476,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
           label: Text(text, style: TextStyle(color: value == null ? AppTheme.inkMuted : AppTheme.ink)),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(0, 48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: const StadiumBorder(),
           ),
         ),
       );
@@ -590,7 +589,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
                 style: FilledButton.styleFrom(
                   backgroundColor: c,
                   minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  shape: const StadiumBorder(),
                 ),
                 child: Text(_saving ? 'A guardar…' : 'Guardar'),
               ),

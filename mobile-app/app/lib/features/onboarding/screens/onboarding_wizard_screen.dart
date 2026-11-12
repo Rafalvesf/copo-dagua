@@ -411,7 +411,7 @@ class _OnboardingWizardScreenState
       background: AppBackground.subtle,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -436,7 +436,7 @@ class _OnboardingWizardScreenState
                           foregroundColor: AppTheme.inkMuted,
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                             fontSize: AppFontSize.base,
-                            fontWeight: FontWeight.w300,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         child: const Text('Saltar'),
@@ -493,7 +493,7 @@ class _OnboardingWizardScreenState
                                   ),
                                   const SizedBox(height: 6),
                                   Text(_step == 1 ? 'Tudo isto muda-se depois.' : 'Uma estimativa chega. Podes saltar.',
-                                      style: const TextStyle(fontSize: AppFontSize.base + 1, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted)),
+                                      style: const TextStyle(fontSize: AppFontSize.base + 1, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                                   for (final st in _currentSteps) _buildStep(context, st),
                                 ],
                               ),
@@ -754,7 +754,7 @@ class _StartChoice extends StatelessWidget {
       background: AppBackground.subtle,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -870,7 +870,7 @@ class _StepScaffold extends StatelessWidget {
               style: const TextStyle(
                 fontSize: AppFontSize.base + 1,
                 height: 22 / 15,
-                fontWeight: FontWeight.w300,
+                fontWeight: FontWeight.w600,
                 color: AppTheme.inkMuted,
               ),
             ),
@@ -913,9 +913,7 @@ class _BigButton extends StatelessWidget {
           backgroundColor: AppTheme.ink,
           disabledBackgroundColor: AppTheme.surface,
           disabledForegroundColor: AppTheme.inkMuted,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
+          shape: const StadiumBorder(),
           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
             fontSize: AppFontSize.lg,
             fontWeight: FontWeight.w700,
@@ -1185,7 +1183,7 @@ class _DateStepState extends State<_DateStep> {
                   style: TextStyle(
                     fontSize: AppFontSize.base,
                     height: 1.5,
-                    fontWeight: FontWeight.w300,
+                    fontWeight: FontWeight.w600,
                     color: AppTheme.inkMuted,
                   ),
                 ),
@@ -1281,7 +1279,7 @@ class _Segmented extends StatelessWidget {
                     options[i],
                     style: TextStyle(
                       fontSize: AppFontSize.md,
-                      fontWeight: i == selected ? FontWeight.w700 : FontWeight.w400,
+                      fontWeight: i == selected ? FontWeight.w700 : FontWeight.w600,
                       color: i == selected ? AppTheme.ink : AppTheme.inkMuted,
                     ),
                   ),
@@ -1359,7 +1357,7 @@ class _MonthCalendar extends StatelessWidget {
                   '$d',
                   style: TextStyle(
                     fontSize: AppFontSize.base,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                     color: isSelected
                         ? Colors.white
                         : past
@@ -1498,7 +1496,7 @@ class _MonthPicker extends StatelessWidget {
                       monthNamesPt[m - 1].substring(0, 3),
                       style: TextStyle(
                         fontSize: AppFontSize.base,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                         color: isSelected
                             ? Colors.white
                             : past
@@ -1606,7 +1604,7 @@ class _RegionStep extends StatelessWidget {
                               region,
                               style: TextStyle(
                                 fontSize: AppFontSize.base + 1,
-                                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                                 color: AppTheme.ink,
                               ),
                             ),
@@ -1776,7 +1774,7 @@ class _GuestEstimate extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: AppFontSize.base,
                       height: 20 / 14,
-                      fontWeight: FontWeight.w300,
+                      fontWeight: FontWeight.w600,
                       color: AppTheme.inkMuted,
                     ),
                   ),
@@ -1967,7 +1965,7 @@ class _DoneView extends StatelessWidget {
           const Positioned.fill(child: FallingConfetti(delay: Duration(milliseconds: 1900))),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 34),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -1986,7 +1984,7 @@ class _DoneView extends StatelessWidget {
                     delay: const Duration(milliseconds: 550),
                     child: Text(
                       '${isWedding ? 'O vosso evento está montado' : 'O teu ${eventType.noun} está montado'}. Começamos pelo que tem prazo mais curto.',
-                      style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
+                      style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -2023,7 +2021,7 @@ class _DoneView extends StatelessWidget {
                             fontFamily: AppTheme.fontFamily,
                             fontFamilyFallback: AppTheme.fontFamilyFallback,
                             fontSize: 15,
-                            fontWeight: FontWeight.w300,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         child: Text('Ir para o ${eventType.noun}'),
@@ -2082,7 +2080,7 @@ class _InviteSheetState extends State<_InviteSheet> {
           const SizedBox(height: 6),
           const Text(
             'Enviamos um convite para organizarem juntos.',
-            style: TextStyle(fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
+            style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
           ),
           const SizedBox(height: 20),
           _LabeledField(

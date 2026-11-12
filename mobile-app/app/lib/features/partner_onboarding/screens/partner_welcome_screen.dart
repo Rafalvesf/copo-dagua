@@ -541,7 +541,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 34),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -579,7 +579,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                     disabledBackgroundColor: AppTheme.borderMuted,
                     foregroundColor: Colors.white,
                     disabledForegroundColor: AppTheme.inkMuted,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: const StadiumBorder(),
                     textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   child: _saving
@@ -1035,7 +1035,7 @@ class _IntroView extends StatelessWidget {
       background: AppBackground.hero,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 34),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -1060,7 +1060,7 @@ class _IntroView extends StatelessWidget {
                         'logótipo, portefólio de fotos, descrição, área '
                         'de serviço, NIF e preços, mais dois passos '
                         'opcionais no fim.',
-                        style: TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
+                        style: TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
                       ),
                     ],
                   ),
@@ -1106,7 +1106,7 @@ class _StepScaffold extends StatelessWidget {
         Text(question, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         if (subtitle != null && subtitle!.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text(subtitle!, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted)),
+          Text(subtitle!, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
         ],
         const SizedBox(height: 22),
         child,
@@ -1198,7 +1198,7 @@ class _Pill extends StatelessWidget {
             ],
             Text(
               label,
-              style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.w700 : FontWeight.w400, color: selected ? Colors.white : AppTheme.ink),
+              style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.w700 : FontWeight.w600, color: selected ? Colors.white : AppTheme.ink),
             ),
           ],
         ),
@@ -1250,7 +1250,7 @@ class _RadioRow extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 15, fontWeight: selected ? FontWeight.w700 : FontWeight.w400, color: AppTheme.ink),
+                  style: TextStyle(fontSize: 15, fontWeight: selected ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink),
                 ),
               ),
             ],
@@ -1336,7 +1336,7 @@ class _SentViewState extends State<_SentView> {
           ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(28, 12, 28, 34),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 34),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -1355,7 +1355,7 @@ class _SentViewState extends State<_SentView> {
                     delay: Duration(milliseconds: 1450),
                     child: Text(
                       'A equipa revê o perfil e fica visível aos clientes assim que estiver aprovado.',
-                      style: TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w300, color: AppTheme.inkMuted),
+                      style: TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
                     ),
                   ),
                   const SizedBox(height: 24),
