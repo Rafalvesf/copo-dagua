@@ -243,3 +243,17 @@ final eventEntryProvider = FutureProvider.family<({bool paid, double? price}), S
 Future<void> setEventEntry(String weddingId, {required bool paid, double? price}) async {
   await supabase.from('weddings').update({'is_paid': paid, 'entry_price': paid ? price : null}).eq('id', weddingId);
 }
+
+/// O organizador já ativou os pagamentos (conta Stripe pronta para
+/// receber o dinheiro dos bilhetes)? Antes de pôr preço numa entrada,
+/// tem de os ativar em `/bilhetes/ativar` (pedido 2026-11-12).
+Future<bool> organizerPaymentsReady() async {
+  final id = supabase.auth.currentUser?.id;
+  if (id == null) return false;
+  try {
+    final row = await supabase.from('profiles').select('stripe_charges_enabled').eq('id', id).maybeSingle();
+    return row?['stripe_charges_enabled'] == true;
+  } catch (_) {
+    return false;
+  }
+}

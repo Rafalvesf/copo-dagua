@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/auth/auth_controller.dart';
-import '../../../core/events/events_providers.dart' show setEventMaxAttendees;
+import '../../../core/events/events_providers.dart' show organizerPaymentsReady, setEventMaxAttendees;
 import '../../../core/models/models.dart';
 import '../../../core/moderation/word_filter.dart';
 import '../../../core/onboarding/intro_answers.dart';
@@ -377,6 +377,21 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
   }
 
   Future<void> _editPrice() async {
+    // Antes de pôr preço: ativar os pagamentos para receber o dinheiro
+    // dos bilhetes (pedido 2026-11-12). Volta aqui depois.
+    if (_price == null && !await organizerPaymentsReady()) {
+      if (!mounted) return;
+      // Conta ainda por criar (fica criada no fim): ativa-se depois.
+      if (supabase.auth.currentUser == null || ref.read(authControllerProvider.notifier).hasPendingSignup) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Para cobrar a entrada, ativa os pagamentos depois de criar o evento, em Acesso e entrada.')));
+        return;
+      }
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Para cobrar a entrada, ativa primeiro os pagamentos.')));
+      await context.push('/bilhetes/ativar');
+      if (!mounted || !await organizerPaymentsReady()) return;
+    }
     final c = TextEditingController(text: _price == null ? '' : _price!.toStringAsFixed(_price! % 1 == 0 ? 0 : 2));
     await _editText(title: 'Preço da entrada (€)', target: c, hint: 'Vazio = grátis', keyboard: const TextInputType.numberWithOptions(decimal: true));
     final v = double.tryParse(c.text.replaceAll('€', '').replaceAll(',', '.').trim());
