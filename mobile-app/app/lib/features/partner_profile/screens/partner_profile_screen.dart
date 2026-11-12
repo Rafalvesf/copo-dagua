@@ -192,7 +192,7 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
       followers: stats?.followers ?? follow?.followers ?? 0,
       following: pub?.following ?? 0,
       buttons: [
-        ProfileButton('Editar perfil', onTap: () => context.push('/partner-business-info')),
+        ProfileButton('Editar perfil', onTap: () => showPartnerEditProfileSheet(context)),
         ProfileButton('Partilhar perfil', dark: true, onTap: () => sharePartnerProfile(context, p.id, name)),
       ],
     );

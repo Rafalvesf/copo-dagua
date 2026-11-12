@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/profile/username.dart';
 import '../../core/social/social.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/snappy_tap.dart';
@@ -307,7 +308,13 @@ Future<void> showEditProfileSheet(BuildContext context, WidgetRef ref, PublicPro
       child: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           const Text('Editar perfil', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          // O @ edita-se só aqui, no perfil (pedido 2026-11-12).
+          UsernameEditRow(onTap: () {
+            Navigator.of(ctx).pop(false);
+            context.push('/username');
+          }),
+          const SizedBox(height: 12),
           TextField(controller: name, decoration: const InputDecoration(labelText: 'Nome'), textCapitalization: TextCapitalization.words),
           const SizedBox(height: 12),
           TextField(controller: city, decoration: const InputDecoration(labelText: 'Cidade'), textCapitalization: TextCapitalization.words),
@@ -335,4 +342,75 @@ Future<void> showEditProfileSheet(BuildContext context, WidgetRef ref, PublicPro
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
     }
   }
+}
+
+
+/// "Nome de utilizador · @ana" — abre o ecrã do @ (migração 163).
+class UsernameEditRow extends ConsumerWidget {
+  final VoidCallback onTap;
+  const UsernameEditRow({super.key, required this.onTap});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final u = ref.watch(myUsernameProvider).value?.username;
+    return SnappyTap(
+      onTap: onTap,
+      child: Container(
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(16)),
+        child: Row(children: [
+          const Expanded(
+            child: Text('Nome de utilizador', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+          Text(u == null ? 'Escolher' : '@$u',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+          const SizedBox(width: 8),
+          const Icon(Icons.chevron_right_rounded, size: 18, color: AppTheme.inkMuted),
+        ]),
+      ),
+    );
+  }
+}
+
+/// "Editar perfil" do parceiro: o @, as informações do negócio e as fotos.
+Future<void> showPartnerEditProfileSheet(BuildContext context) async {
+  final go = await showModalBottomSheet<String>(
+    context: context,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+    builder: (ctx) => Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        const Text('Editar perfil', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 12),
+        UsernameEditRow(onTap: () => Navigator.of(ctx).pop('/username')),
+        const SizedBox(height: 8),
+        _SheetLink('Informações do negócio', () => Navigator.of(ctx).pop('/partner-business-info')),
+        const SizedBox(height: 8),
+        _SheetLink('Fotos e vídeos', () => Navigator.of(ctx).pop('/partner-portfolio')),
+      ]),
+    ),
+  );
+  if (go != null && context.mounted) context.push(go);
+}
+
+class _SheetLink extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _SheetLink(this.label, this.onTap);
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(16)),
+          child: Row(children: [
+            Expanded(child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: AppTheme.inkMuted),
+          ]),
+        ),
+      );
 }
