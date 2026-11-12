@@ -160,7 +160,7 @@ class V2Avatar extends StatelessWidget {
   /// Plana, como nos mockups das Mensagens (2026-11-12): fundo de cor
   /// suave (sempre a mesma para o mesmo nome), sem aro nem sombra.
   final bool flat;
-  const V2Avatar(this.name, {super.key, this.size = 44, this.imageUrl, this.filled = false, this.flat = false});
+  const V2Avatar(this.name, {super.key, this.size = 44, this.imageUrl, this.filled = false, this.flat = true});
 
   static const _tints = [Color(0xFFE7D9C3), Color(0xFFDDE5D3), Color(0xFFF3DEE0), Color(0xFFE6EDE1), Color(0xFFEFE3CC), Color(0xFFE4E0EC)];
   static Color tintFor(String name) {
