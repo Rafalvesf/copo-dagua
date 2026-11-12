@@ -8,8 +8,8 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: CopoDaguaApp()));
     await tester.pumpAndSettle();
 
-    expect(find.text('O teu evento, num só lugar'), findsOneWidget);
-    expect(find.text('Criar conta'), findsOneWidget);
+    expect(find.text('Organiza, convida e celebra.'), findsOneWidget);
+    expect(find.text('Começar'), findsOneWidget);
     expect(find.text('Já tenho conta'), findsOneWidget);
   });
 }
