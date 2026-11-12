@@ -110,7 +110,7 @@ class _PartnerChatThreadScreenState
     });
 
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.cream,
       body: Column(
         children: [
           SafeArea(

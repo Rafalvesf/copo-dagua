@@ -1,8 +1,9 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/moderation/moderation.dart' show blockProfile;
 import '../../../core/social/social.dart';
+import '../../../shared/widgets/line_icon.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -38,7 +39,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     }
   }
 
-  Widget _round(IconData icon, String tip, VoidCallback onTap) => Tooltip(
+  Widget _round(Widget icon, String tip, VoidCallback onTap) => Tooltip(
         message: tip,
         child: SnappyTap(
           onTap: onTap,
@@ -47,7 +48,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             height: 44,
             alignment: Alignment.center,
             decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            child: Icon(icon, size: 22, color: AppTheme.ink),
+            child: icon,
           ),
         ),
       );
@@ -57,7 +58,8 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     final async = ref.watch(publicProfileProvider(widget.profileId));
     final p = async.value;
     return GradientScaffold(
-      background: AppBackground.feed,
+      // Fundo creme liso (mockup).
+      gradientOverride: const LinearGradient(colors: [Color(0xFFF2F0EB), Color(0xFFF2F0EB)]),
       body: async.isLoading && p == null
           ? const Center(child: CircularProgressIndicator())
           : p == null
@@ -68,7 +70,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                       child: Row(children: [
-                        _round(Hi.chevronLeft, 'Voltar', () => Navigator.of(context).maybePop()),
+                        _round(const LineIcon(LineIcon.back, stroke: 2.2), 'Voltar', () => Navigator.of(context).maybePop()),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(p.username?.isNotEmpty == true ? '@${p.username}' : p.name,
@@ -76,6 +78,20 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                         ),
+                        if (!p.isMe)
+                          PopupMenuButton<String>(
+                            tooltip: 'Mais opções',
+                            position: PopupMenuPosition.under,
+                            onSelected: (_) => blockProfile(context, ref, p.id, p.name),
+                            itemBuilder: (_) => const [PopupMenuItem(value: 'block', child: Text('Bloquear'))],
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              alignment: Alignment.center,
+                              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                              child: const LineIcon(LineIcon.dots, stroke: 2.4),
+                            ),
+                          ),
                       ]),
                     ),
                     const SizedBox(height: 18),

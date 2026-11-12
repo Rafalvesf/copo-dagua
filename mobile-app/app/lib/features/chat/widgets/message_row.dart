@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/line_icon.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -99,8 +100,8 @@ class MessageRow extends StatelessWidget {
                 const SizedBox(height: 3),
                 Row(children: [
                   if (mine) ...[
-                    Icon(mineSeen ? Icons.done_all_rounded : Icons.done_rounded,
-                        size: 16, color: mineSeen ? AppTheme.accentOliveDark : AppTheme.inkMuted),
+                    LineIcon(mineSeen ? LineIcon.checks : LineIcon.check,
+                        size: 16, stroke: 2.4, color: mineSeen ? const Color(0xFF3F7A4F) : AppTheme.inkMuted),
                     const SizedBox(width: 4),
                   ],
                   Expanded(

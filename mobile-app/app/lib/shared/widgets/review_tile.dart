@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'line_icon.dart';
 
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
@@ -51,25 +52,26 @@ class ReviewTile extends StatelessWidget {
           ].join(' · ')
         : _date(r.createdAt);
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-      decoration: softCard(radius: 22),
+      // Mockup "Perfil do parceiro" (2026-11-12): cartão branco liso.
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          V2Avatar(r.coupleDisplayName, size: 44, imageUrl: r.coupleAvatarUrl),
-          const SizedBox(width: 12),
+        Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          V2Avatar(r.coupleDisplayName, size: 40, imageUrl: r.coupleAvatarUrl, flat: true),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(r.coupleDisplayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 2),
-              Text(meta, style: const TextStyle(fontSize: AppFontSize.xs, color: v2Muted)),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(meta, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: v2Muted)),
             ]),
           ),
           const SizedBox(width: 8),
           _RatingChip(r.rating),
         ]),
+        if (partnerSide || r.status != 'published') ...[
         const SizedBox(height: 10),
         Row(children: [
           for (var i = 1; i <= 5; i++)
@@ -94,9 +96,11 @@ class ReviewTile extends StatelessWidget {
             ),
           ],
         ]),
+        ],
         if (r.comment != null && r.comment!.trim().isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Text(r.comment!.trim(), style: const TextStyle(fontSize: AppFontSize.md, height: 1.45, color: AppTheme.ink)),
+          const SizedBox(height: 10),
+          Text(r.comment!.trim(),
+              style: const TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: Color(0xFF3A3733))),
         ],
         if (r.response != null && r.response!.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -137,15 +141,11 @@ class _RatingChip extends StatelessWidget {
   const _RatingChip(this.rating);
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-        decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(99)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Hi.star, size: 14, color: Colors.white),
-          const SizedBox(width: 3),
-          Text('$rating,0', style: const TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: Colors.white)),
-        ]),
-      );
+  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
+        const LineIcon(LineIcon.star, size: 13, fill: true, color: Color(0xFFC9A24A)),
+        const SizedBox(width: 3),
+        Text('$rating,0', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      ]);
 }
 
 /// Resposta do parceiro: ligada à avaliação por uma linha, com a foto do
@@ -170,7 +170,7 @@ class _Reply extends StatelessWidget {
         ),
         Expanded(
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            V2Avatar(partnerName, size: 30, imageUrl: partnerAvatarUrl),
+            V2Avatar(partnerName, size: 30, imageUrl: partnerAvatarUrl, flat: true),
             const SizedBox(width: 8),
             Expanded(
               child: Container(

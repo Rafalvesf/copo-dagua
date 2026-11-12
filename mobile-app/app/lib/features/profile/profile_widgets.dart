@@ -58,7 +58,7 @@ class FollowedByRow extends StatelessWidget {
               left: i * 17,
               child: Container(
                 decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-                child: V2Avatar(shown[i].name, size: 20, imageUrl: shown[i].avatarUrl),
+                child: V2Avatar(shown[i].name, size: 20, imageUrl: shown[i].avatarUrl, flat: true),
               ),
             ),
         ]),
@@ -98,7 +98,7 @@ class ProfileCard extends StatelessWidget {
     required this.following,
     this.followedBy,
     this.buttons = const [],
-    this.labels = const ['eventos', 'seguidores', 'a seguir'],
+    this.labels = const ['Eventos', 'Seguidores', 'A seguir'],
   });
 
   Widget _stat(int n, String label) => Column(children: [
@@ -109,7 +109,8 @@ class ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(18),
-        decoration: softCard(radius: 22),
+        // Sem sombra (mockup).
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
             SizedBox(width: 76, height: 76, child: avatar),
@@ -244,7 +245,7 @@ class _FollowingSectionState extends ConsumerState<FollowingSection> {
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-            decoration: softCard(radius: 22),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
             child: Column(children: [
               for (var i = 0; i < shown.length; i++)
                 Container(
@@ -257,7 +258,7 @@ class _FollowingSectionState extends ConsumerState<FollowingSection> {
                       child: SnappyTap(
                         onTap: _partners || shown[i].isMe ? null : () => context.push('/u/${shown[i].id}'),
                         child: Row(children: [
-                          V2Avatar(shown[i].name, size: 44, imageUrl: shown[i].avatarUrl),
+                          V2Avatar(shown[i].name, size: 44, imageUrl: shown[i].avatarUrl, flat: true),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

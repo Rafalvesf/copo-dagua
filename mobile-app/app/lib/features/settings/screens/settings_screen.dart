@@ -4,6 +4,7 @@ import '../../../core/notifications/push.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/line_icon.dart';
 import 'package:copo_dagua_app/shared/widgets/gradient_scaffold.dart';
 import '../../../core/wedding/organizers.dart' show myWeddingPermsProvider;
 import '../../../core/events/events_providers.dart';
@@ -93,7 +94,7 @@ class SettingsScaffold extends StatelessWidget {
                 height: 44,
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                child: const Icon(Hi.chevronLeft, size: 20, color: AppTheme.ink),
+                child: const LineIcon(LineIcon.back, stroke: 2.2),
               ),
             ),
             const SizedBox(width: 10),
@@ -219,7 +220,7 @@ class SettingsRow extends StatelessWidget {
           ],
           if (onTap != null) ...[
             const SizedBox(width: 12),
-            const Icon(Hi.chevronRight, size: 16, color: AppTheme.inkMuted),
+            const LineIcon(LineIcon.forward, size: 16, color: AppTheme.inkMuted),
           ],
         ],
       ),

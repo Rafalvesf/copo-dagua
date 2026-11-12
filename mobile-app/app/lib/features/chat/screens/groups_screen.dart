@@ -393,7 +393,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
             ? names.join(', ')
             : '${names.take(3).join(', ')} e mais ${names.length - 3}';
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.cream,
       body: Column(children: [
         SafeArea(
           top: false,

@@ -145,6 +145,10 @@ Future<void> _block(BuildContext context, WidgetRef ref, String profileId, Strin
   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 }
 
+/// Bloquear uma pessoa (perfil de um amigo, menu ⋯).
+Future<void> blockProfile(BuildContext context, WidgetRef ref, String profileId, String who) =>
+    _block(context, ref, profileId, who);
+
 /// Desbloquear (Definições → Conta → Pessoas bloqueadas).
 Future<void> unblockProfile(WidgetRef ref, String profileId) async {
   final me = ref.read(authControllerProvider).profile?.id;

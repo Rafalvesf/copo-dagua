@@ -170,7 +170,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     });
 
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.cream,
       body: Column(
         children: [
           SafeArea(

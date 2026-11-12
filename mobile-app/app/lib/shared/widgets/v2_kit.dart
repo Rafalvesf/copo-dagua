@@ -202,7 +202,7 @@ class V2Avatar extends StatelessWidget {
           ? null
           : Text(initials(name),
               style: TextStyle(
-                fontSize: flat ? (size >= 48 ? 16 : (size >= 40 ? 14 : 11)) : (size >= 40 ? 14 : 11),
+                fontSize: flat ? (size >= 70 ? 24 : (size >= 48 ? 16 : (size >= 40 ? 14 : 11))) : (size >= 40 ? 14 : 11),
                 fontWeight: FontWeight.w700,
                 color: filled ? Colors.white : AppTheme.accentOliveDark,
               )),

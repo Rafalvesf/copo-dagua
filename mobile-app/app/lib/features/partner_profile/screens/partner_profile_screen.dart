@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/line_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../shared/public_link.dart';
@@ -50,7 +51,7 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
     final profile = ref.watch(authControllerProvider).profile;
 
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.cream,
       body: Stack(
         children: [
           SafeArea(top: false, 
@@ -78,7 +79,7 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                             height: 44,
                             alignment: Alignment.center,
                             decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                            child: const Icon(Hi.cog6Tooth, size: 20, color: AppTheme.ink),
+                            child: const LineIcon(LineIcon.gear, circles: LineIcon.gearCircle),
                           ),
                         ),
                       ),

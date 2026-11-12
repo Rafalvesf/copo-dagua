@@ -378,7 +378,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     final empty = !state.loading && allConvs.isEmpty && allGroups.isEmpty;
 
     return GradientScaffold(
-      background: AppBackground.feed,
+      background: AppBackground.cream,
       body: Stack(
         children: [
           SafeArea(
@@ -395,12 +395,13 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   topPadding: 8,
                   showBack: false,
                   trailing: AddActionButton(
+                    line: true,
                     onTap: _startingConversation ? () {} : () => _newMenu(groupEvents),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),
-                  child: SearchPill(controller: _search, hint: 'Pesquisar pessoas, parceiros ou grupos'),
+                  child: SearchPill(flat: true, controller: _search, hint: 'Pesquisar pessoas, parceiros ou grupos'),
                 ),
                 // Mensagens diretas da equipa (migração 146).
                 const TeamThreadEntry(),

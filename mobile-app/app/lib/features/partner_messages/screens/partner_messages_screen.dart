@@ -51,7 +51,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
     final query = _search.text.trim().toLowerCase();
 
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.cream,
       body: Stack(
         children: [
           SafeArea(top: false, 
@@ -66,7 +66,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                     AppTheme.screenMargin,
                     0,
                   ),
-                  child: SearchPill(controller: _search, hint: 'Pesquisar conversas'),
+                  child: SearchPill(flat: true, controller: _search, hint: 'Pesquisar conversas'),
                 ),
                 const TeamThreadEntry()
  ],

@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'line_icon.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -11,7 +12,10 @@ class SearchPill extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
 
-  const SearchPill({super.key, required this.controller, required this.hint});
+  /// Como no mockup das Mensagens (2026-11-12): sem sombra e lupa de traço.
+  final bool flat;
+
+  const SearchPill({super.key, required this.controller, required this.hint, this.flat = false});
 
   @override
   Widget build(BuildContext context) {
@@ -23,23 +27,27 @@ class SearchPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.pill),
         // Sem contorno, com a sombra suave dos cartões (redesign
         // 2026-10-19) — igual à pesquisa de Parceiros.
-        boxShadow: const [
+        boxShadow: flat
+            ? null
+            : const [
           BoxShadow(color: Color(0x12171713), blurRadius: 18, offset: Offset(0, 6)),
           BoxShadow(color: Color(0x0D171713), blurRadius: 3, offset: Offset(0, 1)),
         ],
       ),
       child: Row(
         children: [
-          const Icon(Hi.magnifyingGlass, size: 18, color: AppTheme.inkMuted),
+          flat
+              ? const LineIcon(LineIcon.search, size: 18, color: AppTheme.inkMuted, stroke: 2.2, circles: LineIcon.searchCircle)
+              : const Icon(Hi.magnifyingGlass, size: 18, color: AppTheme.inkMuted),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: controller,
               textInputAction: TextInputAction.search,
-              style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+              style: TextStyle(fontSize: 15, fontWeight: flat ? FontWeight.w600 : null, color: AppTheme.ink),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: const TextStyle(fontSize: 15, color: Color(0xFF6E6A63)),
+                hintStyle: TextStyle(fontSize: 15, fontWeight: flat ? FontWeight.w600 : null, color: const Color(0xFF6E6A63)),
                 isDense: true,
                 filled: false,
                 border: InputBorder.none,

@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'line_icon.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'buttons.dart';
@@ -190,7 +191,10 @@ class PageHeader extends StatelessWidget {
 class AddActionButton extends StatelessWidget {
   final VoidCallback onTap;
 
-  const AddActionButton({super.key, required this.onTap});
+  /// "+" de traço, como no mockup das Mensagens.
+  final bool line;
+
+  const AddActionButton({super.key, required this.onTap, this.line = false});
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +211,9 @@ class AddActionButton extends StatelessWidget {
             color: AppTheme.ink,
             shape: BoxShape.circle,
           ),
-          child: const Icon(Hi.plus, size: 24, color: Colors.white),
+          child: line
+              ? const LineIcon(LineIcon.plus, color: Colors.white, stroke: 2.4)
+              : const Icon(Hi.plus, size: 24, color: Colors.white),
         ),
       ),
     );

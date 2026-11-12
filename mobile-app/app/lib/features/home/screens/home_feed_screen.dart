@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/line_icon.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:share_plus/share_plus.dart';
 import '../../../core/social/social.dart';
@@ -106,7 +107,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     );
 
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.cream,
       body: profile == null || (organizer && wedding == null)
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -148,7 +149,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                   TourAnchor(
                                     id: 'bell',
                                     child: _RoundIcon(
-                                      icon: Hi.bell,
+                                      icon: const LineIcon(LineIcon.bell),
                                       tip: 'Notificações',
                                       onTap: () => _openNotifications(context),
                                     ),
@@ -168,7 +169,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                             else
                               const PartnerNotificationBell(round: true),
                             const SizedBox(width: 10),
-                            _RoundIcon(icon: Hi.cog6Tooth, tip: 'Definições', onTap: () => context.push('/conta')),
+                            _RoundIcon(icon: const LineIcon(LineIcon.gear, circles: LineIcon.gearCircle), tip: 'Definições', onTap: () => context.push('/conta')),
                           ],
                         ),
                         ),
@@ -189,7 +190,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                         ],
                         ProfileSectionTitle(
                           'Os meus eventos',
-                          action: 'Ver todos',
+                          action: 'Ver todos (${(profile.role == UserRole.partner ? 0 : ref.watch(weddingControllerProvider).events.length) + (ref.watch(guestWeddingsProvider).value?.length ?? 0)})',
                           onAction: () => context.go('/eventos'),
                         ),
                         const MyEventsCarousel(),
@@ -608,7 +609,7 @@ class _NotificationRow extends ConsumerWidget {
 
 
 class _RoundIcon extends StatelessWidget {
-  final IconData icon;
+  final Widget icon;
   final String tip;
   final VoidCallback onTap;
   const _RoundIcon({required this.icon, required this.tip, required this.onTap});
@@ -623,7 +624,7 @@ class _RoundIcon extends StatelessWidget {
             height: 44,
             alignment: Alignment.center,
             decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            child: Icon(icon, size: 22, color: AppTheme.ink),
+            child: icon,
           ),
         ),
       );
