@@ -18,6 +18,9 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/snappy_tap.dart';
+import '../../../core/supabase/supabase_config.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../partners/screens/partner_detail_screen.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
@@ -72,6 +75,12 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     PartnerDetailScreen.show(context, partner);
   }
 
+  /// Respostas rápidas (mockup "Conversa", 2026-11-12).
+  Future<void> _quick(String text) async {
+    _messageController.text = text;
+    await _send();
+  }
+
   Future<void> _send() async {
     final text = _messageController.text;
     if (text.trim().isEmpty) return;
@@ -122,6 +131,19 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   @override
   Widget build(BuildContext context) {
     final chat = ref.watch(chatThreadControllerProvider(_conversationKey));
+    final seenUntil = ref.watch(_partnerReadProvider(_conversationKey)).value;
+    final partner = widget.conversation.partnerId == null
+        ? null
+        : ref.watch(partnerByIdProvider(widget.conversation.partnerId!)).value;
+    // Faixa do evento: "Sofia & Tiago · 12 set 2027".
+    const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    final events = ref.watch(weddingControllerProvider).events;
+    final ev = events.where((w) => w.id == widget.conversation.weddingId).firstOrNull;
+    final evDate = ev?.weddingDate;
+    final eventTitle = ev == null
+        ? null
+        : [ev.displayNames, if (evDate != null) '${evDate.day} ${months[evDate.month - 1]} ${evDate.year}'].join(' · ');
+    final hasProposal = chat.messages.any((m) => m.isProposal);
 
     ref.listen(chatThreadControllerProvider(_conversationKey), (
       previous,
@@ -137,11 +159,19 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       body: Column(
         children: [
           SafeArea(
+            top: false,
             bottom: false,
             child: ChatHeader(
               name: widget.conversation.name,
               avatarUrl: widget.conversation.avatarUrl,
-              subtitle: widget.conversation.partnerId == null ? null : 'Ver perfil',
+              subtitle: partner == null
+                  ? null
+                  : [if (partner.categoryLabels.isNotEmpty) partner.categoryLabels.first, if ((partner.location ?? '').isNotEmpty) partner.location!]
+                      .join(' · '),
+              eventTitle: eventTitle,
+              eventSubtitle: hasProposal ? 'Proposta recebida' : (partner?.categoryLabels.firstOrNull),
+              eventAction: widget.conversation.partnerId == null ? null : 'Ver perfil',
+              onEventAction: widget.conversation.partnerId == null ? null : _openPartnerProfile,
               onOpenProfile: widget.conversation.partnerId == null
                   ? null
                   : _openPartnerProfile,
@@ -155,6 +185,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
             ),
           ),
           Expanded(
+            child: ColoredBox(
+            color: const Color(0xFFF2F0EB),
             child: chat.loading && chat.messages.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 // Invertida para abrir SEMPRE nas mensagens mais recentes
@@ -170,6 +202,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                       // Aqui é sempre o casal a enviar — `fromPartner`
                       // significa "veio da outra parte".
                       isMine: (m) => !m.fromPartner,
+                      seenUntil: seenUntil,
                       content: (message, isMe) => message.hasAttachment
                           ? _ownDeletable(
                               isMe,
@@ -177,7 +210,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
                             )
                           : message.isProposal
-                          ? _ProposalCard(message: message, partnerId: widget.conversation.partnerId, onRequestNew: _openPartnerProfile)
+                          ? _ProposalCard(message: message, partnerId: widget.conversation.partnerId, imageUrl: widget.conversation.avatarUrl, onRequestNew: _openPartnerProfile)
                           : message.isQuoteRequestNotice
                           ? GestureDetector(
                               onTap: _openPartnerProfile,
@@ -193,7 +226,22 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                             ),
                     ).reversed.toList(),
                   ),
+            ),
           ),
+          if (widget.conversation.partnerId != null)
+            ColoredBox(
+              color: const Color(0xFFF2F0EB),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Row(children: [
+                  for (final q in const ['Posso visitar?', 'Pedir outra proposta', 'Obrigado!']) ...[
+                    _QuickReply(q, () => _quick(q)),
+                    const SizedBox(width: 8),
+                  ],
+                ]),
+              ),
+            ),
           ChatComposer(controller: _messageController, onSend: _send, onAttach: _attach),
         ],
       ),
@@ -211,7 +259,8 @@ class _ProposalCard extends ConsumerStatefulWidget {
 
   final VoidCallback? onRequestNew;
   final String? partnerId;
-  const _ProposalCard({required this.message, this.partnerId, this.onRequestNew});
+  final String? imageUrl;
+  const _ProposalCard({required this.message, this.partnerId, this.imageUrl, this.onRequestNew});
 
   // Taxa do organizador para este parceiro (migração 180).
   FeeConfig? fee(WidgetRef ref, {bool watch = false}) {
@@ -381,6 +430,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
         .effectivePct(message.proposalPrice ?? 0);
     double withFee(double v) => amountWithCommission(v, pct);
     return ChatProposalCard(
+      imageUrl: widget.imageUrl,
       title: heading ?? message.proposalTitle ?? 'Proposta',
       subtitle: heading == null ? null : message.proposalTitle,
       // O cliente vê logo o que vai pagar: valor do parceiro + comissão
@@ -415,4 +465,37 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       ],
     );
   }
+}
+
+/// Até quando o parceiro leu esta conversa ("Visto").
+final _partnerReadProvider = FutureProvider.autoDispose.family<DateTime?, String>((ref, id) async {
+  try {
+    final r = await supabase.from('conversations').select('partner_last_read_at').eq('id', id).maybeSingle();
+    final v = r?['partner_last_read_at'] as String?;
+    return v == null ? null : DateTime.parse(v);
+  } catch (_) {
+    return null;
+  }
+});
+
+class _QuickReply extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+  const _QuickReply(this.text, this.onTap);
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Container(
+          height: 34,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(17),
+            border: Border.all(color: const Color(0xFFE6E0D2), width: 1.5),
+          ),
+          child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        ),
+      );
 }

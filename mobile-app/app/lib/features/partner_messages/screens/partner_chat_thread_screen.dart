@@ -111,6 +111,7 @@ class _PartnerChatThreadScreenState
       body: Column(
         children: [
           SafeArea(
+            top: false,
             bottom: false,
             child: ChatHeader(
               name: widget.conversation.name,
