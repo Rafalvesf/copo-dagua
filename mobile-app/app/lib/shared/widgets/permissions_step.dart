@@ -127,7 +127,7 @@ class _PermissionsStepState extends State<PermissionsStep> {
     final visible = _order.where((p) => _state[p] != _State.unsupported).toList();
     final accent = AppTheme.accentOliveDark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

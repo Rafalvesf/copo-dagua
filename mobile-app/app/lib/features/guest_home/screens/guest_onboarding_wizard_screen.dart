@@ -407,7 +407,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
     // Canvas "Convidado 1–8": branco, "Passo X de N", barra fina,
     // pergunta 28/34 e botão verde em baixo.
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 34),
@@ -1222,7 +1222,7 @@ class _ConfirmedView extends StatelessWidget {
   Widget build(BuildContext context) {
     // Canvas "Convidado 8 · Pronto" — mesmos tempos.
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: Stack(
         children: [
           const Positioned.fill(child: FallingConfetti(delay: Duration(milliseconds: 1900))),

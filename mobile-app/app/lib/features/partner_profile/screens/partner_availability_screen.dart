@@ -74,7 +74,7 @@ class _PartnerAvailabilityScreenState extends ConsumerState<PartnerAvailabilityS
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: SafeArea(top: false, 
         child: ListView(
           padding: ( const EdgeInsets.only(bottom: 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
