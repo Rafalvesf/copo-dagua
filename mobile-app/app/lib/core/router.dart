@@ -85,6 +85,8 @@ import '../features/seating/screens/seating_screen.dart' deferred as l55;
 import '../features/partners/screens/partners_list_screen.dart' deferred as l56;
 import '../features/settings/screens/guest_facing_screen.dart' show GuestPageRoute;
 import '../features/settings/screens/settings_screen.dart' deferred as l57;
+import '../features/profile/screens/account_settings_screen.dart' deferred as lacct;
+import '../features/profile/screens/public_profile_screen.dart' deferred as lpub;
 import '../features/support/screens/support_screen.dart' deferred as l58;
 import '../features/wedding/screens/wedding_details_screen.dart' deferred as l59;
 import 'auth/auth_controller.dart';
@@ -637,6 +639,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>lazyPage([l12.loadLibrary], () =>  state.extra is ChatConversation
             ? PermissionGate(perm: OrganizerPerm.conversas, child: l12.ChatThreadScreen(conversation: state.extra as ChatConversation))
             : const _LostRoute('/chat')),
+      ),
+      // Perfil (mockup 2026-11-12): Definições num botão e perfis públicos.
+      GoRoute(
+        path: '/conta',
+        builder: (context, state) => lazyPage([lacct.loadLibrary], () => lacct.AccountSettingsScreen()),
+      ),
+      GoRoute(
+        path: '/u/:id',
+        builder: (context, state) =>
+            lazyPage([lpub.loadLibrary], () => lpub.PublicProfileScreen(profileId: state.pathParameters['id']!)),
       ),
       GoRoute(
         path: '/settings',

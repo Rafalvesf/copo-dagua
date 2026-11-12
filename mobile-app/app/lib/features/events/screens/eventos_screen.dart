@@ -1065,3 +1065,45 @@ class _InviteNotice extends StatelessWidget {
 
 /// Verde da app nas caixas de criar evento (pedido 2026-11-11).
 const _brandGreen = Color(0xFF4F6B4A);
+
+/// "Os meus eventos" com os mesmos cartões, para o Perfil (mockup
+/// "Perfil", 2026-11-12).
+class MyEventsCarousel extends ConsumerWidget {
+  const MyEventsCarousel({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final role = ref.watch(authControllerProvider.select((s) => s.profile?.role));
+    final organizer = role != UserRole.partner;
+    final weddingState = ref.watch(weddingControllerProvider);
+    final myEvents = organizer ? weddingState.events : const <Wedding>[];
+    final activeId = weddingState.wedding?.id;
+    final invited = ref.watch(guestWeddingsProvider).value ?? const <GuestWedding>[];
+    final today = DateTime.now();
+    final day0 = DateTime(today.year, today.month, today.day);
+    int byDate(DateTime? a, DateTime? b) {
+      final pa = a == null || a.isBefore(day0), pb = b == null || b.isBefore(day0);
+      if (pa != pb) return pa ? 1 : -1;
+      if (a == null || b == null) return 0;
+      return pa ? b.compareTo(a) : a.compareTo(b);
+    }
+    final own = [...myEvents]..sort((a, b) => byDate(a.weddingDate, b.weddingDate));
+    final guest = [...invited]..sort((a, b) => byDate(a.weddingDate, b.weddingDate));
+    if (own.isEmpty && guest.isEmpty) return const SizedBox.shrink();
+    return SnapCarousel(
+      itemCount: own.length + guest.length,
+      itemBuilder: (context, i) => i < own.length
+          ? _MyEventCard(wedding: own[i], active: own[i].id == activeId)
+          : _InvitedEventCard(wedding: guest[i - own.length]),
+    );
+  }
+}
+
+/// Cartão de um evento público (Descobrir), para o perfil de um amigo.
+class EventPosterCard extends StatelessWidget {
+  final PublicEvent event;
+  const EventPosterCard({super.key, required this.event});
+
+  @override
+  Widget build(BuildContext context) => _PublicEventCard(event: event);
+}

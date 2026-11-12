@@ -1,5 +1,7 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import '../../../core/social/social.dart';
+import '../../profile/profile_widgets.dart' show FollowedByRow, ProfileButton;
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
@@ -345,8 +347,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         const SizedBox(height: 12),
                         Text(
                           partner.description.isEmpty ? 'Sem descrição.' : partner.description,
+                          textAlign: TextAlign.justify,
                           style: const TextStyle(fontSize: AppFontSize.base, height: 1.5, color: Color(0xFF3F3B37)),
                         ),
+                        // Seguir (mockup "Perfil do parceiro", 2026-11-12).
+                        if (!widget.selectionMode) _PartnerFollow(partnerId: partner.id),
                         const SizedBox(height: 16),
                         // Capacidade ao lado do estado da data e do preço
                         // "Desde" (pedido do utilizador, 2026-10-19).
@@ -949,6 +954,58 @@ class _ComingSoonSection extends StatelessWidget {
         textAlign: TextAlign.center,
         style: const TextStyle(color: AppTheme.ink, height: 1.4),
       ),
+    );
+  }
+}
+
+/// Seguidores, amigos que seguem e o botão Seguir / A seguir.
+class _PartnerFollow extends ConsumerStatefulWidget {
+  final String partnerId;
+  const _PartnerFollow({required this.partnerId});
+
+  @override
+  ConsumerState<_PartnerFollow> createState() => _PartnerFollowState();
+}
+
+class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final info = ref.watch(partnerFollowInfoProvider(widget.partnerId)).value;
+    if (info == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (info.friends.isNotEmpty) ...[
+          FollowedByRow(people: info.friends, text: followedByLine(info.friends, info.friendsCount, female: false)),
+          const SizedBox(height: 12),
+        ],
+        Row(children: [
+          Expanded(
+            child: ProfileButton(
+              info.iFollow ? 'A seguir · ${info.followers}' : 'Seguir · ${info.followers}',
+              dark: !info.iFollow,
+              onTap: _busy
+                  ? null
+                  : () async {
+                      setState(() => _busy = true);
+                      try {
+                        await followPartner(widget.partnerId, !info.iFollow);
+                        ref.invalidate(partnerFollowInfoProvider(widget.partnerId));
+                      } catch (_) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(content: Text('Não foi possível. Tenta outra vez.')));
+                        }
+                      } finally {
+                        if (mounted) setState(() => _busy = false);
+                      }
+                    },
+            ),
+          ),
+        ]),
+      ]),
     );
   }
 }

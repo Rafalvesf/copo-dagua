@@ -270,6 +270,12 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O organizador escolhe quantas pessoas podem ir; quando chega ao limite, ninguém mais entra nem compra bilhete.",
     check: { kind: "column", table: "weddings", column: "max_attendees" },
   },
+  {
+    file: "183_social_profile.sql",
+    title: "Perfil público e seguir",
+    what: "Bio e cidade no perfil, seguir pessoas e parceiros, perfil público de cada pessoa.",
+    check: { kind: "column", table: "profiles", column: "bio" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
