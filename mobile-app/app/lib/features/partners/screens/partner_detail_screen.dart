@@ -855,7 +855,69 @@ class _RequestQuoteSheetState extends State<_RequestQuoteSheet> {
     if (picked != null) setState(() => _eventDate = picked);
   }
 
-
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Pedir orçamento',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Envia os detalhes do teu casamento — o parceiro responde diretamente pelo Chat.',
+            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
+          ),
+          const SizedBox(height: 16),
+          InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            onTap: _pickDate,
+            child: InputDecorator(
+              decoration: const InputDecoration(
+                labelText: 'Data do evento (opcional)',
+              ),
+              child: Text(
+                _eventDate == null
+                    ? 'A combinar'
+                    : '${_eventDate!.day.toString().padLeft(2, '0')}/${_eventDate!.month.toString().padLeft(2, '0')}/${_eventDate!.year}',
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          AuthTextField(label: 'Localização (opcional)', controller: _location),
+          const SizedBox(height: 12),
+          AuthTextField(label: 'Mensagem (opcional)', controller: _message),
+          const SizedBox(height: 16),
+          PrimaryButton(
+            label: 'Enviar pedido',
+            onPressed: () {
+              Navigator.of(context).pop(
+                _RequestQuoteResult(
+                  eventDate: _eventDate,
+                  location: _location.text.trim().isEmpty
+                      ? null
+                      : _location.text.trim(),
+                  message: _message.text.trim().isEmpty
+                      ? null
+                      : _message.text.trim(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
 /// Seguidores, amigos que seguem e o botão Seguir / A seguir.
 class _PartnerFollow extends ConsumerStatefulWidget {
   final String partnerId;
