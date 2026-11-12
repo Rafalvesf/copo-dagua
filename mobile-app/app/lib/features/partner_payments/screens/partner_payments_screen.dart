@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/alert_outline.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -563,12 +564,12 @@ class _OwedNote extends ConsumerWidget {
     if (owed <= 0.004) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: Container(
+      child: AlertOutline(
+        tone: AlertTone.pending,
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: const Color(0xFFF7EACA), borderRadius: BorderRadius.circular(14)),
         child: Text(
           'Taxas de serviço de reservas que cancelaste: ${euros(owed, cents: true)}. São descontadas nos próximos pagamentos.',
-          style: const TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: Color(0xFF8A4B10)),
+          style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.ink),
         ),
       ),
     );

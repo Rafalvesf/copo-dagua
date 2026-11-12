@@ -3,6 +3,7 @@ import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/partner_suggestion_card.dart';
 import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard;
 import 'package:flutter/services.dart';
@@ -2319,7 +2320,8 @@ List<_TodoItem> _todoItems(WidgetRef ref) {
       '${euros(e.amount, cents: payId != null)} até ${_shortDay(e.dueDate!)}${due.length > 1 ? ' · mais ${due.length - 1}' : ''}',
       'Pagar',
       (context, ref) => payId != null ? openPaymentFlow(context, ref, payId) : context.push('/budget'),
-      urgent: true,
+      // Vermelho só quando o prazo acaba em 3 dias ou menos (DESIGN.md).
+      urgent: toneForDue(e.dueDate) == AlertTone.urgent,
       primary: true,
     ));
   }
@@ -2361,6 +2363,10 @@ class _UrgentStrip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = _todoItems(ref);
     if (items.isEmpty) return const SizedBox.shrink();
+    // Vermelho se algum pagamento acaba em 3 dias ou menos; senão amarelo.
+    final tone = _duePayments(ref).any((d) => toneForDue(d.$1.dueDate) == AlertTone.urgent)
+        ? AlertTone.urgent
+        : AlertTone.pending;
     return SnappyTap(
       onTap: () {
         // Desce até "Para fazer agora" (logo abaixo do planeamento).
@@ -2369,17 +2375,19 @@ class _UrgentStrip extends ConsumerWidget {
         pos.animateTo((pos.pixels + 260).clamp(0.0, pos.maxScrollExtent),
             duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic);
       },
-      child: Container(
-        height: 52,
+      child: AlertOutline(
+        tone: tone,
+        radius: 16,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(color: const Color(0xFFF7EACA), borderRadius: BorderRadius.circular(16)),
+        child: SizedBox(
+        height: 49,
         child: Row(
           children: [
             Container(
               width: 26,
               height: 26,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(color: Color(0xFF8A4B10), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: alertColor(tone), shape: BoxShape.circle),
               child: Text('${items.length}',
                   textAlign: TextAlign.center,
                   textHeightBehavior: const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
@@ -2394,11 +2402,12 @@ class _UrgentStrip extends ConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textHeightBehavior: const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
-                style: const TextStyle(fontSize: 15, height: 1, fontWeight: FontWeight.w700, color: Color(0xFF5A3E0C)),
+                style: const TextStyle(fontSize: 15, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink),
               ),
             ),
-            const Icon(Hi.chevronRight, color: Color(0xFF5A3E0C)),
+            const Icon(Hi.chevronRight, color: AppTheme.ink),
           ],
+        ),
         ),
       ),
     );
@@ -3312,6 +3321,15 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // "Falta o sinal": alerta pendente (branco, linha amarela) — DESIGN.md.
+    if (status == BookingStatus.aceite) {
+      return const AlertOutline(
+        tone: AlertTone.pending,
+        radius: 999,
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        child: Text('Falta o sinal', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      );
+    }
     final (label, bg, fg) = switch (status) {
       BookingStatus.confirmado => ('Confirmado', const Color(0xFFDDE5D3), _greenDark),
       BookingStatus.concluido => ('Concluído', const Color(0xFFDDE5D3), _greenDark),

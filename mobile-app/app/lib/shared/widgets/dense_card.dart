@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'alert_outline.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'snappy_tap.dart';
@@ -154,24 +155,35 @@ class AlertStrip extends StatelessWidget {
   final String text;
   final String cta;
   final VoidCallback onTap;
-  const AlertStrip({super.key, required this.text, required this.cta, required this.onTap});
+
+  /// Amarelo (pendente) ou vermelho (prazo a acabar) — DESIGN.md "Alertas".
+  final AlertTone tone;
+  const AlertStrip({super.key, required this.text, required this.cta, required this.onTap, this.tone = AlertTone.pending});
 
   @override
   Widget build(BuildContext context) => GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
-          decoration: BoxDecoration(color: kAlertBg, borderRadius: BorderRadius.circular(14)),
+        child: AlertOutline(
+          tone: tone,
+          padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
           child: Row(children: [
+            AlertDot(tone),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(text,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAlertInk)),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
             const SizedBox(width: 10),
-            CtaPill(cta, height: 32),
+            Container(
+              height: 32,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(16)),
+              child: Text(cta, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
           ]),
         ),
       );
