@@ -36,3 +36,14 @@ export async function addAdminTask(_prev: ActionState, formData: FormData): Prom
   revalidatePath("/", "layout");
   return { error: null };
 }
+
+// X numa tarefa (pedido 2026-11-12): apaga-a de vez.
+export async function deleteAdminTask(id: string): Promise<ActionState> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.from("admin_tasks").delete().eq("id", id);
+  if (error) return { error: "Não foi possível apagar." };
+  revalidatePath("/pending");
+  revalidatePath("/", "layout");
+  return { error: null };
+}

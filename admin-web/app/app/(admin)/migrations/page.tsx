@@ -2,7 +2,9 @@ import { requireAdmin } from "@/lib/dal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Alert, Badge, Card, Empty, PageHeader } from "@/components/ui";
 import { GITHUB_BASE, MIGRATIONS, RAW_BASE, type MigrationCheck } from "@/lib/pending-migrations";
+import { RemoveX } from "@/components/RemoveX";
 import { CopySql } from "./CopySql";
+import { dismissMigration } from "./actions";
 
 // Migrações por correr (2026-11-03). Cada uma sai da lista sozinha quando a
 // verificação encontra na base de dados o que ela cria. O SQL vem do
@@ -35,6 +37,10 @@ async function applied(db: ReturnType<typeof createAdminClient>, c: MigrationChe
   }
 }
 
+function fmtDate(d: string): string {
+  return new Date(d + "T12:00:00Z").toLocaleDateString("pt-PT", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Lisbon" });
+}
+
 async function sqlOf(file: string): Promise<string | null> {
   try {
     const r = await fetch(RAW_BASE + file, { cache: "no-store" });
@@ -47,7 +53,10 @@ async function sqlOf(file: string): Promise<string | null> {
 export default async function MigrationsPage() {
   await requireAdmin();
   const db = createAdminClient();
-  const states = await Promise.all(MIGRATIONS.map((m) => applied(db, m.check)));
+  // Dispensadas com o X (skip-NNN).
+  const { data: skips } = await db.from("applied_migrations").select("id").like("id", "skip-%");
+  const skipped = new Set((skips ?? []).map((r) => String(r.id).slice(5)));
+  const states = await Promise.all(MIGRATIONS.map((m) => (skipped.has(m.file.slice(0, 3)) ? true : applied(db, m.check))));
   const pending = MIGRATIONS.filter((_, i) => !states[i]);
   const sqls = await Promise.all(pending.map((m) => sqlOf(m.file)));
   const all = pending
@@ -90,10 +99,12 @@ export default async function MigrationsPage() {
                   <a className="btn btn-secondary" href={GITHUB_BASE + m.file} target="_blank" rel="noreferrer">
                     Ver ficheiro
                   </a>
+                  <RemoveX onRemove={dismissMigration.bind(null, m.file)} label="Tirar da lista" confirm="Tirar?" />
                 </>
               }
             >
               <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+                {m.date ? `${fmtDate(m.date)} · ` : ""}
                 <code>{m.file}</code>
                 {m.after ? ` · depois da ${m.after}` : ""}
               </p>
