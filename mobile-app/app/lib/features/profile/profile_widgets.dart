@@ -155,7 +155,7 @@ class ProfileSectionTitle extends StatelessWidget {
           if (action != null)
             SnappyTap(
               onTap: onAction,
-              child: Text(action!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+              child: Text(action!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
             ),
         ]),
       );
