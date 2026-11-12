@@ -15,7 +15,7 @@ export default async function PendingPage({ searchParams }: PageProps<"/pending"
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("admin_tasks")
-    .select("id, title, detail, area, owner, done, done_at")
+    .select("id, title, detail, area, owner, done, done_at, created_at")
     .order("sort")
     .order("created_at");
   const tasks = (data ?? []) as AdminTask[];
