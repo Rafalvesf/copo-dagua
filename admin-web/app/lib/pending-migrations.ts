@@ -305,6 +305,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Bio e cidade no perfil, seguir pessoas e parceiros, perfil público de cada pessoa.",
     check: { kind: "column", table: "profiles", column: "bio" },
   },
+  {
+    file: "184_partner_public_stats.sql",
+    date: "2026-11-12",
+    title: "Página pública do parceiro",
+    what: "Seguidores, eventos feitos e «Responde em ~1 h» na página do parceiro, também para quem abre o link sem conta.",
+    check: { kind: "marker", id: "184" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

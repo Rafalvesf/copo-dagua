@@ -192,3 +192,27 @@ Future<void> setProfilePublic(bool v) async {
   if (me == null) return;
   await supabase.from('profiles').update({'profile_public': v}).eq('id', me);
 }
+
+/// Números públicos de um parceiro (184): seguidores, eventos feitos e
+/// tempo típico de resposta. Também funciona sem sessão (página pública).
+class PartnerPublicStats {
+  final int followers;
+  final int eventsDone;
+  final int? responseMinutes;
+  const PartnerPublicStats({this.followers = 0, this.eventsDone = 0, this.responseMinutes});
+}
+
+final partnerPublicStatsProvider = FutureProvider.autoDispose.family<PartnerPublicStats?, String>((ref, id) async {
+  try {
+    final r = await supabase.rpc('partner_public_stats', params: {'p_partner': id});
+    if (r is! Map) return null;
+    return PartnerPublicStats(
+      followers: (r['followers'] as num?)?.toInt() ?? 0,
+      eventsDone: (r['events_done'] as num?)?.toInt() ?? 0,
+      responseMinutes: (r['response_minutes'] as num?)?.toInt(),
+    );
+  } catch (_) {
+    // Antes da migração 184: sem números.
+    return null;
+  }
+});

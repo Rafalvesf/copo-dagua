@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'core/chat/presence.dart';
 import 'shared/widgets/keep_field_visible.dart';
 import 'shared/widgets/safe_top.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
@@ -71,6 +72,8 @@ class CopoDaguaApp extends ConsumerWidget {
       }
       if (next != prev) setErrorReportingUser(next);
     });
+    // Presença "online" (mensagens): enquanto a app está aberta e há sessão.
+    ref.listen(onlineNowProvider, (previous, next) {});
     // A cor escolhida em "Aparência do menu" passa a ser a cor de acento
     // da app toda, para o organizador (pedido 2026-10-18). Parceiros e
     // convidados ficam no verde da marca.

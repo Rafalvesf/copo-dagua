@@ -19,6 +19,9 @@ class MessageRow extends StatelessWidget {
   final VoidCallback onTap;
   final bool last;
 
+  /// Ponto verde de "online agora" no canto da foto.
+  final bool online;
+
   const MessageRow({
     super.key,
     required this.avatar,
@@ -32,6 +35,7 @@ class MessageRow extends StatelessWidget {
     this.unread = 0,
     this.chips = const [],
     this.last = false,
+    this.online = false,
   });
 
   @override
@@ -48,7 +52,27 @@ class MessageRow extends StatelessWidget {
             border: last ? null : const Border(bottom: BorderSide(color: Color(0xFFECE7DC))),
           ),
           child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            SizedBox(width: 52, height: 52, child: avatar),
+            SizedBox(
+              width: 52,
+              height: 52,
+              child: Stack(clipBehavior: Clip.none, children: [
+                Positioned.fill(child: avatar),
+                if (online)
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      width: 15,
+                      height: 15,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3F7A4F),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2.5),
+                      ),
+                    ),
+                  ),
+              ]),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [

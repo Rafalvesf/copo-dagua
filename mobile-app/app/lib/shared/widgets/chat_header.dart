@@ -13,6 +13,9 @@ class ChatHeader extends StatelessWidget {
   final String name;
   final String? avatarUrl;
   final String? subtitle;
+
+  /// Verde quando a linha diz "Online" (mockup "Conversa").
+  final bool subtitleOnline;
   final VoidCallback? onOpenProfile;
 
   /// Botão "Denunciar" visível no cabeçalho (exigência das lojas: o toque
@@ -27,6 +30,7 @@ class ChatHeader extends StatelessWidget {
     required this.name,
     this.avatarUrl,
     this.subtitle,
+    this.subtitleOnline = false,
     this.onOpenProfile,
     this.onReport,
     this.leading,
@@ -51,7 +55,10 @@ class ChatHeader extends StatelessWidget {
                 Text(subtitle!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: subtitleOnline ? const Color(0xFF3F7A4F) : AppTheme.inkMuted)),
             ],
           ),
         ),

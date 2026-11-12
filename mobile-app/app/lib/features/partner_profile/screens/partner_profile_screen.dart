@@ -1,5 +1,8 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../shared/public_link.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -82,6 +85,18 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                     ]),
                     const SizedBox(height: 18),
                     _BusinessHeader(profile: profile),
+                    if (profile != null) ...[
+                      const SizedBox(height: 18),
+                      _MyLinkCard(partnerId: profile.id),
+                      const SizedBox(height: 18),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                        child: Text(
+                          '"Partilhar perfil" abre a partilha do telemóvel com este link. Quem o abrir vê a tua página pública, mesmo sem a app.',
+                          style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
+                        ),
+                      ),
+                    ],
                     if (profile?.partnerProfileStatus != null &&
                         profile!.partnerProfileStatus != 'published') ...[
                       // Pagamentos obrigatórios para a verificação (2026-10-20).
@@ -150,9 +165,9 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
       if (p.category != null) p.category!.label,
       if (p.location != null && p.location!.isNotEmpty) p.location!,
     ].join(' · ');
+    final stats = ref.watch(partnerPublicStatsProvider(p.id)).value;
     final follow = ref.watch(partnerFollowInfoProvider(p.id)).value;
     final pub = ref.watch(publicProfileProvider(p.id)).value;
-    final reviews = ref.watch(partnerReviewSummaryProvider).count;
     return ProfileCard(
       avatar: Semantics(
         button: true,
@@ -171,13 +186,14 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
       name: name,
       handleLine: meta,
       bio: p.businessDescription,
-      labels: const ['avaliações', 'seguidores', 'a seguir'],
-      events: reviews,
-      followers: follow?.followers ?? 0,
+      // Mockup "Parceiro · o meu perfil" (2026-11-12).
+      labels: const ['Eventos', 'Seguidores', 'A seguir'],
+      events: stats?.eventsDone ?? 0,
+      followers: stats?.followers ?? follow?.followers ?? 0,
       following: pub?.following ?? 0,
       buttons: [
         ProfileButton('Editar perfil', onTap: () => context.push('/partner-business-info')),
-        ProfileButton('Portefólio', dark: true, onTap: () => context.push('/partner-portfolio')),
+        ProfileButton('Partilhar perfil', dark: true, onTap: () => sharePartnerProfile(context, p.id, name)),
       ],
     );
   }
@@ -300,6 +316,70 @@ class _PaymentsRequiredCard extends ConsumerWidget {
           ),
         ]),
       ),
+    );
+  }
+}
+
+
+/// Link da página pública do parceiro (`/parceiro/:id`).
+String partnerPublicLink(String partnerId) => publicLink('/parceiro/$partnerId');
+
+Future<void> sharePartnerProfile(BuildContext context, String partnerId, String name) async {
+  final link = partnerPublicLink(partnerId);
+  try {
+    await SharePlus.instance.share(ShareParams(text: '$name na À Nossa!: $link', subject: name));
+  } catch (_) {
+    await Clipboard.setData(ClipboardData(text: link));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
+    }
+  }
+}
+
+/// "O teu link" + Copiar (mockup "Parceiro · o meu perfil").
+class _MyLinkCard extends StatelessWidget {
+  final String partnerId;
+  const _MyLinkCard({required this.partnerId});
+
+  @override
+  Widget build(BuildContext context) {
+    final link = partnerPublicLink(partnerId);
+    final shown = link.replaceFirst(RegExp(r'^https?://'), '');
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      child: Row(children: [
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            const Text('O teu link', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 2),
+            Text(shown,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+          ]),
+        ),
+        const SizedBox(width: 12),
+        SnappyTap(
+          onTap: () async {
+            await Clipboard.setData(ClipboardData(text: link));
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
+            }
+          },
+          child: Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppTheme.ink, width: 1.5),
+            ),
+            child: const Text('Copiar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+        ),
+      ]),
     );
   }
 }

@@ -315,7 +315,17 @@ class ChatComposer extends StatelessWidget {
   /// nos grupos "Mensagem para o grupo").
   final String hint;
 
-  const ChatComposer({super.key, required this.controller, required this.onSend, this.onAttach, this.hint = 'Escreve uma mensagem'});
+  /// A cada tecla (para o "está a escrever…").
+  final ValueChanged<String>? onChanged;
+
+  const ChatComposer({
+    super.key,
+    required this.controller,
+    required this.onSend,
+    this.onAttach,
+    this.hint = 'Escreve uma mensagem',
+    this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -353,6 +363,7 @@ class ChatComposer extends StatelessWidget {
                   ),
                   child: TextField(
                     controller: controller,
+                    onChanged: onChanged,
                     onSubmitted: (_) => onSend(),
                     textInputAction: TextInputAction.send,
                     style: const TextStyle(fontSize: 15, color: AppTheme.ink),
@@ -388,4 +399,26 @@ class ChatComposer extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "A Marta está a escrever…" por baixo das mensagens (mockup "Grupo").
+class ChatTypingLine extends StatelessWidget {
+  final String? text;
+  const ChatTypingLine(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) => AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        alignment: Alignment.bottomCenter,
+        child: text == null
+            ? const SizedBox(width: double.infinity)
+            : Padding(
+                padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+                child: Center(
+                  child: Text(text!,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                ),
+              ),
+      );
 }

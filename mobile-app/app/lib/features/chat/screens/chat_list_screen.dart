@@ -10,6 +10,7 @@ import '../../../core/chat/chat_helpers.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../widgets/message_row.dart';
 import '../../../core/chat/chat_list_controller.dart';
+import '../../../core/chat/presence.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart' show softCard, V2Avatar;
 import '../../../shared/widgets/snappy_tap.dart';
@@ -223,6 +224,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     final query = _search.text.trim().toLowerCase();
     final meta = ref.watch(_convMetaProvider).value ?? const <String, _ConvMeta>{};
     final me = ref.watch(authControllerProvider.select((s) => s.profile?.id));
+    final online = ref.watch(onlineNowProvider);
 
     // Nome de cada evento (as conversas e os grupos de todos os eventos).
     final mine = ref.watch(weddingControllerProvider).events;
@@ -294,6 +296,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         c,
         MessageRow(
           avatar: V2Avatar(c.name, size: 52, imageUrl: c.avatarUrl, flat: true),
+          online: c.partnerId != null && online.contains(c.partnerId),
           title: c.name,
           time: messageTime(c.lastMessageAt),
           preview: c.lastMessage ?? 'Sem mensagens ainda.',

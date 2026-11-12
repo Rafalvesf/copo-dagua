@@ -10,6 +10,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/chat/chat_attachments.dart';
 import '../../../core/chat/chat_delete.dart';
 import '../../../core/chat/group_chat.dart';
+import '../../../core/chat/presence.dart';
+import '../../../core/auth/auth_controller.dart';
 import '../../../core/moderation/moderation.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/supabase/supabase_config.dart';
@@ -269,6 +271,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
     final t = _text.text;
     if (t.trim().isEmpty) return;
     _text.clear();
+    ref.read(typingNowProvider('g:${widget.group.id}').notifier).stop();
     try {
       await ref.read(groupThreadControllerProvider(widget.group.id).notifier).sendText(t);
     } catch (_) {
@@ -523,7 +526,19 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                 ),
           ),
         ),
-        ChatComposer(controller: _text, onSend: _send, onAttach: _attach, hint: 'Mensagem para o grupo'),
+        ColoredBox(
+          color: const Color(0xFFF2F0EB),
+          child: ChatTypingLine(typingLine(ref.watch(typingNowProvider('g:${widget.group.id}')))),
+        ),
+        ChatComposer(
+          controller: _text,
+          onSend: _send,
+          onAttach: _attach,
+          hint: 'Mensagem para o grupo',
+          onChanged: (_) => ref
+              .read(typingNowProvider('g:${widget.group.id}').notifier)
+              .typing(ref.read(authControllerProvider).profile?.fullName ?? ''),
+        ),
       ]),
     );
   }

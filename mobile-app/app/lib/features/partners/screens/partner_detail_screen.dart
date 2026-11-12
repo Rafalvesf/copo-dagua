@@ -1,5 +1,10 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import '../../../core/chat/presence.dart' show responseLabel;
+import '../../../core/pending_deep_link.dart';
+import '../../../shared/widgets/install_app_sheet.dart';
+import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/social/social.dart';
 import '../../profile/profile_widgets.dart' show FollowedByRow, ProfileButton;
 import 'package:copo_dagua_app/core/partners/promotions.dart';
@@ -13,6 +18,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/chat/chat_helpers.dart';
+import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partners/favorite_partners_controller.dart';
 import '../../../core/partners/partner_providers.dart';
@@ -36,10 +42,16 @@ class PartnerDetailScreen extends ConsumerStatefulWidget {
   final Partner partner;
   final bool selectionMode;
 
+  /// Página pública (link "Partilhar perfil", 2026-11-12), vista sem
+  /// sessão: "À Nossa!" e "Abrir na app" no topo; seguir, mensagem e
+  /// pedir orçamento pedem para entrar e voltam aqui.
+  final bool publicView;
+
   const PartnerDetailScreen({
     super.key,
     required this.partner,
     this.selectionMode = false,
+    this.publicView = false,
   });
 
   /// Abre o parceiro numa folha que sobe de baixo (canvas "Parceiro —
@@ -85,6 +97,12 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     for (final slug in widget.partner.categorySlugs) {
       trackInterest(slug, 'view', partnerId: widget.partner.id);
     }
+  }
+
+  /// Sem sessão: entrar ou criar conta e voltar a esta página.
+  void _needAccount() {
+    PendingDeepLink.save('/parceiro/${widget.partner.id}');
+    context.go('/welcome');
   }
 
   void _comingSoon(String message) {
@@ -204,11 +222,14 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final partner = widget.partner;
-    final favorited = ref.watch(
-      favoritePartnersControllerProvider.select(
-        (s) => s.partnerIds.contains(partner.id),
-      ),
-    );
+    final pub = widget.publicView;
+    final favorited = !pub &&
+        ref.watch(
+          favoritePartnersControllerProvider.select(
+            (s) => s.partnerIds.contains(partner.id),
+          ),
+        );
+    final responds = responseLabel(ref.watch(partnerPublicStatsProvider(partner.id)).value?.responseMinutes);
     // `null` enquanto a verificação real não responde ainda (ou falha) —
     // tratado como "não deixar enviar", nunca como "livre para pedir",
     // para nunca haver uma janela otimista em que um duplo pedido escapa.
@@ -216,7 +237,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         .watch(partnerRelationshipStatusProvider(partner.id))
         .maybeWhen(data: (s) => s, orElse: () => null);
     final alreadyRelated =
-        !widget.selectionMode && relationshipStatus != PartnerRelationshipStatus.none;
+        !pub && !widget.selectionMode && relationshipStatus != PartnerRelationshipStatus.none;
     final summary = ref.watch(publicReviewSummaryForPartnerProvider(partner.id));
     final packages = ref
         .watch(partnerPackagesForProvider(partner.id))
@@ -275,6 +296,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     fallbackColor: colorForCategorySlug(partner.primaryCategorySlug),
                     fallbackIcon: iconForCategorySlug(partner.primaryCategorySlug),
                     favorited: favorited,
+                    publicView: pub,
                     onFavorite: () {
                       if (!favorited) {
                         for (final slug in partner.categorySlugs) {
@@ -350,8 +372,21 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                           textAlign: TextAlign.justify,
                           style: const TextStyle(fontSize: AppFontSize.base, height: 1.5, color: Color(0xFF3F3B37)),
                         ),
+                        // "Responde em ~1 h" (184, mockup "Perfil do parceiro").
+                        if (responds != null) ...[
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
+                              child: Text(responds,
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+                            ),
+                          ),
+                        ],
                         // Seguir (mockup "Perfil do parceiro", 2026-11-12).
-                        if (!widget.selectionMode) _PartnerFollow(partnerId: partner.id),
+                        if (!widget.selectionMode) _PartnerFollow(partnerId: partner.id, onNeedAccount: pub ? _needAccount : null),
                         const SizedBox(height: 16),
                         // Capacidade ao lado do estado da data e do preço
                         // "Desde" (pedido do utilizador, 2026-10-19).
@@ -443,7 +478,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                         _PackageButton(
                                           label: alreadyRelated ? 'Falar' : 'Pedir',
                                           busy: _requestingQuote || _openingChat,
-                                          onTap: alreadyRelated
+                                          onTap: pub
+                                              ? _needAccount
+                                              : alreadyRelated
                                               ? _openChat
                                               : () => _requestQuote(
                                                     initialMessage:
@@ -463,6 +500,15 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         const _Heading('Avaliações'),
                         const SizedBox(height: 10),
                         _ReviewsSection(partnerId: partner.id, partnerName: partner.name, partnerAvatarUrl: partner.imageUrl),
+                        if (pub)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 18),
+                            child: Text(
+                              '"Seguir" e "Pedir orçamento" pedem para entrar ou criar conta, e voltam a esta página.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -489,7 +535,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     child: SizedBox(
                       height: 52,
                       child: FilledButton(
-                        onPressed: _openingChat ? null : _openChat,
+                        onPressed: pub ? _needAccount : (_openingChat ? null : _openChat),
                         child: const Text('Mensagem'),
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFFF2F0EB),
@@ -516,7 +562,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         onPressed: _requestingQuote || alreadyRelated
                             ? null
                             : () {
-                                if (widget.selectionMode) {
+                                if (pub) {
+                                  _needAccount();
+                                } else if (widget.selectionMode) {
                                   Navigator.of(context).pop(partner);
                                 } else {
                                   _requestQuote();
@@ -578,6 +626,7 @@ class _PhotoCarousel extends StatefulWidget {
   final IconData fallbackIcon;
   final bool favorited;
   final VoidCallback onFavorite;
+  final bool publicView;
 
   const _PhotoCarousel({
     required this.photos,
@@ -585,6 +634,7 @@ class _PhotoCarousel extends StatefulWidget {
     required this.fallbackIcon,
     required this.favorited,
     required this.onFavorite,
+    this.publicView = false,
   });
 
   @override
@@ -634,6 +684,39 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
               ),
             ),
           ),
+          if (widget.publicView) ...[
+            // Página pública: marca à esquerda, "Abrir na app" à direita.
+            Positioned(
+              top: 12,
+              left: 16,
+              child: Container(
+                height: 44,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                child: const Text('À Nossa!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ),
+            ),
+            if (kIsWeb)
+              Positioned(
+                top: 12,
+                right: 16,
+                child: SnappyTap(
+                  onTap: () {
+                    PendingDeepLink.save(GoRouterState.of(context).uri.toString());
+                    showInstallAppSheet(context);
+                  },
+                  child: Container(
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(22)),
+                    child: const Text('Abrir na app',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                  ),
+                ),
+              ),
+          ] else ...[
           Positioned(
             top: 12,
             left: 16,
@@ -653,6 +736,7 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
               ),
             ),
           ),
+          ],
           if (photos.length > 1)
             Positioned(
               right: 16,
@@ -961,7 +1045,10 @@ class _ComingSoonSection extends StatelessWidget {
 /// Seguidores, amigos que seguem e o botão Seguir / A seguir.
 class _PartnerFollow extends ConsumerStatefulWidget {
   final String partnerId;
-  const _PartnerFollow({required this.partnerId});
+
+  /// Página pública sem sessão: o botão pede para entrar.
+  final VoidCallback? onNeedAccount;
+  const _PartnerFollow({required this.partnerId, this.onNeedAccount});
 
   @override
   ConsumerState<_PartnerFollow> createState() => _PartnerFollowState();
@@ -972,6 +1059,20 @@ class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.onNeedAccount != null) {
+      final followers = ref.watch(partnerPublicStatsProvider(widget.partnerId)).value?.followers ?? 0;
+      return Padding(
+        padding: const EdgeInsets.only(top: 14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          if (followers > 0) ...[
+            Text('Seguido por $followers ${followers == 1 ? 'pessoa' : 'pessoas'} na À Nossa!',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+            const SizedBox(height: 12),
+          ],
+          ProfileButton(followers > 0 ? 'Seguir · $followers' : 'Seguir', dark: true, onTap: widget.onNeedAccount),
+        ]),
+      );
+    }
     final info = ref.watch(partnerFollowInfoProvider(widget.partnerId)).value;
     if (info == null) return const SizedBox.shrink();
     return Padding(
@@ -1008,4 +1109,44 @@ class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
       ]),
     );
   }
+}
+
+
+/// Página pública do parceiro (`/parceiro/:id`, link "Partilhar perfil",
+/// 2026-11-12). Abre sem sessão; com sessão é o perfil de sempre.
+class PublicPartnerScreen extends ConsumerWidget {
+  final String id;
+  const PublicPartnerScreen({super.key, required this.id});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final signedIn = ref.watch(authControllerProvider.select((s) => s.status == AuthStatus.active));
+    final async = ref.watch(partnerByIdProvider(id));
+    return async.when(
+      loading: () => const Scaffold(backgroundColor: Colors.white, body: Center(child: CircularProgressIndicator())),
+      error: (e, st) => const _PartnerUnavailable(),
+      data: (p) => p == null ? const _PartnerUnavailable() : PartnerDetailScreen(partner: p, publicView: !signedIn),
+    );
+  }
+}
+
+class _PartnerUnavailable extends StatelessWidget {
+  const _PartnerUnavailable();
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Text('Este parceiro não está disponível.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 16),
+              ProfileButton('Ir para a À Nossa!', dark: true, onTap: () => context.go('/welcome')),
+            ]),
+          ),
+        ),
+      );
 }
