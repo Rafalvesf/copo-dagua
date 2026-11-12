@@ -302,17 +302,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           child: Text(text,
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: green ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733))),
         );
-    Widget stat(int n, String label) => Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(12)),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('$n', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
-              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: muted)),
-            ]),
-          ),
-        );
     Widget sectionTitle(String t, {String? action, VoidCallback? onAction}) => Padding(
           padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
           child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
@@ -367,100 +356,50 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 ref.read(favoritePartnersControllerProvider.notifier).toggle(partner.id);
               },
             ),
+            // Mesma disposição do perfil de um amigo (pedido 2026-11-12),
+            // com as fotos por cima: cartão de perfil com logótipo,
+            // números, nome, categoria e local, descrição, etiquetas,
+            // quem segue e os dois botões.
             Transform.translate(
               offset: const Offset(0, -28),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                child: ProfileCard(
+                  avatar: V2Avatar(partner.name, size: 76, imageUrl: partner.imageUrl),
+                  name: partner.name,
+                  handleLine: [partner.primaryCategoryLabel, if (partner.location.isNotEmpty) partner.location].join(' · '),
+                  bio: partner.description,
+                  labels: const ['Eventos', 'Seguidores', 'Avaliações'],
+                  events: stats?.eventsDone ?? 0,
+                  followers: stats?.followers ?? 0,
+                  following: summary.count,
+                  extra: Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                    FounderBadge(partner.id, long: true),
+                    ProBadge(partner.id),
+                    chip(fromPrice == null ? 'Por orçamento' : 'Desde ${euros(fromPrice)}'),
+                    if (ratingText != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(999)),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          const LineIcon(LineIcon.star, size: 12, fill: true, color: Color(0xFFC9A24A)),
+                          const SizedBox(width: 4),
+                          Text(ratingText,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
+                        ]),
+                      ),
+                    if (figureText != null) chip(figureText),
+                    if (dateChip != null) chip(dateChip),
+                    if (responds != null) chip(responds, green: true),
+                  ]),
+                  followedBy: widget.selectionMode
+                      ? ProfileButton(mainLabel, dark: true, onTap: mainAction)
+                      : _PartnerFollow(
+                          partnerId: partner.id,
+                          onNeedAccount: pub ? _needAccount : null,
+                          second: ProfileButton(mainLabel, onTap: _requestingQuote || _openingChat ? null : mainAction),
+                        ),
                 ),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(partner.name,
-                            style: const TextStyle(fontSize: 22, height: 1.15, fontWeight: FontWeight.w700, color: ink)),
-                        Row(mainAxisSize: MainAxisSize.min, children: [
-                          FounderBadge(partner.id, long: true),
-                          ProBadge(partner.id),
-                        ]),
-                        const SizedBox(height: 4),
-                        Row(children: [
-                          const LineIcon(LineIcon.pin, size: 14, color: muted, stroke: 2.2, circles: LineIcon.pinCircle),
-                          const SizedBox(width: 5),
-                          Expanded(
-                            child: Text.rich(
-                              TextSpan(children: [
-                                TextSpan(text: [
-                                  if (partner.location.isNotEmpty) partner.location,
-                                  partner.primaryCategoryLabel,
-                                ].join(' · ')),
-                                // A fonte não tem ★: estrela desenhada.
-                                if (ratingText != null) ...[
-                                  const TextSpan(text: ' · '),
-                                  const WidgetSpan(
-                                    alignment: PlaceholderAlignment.middle,
-                                    child: LineIcon(LineIcon.star, size: 12, fill: true, color: muted),
-                                  ),
-                                  TextSpan(text: ' $ratingText'),
-                                ],
-                              ]),
-                              maxLines: 2,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: muted),
-                            ),
-                          ),
-                        ]),
-                      ]),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      constraints: const BoxConstraints(minWidth: 40),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(10)),
-                      child: Column(mainAxisSize: MainAxisSize.min, children: [
-                        Text(fromPrice == null ? 'POR' : 'DESDE',
-                            style: const TextStyle(fontSize: 9, letterSpacing: .4, fontWeight: FontWeight.w700, color: muted)),
-                        Text(fromPrice == null ? 'Orçamento' : euros(fromPrice),
-                            style: const TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w700, color: ink)),
-                      ]),
-                    ),
-                  ]),
-                  const SizedBox(height: 12),
-                  Text(
-                    partner.description.isEmpty ? 'Sem descrição.' : partner.description,
-                    textAlign: TextAlign.justify,
-                    style: const TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: ink),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(children: [
-                    stat(stats?.followers ?? 0, 'Seguidores'),
-                    const SizedBox(width: 6),
-                    stat(summary.count, 'Avaliações'),
-                    const SizedBox(width: 6),
-                    stat(stats?.eventsDone ?? 0, 'Eventos feitos'),
-                  ]),
-                  if (figureText != null || dateChip != null || responds != null) ...[
-                    const SizedBox(height: 12),
-                    Wrap(spacing: 6, runSpacing: 6, children: [
-                      if (figureText != null) chip(figureText),
-                      if (dateChip != null) chip(dateChip),
-                      if (responds != null) chip(responds, green: true),
-                    ]),
-                  ],
-                  if (!widget.selectionMode)
-                    _PartnerFollow(
-                      partnerId: partner.id,
-                      onNeedAccount: pub ? _needAccount : null,
-                      second: ProfileButton(mainLabel, onTap: _requestingQuote || _openingChat ? null : mainAction),
-                    )
-                  else ...[
-                    const SizedBox(height: 12),
-                    ProfileButton(mainLabel, dark: true, onTap: mainAction),
-                  ],
-                ]),
               ),
             ),
             if (packages.isNotEmpty) ...[
@@ -951,7 +890,7 @@ class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
     if (widget.onNeedAccount != null) {
       final followers = ref.watch(partnerPublicStatsProvider(widget.partnerId)).value?.followers ?? 0;
       return Padding(
-        padding: const EdgeInsets.only(top: 12),
+        padding: EdgeInsets.zero,
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (followers > 0) ...[
             Text('Seguido por $followers ${followers == 1 ? 'pessoa' : 'pessoas'} na À Nossa!',
@@ -969,14 +908,14 @@ class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
     if (info == null) {
       return widget.second == null
           ? const SizedBox.shrink()
-          : Padding(padding: const EdgeInsets.only(top: 12), child: widget.second!);
+          : widget.second!;
     }
     return Padding(
-      padding: const EdgeInsets.only(top: 12),
+      padding: EdgeInsets.zero,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (info.friends.isNotEmpty) ...[
           FollowedByRow(people: info.friends, text: followedByLine(info.friends, info.friendsCount, female: false)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
         ],
         Row(children: [
           Expanded(
