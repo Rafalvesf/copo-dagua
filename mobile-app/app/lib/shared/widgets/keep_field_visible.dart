@@ -40,11 +40,14 @@ class _KeepFieldVisibleState extends State<KeepFieldVisible> with WidgetsBinding
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final c = _field();
       if (c == null || !c.mounted) return;
+      // "Lock" (pedido 2026-11-12): o campo onde se escreve (pesquisa,
+      // mensagens, formulários) sobe para perto do topo e fica lá, bem
+      // longe do teclado — em vez de ficar encostado ao teclado ou tapado.
       Scrollable.ensureVisible(
         c,
-        duration: const Duration(milliseconds: 200),
-        // Só mexe se o campo estiver tapado.
-        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        alignment: 0.12,
       );
     });
   }
