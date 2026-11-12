@@ -11,7 +11,7 @@ import '../../../core/pending_deep_link.dart';
 import '../../../shared/widgets/install_app_sheet.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/social/social.dart';
-import '../../profile/profile_widgets.dart' show FollowedByRow, ProfileButton;
+import '../../profile/profile_widgets.dart' show FollowedByRow, ProfileButton, ProfileCard;
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
