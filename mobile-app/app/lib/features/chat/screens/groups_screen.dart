@@ -225,7 +225,7 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
                     CheckboxListTile(
                       value: _picked.contains(p.id),
                       onChanged: (v) => setState(() => v == true ? _picked.add(p.id) : _picked.remove(p.id)),
-                      secondary: V2Avatar(p.name, size: 40, imageUrl: p.avatarUrl),
+                      secondary: V2Avatar(p.name, size: 40, imageUrl: p.avatarUrl, flat: true),
                       title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.w700)),
                       subtitle: Text(p.role == 'organizador' ? 'Organizador' : 'Convidado'),
                       activeColor: AppTheme.accentOliveDark,
@@ -306,7 +306,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                 for (final p in people)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: V2Avatar(p.name, size: 38, imageUrl: p.avatarUrl),
+                    leading: V2Avatar(p.name, size: 38, imageUrl: p.avatarUrl, flat: true),
                     title: Text(p.name),
                   ),
               ]),
@@ -403,9 +403,9 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
               width: 46,
               height: 44,
               child: others.isEmpty
-                  ? const V2Avatar('Grupo', size: 44)
+                  ? const V2Avatar('Grupo', size: 44, flat: true)
                   : others.length == 1
-                      ? V2Avatar(others[0].name, size: 44, imageUrl: others[0].avatarUrl)
+                      ? V2Avatar(others[0].name, size: 44, imageUrl: others[0].avatarUrl, flat: true)
                       : Stack(children: [
                           for (var i = 0; i < 2; i++)
                             Positioned(
@@ -413,7 +413,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                               top: i == 0 ? 0 : 14,
                               child: Container(
                                 decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-                                child: V2Avatar(others[i].name, size: 28, imageUrl: others[i].avatarUrl),
+                                child: V2Avatar(others[i].name, size: 30, imageUrl: others[i].avatarUrl, flat: true),
                               ),
                             ),
                         ]),
@@ -449,9 +449,12 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                     // Nome/foto só na primeira de uma sequência do mesmo autor.
                     final older = i + 1 < msgs.length ? msgs[i + 1] : null;
                     final firstOfRun = older == null || older.senderId != m.senderId;
+                    // Foto ao fundo da última da sequência (mockup "Grupo").
+                    final newer = i > 0 ? msgs[i - 1] : null;
+                    final lastOfRun = newer == null || newer.senderId != m.senderId;
                     final bubble = m.attachmentUrl != null
                         ? ChatAttachmentView(url: m.attachmentUrl!, type: m.attachmentType ?? 'file', name: m.attachmentName, isMe: mine)
-                        : ChatBubble(text: m.body ?? '', isMe: mine);
+                        : ChatBubble(text: m.body ?? '', isMe: mine, sender: !mine && firstOfRun ? (sender?.name ?? '') : null);
                     // Toque longo numa mensagem de outra pessoa: denunciar / bloquear.
                     final content = mine
                         // Toque longo numa mensagem minha: apagar (179).
@@ -478,12 +481,12 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                       padding: EdgeInsets.only(top: firstOfRun ? 10 : 3),
                       child: Row(
                         mainAxisAlignment: mine ? MainAxisAlignment.end : MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           if (!mine) ...[
                             SizedBox(
                               width: 32,
-                              child: firstOfRun ? V2Avatar(sender?.name ?? '?', size: 30, imageUrl: sender?.avatarUrl) : null,
+                              child: lastOfRun ? V2Avatar(sender?.name ?? '?', size: 30, imageUrl: sender?.avatarUrl, flat: true) : null,
                             ),
                             const SizedBox(width: 6),
                           ],
@@ -491,11 +494,11 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                             child: Column(
                               crossAxisAlignment: mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                               children: [
-                                if (!mine && firstOfRun)
+                                if (!mine && firstOfRun && m.attachmentUrl != null)
                                   Padding(
                                     padding: const EdgeInsets.only(left: 4, bottom: 3),
                                     child: Text(sender?.name ?? '',
-                                        style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: ChatBubble.senderColor(sender?.name ?? ''))),
                                   ),
                                 content,
                               ],
@@ -520,7 +523,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                 ),
           ),
         ),
-        ChatComposer(controller: _text, onSend: _send, onAttach: _attach),
+        ChatComposer(controller: _text, onSend: _send, onAttach: _attach, hint: 'Mensagem para o grupo'),
       ]),
     );
   }
@@ -552,7 +555,7 @@ class _AddPeopleSheetState extends State<_AddPeopleSheet> {
                         CheckboxListTile(
                           value: _picked.contains(p.id),
                           onChanged: (v) => setState(() => v == true ? _picked.add(p.id) : _picked.remove(p.id)),
-                          secondary: V2Avatar(p.name, size: 38, imageUrl: p.avatarUrl),
+                          secondary: V2Avatar(p.name, size: 38, imageUrl: p.avatarUrl, flat: true),
                           title: Text(p.name),
                           activeColor: AppTheme.accentOliveDark,
                           contentPadding: EdgeInsets.zero,

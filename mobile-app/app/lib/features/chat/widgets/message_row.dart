@@ -59,7 +59,7 @@ class MessageRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                             fontSize: 16,
-                            fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w400,
+                            fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w600,
                             color: AppTheme.ink)),
                   ),
                   if (time != null) ...[
@@ -67,7 +67,7 @@ class MessageRow extends StatelessWidget {
                     Text(time!,
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w400,
+                          fontWeight: FontWeight.w700,
                           color: hasUnread ? AppTheme.accentOliveDark : AppTheme.inkMuted,
                         )),
                   ],
@@ -90,7 +90,7 @@ class MessageRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w400,
+                        fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w600,
                         color: hasUnread ? AppTheme.ink : AppTheme.inkMuted,
                       ),
                     ),

@@ -159,7 +159,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                                   child: Column(children: [
                                     for (var i = 0; i < sections[k]!.length; i++)
                                       MessageRow(
-                                        avatar: V2Avatar(sections[k]![i].name, size: 52, imageUrl: sections[k]![i].avatarUrl),
+                                        avatar: V2Avatar(sections[k]![i].name, size: 52, imageUrl: sections[k]![i].avatarUrl, flat: true),
                                         title: sections[k]![i].name,
                                         time: messageTime(sections[k]![i].lastMessageAt),
                                         preview: sections[k]![i].lastMessage ?? 'Sem mensagens ainda.',

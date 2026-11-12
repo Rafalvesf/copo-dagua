@@ -157,7 +157,20 @@ class V2Avatar extends StatelessWidget {
   final double size;
   final String? imageUrl;
   final bool filled;
-  const V2Avatar(this.name, {super.key, this.size = 44, this.imageUrl, this.filled = false});
+
+  /// Plana, como nos mockups das Mensagens (2026-11-12): fundo de cor
+  /// suave (sempre a mesma para o mesmo nome), sem aro nem sombra.
+  final bool flat;
+  const V2Avatar(this.name, {super.key, this.size = 44, this.imageUrl, this.filled = false, this.flat = false});
+
+  static const _tints = [Color(0xFFE7D9C3), Color(0xFFDDE5D3), Color(0xFFF3DEE0), Color(0xFFE6EDE1), Color(0xFFEFE3CC), Color(0xFFE4E0EC)];
+  static Color tintFor(String name) {
+    var h = 0;
+    for (final c in name.codeUnits) {
+      h = (h * 31 + c) & 0x7fffffff;
+    }
+    return _tints[h % _tints.length];
+  }
 
   static String initials(String name) {
     final parts = name
@@ -178,10 +191,10 @@ class V2Avatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: filled ? AppTheme.accentOliveDark : Colors.white,
+        color: filled ? AppTheme.accentOliveDark : (flat ? tintFor(name) : Colors.white),
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: StickerIcon.shadow,
+        border: flat ? null : Border.all(color: Colors.white, width: 2),
+        boxShadow: flat ? null : StickerIcon.shadow,
         image: imageUrl == null ? null : DecorationImage(image: sizedNetworkImage(imageUrl!, size, context), fit: BoxFit.cover),
       ),
       alignment: Alignment.center,
@@ -189,7 +202,7 @@ class V2Avatar extends StatelessWidget {
           ? null
           : Text(initials(name),
               style: TextStyle(
-                fontSize: size >= 40 ? 14 : 11,
+                fontSize: flat ? (size >= 48 ? 16 : (size >= 40 ? 14 : 11)) : (size >= 40 ? 14 : 11),
                 fontWeight: FontWeight.w700,
                 color: filled ? Colors.white : AppTheme.accentOliveDark,
               )),
