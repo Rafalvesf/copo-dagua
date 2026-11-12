@@ -12,6 +12,7 @@ import '../../../core/chat/chat_delete.dart';
 import '../../../core/chat/group_chat.dart';
 import '../../../core/moderation/moderation.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -373,6 +374,21 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
     final me = currentUserId();
     final blocked = ref.watch(blockedProfilesProvider).value ?? const <String>{};
     final msgs = thread.messages.reversed.where((m) => !blocked.contains(m.senderId)).toList();
+    final reads = ref.watch(_groupReadsProvider(widget.group.id)).value ?? const <DateTime>[];
+    final others = people.values.where((p) => p.id != me).toList();
+    // Faixa do evento (mockup "Grupo do evento", 2026-11-12).
+    const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    final ev = ref.watch(weddingControllerProvider).events.where((w) => w.id == widget.group.weddingId).firstOrNull;
+    final evDate = ev?.weddingDate;
+    final eventTitle = ev == null
+        ? null
+        : [ev.displayNames, if (evDate != null) '${evDate.day} ${months[evDate.month - 1]} ${evDate.year}'].join(' · ');
+    final names = others.map((p) => p.name.split(' ').first).toList();
+    final subtitle = names.isEmpty
+        ? 'Grupo'
+        : names.length <= 3
+            ? names.join(', ')
+            : '${names.take(3).join(', ')} e mais ${names.length - 3}';
     return GradientScaffold(
       background: AppBackground.subtle,
       body: Column(children: [
@@ -381,8 +397,31 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
           bottom: false,
           child: ChatHeader(
             name: widget.group.name,
-            subtitle: people.isEmpty ? 'Grupo' : '${people.length} membros · ver',
+            subtitle: subtitle,
             onOpenProfile: _menu,
+            leading: SizedBox(
+              width: 46,
+              height: 44,
+              child: others.isEmpty
+                  ? const V2Avatar('Grupo', size: 44)
+                  : others.length == 1
+                      ? V2Avatar(others[0].name, size: 44, imageUrl: others[0].avatarUrl)
+                      : Stack(children: [
+                          for (var i = 0; i < 2; i++)
+                            Positioned(
+                              left: i == 0 ? 0 : 16,
+                              top: i == 0 ? 0 : 14,
+                              child: Container(
+                                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                                child: V2Avatar(others[i].name, size: 28, imageUrl: others[i].avatarUrl),
+                              ),
+                            ),
+                        ]),
+            ),
+            eventTitle: eventTitle ?? 'Grupo do evento',
+            eventSubtitle: eventTitle == null ? null : 'Grupo do evento',
+            eventAction: ev == null ? null : 'Ver evento',
+            onEventAction: ev == null ? null : () => context.go('/home'),
             onReport: () => showReportPicker(context, ref,
                 kind: ReportKind.groupMessage,
                 recentFirst: [
@@ -394,6 +433,8 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
           ),
         ),
         Expanded(
+          child: ColoredBox(
+          color: const Color(0xFFF2F0EB),
           child: thread.loading && thread.messages.isEmpty
               ? const Center(child: CircularProgressIndicator())
               : ListView.builder(
@@ -430,7 +471,9 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                                 kind: ReportKind.groupMessage, targetId: m.id, authorId: m.senderId, authorName: sender?.name),
                             child: bubble,
                           );
-                    return Padding(
+                    // "Visto por N" por baixo da minha última mensagem.
+                    final seenBy = mine && i == 0 ? reads.where((r) => !r.isBefore(m.sentAt)).length : 0;
+                    final row = Padding(
                       padding: EdgeInsets.only(top: firstOfRun ? 10 : 3),
                       child: Row(
                         mainAxisAlignment: mine ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -460,8 +503,20 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                         ],
                       ),
                     );
+                    if (!(mine && i == 0)) return row;
+                    final t = m.sentAt.toLocal();
+                    final hhmm = '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+                    return Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                      row,
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(seenBy > 0 ? '$hhmm · Visto por $seenBy' : hhmm,
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                      ),
+                    ]);
                   },
                 ),
+          ),
         ),
         ChatComposer(controller: _text, onSend: _send, onAttach: _attach),
       ]),
@@ -511,3 +566,17 @@ class _AddPeopleSheetState extends State<_AddPeopleSheet> {
         ),
       );
 }
+
+/// Quando cada outro membro leu o grupo ("Visto por N").
+final _groupReadsProvider = FutureProvider.autoDispose.family<List<DateTime>, String>((ref, groupId) async {
+  try {
+    final me = currentUserId();
+    final rows = await supabase.from('chat_group_members').select('profile_id, last_read_at').eq('group_id', groupId);
+    return [
+      for (final r in (rows as List).cast<Map<String, dynamic>>())
+        if (r['profile_id'] != me && r['last_read_at'] != null) DateTime.parse(r['last_read_at'] as String),
+    ];
+  } catch (_) {
+    return const [];
+  }
+});
