@@ -36,7 +36,7 @@ class ChatHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final info = Row(
       children: [
-        leading ?? V2Avatar(name, size: 44, imageUrl: avatarUrl),
+        leading ?? V2Avatar(name, size: 44, imageUrl: avatarUrl, flat: true),
         const SizedBox(width: 10),
         Expanded(
           child: Column(

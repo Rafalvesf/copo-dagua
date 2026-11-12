@@ -107,14 +107,26 @@ class ChatBubble extends StatelessWidget {
   final String text;
   final bool isMe;
 
-  const ChatBubble({super.key, required this.text, required this.isMe});
+  /// Nos grupos: nome de quem escreveu, dentro da bolha (mockup "Grupo").
+  final String? sender;
+
+  const ChatBubble({super.key, required this.text, required this.isMe, this.sender});
+
+  static const _senderColors = [Color(0xFF9A4F57), Color(0xFF3F7A4F), Color(0xFF8A6A2E), Color(0xFF4F5E8A), Color(0xFF7A4F8A)];
+  static Color senderColor(String name) {
+    var h = 0;
+    for (final c in name.codeUnits) {
+      h = (h * 31 + c) & 0x7fffffff;
+    }
+    return _senderColors[h % _senderColors.length];
+  }
 
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: EdgeInsets.fromLTRB(14, sender == null ? 10 : 8, 14, 10),
         decoration: BoxDecoration(
           // As minhas a preto, as da outra parte a branco (mockup).
           color: isMe ? AppTheme.ink : Colors.white,
@@ -125,14 +137,26 @@ class ChatBubble extends StatelessWidget {
             bottomRight: Radius.circular(isMe ? 6 : 18),
           ),
         ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 15,
-            height: 21 / 15,
-            fontWeight: FontWeight.w600,
-            color: isMe ? Colors.white : AppTheme.ink,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (sender != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text(sender!,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: senderColor(sender!))),
+              ),
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 15,
+                height: 21 / 15,
+                fontWeight: FontWeight.w600,
+                color: isMe ? Colors.white : AppTheme.ink,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -287,7 +311,11 @@ class ChatComposer extends StatelessWidget {
   /// Botão "+" para anexos (fotos, ficheiros, stickers e GIFs).
   final VoidCallback? onAttach;
 
-  const ChatComposer({super.key, required this.controller, required this.onSend, this.onAttach});
+  /// Texto de exemplo na caixa (mockup: "Escreve uma mensagem";
+  /// nos grupos "Mensagem para o grupo").
+  final String hint;
+
+  const ChatComposer({super.key, required this.controller, required this.onSend, this.onAttach, this.hint = 'Escreve uma mensagem'});
 
   @override
   Widget build(BuildContext context) {
@@ -328,8 +356,8 @@ class ChatComposer extends StatelessWidget {
                     onSubmitted: (_) => onSend(),
                     textInputAction: TextInputAction.send,
                     style: const TextStyle(fontSize: 15, color: AppTheme.ink),
-                    decoration: const InputDecoration(
-                      hintText: 'Escrever mensagem',
+                    decoration: InputDecoration(
+                      hintText: hint,
                       isDense: true,
                       filled: false,
                       border: InputBorder.none,

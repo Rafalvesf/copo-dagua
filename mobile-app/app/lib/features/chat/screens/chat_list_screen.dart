@@ -293,7 +293,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         c.id,
         c,
         MessageRow(
-          avatar: V2Avatar(c.name, size: 52, imageUrl: c.avatarUrl),
+          avatar: V2Avatar(c.name, size: 52, imageUrl: c.avatarUrl, flat: true),
           title: c.name,
           time: messageTime(c.lastMessageAt),
           preview: c.lastMessage ?? 'Sem mensagens ainda.',
@@ -519,8 +519,8 @@ class _GroupAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final shown = people.take(2).toList();
-    if (shown.isEmpty) return const V2Avatar('Grupo', size: 52);
-    if (shown.length == 1) return V2Avatar(shown[0].name, size: 52, imageUrl: shown[0].avatarUrl);
+    if (shown.isEmpty) return const V2Avatar('Grupo', size: 52, flat: true);
+    if (shown.length == 1) return V2Avatar(shown[0].name, size: 52, imageUrl: shown[0].avatarUrl, flat: true);
     return Stack(children: [
       for (var i = 0; i < 2; i++)
         Positioned(
@@ -528,7 +528,7 @@ class _GroupAvatar extends StatelessWidget {
           top: i == 0 ? 0 : 18,
           child: Container(
             decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-            child: V2Avatar(shown[i].name, size: 32, imageUrl: shown[i].avatarUrl),
+            child: V2Avatar(shown[i].name, size: 30, imageUrl: shown[i].avatarUrl, flat: true),
           ),
         ),
     ]);
