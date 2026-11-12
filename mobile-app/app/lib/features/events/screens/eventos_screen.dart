@@ -1,6 +1,7 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
+import '../widgets/event_actions_sheet.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/text_case.dart';
 import 'package:copo_dagua_app/shared/widgets/partner_notification_bell.dart';
@@ -813,7 +814,13 @@ class _MyEventCard extends ConsumerWidget {
       if (summary.confirmed > 0) ('${summary.confirmed}', summary.confirmed == 1 ? 'confirmado' : 'confirmados'),
       if (summary.bookings > 0) ('${summary.bookings}', summary.bookings == 1 ? 'reserva' : 'reservas'),
     ];
-    return SnappyTap(
+    // Toque longo: arquivar ou apagar (185).
+    return GestureDetector(
+      onLongPress: () => showEventActionsSheet(context, ref,
+          weddingId: wedding.id,
+          name: capFirst(wedding.displayNames),
+          isOwner: wedding.ownerId == ref.read(authControllerProvider).profile?.id),
+      child: SnappyTap(
       onTap: () => _open(context, ref),
       child: Container(
         clipBehavior: Clip.antiAlias,
@@ -857,6 +864,7 @@ class _MyEventCard extends ConsumerWidget {
           ),
         ]),
       ),
+    ),
     );
   }
 }

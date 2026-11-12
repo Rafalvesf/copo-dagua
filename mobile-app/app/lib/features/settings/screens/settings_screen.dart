@@ -4,6 +4,9 @@ import '../../../core/notifications/push.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../../shared/text_case.dart';
+import '../../../core/wedding/event_lifecycle.dart';
+import '../../../core/wedding/date_format_pt.dart';
 import '../../../shared/widgets/line_icon.dart';
 import 'package:copo_dagua_app/shared/widgets/gradient_scaffold.dart';
 import '../../../core/wedding/organizers.dart' show myWeddingPermsProvider;
@@ -332,6 +335,12 @@ class _CoupleSettings extends ConsumerWidget {
             label: 'Acesso e entrada',
             value: 'Para os convidados',
             onTap: () => context.push('/guest-page'),
+          ),
+          // Arquivados e apagados (185) — só aqui.
+          _Row(
+            icon: Hi.archiveBox,
+            label: 'Eventos arquivados e apagados',
+            onTap: () => context.push('/eventos-arquivados'),
           ),
         ],
       ),
@@ -1018,6 +1027,140 @@ class _PushRowState extends State<_PushRow> {
           activeTrackColor: AppTheme.accentOliveDark,
           onChanged: _busy || _status == PushStatus.iosInstall || _status == PushStatus.denied ? null : _toggle,
         ),
+      ]),
+    );
+  }
+}
+
+
+/// Definições → "Eventos arquivados e apagados" (migração 185).
+class HiddenEventsScreen extends ConsumerWidget {
+  const HiddenEventsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final list = ref.watch(hiddenEventsProvider).value ?? const <HiddenEvent>[];
+    final archived = list.where((e) => !e.deleted).toList();
+    final deleted = list.where((e) => e.deleted).toList();
+    return SettingsScaffold(
+      title: 'Arquivados e apagados',
+      children: [
+        if (list.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 20),
+            child: Text('Não tens eventos arquivados nem apagados.',
+                style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+          ),
+        if (archived.isNotEmpty) ...[
+          const SettingsSectionTitle('Arquivados'),
+          SettingsGroup(children: [for (final e in archived) _HiddenEventRow(e)]),
+        ],
+        if (deleted.isNotEmpty) ...[
+          const SettingsSectionTitle('Apagados'),
+          SettingsGroup(children: [for (final e in deleted) _HiddenEventRow(e)]),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(4, 10, 4, 0),
+            child: Text(
+              'Os apagados não aparecem a ninguém. Restaura-os quando quiseres, ou apaga-os de vez se não tiverem pedidos a parceiros, bilhetes ou presentes.',
+              style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _HiddenEventRow extends ConsumerStatefulWidget {
+  final HiddenEvent event;
+  const _HiddenEventRow(this.event);
+
+  @override
+  ConsumerState<_HiddenEventRow> createState() => _HiddenEventRowState();
+}
+
+class _HiddenEventRowState extends ConsumerState<_HiddenEventRow> {
+  bool _busy = false;
+  bool _confirmPurge = false;
+
+  Future<void> _run(Future<void> Function() action, String ok) async {
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await action();
+      final me = ref.read(authControllerProvider).profile?.id;
+      if (me != null) await ref.read(weddingControllerProvider.notifier).load(me);
+      ref.invalidate(hiddenEventsProvider);
+      messenger.showSnackBar(SnackBar(content: Text(ok)));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(eventActionError(e))));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _confirmPurge = false;
+        });
+      }
+    }
+  }
+
+  Widget _pill(String text, {bool dark = false, VoidCallback? onTap}) => SnappyTap(
+        onTap: _busy ? null : onTap,
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: dark ? AppTheme.ink : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: dark ? null : Border.all(color: AppTheme.ink, width: 1.5),
+          ),
+          child: Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: dark ? Colors.white : AppTheme.ink)),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final e = widget.event;
+    final date = e.date == null ? null : formatWeddingDateCaps(e.date!);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(e.name.isEmpty ? 'Evento' : capFirst(e.name),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              if (date != null) Text(date, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
+          ),
+          const SizedBox(width: 10),
+          _pill('Restaurar', dark: true, onTap: () => _run(() => restoreEvent(e.id), 'Evento restaurado.')),
+        ]),
+        if (e.deleted && e.mine) ...[
+          const SizedBox(height: 10),
+          if (!_confirmPurge)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SnappyTap(
+                onTap: _busy ? null : () => setState(() => _confirmPurge = true),
+                child: const Text('Apagar de vez',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppStatusColors.declined)),
+              ),
+            )
+          else
+            Row(children: [
+              const Expanded(
+                child: Text('Apagar de vez? Não dá para desfazer.',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppStatusColors.declined)),
+              ),
+              _pill('Não', onTap: () => setState(() => _confirmPurge = false)),
+              const SizedBox(width: 6),
+              _pill('Apagar', dark: true, onTap: () => _run(() => purgeEvent(e.id), 'Evento apagado de vez.')),
+            ]),
+        ],
       ]),
     );
   }

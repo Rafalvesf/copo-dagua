@@ -312,6 +312,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Seguidores, eventos feitos e «Responde em ~1 h» na página do parceiro, também para quem abre o link sem conta.",
     check: { kind: "marker", id: "184" },
   },
+  {
+    file: "185_event_archive_delete.sql",
+    date: "2026-11-12",
+    title: "Arquivar e apagar eventos",
+    what: "Arquivar ou apagar um evento (página do evento ou toque longo); arquivados e apagados nas Definições, com restaurar.",
+    check: { kind: "marker", id: "185" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
