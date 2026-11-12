@@ -817,7 +817,7 @@ class _MyEventCard extends ConsumerWidget {
             id: wedding.id,
             type: wedding.eventType,
             photo: wedding.coverPhotoUrl,
-            height: 120,
+            height: 140,
             badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Organizador')],
           ),
           Padding(
@@ -883,7 +883,7 @@ class _InvitedEventCard extends ConsumerWidget {
             id: wedding.weddingId,
             type: wedding.eventType,
             photo: wedding.coverPhotoUrl,
-            height: 120,
+            height: 140,
             badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Convidado')],
           ),
           Padding(
