@@ -84,6 +84,8 @@ class ProfileCard extends StatelessWidget {
   final int following;
   final Widget? followedBy;
   final List<Widget> buttons;
+  /// Etiquetas dos três números (o parceiro mostra avaliações).
+  final List<String> labels;
   const ProfileCard({
     super.key,
     required this.avatar,
@@ -95,6 +97,7 @@ class ProfileCard extends StatelessWidget {
     required this.following,
     this.followedBy,
     this.buttons = const [],
+    this.labels = const ['eventos', 'seguidores', 'a seguir'],
   });
 
   Widget _stat(int n, String label) => Column(children: [
@@ -110,9 +113,9 @@ class ProfileCard extends StatelessWidget {
           Row(children: [
             SizedBox(width: 76, height: 76, child: avatar),
             const SizedBox(width: 16),
-            Expanded(child: _stat(events, 'eventos')),
-            Expanded(child: _stat(followers, 'seguidores')),
-            Expanded(child: _stat(following, 'a seguir')),
+            Expanded(child: _stat(events, labels[0])),
+            Expanded(child: _stat(followers, labels[1])),
+            Expanded(child: _stat(following, labels[2])),
           ]),
           const SizedBox(height: 14),
           Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),

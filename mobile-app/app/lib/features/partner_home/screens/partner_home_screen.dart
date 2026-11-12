@@ -151,7 +151,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                 const TeamBannerCard(padding: EdgeInsets.only(bottom: 16)),
                 Text(
                   firstName.isEmpty ? 'Olá!' : 'Olá, $firstName!',
-                  style: const TextStyle(fontSize: 26, height: 32 / 26, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                  style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
                 ),
                 const SizedBox(height: 4),
                 Text(

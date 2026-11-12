@@ -72,7 +72,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
             bottom: false,
             child: ScrollingHeader(
  header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-                const PageHeader(title: 'Pedidos', centered: true, showBack: false)
+                const PageHeader(title: 'Pedidos', showBack: false, titleFontSize: 28)
  ],
  body: bookingsAsync.when(
                     loading: () =>
