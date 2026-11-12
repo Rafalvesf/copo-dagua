@@ -204,7 +204,8 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
                 padding: ( const EdgeInsets.fromLTRB(0, 0, 0, 150)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
                 children: [
                   // Sino com os avisos pessoais (convites, lembretes) — 2026-11-11.
-                  const PageHeader(title: 'Eventos', showBack: false, centered: true, trailing: PartnerNotificationBell()),
+                  // À esquerda, como Parceiros (pedido 2026-11-12).
+                  const PageHeader(title: 'Eventos', showBack: false, titleFontSize: 28, trailing: PartnerNotificationBell()),
                   const SizedBox(height: 14),
                   const TeamBannerCard(),
                   // Quem não tem Chat vê aqui a conversa com a equipa.
@@ -370,7 +371,7 @@ class _PosterCard extends StatelessWidget {
                       Text(_months[date.month - 1],
                           style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
                       Text('${date.day}',
-                          style: const TextStyle(fontSize: 18, height: 1.1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 20, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ]),
                   ),
                 ),
@@ -487,7 +488,7 @@ class _Title extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 2, 18, AppTheme.screenMargin, 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(text, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           if (subtitle != null)
             Padding(
               padding: const EdgeInsets.only(top: 2),
@@ -505,12 +506,13 @@ class _CelebrateCard extends StatelessWidget {
   Widget _tile(BuildContext context, IconData icon, String label, EventType type) => Expanded(
         child: SnappyTap(
           onTap: () => context.push('/novo-evento?tipo=${type.name}'),
+          // Da altura da navbar (pedido 2026-11-12).
           child: Container(
-            height: 92,
+            height: 76,
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(icon, size: 26, color: _brandGreen),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.ink)),
             ]),
           ),
@@ -762,7 +764,7 @@ final _seenAlertsProvider = NotifierProvider<_SeenAlerts, Set<String>>(_SeenAler
 Widget _cardTitle(String text) => Text(text,
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
-    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink));
+    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink));
 
 List<(IconData, String)> _cardMeta(DateTime? date, String? time, String? place) => [
       if (date != null)

@@ -355,7 +355,7 @@ class FeaturedOverlayCard extends StatelessWidget {
                     Text(title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                        style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     const SizedBox(height: 3),
                     if (subtitle.isNotEmpty) MetaRow([(Hi.mapPin, subtitle)]),
                     const Spacer(),
