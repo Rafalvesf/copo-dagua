@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/chat/chat_delete.dart';
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/supabase/supabase_config.dart';
-import '../../../shared/widgets/dense_card.dart' show AlertStrip;
 import '../widgets/message_row.dart';
 import '../../../core/chat/chat_list_controller.dart';
 import '../../../shared/widgets/island_sheet.dart';
@@ -260,15 +259,6 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         return b.$1!.compareTo(a.$1!);
       });
 
-    // Proposta por responder (aviso amarelo no topo).
-    ChatConversation? pending;
-    for (final c in allConvs) {
-      if (meta[c.id]?.status == _Status.proposal) {
-        pending = c;
-        break;
-      }
-    }
-
     Widget row(Object it, bool last) {
       if (it is ChatGroup) {
         final people = ref.watch(groupPeopleProvider(it.id)).value?.values.where((p) => p.id != me).toList() ??
@@ -346,15 +336,6 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           ]),
         ),
       ),
-      if (pending != null)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, AppTheme.screenMargin, 0),
-          child: AlertStrip(
-            text: '${pending.name} enviou uma proposta',
-            cta: 'Ver',
-            onTap: () => context.push('/chat/${pending!.id}', extra: pending),
-          ),
-        ),
       for (final k in [0, 1, 2])
         if (sections[k] != null) ...[
           Padding(
