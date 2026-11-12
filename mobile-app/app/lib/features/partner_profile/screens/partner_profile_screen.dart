@@ -1,6 +1,5 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
-import '../../settings/screens/settings_screen.dart' show PartnerAccountSections;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,6 +13,9 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import '../../../shared/widgets/snappy_tap.dart';
+import '../../../core/social/social.dart';
+import '../../profile/profile_widgets.dart';
 
 class PartnerProfileScreen extends ConsumerStatefulWidget {
   const PartnerProfileScreen({super.key});
@@ -51,43 +53,48 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
           SafeArea(top: false, 
             bottom: false,
             child: ListView(
-              padding: ( const EdgeInsets.fromLTRB(28, 20, 28, 140)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
+              padding: ( const EdgeInsets.fromLTRB(0, 20, 0, 140)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
               children: [
-                // Redesign 2026-10, igual ao canvas "Parceiro — perfil".
-                // Canvas "Parceiro — perfil (redesign)": título ao centro.
-                const SizedBox(
-                  height: 46,
-                  child: Row(
-                    children: [
-                      SizedBox(width: 44),
-                      Expanded(
-                        child: Text(
-                          'Perfil',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    // Como o Perfil do organizador (mockup 2026-11-12): título
+                    // à esquerda, avisos e Definições em botões redondos.
+                    Row(children: [
+                      const Expanded(
+                        child: Text('Perfil', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      ),
+                      const PartnerNotificationBell(),
+                      const SizedBox(width: 10),
+                      Tooltip(
+                        message: 'Definições',
+                        child: SnappyTap(
+                          onTap: () => context.push('/settings'),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            alignment: Alignment.center,
+                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                            child: const Icon(Hi.cog6Tooth, size: 20, color: AppTheme.ink),
+                          ),
                         ),
                       ),
-                      PartnerNotificationBell(),
+                    ]),
+                    const SizedBox(height: 18),
+                    _BusinessHeader(profile: profile),
+                    if (profile?.partnerProfileStatus != null &&
+                        profile!.partnerProfileStatus != 'published') ...[
+                      // Pagamentos obrigatórios para a verificação (2026-10-20).
+                      const _PaymentsRequiredCard(),
+                      const SizedBox(height: 16),
+                      _ReviewStatusCard(
+                        status: profile.partnerProfileStatus!,
+                        rejectionReason: profile.rejectionReason,
+                      ),
                     ],
-                  ),
+                  ]),
                 ),
-                const SizedBox(height: 18),
-                _BusinessHeader(profile: profile),
-                if (profile?.partnerProfileStatus != null &&
-                    profile!.partnerProfileStatus != 'published') ...[
-                  // Pagamentos obrigatórios para a verificação (2026-10-20).
-                  const _PaymentsRequiredCard(),
-                  const SizedBox(height: 16),
-                  _ReviewStatusCard(
-                    status: profile.partnerProfileStatus!,
-                    rejectionReason: profile.rejectionReason,
-                  ),
-                ],
-                const SizedBox(height: 6),
-                // Definições da conta dentro do Perfil (2026-10-17). Preços,
-                // portefólio, avaliações, resultados, pagamentos, contratos
-                // e reservas estão no Painel.
-                const PartnerAccountSections(),
+                if (profile != null) _PartnerFollowing(profileId: profile.id),
               ],
             ),
           ),
@@ -136,58 +143,55 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
 
   @override
   Widget build(BuildContext context) {
-    final profile = widget.profile;
-    final p = profile;
-    final name = (p?.businessName?.isEmpty ?? true)
-        ? (p?.fullName ?? '')
-        : p!.businessName!;
+    final p = widget.profile;
+    if (p == null) return const SizedBox.shrink();
+    final name = (p.businessName?.isEmpty ?? true) ? (p.fullName ?? '') : p.businessName!;
     final meta = [
-      if (p?.category != null) p!.category!.label,
-      if (p?.location != null && p!.location!.isNotEmpty) p.location!,
+      if (p.category != null) p.category!.label,
+      if (p.location != null && p.location!.isNotEmpty) p.location!,
     ].join(' · ');
-    final published = p?.partnerProfileStatus == 'published';
-    return Column(
-      children: [
-        Semantics(
-          button: true,
-          label: 'Mudar foto de perfil',
-          child: GestureDetector(
-            onTap: _uploading ? null : _pickPhoto,
-            child: Stack(clipBehavior: Clip.none, children: [
-              V2Avatar(name, size: 84, imageUrl: p?.logoUrl ?? p?.avatarUrl),
-              if (_uploading)
-                Positioned.fill(
-                  child: Center(child: SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.accentOliveDark))),
-                ),
-              Positioned(
-                right: -2,
-                bottom: -2,
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
-                  child: const Icon(Hi.camera, size: 15, color: Colors.white),
-                ),
+    final follow = ref.watch(partnerFollowInfoProvider(p.id)).value;
+    final pub = ref.watch(publicProfileProvider(p.id)).value;
+    final reviews = ref.watch(partnerReviewSummaryProvider).count;
+    return ProfileCard(
+      avatar: Semantics(
+        button: true,
+        label: 'Mudar foto de perfil',
+        child: GestureDetector(
+          onTap: _uploading ? null : _pickPhoto,
+          child: Stack(children: [
+            V2Avatar(name, size: 76, imageUrl: p.logoUrl ?? p.avatarUrl),
+            if (_uploading)
+              const Positioned.fill(
+                child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))),
               ),
-            ]),
-          ),
+          ]),
         ),
-        const SizedBox(height: 10),
-        Text(
-          name,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
-        ),
-        if (meta.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Text(meta, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-        ],
-        if (published) ...[
-          const SizedBox(height: 8),
-          const V2Chip('Publicado — visível aos clientes'),
-        ],
+      ),
+      name: name,
+      handleLine: meta,
+      bio: p.businessDescription,
+      labels: const ['avaliações', 'seguidores', 'a seguir'],
+      events: reviews,
+      followers: follow?.followers ?? 0,
+      following: pub?.following ?? 0,
+      buttons: [
+        ProfileButton('Editar perfil', onTap: () => context.push('/partner-business-info')),
+        ProfileButton('Portefólio', dark: true, onTap: () => context.push('/partner-portfolio')),
       ],
     );
+  }
+}
+
+class _PartnerFollowing extends ConsumerWidget {
+  final String profileId;
+  const _PartnerFollowing({required this.profileId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pub = ref.watch(publicProfileProvider(profileId)).value;
+    if (pub == null || pub.followingPeople + pub.followingPartners == 0) return const SizedBox.shrink();
+    return FollowingSection(profileId: profileId, people: pub.followingPeople, partners: pub.followingPartners);
   }
 }
 

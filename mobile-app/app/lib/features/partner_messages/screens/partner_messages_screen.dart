@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/partner_app/partner_app_providers.dart';
+import '../../../core/models/models.dart' show ChatConversation;
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/mascot.dart';
