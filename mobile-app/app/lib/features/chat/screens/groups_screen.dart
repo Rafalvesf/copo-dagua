@@ -418,10 +418,6 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                             ),
                         ]),
             ),
-            eventTitle: eventTitle ?? 'Grupo do evento',
-            eventSubtitle: eventTitle == null ? null : 'Grupo do evento',
-            eventAction: ev == null ? null : 'Ver evento',
-            onEventAction: ev == null ? null : () => context.go('/home'),
             onReport: () => showReportPicker(context, ref,
                 kind: ReportKind.groupMessage,
                 recentFirst: [
@@ -437,9 +433,14 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
           color: const Color(0xFFF2F0EB),
           child: thread.loading && thread.messages.isEmpty
               ? const Center(child: CircularProgressIndicator())
-              : ListView.builder(
+              : ChatEventIsland(
+                  title: eventTitle ?? 'Grupo do evento',
+                  subtitle: eventTitle == null ? null : 'Grupo do evento',
+                  action: ev == null ? null : 'Ver evento',
+                  onAction: ev == null ? null : () => context.go('/home'),
+                  child: ListView.builder(
                   reverse: true,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 82, 16, 16),
                   itemCount: msgs.length,
                   itemBuilder: (context, i) {
                     final m = msgs[i];
@@ -515,6 +516,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                       ),
                     ]);
                   },
+                ),
                 ),
           ),
         ),

@@ -168,10 +168,6 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                   ? null
                   : [if (partner.categoryLabels.isNotEmpty) partner.categoryLabels.first, if ((partner.location ?? '').isNotEmpty) partner.location!]
                       .join(' · '),
-              eventTitle: eventTitle,
-              eventSubtitle: hasProposal ? 'Proposta recebida' : (partner?.categoryLabels.firstOrNull),
-              eventAction: widget.conversation.partnerId == null ? null : 'Ver perfil',
-              onEventAction: widget.conversation.partnerId == null ? null : _openPartnerProfile,
               onOpenProfile: widget.conversation.partnerId == null
                   ? null
                   : _openPartnerProfile,
@@ -193,10 +189,15 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                 // (antes saltava para o fim com animação e, com cartões
                 // a crescer depois de desenhados, ficava a meio —
                 // reportado 2026-10-18).
-                : ListView(
+                : ChatEventIsland(
+                    title: eventTitle,
+                    subtitle: hasProposal ? 'Proposta recebida' : (partner?.categoryLabels.firstOrNull),
+                    action: widget.conversation.partnerId == null ? null : 'Ver perfil',
+                    onAction: widget.conversation.partnerId == null ? null : _openPartnerProfile,
+                    child: ListView(
                     controller: _scrollController,
                     reverse: true,
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.fromLTRB(16, eventTitle == null ? 16 : 82, 16, 16),
                     children: chatTimeline(
                       messages: chat.messages,
                       // Aqui é sempre o casal a enviar — `fromPartner`
@@ -225,6 +226,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               child: ChatBubble(text: message.text ?? '', isMe: isMe),
                             ),
                     ).reversed.toList(),
+                  ),
                   ),
             ),
           ),
