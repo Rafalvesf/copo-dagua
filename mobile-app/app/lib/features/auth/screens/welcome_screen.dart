@@ -215,7 +215,7 @@ class _WelcomeContent extends StatelessWidget {
                         backgroundColor: Colors.white,
                         foregroundColor: AppTheme.accentOliveDark,
                         side: BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: const StadiumBorder(),
                         textStyle: const TextStyle(
                           fontFamily: AppTheme.fontFamily,
                           fontFamilyFallback: AppTheme.fontFamilyFallback,

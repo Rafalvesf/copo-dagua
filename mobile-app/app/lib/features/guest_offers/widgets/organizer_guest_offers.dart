@@ -476,7 +476,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
           label: Text(text, style: TextStyle(color: value == null ? AppTheme.inkMuted : AppTheme.ink)),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(0, 48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: const StadiumBorder(),
           ),
         ),
       );
@@ -589,7 +589,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
                 style: FilledButton.styleFrom(
                   backgroundColor: c,
                   minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  shape: const StadiumBorder(),
                 ),
                 child: Text(_saving ? 'A guardar…' : 'Guardar'),
               ),

@@ -206,9 +206,7 @@ Expanded(child: ScrollingHeader(
                         ),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.ink,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
+                          shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                             fontSize: AppFontSize.lg,
                             fontWeight: FontWeight.w700,
@@ -261,9 +259,7 @@ Expanded(child: ScrollingHeader(
                             side: BorderSide.none,
                             elevation: 0,
                             shadowColor: const Color(0x22171713),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+                            shape: const StadiumBorder(),
                             textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                               fontSize: AppFontSize.base + 1,
                               fontWeight: FontWeight.w700,
@@ -365,9 +361,7 @@ Expanded(child: ScrollingHeader(
                             backgroundColor: Colors.white,
                             foregroundColor: const Color(0xFFA3412E),
                             side: const BorderSide(color: Color(0xFFA3412E), width: 1.5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+                            shape: const StadiumBorder(),
                             textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                               fontSize: AppFontSize.base + 1,
                               fontWeight: FontWeight.w700,

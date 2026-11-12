@@ -913,9 +913,7 @@ class _BigButton extends StatelessWidget {
           backgroundColor: AppTheme.ink,
           disabledBackgroundColor: AppTheme.surface,
           disabledForegroundColor: AppTheme.inkMuted,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
+          shape: const StadiumBorder(),
           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
             fontSize: AppFontSize.lg,
             fontWeight: FontWeight.w700,

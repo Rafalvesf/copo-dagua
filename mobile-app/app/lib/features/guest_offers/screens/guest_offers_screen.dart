@@ -170,7 +170,7 @@ class _OfferCard extends ConsumerWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppTheme.ink,
               minimumSize: const Size.fromHeight(46),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+              shape: const StadiumBorder(),
             ),
             child: Text(soldOut
                 ? 'Esgotado'
@@ -293,7 +293,7 @@ class _ReserveSheetState extends ConsumerState<_ReserveSheet> {
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
                 minimumSize: const Size.fromHeight(52),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: const StadiumBorder(),
               ),
               child: Text(_busy ? 'A abrir pagamento…' : 'Pagar ${euros(total, cents: true)}'),
             ),

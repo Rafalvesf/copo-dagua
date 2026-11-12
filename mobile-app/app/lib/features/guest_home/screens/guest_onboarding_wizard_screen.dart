@@ -472,7 +472,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.ink,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: const StadiumBorder(),
                     textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   child: _saving

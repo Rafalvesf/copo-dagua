@@ -247,7 +247,7 @@ class AuthPrimaryButton extends StatelessWidget {
           backgroundColor: AppTheme.ink,
           disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.45),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: const StadiumBorder(),
           textStyle: const TextStyle(
             fontFamily: AppTheme.fontFamily,
             fontFamilyFallback: AppTheme.fontFamilyFallback,
@@ -284,7 +284,7 @@ class AuthSocialButton extends StatelessWidget {
             backgroundColor: Colors.white,
             foregroundColor: AppTheme.ink,
             side: const BorderSide(color: AppTheme.borderMuted),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: const StadiumBorder(),
             textStyle: const TextStyle(
               fontFamily: AppTheme.fontFamily,
               fontFamilyFallback: AppTheme.fontFamilyFallback,

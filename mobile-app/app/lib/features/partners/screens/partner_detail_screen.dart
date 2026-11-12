@@ -279,7 +279,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
 
     final figureText = figureValue == null ? null : figure.format(figureValue);
     final ratingText = summary.count > 0
-        ? '★ ${summary.average.toStringAsFixed(1).replaceAll('.', ',')} (${summary.count})'
+        ? '${summary.average.toStringAsFixed(1).replaceAll('.', ',')} (${summary.count})'
         : null;
     final stats = ref.watch(partnerPublicStatsProvider(partner.id)).value;
     final dateChip = weddingDate == null
@@ -392,12 +392,22 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                           const LineIcon(LineIcon.pin, size: 14, color: muted, stroke: 2.2, circles: LineIcon.pinCircle),
                           const SizedBox(width: 5),
                           Expanded(
-                            child: Text(
-                              [
-                                if (partner.location.isNotEmpty) partner.location,
-                                partner.primaryCategoryLabel,
-                                ?ratingText,
-                              ].join(' · '),
+                            child: Text.rich(
+                              TextSpan(children: [
+                                TextSpan(text: [
+                                  if (partner.location.isNotEmpty) partner.location,
+                                  partner.primaryCategoryLabel,
+                                ].join(' · ')),
+                                // A fonte não tem ★: estrela desenhada.
+                                if (ratingText != null) ...[
+                                  const TextSpan(text: ' · '),
+                                  const WidgetSpan(
+                                    alignment: PlaceholderAlignment.middle,
+                                    child: LineIcon(LineIcon.star, size: 12, fill: true, color: muted),
+                                  ),
+                                  TextSpan(text: ' $ratingText'),
+                                ],
+                              ]),
                               maxLines: 2,
                               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: muted),
                             ),

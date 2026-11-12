@@ -420,7 +420,7 @@ class V2BigButton extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               child: _label(),
@@ -430,7 +430,7 @@ class V2BigButton extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.ink,
                 side: BorderSide(color: AppTheme.ink, width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               child: _label(),

@@ -579,7 +579,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                     disabledBackgroundColor: AppTheme.borderMuted,
                     foregroundColor: Colors.white,
                     disabledForegroundColor: AppTheme.inkMuted,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: const StadiumBorder(),
                     textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   child: _saving

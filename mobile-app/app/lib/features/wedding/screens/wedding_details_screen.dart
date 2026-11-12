@@ -2491,7 +2491,7 @@ class _TodoNow extends ConsumerWidget {
                           foregroundColor: Colors.white,
                           minimumSize: const Size(0, 40),
                           padding: const EdgeInsets.symmetric(horizontal: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700),
                         ),
                         child: Text(it.action),
