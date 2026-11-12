@@ -1,4 +1,3 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart' show openTicketPurchase;
 import 'package:copo_dagua_app/core/events/tickets.dart';
@@ -9,8 +8,6 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
-import '../../../core/models/models.dart';
-import '../../../core/wedding/date_format_pt.dart';
 import '../../../shared/widgets/island_sheet.dart';
 
 /// Acedido a partir de "Definições" pelo lado do casal — deixa uma conta
@@ -93,9 +90,6 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final weddingsAsync = ref.watch(guestWeddingsProvider);
-    final weddings = weddingsAsync.asData?.value ?? const [];
-
     // Redesign 2026-10-17: folha branca com pega, campo grande para o
     // código e a lista dos eventos em linhas simples.
     return SafeArea(
@@ -156,50 +150,8 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
               ),
               const SizedBox(height: 12),
               PrimaryButton(label: 'Entrar', loading: _joining, onPressed: _join),
-              if (weddings.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                const Text(
-                  'OS TEUS EVENTOS',
-                  style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF6E6A63)),
-                ),
-                const SizedBox(height: 4),
-                for (var i = 0; i < weddings.length; i++) ...[
-                  if (i > 0) const Divider(height: 1, thickness: 1, color: AppTheme.borderMuted),
-                  InkWell(
-                    onTap: () => _open(weddings[i].weddingId),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: const BoxDecoration(color: AppColors.gray, shape: BoxShape.circle),
-                            child: Icon(Hi.sparkles, size: 20, color: AppTheme.accentOliveDark),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(weddings[i].displayNames, style: const TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                                Text(
-                                  [
-                                    weddings[i].eventType.label,
-                                    if (weddings[i].weddingDate != null) formatWeddingDateCaps(weddings[i].weddingDate!),
-                                  ].join(' · '),
-                                  style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(Hi.chevronRight, size: 18, color: Color(0xFFB5B0A6)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+              // Sem a lista dos eventos (pedido 2026-11-12): já estão em
+              // "Os meus eventos".
             ],
           ),
         ),
