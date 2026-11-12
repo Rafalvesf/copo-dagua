@@ -1020,7 +1020,7 @@ class PublicPartnerScreen extends ConsumerWidget {
     final signedIn = ref.watch(authControllerProvider.select((s) => s.status == AuthStatus.active));
     final async = ref.watch(partnerByIdProvider(id));
     return async.when(
-      loading: () => const Scaffold(backgroundColor: Colors.white, body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(backgroundColor: AppTheme.background, body: Center(child: CircularProgressIndicator())),
       error: (e, st) => const _PartnerUnavailable(),
       data: (p) => p == null ? const _PartnerUnavailable() : PartnerDetailScreen(partner: p, publicView: !signedIn),
     );
@@ -1032,7 +1032,7 @@ class _PartnerUnavailable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.background,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),

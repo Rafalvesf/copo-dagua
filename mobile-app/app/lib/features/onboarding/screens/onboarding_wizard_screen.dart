@@ -1959,7 +1959,7 @@ class _DoneView extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: Stack(
         children: [
           const Positioned.fill(child: FallingConfetti(delay: Duration(milliseconds: 1900))),

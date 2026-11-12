@@ -45,7 +45,7 @@ class GuestPageRoute extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final wedding = ref.watch(weddingControllerProvider).wedding;
     if (wedding == null) {
-      return const Scaffold(backgroundColor: Colors.white, body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(backgroundColor: AppTheme.background, body: Center(child: CircularProgressIndicator()));
     }
     return GuestFacingScreen(key: ValueKey(wedding.id), wedding: wedding);
   }

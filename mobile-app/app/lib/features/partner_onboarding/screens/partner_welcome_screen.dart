@@ -538,7 +538,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
     // barra fina, pergunta 28/34 e "Continuar" verde em baixo.
     final total = _steps.length - 1;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 34),
@@ -1328,7 +1328,7 @@ class _SentViewState extends State<_SentView> {
   Widget build(BuildContext context) {
     // Canvas "Parceiro 7 · Pronto" — mesmos tempos.
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: Stack(
         children: [
           const Positioned.fill(

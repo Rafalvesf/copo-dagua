@@ -22,7 +22,7 @@ class MaintenanceScreen extends ConsumerWidget {
     // Mesmo formato das outras páginas de estado, com a mascote a dormir
     // (revisão 2026-10-17).
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: PublicStateView(
           pose: MascotPose.sleep,

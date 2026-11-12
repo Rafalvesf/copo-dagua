@@ -24,7 +24,7 @@ class AuthPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, c) => SingleChildScrollView(
