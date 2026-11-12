@@ -13,11 +13,43 @@ import 'push_opt_in.dart';
 /// (`home_feed_screen.dart`, `_NotificationsSheet`), sem os separadores
 /// Todas/Não lidas/Lidas. Ver `partner_notifications_providers.dart`.
 class PartnerNotificationBell extends ConsumerWidget {
-  const PartnerNotificationBell({super.key});
+  /// Botão redondo branco de 44 (mockup "Perfil", 2026-11-12).
+  final bool round;
+  const PartnerNotificationBell({super.key, this.round = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unread = ref.watch(partnerUnreadNotificationsCountProvider);
+    if (round) {
+      return Tooltip(
+        message: 'Notificações',
+        child: GestureDetector(
+          onTap: () => showIslandSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (context) => const _PartnerNotificationsSheet(),
+          ),
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            child: Stack(children: [
+              const Center(child: Icon(Hi.bell, size: 20, color: AppTheme.ink)),
+              if (unread > 0)
+                Positioned(
+                  top: 9,
+                  right: 10,
+                  child: Container(
+                    width: 9,
+                    height: 9,
+                    decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle),
+                  ),
+                ),
+            ]),
+          ),
+        ),
+      );
+    }
 
     return Stack(
       clipBehavior: Clip.none,

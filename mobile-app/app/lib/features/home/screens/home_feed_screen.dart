@@ -166,7 +166,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                 ],
                               )
                             else
-                              const PartnerNotificationBell(),
+                              const PartnerNotificationBell(round: true),
                             const SizedBox(width: 10),
                             _RoundIcon(icon: Hi.cog6Tooth, tip: 'Definições', onTap: () => context.push('/conta')),
                           ],
@@ -649,7 +649,7 @@ class _MyProfileCard extends ConsumerWidget {
         child: GestureDetector(
           onTap: onChangePhoto,
           child: Stack(children: [
-            V2Avatar(name, size: 76, imageUrl: profile.avatarUrl),
+            V2Avatar(name, size: 76, imageUrl: profile.avatarUrl, flat: true),
             if (uploading)
               const Positioned.fill(
                 child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))),

@@ -67,15 +67,15 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                       const Expanded(
                         child: Text('Perfil', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                       ),
-                      const PartnerNotificationBell(),
+                      const PartnerNotificationBell(round: true),
                       const SizedBox(width: 10),
                       Tooltip(
                         message: 'Definições',
                         child: SnappyTap(
                           onTap: () => context.push('/settings'),
                           child: Container(
-                            width: 40,
-                            height: 40,
+                            width: 44,
+                            height: 44,
                             alignment: Alignment.center,
                             decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
                             child: const Icon(Hi.cog6Tooth, size: 20, color: AppTheme.ink),
@@ -175,7 +175,7 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
         child: GestureDetector(
           onTap: _uploading ? null : _pickPhoto,
           child: Stack(children: [
-            V2Avatar(name, size: 76, imageUrl: p.logoUrl ?? p.avatarUrl),
+            V2Avatar(name, size: 76, imageUrl: p.logoUrl ?? p.avatarUrl, flat: true),
             if (_uploading)
               const Positioned.fill(
                 child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))),
