@@ -367,6 +367,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 child: ProfileCard(
                   avatar: V2Avatar(partner.name, size: 76, imageUrl: partner.imageUrl),
                   name: partner.name,
+                  nameBadge: ProBadge(partner.id),
                   handleLine: [partner.primaryCategoryLabel, if (partner.location.isNotEmpty) partner.location].join(' · '),
                   bio: partner.description,
                   labels: const ['Eventos', 'Seguidores', 'Avaliações'],
@@ -375,7 +376,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                   following: summary.count,
                   extra: Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
                     FounderBadge(partner.id, long: true),
-                    ProBadge(partner.id),
                     chip(fromPrice == null ? 'Por orçamento' : 'Desde ${euros(fromPrice)}'),
                     if (ratingText != null)
                       Container(

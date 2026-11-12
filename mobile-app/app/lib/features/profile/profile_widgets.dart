@@ -87,6 +87,9 @@ class ProfileCard extends StatelessWidget {
 
   /// Por baixo da descrição (o parceiro põe aqui as etiquetas).
   final Widget? extra;
+
+  /// Ao lado do nome (o visto de verificado do parceiro).
+  final Widget? nameBadge;
   final List<Widget> buttons;
   /// Etiquetas dos três números (o parceiro mostra avaliações).
   final List<String> labels;
@@ -101,6 +104,7 @@ class ProfileCard extends StatelessWidget {
     required this.following,
     this.followedBy,
     this.extra,
+    this.nameBadge,
     this.buttons = const [],
     this.labels = const ['Eventos', 'Seguidores', 'A seguir'],
   });
@@ -124,7 +128,10 @@ class ProfileCard extends StatelessWidget {
             Expanded(child: _stat(following, labels[2])),
           ]),
           const SizedBox(height: 14),
-          Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Row(children: [
+            Flexible(child: Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            ?nameBadge,
+          ]),
           if (handleLine.isNotEmpty) ...[
             const SizedBox(height: 2),
             Text(handleLine, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),

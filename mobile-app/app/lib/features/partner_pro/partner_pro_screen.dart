@@ -225,7 +225,8 @@ class ProBadge extends ConsumerWidget {
       message: 'Parceiro verificado',
       child: Container(
         margin: const EdgeInsets.only(left: 4),
-        child: Icon(Hi.trophy, size: 17, color: AppTheme.accentOliveDark, semanticLabel: 'Premium'),
+        // Visto de verificado (antes era o mesmo troféu do Fundador).
+        child: Icon(Hi.checkBadge, size: 18, color: AppTheme.accentOliveDark, semanticLabel: 'Verificado'),
       ),
     );
   }

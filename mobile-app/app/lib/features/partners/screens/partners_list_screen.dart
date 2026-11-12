@@ -808,11 +808,11 @@ class _PartnerCard extends ConsumerWidget {
                       child: Text(partner.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: AppTheme.ink)),
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppTheme.ink)),
                     ),
+                    ProBadge(partner.id),
                     const SizedBox(width: 6),
                     FounderBadge(partner.id),
-                    ProBadge(partner.id),
                   ]),
                   const SizedBox(height: 2),
                   Text.rich(
