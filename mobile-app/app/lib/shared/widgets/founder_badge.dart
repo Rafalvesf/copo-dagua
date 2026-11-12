@@ -1,9 +1,8 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/partners/partner_referrals.dart';
-import '../../core/theme/app_theme.dart';
+import 'line_icon.dart';
 
 /// Selo "Fundador" dos primeiros parceiros (migração 151).
 class FounderBadge extends ConsumerWidget {
@@ -15,17 +14,18 @@ class FounderBadge extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final n = ref.watch(founderPartnersProvider).value?[partnerId];
     if (n == null) return const SizedBox.shrink();
-    final green = AppTheme.accentOliveDark;
+    // Etiqueta verde do DESIGN.md (fundo #E6EDE1, texto #3F7A4F, 12
+    // negrito), com uma estrela — distinta do visto de "verificado".
     return Tooltip(
-      message: 'Um dos primeiros 100 parceiros da À Nossa!',
+      message: 'Um dos primeiros 100 parceiros da À Nossa! (nº $n)',
       child: Container(
-        padding: const EdgeInsets.fromLTRB(5, 2, 8, 2),
-        decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(999)),
+        padding: EdgeInsets.symmetric(horizontal: long ? 10 : 8, vertical: long ? 5 : 3),
+        decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Hi.trophy, size: 13, color: green),
-          const SizedBox(width: 3),
-          Text(long ? 'Parceiro Fundador' : 'Fundador',
-              style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w800, color: green)),
+          const LineIcon(LineIcon.star, size: 11, fill: true, color: Color(0xFF3F7A4F)),
+          const SizedBox(width: 4),
+          Text(long ? 'Parceiro fundador' : 'Fundador',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
         ]),
       ),
     );
