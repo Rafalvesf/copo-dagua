@@ -197,11 +197,11 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Row(children: [
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
           if (action != null)
             GestureDetector(
               onTap: onAction,
-              child: Text(action!, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: guestButtonGreen)),
+              child: Text(action!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: guestButtonGreen)),
             ),
         ]),
       );

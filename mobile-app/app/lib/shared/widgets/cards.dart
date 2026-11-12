@@ -219,7 +219,7 @@ class ConversationListItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: AppTheme.ink,
                       ),
                     ),
@@ -338,7 +338,7 @@ class ConversationListItem extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                               fontSize: 15,
                               color: AppTheme.ink,
                             ),

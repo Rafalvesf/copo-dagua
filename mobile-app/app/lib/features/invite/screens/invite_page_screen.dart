@@ -556,7 +556,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(p.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.ink)),
+                                Text(p.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                                 if (p.place.trim().isNotEmpty)
                                   Text(p.place, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
                               ],
@@ -1102,7 +1102,7 @@ class _AnswerRow extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: Text(name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.ink))),
+            Expanded(child: Text(name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink))),
             const SizedBox(width: 12),
             Flexible(
               child: Text(detail,

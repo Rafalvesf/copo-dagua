@@ -115,6 +115,12 @@ flutter:
           style: italic
         - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Regular.ttf
           weight: 400
+        # Corpo de texto (w500/w600) na Regular: só os títulos (w700+)
+        # ficam a negrito, para se destacarem (pedido 2026-11-12).
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Regular.ttf
+          weight: 500
+        - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Regular.ttf
+          weight: 600
         - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Italic.ttf
           weight: 400
           style: italic

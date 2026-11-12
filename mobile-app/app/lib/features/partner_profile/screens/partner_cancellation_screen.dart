@@ -84,7 +84,7 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
       activeColor: AppTheme.accentOliveDark,
       contentPadding: EdgeInsets.zero,
       title: Text(title,
-          style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: selected ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink)),
+          style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: selected ? FontWeight.w700 : FontWeight.w700, color: AppTheme.ink)),
     );
   }
 

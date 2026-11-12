@@ -158,7 +158,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                 ],
                               const SizedBox(height: 4),
                               const Text('As tuas tarefas',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                               const SizedBox(height: 4),
                               Text(
                                 'Criadas por vocês — sem limite, sem pressa.',

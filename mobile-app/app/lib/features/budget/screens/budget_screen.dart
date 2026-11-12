@@ -283,7 +283,7 @@ class _CategoriesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Categorias', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const Text('Categorias', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 12),
         for (final (index, category) in visible.indexed) ...[
           _CategoryRow(category: category, index: index),
@@ -497,7 +497,7 @@ class _ExpenseList extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: AppFontSize.base,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: AppTheme.inkMuted,
               ),
             ),
