@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/chat/chat_helpers.dart';
 import '../../core/home/home_providers.dart';
+import '../../core/models/models.dart' show ChatConversation;
 import '../../core/payments/payments.dart';
 import '../../core/supabase/supabase_config.dart';
 
@@ -15,7 +17,7 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
   try {
     row = await supabase
         .from('payments')
-        .select('id, type, status, amount, partner_id, bookings(total_amount), partner_profiles(business_name)')
+        .select('id, type, status, amount, partner_id, bookings(total_amount, wedding_id), partner_profiles(business_name)')
         .eq('id', paymentId)
         .maybeSingle();
   } catch (_) {}
@@ -51,6 +53,11 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
       kind: row['type'] as String,
       amount: amountWithCommission((row['amount'] as num).toDouble(), pct),
       baseAmount: (row['amount'] as num).toDouble(),
+      onChat: _chatOpener(
+        weddingId: (row['bookings'] as Map?)?['wedding_id'] as String?,
+        partnerId: row['partner_id'] as String?,
+        partnerName: partner,
+      ),
     ),
   );
   ref.invalidate(coupleBookingsProvider);
@@ -60,3 +67,20 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
 /// `source_entity_id` (`task_engine_controller.dart`).
 bool isPaymentTask(String? category, String? sourceEntityId) =>
     category == 'pagamentos' && sourceEntityId != null;
+
+/// Abre a conversa com o parceiro a partir da folha de pagamento.
+void Function(BuildContext)? _chatOpener({String? weddingId, String? partnerId, required String partnerName}) {
+  if (weddingId == null || partnerId == null) return null;
+  return (context) async {
+    final router = GoRouter.of(context);
+    try {
+      final id = await getOrCreateConversation(weddingId: weddingId, partnerId: partnerId);
+      final c = ChatConversation(id: id, weddingId: weddingId, partnerId: partnerId, name: partnerName, avatarSeed: partnerId);
+      if (router.canPop()) router.pop();
+      router.push('/chat/$id', extra: c);
+    } catch (_) {
+      if (router.canPop()) router.pop();
+      router.push('/chat');
+    }
+  };
+}

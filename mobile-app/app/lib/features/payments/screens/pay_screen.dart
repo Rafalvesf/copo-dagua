@@ -691,7 +691,12 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         button = _SheetButton(label: 'Enviar pedido MB WAY', onTap: _sendMbWay);
       case _Step.done:
         button = _SheetButton(label: a.isBooking ? 'Ver reserva' : 'Fechar', onTap: () => a.isBooking ? context.go('/bookings') : context.pop());
-        if (a.isBooking) extras.add(_SheetButton(label: 'Fechar', secondary: true, onTap: () => context.pop()));
+        if (a.isBooking) {
+          final chat = a.onChat;
+          extras.add(chat != null
+              ? _SheetButton(label: 'Falar com ${a.partnerName}', secondary: true, onTap: () => chat(context))
+              : _SheetButton(label: 'Fechar', secondary: true, onTap: () => context.pop()));
+        }
       case _Step.mbWayWaiting:
         button = _SheetButton(label: 'Escolher outro método', secondary: true, onTap: _backToSelect);
       case _Step.multibanco:

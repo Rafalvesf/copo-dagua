@@ -34,6 +34,9 @@ class PayArgs {
   /// serviço" + "Total" na folha de pagamento. `null` = só o total.
   final double? baseAmount;
 
+  /// "Falar com {parceiro}" no fim do pagamento (mockup "Sinal pago").
+  final void Function(BuildContext context)? onChat;
+
   // Bilhetes, prendas e Premium (2026-11-09: "sempre embutido na app,
   // nunca com link"): o mesmo ecrã de pagamento, com outra origem.
   final Future<PaymentIntentInfo> Function(PayMethod method, {String? phone, String? paymentMethodId})? create;
@@ -53,6 +56,7 @@ class PayArgs {
     required this.kind,
     required this.amount,
     this.baseAmount,
+    this.onChat,
     this.create,
     this.state,
     this.methods,
