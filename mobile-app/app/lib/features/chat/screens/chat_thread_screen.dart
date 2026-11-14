@@ -373,6 +373,8 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       kind: type,
       amount: amountWithCommission(amount, pct),
       baseAmount: amount,
+      // Já estamos na conversa: só fecha a folha.
+      onChat: (ctx) => Navigator.of(ctx).pop(),
     ));
     if (!mounted) return;
     final booking = await fetchProposalBookingState(id);
