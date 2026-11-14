@@ -57,21 +57,13 @@ class GuestOnboardingWizardScreen extends ConsumerStatefulWidget {
   ConsumerState<GuestOnboardingWizardScreen> createState() => _GuestOnboardingWizardScreenState();
 }
 
-enum _Step { attending, companions, ages, menu, allergies, side, relationship }
+enum _Step { attending, companions, ages, menu, allergies, side }
 
 const _adultMenus = ['Carne', 'Peixe', 'Vegetariano'];
 const _childMenus = ['Menu criança', 'Carne', 'Peixe'];
 // 'Nenhuma' (2026-11-07): menu e alergias passam a ser obrigatórios —
 // quem não tem alergias diz que não tem.
 const _allergyOptions = ['Nenhuma', 'Glúten', 'Lactose', 'Marisco', 'Frutos secos', 'Outra'];
-const _relationOptions = <(String, IconData)>[
-  ('Família', Hi.heartOutline),
-  ('Amigos', Hi.userGroup),
-  ('Trabalho', Hi.briefcase),
-  ('Vizinhos', Hi.home),
-  ('Escola / Faculdade', Hi.academicCap),
-  ('Outro', Hi.starOutline),
-];
 
 class _Person {
   String name;
@@ -141,12 +133,9 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   }();
   final List<_Person> _companions = [];
   WeddingSide? _side;
-  String? _relationship;
-  final _relationOther = TextEditingController();
 
   @override
   void dispose() {
-    _relationOther.dispose();
     super.dispose();
   }
 
@@ -181,7 +170,6 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   }
 
   EventType get _eventType => _wedding?.eventType ?? EventType.wedding;
-  String get _hosts => _wedding?.displayNames ?? 'os anfitriões';
 
   /// Limite definido pelo organizador (091); antes era sempre 5.
   int get _limit => widget.guest.maxCompanions > 0 ? widget.guest.maxCompanions : (widget.guest.plusOneAllowed ? 1 : 0);
@@ -193,8 +181,8 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         _Step.menu,
         _Step.allergies,
         // «És convidado de quem?» saiu (2026-11-14): a app já não é só
-        // para casamentos.
-        _Step.relationship,
+        // para casamentos. «Como nos conheces?» também: é o organizador
+        // que diz quem é cada pessoa ao aceitá-la (2026-11-14).
       ];
 
   List<_Person> get _people => [_me, ..._companions];
@@ -240,7 +228,6 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
 
   Future<void> _finish({required bool attending}) async {
     setState(() => _saving = true);
-    final groupLabel = _relationship == 'Outro' && _relationOther.text.trim().isNotEmpty ? _relationOther.text.trim() : _relationship;
     if (widget.rsvpToken != null) {
       try {
         try {
@@ -255,7 +242,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
             WeddingSide.bride => 'couple_b',
             WeddingSide.both => 'both',
           },
-          'p_group_label': groupLabel,
+          'p_group_label': null,
           'p_message': null,
           'p_companions': [for (final c in _companions) _companionJson(c)],
           });
@@ -296,7 +283,6 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         menuSelection: _me.menu,
         dietaryRestrictions: _me.allAllergies.isEmpty ? null : _me.allAllergies.join(', '),
         side: _side ?? widget.guest.side,
-        groupLabel: _relationship == 'Outro' && _relationOther.text.trim().isNotEmpty ? _relationOther.text.trim() : _relationship,
       );
       if (attending) {
         try {
@@ -749,39 +735,6 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                     onTap: () => setState(() => _side = side),
                   ),
                 ),
-              ],
-            ],
-          ),
-        );
-      case _Step.relationship:
-        return _StepScaffold(
-          question: 'Como conheces $_hosts?',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              GridView(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  mainAxisExtent: 78,
-                ),
-                children: [
-                  for (final (label, icon) in _relationOptions)
-                    _BigChoice(
-                      icon: icon,
-                      label: label,
-                      height: 78,
-                      selected: _relationship == label,
-                      onTap: () => setState(() => _relationship = label),
-                    ),
-                ],
-              ),
-              if (_relationship == 'Outro') ...[
-                const SizedBox(height: 16),
-                AuthField(label: 'Qual?', controller: _relationOther, topGap: 0),
               ],
             ],
           ),

@@ -794,7 +794,7 @@ void main() {
   ]) {
     testWidgets(name, (t) => _shoot(t, name, guest, path));
   }
-  for (var i = 0; i < 6; i++) {
+  for (var i = 0; i < 5; i++) {
     testWidgets('55 convidado onboarding ${i + 1}', (t) => _shoot(
           t,
           '55_convidado_onb_${i + 1}',

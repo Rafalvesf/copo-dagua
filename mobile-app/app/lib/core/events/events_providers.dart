@@ -226,8 +226,14 @@ final myJoinRequestPendingProvider = FutureProvider.family<bool, String>((ref, w
   }
 });
 
-Future<void> reviewJoinRequest(String requestId, {required bool approve}) async {
-  await supabase.rpc('review_join_request', params: {'p_request': requestId, 'p_approve': approve});
+/// Aceita ou recusa um pedido para entrar. Ao aceitar, [category] é a
+/// categoria que o organizador dá à pessoa (Família, Amigos…), guardada
+/// em `guests.group_label` na linha que a função devolve.
+Future<void> reviewJoinRequest(String requestId, {required bool approve, String? category}) async {
+  final guestId = await supabase.rpc('review_join_request', params: {'p_request': requestId, 'p_approve': approve});
+  if (approve && category != null && guestId is String) {
+    await supabase.from('guests').update({'group_label': category}).eq('id', guestId);
+  }
 }
 
 /// Entrada do evento que organizo: grátis ou preço por pessoa (142).
