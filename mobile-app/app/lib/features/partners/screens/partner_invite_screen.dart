@@ -99,7 +99,7 @@ class _PartnerInviteScreenState extends ConsumerState<PartnerInviteScreen> {
       );
     } else {
       body = PublicStateView(
-        pose: MascotPose.clink,
+        pose: MascotPose.cheer,
         title: r!.valid ? 'Convite de ${r.businessName}' : 'Já estás ligado a ${r.businessName}',
         message: r.valid
             ? '${r.businessName} convidou-te para a À Nossa!. Faz as reservas e os pagamentos com eles pela app: '

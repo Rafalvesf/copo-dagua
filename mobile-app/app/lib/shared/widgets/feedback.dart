@@ -86,11 +86,8 @@ class AsyncErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Hi.signalSlash,
-              size: 32,
-              color: AppTheme.navIconMuted,
-            ),
+            // Estrela triste (2026-11-14) no lugar do ícone.
+            const EstrelaMascot(Estrela.triste, size: 100),
             const SizedBox(height: 12),
             Text(
               message,
@@ -176,7 +173,8 @@ class EmptyStateView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-            Icon(icon, size: 32, color: AppTheme.navIconMuted),
+            // Estrela a dormir nas listas vazias (2026-11-14).
+            const EstrelaMascot(Estrela.dormir, size: 88),
               const SizedBox(height: 12),
               Text(
                 message,

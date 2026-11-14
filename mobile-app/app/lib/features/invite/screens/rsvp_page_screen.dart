@@ -174,7 +174,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
             final answered = data['rsvp_status'] == 'confirmed' || data['rsvp_status'] == 'declined';
             if (_submitted) {
               return PublicStateView(
-                pose: _declined ? MascotPose.wave : MascotPose.clink,
+                pose: _declined ? MascotPose.wave : MascotPose.love,
                 title: _declined ? 'Resposta enviada' : 'Até lá!',
                 message: _declined
                     ? 'Obrigado por avisares. Os anfitriões já sabem.'

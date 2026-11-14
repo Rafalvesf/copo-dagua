@@ -2,7 +2,10 @@ import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'estrela.dart';
 import 'steady_ticker.dart';
+
+export 'estrela.dart';
 
 /// Mascote "o Tchin e o Tchin" — duas taças (espumante e rosé).
 /// Pedido do utilizador (2026-10-17): "criar um avatar para a app, como o
@@ -15,7 +18,11 @@ enum MascotPose {
   sleep('assets/mascot/duo_sleep.png'),
   sad('assets/mascot/duo_sad.png'),
   chat('assets/mascot/duo_chat.png'),
-  clink('assets/mascot/duo_clink.png');
+  clink('assets/mascot/duo_clink.png'),
+  // Só da estrela (2026-11-14).
+  love('assets/mascot/duo_wave.png'),
+  cheer('assets/mascot/duo_clink.png'),
+  thinking('assets/mascot/duo_chat.png');
 
   final String asset;
   const MascotPose(this.asset);
@@ -30,9 +37,10 @@ const _confettiColors = [
   Color(0xFFDDE5D3),
 ];
 
-/// Uma pose estática da mascote, com um balançar suave (algumas vezes,
-/// depois pára — nunca uma animação infinita).
-class TchinMascot extends StatefulWidget {
+/// A mascote em cada sítio da app. Desde 2026-11-14 é a estrela
+/// ([EstrelaMascot]); as poses antigas das taças passam para a reação da
+/// estrela que lhes corresponde.
+class TchinMascot extends StatelessWidget {
   final MascotPose pose;
   final double width;
   final bool bob;
@@ -47,59 +55,26 @@ class TchinMascot extends StatefulWidget {
   });
 
   @override
-  State<TchinMascot> createState() => _TchinMascotState();
+  Widget build(BuildContext context) => EstrelaMascot(
+        pose.estrela,
+        size: width * 0.8,
+        cycles: bob ? 3 : 0,
+        semanticLabel: semanticLabel,
+      );
 }
 
-class _TchinMascotState extends State<TchinMascot> with SteadyTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 2400),
-  );
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (widget.bob && !_c.isAnimating && _c.value == 0) {
-      _runCycles();
-    }
-  }
-
-  Future<void> _runCycles() async {
-    for (var i = 0; i < 4 && mounted; i++) {
-      await _c.forward(from: 0).orCancel.catchError((_) {});
-    }
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final image = Image.asset(
-      widget.pose.asset,
-      width: widget.width,
-      fit: BoxFit.contain,
-      semanticLabel: widget.semanticLabel ?? 'Duas taças',
-    );
-    return AnimatedBuilder(
-      animation: _c,
-      builder: (context, child) {
-        final t = math.sin(_c.value * math.pi * 2);
-        return Transform.translate(
-          offset: Offset(0, -6 * t.abs()),
-          child: Transform.rotate(
-            angle: -0.035 * t,
-            alignment: Alignment.bottomCenter,
-            child: child,
-          ),
-        );
-      },
-      child: image,
-    );
-  }
+extension MascotPoseEstrela on MascotPose {
+  Estrela get estrela => switch (this) {
+        MascotPose.wave => Estrela.feliz,
+        MascotPose.budget => Estrela.ideia,
+        MascotPose.sleep => Estrela.dormir,
+        MascotPose.sad => Estrela.triste,
+        MascotPose.chat => Estrela.piscar,
+        MascotPose.clink => Estrela.parabens,
+        MascotPose.love => Estrela.apaixonada,
+        MascotPose.cheer => Estrela.contente,
+        MascotPose.thinking => Estrela.pensar,
+      };
 }
 
 /// As duas taças a brindar uma vez: entram afastadas, batem com um
