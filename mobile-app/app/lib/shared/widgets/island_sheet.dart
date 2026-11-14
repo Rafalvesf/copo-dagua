@@ -56,7 +56,16 @@ Future<T?> showIslandSheet<T>({
                       padding: EdgeInsets.zero,
                       viewPadding: EdgeInsets.zero,
                     ),
-                    child: Builder(builder: builder),
+                    // Caixas de texto cinzentas dentro da folha branca.
+                    child: Builder(
+                      builder: (c) {
+                        final t = Theme.of(c);
+                        return Theme(
+                          data: t.copyWith(inputDecorationTheme: t.inputDecorationTheme.copyWith(fillColor: AppTheme.surface)),
+                          child: Builder(builder: builder),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),

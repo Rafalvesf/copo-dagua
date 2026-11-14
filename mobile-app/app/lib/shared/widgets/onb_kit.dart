@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
+import 'island_sheet.dart';
 import 'line_icon.dart';
 import 'snappy_tap.dart';
 
@@ -473,6 +474,249 @@ class OnbTypeGrid extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+
+// ---- Folhas do passo "Quando e onde?" (mockup Ev3b / Ev3c, 2026-11-14) ----
+
+const _close = 'M6 6l12 12M18 6L6 18';
+const _months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const _monthsShort = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const _weekdays = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
+
+/// Cabeçalho das folhas: título 22 + fechar redondo 36.
+class OnbSheetHeader extends StatelessWidget {
+  final String title;
+  const OnbSheetHeader(this.title, {super.key});
+
+  @override
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Center(
+          child: Container(
+            width: 40,
+            height: 5,
+            decoration: BoxDecoration(color: const Color(0xFFD8D3C9), borderRadius: BorderRadius.circular(3)),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Row(children: [
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+          _SheetRound(path: _close, onTap: () => Navigator.of(context).pop(), size: 18),
+        ]),
+      ]);
+}
+
+class _SheetRound extends StatelessWidget {
+  final String path;
+  final VoidCallback? onTap;
+  final double size;
+  const _SheetRound({required this.path, required this.onTap, this.size = 18});
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Opacity(
+          opacity: onTap == null ? 0.35 : 1,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
+            alignment: Alignment.center,
+            child: LineIcon(path, size: size, color: AppTheme.ink),
+          ),
+        ),
+      );
+}
+
+/// Calendário numa folha: mês com setas, semana a começar à segunda,
+/// dia escolhido num círculo verde 40; botão "Escolher {dia}".
+Future<DateTime?> showOnbDateSheet(
+  BuildContext context, {
+  DateTime? initial,
+  required DateTime first,
+  required DateTime last,
+  String title = 'Quando é?',
+}) =>
+    showIslandSheet<DateTime>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => _DateSheet(initial: initial, first: first, last: last, title: title),
+    );
+
+class _DateSheet extends StatefulWidget {
+  final DateTime? initial;
+  final DateTime first;
+  final DateTime last;
+  final String title;
+  const _DateSheet({required this.initial, required this.first, required this.last, required this.title});
+
+  @override
+  State<_DateSheet> createState() => _DateSheetState();
+}
+
+class _DateSheetState extends State<_DateSheet> {
+  late DateTime? _picked = widget.initial;
+  late DateTime _month = DateTime((widget.initial ?? widget.first).year, (widget.initial ?? widget.first).month);
+
+  DateTime get _firstMonth => DateTime(widget.first.year, widget.first.month);
+  DateTime get _lastMonth => DateTime(widget.last.year, widget.last.month);
+
+  bool _allowed(DateTime d) => !d.isBefore(DateTime(widget.first.year, widget.first.month, widget.first.day)) && !d.isAfter(widget.last);
+
+  @override
+  Widget build(BuildContext context) {
+    final daysInMonth = DateTime(_month.year, _month.month + 1, 0).day;
+    final lead = DateTime(_month.year, _month.month, 1).weekday - 1; // segunda = 0
+    final cells = <Widget>[
+      for (final w in const ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'])
+        Center(
+          child: Text(w, style: const TextStyle(fontSize: 12, letterSpacing: 1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+        ),
+      for (var i = 0; i < lead; i++) const SizedBox.shrink(),
+      for (var d = 1; d <= daysInMonth; d++) _day(DateTime(_month.year, _month.month, d)),
+    ];
+    final p = _picked;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        OnbSheetHeader(widget.title),
+        const SizedBox(height: 16),
+        Row(children: [
+          _SheetRound(
+            path: LineIcon.back,
+            onTap: _month.isAfter(_firstMonth) ? () => setState(() => _month = DateTime(_month.year, _month.month - 1)) : null,
+          ),
+          Expanded(
+            child: Text('${_capFirst(_months[_month.month - 1])} de ${_month.year}',
+                textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+          _SheetRound(
+            path: LineIcon.forward,
+            onTap: _month.isBefore(_lastMonth) ? () => setState(() => _month = DateTime(_month.year, _month.month + 1)) : null,
+          ),
+        ]),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 7,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 2,
+          childAspectRatio: 1.15,
+          children: cells,
+        ),
+        const SizedBox(height: 14),
+        OnbButton(
+          label: p == null ? 'Escolher' : 'Escolher ${_weekdays[p.weekday - 1]}, ${p.day} ${_monthsShort[p.month - 1]}',
+          onPressed: p == null ? null : () => Navigator.of(context).pop(p),
+        ),
+      ]),
+    );
+  }
+
+  Widget _day(DateTime d) {
+    final ok = _allowed(d);
+    final sel = _picked != null && _picked!.year == d.year && _picked!.month == d.month && _picked!.day == d.day;
+    return SnappyTap(
+      onTap: ok ? () => setState(() => _picked = d) : null,
+      child: Center(
+        child: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: sel ? const BoxDecoration(color: _green, shape: BoxShape.circle) : null,
+          child: Text(
+            '${d.day}',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: sel ? FontWeight.w700 : FontWeight.w600,
+              color: sel ? Colors.white : ok ? AppTheme.ink : const Color(0xFFC9C3B8),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _capFirst(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+
+/// "Onde é?": caixa de texto + atalho para a zona da conta.
+Future<String?> showOnbPlaceSheet(
+  BuildContext context, {
+  required String current,
+  String? homeZone,
+  String? Function(String)? validate,
+}) =>
+    showIslandSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => _PlaceSheet(current: current, homeZone: homeZone, validate: validate),
+    );
+
+class _PlaceSheet extends StatefulWidget {
+  final String current;
+  final String? homeZone;
+  final String? Function(String)? validate;
+  const _PlaceSheet({required this.current, required this.homeZone, required this.validate});
+
+  @override
+  State<_PlaceSheet> createState() => _PlaceSheetState();
+}
+
+class _PlaceSheetState extends State<_PlaceSheet> {
+  late final _c = TextEditingController(text: widget.current);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final err = widget.validate?.call(_c.text);
+    final zone = widget.homeZone?.trim() ?? '';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        const OnbSheetHeader('Onde é?'),
+        const SizedBox(height: 16),
+        OnbField(
+          controller: _c,
+          hint: 'Ex.: Quinta da Ribafria, Sintra',
+          fill: AppTheme.background,
+          autofocus: true,
+          error: err,
+          onChanged: (_) => setState(() {}),
+        ),
+        if (zone.isNotEmpty && zone != _c.text.trim()) ...[
+          const SizedBox(height: 12),
+          SnappyTap(
+            onTap: () => Navigator.of(context).pop(zone),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 56),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+              child: Row(children: [
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Text('Usar a tua zona', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    const SizedBox(height: 2),
+                    Text(zone, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                  ]),
+                ),
+                const LineIcon(LineIcon.forward, size: 16, color: AppTheme.inkMuted),
+              ]),
+            ),
+          ),
+        ],
+        const SizedBox(height: 12),
+        const OnbMeta('Escreve o espaço, a cidade ou a morada. Podes mudar mais tarde.'),
+        const SizedBox(height: 16),
+        OnbButton(label: 'Guardar', onPressed: err == null ? () => Navigator.of(context).pop(_c.text.trim()) : null),
+      ]),
     );
   }
 }

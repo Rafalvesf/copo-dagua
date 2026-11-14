@@ -13,6 +13,8 @@ import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/alert_outline.dart' show AlertTone;
+import '../../../shared/widgets/dense_card.dart' show AlertStrip;
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gallery_placeholder.dart';
 import '../../../core/gallery/gallery_social.dart';
@@ -229,43 +231,15 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
           ),
           children: [
             if (pending.isNotEmpty) ...[
-              // Aviso amarelo (canvas): quantas fotos esperam aprovação;
-              // "Rever" abre a lista para aprovar ou recusar.
-              Container(
-                padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFCEFD6),
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(color: AppStatusColors.pending),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Hi.clock, size: 18, color: Color(0xFF7A5000)),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        pending.length == 1
-                            ? '1 foto de convidados à espera da vossa aprovação.'
-                            : '${pending.length} fotos de convidados à espera da vossa aprovação.',
-                        style: const TextStyle(
-                          fontSize: AppFontSize.md,
-                          color: Color(0xFF7A5000),
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => setState(() => _showPending = !_showPending),
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF7A5000),
-                        textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
-                          fontWeight: FontWeight.w700,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                      child: Text(_showPending ? 'Fechar' : 'Rever'),
-                    ),
-                  ],
-                ),
+              // Alerta pendente (DESIGN §7: fundo branco + linha amarela,
+              // nunca fundo amarelo); "Rever" abre a lista para aprovar.
+              AlertStrip(
+                tone: AlertTone.pending,
+                text: pending.length == 1
+                    ? '1 foto de convidados à espera da vossa aprovação.'
+                    : '${pending.length} fotos de convidados à espera da vossa aprovação.',
+                cta: _showPending ? 'Fechar' : 'Rever',
+                onTap: () => setState(() => _showPending = !_showPending),
               ),
               const SizedBox(height: 12),
               if (_showPending) ...[

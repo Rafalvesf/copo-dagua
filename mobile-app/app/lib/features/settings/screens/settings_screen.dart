@@ -508,6 +508,7 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
       title: 'Detalhes do evento',
       children: [
         // Mesma grelha do criar evento; «Outro» pede o nome (até 24).
+        const SizedBox(height: 14),
         const OnbGroupLabel('Tipo de evento'),
         const SizedBox(height: 8),
         OnbTypeGrid(selected: _type, onTap: (t) => setState(() => _type = t)),

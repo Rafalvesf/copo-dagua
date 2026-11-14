@@ -7,6 +7,7 @@ import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/partner_profile/partner_profile_controller.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -172,19 +173,13 @@ class _RequirementBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final complete = imageCount >= _minImages;
-    return Container(
+    // Nunca fundo amarelo (DESIGN §7): branco + linha fina do tom.
+    return AlertOutline(
+      tone: complete ? AlertTone.invite : AlertTone.pending,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: complete ? AppTheme.accentTint.withValues(alpha: 0.4) : AppColors.yellow.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
       child: Row(
         children: [
-          Icon(
-            complete ? Hi.checkCircle : Hi.informationCircle,
-            size: 18,
-            color: AppTheme.ink,
-          ),
+          AlertDot(complete ? AlertTone.invite : AlertTone.pending),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -212,16 +207,18 @@ class _ActionPill extends StatelessWidget {
       height: 52,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: outlined ? AppTheme.surface : AppTheme.accentOliveDark,
-        border: outlined ? Border.all(color: AppTheme.accentOliveDark) : null,
+        // Botões pretos / brancos com contorno preto (DESIGN §2: verde
+        // nunca em botões).
+        color: outlined ? Colors.white : AppTheme.ink,
+        border: outlined ? Border.all(color: AppTheme.ink, width: 1.5) : null,
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: outlined ? AppTheme.accentOliveDark : Colors.white,
+          color: outlined ? AppTheme.ink : Colors.white,
           fontWeight: FontWeight.w700,
-          fontSize: AppFontSize.lg,
+          fontSize: 15,
         ),
       ),
     );

@@ -715,7 +715,8 @@ void main() {
         const AuthState(status: AuthStatus.onboardingIncomplete, profile: _coupleProfile),
         '/onboarding',
       ));
-  for (var i = 1; i < 7; i++) {
+  // Casamento: 5 passos (o «Quem pode ir» só aparece em eventos abertos).
+  for (var i = 1; i < 5; i++) {
     testWidgets('04 onboarding passo ${i + 1}', (t) => _shoot(
           t,
           '04_onboarding_${i + 1}',

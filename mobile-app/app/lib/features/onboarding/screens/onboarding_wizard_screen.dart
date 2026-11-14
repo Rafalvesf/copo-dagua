@@ -1,6 +1,7 @@
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
@@ -81,6 +82,10 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
   DateTime? _date;
   final _location = TextEditingController();
   int _people = 50;
+  String? _homeZone;
+  bool _peopleEditing = false;
+  final _peopleCtrl = TextEditingController();
+  final _peopleFocus = FocusNode();
   bool _isPublic = false;
   double? _price;
   bool _inviteOrganizer = false;
@@ -102,6 +107,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     }
     _type ??= EventType.wedding;
     _location.text = IntroAnswers.city;
+    _homeZone = IntroAnswers.city.isEmpty ? null : IntroAnswers.city;
     for (final c in [_otherLabel, _name, _location]) {
       c.addListener(() => setState(() {}));
     }
@@ -115,7 +121,10 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     try {
       final row = await supabase.from('profiles').select('city').eq('id', id).maybeSingle();
       final city = (row?['city'] as String?)?.trim() ?? '';
-      if (city.isNotEmpty && mounted && _location.text.isEmpty) _location.text = city;
+      if (city.isNotEmpty && mounted) {
+        _homeZone = city;
+        if (_location.text.isEmpty) _location.text = city;
+      }
     } catch (_) {}
   }
 
@@ -124,6 +133,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     _otherLabel.dispose();
     _name.dispose();
     _location.dispose();
+    _peopleCtrl.dispose();
+    _peopleFocus.dispose();
     super.dispose();
   }
 
@@ -199,6 +210,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
   }
 
   Future<void> _next(Profile profile) async {
+    if (_peopleEditing) _commitPeople();
     if (_current == _Step.type && !_nameTouched) {
       final s = _nameSuggestions(profile);
       if (s.isNotEmpty) _name.text = s.first;
@@ -338,14 +350,39 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
-    final d = await showDatePicker(
-      context: context,
-      initialDate: _date ?? now.add(const Duration(days: 180)),
-      firstDate: DateTime(now.year, now.month, now.day),
-      lastDate: DateTime(now.year + 5, 12, 31),
-      locale: const Locale('pt', 'PT'),
+    final d = await showOnbDateSheet(
+      context,
+      initial: _date,
+      first: DateTime(now.year, now.month, now.day),
+      last: DateTime(now.year + 5, 12, 31),
     );
     if (d != null) setState(() => _date = d);
+  }
+
+  Future<void> _pickPlace() async {
+    final v = await showOnbPlaceSheet(
+      context,
+      current: _location.text,
+      homeZone: _homeZone,
+      validate: (t) => WordFilter.allowed(t) ? null : WordFilter.message,
+    );
+    if (v != null) setState(() => _location.text = v);
+  }
+
+  /// Escrever o número de pessoas (mockup Ev4c): além do − / + e atalhos.
+  Future<void> _typePeople() async {
+    setState(() => _peopleEditing = true);
+    _peopleCtrl.text = '$_people';
+    _peopleCtrl.selection = TextSelection(baseOffset: 0, extentOffset: _peopleCtrl.text.length);
+    _peopleFocus.requestFocus();
+  }
+
+  void _commitPeople() {
+    final n = int.tryParse(_peopleCtrl.text.trim());
+    setState(() {
+      if (n != null && n > 0) _people = n.clamp(1, 5000);
+      _peopleEditing = false;
+    });
   }
 
   Future<void> _editText({
@@ -429,7 +466,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
       );
     }
 
-    final kicker = '${_index + 1} de ${_steps.length}';
+    final kicker = '${_steps.indexOf(_current) + 1} de ${_steps.length}';
     final cta = OnbButton(
       label: _current == _Step.organizer ? 'Criar evento' : 'Continuar',
       loading: _saving,
@@ -541,7 +578,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             OnbRows(rows: [
               ('Data', _date == null ? 'Escolher' : '${formatShortDatePt(_date!).replaceFirstMapped(RegExp(r' [A-Z]\w+$'), (m) => m[0]!.toLowerCase())} ${_date!.year}', _pickDate),
               ('Onde', _location.text.trim().isEmpty ? 'Escolher' : _location.text.trim(),
-                  () => _editText(title: 'Onde é?', target: _location, hint: 'Ex.: Lisboa')),
+                  _pickPlace),
             ]),
             if (days != null && days >= 0) ...[
               const SizedBox(height: 12),
@@ -574,11 +611,50 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                 _RoundStep(
                   path: 'M5 12h14',
                   dark: false,
-                  onTap: _people > 1 ? () => setState(() => _people = (_people - (_people > 20 ? 10 : 1)).clamp(1, 5000)) : null,
+                  onTap: _people > 1 ? () => setState(() {
+                    _peopleEditing = false;
+                    _people = (_people - (_people > 20 ? 10 : 1)).clamp(1, 5000);
+                  }) : null,
                 ),
                 Expanded(
                   child: Column(children: [
-                    Text('$_people', style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    // Toca no número para o escrever (pedido 2026-11-14).
+                    _peopleEditing
+                        ? IntrinsicWidth(
+                            child: TextField(
+                              controller: _peopleCtrl,
+                              focusNode: _peopleFocus,
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(4)],
+                              cursorColor: AppTheme.ink,
+                              onSubmitted: (_) => _commitPeople(),
+                              onTapOutside: (_) {
+                                _peopleFocus.unfocus();
+                                _commitPeople();
+                              },
+                              style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                              decoration: const InputDecoration(
+                                isCollapsed: true,
+                                filled: false,
+                                contentPadding: EdgeInsets.fromLTRB(6, 0, 6, 2),
+                                border: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF4F6B4A), width: 2)),
+                                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF4F6B4A), width: 2)),
+                                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF4F6B4A), width: 2)),
+                              ),
+                            ),
+                          )
+                        : SnappyTap(
+                            onTap: _typePeople,
+                            child: Container(
+                              padding: const EdgeInsets.fromLTRB(6, 0, 6, 2),
+                              decoration: const BoxDecoration(
+                                border: Border(bottom: BorderSide(color: Color(0xFFD8D3C9), width: 2)),
+                              ),
+                              child: Text('$_people',
+                                  style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            ),
+                          ),
                     const SizedBox(height: 2),
                     const Text('pessoas no máximo', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                   ]),
@@ -586,7 +662,10 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                 _RoundStep(
                   path: LineIcon.plus,
                   dark: true,
-                  onTap: () => setState(() => _people = (_people + (_people >= 20 ? 10 : 1)).clamp(1, 5000)),
+                  onTap: () => setState(() {
+                    _peopleEditing = false;
+                    _people = (_people + (_people >= 20 ? 10 : 1)).clamp(1, 5000);
+                  }),
                 ),
               ]),
             ),
@@ -594,10 +673,13 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             OnbChips(
               items: [for (final n in _peopleChips) n == 300 ? '300+' : '$n'],
               selected: {_people == 300 ? '300+' : '$_people'},
-              onTap: (v) => setState(() => _people = int.parse(v.replaceAll('+', ''))),
+              onTap: (v) => setState(() {
+                _peopleEditing = false;
+                _people = int.parse(v.replaceAll('+', ''));
+              }),
             ),
             const SizedBox(height: 12),
-            const OnbMeta('É o limite de convidados e de entradas. Não voltamos a perguntar. Podes mudar mais tarde.'),
+            const OnbMeta('Toca no número para o escreveres. É o limite de convidados e de entradas; podes mudar mais tarde.'),
           ]),
         );
       case _Step.access:

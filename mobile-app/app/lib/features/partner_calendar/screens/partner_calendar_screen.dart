@@ -64,8 +64,10 @@ class _PartnerCalendarScreenState
                       children: [
                         // Canvas "Parceiro — calendário (redesign)": mês num
                         // cartão branco com sombra suave.
+                        // Só a sombra: o cartão (e o interior) já vêm do
+                        // MonthCalendarGrid — antes ficava um cartão dentro
+                        // de outro, com duas margens.
                         Container(
-                          padding: const EdgeInsets.all(16),
                           decoration: softCard(),
                           child: MonthCalendarGrid(
                             visibleMonth: _visibleMonth,
