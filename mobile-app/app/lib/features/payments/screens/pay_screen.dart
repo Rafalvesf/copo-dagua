@@ -1,3 +1,4 @@
+import '../../../shared/widgets/estrela.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:async';
@@ -613,15 +614,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       case _Step.done:
         return [
           const SizedBox(height: 8),
-          Center(
-            child: Container(
-              width: 72,
-              height: 72,
-              decoration: const BoxDecoration(color: Color(0xFF4F6B4A), shape: BoxShape.circle),
-              alignment: Alignment.center,
-              child: const LineIcon(LineIcon.check, size: 34, color: Colors.white, stroke: 2.6),
-            ),
-          ),
+          // Estrela a festejar (2026-11-14), no lugar do visto verde.
+          const Center(child: EstrelaMascot(Estrela.parabens, size: 120)),
           const SizedBox(height: 12),
           Text(
             a.isBooking

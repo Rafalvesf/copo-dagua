@@ -1,3 +1,4 @@
+import '../../../shared/widgets/estrela.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
@@ -859,6 +860,8 @@ class _DoneView extends StatelessWidget {
             const SizedBox(height: 44, child: OnbProgress(value: 1)),
             Expanded(
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                const EstrelaMascot(Estrela.parabens, size: 150),
+                const SizedBox(height: 20),
                 const Text('Parabéns! 🎉',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 35, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),

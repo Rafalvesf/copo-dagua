@@ -104,7 +104,7 @@ class _JoinWeddingScreenState extends ConsumerState<JoinWeddingScreen> {
                         );
                       }
                       return PublicStateView(
-                        pose: MascotPose.clink,
+                        pose: MascotPose.cheer,
                         title: 'Organiza com ${invite.names}',
                         message: 'Cria conta ou entra para ficares com acesso ao evento.',
                         actions: [

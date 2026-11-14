@@ -104,7 +104,7 @@ class _InviteTokenScreenState extends ConsumerState<InviteTokenScreen> {
                           actions: [PrimaryButton(label: 'Voltar', onPressed: () => context.go('/guest-home'))],
                         )
                 : PublicStateView(
-                    pose: MascotPose.wave,
+                    pose: MascotPose.love,
                     title: 'Foste convidado!',
                     message: 'Este convite é só para ti. Instala a app e cria conta com o mesmo email ou telemóvel — o convite fica logo ligado a ti.',
                     actions: [

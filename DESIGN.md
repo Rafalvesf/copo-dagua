@@ -135,6 +135,16 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
   opção brancos (cantos 22, interior 16), **verdes quando escolhidos**;
   grelha de tipos de evento em 3 colunas (82 de altura, ícone 24, texto
   12 negrito); contador de pessoas com número 40.
+- **Mascote — a estrela** (`shared/widgets/estrela.dart`, desenho do
+  Rafael, canvas «Estrela · reações», 2026-11-14): estrela verde `#596440`,
+  lisa, com sombra no chão; 12 reações (feliz, parabéns, apaixonada, fixe,
+  piscar o olho, surpresa, a dormir, a pensar, contente, triste, zangada,
+  ideia). Anima 3 vezes ao aparecer e fica parada; só «a pensar» pode
+  continuar enquanto carrega; parada com «reduzir movimento». Onde:
+  listas vazias → a dormir; erros → triste; evento criado e pagamento
+  feito → parabéns; convites e «vou» → apaixonada; aceitar/juntar →
+  contente; sugestões → ideia; conversas vazias → piscar o olho. Substitui
+  as duas taças.
 - **Emojis:** só no "Parabéns! 🎉" do fim do criar evento (pedido do
   Rafael, 2026-11-12). Em mais lado nenhum.
 
