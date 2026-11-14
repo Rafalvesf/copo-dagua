@@ -51,7 +51,7 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
   late final _email = TextEditingController(text: widget.existing?.email ?? '');
   late final _phone = TextEditingController(text: widget.existing?.phone ?? '');
   late final _group = TextEditingController(text: widget.existing?.group ?? '');
-  late WeddingSide _side = widget.existing?.side ?? WeddingSide.both;
+  late final WeddingSide _side = widget.existing?.side ?? WeddingSide.both;
   late int _maxCompanions = widget.existing?.maxCompanions ?? 0;
   String? _nameError;
 
@@ -96,26 +96,7 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
             const SizedBox(height: 12),
             AuthTextField(label: 'Grupo', controller: _group),
             const SizedBox(height: 12),
-            Text('Lado', style: Theme.of(context).textTheme.labelLarge),
-            RadioGroup<WeddingSide>(
-              groupValue: _side,
-              onChanged: (v) => setState(() => _side = v ?? _side),
-              child: Column(
-                children: WeddingSide.values
-                    .map(
-                      (side) => RadioListTile<WeddingSide>(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(switch (side) {
-                          WeddingSide.groom => 'Noivo',
-                          WeddingSide.bride => 'Noiva',
-                          WeddingSide.both => 'Ambos',
-                        }),
-                        value: side,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
+            // Sem «Lado» (noivo/noiva) desde 2026-11-14: não é só para casamentos.
             // Limite de acompanhantes (pedido 2026-10-17: os
             // organizadores não tinham como mudar ou limitar).
             const SizedBox(height: 8),

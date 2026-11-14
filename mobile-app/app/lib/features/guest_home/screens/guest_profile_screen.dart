@@ -178,11 +178,6 @@ class _GuestProfileBody extends ConsumerWidget {
             ? profile.email
             : [
                 if (guest.group.isNotEmpty) guest.group,
-                switch (guest.side) {
-                  WeddingSide.bride => 'Lado da noiva',
-                  WeddingSide.groom => 'Lado do noivo',
-                  WeddingSide.both => '',
-                },
               ].where((t) => t.isNotEmpty).join(' · ');
         // Mesmo estilo dos perfis do organizador e do parceiro
         // (pedido 2026-10-17): título grande, foto redonda com câmara,
