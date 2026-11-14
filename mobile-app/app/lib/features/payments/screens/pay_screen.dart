@@ -16,14 +16,12 @@ import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
-import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
-import '../../../shared/widgets/green_hero.dart';
-import '../../../shared/widgets/page_header.dart';
-import '../../../shared/widgets/sticker_icon.dart';
-import 'pay_done_screen.dart';
+import '../../../shared/widgets/line_icon.dart';
+import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
 
-enum _Step { checking, select, loading, card, confirming, mbWayPhone, mbWayWaiting, multibanco }
+enum _Step { checking, select, loading, card, confirming, mbWayPhone, mbWayWaiting, multibanco, done }
 
 /// Pagamento dentro da app. 2026-10-25 ("quero tudo feito na app"): o ecrã
 /// é todo desenhado pela app — nada de formulários da Stripe.
@@ -347,293 +345,379 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     }
     ref.invalidate(coupleBookingsProvider);
     ref.read(taskEngineControllerProvider.notifier).recompute();
-    context.pushReplacement(
-      '/pay/done',
-      extra: PayDoneArgs(
-        partnerName: a.partnerName,
-        title: a.title,
-        amountLabel: _amountLabel,
-      ),
-    );
+    // O fim também é na folha (mockup "Pagamentos · Pago").
+    if (mounted) setState(() => _step = _Step.done);
   }
+
+  bool _more = false;
+
+  /// O método recomendado: a carteira do aparelho (Apple Pay no iPhone,
+  /// Google Pay no Android, a do browser na web); sem carteira, o cartão.
+  PayMethod get _recommended => _methods.contains(PayMethod.wallet) ? PayMethod.wallet : _methods.first;
+
+  String get _sheetTitle => switch (_step) {
+        _Step.card || _Step.confirming => 'Pagar com cartão',
+        _Step.mbWayPhone => 'MB WAY',
+        _Step.mbWayWaiting => 'Aprova na app MB WAY',
+        _Step.multibanco => 'Referência Multibanco',
+        _Step.done => '${a.title} pago',
+        _ => a.isBooking ? (a.kind == 'deposit' ? 'Pagar sinal' : 'Pagar o resto') : 'Pagar',
+      };
+
+  bool get _canGoBack =>
+      _step == _Step.card || _step == _Step.mbWayPhone || _step == _Step.mbWayWaiting || _step == _Step.multibanco;
 
   @override
   Widget build(BuildContext context) {
-    return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(
-        child: Column(
-          children: [
-            PageHeader(title: 'Pagamento', centered: true),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 24),
-                children: [
-                  GreenHero(
-                    label: '${a.title.toUpperCase()} · ${a.partnerName.toUpperCase()}',
-                    value: _amountLabel,
-                    doodles: const [Hi.lockClosed, Hi.sparkles, Hi.heartOutline],
-                    footer: Wrap(spacing: 6, runSpacing: 6, children: [
-                      const HeroPill('Pagamento seguro', solid: true),
-                      if (a.isBooking) HeroPill(a.kind == 'deposit' ? 'Confirma a reserva' : 'Fecha a reserva'),
-                    ]),
-                  ),
-                  ..._body(),
-                ],
-              ),
+    final bottom = MediaQuery.of(context).padding.bottom;
+    final maxH = MediaQuery.sizeOf(context).height * 0.92;
+    return Material(
+      type: MaterialType.transparency,
+      child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+        // Toque fora da folha fecha.
+        Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => context.pop())),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxH),
+          child: Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: AppTheme.background,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
-            _bottomBar(),
-          ],
+            padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 20 + bottom),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(color: const Color(0xFFD8D3C9), borderRadius: BorderRadius.circular(3)),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(children: [
+                if (_canGoBack) ...[
+                  _SheetRound(
+                    icon: LineIcon.back,
+                    color: AppTheme.background,
+                    label: 'Voltar',
+                    onTap: _step == _Step.confirming ? null : _backToSelect,
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: Text(_sheetTitle,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ),
+                _SheetRound(icon: _closePath, color: Colors.white, label: 'Fechar', onTap: () => context.pop()),
+              ]),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: _body()),
+                ),
+              ),
+              _bottomBar(),
+            ]),
+          ),
         ),
-      ),
+      ]),
     );
   }
 
-  Widget _changeMethod() => TextButton(
-        onPressed: _step == _Step.confirming ? null : _backToSelect,
-        child: Text('Mudar método', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-      );
+  static const _closePath = 'M6 6l12 12M18 6L6 18';
+
+  Widget _partnerRow() {
+    final name = a.partnerName.trim();
+    return Row(children: [
+      V2Avatar(name.isEmpty ? '?' : name, size: 40),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(a.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+        ]),
+      ),
+    ]);
+  }
+
+  Widget _totals() {
+    final base = a.baseAmount;
+    final total = (_amountCents ?? (a.amount * 100).round()) / 100;
+    Widget line(String l, String v) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(children: [
+            Text(l, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+            const Spacer(),
+            Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+          ]),
+        );
+    return _WhiteCard(
+      child: Column(children: [
+        if (base != null && total > base) ...[
+          line(a.title, euros(base, cents: true)),
+          line('Taxa de serviço', euros(total - base, cents: true)),
+          const Divider(height: 8, color: Color(0xFFECE7DC)),
+          const SizedBox(height: 8),
+        ],
+        Row(children: [
+          const Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const Spacer(),
+          Text(_amountLabel, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        ]),
+      ]),
+    );
+  }
 
   List<Widget> _body() {
     switch (_step) {
       case _Step.checking:
       case _Step.loading:
         return [
-          const SizedBox(height: 60),
-          Center(child: CircularProgressIndicator(color: AppTheme.accentOliveDark)),
+          const SizedBox(height: 40),
+          const Center(child: CircularProgressIndicator(color: Color(0xFF4F6B4A))),
           const SizedBox(height: 14),
           Center(
             child: Text(_step == _Step.checking ? 'A verificar o pagamento…' : 'A preparar o pagamento…',
-                style: const TextStyle(color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           ),
+          const SizedBox(height: 40),
         ];
       case _Step.select:
+        final rec = _recommended;
+        final others = [for (final m in _methods) if (m != rec) m];
+        final shown = [rec, if (_more) ...others];
         return [
-          const SectionTitle('Como queres pagar?'),
-          for (final m in _methods) ...[
-            _MethodTile(
-              method: m,
-              label: m == PayMethod.wallet ? _walletName : null,
-              icon: m == PayMethod.wallet && _wallet == 'apple_pay' ? Icons.apple : null,
-              selected: m == _method,
-              onTap: () => setState(() => _method = m),
-            ),
-            const SizedBox(height: 10),
-          ],
-          if (_error != null) _ErrorNote(_error!),
-          // Cancelamento (2026-11-09): fica aqui e nos termos, não no perfil
-          // do parceiro. Prazo grátis da regra do parceiro (migração 174).
-          const SizedBox(height: 4),
-          if (a.isBooking) _CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit'),
+          _partnerRow(),
+          const SizedBox(height: 18),
+          const Text('COMO QUERES PAGAR',
+              style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           const SizedBox(height: 8),
-          const _SecureNote(),
+          _WhiteCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Column(children: [
+              for (final m in shown)
+                _MethodRow(
+                  method: m,
+                  label: m == PayMethod.wallet ? _walletName : null,
+                  recommended: m == rec,
+                  hint: m == rec && m == PayMethod.wallet ? 'Pagas com o ${_wallet == 'apple_pay' ? 'Face ID' : 'teu telemóvel'}, sem escrever nada.' : null,
+                  selected: m == _method,
+                  onTap: () => setState(() => _method = m),
+                ),
+              if (others.isNotEmpty)
+                SnappyTap(
+                  onTap: () => setState(() {
+                    _more = !_more;
+                    if (!_more) _method = rec;
+                  }),
+                  child: SizedBox(
+                    height: 48,
+                    child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Text(_more ? 'Menos opções' : 'Mais opções',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      const SizedBox(width: 6),
+                      LineIcon(_more ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6', size: 16, color: AppTheme.inkMuted),
+                    ]),
+                  ),
+                ),
+            ]),
+          ),
+          const SizedBox(height: 12),
+          _totals(),
+          if (_error != null) ...[const SizedBox(height: 12), _ErrorNote(_error!)],
         ];
       case _Step.card:
       case _Step.confirming:
         return [
-          SectionTitle('Cartão', trailing: _changeMethod()),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: whiteLineCard(),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              if (!_stripe.splitFields) ...[
-                const _FieldLabel('Dados do cartão'),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppTheme.borderMuted),
-                  ),
-                  child: _stripe.cardPart(CardPart.number),
-                ),
-              ] else ...[
-              const _FieldLabel('Número do cartão'),
-              _CardBox(child: _stripe.cardPart(CardPart.number)),
-              const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const _FieldLabel('Validade'),
-                    _CardBox(child: _stripe.cardPart(CardPart.expiry)),
-                  ]),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const _FieldLabel('CVC'),
-                    _CardBox(child: _stripe.cardPart(CardPart.cvc)),
-                  ]),
-                ),
-              ]),
-              ],
-              if (_card.error.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Text(_card.error, style: const TextStyle(fontSize: AppFontSize.sm, color: Color(0xFFB3261E))),
-              ],
+          if (!_stripe.splitFields) ...[
+            const _FieldLabel('Dados do cartão'),
+            _CardBox(child: _stripe.cardPart(CardPart.number)),
+          ] else ...[
+            const _FieldLabel('Número do cartão'),
+            _CardBox(child: _stripe.cardPart(CardPart.number)),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  const _FieldLabel('Validade'),
+                  _CardBox(child: _stripe.cardPart(CardPart.expiry)),
+                ]),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  const _FieldLabel('CVC'),
+                  _CardBox(child: _stripe.cardPart(CardPart.cvc)),
+                ]),
+              ),
             ]),
-          ),
-          if (_error != null) ...[const SizedBox(height: 10), _ErrorNote(_error!)],
+          ],
+          if (_card.error.isNotEmpty) ...[const SizedBox(height: 10), _ErrorNote(_card.error)],
           const SizedBox(height: 12),
-          const _SecureNote(),
+          _totals(),
+          if (_error != null) ...[const SizedBox(height: 12), _ErrorNote(_error!)],
         ];
       case _Step.mbWayPhone:
         return [
-          SectionTitle('MB WAY', trailing: _changeMethod()),
+          const _FieldLabel('Telemóvel com MB WAY'),
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: whiteLineCard(),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const _FieldLabel('Telemóvel com MB WAY'),
-              TextField(
-                controller: _phone,
-                keyboardType: TextInputType.phone,
-                autofillHints: const [AutofillHints.telephoneNumber],
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d +]'))],
-                style: const TextStyle(fontSize: AppFontSize.lg, color: AppTheme.ink),
-                decoration: const InputDecoration(hintText: '912 345 678', prefixText: '+351  '),
-                onSubmitted: (_) => _sendMbWay(),
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26)),
+            child: Row(children: [
+              const Text('+351', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _phone,
+                  keyboardType: TextInputType.phone,
+                  autofillHints: const [AutofillHints.telephoneNumber],
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d +]'))],
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.ink),
+                  decoration: const InputDecoration(
+                    isCollapsed: true,
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    hintText: '912 345 678',
+                  ),
+                  onSubmitted: (_) => _sendMbWay(),
+                ),
               ),
-              const SizedBox(height: 10),
-              const Text('Vais receber um pedido de pagamento na app MB WAY para aprovar.',
-                  style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4)),
             ]),
           ),
-          if (_error != null) ...[const SizedBox(height: 10), _ErrorNote(_error!)],
+          const SizedBox(height: 10),
+          const Text('Vais receber um pedido de pagamento na app MB WAY para aprovar.',
+              style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+          const SizedBox(height: 12),
+          _totals(),
+          if (_error != null) ...[const SizedBox(height: 12), _ErrorNote(_error!)],
         ];
       case _Step.mbWayWaiting:
         return [
-          const SizedBox(height: 18),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: whiteLineCard(),
+          const SizedBox(height: 12),
+          Center(
+            child: Text(_amountLabel,
+                style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+          const SizedBox(height: 10),
+          const Text('Enviámos o pedido para o teu telemóvel. Tens 4 minutos para aprovar.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+          const SizedBox(height: 14),
+          const Center(child: _PendingTag('À espera da aprovação')),
+          const SizedBox(height: 12),
+        ];
+      case _Step.done:
+        return [
+          const SizedBox(height: 8),
+          Center(
+            child: Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(color: Color(0xFF4F6B4A), shape: BoxShape.circle),
+              alignment: Alignment.center,
+              child: const LineIcon(LineIcon.check, size: 34, color: Colors.white, stroke: 2.6),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            a.isBooking
+                ? (a.kind == 'deposit'
+                    ? '${a.partnerName} está reservado. O resto paga-se até 30 dias antes.'
+                    : 'Está tudo pago a ${a.partnerName}.')
+                : 'Pagamento feito.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
+          ),
+          const SizedBox(height: 16),
+          _WhiteCard(
             child: Column(children: [
-              const StickerIcon(Hi.devicePhoneMobile, size: 56),
-              const SizedBox(height: 14),
-              const Text('Aprova na app MB WAY',
-                  style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 6),
-              Text('Enviámos um pedido de $_amountLabel para o teu telemóvel. Tens 4 minutos para aprovar.',
-                  textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.inkMuted, height: 1.4)),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: 26,
-                height: 26,
-                child: CircularProgressIndicator(strokeWidth: 3, color: AppTheme.accentOliveDark),
-              ),
+              Row(children: [
+                const Text('Pago', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                const Spacer(),
+                Text(_amountLabel, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+              ]),
               const SizedBox(height: 8),
-              const Text('À espera da confirmação…', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-              const SizedBox(height: 6),
-              _changeMethod(),
+              const Row(children: [
+                Text('Fatura', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                Spacer(),
+                Text('Enviada por email', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ]),
             ]),
           ),
         ];
       case _Step.multibanco:
         final mb = _mb;
         return [
-          SectionTitle('Referência Multibanco', trailing: _changeMethod()),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: whiteLineCard(),
+          _WhiteCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Column(children: [
               _RefRow(label: 'Entidade', value: mb?.entity ?? '—'),
-              const Divider(height: 22, color: AppTheme.borderMuted),
               _RefRow(label: 'Referência', value: _groupRef(mb?.reference ?? '—'), copy: mb?.reference),
-              const Divider(height: 22, color: AppTheme.borderMuted),
               _RefRow(label: 'Montante', value: _amountLabel),
-              if (mb?.expiresAt != null) ...[
-                const Divider(height: 22, color: AppTheme.borderMuted),
-                _RefRow(label: 'Pagar até', value: _date(mb!.expiresAt!)),
-              ],
+              if (mb?.expiresAt != null) _RefRow(label: 'Pagar até', value: _date(mb!.expiresAt!), last: true),
             ]),
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: AppColors.yellow, borderRadius: BorderRadius.circular(18)),
-            child: const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(Hi.clock, size: 20, color: AppTheme.ink),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Paga no multibanco ou no homebanking em "Pagamento de serviços". Confirmamos automaticamente quando o pagamento chegar (pode demorar algumas horas).',
-                  style: TextStyle(fontSize: AppFontSize.md, height: 1.4, color: AppTheme.ink),
-                ),
-              ),
-            ]),
+          const Text(
+            'Paga no multibanco ou no homebanking em "Pagamento de serviços". Confirmamos sozinhos quando o pagamento chegar (pode demorar algumas horas).',
+            style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
           ),
         ];
     }
   }
 
   Widget _bottomBar() {
-    String? label;
-    VoidCallback? onTap;
-    IconData? icon;
-    var busy = false;
+    Widget? button;
+    final extras = <Widget>[];
     switch (_step) {
       case _Step.select:
         if (_method == PayMethod.wallet) {
-          label = 'Pagar com $_walletName';
-          icon = _wallet == 'apple_pay' ? Icons.apple : Hi.wallet;
-          onTap = _payWallet;
+          button = _stripe.walletButton(_payWallet) ?? _SheetButton(label: 'Pagar com $_walletName', onTap: _payWallet);
         } else {
-          label = 'Continuar';
-          onTap = _continue;
+          button = _SheetButton(label: _method == PayMethod.card ? 'Pagar $_amountLabel' : 'Continuar', onTap: _continue);
         }
+        extras.add(const _SecureNote('Pagamento seguro pela Stripe, dentro da app.'));
+        if (a.isBooking) extras.add(_CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit'));
       case _Step.card:
-        label = 'Pagar $_amountLabel';
-        icon = Hi.lockClosed;
-        onTap = _cardMounted && _card.complete ? _payCard : null;
+        button = _SheetButton(label: 'Pagar $_amountLabel', onTap: _cardMounted && _card.complete ? _payCard : null);
+        extras.add(const _SecureNote('O número do cartão vai direto para a Stripe.'));
       case _Step.confirming:
-        label = 'A pagar…';
-        busy = true;
+        button = const _SheetButton(label: 'A pagar…', busy: true);
       case _Step.mbWayPhone:
-        label = 'Enviar pedido MB WAY';
-        onTap = _sendMbWay;
+        button = _SheetButton(label: 'Enviar pedido MB WAY', onTap: _sendMbWay);
+      case _Step.done:
+        button = _SheetButton(label: a.isBooking ? 'Ver reserva' : 'Fechar', onTap: () => a.isBooking ? context.go('/bookings') : context.pop());
+        if (a.isBooking) extras.add(_SheetButton(label: 'Fechar', secondary: true, onTap: () => context.pop()));
+      case _Step.mbWayWaiting:
+        button = _SheetButton(label: 'Escolher outro método', secondary: true, onTap: _backToSelect);
       case _Step.multibanco:
-        label = 'Já paguei';
-        onTap = () async {
-          final (state, _) = await a.currentState();
-          if (!mounted) return;
-          if (state == 'paid') {
-            _done();
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Ainda não recebemos o pagamento. Pode demorar algumas horas — avisamos-te.'),
-            ));
-          }
-        };
+        button = _SheetButton(
+          label: 'Já paguei',
+          onTap: () async {
+            final (state, _) = await a.currentState();
+            if (!mounted) return;
+            if (state == 'paid') {
+              _done();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('Ainda não recebemos o pagamento. Pode demorar algumas horas — avisamos-te.'),
+              ));
+            }
+          },
+        );
       default:
-        return const SizedBox.shrink();
+        return const SizedBox(height: 4);
     }
-    return Container(
-      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 14),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Color(0x14171713), blurRadius: 18, offset: Offset(0, -4))],
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 54,
-        child: FilledButton(
-          onPressed: onTap,
-          style: FilledButton.styleFrom(
-            backgroundColor: _method == PayMethod.wallet && _step == _Step.select ? AppTheme.ink : AppTheme.accentOliveDark,
-            disabledBackgroundColor: AppTheme.accentOliveDark.withValues(alpha: 0.4),
-            foregroundColor: Colors.white,
-            disabledForegroundColor: Colors.white,
-            shape: const StadiumBorder(),
-            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
-          ),
-          child: busy
-              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-              : Row(mainAxisSize: MainAxisSize.min, children: [
-                  if (icon != null) ...[Icon(icon, size: 18), const SizedBox(width: 8)],
-                  Text(label),
-                ]),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        button,
+        for (final e in extras) ...[const SizedBox(height: 10), e],
+      ]),
     );
   }
 
@@ -657,12 +741,13 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: AppFontSize.md, color: AppTheme.ink)),
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(text.toUpperCase(),
+            style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
       );
 }
 
-/// Caixa da app à volta de um campo de cartão (o campo em si é da Stripe).
+/// Pílula branca 52 à volta de um campo de cartão (o campo é da Stripe).
 class _CardBox extends StatelessWidget {
   final Widget child;
   const _CardBox({required this.child});
@@ -670,67 +755,173 @@ class _CardBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         height: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppTheme.borderMuted),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26)),
         alignment: Alignment.centerLeft,
         child: SizedBox(height: 24, width: double.infinity, child: child),
       );
 }
 
-class _MethodTile extends StatelessWidget {
+class _WhiteCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets padding;
+  const _WhiteCard({required this.child, this.padding = const EdgeInsets.all(16)});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: padding,
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        child: child,
+      );
+}
+
+/// Botão redondo 36 do topo da folha (voltar / fechar).
+class _SheetRound extends StatelessWidget {
+  final String icon;
+  final Color color;
+  final String label;
+  final VoidCallback? onTap;
+  const _SheetRound({required this.icon, required this.color, required this.label, this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: label,
+        child: SnappyTap(
+          onTap: onTap,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            alignment: Alignment.center,
+            child: LineIcon(icon, size: 18, color: AppTheme.ink),
+          ),
+        ),
+      );
+}
+
+/// Botão 52 da folha: preto, ou branco com contorno.
+class _SheetButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  final bool secondary;
+  final bool busy;
+  const _SheetButton({required this.label, this.onTap, this.secondary = false, this.busy = false});
+
+  @override
+  Widget build(BuildContext context) {
+    const text = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700);
+    final child = busy
+        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+        : Text(label);
+    return SizedBox(
+      height: 52,
+      child: secondary
+          ? OutlinedButton(
+              onPressed: onTap,
+              style: OutlinedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppTheme.ink,
+                side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                shape: const StadiumBorder(),
+                textStyle: text,
+              ),
+              child: child,
+            )
+          : FilledButton(
+              onPressed: busy ? () {} : onTap,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.ink,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.35),
+                disabledForegroundColor: Colors.white,
+                shape: const StadiumBorder(),
+                textStyle: text,
+              ),
+              child: child,
+            ),
+    );
+  }
+}
+
+/// Linha de um método de pagamento (mockup "Pagamentos").
+class _MethodRow extends StatelessWidget {
   final PayMethod method;
   final String? label;
-  final IconData? icon;
+  final String? hint;
+  final bool recommended;
   final bool selected;
   final VoidCallback onTap;
-  const _MethodTile({required this.method, this.label, this.icon, required this.selected, required this.onTap});
+  const _MethodRow({
+    required this.method,
+    this.label,
+    this.hint,
+    required this.recommended,
+    required this.selected,
+    required this.onTap,
+  });
 
-  IconData get _icon => icon ?? switch (method) {
-    PayMethod.wallet => Hi.wallet,
-    PayMethod.card => Hi.creditCard,
-    PayMethod.mbWay => Hi.devicePhoneMobile,
-    PayMethod.multibanco => Hi.buildingLibrary,
+  static const _paths = {
+    PayMethod.wallet: 'M4 7h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4zM4 7l11-3v3M16 13h.01',
+    PayMethod.card: 'M5 6h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM3 10h18M7 15h4',
+    PayMethod.mbWay: 'M9 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM11 18h2',
+    PayMethod.multibanco: 'M4 6h16v12H4zM8 10h8M8 14h5',
   };
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.all(14),
-        decoration: whiteLineCard(
-          line: selected ? AppTheme.accentOliveDark : null,
-          width: selected ? 2 : 1,
-        ),
-        child: Row(children: [
-          StickerIcon(_icon, turns: StickerIcon.tilt(method.index)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(label ?? method.label,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, color: AppTheme.ink)),
-              const SizedBox(height: 2),
-              Text(method.hint, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-            ]),
-          ),
-          const SizedBox(width: 8),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: selected ? AppTheme.accentOliveDark : Colors.white,
-              border: Border.all(color: selected ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: 2),
+    final sub = hint ?? (method == PayMethod.multibanco ? 'Referência para pagar até 3 dias.' : null);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: SnappyTap(
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 56),
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFECE7DC)))),
+          child: Row(children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(12)),
+              alignment: Alignment.center,
+              child: LineIcon(_paths[method]!, size: 20, color: AppTheme.ink),
             ),
-            child: selected ? const Icon(Hi.check, size: 15, color: Colors.white) : null,
-          ),
-        ]),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Wrap(spacing: 6, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                  Text(label ?? method.label,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  if (recommended)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
+                      child: const Text('Recomendado',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+                    ),
+                ]),
+                if (sub != null) ...[
+                  const SizedBox(height: 3),
+                  Text(sub, style: const TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                ],
+              ]),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? const Color(0xFF4F6B4A) : null,
+                border: selected ? null : Border.all(color: const Color(0xFFC9C3B8), width: 1.5),
+              ),
+              alignment: Alignment.center,
+              child: selected ? const LineIcon(LineIcon.check, size: 14, color: Colors.white, stroke: 3) : null,
+            ),
+          ]),
+        ),
       ),
     );
   }
@@ -740,70 +931,99 @@ class _RefRow extends StatelessWidget {
   final String label;
   final String value;
   final String? copy;
-  const _RefRow({required this.label, required this.value, this.copy});
+  final bool last;
+  const _RefRow({required this.label, required this.value, this.copy, this.last = false});
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.base)),
-      const Spacer(),
-      Text(value,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg, color: AppTheme.ink, letterSpacing: 0.5)),
-      if (copy != null) ...[
-        const SizedBox(width: 6),
-        IconButton(
-          tooltip: 'Copiar',
-          visualDensity: VisualDensity.compact,
-          icon: Icon(Hi.documentDuplicate, size: 18, color: AppTheme.accentOliveDark),
-          onPressed: () async {
-            await copyText(copy!);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Referência copiada')));
-            }
-          },
-        ),
-      ],
-    ]);
+    return Container(
+      constraints: const BoxConstraints(minHeight: 56),
+      decoration: last ? null : const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFECE7DC)))),
+      child: Row(children: [
+        Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const Spacer(),
+        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, letterSpacing: 0.5)),
+        if (copy != null)
+          IconButton(
+            tooltip: 'Copiar',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Hi.documentDuplicate, size: 18, color: AppTheme.inkMuted),
+            onPressed: () async {
+              await copyText(copy!);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Referência copiada')));
+              }
+            },
+          ),
+      ]),
+    );
   }
 }
 
 class _SecureNote extends StatelessWidget {
-  const _SecureNote();
+  final String text;
+  const _SecureNote(this.text);
 
   @override
   Widget build(BuildContext context) {
-    return const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Icon(Hi.lockClosed, size: 16, color: AppTheme.inkMuted),
-      SizedBox(width: 8),
-      Expanded(
-        child: Text(
-          'Pagamento seguro processado pela Stripe. Os dados do teu cartão nunca passam pela À Nossa!.',
-          style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4),
-        ),
+    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+      const LineIcon('M7 11h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2zM8 11V7a4 4 0 0 1 8 0v4',
+          size: 14, color: AppTheme.inkMuted),
+      const SizedBox(width: 6),
+      Flexible(
+        child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
       ),
     ]);
   }
 }
 
+/// Erro: branco com linha vermelha 1,5 e ponto (DESIGN.md §7).
 class _ErrorNote extends StatelessWidget {
   final String text;
   const _ErrorNote(this.text);
 
   @override
   Widget build(BuildContext context) {
+    const red = Color(0xFFC8553D);
     return Container(
-      margin: const EdgeInsets.only(top: 4, bottom: 4),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: AppColors.pink, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: red, width: 1.5),
+      ),
       child: Row(children: [
-        const Icon(Hi.exclamationCircle, size: 18, color: Color(0xFFB3261E)),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink))),
+        Container(width: 8, height: 8, decoration: const BoxDecoration(color: red, shape: BoxShape.circle)),
+        const SizedBox(width: 10),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.ink))),
       ]),
     );
   }
 }
 
+/// Etiqueta pendente: branca, linha amarela, ponto.
+class _PendingTag extends StatelessWidget {
+  final String text;
+  const _PendingTag(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    const y = Color(0xFFF2A01B);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: y, width: 1.5),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(width: 8, height: 8, decoration: const BoxDecoration(color: y, shape: BoxShape.circle)),
+        const SizedBox(width: 6),
+        Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      ]),
+    );
+  }
+}
 
 /// Até quando se cancela de graça (servidor, regra do parceiro).
 final _freeUntilProvider = FutureProvider.autoDispose.family<DateTime?, String>((ref, paymentId) async {
@@ -835,12 +1055,18 @@ class _CancelNote extends ConsumerWidget {
         : deposit
             ? 'Com cartão, Apple Pay ou Google Pay, o sinal fica cativo 48 h e só é cobrado depois.'
             : null;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (text != null) Text(text, style: const TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted)),
-      TextButton(
-        onPressed: () => context.push('/termos'),
-        style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: AppTheme.accentOliveDark),
-        child: const Text('Condições de cancelamento', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700)),
+    return Column(children: [
+      if (text != null)
+        Text(text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+      SnappyTap(
+        onTap: () => context.push('/termos'),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Text('Condições de cancelamento',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink, decoration: TextDecoration.underline)),
+        ),
       ),
     ]);
   }

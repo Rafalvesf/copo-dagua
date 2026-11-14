@@ -11,9 +11,11 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/island_sheet.dart';
-import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/green_hero.dart' show SectionTitle;
+import '../../../shared/widgets/line_icon.dart';
+import '../../../shared/widgets/onb_kit.dart';
+import '../../../shared/widgets/dense_card.dart' show AlertStrip;
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
@@ -149,8 +151,14 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
           child: ListView(
             padding: ( const EdgeInsets.fromLTRB(0, 8, 0, 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
             children: [
-              const PageHeader(title: 'Pagamentos', centered: true),
-              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, 0),
+                child: Row(children: [OnbBackButton(onTap: () => context.canPop() ? context.pop() : context.go('/partner-home'))]),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 20),
+                child: Text('Pagamentos', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                 child: async.when(
@@ -182,13 +190,14 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
   }
 
   Widget _notActive(ConnectStatus s) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        GreenHero(
-          label: 'RECEBE NA APP',
-          value: 'Ativa os pagamentos',
-          doodles: const [Hi.currencyEuro, Hi.sparkles, Hi.heartOutline],
-          footer: const Wrap(spacing: 6, runSpacing: 6, children: [
-            HeroPill('Sinais pagos na app', solid: true),
-            HeroPill('Levantas quando quiseres'),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Recebe pagamentos na app', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            SizedBox(height: 6),
+            Text('Os clientes pagam dentro da À Nossa! e o dinheiro vai para a tua conta.',
+                style: TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           ]),
         ),
         const SectionTitle('Como funciona'),
@@ -209,89 +218,135 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
 
   Widget _active(ConnectStatus s) {
     final canWithdraw = s.payoutsEnabled && s.availableCents > 0 && !_paying;
+    Widget group(String t) => Padding(
+          padding: const EdgeInsets.only(top: 20, bottom: 12),
+          child: OnbGroupLabel(t),
+        );
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      GreenHero(
-        label: 'DISPONÍVEL PARA LEVANTAR',
-        value: _eur(s.availableCents),
-        doodles: const [Hi.currencyEuro, Hi.sparkles, Hi.heartOutline],
-        footer: Wrap(spacing: 6, runSpacing: 6, children: [
-          HeroPill('A chegar ${_eur(s.pendingCents)}', solid: true),
-          if (s.bankLast4 != null) HeroPill('IBAN •••• ${s.bankLast4}'),
+      // Saldo (mockup "Pagamentos ativos").
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
+            child: Text(s.active ? 'Pagamentos ativos' : 'Em verificação',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+          ),
+          const SizedBox(height: 10),
+          const Text('Disponível para receber', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+          const SizedBox(height: 6),
+          Text(_eur(s.availableCents), style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 8),
+          Text(
+            [
+              if (s.pendingCents > 0) 'A chegar ${_eur(s.pendingCents)}.',
+              if (!s.manualPayouts && s.bankLast4 != null) 'Vai sozinho para a conta ···· ${s.bankLast4} ${_nextAuto(s.payoutSchedule)}.',
+              if (s.manualPayouts && s.bankLast4 != null) 'Levantas para a conta ···· ${s.bankLast4}.',
+            ].join(' '),
+            style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
+          ),
+          if (s.manualPayouts) ...[
+            const SizedBox(height: 14),
+            OnbButton(
+              label: _paying
+                  ? 'A pedir…'
+                  : !s.payoutsEnabled
+                      ? 'Levantamentos por ativar'
+                      : s.availableCents > 0
+                          ? 'Levantar ${_eur(s.availableCents)}'
+                          : 'Sem saldo para levantar',
+              onPressed: canWithdraw ? () => _withdraw(s) : null,
+            ),
+          ],
         ]),
       ),
       const _OwedNote(),
-      const SizedBox(height: 14),
-      if (s.manualPayouts)
-        _PillButton(
-          label: _paying
-              ? 'A pedir…'
-              : !s.payoutsEnabled
-                  ? 'Levantamentos por ativar'
-                  : s.availableCents > 0
-                      ? 'Levantar ${_eur(s.availableCents)}'
-                      : 'Sem saldo para levantar',
-          icon: Hi.arrowDown,
-          onPressed: canWithdraw ? () => _withdraw(s) : null,
-        )
-      else
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(22)),
-          child: Row(children: [
-            Icon(Hi.arrowPath, color: AppTheme.accentOliveDark),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Levantamento automático ${_nextAuto(s.payoutSchedule)} — o saldo disponível vai sozinho para o IBAN.',
-                style: const TextStyle(color: AppTheme.ink, height: 1.35, fontSize: AppFontSize.md),
-              ),
-            ),
-          ]),
-        ),
       if (s.needsData) ...[
-        const SizedBox(height: 14),
-        _ActionCard(
-          icon: Hi.exclamationCircle,
-          title: 'A Stripe precisa de mais dados',
-          text: 'Completa para não ficares com os pagamentos parados.',
-          color: AppColors.yellow,
+        const SizedBox(height: 12),
+        AlertStrip(
+          tone: AlertTone.pending,
+          text: 'A Stripe precisa de mais dados para não parar os pagamentos.',
+          cta: 'Completar',
           onTap: () => context.push('/partner-payments/setup'),
         ),
       ],
-      const SectionTitle('Por receber'),
+      group('A caminho'),
       const _ToReceive(),
-      SectionTitle('Levantamentos', trailing: s.payouts.isEmpty ? null : Text('${s.payouts.length}',
-          style: const TextStyle(color: AppTheme.inkMuted, fontWeight: FontWeight.w700))),
-      if (s.payouts.isEmpty)
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: whiteLineCard(),
-          child: const Text('Ainda não fizeste nenhum levantamento.',
-              style: TextStyle(color: AppTheme.inkMuted)),
-        )
-      else
-        for (final (i, p) in s.payouts.indexed) ...[
-          _PayoutRow(payout: p, index: i),
-          const SizedBox(height: 8),
-        ],
-      const SectionTitle('Conta'),
-      _ActionCard(
-        icon: Hi.adjustmentsHorizontal,
-        title: 'Modo de levantamento',
-        text: PayoutMode.of(s.payoutSchedule).label,
-        color: Colors.white,
-        onTap: () => _pickMode(s),
-      ),
-      const SizedBox(height: 10),
-      _ActionCard(
-        icon: Hi.shieldCheck,
-        title: 'Os meus dados na Stripe',
-        text: s.needsData ? 'Há dados em falta' : 'Identidade, morada e IBAN confirmados',
-        color: Colors.white,
-        onTap: () => context.push('/partner-payments/setup'),
-      ),
+      group('Levantamentos'),
+      _Rows([
+        if (s.payouts.isEmpty)
+          const _RowData('Ainda não fizeste nenhum levantamento.', null, null)
+        else
+          for (final p in s.payouts) _RowData(euros(p.amountCents / 100, cents: true), _payoutDate(p), p.statusLabel),
+      ]),
+      group('Conta'),
+      _Rows([
+        _RowData('Dados e IBAN', null, s.bankLast4 == null ? (s.needsData ? 'Em falta' : '') : '···· ${s.bankLast4}',
+            onTap: () => context.push('/partner-payments/setup')),
+        _RowData('Modo de levantamento', null, PayoutMode.of(s.payoutSchedule).label, onTap: () => _pickMode(s)),
+      ]),
     ]);
   }
+
+  static String _payoutDate(ConnectPayout p) {
+    final d = p.created ?? p.arrival;
+    return d == null ? '' : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  }
+}
+
+class _RowData {
+  final String title;
+  final String? sub;
+  final String? value;
+  final VoidCallback? onTap;
+  const _RowData(this.title, this.sub, this.value, {this.onTap});
+}
+
+/// Grupo de linhas (DESIGN.md §4): cartão branco 22, linhas 56,
+/// divisórias #ECE7DC, valor 14 + seta à direita quando abre.
+class _Rows extends StatelessWidget {
+  final List<_RowData> rows;
+  const _Rows(this.rows);
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        child: Column(children: [
+          for (final (i, r) in rows.indexed)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: r.onTap,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 56),
+                decoration: i < rows.length - 1
+                    ? const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFECE7DC))))
+                    : null,
+                child: Row(children: [
+                  Expanded(
+                    child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(r.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      if (r.sub != null && r.sub!.isNotEmpty)
+                        Text(r.sub!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                    ]),
+                  ),
+                  if (r.value != null && r.value!.isNotEmpty)
+                    Text(r.value!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                  if (r.onTap != null) ...[
+                    const SizedBox(width: 6),
+                    const LineIcon(LineIcon.forward, size: 16, color: AppTheme.inkMuted, stroke: 1.8),
+                  ],
+                ]),
+              ),
+            ),
+        ]),
+      );
 }
 
 class _ToReceive extends ConsumerWidget {
@@ -301,76 +356,19 @@ class _ToReceive extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final b = ref.watch(partnerBalanceProvider).value;
     final feeCfg = ref.watch(partnerFeeConfigProvider).value ?? const PartnerFeeConfig();
-    Widget tile(String label, double v, Color c) => Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(20)),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(label, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-              const SizedBox(height: 4),
-              Text(euros(v),
-                  style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            ]),
-          ),
-        );
-    return Column(children: [
-      Row(children: [
-        tile('Sinais a aguardar', b?.pendingDeposits ?? 0, AppColors.pink),
-        const SizedBox(width: 10),
-        tile('Restante por cobrar', b?.uncollectedBalance ?? 0, AppTheme.accentTint),
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      _Rows([
+        _RowData('Sinais a aguardar', 'Libertados 48 h depois de pagos', euros(b?.pendingDeposits ?? 0)),
+        _RowData('Restante por cobrar', '3 dias depois do evento', euros(b?.uncollectedBalance ?? 0)),
+        if ((b?.held ?? 0) > 0.009) _RowData('Pago, por libertar', null, euros(b!.held)),
       ]),
-      // Pagamentos antecipados (2026-10-25): o que já foi pago fica retido
-      // — o sinal 48 h depois de pago (migração 124), o restante até 3 dias
-      // depois do evento — e só então passa para o teu saldo.
-      if ((b?.held ?? 0) > 0.009) ...[
-        const SizedBox(height: 10),
-        Row(children: [tile('Pago, por libertar', b!.held, const Color(0xFFE9E8E4))]),
-      ],
       const SizedBox(height: 8),
       Text(
         'O sinal é libertado 48 h depois de o cliente o pagar; o restante, 3 dias depois do evento.'
         '${feeCfg.isZero ? '' : ' Valores antes da taxa da À Nossa! (${feeCfg.describe((v) => euros(v))} do valor da reserva, IVA incluído), descontada nessa altura.'}',
-        style: const TextStyle(fontSize: AppFontSize.sm, height: 1.35, color: AppTheme.inkMuted),
+        style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
       ),
     ]);
-  }
-}
-
-class _PayoutRow extends StatelessWidget {
-  final ConnectPayout payout;
-  final int index;
-  const _PayoutRow({required this.payout, required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    final d = payout.created ?? payout.arrival;
-    final date = d == null ? '' : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-    final (bg, fg) = switch (payout.status) {
-      'paid' => (const Color(0xFFE4EFE5), const Color(0xFF2F6B45)),
-      'failed' || 'canceled' => (const Color(0xFFFBE3E1), const Color(0xFFB3261E)),
-      _ => (const Color(0xFFFCEFD6), const Color(0xFF7A5000)),
-    };
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: whiteLineCard(),
-      child: Row(children: [
-        StickerIcon(Hi.arrowDown, size: 36, turns: StickerIcon.tilt(index)),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(euros(payout.amountCents / 100, cents: true),
-                style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink, fontSize: AppFontSize.base)),
-            Text(date, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-          ]),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-          child: Text(payout.statusLabel,
-              style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: fg)),
-        ),
-      ]),
-    );
   }
 }
 
@@ -396,37 +394,6 @@ class _Step extends StatelessWidget {
             ]),
           ),
         ]),
-      );
-}
-
-class _ActionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String text;
-  final Color color;
-  final VoidCallback onTap;
-  const _ActionCard({required this.icon, required this.title, required this.text, required this.color, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: color == Colors.white
-              ? whiteLineCard()
-              : BoxDecoration(color: color, borderRadius: BorderRadius.circular(22)),
-          child: Row(children: [
-            StickerIcon(icon, size: 36),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text(text, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-              ]),
-            ),
-            const Icon(Hi.chevronRight, color: AppTheme.inkMuted),
-          ]),
-        ),
       );
 }
 

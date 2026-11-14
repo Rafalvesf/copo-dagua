@@ -1,4 +1,3 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -6,6 +5,9 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/payments/partner_connect.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/line_icon.dart';
+import '../../../shared/widgets/onb_kit.dart';
+import '../../../shared/widgets/snappy_tap.dart';
 
 /// Dados para receber pagamentos, pedidos com o UI da própria app
 /// (2026-10-25: "nada de links nem caixas com o site da Stripe"). Os dados
@@ -24,7 +26,7 @@ class PayoutDetailsForm extends StatefulWidget {
   State<PayoutDetailsForm> createState() => _PayoutDetailsFormState();
 }
 
-enum _Step { type, person, company, address, activity, bank, confirm, document }
+enum _Step { type, person, contact, company, address, activity, bank, document }
 
 class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
   bool _loading = true;
@@ -66,14 +68,16 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
         _line1, _line2, _postal, _city, _description, _url, _iban, _holder,
       ];
 
+  // Mockup "Pagamentos · Ativar pagamentos" (2026-11-14): uma ou duas
+  // perguntas por ecrã.
   List<_Step> get _steps => [
         _Step.type,
         _Step.person,
+        _Step.contact,
         if (_type == 'company') _Step.company,
         _Step.address,
         _Step.activity,
         _Step.bank,
-        _Step.confirm,
       ];
 
   _Step get _step => _status != null ? _Step.document : _steps[_index.clamp(0, _steps.length - 1)];
@@ -155,6 +159,8 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
       case _Step.person:
         if (_first.text.trim().isEmpty || _last.text.trim().isEmpty) return 'Escreve o nome e o apelido.';
         if (_dobIso() == null) return 'Escreve a data de nascimento como DD/MM/AAAA.';
+        return null;
+      case _Step.contact:
         if (!(_nifProvided && _nif.text.trim().isEmpty) && !_nifOk(_nif.text)) return 'O NIF tem 9 dígitos.';
         if (!_email.text.contains('@')) return 'Escreve um email válido.';
         if (_phone.text.replaceAll(RegExp(r'\D'), '').length < 9) return 'Escreve o número de telemóvel.';
@@ -176,9 +182,6 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
         final iban = _iban.text.replaceAll(' ', '').toUpperCase();
         if (iban.isEmpty && _bankLast4 != null) return null;
         if (!RegExp(r'^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$').hasMatch(iban)) return 'O IBAN não parece válido (ex.: PT50 …).';
-        return null;
-      case _Step.confirm:
-        if (!_accept && !_tosAlready) return 'Confirma para continuar.';
         return null;
       case _Step.document:
         if (_docFront == null) return 'Fotografa a frente do documento.';
@@ -232,7 +235,14 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
       return;
     }
     setState(() => _error = null);
-    if (_step == _Step.confirm) return _submit();
+    if (_step == _Step.bank) {
+      // Ao enviar aceita os termos da Stripe (texto por baixo do botão).
+      _accept = true;
+      if (_holder.text.trim().isEmpty) {
+        _holder.text = _type == 'company' ? _companyName.text.trim() : '${_first.text} ${_last.text}'.trim();
+      }
+      return _submit();
+    }
     if (_step == _Step.document) return _submitDocument();
     setState(() => _index++);
   }
@@ -297,359 +307,232 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
     setState(() => front ? _docFront = f : _docBack = f);
   }
 
-  // ---------- UI ----------
+  // ---------- UI (mockup "Ativar pagamentos") ----------
+
+  // A barra começa em 20%: tipo 30, quem és 40, NIF 50, empresa 55,
+  // morada 60, serviço 70, IBAN 80, documento 90.
+  double get _progress => switch (_step) {
+        _Step.type => 0.3,
+        _Step.person => 0.4,
+        _Step.contact => 0.5,
+        _Step.company => 0.55,
+        _Step.address => 0.6,
+        _Step.activity => 0.7,
+        _Step.bank => 0.8,
+        _Step.document => 0.9,
+      };
 
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Padding(
-        padding: const EdgeInsets.all(40),
-        child: Center(child: CircularProgressIndicator(color: AppTheme.accentOliveDark)),
+      return const Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF4F6B4A))),
       );
     }
     final steps = _steps;
-    final pos = _status != null ? steps.length : _index;
-    final total = steps.length + (_status != null ? 1 : 0);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text('PASSO ${pos + 1} DE $total',
-            style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark)),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: LinearProgressIndicator(
-            value: (pos + 1) / total,
-            minHeight: 5,
-            backgroundColor: AppTheme.borderMuted,
-            color: AppTheme.accentOliveDark,
-          ),
-        ),
-        const SizedBox(height: 20),
-        ..._content(),
-        if (_error != null) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: const Color(0xFFE9E8E4), borderRadius: BorderRadius.circular(14)),
-            child: Row(children: [
-              const Icon(Hi.informationCircle, size: 18, color: AppTheme.ink),
-              const SizedBox(width: 8),
-              Expanded(child: Text(_error!, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink))),
-            ]),
-          ),
-        ],
-        const SizedBox(height: 20),
-        Row(children: [
-          TextButton(
-            onPressed: _saving ? null : _back,
-            style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted, minimumSize: const Size(0, 52)),
-            child: Text(_index == 0 && _status == null ? 'Mais tarde' : 'Voltar'),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: FilledButton(
-              onPressed: _saving ? null : _next,
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(52),
-                backgroundColor: AppTheme.ink,
-                shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontWeight: FontWeight.w700, fontSize: AppFontSize.lg),
-              ),
-              child: _saving
-                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                  : Text(switch (_step) {
-                      _Step.confirm => 'Enviar dados',
-                      _Step.document => 'Enviar documento',
-                      _ => 'Continuar',
-                    }),
-            ),
-          ),
-        ]),
-      ],
+    final pos = _status != null ? steps.length + 1 : _index + 1;
+    final total = steps.length + 1; // + documento
+    final (title, sub) = _texts();
+    final label = switch (_step) {
+      _Step.bank => 'Enviar',
+      _Step.document => 'Enviar',
+      _ => 'Continuar',
+    };
+    return OnbStep(
+      onBack: _saving ? null : _back,
+      progress: _progress,
+      kicker: '$pos de $total',
+      title: title,
+      subtitle: sub,
+      bottom: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (_error != null) ...[_ErrorLine(_error!), const SizedBox(height: 12)],
+        OnbButton(label: label, loading: _saving, onPressed: _saving ? null : _next),
+      ]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: _content()),
     );
   }
+
+  (String, String) _texts() => switch (_step) {
+        _Step.type => ('Recebes como?', 'É o nome que aparece nas faturas.'),
+        _Step.person => (_type == 'company' ? 'Quem é o responsável?' : 'Quem és?', 'Igual ao teu documento de identificação.'),
+        _Step.contact => ('NIF e telemóvel', 'Para as faturas e para te avisarmos de cada pagamento.'),
+        _Step.company => ('A tua empresa', 'Os dados da certidão permanente.'),
+        _Step.address => ('Onde fica o teu negócio?', 'A morada fiscal.'),
+        _Step.activity => ('O que fazes?', 'Uma frase chega.'),
+        _Step.bank => ('Para onde enviamos o dinheiro?', 'A conta tem de estar em teu nome ou da tua empresa.'),
+        _Step.document => ('Confirma a tua identidade', 'Cartão de cidadão ou passaporte, com tudo legível.'),
+      };
+
+  Widget _gap() => const SizedBox(height: 12);
 
   List<Widget> _content() {
     switch (_step) {
       case _Step.type:
         return [
-          const _Title('Como trabalhas?', 'Escolhe como recebes os pagamentos dos clientes.'),
-          _Choice(
-            selected: _type == 'individual',
-            icon: Hi.user,
+          OnbOption(
             title: 'Em nome individual',
-            sub: 'Trabalhador independente ou empresário em nome individual',
+            subtitle: 'Trabalhas por conta própria, com o teu NIF.',
+            selected: _type == 'individual',
             onTap: () => setState(() => _type = 'individual'),
           ),
-          const SizedBox(height: 10),
-          _Choice(
-            selected: _type == 'company',
-            icon: Hi.buildingOffice,
+          _gap(),
+          OnbOption(
             title: 'Empresa',
-            sub: 'Sociedade (Lda., Unipessoal, S.A.) com NIPC',
+            subtitle: 'Tens uma sociedade, com NIPC.',
+            selected: _type == 'company',
             onTap: () => setState(() => _type = 'company'),
           ),
         ];
       case _Step.person:
         return [
-          _Title(_type == 'company' ? 'Responsável da empresa' : 'Os teus dados',
-              'Como aparecem no Cartão de Cidadão. A lei obriga a confirmar quem recebe o dinheiro.'),
-          _Row2(_Field('Nome', _first, hints: const [AutofillHints.givenName]), _Field('Apelido', _last, hints: const [AutofillHints.familyName])),
-          _Field('Data de nascimento', _dob, hint: 'DD/MM/AAAA', keyboard: TextInputType.datetime, hints: const [AutofillHints.birthday]),
-          _Field(_nifProvided ? 'NIF (já indicado — escreve só para mudar)' : 'NIF', _nif, hint: '123456789', keyboard: TextInputType.number),
-          _Field('Email', _email, keyboard: TextInputType.emailAddress, hints: const [AutofillHints.email]),
-          _Field('Telemóvel', _phone, hint: '912 345 678', keyboard: TextInputType.phone, hints: const [AutofillHints.telephoneNumber]),
-          if (_type == 'company') _Field('Cargo', _title, hint: 'Gerente'),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: OnbField(controller: _first, label: 'Nome', hint: 'Rafael')),
+            const SizedBox(width: 10),
+            Expanded(child: OnbField(controller: _last, label: 'Apelido', hint: 'Alves')),
+          ]),
+          _gap(),
+          OnbField(controller: _dob, label: 'Data de nascimento', hint: 'DD/MM/AAAA', keyboardType: TextInputType.datetime),
+          if (_type == 'company') ...[_gap(), OnbField(controller: _title, label: 'Cargo', hint: 'Gerente')],
+        ];
+      case _Step.contact:
+        return [
+          OnbField(
+            controller: _nif,
+            label: 'NIF',
+            hint: _nifProvided ? 'Já indicado — escreve só para mudar' : '123 456 789',
+            keyboardType: TextInputType.number,
+          ),
+          _gap(),
+          OnbField(controller: _phone, label: 'Telemóvel', hint: '912 345 678', keyboardType: TextInputType.phone),
+          if (!_email.text.contains('@')) ...[
+            _gap(),
+            OnbField(controller: _email, label: 'Email', hint: 'nome@email.com', keyboardType: TextInputType.emailAddress),
+          ],
         ];
       case _Step.company:
         return [
-          const _Title('A tua empresa', 'Os dados da certidão permanente.'),
-          _Field('Nome da empresa', _companyName),
-          _Field(_companyTaxProvided ? 'NIPC (já indicado — escreve só para mudar)' : 'NIPC', _companyNif, hint: '501234567', keyboard: TextInputType.number),
-          _Field('Telefone da empresa (opcional)', _companyPhone, keyboard: TextInputType.phone),
+          OnbField(controller: _companyName, label: 'Nome da empresa'),
+          _gap(),
+          OnbField(
+            controller: _companyNif,
+            label: 'NIPC',
+            hint: _companyTaxProvided ? 'Já indicado — escreve só para mudar' : '501 234 567',
+            keyboardType: TextInputType.number,
+          ),
         ];
       case _Step.address:
         return [
-          _Title(_type == 'company' ? 'Morada da empresa' : 'A tua morada', 'A morada fiscal.'),
-          _Field('Rua e número', _line1, hints: const [AutofillHints.streetAddressLine1]),
-          _Field('Andar, porta (opcional)', _line2, hints: const [AutofillHints.streetAddressLine2]),
-          _Row2(
-            _Field('Código postal', _postal, hint: '1000-001', keyboard: TextInputType.number, hints: const [AutofillHints.postalCode]),
-            _Field('Localidade', _city, hints: const [AutofillHints.addressCity]),
-          ),
+          OnbField(controller: _line1, label: 'Morada', hint: 'Rua e número'),
+          _gap(),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: OnbField(controller: _postal, label: 'Código postal', hint: '1000-001', keyboardType: TextInputType.number)),
+            const SizedBox(width: 10),
+            Expanded(child: OnbField(controller: _city, label: 'Cidade', hint: 'Lisboa')),
+          ]),
         ];
       case _Step.activity:
         return [
-          const _Title('O teu serviço', 'Aparece no extrato do cartão dos clientes e ajuda a confirmar a atividade.'),
-          _Field('Descrição do serviço', _description, maxLines: 3, hint: 'Ex.: espaço para casamentos e eventos em Sintra'),
-          _Field('Site ou Instagram (opcional)', _url, hint: 'oteusite.pt', keyboard: TextInputType.url),
+          OnbField(controller: _description, label: 'Descrição', hint: 'Ex.: fotografia de casamentos em Lisboa'),
+          _gap(),
+          OnbField(controller: _url, label: 'Site ou Instagram · opcional', hint: 'oteusite.pt', keyboardType: TextInputType.url),
         ];
       case _Step.bank:
         return [
-          const _Title('Conta para receber', 'Os pagamentos dos clientes vão para esta conta.'),
-          if (_bankLast4 != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text('Conta atual: IBAN terminado em $_bankLast4. Escreve outro só se quiseres mudar.',
-                  style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
-            ),
-          _Field('IBAN', _iban, hint: 'PT50 0000 0000 0000 0000 0000 0', keyboard: TextInputType.text),
-          _Field(_type == 'company' ? 'Titular (nome da empresa)' : 'Titular da conta', _holder,
-              hint: _type == 'company' ? _companyName.text : '${_first.text} ${_last.text}'.trim()),
-        ];
-      case _Step.confirm:
-        return [
-          const _Title('Confirmar e enviar', 'Revê antes de enviar.'),
-          _Summary([
-            (_type == 'company' ? 'Empresa' : 'Em nome individual', _type == 'company' ? _companyName.text : '${_first.text} ${_last.text}'),
-            if (_type == 'company') ('Responsável', '${_first.text} ${_last.text}'),
-            ('Morada', '${_line1.text}, ${_postal.text} ${_city.text}'),
-            ('Contacto', '${_email.text} · ${_phone.text}'),
-            ('IBAN', _iban.text.trim().isEmpty ? (_bankLast4 == null ? '—' : '•••• $_bankLast4') : _maskIban(_iban.text)),
-          ]),
-          const SizedBox(height: 14),
-          if (!_tosAlready)
-            InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => setState(() => _accept = !_accept),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: _accept ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: _accept ? 2 : 1),
-                ),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Icon(_accept ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
-                      color: _accept ? AppTheme.accentOliveDark : AppTheme.inkMuted),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Text(
-                      'Confirmo que os dados são verdadeiros, que a conta bancária está em meu nome ou da minha empresa, '
-                      'e aceito os termos de serviço da Stripe, que processa os pagamentos da À Nossa!.',
-                      style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink, height: 1.4),
-                    ),
-                  ),
-                ]),
-              ),
-            ),
-          const SizedBox(height: 10),
-          const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Icon(Hi.lockClosed, size: 16, color: AppTheme.inkMuted),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text('Enviados de forma segura. A À Nossa! não guarda o teu IBAN completo nem o NIF.',
-                  style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4)),
-            ),
-          ]),
+          OnbField(
+            controller: _iban,
+            label: 'IBAN',
+            hint: _bankLast4 != null ? 'Atual: •••• $_bankLast4 (escreve só para mudar)' : 'PT50 0000 0000 0000 0000 0000 0',
+          ),
+          _gap(),
+          const _LockNote('Vai direto para a Stripe. A À Nossa! não guarda o IBAN completo nem o NIF.'),
+          if (!_tosAlready) ...[
+            const SizedBox(height: 10),
+            const OnbMeta('Ao enviar, confirmas que os dados são verdadeiros, que a conta está em teu nome ou da tua '
+                'empresa, e aceitas os termos de serviço da Stripe, que processa os pagamentos da À Nossa!.'),
+          ],
         ];
       case _Step.document:
         return [
-          const _Title('Documento de identificação', 'Para terminar, uma fotografia do Cartão de Cidadão (frente e verso) ou do passaporte.'),
-          _DocPick(label: 'Frente', file: _docFront, onTap: () => _pick(true)),
-          const SizedBox(height: 10),
-          _DocPick(label: 'Verso (opcional no passaporte)', file: _docBack, onTap: () => _pick(false)),
+          Row(children: [
+            Expanded(child: _DocTile(label: 'Frente', file: _docFront, onTap: () => _pick(true))),
+            const SizedBox(width: 10),
+            Expanded(child: _DocTile(label: 'Verso', file: _docBack, onTap: () => _pick(false))),
+          ]),
+          _gap(),
+          const OnbMeta('No passaporte só precisas da frente.'),
         ];
     }
   }
-
-  String _maskIban(String v) {
-    final s = v.replaceAll(' ', '').toUpperCase();
-    return s.length < 8 ? s : '${s.substring(0, 4)} •••• ${s.substring(s.length - 4)}';
-  }
 }
 
-class _Title extends StatelessWidget {
-  final String title;
-  final String sub;
-  const _Title(this.title, this.sub);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          const SizedBox(height: 6),
-          Text(sub, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted, height: 1.4)),
-        ]),
-      );
-}
-
-class _Field extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  final String? hint;
-  final TextInputType? keyboard;
-  final int maxLines;
-  final Iterable<String>? hints;
-  const _Field(this.label, this.controller, {this.hint, this.keyboard, this.maxLines = 1, this.hints});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: const TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w600, color: AppTheme.ink)),
-          const SizedBox(height: 6),
-          TextField(
-            controller: controller,
-            keyboardType: keyboard,
-            maxLines: maxLines,
-            autofillHints: hints,
-            decoration: InputDecoration(
-              hintText: hint,
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderMuted)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderMuted)),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppTheme.accentOliveDark, width: 2)),
-            ),
-          ),
-        ]),
-      );
-}
-
-class _Row2 extends StatelessWidget {
-  final Widget a;
-  final Widget b;
-  const _Row2(this.a, this.b);
+class _LockNote extends StatelessWidget {
+  final String text;
+  const _LockNote(this.text);
 
   @override
   Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(child: a),
-        const SizedBox(width: 10),
-        Expanded(child: b),
+        const Padding(
+          padding: EdgeInsets.only(top: 2),
+          child: LineIcon('M7 11h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2zM8 11V7a4 4 0 0 1 8 0v4',
+              size: 14, color: AppTheme.inkMuted),
+        ),
+        const SizedBox(width: 6),
+        Expanded(child: OnbMeta(text)),
       ]);
 }
 
-class _Choice extends StatelessWidget {
-  final bool selected;
-  final IconData icon;
-  final String title;
-  final String sub;
-  final VoidCallback onTap;
-  const _Choice({required this.selected, required this.icon, required this.title, required this.sub, required this.onTap});
+/// Erro: linha vermelha 1,5 + ponto (DESIGN.md §7).
+class _ErrorLine extends StatelessWidget {
+  final String text;
+  const _ErrorLine(this.text);
 
   @override
-  Widget build(BuildContext context) => InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: selected ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: selected ? 2 : 1),
-          ),
-          child: Row(children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(color: AppTheme.accentTint, shape: BoxShape.circle),
-              child: Icon(icon, color: AppTheme.accentOliveDark),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, color: AppTheme.ink)),
-                const SizedBox(height: 2),
-                Text(sub, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.3)),
-              ]),
-            ),
-            Icon(selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                color: selected ? AppTheme.accentOliveDark : AppTheme.inkMuted),
-          ]),
-        ),
-      );
+  Widget build(BuildContext context) {
+    const red = Color(0xFFC8553D);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: red, width: 1.5)),
+      child: Row(children: [
+        Container(width: 8, height: 8, decoration: const BoxDecoration(color: red, shape: BoxShape.circle)),
+        const SizedBox(width: 10),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.ink))),
+      ]),
+    );
+  }
 }
 
-class _Summary extends StatelessWidget {
-  final List<(String, String)> rows;
-  const _Summary(this.rows);
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: const Color(0xFFE9E8E4), borderRadius: BorderRadius.circular(18)),
-        child: Column(children: [
-          for (final (k, v) in rows)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 5),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                SizedBox(width: 110, child: Text(k, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted))),
-                Expanded(child: Text(v, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink, fontWeight: FontWeight.w600))),
-              ]),
-            ),
-        ]),
-      );
-}
-
-class _DocPick extends StatelessWidget {
+/// Frente / verso do documento: cartão branco 150, círculo preto "+" ou
+/// verde com visto.
+class _DocTile extends StatelessWidget {
   final String label;
   final XFile? file;
   final VoidCallback onTap;
-  const _DocPick({required this.label, required this.file, required this.onTap});
+  const _DocTile({required this.label, required this.file, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => InkWell(
-        borderRadius: BorderRadius.circular(18),
+  Widget build(BuildContext context) => SnappyTap(
         onTap: onTap,
         child: Container(
+          height: 150,
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: file != null ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: file != null ? 2 : 1),
-          ),
-          child: Row(children: [
-            Icon(file != null ? Hi.checkCircle : Hi.camera, color: AppTheme.accentOliveDark),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(file != null ? '$label · ${file!.name}' : label,
-                  style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.ink)),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: file != null ? const Color(0xFF4F6B4A) : AppTheme.ink, shape: BoxShape.circle),
+              alignment: Alignment.center,
+              child: LineIcon(file != null ? LineIcon.check : LineIcon.plus, size: 18, color: Colors.white, stroke: file != null ? 2.6 : 2),
             ),
-            Text(file != null ? 'Trocar' : 'Escolher', style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 2),
+            Text(file?.name ?? 'Tirar foto ou escolher',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           ]),
         ),
       );

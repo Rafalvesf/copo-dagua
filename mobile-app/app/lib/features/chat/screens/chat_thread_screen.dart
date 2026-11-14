@@ -372,6 +372,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       partnerName: partner,
       kind: type,
       amount: amountWithCommission(amount, pct),
+      baseAmount: amount,
     ));
     if (!mounted) return;
     final booking = await fetchProposalBookingState(id);

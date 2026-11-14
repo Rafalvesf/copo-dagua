@@ -600,9 +600,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/pay',
-        builder: (context, state) =>lazyPage([l6.loadLibrary], () =>  state.extra is PayArgs
-            ? l6.PayScreen(args: state.extra as PayArgs)
-            : const _LostRoute('/bookings')),
+        // Folha que sobe por cima do ecrã de onde se carregou em pagar
+        // (mockup "Pagamentos", 2026-11-14), em vez de uma página à parte.
+        pageBuilder: (context, state) => CustomTransitionPage<void>(
+          key: state.pageKey,
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: const Color(0x6B171713),
+          transitionDuration: const Duration(milliseconds: 320),
+          reverseTransitionDuration: const Duration(milliseconds: 240),
+          transitionsBuilder: (context, animation, secondary, child) => SlideTransition(
+            position: Tween(begin: const Offset(0, 1), end: Offset.zero)
+                .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            child: child,
+          ),
+          child: lazyPage([l6.loadLibrary], () => state.extra is PayArgs
+              ? l6.PayScreen(args: state.extra as PayArgs)
+              : const _LostRoute('/bookings')),
+        ),
       ),
       GoRoute(
         path: '/pay/return',
