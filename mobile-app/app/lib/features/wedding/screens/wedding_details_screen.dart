@@ -3033,12 +3033,15 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     Icon(Hi.photo, size: 28, color: look.accent),
                     const SizedBox(height: 10),
+                    // Pílula do tamanho do texto (antes ocupava a largura toda).
                     Container(
-                      height: 40,
+                      height: 36,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                      child: const Text('Pôr foto de capa', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+                      child: const Center(
+                        widthFactor: 1,
+                        child: Text('Pôr foto de capa', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      ),
                     ),
                   ]),
                 ),

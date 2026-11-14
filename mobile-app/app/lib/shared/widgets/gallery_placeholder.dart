@@ -13,7 +13,7 @@ List<Color> get galleryTints => [
   Color(0xFFF3DEE0),
   Color(0xFFF4E1D2),
   Color(0xFFC9D3B0),
-  Color(0xFFEEF2E9),
+  Color(0xFFDDE4EC), // antes #EEF2E9, quase igual ao fundo (parecia um buraco)
   Color(0xFFF7EACA),
   AppTheme.accentTint,
 ];

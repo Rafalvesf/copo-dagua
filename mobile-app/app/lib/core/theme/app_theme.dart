@@ -199,7 +199,10 @@ class AppTheme {
       // ainda tinham o aspeto Material por omissão.
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surface,
+        // Branco no fundo #F2F0EB das páginas (antes era da cor do fundo e
+        // as caixas não se viam). Nas folhas brancas passa a #F2F0EB
+        // (showIslandSheet).
+        fillColor: Colors.white,
         hintStyle: const TextStyle(color: Color(0xFF6E6A63)),
         labelStyle: const TextStyle(color: inkMuted),
         floatingLabelStyle: TextStyle(color: accentOliveDark, fontWeight: FontWeight.w700),

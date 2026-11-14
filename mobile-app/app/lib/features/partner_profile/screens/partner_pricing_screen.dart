@@ -178,16 +178,16 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                               height: 52,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: AppTheme.surface,
-                                border: Border.all(color: AppTheme.accentOliveDark),
+                                color: Colors.white,
+                                border: Border.all(color: AppTheme.ink, width: 1.5),
                                 borderRadius: BorderRadius.circular(AppRadius.pill),
                               ),
-                              child: Text(
+                              child: const Text(
                                 '+ Adicionar pacote',
                                 style: TextStyle(
-                                  color: AppTheme.accentOliveDark,
+                                  color: AppTheme.ink,
                                   fontWeight: FontWeight.w700,
-                                  fontSize: AppFontSize.lg,
+                                  fontSize: 15,
                                 ),
                               ),
                             ),
