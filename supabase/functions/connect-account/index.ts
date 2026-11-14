@@ -13,8 +13,8 @@ import { applyDetails, applyDocument, type Details, ensureAccount, prefill, stri
 //                últimos 4), saldo disponível/pendente e últimos levantamentos.
 //  - "prefill" / "details" / "document" → dados pedidos com o UI da app
 //                (2026-10-25), enviados à Stripe pela API.
-//  - "payout"  → levanta o saldo disponível para o IBAN (também em modo automático, 2026-11-14) (levantamentos
-//                passam a manuais: só saem quando o parceiro carrega).
+//  - "payout"  → levanta já o saldo disponível para o IBAN, em modo
+//                manual ou automático (2026-11-14).
 //
 // Sempre com o JWT do parceiro: só mexe na conta do próprio.
 Deno.serve(async (req) => {
