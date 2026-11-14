@@ -5,6 +5,7 @@ import '../../../core/events/events_providers.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/green_hero.dart';
+import '../../../shared/widgets/snap_carousel.dart';
 import '../../../shared/widgets/v2_kit.dart';
 
 /// Categorias que o organizador dá a quem aceita (2026-11-14: «já não são
@@ -15,23 +16,47 @@ const guestCategories = ['Família', 'Amigos', 'Trabalho', 'Vizinhos', 'Escola /
 /// "Pedidos para entrar" (migração 143): quem entrou num evento privado
 /// com o código ou o link e ainda não está na lista. Aceitar põe a pessoa
 /// na lista com a categoria escolhida; recusar tira-a do evento.
-/// Mockup «Páginas do evento» → Convidados (2026-11-14).
-class JoinRequestsCard extends ConsumerWidget {
+/// Mockup «Páginas do evento» → Convidados (2026-11-14). Vários pedidos
+/// ficam num carrossel como «Os meus eventos»; cada um sai assim que é
+/// aceite ou recusado e aparece o seguinte, até acabarem.
+class JoinRequestsCard extends ConsumerStatefulWidget {
   final String weddingId;
   const JoinRequestsCard({super.key, required this.weddingId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final requests = ref.watch(joinRequestsProvider(weddingId)).value ?? const <JoinRequest>[];
+  ConsumerState<JoinRequestsCard> createState() => _JoinRequestsCardState();
+}
+
+class _JoinRequestsCardState extends ConsumerState<JoinRequestsCard> {
+  /// Já tratados: saem logo, antes de a lista do servidor voltar.
+  final Set<String> _handled = {};
+
+  @override
+  Widget build(BuildContext context) {
+    final requests = (ref.watch(joinRequestsProvider(widget.weddingId)).value ?? const <JoinRequest>[])
+        .where((r) => !_handled.contains(r.id))
+        .toList();
     if (requests.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionTitle('Pedidos para entrar'),
-        for (final (i, r) in requests.indexed) ...[
-          if (i > 0) const SizedBox(height: 12),
-          _RequestCard(key: ValueKey(r.id), weddingId: weddingId, request: r),
-        ],
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+          child: SectionTitle('Pedidos para entrar'),
+        ),
+        SnapCarousel(
+          itemCount: requests.length,
+          itemBuilder: (context, i) => _RequestCard(
+            key: ValueKey(requests[i].id),
+            weddingId: widget.weddingId,
+            request: requests[i],
+            onHandled: () => setState(() => _handled.add(requests[i].id)),
+            // Se falhar, o pedido volta ao carrossel.
+            onFailed: () {
+              if (mounted) setState(() => _handled.remove(requests[i].id));
+            },
+          ),
+        ),
       ],
     );
   }
@@ -40,7 +65,15 @@ class JoinRequestsCard extends ConsumerWidget {
 class _RequestCard extends ConsumerStatefulWidget {
   final String weddingId;
   final JoinRequest request;
-  const _RequestCard({super.key, required this.weddingId, required this.request});
+  final VoidCallback onHandled;
+  final VoidCallback onFailed;
+  const _RequestCard({
+    super.key,
+    required this.weddingId,
+    required this.request,
+    required this.onHandled,
+    required this.onFailed,
+  });
 
   @override
   ConsumerState<_RequestCard> createState() => _RequestCardState();
@@ -53,15 +86,23 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
   Future<void> _review(bool approve) async {
     final r = widget.request;
     final messenger = ScaffoldMessenger.of(context);
+    // O cartão sai do carrossel já a seguir: daqui para a frente usa o
+    // contentor, não o `ref` deste cartão.
+    final container = ProviderScope.containerOf(context, listen: false);
+    final guests = ref.read(guestsControllerProvider.notifier);
+    final category = approve ? _category : null;
     setState(() => _busy = true);
+    // Sai já do carrossel e aparece o pedido seguinte.
+    widget.onHandled();
     try {
-      await reviewJoinRequest(r.id, approve: approve, category: approve ? _category : null);
-      ref.invalidate(joinRequestsProvider(widget.weddingId));
-      if (approve) await ref.read(guestsControllerProvider.notifier).load(widget.weddingId);
+      await reviewJoinRequest(r.id, approve: approve, category: category);
+      container.invalidate(joinRequestsProvider(widget.weddingId));
+      if (approve) await guests.load(widget.weddingId);
       messenger.showSnackBar(SnackBar(
         content: Text(approve ? '${r.name} está na lista de convidados.' : 'Pedido de ${r.name} recusado.'),
       ));
     } catch (_) {
+      widget.onFailed();
       messenger.showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
     } finally {
       if (mounted) setState(() => _busy = false);

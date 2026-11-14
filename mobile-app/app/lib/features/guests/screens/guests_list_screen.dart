@@ -126,7 +126,8 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                       ),
                       if (wedding != null)
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 0),
+                          // Sem margens: o carrossel põe as suas.
+                          padding: EdgeInsets.zero,
                           child: JoinRequestsCard(weddingId: wedding.id),
                         ),
                       Padding(
