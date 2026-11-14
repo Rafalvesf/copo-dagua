@@ -192,7 +192,8 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         _Step.ages,
         _Step.menu,
         _Step.allergies,
-        if (_sideOptions != null) _Step.side,
+        // «És convidado de quem?» saiu (2026-11-14): a app já não é só
+        // para casamentos.
         _Step.relationship,
       ];
 
