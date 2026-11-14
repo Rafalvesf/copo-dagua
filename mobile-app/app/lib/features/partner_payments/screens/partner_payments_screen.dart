@@ -251,6 +251,15 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
             ].join(' '),
             style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
           ),
+          // Em automático também se pode levantar já (pedido 2026-11-14).
+          if (!s.manualPayouts && s.payoutsEnabled && s.availableCents > 0) ...[
+            const SizedBox(height: 14),
+            OnbButton(
+              label: _paying ? 'A pedir…' : 'Levantar já ${_eur(s.availableCents)}',
+              secondary: true,
+              onPressed: canWithdraw ? () => _withdraw(s) : null,
+            ),
+          ],
           if (s.manualPayouts) ...[
             const SizedBox(height: 14),
             OnbButton(
@@ -277,6 +286,8 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
         ),
       ],
       group('A caminho'),
+      const _Incoming(),
+      group('Por cobrar'),
       const _ToReceive(),
       group('Levantamentos'),
       _Rows([
@@ -349,6 +360,35 @@ class _Rows extends StatelessWidget {
       );
 }
 
+/// "A caminho": cada pagamento já pago e ainda retido, por cliente.
+class _Incoming extends ConsumerWidget {
+  const _Incoming();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final b = ref.watch(partnerBalanceProvider).value;
+    final list = b?.incoming ?? const <IncomingPayment>[];
+    String date(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+    if (list.isEmpty) {
+      return _Rows([
+        (b?.held ?? 0) > 0.009
+            ? _RowData('Pago, por libertar', null, euros(b!.held))
+            : const _RowData('Nada a caminho', 'Os pagamentos aparecem aqui quando os clientes pagam.', null),
+      ]);
+    }
+    return _Rows([
+      for (final p in list)
+        _RowData(
+          p.client,
+          p.deposit
+              ? (p.releaseAt == null ? 'Sinal · liberta em 48 h' : 'Sinal · liberta a ${date(p.releaseAt!.toLocal())}')
+              : (p.releaseAt == null ? 'Resto · 3 dias depois do evento' : 'Resto · liberta a ${date(p.releaseAt!.toLocal())}'),
+          euros(p.amount, cents: true),
+        ),
+    ]);
+  }
+}
+
 class _ToReceive extends ConsumerWidget {
   const _ToReceive();
 
@@ -358,9 +398,8 @@ class _ToReceive extends ConsumerWidget {
     final feeCfg = ref.watch(partnerFeeConfigProvider).value ?? const PartnerFeeConfig();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       _Rows([
-        _RowData('Sinais a aguardar', 'Libertados 48 h depois de pagos', euros(b?.pendingDeposits ?? 0)),
-        _RowData('Restante por cobrar', '3 dias depois do evento', euros(b?.uncollectedBalance ?? 0)),
-        if ((b?.held ?? 0) > 0.009) _RowData('Pago, por libertar', null, euros(b!.held)),
+        _RowData('Sinais por pagar', 'Os clientes ainda não pagaram', euros(b?.pendingDeposits ?? 0)),
+        _RowData('Restante por cobrar', 'Pago até 30 dias antes do evento', euros(b?.uncollectedBalance ?? 0)),
       ]),
       const SizedBox(height: 8),
       Text(

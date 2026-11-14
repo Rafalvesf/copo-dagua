@@ -496,7 +496,21 @@ Future<String> createConnectLoginUrl() async {
 /// e sinais pendentes + o saldo por cobrar (diferença entre o valor
 /// total e o sinal, que ainda não tem nenhum fluxo de cobrança em lado
 /// nenhum da plataforma — só `deposit` é cobrado, ver `020_payments.sql`).
+/// Um pagamento já pago pelo cliente, retido até ser libertado
+/// ("A caminho" na página Pagamentos, pedido 2026-11-14).
+class IncomingPayment {
+  final String client;
+  final bool deposit;
+  final double amount;
+
+  /// Quando é libertado: sinal 48 h depois de pago, o resto 3 dias
+  /// depois do evento. `null` se não houver data.
+  final DateTime? releaseAt;
+  const IncomingPayment({required this.client, required this.deposit, required this.amount, this.releaseAt});
+}
+
 class PartnerBalanceData {
+  final List<IncomingPayment> incoming;
   final double received;
   final double pendingDeposits;
   final double uncollectedBalance;
@@ -511,6 +525,7 @@ class PartnerBalanceData {
     required this.pendingDeposits,
     required this.uncollectedBalance,
     this.held = 0,
+    this.incoming = const [],
   });
 }
 
@@ -522,21 +537,32 @@ final partnerBalanceProvider = FutureProvider<PartnerBalanceData>((ref) async {
   // reserva ativa: recebido = pagamentos pagos (sinal + restante),
   // sinais a aguardar = sinais pendentes, por cobrar = o que sobra.
   List<dynamic> rows;
+  var detailed = true;
   try {
+    rows = await supabase
+        .from('bookings')
+        .select('total_amount, status, event_date, profiles(full_name), weddings(partner_name_1, partner_name_2), '
+            'payments(type, status, amount, released_at, paid_at)')
+        .eq('partner_id', partnerId)
+        .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
+  } on PostgrestException {
+    detailed = false;
+    try {
     rows = await supabase
         .from('bookings')
         .select('total_amount, status, payments(type, status, amount, released_at)')
         .eq('partner_id', partnerId)
         .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
-  } on PostgrestException {
-    // Migração 119 ainda por correr.
-    rows = await supabase
-        .from('bookings')
-        .select('total_amount, status, payments(type, status, amount)')
-        .eq('partner_id', partnerId)
-        .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
+    } on PostgrestException {
+      rows = await supabase
+          .from('bookings')
+          .select('total_amount, status, payments(type, status, amount)')
+          .eq('partner_id', partnerId)
+          .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
+    }
   }
 
+  final incoming = <IncomingPayment>[];
   double received = 0;
   double pendingDeposits = 0;
   double uncollectedBalance = 0;
@@ -548,7 +574,20 @@ final partnerBalanceProvider = FutureProvider<PartnerBalanceData>((ref) async {
     for (final p in ((row['payments'] as List?) ?? const []).cast<Map<String, dynamic>>()) {
       final amount = (p['amount'] as num).toDouble();
       if (p['status'] == 'paid') paid += amount;
-      if (p['status'] == 'paid' && p.containsKey('released_at') && p['released_at'] == null) held += amount;
+      if (p['status'] == 'paid' && p.containsKey('released_at') && p['released_at'] == null) {
+        held += amount;
+        if (detailed) {
+          final deposit = p['type'] == 'deposit';
+          final paidAt = DateTime.tryParse((p['paid_at'] as String?) ?? '');
+          final event = DateTime.tryParse((row['event_date'] as String?) ?? '');
+          incoming.add(IncomingPayment(
+            client: _clientDisplayName(row['weddings'] as Map<String, dynamic>?, row['profiles'] as Map<String, dynamic>?),
+            deposit: deposit,
+            amount: amount,
+            releaseAt: deposit ? paidAt?.add(const Duration(hours: 48)) : event?.add(const Duration(days: 3)),
+          ));
+        }
+      }
       if (p['status'] == 'pending' && p['type'] == 'deposit') pendingDeposit += amount;
     }
     received += paid;
@@ -562,6 +601,7 @@ final partnerBalanceProvider = FutureProvider<PartnerBalanceData>((ref) async {
     pendingDeposits: pendingDeposits,
     uncollectedBalance: uncollectedBalance,
     held: held,
+    incoming: incoming..sort((a, b) => (a.releaseAt ?? DateTime(9999)).compareTo(b.releaseAt ?? DateTime(9999))),
   );
 });
 

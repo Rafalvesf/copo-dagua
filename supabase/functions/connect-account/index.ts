@@ -13,7 +13,7 @@ import { applyDetails, applyDocument, type Details, ensureAccount, prefill, stri
 //                últimos 4), saldo disponível/pendente e últimos levantamentos.
 //  - "prefill" / "details" / "document" → dados pedidos com o UI da app
 //                (2026-10-25), enviados à Stripe pela API.
-//  - "payout"  → levanta o saldo disponível para o IBAN (levantamentos
+//  - "payout"  → levanta o saldo disponível para o IBAN (também em modo automático, 2026-11-14) (levantamentos
 //                passam a manuais: só saem quando o parceiro carrega).
 //
 // Sempre com o JWT do parceiro: só mexe na conta do próprio.
@@ -161,24 +161,38 @@ Deno.serve(async (req) => {
 
     if (action === "payout") {
       if (!acc.payouts_enabled) return json({ error: "payouts_disabled" }, 409);
-      // Em automático é a Stripe que levanta sozinha (escolha do parceiro).
-      if (acc.settings?.payouts?.schedule?.interval !== "manual") {
-        return json({ error: "automatic_payouts" }, 409);
-      }
       const bal = await stripe.balance.retrieve({ stripeAccount: accountId });
       const available = bal.available.find((b) => b.currency === "eur")?.amount ?? 0;
       const requested = typeof body.amount_cents === "number" ? Math.floor(body.amount_cents) : available;
       if (available <= 0 || requested <= 0) return json({ error: "no_balance" }, 409);
       if (requested > available) return json({ error: "insufficient_balance" }, 409);
-      const payout = await stripe.payouts.create(
-        {
-          amount: requested,
-          currency: "eur",
-          description: "Levantamento À Nossa!",
-          metadata: organizer ? { organizer_id: user.id } : { partner_id: user.id },
-        },
-        { stripeAccount: accountId, idempotencyKey: `payout-${accountId}-${requested}-${new Date().toISOString().slice(0, 16)}` },
-      );
+      // Levantar já também em automático (pedido 2026-11-14): a Stripe só
+      // aceita levantamentos pedidos em modo manual, por isso passa a
+      // manual, levanta e volta ao modo que o parceiro escolheu.
+      const previous = acc.settings?.payouts?.schedule;
+      const wasAutomatic = previous?.interval !== undefined && previous.interval !== "manual";
+      if (wasAutomatic) {
+        await stripe.accounts.update(accountId, { settings: { payouts: { schedule: { interval: "manual" } } } });
+      }
+      let payout;
+      try {
+        payout = await stripe.payouts.create(
+          {
+            amount: requested,
+            currency: "eur",
+            description: "Levantamento À Nossa!",
+            metadata: organizer ? { organizer_id: user.id } : { partner_id: user.id },
+          },
+          { stripeAccount: accountId, idempotencyKey: `payout-${accountId}-${requested}-${new Date().toISOString().slice(0, 16)}` },
+        );
+      } finally {
+        if (wasAutomatic) {
+          const schedule: Record<string, unknown> = { interval: previous!.interval };
+          if (previous!.interval === "weekly") schedule.weekly_anchor = previous!.weekly_anchor ?? "friday";
+          if (previous!.interval === "monthly") schedule.monthly_anchor = previous!.monthly_anchor ?? 1;
+          await stripe.accounts.update(accountId, { settings: { payouts: { schedule } } });
+        }
+      }
       return json({
         payout: { id: payout.id, amount_cents: payout.amount, arrival_date: payout.arrival_date, status: payout.status },
       });
