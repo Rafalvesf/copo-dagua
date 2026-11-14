@@ -1,17 +1,9 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
-import 'hide_while_typing.dart';
-import '../../core/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../core/events/event_pass.dart';
-import '../../core/guest_home/guest_home_providers.dart';
-
-import '../../core/theme/app_theme.dart';
-import 'first_run_tour.dart';
-import 'floating_filter_bar.dart' show ConnectedFilterNav;
-import 'floating_bottom_nav.dart' show NavBubble, kNavRadius;
+import '../../core/auth/auth_controller.dart';
+import '../../core/models/models.dart' show UserRole;
+import 'floating_bottom_nav.dart' show AppTab, FloatingBottomNav;
 
 enum GuestTab { home, gifts, gallery, profile, events }
 
@@ -47,147 +39,14 @@ class GuestBottomNav extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // O organizador pode esconder a Galeria e os Presentes (migração 158).
-    final id = weddingId ?? ref.watch(guestWeddingsProvider).value?.firstOrNull?.weddingId;
-    final sections = id == null ? const GuestSections() : (ref.watch(myEventPassProvider(id)).value?.sections ?? const GuestSections());
-    // Fica fixa por cima enquanto a página anima (page_transitions.dart).
-    return StayOverNav(
-      child: HideWhileTyping(child: TourHost(role: TourRole.guest, guestWeddingId: weddingId, child: _buildNav(context, sections))),
+    // A mesma barra para todos os modos (pedido 2026-11-14): Parceiros,
+    // Eventos, Mensagens e Perfil. Galeria e Presentes abrem a partir do
+    // evento. Um convidado está sempre «dentro» de Eventos.
+    final role = ref.watch(authControllerProvider).profile?.role;
+    return FloatingBottomNav(
+      current: current == GuestTab.profile ? AppTab.home : AppTab.events,
+      top: top,
+      profilePath: role == UserRole.couple ? '/home' : _path('/guest-profile'),
     );
-  }
-
-  Widget _buildNav(BuildContext context, GuestSections sections) {
-    return SafeArea(
-      top: false,
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(kNavRadius),
-          boxShadow: AppTheme.navBarShadow,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(kNavRadius),
-          child: ConnectedFilterNav(
-          top: top,
-          navRow: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          child: Row(
-            children: [
-              Expanded(
-                child: Center(
-                  child: _GuestNavIcon(
-                    icon: Hi.home,
-                    activeIcon: Hi.homeOutline,
-                    active: current == GuestTab.home,
-                    onTap: () => context.go(_path('/guest-home')),
-                    label: 'Início',
-                  ),
-                ),
-              ),
-              if (sections.shows(GuestSection.galeria) || current == GuestTab.gallery)
-              Expanded(
-                child: Center(
-                  child: _GuestNavIcon(
-                    icon: Hi.rectangleStack,
-                    activeIcon: Hi.rectangleStackOutline,
-                    active: current == GuestTab.gallery,
-                    onTap: () => context.go(_path('/guest-gallery')),
-                    label: 'Galeria',
-                  ),
-                ),
-              ),
-              if (sections.shows(GuestSection.presentes) || current == GuestTab.gifts)
-              Expanded(
-                child: Center(
-                  child: _GuestNavIcon(
-                    icon: Hi.gift,
-                    activeIcon: Hi.giftOutline,
-                    active: current == GuestTab.gifts,
-                    onTap: () => context.go(_path('/guest-gifts')),
-                    label: 'Presentes',
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: _GuestNavIcon(
-                    icon: Hi.user,
-                    activeIcon: Hi.userOutline,
-                    active: current == GuestTab.profile,
-                    onTap: () => context.go(_path('/guest-profile')),
-                    label: 'Perfil',
-                  ),
-                ),
-              ),
-            ],
-          ),
-          ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GuestNavIcon extends StatelessWidget {
-  final IconData icon;
-  final IconData activeIcon;
-  final bool active;
-  final VoidCallback onTap;
-
-  /// Nome do separador para leitores de ecrã (acessibilidade, 2026-11-03).
-  final String label;
-
-  const _GuestNavIcon({
-    this.label = '',
-    required this.icon,
-    required this.activeIcon,
-    required this.active,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Sem bolha (2026-11-11): ícones preenchidos; o separador ativo
-    // fica com o ícone só com contorno.
-    final color = active ? AppTheme.ink : AppTheme.navIconMuted;
-    return Semantics(
-      button: true,
-      selected: active,
-      label: label,
-      excludeSemantics: true,
-      onTap: onTap,
-      child: Tooltip(
-        message: label,
-        excludeFromSemantics: true,
-        child: InkWell(
-      borderRadius: BorderRadius.circular(kNavRadius - 10),
-      onTap: onTap,
-      // Pill cinzenta no separador ativo (2026-11-11: "para ser mais
-      // percetível").
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: active ? const Color(0xFFEDEAE3) : Colors.transparent,
-          borderRadius: BorderRadius.circular(kNavRadius - 10),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: 26,
-              child: Center(child: Icon(active ? activeIcon : icon, color: color, size: 24)),
-            ),
-            const SizedBox(height: 3),
-            Text(label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
-          ],
-        ),
-      ),
-    )));
   }
 }
