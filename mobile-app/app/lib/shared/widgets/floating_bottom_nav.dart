@@ -32,7 +32,12 @@ class FloatingBottomNav extends ConsumerWidget {
   /// separadores, na mesma ilha (redesign 2026-10).
   final Widget? top;
 
-  const FloatingBottomNav({super.key, required this.current, this.top});
+  /// Para onde vai «Perfil». Um convidado (conta «Utilizador») não tem
+  /// `/home`: vai para o perfil de convidado (2026-11-14, a mesma barra
+  /// para todos os modos).
+  final String profilePath;
+
+  const FloatingBottomNav({super.key, required this.current, this.top, this.profilePath = '/home'});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) =>
@@ -125,7 +130,7 @@ class FloatingBottomNav extends ConsumerWidget {
                     active: current == AppTab.home,
                     accent: menuColor.color,
                     onAccent: menuColor.on,
-                    onTap: () => context.go('/home'),
+                    onTap: () => context.go(profilePath),
                     label: 'Perfil',
                   ),
                 ),

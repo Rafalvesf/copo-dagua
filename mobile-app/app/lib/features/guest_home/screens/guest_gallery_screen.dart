@@ -138,7 +138,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
             bottom: false,
             child: ScrollingHeader(
  header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-                const GuestEventsPillRow(),
+                GuestEventsPillRow(to: widget.weddingId == null ? '/guest-home' : '/guest-home/${widget.weddingId}'),
                 // Canvas "Convidado · Galeria": título ao centro e "+" verde.
                 // Redesign 2026-10-19: "+" verde redondo como no canvas.
                 PageHeader(

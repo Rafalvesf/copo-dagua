@@ -121,7 +121,7 @@ class GuestGiftsScreen extends ConsumerWidget {
             child: ListView(
               padding: ( const EdgeInsets.only(bottom: 140)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
               children: [
-                const GuestEventsPillRow(),
+                GuestEventsPillRow(to: weddingId == null ? '/guest-home' : '/guest-home/$weddingId'),
                 const PageHeader(title: 'Presentes', showBack: false, centered: true),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, AppTheme.screenMargin, 0),
