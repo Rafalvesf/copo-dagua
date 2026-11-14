@@ -1,4 +1,3 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,11 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/payments/partner_connect.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/green_hero.dart';
-import '../../../shared/widgets/page_header.dart';
-import '../../../shared/widgets/sticker_icon.dart';
-import '../../payments/screens/pay_done_screen.dart';
+import '../../../shared/widgets/onb_kit.dart';
 import '../widgets/payout_details_form.dart';
 
 /// "Confirma os teus dados" (pedido 2026-10-19): antes de receber e
@@ -27,7 +22,6 @@ class PartnerPayoutSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
-  bool _agreed = false;
 
   @override
   void initState() {
@@ -42,7 +36,6 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
   }
 
   bool _form = false;
-  final bool _loading = false;
   String? _error;
 
   /// Abre o formulário da própria app (2026-10-25 — sem formulários nem
@@ -54,247 +47,203 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
     });
   }
 
-  /// O parceiro terminou (ou saiu) do formulário.
+  /// Terminou (ou saiu) do formulário: mostra o estado ("Estamos a
+  /// verificar" / ativo) na própria página (mockup "Em verificação").
   Future<void> _finished() async {
     ref.invalidate(partnerConnectStatusProvider);
     ref.invalidate(partnerStripeStatusProvider);
     final s = await ref.read(partnerConnectStatusProvider.future);
     if (!mounted) return;
-    if (s.detailsSubmitted && !s.needsData && widget.organizer) {
-      context.pop();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(s.active ? 'Pagamentos ativos! Já podes vender bilhetes.' : 'Dados enviados. A Stripe está a verificar.'),
-      ));
-      return;
-    }
-    if (s.detailsSubmitted && !s.needsData) {
-      context.pushReplacement(
-        '/pay/done',
-        extra: PayDoneArgs(
-          partnerName: '',
-          title: '',
-          amountLabel: '',
-          headline: s.active ? 'Pagamentos ativos!' : 'Dados enviados!',
-          subtitle: s.active
-              ? 'Já podes receber sinais e levantar para o teu IBAN.'
-              : 'A Stripe está a verificar os teus dados.',
-          lines: [
-            if (!s.active)
-              (Hi.clock, 'A verificação costuma demorar minutos, às vezes 1–2 dias úteis.'),
-            if (s.bankLast4 != null) (Hi.buildingLibrary, 'IBAN terminado em ${s.bankLast4}'),
-            (Hi.banknotes, 'Os sinais pagos pelos clientes ficam no teu saldo para levantares.'),
-          ],
-          primaryLabel: 'Ver pagamentos',
-          primaryRoute: '/partner-payments',
-          secondaryLabel: 'Voltar ao início',
-          secondaryRoute: '/partner-home',
-        ),
-      );
-    } else {
-      setState(() {
-        _form = false;
-        _error = s.needsData ? 'Ainda faltam alguns dados. Podes continuar quando quiseres.' : null;
-      });
-    }
+    setState(() {
+      _form = false;
+      _error = s.needsData ? 'Ainda faltam alguns dados. Podes continuar quando quiseres.' : null;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_form) {
+      return PayoutDetailsForm(
+        onDone: (_) => _finished(),
+        onLater: () => setState(() => _form = false),
+      );
+    }
     final async = ref.watch(partnerConnectStatusProvider);
     final s = async.value ?? const ConnectStatus();
-    final total = ConnectGroup.values.length;
-    return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(
-        child: Column(children: [
-          PageHeader(title: _form ? 'Os teus dados' : 'Ativar pagamentos', centered: true),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 24),
-              children: _form ? _formBody() : _checklist(async, s, total),
-            ),
-          ),
-          if (!_form) _bottom(s),
-        ]),
-      ),
-    );
+    if (async.isLoading && !async.hasValue) {
+      return const Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF4F6B4A))),
+      );
+    }
+    final submitted = s.hasAccount && s.detailsSubmitted && !s.needsData;
+    return submitted ? _status(s) : _intro(s);
   }
 
-  List<Widget> _formBody() => [
-        PayoutDetailsForm(
-          onDone: (_) => _finished(),
-          onLater: () => setState(() => _form = false),
-        ),
-      ];
-
-  List<Widget> _checklist(AsyncValue<ConnectStatus> async, ConnectStatus s, int total) => [
-        GreenHero(
-          label: 'DADOS PARA RECEBER',
-          value: '${s.groupsDone}',
-          suffix: 'de $total confirmados',
-          progress: s.groupsDone / total,
-          doodles: const [Hi.shieldCheck, Hi.currencyEuro, Hi.sparkles],
-          footer: Wrap(spacing: 6, runSpacing: 6, children: [
-            HeroPill(s.chargesEnabled ? 'Recebe pagamentos · ativo' : 'Recebe pagamentos', solid: s.chargesEnabled),
-            HeroPill(s.payoutsEnabled ? 'Levantamentos · ativo' : 'Levantamentos', solid: s.payoutsEnabled),
+  /// "Recebe pagamentos na app" (mockup V0).
+  Widget _intro(ConnectStatus s) {
+    final steps = [
+      ('Quem és', 'Nome, data de nascimento, NIF'),
+      ('O teu negócio', 'Morada e o que fazes'),
+      ('Conta e documento', 'IBAN e cartão de cidadão'),
+    ];
+    return OnbStep(
+      onBack: () => context.pop(),
+      progress: 0.2,
+      title: 'Recebe pagamentos na app',
+      subtitle: widget.organizer
+          ? 'Quem compra bilhetes paga dentro da À Nossa! e o dinheiro vai para a tua conta. Leva uns 3 minutos.'
+          : 'Os clientes pagam dentro da À Nossa! e o dinheiro vai para a tua conta. Leva uns 3 minutos.',
+      bottom: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        OnbButton(label: s.hasAccount && s.needsData ? 'Completar dados' : 'Começar', onPressed: _open),
+        const SizedBox(height: 10),
+        OnbButton(label: 'Mais tarde', secondary: true, onPressed: () => context.pop()),
+      ]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        _WhiteBox(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Column(children: [
+            for (final (i, (t, sub)) in steps.indexed)
+              Container(
+                constraints: const BoxConstraints(minHeight: 60),
+                decoration: i < steps.length - 1
+                    ? const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFECE7DC))))
+                    : null,
+                child: Row(children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
+                    alignment: Alignment.center,
+                    child: Text('${i + 1}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(t, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      Text(sub, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                    ]),
+                  ),
+                ]),
+              ),
           ]),
         ),
-        const SizedBox(height: 16),
-        const Text(
-          'A lei obriga a Stripe, que processa os pagamentos, a confirmar quem recebe o dinheiro. '
-          'Tem isto à mão — demora cerca de 5 minutos:',
-          style: TextStyle(color: AppTheme.inkMuted, height: 1.45, fontSize: AppFontSize.base),
-        ),
-        const SectionTitle('O que é preciso'),
-        if (async.isLoading && !async.hasValue)
-          Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator(color: AppTheme.accentOliveDark)),
-          )
-        else
-          for (final (i, g) in ConnectGroup.values.indexed) ...[
-            _GroupTile(group: g, state: s.stateOf(g), index: i, bankLast4: s.bankLast4),
-            const SizedBox(height: 10),
-          ],
-        if (s.disabledReason != null && s.disabledReason!.contains('rejected')) ...[
-          const SizedBox(height: 6),
-          const _Warn('A Stripe recusou esta conta. Contacta o suporte da À Nossa!'),
-        ],
-        if (_error != null) ...[const SizedBox(height: 6), _Warn(_error!)],
-        const SizedBox(height: 10),
-        GestureDetector(
-          onTap: () => setState(() => _agreed = !_agreed),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: whiteLineCard(line: _agreed ? AppTheme.accentOliveDark : null, width: _agreed ? 2 : 1),
-            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: _agreed ? AppTheme.accentOliveDark : Colors.white,
-                  borderRadius: BorderRadius.circular(7),
-                  border: Border.all(color: _agreed ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: 2),
-                ),
-                child: _agreed ? const Icon(Hi.check, size: 15, color: Colors.white) : null,
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Confirmo que os dados são verdadeiros e que a conta bancária está em meu nome ou da minha empresa.',
-                  style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink, height: 1.4),
-                ),
-              ),
+        if (!widget.organizer) ...[
+          const SizedBox(height: 12),
+          const _WhiteBox(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              OnbGroupLabel('Quando recebes'),
+              SizedBox(height: 6),
+              Text('O sinal chega 48 h depois de pago. O resto, 3 dias depois do evento, se ninguém reportar um problema.',
+                  style: TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.ink)),
             ]),
           ),
-        ),
-        const SizedBox(height: 12),
-        const _Note('Pedimos tudo aqui na app, de forma segura. São passados à Stripe, que processa os pagamentos.'),
-      ];
-
-  Widget _bottom(ConnectStatus s) {
-    final label = !s.hasAccount || !s.detailsSubmitted
-        ? 'Confirmar dados'
-        : s.needsData
-            ? 'Completar dados em falta'
-            : 'Rever os meus dados';
-    return Container(
-      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 14),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Color(0x14171713), blurRadius: 18, offset: Offset(0, -4))],
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 54,
-        child: FilledButton(
-          onPressed: _agreed && !_loading ? _open : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.ink,
-            disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.4),
-            foregroundColor: Colors.white,
-            disabledForegroundColor: Colors.white,
-            shape: const StadiumBorder(),
-            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
-          ),
-          child: _loading
-              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-              : Text(label),
-        ),
-      ),
+        ],
+        if (s.disabledReason != null && s.disabledReason!.contains('rejected')) ...[
+          const SizedBox(height: 12),
+          const _Warn('A Stripe recusou esta conta. Contacta o suporte da À Nossa!'),
+        ],
+        if (_error != null) ...[const SizedBox(height: 12), _Warn(_error!)],
+      ]),
     );
   }
-}
 
-class _GroupTile extends StatelessWidget {
-  final ConnectGroup group;
-  final GroupState state;
-  final int index;
-  final String? bankLast4;
-  const _GroupTile({required this.group, required this.state, required this.index, this.bankLast4});
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, bg, fg) = switch (state) {
-      GroupState.done => ('Confirmado', const Color(0xFFE4EFE5), const Color(0xFF2F6B45)),
-      GroupState.missing => ('Em falta', const Color(0xFFFBE3E1), const Color(0xFFB3261E)),
-      GroupState.verifying => ('A verificar', const Color(0xFFFCEFD6), const Color(0xFF7A5000)),
-      GroupState.later => ('Mais tarde', const Color(0xFFF2F0EB), AppTheme.inkMuted),
-      GroupState.todo => ('Por preencher', const Color(0xFFF2F0EB), AppTheme.inkMuted),
-    };
-    final hint = group == ConnectGroup.bank && bankLast4 != null ? 'IBAN terminado em $bankLast4' : group.hint;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: whiteLineCard(),
-      child: Row(children: [
-        StickerIcon(group.icon, turns: StickerIcon.tilt(index)),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(group.title,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base, color: AppTheme.ink)),
-            const SizedBox(height: 2),
-            Text(hint, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.3)),
-          ]),
+  /// "Estamos a verificar" / "Pagamentos ativos" (mockup V8).
+  Widget _status(ConnectStatus s) {
+    final active = s.active;
+    return OnbStep(
+      onBack: () => context.pop(),
+      progress: 1,
+      title: active ? 'Pagamentos ativos' : 'Estamos a verificar',
+      subtitle: active
+          ? (widget.organizer ? 'Já podes vender bilhetes.' : 'Já podes receber sinais e levantar para o teu IBAN.')
+          : 'A Stripe confirma os teus dados. Normalmente demora menos de um dia.',
+      bottom: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        OnbButton(
+          label: active && !widget.organizer ? 'Ver pagamentos' : 'Feito',
+          onPressed: () => active && !widget.organizer ? context.pushReplacement('/partner-payments') : context.pop(),
         ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-          child: Text(label, style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: fg)),
-        ),
+        const SizedBox(height: 10),
+        OnbButton(label: 'Rever os meus dados', secondary: true, onPressed: _open),
+      ]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (!active)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: const Color(0xFFF2A01B), width: 1.5),
+            ),
+            child: const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: SizedBox(width: 8, height: 8, child: DecoratedBox(decoration: BoxDecoration(color: Color(0xFFF2A01B), shape: BoxShape.circle))),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Em verificação', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  SizedBox(height: 4),
+                  Text('Já podes receber pedidos e enviar propostas. Avisamos-te quando os pagamentos ficarem ativos.',
+                      style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                ]),
+              ),
+            ]),
+          )
+        else
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
+              child: const Text('Pagamentos ativos', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+            ),
+          ),
+        if (s.bankLast4 != null) ...[
+          const SizedBox(height: 12),
+          _WhiteBox(
+            child: Row(children: [
+              const Text('Conta', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+              const Spacer(),
+              Text('IBAN ···· ${s.bankLast4}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.ink)),
+            ]),
+          ),
+        ],
       ]),
     );
   }
 }
 
-class _Note extends StatelessWidget {
-  final String text;
-  const _Note(this.text);
+class _WhiteBox extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets padding;
+  const _WhiteBox({required this.child, this.padding = const EdgeInsets.all(16)});
 
   @override
-  Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Icon(Hi.lockClosed, size: 16, color: AppTheme.inkMuted),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(text, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4)),
-        ),
-      ]);
+  Widget build(BuildContext context) => Container(
+        padding: padding,
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        child: child,
+      );
 }
 
+/// Aviso: linha vermelha 1,5 + ponto (DESIGN.md §7).
 class _Warn extends StatelessWidget {
   final String text;
   const _Warn(this.text);
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: AppColors.pink, borderRadius: BorderRadius.circular(16)),
-        child: Row(children: [
-          const Icon(Hi.exclamationCircle, size: 18, color: Color(0xFFB3261E)),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.ink))),
-        ]),
-      );
+  Widget build(BuildContext context) {
+    const red = Color(0xFFC8553D);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: red, width: 1.5)),
+      child: Row(children: [
+        Container(width: 8, height: 8, decoration: const BoxDecoration(color: red, shape: BoxShape.circle)),
+        const SizedBox(width: 10),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.ink))),
+      ]),
+    );
+  }
 }

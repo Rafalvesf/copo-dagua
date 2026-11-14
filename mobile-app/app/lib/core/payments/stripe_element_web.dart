@@ -87,6 +87,9 @@ class _WebStripePay implements StripePay {
   }
 
   @override
+  Widget? walletButton(VoidCallback onPressed) => null;
+
+  @override
   Future<String> wallet(String publishableKey, int amountCents, String label) async {
     final pay = _pay;
     if (pay == null) return '';

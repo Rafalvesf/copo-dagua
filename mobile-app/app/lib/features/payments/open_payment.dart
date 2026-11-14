@@ -50,6 +50,7 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
       partnerName: partner,
       kind: row['type'] as String,
       amount: amountWithCommission((row['amount'] as num).toDouble(), pct),
+      baseAmount: (row['amount'] as num).toDouble(),
     ),
   );
   ref.invalidate(coupleBookingsProvider);

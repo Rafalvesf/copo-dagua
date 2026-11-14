@@ -47,6 +47,11 @@ abstract class StripePay {
   /// `{status}`, `{error}` ou `{cancelled: true}`.
   Future<Map<String, dynamic>> payWallet(Future<String?> Function() clientSecret);
 
+  /// Botão oficial do Apple Pay / Google Pay (PlatformPayButton), com a
+  /// marca de cada um. `null` onde não há botão oficial (web): a app usa o
+  /// seu botão preto "Pagar com …".
+  Widget? walletButton(VoidCallback onPressed);
+
   void dispose();
 }
 

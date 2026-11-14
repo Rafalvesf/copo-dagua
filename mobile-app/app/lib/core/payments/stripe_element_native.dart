@@ -106,6 +106,18 @@ class _NativeStripePay implements StripePay {
   }
 
   @override
+  Widget? walletButton(VoidCallback onPressed) => SizedBox(
+        height: 52,
+        width: double.infinity,
+        child: PlatformPayButton(
+          type: PlatformButtonType.pay,
+          appearance: PlatformButtonStyle.black,
+          borderRadius: 26,
+          onPressed: onPressed,
+        ),
+      );
+
+  @override
   Future<String> wallet(String publishableKey, int amountCents, String label) async {
     if (!supported) return '';
     try {

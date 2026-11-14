@@ -30,6 +30,10 @@ class PayArgs {
   /// o pagamento; depois vale o valor devolvido pela Stripe.
   final double amount;
 
+  /// Valor sem a taxa de serviço (reservas): mostra "Sinal" + "Taxa de
+  /// serviço" + "Total" na folha de pagamento. `null` = só o total.
+  final double? baseAmount;
+
   // Bilhetes, prendas e Premium (2026-11-09: "sempre embutido na app,
   // nunca com link"): o mesmo ecrã de pagamento, com outra origem.
   final Future<PaymentIntentInfo> Function(PayMethod method, {String? phone, String? paymentMethodId})? create;
@@ -48,6 +52,7 @@ class PayArgs {
     required this.partnerName,
     required this.kind,
     required this.amount,
+    this.baseAmount,
     this.create,
     this.state,
     this.methods,
