@@ -197,13 +197,17 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
     return Stack(
       key: const ValueKey('normal'),
       children: [
+        // Sem SafeArea no topo: a capa do estilo Clássico vai até cima,
+        // por trás das horas e da bateria (antes ficava uma faixa da cor
+        // do fundo por cima da capa). Cada topo soma a margem ele próprio.
         SafeArea(
+          top: false,
           bottom: false,
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
             onLongPress: _startEditing,
             child: EdgeFade(
-              topFadeHeight: 8,
+              topFadeHeight: layout == MenuLayout.classic ? 0 : 8,
               bottomFadeHeight: 140,
               child: _PageBody(wedding: wedding, layout: layout),
             ),
@@ -443,7 +447,7 @@ class _PageBody extends ConsumerWidget {
       const _BookingsSection(),
       _ManageList(wedding: wedding),
     ];
-    final padding = EdgeInsets.fromLTRB(0, classic ? 0 : 40, 0, 140);
+    final padding = EdgeInsets.fromLTRB(0, (classic ? 0 : 40) + MediaQuery.paddingOf(context).top, 0, 140);
     if (!scrollable) {
       // Pré-visualização (modo de edição): sem lista que desliza.
       return Padding(
@@ -3014,13 +3018,15 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
       if (w.weddingDate != null) '${w.weddingDate!.day} ${monthNamesPt[w.weddingDate!.month - 1].toLowerCase()} ${w.weddingDate!.year}',
       if (w.venue?.isNotEmpty == true) w.venue! else if (w.location?.isNotEmpty == true) w.location!,
     ].join(' · ');
+    // Altura das horas e da bateria: a capa começa por trás delas.
+    final inset = MediaQuery.paddingOf(context).top;
     return Stack(
       children: [
         Positioned(
           left: 0,
           right: 0,
           top: 0,
-          height: 230,
+          height: 230 + inset,
           child: SnappyTap(
             onTap: _uploading ? null : _pickBanner,
             child: Stack(fit: StackFit.expand, children: [
@@ -3057,7 +3063,7 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
         Positioned(
           left: 16,
           right: 16,
-          top: 12,
+          top: 12 + inset,
           child: Row(children: [
             _round(Hi.chevronLeft, 'Voltar a Eventos', () => context.go('/eventos')),
             const Spacer(),
@@ -3071,7 +3077,7 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
           ]),
         ),
         Padding(
-          padding: const EdgeInsets.only(top: 202),
+          padding: EdgeInsets.only(top: 202 + inset),
           child: Container(
             padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 26, AppTheme.screenMargin, 0),
             decoration: const BoxDecoration(
