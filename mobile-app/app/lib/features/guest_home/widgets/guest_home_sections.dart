@@ -307,38 +307,26 @@ class GuestPlaceCard extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: guestCard(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(color: const Color(0xFFDDE5D3), borderRadius: BorderRadius.circular(13)),
-            child: const Icon(Hi.mapPin, color: guestHeroGreen),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              if (address?.isNotEmpty == true && address != title)
-                Text(address!, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
-            ]),
-          ),
-        ]),
+        // Mockup «Páginas do convidado»: nome 16, local 13 e «Como chegar» 44.
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        if (address?.isNotEmpty == true && address != title)
+          Text(address!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         if (wedding.dressCode?.isNotEmpty == true) ...[
           const SizedBox(height: 10),
           Text('Dress code: ${wedding.dressCode}',
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ],
         const SizedBox(height: 12),
-        FilledButton.icon(
+        FilledButton(
           onPressed: () => showNavigationSheet(context, label: title, address: address, latitude: lat, longitude: lng),
-          icon: const Icon(Hi.map, size: 19),
-          label: const Text('Como chegar'),
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.ink,
             foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(46),
+            minimumSize: const Size.fromHeight(44),
             shape: const StadiumBorder(),
+            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
           ),
+          child: const Text('Como chegar'),
         ),
       ]),
     );

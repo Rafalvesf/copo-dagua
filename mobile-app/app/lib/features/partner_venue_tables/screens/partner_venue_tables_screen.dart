@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partner_venue_tables/partner_venue_tables_controller.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -46,66 +47,53 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
     final state = ref.watch(partnerVenueTablesControllerProvider);
     final controller = ref.read(partnerVenueTablesControllerProvider.notifier);
 
+    // Mockup «Páginas do parceiro» → Mesas do local (2026-11-14).
     return GradientScaffold(
       background: AppBackground.feed,
-      body: SafeArea(top: false, 
-        bottom: false,
-        child: ScrollingHeader(
- header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-            PageHeader(
-              title: 'Mesas do local',
-              centered: true,
-              subtitle: 'Tipos de mesa disponíveis para os clientes.',
-              trailing: AddActionButton(onTap: () => _add(context, ref)),
+      body: KitPage(
+        children: [
+          KitHeader(actions: [KitAddButton(tooltip: 'Novo tipo de mesa', onTap: () => _add(context, ref))]),
+          const KitTitle('Mesas do local', subtitle: 'Tipos de mesa disponíveis para os clientes.'),
+          if (state.loading)
+            const Padding(padding: EdgeInsets.only(top: 60), child: Center(child: CircularProgressIndicator()))
+          else if (state.tableTypes.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 40),
+              child: Text(
+                'Ainda não configuraste nenhum tipo de mesa. Os clientes só veem um número real de mesas depois de adicionares pelo menos um tipo.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppTheme.inkMuted, fontSize: 14),
+              ),
+            )
+          else ...[
+            KitSummary(
+              kicker: 'Mesas',
+              value: '${state.totalTables}',
+              unit: 'em ${state.tableTypes.length} ${state.tableTypes.length == 1 ? 'tipo' : 'tipos'}',
             ),
-            const SizedBox(height: 16),
-            if (!state.loading && state.tableTypes.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                child: Text(
-                  'Total: ${state.totalTables} mesas',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: AppFontSize.base,
-                    color: AppTheme.ink,
+            KitGroup(top: 16, [
+              for (final table in state.tableTypes)
+                KitRow(
+                  title: '${table.quantity} × Mesa ${table.shape.label.toLowerCase()}',
+                  sub: '${table.seats} lugares por mesa',
+                  onTap: () => _edit(context, ref, table),
+                  trailing: PopupMenuButton<String>(
+                    tooltip: 'Mais opções',
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Hi.ellipsisHorizontal, size: 18, color: AppTheme.inkMuted),
+                    onSelected: (v) {
+                      if (v == 'edit') _edit(context, ref, table);
+                      if (v == 'delete') controller.remove(table.id);
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'edit', child: Text('Editar')),
+                      PopupMenuItem(value: 'delete', child: Text('Remover')),
+                    ],
                   ),
                 ),
-              ),
-            const SizedBox(height: 8)
- ],
- body: state.loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : state.tableTypes.isEmpty
-                      ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 32),
-                            child: Text(
-                              'Ainda não configuraste nenhum tipo de mesa. Os clientes só veem um número real de mesas depois de adicionares pelo menos um tipo.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-                            ),
-                          ),
-                        )
-                      : ListView(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppTheme.screenMargin,
-                            0,
-                            AppTheme.screenMargin,
-                            24,
-                          ),
-                          children: [
-                            for (final table in state.tableTypes)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _TableTypeCard(
-                                  table: table,
-                                  onEdit: () => _edit(context, ref, table),
-                                  onDelete: () => controller.remove(table.id),
-                                ),
-                              ),
-                          ],
-                        ),
-),
+            ]),
+          ],
+        ],
       ),
     );
   }

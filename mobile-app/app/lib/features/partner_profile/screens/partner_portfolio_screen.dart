@@ -7,6 +7,8 @@ import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/partner_profile/partner_profile_controller.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/estrela.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -120,28 +122,52 @@ class _PartnerPortfolioScreenState extends ConsumerState<PartnerPortfolioScreen>
                       16,
                     ),
                     children: [
-                      _RequirementBanner(imageCount: images.length),
-                      const SizedBox(height: 16),
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.95,
+                      // Mockup «Páginas do parceiro» → Portefólio (2026-11-14).
+                      if (images.length < _minImages)
+                        KitAlert(
+                          top: 0,
+                          text: 'Faltam ${_minImages - images.length} ${_minImages - images.length == 1 ? 'foto' : 'fotos'}: '
+                              'são o mínimo para submeter o perfil.',
+                          action: 'Adicionar',
+                          onAction: _uploading ? null : _addImages,
                         ),
-                        itemCount: images.length + videos.length,
-                        itemBuilder: (context, index) {
-                          final item = index < images.length ? images[index] : videos[index - images.length];
-                          return _PortfolioTile(item: item, onDelete: () => _remove(item));
-                        },
-                      ),
+                      if (images.isEmpty && videos.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 40),
+                          child: Column(children: [
+                            EstrelaMascot(Estrela.dormir, size: 88),
+                            SizedBox(height: 16),
+                            Text('Ainda não tens fotos',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            SizedBox(height: 4),
+                            Text('São a primeira coisa que os clientes veem.',
+                                textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                          ]),
+                        )
+                      else ...[
+                        const SizedBox(height: 16),
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.95,
+                          ),
+                          itemCount: images.length + videos.length,
+                          itemBuilder: (context, index) {
+                            final item = index < images.length ? images[index] : videos[index - images.length];
+                            return _PortfolioTile(item: item, onDelete: () => _remove(item));
+                          },
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       SnappyTap(
                         onTap: _uploading ? () {} : _addImages,
                         child: _ActionPill(
-                          label: _uploading ? 'A enviar...' : '+ Adicionar fotos',
+                          label: _uploading ? 'A enviar...' : 'Adicionar fotos',
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -149,7 +175,7 @@ class _PartnerPortfolioScreenState extends ConsumerState<PartnerPortfolioScreen>
                         SnappyTap(
                           onTap: _uploading ? () {} : _addVideo,
                           child: _ActionPill(
-                            label: _uploading ? 'A enviar...' : '+ Adicionar vídeo (opcional)',
+                            label: _uploading ? 'A enviar...' : 'Adicionar vídeo (opcional)',
                             outlined: true,
                           ),
                         ),

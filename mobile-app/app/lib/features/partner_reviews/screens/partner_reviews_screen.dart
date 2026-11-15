@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/review_tile.dart';
@@ -121,13 +122,7 @@ class PartnerReviewsScreen extends ConsumerWidget {
                       )
                     else ...[
                       if (reviews.any((r) => r.response == null))
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12, left: 4),
-                          child: Text(
-                            '${reviews.where((r) => r.response == null).length} por responder',
-                            style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-                          ),
-                        ),
+                        KitCaps('Por responder · ${reviews.where((r) => r.response == null).length}', top: 8),
                       for (final r in reviews) ...[
                         ReviewTile(
                           review: r,

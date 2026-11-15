@@ -2,6 +2,8 @@ import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/estrela.dart';
+import '../../../shared/widgets/onb_kit.dart';
 import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
 import '../../../shared/widgets/first_run_tour.dart' show TourRole;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -545,42 +547,31 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Mockup «Páginas do parceiro» → POnb (kit do onboarding):
+              // voltar 44, barra verde de 10 com a percentagem e «N DE M».
               SizedBox(
                 height: 44,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: CircleBackButton(onTap: () => setState(() => _stepIndex--)),
-                ),
+                child: Row(children: [
+                  OnbBackButton(onTap: () => setState(() => _stepIndex--)),
+                  const SizedBox(width: 12),
+                  Expanded(child: OnbProgress(value: 0.2 + 0.8 * _stepIndex / (total + 1))),
+                ]),
               ),
-              const SizedBox(height: 20),
-              Text('Passo $_stepIndex de $total', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(end: _stepIndex / total),
-                  duration: const Duration(milliseconds: 260),
-                  builder: (context, v, _) => LinearProgressIndicator(
-                    value: v,
-                    minHeight: 3,
-                    backgroundColor: AppTheme.borderMuted,
-                    color: AppTheme.accentOliveDark,
-                  ),
-                ),
-              ),
+              const SizedBox(height: 28),
+              OnbGroupLabel('$_stepIndex de $total'),
               Expanded(child: SingleChildScrollView(child: _buildStep(context))),
               const SizedBox(height: 12),
               SizedBox(
-                height: 54,
+                height: 52,
                 child: FilledButton(
                   onPressed: !_canContinue || _saving ? null : _continue,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.ink,
-                    disabledBackgroundColor: AppTheme.borderMuted,
+                    disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.35),
                     foregroundColor: Colors.white,
-                    disabledForegroundColor: AppTheme.inkMuted,
+                    disabledForegroundColor: Colors.white,
                     shape: const StadiumBorder(),
-                    textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
+                    textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   child: _saving
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
@@ -1040,27 +1031,31 @@ class _IntroView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Seta para sair do registo (nada fica gravado).
-              SizedBox(height: 44, child: Align(alignment: Alignment.centerLeft, child: CircleBackButton(onTap: onExit))),
+              SizedBox(
+                height: 44,
+                child: Row(children: [
+                  OnbBackButton(onTap: onExit),
+                  const SizedBox(width: 12),
+                  const Expanded(child: OnbProgress(value: 0.2)),
+                ]),
+              ),
               Expanded(
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Center(child: TchinMascot(pose: MascotPose.wave, width: 200)),
-                      const SizedBox(height: 28),
+                      const Center(child: EstrelaMascot(Estrela.feliz, size: 150)),
+                      const SizedBox(height: 24),
                       const Text(
                         'Olá, parceiro!',
                         style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Faltam só alguns passos rápidos para os clientes te '
-                        'poderem encontrar — nome do negócio, categoria, '
-                        'logótipo, portefólio de fotos, descrição, área '
-                        'de serviço, NIF e preços, mais dois passos '
-                        'opcionais no fim.',
-                        style: TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
+                        'Faltam só alguns passos para os clientes te encontrarem: '
+                        'nome, categorias, logótipo, fotos, descrição, zona, NIF e preços.',
+                        style: TextStyle(fontSize: 14, height: 1.45, color: AppTheme.inkMuted),
                       ),
                     ],
                   ),
@@ -1102,13 +1097,13 @@ class _StepScaffold extends StatelessWidget {
           ),
           const SizedBox(height: 12),
         ] else
-          const SizedBox(height: 32),
+          const SizedBox(height: 8),
         Text(question, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         if (subtitle != null && subtitle!.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text(subtitle!, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+          Text(subtitle!, style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.inkMuted)),
         ],
-        const SizedBox(height: 22),
+        const SizedBox(height: 24),
         child,
       ],
     );
@@ -1183,22 +1178,19 @@ class _Pill extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         // Sem `alignment`: assim o botão fica do tamanho do texto em vez
         // de ocupar a linha toda dentro do Wrap.
-        height: 40,
+        // Filtro em pílula 38 (DESIGN.md §6): branco ou verde quando escolhido.
+        height: 38,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
+          color: selected ? AppTheme.accentOliveDark : Colors.white,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (selected) ...[
-              const Icon(Hi.check, size: 16, color: Colors.white),
-              const SizedBox(width: 6),
-            ],
             Text(
               label,
-              style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.w700 : FontWeight.w600, color: selected ? Colors.white : AppTheme.ink),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink),
             ),
           ],
         ),

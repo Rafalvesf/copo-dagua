@@ -149,41 +149,30 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                   SnappyTap(
                     onTap: _locating ? () {} : _useCurrent,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF6F8F2),
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(color: AppTheme.accentOliveDark, width: 1.5),
-                      ),
+                      // Mockup «Páginas do parceiro» → Localização: linha branca.
+                      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
                       child: Row(
                         children: [
-                          _locating
-                              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
-                              : Icon(Hi.viewfinderCircle, color: AppTheme.accentOliveDark),
-                          const SizedBox(width: 12),
                           const Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Usar a minha localização atual', style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                                Text('Preenche a morada automaticamente', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+                                Text('Usar a minha localização', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                Text('Preenche a morada automaticamente.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                               ],
                             ),
                           ),
+                          _locating
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Hi.chevronRight, size: 16, color: AppTheme.inkMuted),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 18),
-                  const Row(
-                    children: [
-                      Expanded(child: Divider(color: AppTheme.borderMuted)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Text('ou procura a morada', style: TextStyle(fontSize: AppFontSize.sm, color: Color(0xFF6E6A63))),
-                      ),
-                      Expanded(child: Divider(color: AppTheme.borderMuted)),
-                    ],
+                  const Center(
+                    child: Text('ou procura a morada', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                   ),
                   const SizedBox(height: 12),
                   TextField(
