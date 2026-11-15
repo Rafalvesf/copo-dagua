@@ -206,7 +206,7 @@ class GuestAnswerCard extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: edit,
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, foregroundColor: Colors.white, shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, foregroundColor: Colors.white, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
             child: Text(declined ? 'Mudar' : 'Responder'),
           ),
         ]),
