@@ -97,25 +97,25 @@ class PartnerHomeScreen extends ConsumerWidget {
                     if (business != null && business.isNotEmpty)
                       Flexible(
                         child: Container(
-                          height: 34,
-                          padding: const EdgeInsets.fromLTRB(4, 0, 12, 0),
+                          height: 44,
+                          padding: const EdgeInsets.fromLTRB(6, 0, 16, 0),
                           decoration: isPro
                               ? BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(999),
                                   border: Border.all(color: _proInk, width: 1.5),
                                 )
-                              : softCard(radius: 999),
+                              : BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              V2Avatar(business, size: 26, imageUrl: profile?.avatarUrl),
+                              V2Avatar(business, size: 32, imageUrl: profile?.avatarUrl),
                               const SizedBox(width: 8),
                               Flexible(
                                 child: Text(
                                   business,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink),
                                 ),
                               ),
                               if (isPro) ...[
@@ -158,9 +158,9 @@ class PartnerHomeScreen extends ConsumerWidget {
                   newRequests.isEmpty
                       ? 'Sem pedidos à espera. Avisamos-te quando chegar um.'
                       : 'Tens ${newRequests.length} ${newRequests.length == 1 ? 'pedido' : 'pedidos'} à espera de resposta.',
-                  style: const TextStyle(fontSize: 15, height: 1.4, color: AppTheme.inkMuted),
+                  style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 20),
                 // Rearranjo 2026-11-07 ("tem muitos botões"): o que precisa de
                 // resposta primeiro; depois vendas, a semana, o negócio (4
                 // mosaicos) e a montra numa lista. Canvas "Parceiros · Início".
