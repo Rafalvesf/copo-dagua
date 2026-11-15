@@ -312,10 +312,6 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             value: bringing.isEmpty ? limit : 'Traz $bringing',
             onTap: () => _editCompanionLimit(context, guest),
           ),
-          KitSetRow(
-            label: 'Menu',
-            value: guest.menuSelection?.isNotEmpty == true ? guest.menuSelection : 'Por escolher',
-          ),
           if (guest.dietaryRestrictions?.isNotEmpty == true)
             KitSetRow(label: 'Alergias', value: guest.dietaryRestrictions),
           KitSetRow(

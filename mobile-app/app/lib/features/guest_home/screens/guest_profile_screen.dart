@@ -316,10 +316,7 @@ class _GuestProfileBody extends ConsumerWidget {
                 initials: _initialsOf(profile.fullName),
                 color: AppColors.yellow,
                 name: 'Tu',
-                detail: [
-                  guest.menuSelection?.isNotEmpty == true ? guest.menuSelection! : 'Menu por escolher',
-                  guest.dietaryRestrictions?.isNotEmpty == true ? guest.dietaryRestrictions! : 'Sem alergias',
-                ].join(' · '),
+                detail: guest.dietaryRestrictions?.isNotEmpty == true ? guest.dietaryRestrictions! : 'Sem alergias',
                 status: 'Conta ligada',
                 onTap: () => _editMe(context, ref, guest),
               ),
@@ -329,7 +326,7 @@ class _GuestProfileBody extends ConsumerWidget {
                     initials: _initialsOf(c.name),
                     color: AppTheme.accentTint,
                     name: c.isChild && c.childAge != null ? '${c.name} · ${c.childAge} anos' : c.name,
-                    detail: [c.menu ?? 'Menu por escolher', c.allergies.isEmpty ? 'Sem alergias' : c.allergies.join(', ')].join(' · '),
+                    detail: c.allergies.isEmpty ? 'Sem alergias' : c.allergies.join(', '),
                     status: c.phone?.isNotEmpty == true ? 'Telemóvel ${c.phone}' : 'Sem contacto',
                     muted: c.phone?.isNotEmpty != true,
                     onTap: () async {
@@ -413,15 +410,6 @@ class _GuestProfileBody extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Hi.buildingStorefront),
-              title: const Text('Menu'),
-              subtitle: Text(guest.menuSelection ?? 'Por escolher'),
-              onTap: () {
-                Navigator.of(sheet).pop();
-                _editField(context, ref, title: 'Menu', guest: guest, currentValue: (g) => g.menuSelection, onSave: updateOwnGuestMenu);
-              },
-            ),
             ListTile(
               leading: const Icon(Hi.noSymbol),
               title: const Text('Alergias ou restrições'),

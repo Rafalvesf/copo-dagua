@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../shared/public_link.dart';
+import '../models/models.dart' show EventType;
 import '../supabase/supabase_config.dart';
 
 /// Partes da página do evento que o organizador pode mostrar ou esconder
@@ -56,6 +57,12 @@ class GuestSections {
   bool get groupsCreate => flag('opt_groups_create', fallback: true);
   bool get kidsFree => flag('opt_kids_free', fallback: false);
   bool get companionDetails => flag('opt_companion_details', fallback: true);
+
+  /// Perguntar alergias no onboarding do convidado (2026-11-15): só faz
+  /// sentido quando o menu é escolhido pelo organizador (catering do
+  /// espaço, ex.: casamentos). Num restaurante cada um escolhe o prato no
+  /// dia. O organizador pode mudar em «Para os convidados».
+  bool askAllergies(EventType t) => flag('opt_ask_allergies', fallback: cateringByOrganizer(t));
 
   /// A mesa já se mostra ao convidado, dada a data do evento.
   bool tableVisible(DateTime? eventDate) {
@@ -169,3 +176,10 @@ Future<CheckIn> checkInTicket(String code) async {
     return const CheckIn(CheckInResult.error);
   }
 }
+
+/// Tipos de evento em que, por omissão, o menu é escolhido pelo
+/// organizador e servido a todos (catering).
+bool cateringByOrganizer(EventType t) => switch (t) {
+      EventType.wedding || EventType.vowRenewal || EventType.baptism || EventType.communion || EventType.corporate => true,
+      _ => false,
+    };

@@ -29,7 +29,8 @@ import '../widgets/invite_envelope.dart';
 ///
 /// 1. Sem conta: sugere a app/conta (nunca obrigatório) — "Continuar aqui".
 /// 2. O convite completo: tudo o que o organizador preencheu.
-/// 3. "Confirmar presença": nome → acompanhantes, menu e alergias
+/// 3. "Confirmar presença": nome → acompanhantes (e alergias, se o
+///    organizador as pedir)
 ///    (obrigatórios). "Não vou poder": só o nome.
 /// 4. Resposta enviada, com a sugestão de criar conta.
 ///
@@ -646,7 +647,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
           ),
           const SizedBox(height: 10),
           const Text(
-            'A seguir pedimos nome, acompanhantes, menu e alergias.',
+            'A seguir pedimos o teu nome e quem vai contigo.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
           ),
@@ -784,7 +785,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
 
   static String _personDetail(String? menu, String? allergies) {
     final al = (allergies ?? '').trim();
-    return [menu ?? '—', al.isEmpty ? 'sem alergias' : al.toLowerCase()].join(' · ');
+    return al.isEmpty ? 'Sem alergias' : al;
   }
 }
 

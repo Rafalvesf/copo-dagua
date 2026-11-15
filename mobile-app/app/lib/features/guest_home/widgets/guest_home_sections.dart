@@ -44,8 +44,6 @@ int? programMinutes(String raw) {
   return h * 60 + min;
 }
 
-String _cap(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
-
 
 const _weekdays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -213,10 +211,8 @@ class GuestAnswerCard extends ConsumerWidget {
       );
     }
     final companions = ref.watch(guestCompanionsProvider(guest.id)).value ?? const <GuestCompanion>[];
-    String detail(String? menu, String? allergies) => [
-          menu?.isNotEmpty == true ? _cap(menu!) : 'Menu por escolher',
-          allergies?.isNotEmpty == true ? allergies! : 'sem alergias',
-        ].join(' · ');
+    // Sem menu (2026-11-15): cada um escolhe no restaurante.
+    String detail(String? menu, String? allergies) => allergies?.isNotEmpty == true ? allergies! : 'Sem alergias';
     final rows = <(String, String)>[
       ('Tu', detail(guest.menuSelection, guest.dietaryRestrictions)),
       for (final c in companions) (c.name, detail(c.menu, c.allergies.isEmpty ? null : c.allergies.join(', '))),
