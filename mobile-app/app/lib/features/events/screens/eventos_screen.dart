@@ -699,15 +699,14 @@ final _orgSummaryProvider = FutureProvider.autoDispose.family<_OrgSummary, Strin
 class _GuestSteps {
   final bool answered;
   final bool declined;
-  final bool hasMenu;
   final bool hasGifts;
   final bool gave;
-  const _GuestSteps({this.answered = true, this.declined = false, this.hasMenu = true, this.hasGifts = false, this.gave = false});
+  const _GuestSteps({this.answered = true, this.declined = false, this.hasGifts = false, this.gave = false});
 
-  // Presença, menu e presente com o visto verde (mockup 2026-11-11).
+  // Presença e presente com o visto verde (mockup 2026-11-11; o menu saiu
+  // a 2026-11-15).
   List<(String, String, bool)> get steps => [
         ('rsvp', 'Presença', answered),
-        if (!declined) ('menu', 'Menu', hasMenu),
         if (hasGifts) ('gift', 'Presente', gave),
       ];
 }
@@ -734,7 +733,6 @@ final _guestStepsProvider = FutureProvider.autoDispose.family<_GuestSteps, Strin
   return _GuestSteps(
     answered: row == null || row['rsvp_status'] != 'pending',
     declined: row == null || row['rsvp_status'] == 'declined',
-    hasMenu: (row?['menu_selection'] as String?)?.isNotEmpty == true,
     hasGifts: r[1].isNotEmpty,
     gave: r[2].isNotEmpty || r[3].isNotEmpty || r[4].isNotEmpty,
   );

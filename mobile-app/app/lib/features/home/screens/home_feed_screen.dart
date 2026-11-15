@@ -240,7 +240,7 @@ class _PresenceCard extends StatelessWidget {
                   Text('A tua presença',
                       style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   SizedBox(height: 2),
-                  Text('Resposta, menu, acompanhantes e mesa',
+                  Text('Resposta, acompanhantes e mesa',
                       style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
                 ],
               ),

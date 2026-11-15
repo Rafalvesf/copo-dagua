@@ -11,7 +11,6 @@ import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
-import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -20,6 +19,7 @@ import '../../settings/screens/settings_screen.dart' show GuestAccountSections;
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import '../../../shared/widgets/page_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 /// "O meu perfil" — pedido explícito do utilizador (mockup de
@@ -186,39 +186,27 @@ class _GuestProfileBody extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 140),
           children: [
             // Redesign 2026-10-19 (canvas "Convidado — perfil (redesign)").
-            SizedBox(
-              height: 46,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: CircleBackButton(onTap: () => context.canPop() ? context.pop() : context.go('/eventos')),
-                  ),
-                  const Text(
-                    'A tua presença',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
+            // Kit das páginas (2026-11-15): voltar, título à esquerda e o
+            // cartão do perfil. Sem «Em modo convidado»: só a categoria.
+            KitHeader(onBack: () => context.canPop() ? context.pop() : context.go('/eventos')),
+            const KitTitle('A tua presença'),
+            const SizedBox(height: 16),
             _GuestHeader(
               name: profile.fullName,
               email: profile.email,
               avatarUrl: profile.avatarUrl,
-              chip: profile.role == UserRole.couple ? 'Em modo convidado' : (subtitle.isEmpty || guest == null ? 'Convidado' : subtitle),
+              chip: subtitle.isEmpty || guest == null ? 'Convidado' : subtitle,
               onChangePhoto: () => _pickAndUploadAvatar(context, ref),
             ),
-            const SizedBox(height: 18),
             // Sem linha na lista de convidados (pedido 2026-11: a
             // mensagem antiga aparecia a quem organiza o próprio evento e
             // a quem já tinha entrado com o código).
             if (guest == null)
               Container(
+                margin: const EdgeInsets.only(top: 16),
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                decoration: softCard(),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
                 child: isOrganizer
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -229,7 +217,7 @@ class _GuestProfileBody extends ConsumerWidget {
                           ),
                           const SizedBox(height: 6),
                           const Text(
-                            'Como organizas este evento, não tens resposta, menu nem mesa aqui. Para voltar a organizar, usa o separador Eventos.',
+                            'Como organizas este evento, não tens resposta nem mesa aqui. Para voltar a organizar, usa o separador Eventos.',
                             style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                           ),
                         ],
@@ -243,14 +231,14 @@ class _GuestProfileBody extends ConsumerWidget {
                           ),
                           const SizedBox(height: 6),
                           const Text(
-                            'Já podes ver o programa, a galeria e as novidades. Assim que o organizador confirmar, respondes, escolhes o menu e vês a tua mesa.',
+                            'Já podes ver o programa, a galeria e as novidades. Assim que o organizador confirmar, respondes e vês a tua mesa.',
                             style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
                           ),
                         ],
                       ),
               )
             else ...[
-              const _Caps('A tua resposta'),
+              const KitCaps('A tua resposta'),
               _Segmented(
                 going: guest.rsvpStatus != RsvpStatus.declined,
                 onChanged: (going) async {
@@ -271,21 +259,12 @@ class _GuestProfileBody extends ConsumerWidget {
                   }
                 },
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 24, 0, 6),
-                child: Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Quem vai',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                    ),
-                  ),
-                  // Só enquanto houver lugar, segundo o limite dado pelo
-                  // organizador (091).
-                  if (companions.length < guest.maxCompanions)
-                    SnappyTap(
-                      onTap: () async {
+              KitSection(
+                'Quem vai',
+                // Só enquanto houver lugar, segundo o limite dado pelo
+                // organizador (091).
+                action: companions.length < guest.maxCompanions ? '+ Acompanhante' : null,
+                onAction: () async {
                         // Nome, idade e telemóvel/email (2026-10-19): com o
                         // contacto o acompanhante pode depois entrar na app
                         // e ficar ligado a esta resposta.
@@ -298,13 +277,9 @@ class _GuestProfileBody extends ConsumerWidget {
                         );
                         ref.invalidate(guestCompanionsProvider(guest.id));
                       },
-                      child: Text('+ Acompanhante', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-                    ),
-                ],
-              ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(top: 0, bottom: 12),
                 child: Text(
                   guest.maxCompanions == 0
                       ? 'Este convite é só para ti.'
@@ -316,10 +291,7 @@ class _GuestProfileBody extends ConsumerWidget {
                 initials: _initialsOf(profile.fullName),
                 color: AppColors.yellow,
                 name: 'Tu',
-                detail: [
-                  guest.menuSelection?.isNotEmpty == true ? guest.menuSelection! : 'Menu por escolher',
-                  guest.dietaryRestrictions?.isNotEmpty == true ? guest.dietaryRestrictions! : 'Sem alergias',
-                ].join(' · '),
+                detail: guest.dietaryRestrictions?.isNotEmpty == true ? guest.dietaryRestrictions! : 'Sem alergias',
                 status: 'Conta ligada',
                 onTap: () => _editMe(context, ref, guest),
               ),
@@ -329,7 +301,7 @@ class _GuestProfileBody extends ConsumerWidget {
                     initials: _initialsOf(c.name),
                     color: AppTheme.accentTint,
                     name: c.isChild && c.childAge != null ? '${c.name} · ${c.childAge} anos' : c.name,
-                    detail: [c.menu ?? 'Menu por escolher', c.allergies.isEmpty ? 'Sem alergias' : c.allergies.join(', ')].join(' · '),
+                    detail: c.allergies.isEmpty ? 'Sem alergias' : c.allergies.join(', '),
                     status: c.phone?.isNotEmpty == true ? 'Telemóvel ${c.phone}' : 'Sem contacto',
                     muted: c.phone?.isNotEmpty != true,
                     onTap: () async {
@@ -355,13 +327,9 @@ class _GuestProfileBody extends ConsumerWidget {
                   status: 'Sem conta — está contigo',
                   muted: true,
                 ),
-              const _Caps('Detalhes'),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-                decoration: softCard(),
-                child: Column(children: [
-              _InfoLine(
-                icon: Hi.tableCells,
+              const KitCaps('Detalhes'),
+              KitGroup([
+              KitSetRow(
                 label: 'A tua mesa',
                 value: tableAsync.maybeWhen(data: (t) => t == null ? 'Por atribuir' : 'Mesa $t', orElse: () => '…'),
                 onTap: tableAsync.maybeWhen(data: (t) => t, orElse: () => null) == null
@@ -370,9 +338,7 @@ class _GuestProfileBody extends ConsumerWidget {
                           MaterialPageRoute(builder: (_) => GuestTableScreen(weddingId: weddingId, tableNumber: tableAsync.value)),
                         ),
               ),
-              const Divider(height: 1, thickness: 1, color: Color(0xFFEEF2EC)),
-              _InfoLine(
-                icon: Hi.phone,
+              KitSetRow(
                 label: 'Telemóvel',
                 value: guest.phone?.isNotEmpty == true ? guest.phone! : 'Adicionar',
                 onTap: () => _editField(
@@ -388,15 +354,14 @@ class _GuestProfileBody extends ConsumerWidget {
                   ),
                 ),
               ),
-                ]),
-              ),
+              ]),
             ],
             // Definições da conta dentro do Perfil (pedido 2026-10-17).
             if (profile.role == UserRole.guest)
               const GuestAccountSections()
             else ...[
-              const _Caps('Conta'),
-              _InfoLine(icon: Hi.cog6Tooth, label: 'Definições do teu evento', value: '', onTap: onMore),
+              const KitCaps('Conta'),
+              KitGroup([KitSetRow(label: 'Definições do teu evento', onTap: onMore)]),
             ],
           ],
         );
@@ -413,15 +378,6 @@ class _GuestProfileBody extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Hi.buildingStorefront),
-              title: const Text('Menu'),
-              subtitle: Text(guest.menuSelection ?? 'Por escolher'),
-              onTap: () {
-                Navigator.of(sheet).pop();
-                _editField(context, ref, title: 'Menu', guest: guest, currentValue: (g) => g.menuSelection, onSave: updateOwnGuestMenu);
-              },
-            ),
             ListTile(
               leading: const Icon(Hi.noSymbol),
               title: const Text('Alergias ou restrições'),
@@ -460,11 +416,10 @@ class _Segmented extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return V2Segment(
-      options: const ['Vou', 'Não vou'],
-      selected: going ? 0 : 1,
-      onChanged: (i) => onChanged(i == 0),
-    );
+    return KitPills([
+      KitPill(label: 'Vou', selected: going, onTap: () => onChanged(true)),
+      KitPill(label: 'Não vou', selected: !going, onTap: () => onChanged(false)),
+    ], top: 0);
   }
 }
 
@@ -489,52 +444,27 @@ class _PersonLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Linha da lista (kit das páginas): avatar 44, nome 16, meta 13 e a
+    // etiqueta à direita.
     final row = Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: softCard(),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Row(
         children: [
-          V2Avatar(initials.isEmpty ? name : initials),
+          V2Avatar(initials.isEmpty ? name : initials, size: 44),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text(detail, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(detail, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          V2Chip(status, strong: !muted, tone: muted ? V2Tone.grey : V2Tone.green),
-        ],
-      ),
-    );
-    return onTap == null ? row : SnappyTap(onTap: onTap!, child: row);
-  }
-}
-
-class _InfoLine extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final VoidCallback? onTap;
-
-  const _InfoLine({required this.icon, required this.label, required this.value, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final row = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 11),
-      child: Row(
-        children: [
-          StickerIcon(icon, size: 36, turns: StickerIcon.tilt(label.length)),
-          const SizedBox(width: 12),
-          Expanded(child: Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.ink))),
-          Text(value, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted)),
-          const SizedBox(width: 6),
-          SizedBox(width: 18, child: onTap == null ? null : const Icon(Hi.chevronRight, size: 18, color: Color(0xFFB5B0A6))),
+          KitTag(status, kind: muted ? KitTagKind.neutral : KitTagKind.green),
         ],
       ),
     );
@@ -588,22 +518,6 @@ class _ProfileRow extends StatelessWidget {
   }
 }
 
-class _Caps extends StatelessWidget {
-  final String text;
-  const _Caps(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 24, 0, 12),
-      child: Text(
-        text.toUpperCase(),
-        style: const TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted),
-      ),
-    );
-  }
-}
-
 /// Cabeçalho igual ao do perfil do organizador: foto redonda (88) com o
 /// botão da câmara, nome, email e uma etiqueta.
 class _GuestHeader extends StatelessWidget {
@@ -623,68 +537,73 @@ class _GuestHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Cartão do perfil (kit das páginas, 2026-11-15): branco, cantos 22,
+    // interior 18, sem sombra; foto 76 plana com a câmara, nome 20, email
+    // 13 e a etiqueta.
     final initials = Center(
       child: Text(
         _initialsOf(name).isEmpty ? '?' : _initialsOf(name),
-        style: TextStyle(fontSize: AppFontSize.h1, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.ink),
       ),
     );
-    return Column(
-      children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              width: 84,
-              height: 84,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: StickerIcon.shadow,
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      child: Row(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 76,
+                height: 76,
+                decoration: const BoxDecoration(color: Color(0xFFE7D9C3), shape: BoxShape.circle),
+                child: ClipOval(
+                  child: avatarUrl == null
+                      ? initials
+                      : SizedNetworkImage(avatarUrl!, fit: BoxFit.cover, errorBuilder: (context, error, stack) => initials),
+                ),
               ),
-              child: ClipOval(
-                child: avatarUrl == null
-                    ? initials
-                    : SizedNetworkImage(avatarUrl!, fit: BoxFit.cover, errorBuilder: (context, error, stack) => initials),
-              ),
-            ),
-            Positioned(
-              bottom: -2,
-              right: -4,
-              child: Semantics(
-                button: true,
-                label: 'Mudar foto',
-                child: SnappyTap(
-                  onTap: onChangePhoto,
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: AppTheme.accentOliveDark,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+              Positioned(
+                bottom: -2,
+                right: -2,
+                child: Semantics(
+                  button: true,
+                  label: 'Mudar foto',
+                  child: SnappyTap(
+                    onTap: onChangePhoto,
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: AppTheme.ink,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: const Icon(Hi.camera, size: 14, color: Colors.white),
                     ),
-                    child: const Icon(Hi.camera, size: 16, color: Colors.white),
                   ),
                 ),
               ),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, maxLines: 2, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                if (email.isNotEmpty)
+                  Text(email, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                const SizedBox(height: 8),
+                KitTag(chip, kind: KitTagKind.neutral),
+              ],
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Text(
-          name,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
-        ),
-        if (email.isNotEmpty) ...[
-          const SizedBox(height: 2),
-          Text(email, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          ),
         ],
-        const SizedBox(height: 8),
-        V2Chip(chip),
-      ],
+      ),
     );
   }
 }

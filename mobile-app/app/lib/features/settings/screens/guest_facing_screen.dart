@@ -1338,8 +1338,18 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
         weddingId: widget.weddingId,
         optKey: 'opt_companion_details',
         fallback: true,
-        title: 'Pedir nome, menu e alergias',
-        subtitle: 'De cada acompanhante, na resposta',
+        title: 'Pedir os dados dos acompanhantes',
+        subtitle: 'Nome e idade de cada um, na resposta',
+      ),
+      // Alergias (2026-11-15): só quando o menu é vosso (catering). Num
+      // restaurante cada um escolhe no dia. Ligado por omissão nos
+      // casamentos, batizados, comunhões e eventos de empresa.
+      _OptSwitch(
+        weddingId: widget.weddingId,
+        optKey: 'opt_ask_allergies',
+        fallback: cateringByOrganizer(ref.read(weddingControllerProvider).wedding?.eventType ?? EventType.wedding),
+        title: 'Perguntar alergias',
+        subtitle: 'Quando são vocês a escolher o menu (catering)',
       ),
       _OptSwitch(
         weddingId: widget.weddingId,

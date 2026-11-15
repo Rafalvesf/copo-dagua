@@ -179,8 +179,10 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         _Step.attending,
         if (_limit > 0) _Step.companions,
         _Step.ages,
-        _Step.menu,
-        _Step.allergies,
+        // Menu (carne / peixe / vegetariano) saiu (2026-11-15): cada um
+        // escolhe no menu do restaurante. Alergias só quando o menu é do
+        // organizador (catering), ver GuestSections.askAllergies.
+        if (_opts.askAllergies(_eventType)) _Step.allergies,
         // «És convidado de quem?» saiu (2026-11-14): a app já não é só
         // para casamentos. «Como nos conheces?» também: é o organizador
         // que diz quem é cada pessoa ao aceitá-la (2026-11-14).
@@ -374,8 +376,8 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
       return _ConfirmedView(
         rows: [
           names.isEmpty ? 'Vais tu' : '${_people.length} pessoas: tu, ${names.join(', ')}',
-          if (_people.any((p) => p.menu != null)) _people.map((p) => p.menu ?? '—').join(' · '),
-          _people.every((p) => p.allAllergies.isEmpty)
+          if (_opts.askAllergies(_eventType))
+            _people.every((p) => p.allAllergies.isEmpty)
               ? 'Sem alergias indicadas'
               : 'Alergias: ${_people.where((p) => p.allAllergies.isNotEmpty).map((p) => '${p.allAllergies.join(', ')} (${p == _me ? 'tu' : p.name})').join(', ')}',
           for (final c in _companions.where((c) => c.willInstall))
