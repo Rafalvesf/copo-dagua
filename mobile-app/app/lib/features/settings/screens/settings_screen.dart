@@ -562,7 +562,7 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(52),
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
               ),
               child: const Text('Guardar'),
             ),

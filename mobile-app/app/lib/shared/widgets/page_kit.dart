@@ -138,6 +138,7 @@ class KitBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(height / 2),
         child: SizedBox(
           height: height,
+          width: double.infinity,
           child: Stack(children: [
             const Positioned.fill(child: ColoredBox(color: _track)),
             FractionallySizedBox(
@@ -557,7 +558,7 @@ class KitAlert extends StatelessWidget {
               minimumSize: const Size(0, 36),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               shape: const StadiumBorder(),
-              textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(action!),

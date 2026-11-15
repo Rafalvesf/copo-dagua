@@ -145,6 +145,14 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
   feito → parabéns; convites e «vou» → apaixonada; aceitar/juntar →
   contente; sugestões → ideia; conversas vazias → piscar o olho. Substitui
   as duas taças.
+- **Páginas** (`shared/widgets/page_kit.dart`, canvases «Páginas do
+  evento / parceiro / convidado», 2026-11-14): voltar redondo branco 44 numa
+  linha com as ações à direita («+» preto 44, ⋯ branco 44); título de página
+  28 à esquerda por baixo e subtítulo 13; filtros em pílula 38 **em cima**
+  (com contador); **resumo do topo** branco (cantos 22, interior 18, sem
+  sombra): rótulo 12 em maiúsculas, número 40, unidade 13, barra verde 10 e
+  etiquetas ou uma linha 13 por baixo — nunca cartão verde; listas em grupos
+  de linhas (avatar 44, nome 16, meta 13, etiqueta à direita).
 - **Emojis:** só no "Parabéns! 🎉" do fim do criar evento (pedido do
   Rafael, 2026-11-12). Em mais lado nenhum.
 

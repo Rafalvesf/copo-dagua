@@ -2074,7 +2074,7 @@ class _CodeHero extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final code = wedding.guestCode;
     final isPublic = ref.watch(eventIsPublicProvider(wedding.id)).value ?? false;
-    const btnText = TextStyle(fontSize: 14, fontWeight: FontWeight.w700);
+    const btnText = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700);
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
