@@ -552,6 +552,10 @@ Future<void> _shoot(
 }) async {
   tester.view.physicalSize = const Size(1170, 2532);
   tester.view.devicePixelRatio = 3;
+  // Barra das horas e da bateria (iPhone: 47 em cima, 34 em baixo), para
+  // as capturas mostrarem o topo como no telemóvel.
+  tester.view.padding = const FakeViewPadding(top: 141, bottom: 102);
+  tester.view.viewPadding = const FakeViewPadding(top: 141, bottom: 102);
   addTearDown(tester.view.reset);
 
   final previousOnError = FlutterError.onError;
@@ -616,6 +620,10 @@ Future<void> _shootTransition(
 ) async {
   tester.view.physicalSize = const Size(1170, 2532);
   tester.view.devicePixelRatio = 3;
+  // Barra das horas e da bateria (iPhone: 47 em cima, 34 em baixo), para
+  // as capturas mostrarem o topo como no telemóvel.
+  tester.view.padding = const FakeViewPadding(top: 141, bottom: 102);
+  tester.view.viewPadding = const FakeViewPadding(top: 141, bottom: 102);
   addTearDown(tester.view.reset);
   final previousOnError = FlutterError.onError;
   FlutterError.onError = (details) {
