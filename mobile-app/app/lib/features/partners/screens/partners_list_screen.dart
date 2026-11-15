@@ -755,7 +755,7 @@ class _FeaturedCard extends StatelessWidget {
     final rating = _ratingLabel(partner);
     // Quem trabalha só por orçamento: "Por orçamento" no lugar do preço
     // (2026-11-11).
-    final price = partner.startingPrice != null ? ('DESDE', euros(partner.startingPrice!)) : ('POR', 'Orçamento');
+    final price = partner.startingPrice != null ? ('DESDE', euros(partner.startingPrice!)) : ('', 'Por orçamento');
     return FeaturedOverlayCard(
       onTap: onTap,
       image: _PartnerPhoto(partner),
