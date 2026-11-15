@@ -146,19 +146,23 @@ final partnerPackagesForProvider =
           .select()
           .eq('partner_id', partnerId)
           .order('position', ascending: true);
-      return rows
-          .map(
-            (row) => ServicePackage(
-              id: row['id'] as String,
-              partnerId: row['partner_id'] as String,
-              name: row['name'] as String,
-              description: row['description'] as String? ?? '',
-              price: (row['price'] as num).toDouble(),
-              isStartingPrice: row['is_starting_price'] as bool? ?? false,
-              position: row['position'] as int? ?? 0,
-            ),
-          )
-          .toList();
+      return rows.map(ServicePackage.fromRow).toList();
+    });
+
+/// Extras de um parceiro (188). Antes da migração a tabela não existe:
+/// devolve vazio em vez de falhar o perfil.
+final partnerExtrasForProvider =
+    FutureProvider.family<List<ServiceExtra>, String>((ref, partnerId) async {
+      try {
+        final rows = await supabase
+            .from('partner_service_extras')
+            .select()
+            .eq('partner_id', partnerId)
+            .order('position', ascending: true);
+        return rows.map(ServiceExtra.fromRow).toList();
+      } catch (_) {
+        return const <ServiceExtra>[];
+      }
     });
 
 /// Capacidade de um espaço: soma de lugares (`seats × quantity`) dos

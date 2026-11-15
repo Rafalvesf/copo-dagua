@@ -16,6 +16,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/onb_kit.dart';
 
 const _maxPackages = 3;
 
@@ -66,6 +67,11 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
           price: result.price,
           isStartingPrice: result.isStartingPrice,
           position: currentCount,
+          includes: result.includes,
+          excludes: result.excludes,
+          priceUnit: result.priceUnit,
+          minPeople: result.minPeople,
+          maxPeople: result.maxPeople,
         ));
   }
 
@@ -76,6 +82,11 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
       description: pkg.description,
       price: pkg.price,
       isStartingPrice: pkg.isStartingPrice,
+      includes: pkg.includes,
+      excludes: pkg.excludes,
+      priceUnit: pkg.priceUnit,
+      minPeople: pkg.minPeople,
+      maxPeople: pkg.maxPeople,
     );
     if (result == null) return;
     await _withBusy(() => editServicePackage(
@@ -84,10 +95,40 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
           description: result.description,
           price: result.price,
           isStartingPrice: result.isStartingPrice,
+          includes: result.includes,
+          excludes: result.excludes,
+          priceUnit: result.priceUnit,
+          minPeople: result.minPeople,
+          maxPeople: result.maxPeople,
         ));
   }
 
   Future<void> _removePackage(ServicePackage pkg) => _withBusy(() => removeServicePackage(pkg.id));
+
+  Future<void> _editExtra(List<ServicePackage> packages, List<ServiceExtra> extras, [ServiceExtra? extra]) async {
+    final result = await showIslandSheet<_ExtraResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _EditExtraSheet(extra: extra, packages: packages),
+    );
+    if (result == null) return;
+    await _withBusy(() => saveServiceExtra(
+          id: extra?.id,
+          name: result.name,
+          details: result.details,
+          price: result.price,
+          priceUnit: result.priceUnit,
+          packageIds: result.packageIds,
+          position: extras.length,
+        ));
+    ref.invalidate(partnerOwnExtrasProvider);
+  }
+
+  Future<void> _removeExtra(ServiceExtra e) async {
+    await _withBusy(() => removeServiceExtra(e.id));
+    ref.invalidate(partnerOwnExtrasProvider);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +194,8 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                               KitRow(
                                 title: pkg.name,
                                 sub: [
-                                  '${pkg.isStartingPrice ? 'A partir de ' : ''}${euros(pkg.price)}',
+                                  '${pkg.isStartingPrice ? 'Desde ' : ''}${euros(pkg.price)}${priceUnitSuffix(pkg.priceUnit)}',
+                                  if (pkg.includes.isNotEmpty) '${pkg.includes.length} ${pkg.includes.length == 1 ? 'coisa incluída' : 'coisas incluídas'}',
                                   if (pkg.description.trim().isNotEmpty) pkg.description.trim(),
                                 ].join(' · '),
                                 onTap: _busy ? null : () => _editPackage(pkg),
@@ -195,6 +237,49 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                               ),
                             ),
                           ),
+                        // Extras (188): só aparecem ao cliente depois de ele
+                        // escolher um dos pacotes marcados.
+                        if (packages.isNotEmpty) ...[
+                          KitSection('Extras', action: '+ Adicionar', onAction: _busy ? null : () => _editExtra(packages, ref.read(partnerOwnExtrasProvider).value ?? const [])),
+                          const Text(
+                            'Aparecem ao cliente só depois de escolher um dos pacotes que marcares.',
+                            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                          ),
+                          const SizedBox(height: 10),
+                          Builder(builder: (context) {
+                            final extras = ref.watch(partnerOwnExtrasProvider).value ?? const <ServiceExtra>[];
+                            if (extras.isEmpty) return const SizedBox.shrink();
+                            String where(ServiceExtra e) => e.packageIds.isEmpty
+                                ? 'Em todos os pacotes'
+                                : packages.where((p) => e.packageIds.contains(p.id)).map((p) => p.name).join(', ');
+                            return KitGroup([
+                              for (final e in extras)
+                                KitRow(
+                                  title: e.name,
+                                  sub: where(e),
+                                  onTap: _busy ? null : () => _editExtra(packages, extras, e),
+                                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                                    Text('${euros(e.price)}${priceUnitSuffix(e.priceUnit)}',
+                                        style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                                    PopupMenuButton<String>(
+                                      tooltip: 'Mais opções',
+                                      padding: EdgeInsets.zero,
+                                      icon: const Icon(Hi.ellipsisHorizontal, size: 18, color: AppTheme.inkMuted),
+                                      onSelected: (v) {
+                                        if (_busy) return;
+                                        if (v == 'edit') _editExtra(packages, extras, e);
+                                        if (v == 'delete') _removeExtra(e);
+                                      },
+                                      itemBuilder: (_) => const [
+                                        PopupMenuItem(value: 'edit', child: Text('Editar')),
+                                        PopupMenuItem(value: 'delete', child: Text('Remover')),
+                                      ],
+                                    ),
+                                  ]),
+                                ),
+                            ]);
+                          }),
+                        ],
                       ],
                     ],
                   );
@@ -375,17 +460,28 @@ class _PackageCard extends StatelessWidget {
   }
 }
 
+
 class EditPackageResult {
   final String name;
   final String description;
   final double price;
   final bool isStartingPrice;
+  final List<String> includes;
+  final String? excludes;
+  final String priceUnit;
+  final int? minPeople;
+  final int? maxPeople;
 
   const EditPackageResult({
     required this.name,
     required this.description,
     required this.price,
     required this.isStartingPrice,
+    this.includes = const [],
+    this.excludes,
+    this.priceUnit = 'total',
+    this.minPeople,
+    this.maxPeople,
   });
 }
 
@@ -395,6 +491,11 @@ Future<EditPackageResult?> showEditPackageSheet(
   String description = '',
   double price = 0,
   bool isStartingPrice = false,
+  List<String> includes = const [],
+  String? excludes,
+  String priceUnit = 'total',
+  int? minPeople,
+  int? maxPeople,
 }) {
   return showIslandSheet<EditPackageResult>(
     context: context,
@@ -405,21 +506,50 @@ Future<EditPackageResult?> showEditPackageSheet(
       description: description,
       price: price,
       isStartingPrice: isStartingPrice,
+      includes: includes,
+      excludes: excludes,
+      priceUnit: priceUnit,
+      minPeople: minPeople,
+      maxPeople: maxPeople,
     ),
   );
 }
 
+/// Linha vaga (2026-11-15: «pede ao parceiro para ser específico»): sem
+/// um número nem uma unidade (horas, pessoas, unidades…).
+bool isVagueLine(String line) {
+  final t = line.trim().toLowerCase();
+  if (t.isEmpty) return false;
+  if (RegExp(r'\d').hasMatch(t)) return false;
+  const units = ['hora', 'pessoa', 'unidade', 'minuto', 'dia', 'noite', 'página', 'foto', 'garrafa', 'prato', 'convidado'];
+  final hasNumberWord = RegExp(r'\b(um|uma|dois|duas|três|quatro|cinco|seis|sete|oito|nove|dez|meio|meia)\b').hasMatch(t);
+  return !(hasNumberWord && units.any(t.contains));
+}
+
+/// Folha do pacote (mockup «Perfis dos parceiros» → Novo menu / pacote,
+/// 2026-11-15): nome, preço e unidade, «O que inclui» uma linha por
+/// coisa (as vagas ficam a vermelho), «Não inclui» e nº de pessoas.
 class _EditPackageSheet extends StatefulWidget {
   final String name;
   final String description;
   final double price;
   final bool isStartingPrice;
+  final List<String> includes;
+  final String? excludes;
+  final String priceUnit;
+  final int? minPeople;
+  final int? maxPeople;
 
   const _EditPackageSheet({
     required this.name,
     required this.description,
     required this.price,
     required this.isStartingPrice,
+    required this.includes,
+    required this.excludes,
+    required this.priceUnit,
+    required this.minPeople,
+    required this.maxPeople,
   });
 
   @override
@@ -429,23 +559,46 @@ class _EditPackageSheet extends StatefulWidget {
 class _EditPackageSheetState extends State<_EditPackageSheet> {
   late final _name = TextEditingController(text: widget.name);
   late final _description = TextEditingController(text: widget.description);
-  late final _price = TextEditingController(
-    text: widget.price == 0 ? '' : widget.price.toStringAsFixed(0),
-  );
-  late bool _isStartingPrice = widget.isStartingPrice;
+  late final _price = TextEditingController(text: widget.price == 0 ? '' : widget.price.toStringAsFixed(0));
+  late final _excludes = TextEditingController(text: widget.excludes ?? '');
+  late final _min = TextEditingController(text: widget.minPeople?.toString() ?? '');
+  late final _max = TextEditingController(text: widget.maxPeople?.toString() ?? '');
+  late final List<TextEditingController> _lines = [
+    for (final l in widget.includes) TextEditingController(text: l),
+    if (widget.includes.isEmpty) ...[TextEditingController(), TextEditingController()],
+  ];
+  // 'total' | 'person' | 'from' (desde)
+  late String _unit = widget.isStartingPrice ? 'from' : widget.priceUnit;
+  bool _tried = false;
 
   @override
   void dispose() {
-    _name.dispose();
-    _description.dispose();
-    _price.dispose();
+    for (final c in [_name, _description, _price, _excludes, _min, _max, ..._lines]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
   Future<void> _save() async {
+    setState(() => _tried = true);
     if (_name.text.trim().isEmpty) return;
     final price = double.tryParse(_price.text.trim().replaceAll(',', '.')) ?? 0;
-    // Confirma que o preço já inclui IVA; se não, fica no formulário.
+    final includes = [for (final c in _lines) if (c.text.trim().isNotEmpty) c.text.trim()];
+    if (includes.isEmpty) return;
+    if (includes.any(isVagueLine)) {
+      final go = await showIslandDialog<bool>(
+        context: context,
+        builder: (d) => IslandAlert(
+          title: const Text('Algumas linhas não dizem quantidades'),
+          content: const Text('Os clientes escolhem melhor quando sabem quantos, quantas horas ou para quantas pessoas. Guardar mesmo assim?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(d).pop(false), child: const Text('Corrigir')),
+            FilledButton(onPressed: () => Navigator.of(d).pop(true), child: const Text('Guardar')),
+          ],
+        ),
+      );
+      if (go != true || !mounted) return;
+    }
     if (price > 0 && !await confirmVatIncluded(context, price)) return;
     if (!mounted) return;
     Navigator.of(context).pop(
@@ -453,54 +606,226 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
         name: _name.text.trim(),
         description: _description.text.trim(),
         price: price,
-        isStartingPrice: _isStartingPrice,
+        isStartingPrice: _unit == 'from',
+        includes: includes,
+        excludes: _excludes.text.trim().isEmpty ? null : _excludes.text.trim(),
+        priceUnit: _unit == 'person' ? 'person' : 'total',
+        minPeople: int.tryParse(_min.text.trim()),
+        maxPeople: int.tryParse(_max.text.trim()),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    const red = Color(0xFFC8553D);
+    final noIncludes = _tried && _lines.every((c) => c.text.trim().isEmpty);
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.9),
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         decoration: const BoxDecoration(
           color: AppTheme.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Pacote', style: TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.xl)),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(widget.name.isEmpty ? 'Novo pacote' : 'Pacote',
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 22, color: AppTheme.ink)),
+              const SizedBox(height: 4),
+              const Text('Diz exatamente o que o cliente recebe. É isto que ele vê antes de pedir e o que fica combinado.',
+                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              const SizedBox(height: 16),
+              OnbField(controller: _name, label: 'Nome', maxLength: 40, error: _tried && _name.text.trim().isEmpty ? 'Dá um nome ao pacote.' : null),
+              const SizedBox(height: 14),
+              OnbField(controller: _price, label: 'Preço (€)', keyboardType: TextInputType.number),
+              const SizedBox(height: 10),
+              KitPills(top: 0, [
+                KitPill(label: 'Total', selected: _unit == 'total', onTap: () => setState(() => _unit = 'total')),
+                KitPill(label: 'Por pessoa', selected: _unit == 'person', onTap: () => setState(() => _unit = 'person')),
+                KitPill(label: 'Desde', selected: _unit == 'from', onTap: () => setState(() => _unit = 'from')),
+              ]),
+              const SizedBox(height: 18),
+              const OnbGroupLabel('O que inclui'),
+              const SizedBox(height: 4),
+              const Text('Uma coisa por linha, com quantidades, horas ou número de pessoas.',
+                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              const SizedBox(height: 8),
+              for (final c in _lines) ...[
+                OnbField(
+                  controller: c,
+                  hint: 'Ex.: Mesa de doces com 6 sobremesas',
+                  error: isVagueLine(c.text) ? 'Diz quantos: «6 sobremesas», «3 horas», «até 120 pessoas».' : null,
+                  onChanged: (_) => setState(() {}),
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (noIncludes)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Text('Escreve pelo menos uma coisa que o pacote inclui.', style: TextStyle(fontSize: 13, color: red)),
+                ),
+              OutlinedButton(
+                onPressed: _lines.length >= 12 ? null : () => setState(() => _lines.add(TextEditingController())),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.ink,
+                  minimumSize: const Size(0, 44),
+                  side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                  shape: const StadiumBorder(),
+                  textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
+                ),
+                child: const Text('Juntar linha'),
+              ),
+              const SizedBox(height: 18),
+              OnbField(controller: _excludes, label: 'Não inclui', hint: 'Ex.: bolo dos noivos, bar depois do jantar'),
+              const SizedBox(height: 4),
+              const Text('Evita surpresas: o que costumam perguntar e não está no preço.',
+                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              const SizedBox(height: 18),
+              const OnbGroupLabel('Para quantas pessoas'),
+              const SizedBox(height: 8),
+              Row(children: [
+                Expanded(child: OnbField(controller: _min, hint: 'Mínimo', keyboardType: TextInputType.number)),
+                const SizedBox(width: 10),
+                Expanded(child: OnbField(controller: _max, hint: 'Máximo', keyboardType: TextInputType.number)),
+              ]),
+              const SizedBox(height: 14),
+              OnbField(controller: _description, label: 'Descrição curta (opcional)'),
+              const SizedBox(height: 20),
+              PrimaryButton(label: 'Guardar pacote', onPressed: _save),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExtraResult {
+  final String name;
+  final List<String> details;
+  final double price;
+  final String priceUnit;
+  final List<String> packageIds;
+  const _ExtraResult(this.name, this.details, this.price, this.priceUnit, this.packageIds);
+}
+
+/// Folha do extra (mockup «Perfis dos parceiros» → Novo extra): o que é,
+/// exatamente, o preço e a unidade, e depois de que pacotes aparece.
+class _EditExtraSheet extends StatefulWidget {
+  final ServiceExtra? extra;
+  final List<ServicePackage> packages;
+  const _EditExtraSheet({required this.extra, required this.packages});
+
+  @override
+  State<_EditExtraSheet> createState() => _EditExtraSheetState();
+}
+
+class _EditExtraSheetState extends State<_EditExtraSheet> {
+  late final _name = TextEditingController(text: widget.extra?.name ?? '');
+  late final _price = TextEditingController(text: widget.extra == null ? '' : widget.extra!.price.toStringAsFixed(0));
+  late final List<TextEditingController> _lines = [
+    for (final l in widget.extra?.details ?? const <String>[]) TextEditingController(text: l),
+    if ((widget.extra?.details ?? const []).isEmpty) TextEditingController(),
+  ];
+  late String _unit = widget.extra?.priceUnit ?? 'total';
+  late final Set<String> _pkgs = {...?widget.extra?.packageIds};
+  bool _tried = false;
+
+  @override
+  void dispose() {
+    for (final c in [_name, _price, ..._lines]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _save() {
+    setState(() => _tried = true);
+    final price = double.tryParse(_price.text.trim().replaceAll(',', '.'));
+    final details = [for (final c in _lines) if (c.text.trim().isNotEmpty) c.text.trim()];
+    if (_name.text.trim().isEmpty || price == null || details.isEmpty) return;
+    // Todos marcados = vazio (aparece em qualquer pacote).
+    final ids = _pkgs.length == widget.packages.length ? <String>[] : _pkgs.toList();
+    Navigator.of(context).pop(_ExtraResult(_name.text.trim(), details, price, _unit, ids));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final allOn = _pkgs.isEmpty || _pkgs.length == widget.packages.length;
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.9),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+        decoration: const BoxDecoration(
+          color: AppTheme.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(widget.extra == null ? 'Novo extra' : 'Extra',
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 22, color: AppTheme.ink)),
+            const SizedBox(height: 4),
+            const Text('Aparece ao cliente só depois de ele escolher um dos pacotes que marcares.',
+                style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             const SizedBox(height: 16),
-            TextField(
-              controller: _name,
-              decoration: const InputDecoration(labelText: 'Nome'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _description,
-              maxLines: 3,
-              minLines: 2,
-              decoration: const InputDecoration(labelText: 'Descrição'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _price,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Preço (€)'),
-            ),
-            CheckboxListTile(
-              value: _isStartingPrice,
-              onChanged: (v) => setState(() => _isStartingPrice = v ?? false),
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Mostrar como "A partir de"', style: TextStyle(fontSize: AppFontSize.md)),
-            ),
+            OnbField(controller: _name, label: 'Nome', maxLength: 40, error: _tried && _name.text.trim().isEmpty ? 'Dá um nome ao extra.' : null),
+            const SizedBox(height: 14),
+            const OnbGroupLabel('O que é, exatamente'),
             const SizedBox(height: 8),
-            PrimaryButton(label: 'Guardar', onPressed: _save),
-          ],
+            for (final c in _lines) ...[
+              OnbField(
+                controller: c,
+                hint: 'Ex.: Gin, 3 cocktails da casa e cerveja',
+                error: isVagueLine(c.text) ? 'Diz quanto: «3 horas», «1 barman por 40 pessoas».' : null,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 8),
+            ],
+            OutlinedButton(
+              onPressed: _lines.length >= 6 ? null : () => setState(() => _lines.add(TextEditingController())),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.ink,
+                minimumSize: const Size(0, 44),
+                side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                shape: const StadiumBorder(),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+              child: const Text('Juntar linha'),
+            ),
+            const SizedBox(height: 14),
+            OnbField(controller: _price, label: 'Preço (€)', keyboardType: TextInputType.number,
+                error: _tried && double.tryParse(_price.text.trim().replaceAll(',', '.')) == null ? 'Indica o preço.' : null),
+            const SizedBox(height: 10),
+            KitPills(top: 0, [
+              KitPill(label: 'Total', selected: _unit == 'total', onTap: () => setState(() => _unit = 'total')),
+              KitPill(label: 'Por pessoa', selected: _unit == 'person', onTap: () => setState(() => _unit = 'person')),
+              KitPill(label: 'Por unidade', selected: _unit == 'unit', onTap: () => setState(() => _unit = 'unit')),
+            ]),
+            const SizedBox(height: 18),
+            const OnbGroupLabel('Aparece depois de escolherem'),
+            const SizedBox(height: 8),
+            KitGroup([
+              for (final p in widget.packages)
+                KitRow(
+                  title: p.name,
+                  trailing: Checkbox(
+                    value: allOn || _pkgs.contains(p.id),
+                    onChanged: (v) => setState(() {
+                      if (_pkgs.isEmpty) _pkgs.addAll(widget.packages.map((x) => x.id));
+                      v == true ? _pkgs.add(p.id) : _pkgs.remove(p.id);
+                    }),
+                  ),
+                ),
+            ]),
+            const SizedBox(height: 20),
+            PrimaryButton(label: 'Guardar extra', onPressed: _save),
+          ]),
         ),
       ),
     );

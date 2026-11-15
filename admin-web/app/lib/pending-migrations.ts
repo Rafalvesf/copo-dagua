@@ -333,6 +333,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O convidado vê os organizadores do evento e abre o perfil deles para os seguir («Ver perfil»).",
     check: { kind: "marker", id: "187" },
   },
+  {
+    file: "188_package_details_extras.sql",
+    date: "2026-11-15",
+    title: "Pacotes detalhados, extras e pedir um pacote",
+    what: "Pacotes com «Inclui / Não inclui», preço por pessoa/total/unidade e nº de pessoas; extras do parceiro que aparecem depois de escolher o pacote; o cliente pede o pacote e o parceiro aceita (cria a reserva) ou recusa.",
+    check: { kind: "marker", id: "188" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
