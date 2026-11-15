@@ -512,6 +512,10 @@ class Guest {
   /// convidado (ex: "Avó Lurdes"); aparece nos Lugares em vez do nome.
   final String? nickname;
 
+  /// `guests.linked_profile_id` (067) — a conta da pessoa na app, quando
+  /// já entrou com o link ou o código; serve para «Ver perfil».
+  final String? linkedProfileId;
+
   /// O nome a mostrar nos Lugares: o carinhoso, se existir.
   String get displayName => (nickname?.trim().isNotEmpty ?? false) ? nickname!.trim() : name;
 
@@ -538,6 +542,7 @@ class Guest {
     this.menuSelection,
     this.onboardingCompletedAt,
     this.nickname,
+    this.linkedProfileId,
   });
 
   Guest copyWith({
@@ -579,6 +584,7 @@ class Guest {
       menuSelection: menuSelection ?? this.menuSelection,
       onboardingCompletedAt: onboardingCompletedAt ?? this.onboardingCompletedAt,
       nickname: nickname,
+      linkedProfileId: linkedProfileId,
     );
   }
 }
@@ -608,6 +614,20 @@ class ProgramItem {
 
   static List<ProgramItem> listFrom(Object? raw) => raw is List
       ? raw.whereType<Map>().map((m) => ProgramItem.fromJson(m.cast<String, dynamic>())).where((i) => !i.isEmpty).toList()
+      : const [];
+}
+
+/// Um organizador visto pelo convidado: conta e nome (migração 187).
+class EventOrganizerRef {
+  final String id;
+  final String name;
+  const EventOrganizerRef({required this.id, required this.name});
+
+  static List<EventOrganizerRef> listFrom(Object? raw) => raw is List
+      ? [
+          for (final m in raw.whereType<Map>())
+            if (m['id'] is String) EventOrganizerRef(id: m['id'] as String, name: (m['name'] as String?) ?? 'Organizador'),
+        ]
       : const [];
 }
 
@@ -660,12 +680,17 @@ class GuestWedding {
     this.venueAddress,
     this.venueLatitude,
     this.venueLongitude,
+    this.organizers = const [],
   });
 
   /// Coordenadas do local (087), quando a morada veio do local escolhido
   /// na app.
   final double? venueLatitude;
   final double? venueLongitude;
+
+  /// Quem organiza (migração 187): para o convidado abrir o perfil e
+  /// seguir. Vazio antes da migração.
+  final List<EventOrganizerRef> organizers;
 
   /// Programa, dress code e morada (085) — definidos pelo casal em
   /// "Para os convidados".

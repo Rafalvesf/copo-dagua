@@ -9,6 +9,7 @@ import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../shared/widgets/organizers_card.dart';
 import '../../../shared/widgets/buttons.dart';
 
 import '../../../core/guest_offers/guest_offers.dart';
@@ -312,6 +313,7 @@ class _GuestHomeBody extends ConsumerWidget {
           const SizedBox(height: 18),
           GuestPlaceCard(wedding: wedding),
         ],
+        GuestOrganizersCard(organizers: wedding.organizers),
         ...tail,
       ],
     );
