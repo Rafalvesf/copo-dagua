@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/guest_home/guest_home_providers.dart' show guestCompanionsProvider, ageGroupLabel;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/guests/guest_controller.dart';
@@ -371,6 +372,18 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
                     : () => _launchContact(context, Uri(scheme: 'mailto', path: guest.email)),
               ),
             ),
+            // «Ver perfil» (2026-11-15): só quando a pessoa já tem conta na
+            // app (entrou com o link ou o código) — para a seguir.
+            if (guest.linkedProfileId != null) ...[
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ContactActionButton(
+                  icon: Hi.user,
+                  label: 'Ver perfil',
+                  onTap: () => context.push('/u/${guest.linkedProfileId}'),
+                ),
+              ),
+            ],
           ],
         ),
         const SizedBox(height: 20),

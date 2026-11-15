@@ -326,6 +326,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "País, idade e tipos de eventos no perfil; asneiras bloqueadas no evento, perfil e mensagens; limites de 24/40 caracteres.",
     check: { kind: "marker", id: "186" },
   },
+  {
+    file: "187_guest_sees_organizers.sql",
+    date: "2026-11-15",
+    title: "Convidados veem quem organiza",
+    what: "O convidado vê os organizadores do evento e abre o perfil deles para os seguir («Ver perfil»).",
+    check: { kind: "marker", id: "187" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

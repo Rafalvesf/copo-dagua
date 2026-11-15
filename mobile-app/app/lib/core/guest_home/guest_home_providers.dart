@@ -82,6 +82,7 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
       venueAddress: wedding?['venue_address'] as String?,
       venueLatitude: (wedding?['venue_latitude'] as num?)?.toDouble(),
       venueLongitude: (wedding?['venue_longitude'] as num?)?.toDouble(),
+      organizers: EventOrganizerRef.listFrom(wedding?['organizers']),
     );
   }).toList();
 });

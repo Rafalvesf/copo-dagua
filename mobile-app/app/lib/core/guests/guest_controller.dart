@@ -106,6 +106,7 @@ Guest guestFromRow(Map<String, dynamic> row) => Guest(
       ? null
       : DateTime.parse(row['onboarding_completed_at'] as String),
   nickname: row['nickname'] as String?,
+  linkedProfileId: row['linked_profile_id'] as String?,
 );
 
 /// Liga-se à tabela `guests` real (`database/migrations/004_guests.sql`)
