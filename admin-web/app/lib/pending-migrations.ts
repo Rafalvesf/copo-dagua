@@ -340,6 +340,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Pacotes com «Inclui / Não inclui», preço por pessoa/total/unidade e nº de pessoas; extras do parceiro que aparecem depois de escolher o pacote; o cliente pede o pacote e o parceiro aceita (cria a reserva) ou recusa.",
     check: { kind: "marker", id: "188" },
   },
+  {
+    file: "189_event_group_rsvp_invite_followed.sql",
+    date: "2026-11-15",
+    title: "Grupo do evento com as respostas e convidar quem sigo",
+    what: "Cada evento tem um grupo com toda a gente; quando um convidado diz que vai ou não vai aparece no grupo com o perfil para seguir; o organizador convida quem segue dentro da app (sem link).",
+    check: { kind: "marker", id: "189" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
