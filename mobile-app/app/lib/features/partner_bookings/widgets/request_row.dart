@@ -1,3 +1,4 @@
+import '../../../shared/widgets/page_kit.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/models/models.dart';
@@ -21,12 +22,31 @@ class RequestRow extends StatelessWidget {
   final VoidCallback onTap;
   final bool compact;
 
+  /// Linha de um grupo (mockup «Páginas do parceiro» → Pedidos): sem
+  /// cartão próprio, para ir dentro de um `KitGroup`.
+  final bool flat;
+
   const RequestRow({
     super.key,
     required this.booking,
     required this.onTap,
     this.compact = false,
+    this.flat = false,
   });
+
+  KitTag get _tag {
+    if (booking.proposalSent && booking.status != BookingStatus.confirmado && booking.status != BookingStatus.concluido) {
+      return const KitTag('Proposta enviada', kind: KitTagKind.neutral);
+    }
+    return switch (booking.status) {
+      BookingStatus.novo => const KitTag('Por responder', kind: KitTagKind.pending),
+      BookingStatus.emAnalise => const KitTag('Em análise', kind: KitTagKind.neutral),
+      BookingStatus.aceite => const KitTag('Sinal pendente', kind: KitTagKind.pending),
+      BookingStatus.confirmado => const KitTag('Confirmado'),
+      BookingStatus.concluido => const KitTag('Concluído', kind: KitTagKind.neutral),
+      BookingStatus.recusado => const KitTag('Recusado', kind: KitTagKind.neutral),
+    };
+  }
 
 
   ({String label, Color fg, Color bg}) get _status => switch (booking.status) {
@@ -81,6 +101,15 @@ class RequestRow extends StatelessWidget {
       requestDateLabel(booking.eventDate),
       if (booking.city.isNotEmpty) booking.city,
     ].join(' · ');
+    if (flat) {
+      return KitRow(
+        lead: V2Avatar(booking.clientName, imageUrl: booking.clientAvatarUrl),
+        title: booking.clientName,
+        sub: [meta, if (booking.packageLabel.isNotEmpty) booking.packageLabel].join(' · '),
+        trailing: _tag,
+        onTap: onTap,
+      );
+    }
     final header = Row(
       children: [
         V2Avatar(booking.clientName, imageUrl: booking.clientAvatarUrl),

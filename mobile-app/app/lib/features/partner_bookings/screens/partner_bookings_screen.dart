@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -64,94 +65,79 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
   Widget build(BuildContext context) {
     final bookingsAsync = ref.watch(partnerBookingsProvider(null));
 
+    final all = bookingsAsync.value ?? const <Booking>[];
+    int countOf(_BookingSegment seg) => all.where((b) => _matchesSegment(b, seg)).length;
+
+    // Mockup «Páginas do parceiro» → Pedidos (2026-11-14): filtros em
+    // cima, resumo e as linhas num grupo.
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.feed,
       body: Stack(
         children: [
-          SafeArea(top: false, 
-            bottom: false,
-            child: ScrollingHeader(
- header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-                const PageHeader(title: 'Pedidos', showBack: false, titleFontSize: 28)
- ],
- body: bookingsAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerBookingsProvider(null))),
-                    data: (allBookings) {
-                      final bookings = allBookings.where(_matches).toList();
-                      // Canvas "Parceiro — pedidos (redesign)": cartão verde
-                      // com o total do mês e o ponto de situação.
-                      final received = allBookings
-                          .where((b) => b.fromQuoteRequest)
-                          .length;
-                      final toAnswer = allBookings
-                          .where((b) => b.status == BookingStatus.novo && !b.proposalSent)
-                          .length;
-                      final sent = allBookings.where((b) => b.proposalSent && b.status == BookingStatus.emAnalise).length;
-                      return ListView(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppTheme.screenMargin,
-                          18,
-                          AppTheme.screenMargin,
-                          200,
-                        ),
-                        children: [
-                          GreenHero(
-                            label: 'PEDIDOS RECEBIDOS',
-                            value: '$received',
-                            suffix: received == 1 ? 'pedido no total' : 'pedidos no total',
-                            doodles: const [Hi.inbox, Hi.heartOutline, Hi.sparkles],
-                            footer: Wrap(spacing: 8, runSpacing: 8, children: [
-                              HeroPill('$toAnswer por responder', pending: true),
-                              HeroPill('$sent ${sent == 1 ? 'proposta enviada' : 'propostas enviadas'}'),
-                            ]),
-                          ),
-                          const SizedBox(height: 16),
-                          if (bookings.isEmpty)
-                            const V2RowCard(
-                              lead: StickerIcon(Hi.calendarDays),
-                              title: 'Sem pedidos nesta categoria',
-                              sub: 'Muda o filtro em baixo para ver os outros.',
-                            )
-                          else
-                            for (final b in bookings)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: RequestRow(
-                                  booking: b,
-                                  onTap: () => context.push('/partner-requests/${b.id}', extra: b),
-                                ),
-                              ),
-                        ],
-                      );
-                    },
+          ListView(
+            padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, MediaQuery.paddingOf(context).top + 12, AppTheme.screenMargin, 140),
+            children: [
+              const SizedBox(
+                height: 44,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Pedidos', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ),
+              ),
+              KitPills([
+                for (final seg in _BookingSegment.values)
+                  KitPill(
+                    label: _segmentLabel(seg),
+                    count: seg == _BookingSegment.recebidos ? countOf(seg) : null,
+                    selected: _segment == seg,
+                    onTap: () => setState(() => _segment = seg),
                   ),
-),
+              ]),
+              ...bookingsAsync.when<List<Widget>>(
+                loading: () => const [Padding(padding: EdgeInsets.only(top: 60), child: Center(child: CircularProgressIndicator()))],
+                error: (err, st) => [AsyncErrorView(onRetry: () => ref.invalidate(partnerBookingsProvider(null)))],
+                data: (allBookings) {
+                  final bookings = allBookings.where(_matches).toList();
+                  final received = allBookings.where((b) => b.fromQuoteRequest).length;
+                  final toAnswer = allBookings.where((b) => b.status == BookingStatus.novo && !b.proposalSent).length;
+                  final sent = allBookings.where((b) => b.proposalSent && b.status == BookingStatus.emAnalise).length;
+                  return [
+                    KitSummary(
+                      kicker: 'Pedidos recebidos',
+                      value: '$received',
+                      unit: received == 1 ? 'pedido no total' : 'pedidos no total',
+                      extra: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Wrap(spacing: 8, runSpacing: 8, children: [
+                          KitTag('$toAnswer por responder', kind: KitTagKind.pending),
+                          KitTag('$sent ${sent == 1 ? 'proposta enviada' : 'propostas enviadas'}', kind: KitTagKind.neutral),
+                        ]),
+                      ),
+                    ),
+                    KitGroup(top: 16, [
+                      if (bookings.isEmpty)
+                        const KitRow(title: 'Sem pedidos aqui', sub: 'Muda o filtro em cima para ver os outros.')
+                      else
+                        for (final b in bookings)
+                          RequestRow(
+                            booking: b,
+                            flat: true,
+                            onTap: () => context.push('/partner-requests/${b.id}', extra: b),
+                          ),
+                    ]),
+                  ];
+                },
+              ),
+            ],
           ),
-          Positioned(
+          const Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            child: PartnerBottomNav(
-              current: PartnerTab.requests,
-              // Estados como segunda navbar, ligados à doca (redesign
-              // 2026-10).
-              top: FilterChipsRow(
-                items: [
-                  for (final segment in _BookingSegment.values)
-                    FilterBarItem(_segmentLabel(segment)),
-                ],
-                selected: _segment.index,
-                onSelected: (i) =>
-                    setState(() => _segment = _BookingSegment.values[i]),
-              ),
-            ),
+            child: PartnerBottomNav(current: PartnerTab.requests),
           ),
         ],
       ),
     );
   }
 }
-
-
