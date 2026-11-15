@@ -1,5 +1,5 @@
 import '../../../shared/widgets/page_kit.dart';
-import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
+import '../../../shared/widgets/v2_kit.dart' show V2Avatar, softCard;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 
@@ -14,6 +14,10 @@ import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_venue.dart';
 import '../../../shared/widgets/navigation_sheet.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/sized_network_image.dart';
+import '../../../shared/widgets/partner_notification_bell.dart';
+import '../../../shared/utils_clipboard.dart';
+import 'guest_events_pill.dart';
 
 // Ecrãs do convidado redesenhados (canvas "Convidados · Ecrãs
 // melhorados", 2026-11-07): capa verde, atalhos coloridos, a tua resposta,
@@ -299,9 +303,14 @@ class GuestPlaceCard extends ConsumerWidget {
     final lng = wedding.venueLongitude ?? (wedding.venueAddress?.isNotEmpty == true ? null : appVenue?.longitude);
     if (name?.isNotEmpty != true && address?.isNotEmpty != true) return const SizedBox.shrink();
     final title = name?.isNotEmpty == true ? name! : address!;
-    return Container(
+    // Mockup «Páginas do convidado» → Início (2026-11-15): «Como chegar»
+    // antes dos quadrados, com «Abrir no mapa» e «Copiar morada».
+    final copyable = address?.isNotEmpty == true ? address! : title;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const KitCaps('Como chegar', top: 0),
+      Container(
       padding: const EdgeInsets.all(16),
-      decoration: guestCard(),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         // Mockup «Páginas do convidado»: nome 16, local 13 e «Como chegar» 44.
         Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -313,19 +322,136 @@ class GuestPlaceCard extends ConsumerWidget {
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ],
         const SizedBox(height: 12),
-        FilledButton(
-          onPressed: () => showNavigationSheet(context, label: title, address: address, latitude: lat, longitude: lng),
-          style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.ink,
-            foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(44),
-            shape: const StadiumBorder(),
-            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
+        Row(children: [
+          Expanded(
+            child: FilledButton(
+              onPressed: () => showNavigationSheet(context, label: title, address: address, latitude: lat, longitude: lng),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.ink,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 44),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: const StadiumBorder(),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+              child: const Text('Abrir no mapa', maxLines: 1),
+            ),
           ),
-          child: const Text('Como chegar'),
-        ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                await copyText(copyable);
+                messenger.showSnackBar(const SnackBar(content: Text('Morada copiada.')));
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.ink,
+                minimumSize: const Size(0, 44),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                shape: const StadiumBorder(),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+              child: const Text('Copiar morada', maxLines: 1),
+            ),
+          ),
+        ]),
       ]),
-    );
+      ),
+    ]);
+  }
+}
+
+/// Capa do evento no topo do início do convidado (mockup 2026-11-15): a
+/// foto escolhida pelo organizador (ou a cor do evento) até ao topo, por
+/// trás das horas, com voltar e o sino por cima; o nome e a data num
+/// painel que sobe por cima da foto.
+class GuestCover extends StatelessWidget {
+  final GuestWedding wedding;
+  final Widget hero;
+  const GuestCover({super.key, required this.wedding, required this.hero});
+
+  @override
+  Widget build(BuildContext context) {
+    final inset = MediaQuery.paddingOf(context).top;
+    final photo = wedding.coverPhotoUrl;
+    final h = 260 + inset;
+    return Stack(children: [
+      SizedBox(
+        height: h,
+        width: double.infinity,
+        child: photo == null
+            ? ColoredBox(color: AppTheme.accentTint)
+            : SizedNetworkImage(photo, fit: BoxFit.cover,
+                errorBuilder: (context, error, stack) => ColoredBox(color: AppTheme.accentTint)),
+      ),
+      Positioned(
+        left: AppTheme.screenMargin,
+        right: AppTheme.screenMargin,
+        top: inset + 12,
+        child: const Row(children: [GuestEventsPill(), Spacer(), PartnerNotificationBell()]),
+      ),
+      Padding(
+        padding: EdgeInsets.only(top: h - 28),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 22, AppTheme.screenMargin, 0),
+          decoration: const BoxDecoration(
+            color: AppTheme.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: hero,
+        ),
+      ),
+    ]);
+  }
+}
+
+/// Linha do grupo no estilo da aba Mensagens (2026-11-15): avatares
+/// sobrepostos, nome 16 e uma linha por baixo.
+class GuestGroupRow extends StatelessWidget {
+  final VoidCallback onTap;
+  const GuestGroupRow({super.key, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget dot(Color c) => Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(color: c, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+        );
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const KitCaps('Grupo do evento', top: 0),
+      SnappyTap(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: softCard(radius: 22),
+          child: Row(children: [
+            SizedBox(
+              width: 52,
+              height: 52,
+              child: Stack(children: [
+                Positioned(left: 0, top: 0, child: dot(const Color(0xFFB9767C))),
+                Positioned(left: 18, top: 18, child: dot(const Color(0xFF6E8B68))),
+              ]),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Conversa dos convidados',
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                SizedBox(height: 2),
+                Text('Fala com quem também vai', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ]),
+            ),
+            const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
+          ]),
+        ),
+      ),
+    ]);
   }
 }
 

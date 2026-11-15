@@ -482,10 +482,9 @@ class Guest {
   /// qualquer convite ser enviado ou resposta dada.
   final DateTime? createdAt;
 
-  /// `guests.invite_sent_at` — ainda não escrito por nenhum fluxo real
-  /// (o envio de convites é manual, por link copiado — ver
-  /// `guest_detail_screen.dart`), por isso hoje é sempre `null`; exposto
-  /// já para o dia em que um envio real o passar a preencher.
+  /// `guests.invite_sent_at` — preenchido pelo ecrã «Convidar»
+  /// (`invite_screen.dart`, 2026-11-15) quando o organizador envia o
+  /// convite a esta pessoa.
   final DateTime? inviteSentAt;
 
   /// `guests.rsvp_responded_at` — timestamp real da resposta,

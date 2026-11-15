@@ -141,7 +141,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                       Expanded(child: SearchPill(controller: _search, hint: 'Pesquisar convidados')),
                       if (wedding != null) ...[
                         const SizedBox(width: 10),
-                        V2RoundButton(icon: Hi.arrowUpOnSquare, tooltip: 'Partilhar convite', onTap: () => _shareInvite(wedding)),
+                        V2RoundButton(icon: Hi.arrowUpOnSquare, tooltip: 'Convidar', onTap: () => context.push('/guests/convidar')),
                       ],
                     ]),
                   ),

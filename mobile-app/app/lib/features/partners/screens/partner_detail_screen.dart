@@ -93,6 +93,8 @@ class PartnerDetailScreen extends ConsumerStatefulWidget {
 class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   bool _openingChat = false;
   bool _requestingQuote = false;
+  /// Pacote escolhido no perfil (mockup «Perfis dos parceiros», 2026-11-15).
+  int? _selectedPackage;
 
   @override
   void initState() {
@@ -397,7 +399,12 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                       : _PartnerFollow(
                           partnerId: partner.id,
                           onNeedAccount: pub ? _needAccount : null,
-                          second: ProfileButton(mainLabel, onTap: _requestingQuote || _openingChat ? null : mainAction),
+                          // Com pacotes, o caminho é escolher um pacote (em
+                          // baixo); o orçamento à medida fica como linha
+                          // secundária por baixo dos pacotes (2026-11-15).
+                          second: packages.isNotEmpty && !alreadyRelated
+                              ? null
+                              : ProfileButton(mainLabel, onTap: _requestingQuote || _openingChat ? null : mainAction),
                         ),
                 ),
               ),
@@ -409,49 +416,64 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               ),
               Transform.translate(
                 offset: const Offset(0, -28),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                  child: Column(children: [
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                     for (var i = 0; i < packages.length; i++)
-                      SnappyTap(
-                        // Tocar num pacote: pedir esse pacote (ou falar, se já há pedido).
-                        onTap: widget.selectionMode
-                            ? null
-                            : pub
-                                ? _needAccount
-                                : alreadyRelated
-                                    ? _openChat
-                                    : () => _requestQuote(
-                                          initialMessage:
-                                              'Olá! Tenho interesse no pacote "${packages[i].name}" (${packages[i].isStartingPrice ? 'desde ' : ''}${euros(packages[i].price)}).',
-                                        ),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            border: i == packages.length - 1 ? null : const Border(bottom: BorderSide(color: Color(0xFFECE7DC))),
-                          ),
-                          child: Row(children: [
-                            Expanded(
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text(packages[i].name,
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
-                                if (packages[i].description.trim().isNotEmpty)
-                                  Text(packages[i].description.trim(),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: muted)),
-                              ]),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              packages[i].isStartingPrice ? 'desde ${euros(packages[i].price)}' : euros(packages[i].price),
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink),
-                            ),
-                          ]),
+                      Padding(
+                        padding: EdgeInsets.only(top: i == 0 ? 0 : 10),
+                        child: _PackageCard(
+                          package: packages[i],
+                          selected: _selectedPackage == i,
+                          onTap: widget.selectionMode
+                              ? null
+                              : pub
+                                  ? _needAccount
+                                  : alreadyRelated
+                                      ? _openChat
+                                      : () => setState(() => _selectedPackage = _selectedPackage == i ? null : i),
                         ),
                       ),
+                    if (!widget.selectionMode && !alreadyRelated && _selectedPackage != null && _selectedPackage! < packages.length) ...[
+                      const SizedBox(height: 16),
+                      Builder(builder: (context) {
+                        final p = packages[_selectedPackage!];
+                        final label = p.isStartingPrice
+                            ? 'Pedir proposta · ${p.name}'
+                            : 'Pedir ${p.name} · ${euros(p.price)}';
+                        return FilledButton(
+                          onPressed: _requestingQuote
+                              ? null
+                              : () => _requestQuote(
+                                    initialMessage:
+                                        'Olá! Queremos o pacote "${p.name}" (${p.isStartingPrice ? 'desde ' : ''}${euros(p.price)}).',
+                                  ),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: ink,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size.fromHeight(52),
+                            shape: const StadiumBorder(),
+                            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                          ),
+                          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        );
+                      }),
+                    ],
+                    if (!widget.selectionMode && !alreadyRelated) ...[
+                      const SizedBox(height: 14),
+                      Center(
+                        child: SnappyTap(
+                          onTap: pub ? _needAccount : (_requestingQuote ? null : () => _requestQuote()),
+                          child: Text.rich(TextSpan(children: [
+                            const TextSpan(text: 'Nada disto serve? ', style: TextStyle(fontSize: 13, color: muted)),
+                            TextSpan(
+                              text: 'Pedir orçamento à medida',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+                            ),
+                          ])),
+                        ),
+                      ),
+                    ],
                   ]),
                 ),
               ),
@@ -985,4 +1007,60 @@ class _PartnerUnavailable extends StatelessWidget {
           ),
         ),
       );
+}
+
+/// Cartão de um pacote no perfil (mockup «Perfis dos parceiros»,
+/// 2026-11-15): branco com o círculo por escolher; verde quando escolhido.
+class _PackageCard extends StatelessWidget {
+  final ServicePackage package;
+  final bool selected;
+  final VoidCallback? onTap;
+  const _PackageCard({required this.package, required this.selected, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = selected ? Colors.white : AppTheme.ink;
+    final mu = selected ? Colors.white.withValues(alpha: 0.85) : AppTheme.inkMuted;
+    final price = package.isStartingPrice ? 'desde ${euros(package.price)}' : euros(package.price);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: SnappyTap(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.all(16),
+          decoration: selected
+              ? BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(22))
+              : softCard(radius: 22),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? Colors.white : null,
+                border: selected ? null : Border.all(color: const Color(0xFFCFC8B8), width: 1.5),
+              ),
+              child: selected ? Icon(Hi.check, size: 16, color: AppTheme.accentOliveDark) : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Expanded(child: Text(package.name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: fg))),
+                  const SizedBox(width: 10),
+                  Text(price, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: fg)),
+                ]),
+                if (package.description.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(package.description.trim(), style: TextStyle(fontSize: 13, height: 1.4, color: mu)),
+                ],
+              ]),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
 }

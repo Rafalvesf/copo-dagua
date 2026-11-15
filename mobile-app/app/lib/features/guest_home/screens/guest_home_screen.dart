@@ -79,7 +79,9 @@ class GuestHomeScreen extends ConsumerWidget {
       gradientOverride: guestPageGradient,
       body: Stack(
         children: [
+          // Sem SafeArea no topo: a capa do evento vai até cima (2026-11-15).
           SafeArea(
+            top: false,
             bottom: false,
             child: weddingsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -240,34 +242,19 @@ class _GuestHomeBody extends ConsumerWidget {
 
     final tail = <Widget>[
       if (show(GuestSection.grupos) || show(GuestSection.estadia)) const SizedBox(height: 22),
-      if (show(GuestSection.grupos))
-        SnappyTap(
-          onTap: () => context.push('/groups/${wedding.weddingId}'),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: guestCard(),
-            child: const Row(children: [
-              Icon(Hi.userGroup, color: guestHeroGreen),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text('Grupo · conversa com os outros convidados',
-                    style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              ),
-              Icon(Hi.chevronRight, color: AppTheme.inkMuted),
-            ]),
-          ),
-        ),
+      // Grupo do evento no estilo das Mensagens (mockup 2026-11-15).
+      if (show(GuestSection.grupos)) GuestGroupRow(onTap: () => context.push('/groups/${wedding.weddingId}')),
       if (show(GuestSection.estadia)) _StayCard(weddingId: wedding.weddingId),
     ];
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 130),
-      children: [
-        // Única saída do modo convidado (pedido 2026-11): no topo, com
-        // as três linhas e a dizer para onde se volta.
-        const Row(children: [GuestEventsPill(), Spacer(), PartnerNotificationBell()]),
-        const SizedBox(height: 16),
+    // Mockup «Páginas do convidado» → Início (2026-11-15): capa do
+    // organizador no topo; depois a resposta e «Como chegar»; só depois
+    // os quadrados.
+    final body = <Widget>[
         if (isToday) ...[
+          SizedBox(height: MediaQuery.paddingOf(context).top + 20),
+          const Row(children: [GuestEventsPill(), Spacer(), PartnerNotificationBell()]),
+          const SizedBox(height: 16),
           GuestTodayHero(wedding: wedding),
           if (show(GuestSection.programa) && wedding.program.isNotEmpty) ...[
             const SizedBox(height: 14),
@@ -294,13 +281,14 @@ class _GuestHomeBody extends ConsumerWidget {
           const SizedBox(height: 14),
           GuestPlaceCard(wedding: wedding),
         ] else ...[
-          GuestHero(wedding: wedding, place: place, goingWith: goingWith),
-          const SizedBox(height: 14),
-          GuestShortcutsRow(items: shortcuts),
           if (guest != null) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 4),
             GuestAnswerCard(guest: guest, weddingId: wedding.weddingId),
           ],
+          const SizedBox(height: 22),
+          GuestPlaceCard(wedding: wedding),
+          const SizedBox(height: 18),
+          GuestShortcutsRow(items: shortcuts),
           if (pass.ticket != null) ...[
             const SizedBox(height: 14),
             TicketPassCard(ticket: pass.ticket!, eventName: wedding.displayNames),
@@ -309,11 +297,19 @@ class _GuestHomeBody extends ConsumerWidget {
             const SizedBox(height: 22),
             GuestDayStrip(wedding: wedding),
           ],
-          const SizedBox(height: 18),
-          GuestPlaceCard(wedding: wedding),
         ],
         GuestOrganizersCard(organizers: wedding.organizers),
         ...tail,
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 130),
+      children: [
+        if (!isToday) GuestCover(wedding: wedding, hero: GuestHero(wedding: wedding, place: place, goingWith: goingWith)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: body),
+        ),
       ],
     );
   }
