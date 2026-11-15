@@ -22,7 +22,6 @@ import '../shared/theme_color/theme_color.dart' show BarColorObserver;
 import '../features/auth/screens/forgot_password_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/register_screen.dart';
-import '../features/auth/screens/role_selection_screen.dart';
 import '../features/auth/screens/verify_email_screen.dart';
 import '../features/auth/screens/welcome_screen.dart';
 import '../features/auth/screens/start_flow_screen.dart';
@@ -112,7 +111,6 @@ bool _deepLinkWorthKeeping(String location) =>
 const _authRoutes = {
   '/welcome',
   '/comecar',
-  '/role',
   '/register',
   '/login',
   '/forgot-password',
@@ -164,12 +162,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Termos e Política de Privacidade — públicos (abrem do registo).
       if (location == '/termos' || location == '/privacidade' || location == '/apagar-conta') return null;
 
-      // `/register` sem uma role válida na URL (ver role_selection_screen.dart
-      // e a nota na rota `/register` abaixo) volta sempre a `/role` em vez
-      // de deixar o registo continuar com uma role adivinhada.
+      // `/register` sem uma role válida na URL (ver a nota na rota
+      // `/register` abaixo) volta sempre ao início («Começar») em vez de
+      // deixar o registo continuar com uma role adivinhada.
       if (location == '/register') {
         final role = state.uri.queryParameters['role'];
-        if (role != 'couple' && role != 'partner' && role != 'guest') return '/role';
+        if (role != 'couple' && role != 'partner' && role != 'guest') return '/comecar';
       }
 
       // Modo de manutenção (`admin-web/components/MaintenanceSwitch.tsx`)
@@ -267,18 +265,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Início da app depois de "Começar" (mockup Onboarding, 2026-11-12).
       GoRoute(path: '/comecar', builder: (context, state) => const StartFlowScreen()),
       GoRoute(
-        path: '/role',
-        builder: (context, state) => const RoleSelectionScreen(),
-      ),
-      GoRoute(
         path: '/register',
         builder: (context, state) {
-          // Lê a role da própria query string (`?role=couple|partner`, ver
-          // role_selection_screen.dart) em vez de `extra` — `extra` do
+          // Lê a role da própria query string (`?role=couple|partner|guest`,
+          // posta pelo «Começar») em vez de `extra` — `extra` do
           // go_router não sobrevive de forma fiável no Flutter Web (só
           // existe em memória, não faz parte do URL), o que fazia o registo
           // cair sempre em `UserRole.couple` independentemente do que fosse
-          // escolhido em `/role`. `redirect` (acima) já garante que só se
+          // escolhido. `redirect` (acima) já garante que só se
           // chega aqui com 'couple' ou 'partner' na URL.
           return RegisterScreen(
             role: UserRole.values.byName(state.uri.queryParameters['role']!),

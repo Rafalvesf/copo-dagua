@@ -82,7 +82,7 @@ class _PartnerInviteScreenState extends ConsumerState<PartnerInviteScreen> {
         message: 'Um parceiro convidou-te para organizares o teu evento na À Nossa!: orçamento, convidados, '
             'contratos e pagamentos seguros num só sítio. Cria conta (ou entra) e o convite fica ligado a ti.',
         actions: [
-          PrimaryButton(label: 'Criar conta', onPressed: () => context.push('/role')),
+          PrimaryButton(label: 'Criar conta', onPressed: () => context.push('/comecar')),
           TextButton(onPressed: () => context.push('/login'), child: const Text('Já tenho conta')),
           if (kIsWeb)
             TextButton(onPressed: () => showInstallAppSheet(context), child: const Text('Instalar a app')),
