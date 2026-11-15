@@ -922,6 +922,17 @@ class Booking {
   /// `send_proposal_screen.dart`.
   final bool proposalSent;
 
+  /// 188: pedido de um pacote — a cópia do pacote e dos extras como
+  /// estavam quando o cliente pediu, o nº de pessoas e o total.
+  final Map<String, dynamic>? packageSnapshot;
+  final List<Map<String, dynamic>> extrasSnapshot;
+  final int? people;
+  final double? totalAmount;
+
+  bool get isPackageRequest => packageSnapshot != null;
+  bool get canAcceptPackage =>
+      fromQuoteRequest && packageSnapshot != null && packageSnapshot!['is_starting_price'] != true && (totalAmount ?? 0) > 0;
+
   const Booking({
     required this.id,
     required this.partnerId,
@@ -938,9 +949,17 @@ class Booking {
     this.proposalSent = false,
     this.clientAvatarUrl,
     this.eventType = EventType.wedding,
+    this.packageSnapshot,
+    this.extrasSnapshot = const [],
+    this.people,
+    this.totalAmount,
   });
 
   Booking copyWith({BookingStatus? status}) => Booking(
+    packageSnapshot: packageSnapshot,
+    extrasSnapshot: extrasSnapshot,
+    people: people,
+    totalAmount: totalAmount,
     eventType: eventType,
     clientAvatarUrl: clientAvatarUrl,
     id: id,
@@ -1003,6 +1022,14 @@ class ServicePackage {
   final bool isStartingPrice;
   final int position;
 
+  /// 188: o que inclui (uma linha por coisa), o que não inclui, a unidade
+  /// do preço (`total` / `person` / `unit`) e para quantas pessoas.
+  final List<String> includes;
+  final String? excludes;
+  final String priceUnit;
+  final int? minPeople;
+  final int? maxPeople;
+
   const ServicePackage({
     required this.id,
     required this.partnerId,
@@ -1011,8 +1038,74 @@ class ServicePackage {
     required this.price,
     this.isStartingPrice = false,
     this.position = 0,
+    this.includes = const [],
+    this.excludes,
+    this.priceUnit = 'total',
+    this.minPeople,
+    this.maxPeople,
   });
+
+  bool get perPerson => priceUnit == 'person';
+
+  factory ServicePackage.fromRow(Map<String, dynamic> row) => ServicePackage(
+        id: row['id'] as String,
+        partnerId: row['partner_id'] as String,
+        name: row['name'] as String,
+        description: row['description'] as String? ?? '',
+        price: (row['price'] as num).toDouble(),
+        isStartingPrice: row['is_starting_price'] as bool? ?? false,
+        position: row['position'] as int? ?? 0,
+        includes: [for (final x in (row['includes'] as List?) ?? const []) '$x'],
+        excludes: (row['excludes'] as String?)?.trim().isEmpty == true ? null : row['excludes'] as String?,
+        priceUnit: row['price_unit'] as String? ?? 'total',
+        minPeople: row['min_people'] as int?,
+        maxPeople: row['max_people'] as int?,
+      );
 }
+
+/// Extra do parceiro (188): aparece ao cliente só depois de ele escolher
+/// um dos pacotes em [packageIds] (vazio = qualquer pacote).
+class ServiceExtra {
+  final String id;
+  final String partnerId;
+  final String name;
+  final List<String> details;
+  final double price;
+  final String priceUnit;
+  final List<String> packageIds;
+  final int position;
+
+  const ServiceExtra({
+    required this.id,
+    required this.partnerId,
+    required this.name,
+    this.details = const [],
+    required this.price,
+    this.priceUnit = 'total',
+    this.packageIds = const [],
+    this.position = 0,
+  });
+
+  bool appliesTo(String packageId) => packageIds.isEmpty || packageIds.contains(packageId);
+
+  factory ServiceExtra.fromRow(Map<String, dynamic> row) => ServiceExtra(
+        id: row['id'] as String,
+        partnerId: row['partner_id'] as String,
+        name: row['name'] as String,
+        details: [for (final x in (row['details'] as List?) ?? const []) '$x'],
+        price: (row['price'] as num).toDouble(),
+        priceUnit: row['price_unit'] as String? ?? 'total',
+        packageIds: [for (final x in (row['package_ids'] as List?) ?? const []) '$x'],
+        position: row['position'] as int? ?? 0,
+      );
+}
+
+/// Sufixo do preço conforme a unidade (188).
+String priceUnitSuffix(String unit) => switch (unit) {
+      'person' => ' / pessoa',
+      'unit' => ' / unid.',
+      _ => '',
+    };
 
 /// Avaliação real (`reviews`, 045_reviews.sql). `weddings` só é
 /// legível pelos próprios membros/admin (RLS de `003_wedding.sql`) —

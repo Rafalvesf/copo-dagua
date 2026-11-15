@@ -95,6 +95,75 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   bool _requestingQuote = false;
   /// Pacote escolhido no perfil (mockup «Perfis dos parceiros», 2026-11-15).
   int? _selectedPackage;
+  final Set<String> _selectedExtras = {};
+  int? _people;
+  final _packageMessage = TextEditingController();
+
+  @override
+  void dispose() {
+    _packageMessage.dispose();
+    super.dispose();
+  }
+
+  /// «Pedir este pacote» (188): pacote, extras, pessoas e mensagem. Antes
+  /// da migração (função em falta) cai no pedido de orçamento normal com
+  /// o pacote na mensagem.
+  Future<void> _requestPackage(ServicePackage pkg, List<ServiceExtra> extras, int people) async {
+    final wedding = ref.read(weddingControllerProvider).wedding;
+    if (wedding == null || _requestingQuote) return;
+    final chosen = extras.where((e) => _selectedExtras.contains(e.id)).toList();
+    final summary = [
+      'Pacote "${pkg.name}"',
+      if (pkg.perPerson) 'para $people pessoas',
+      if (chosen.isNotEmpty) 'com ${chosen.map((e) => e.name).join(', ')}',
+    ].join(' ');
+    final note = _packageMessage.text.trim();
+    setState(() => _requestingQuote = true);
+    Funnel.track('quote_request_start', ref: widget.partner.id);
+    try {
+      await supabase.rpc('request_package', params: {
+        'p_partner_id': widget.partner.id,
+        'p_wedding_id': wedding.id,
+        'p_package_id': pkg.id,
+        'p_extra_ids': chosen.map((e) => e.id).toList(),
+        'p_people': people,
+        'p_event_date': wedding.weddingDate?.toIso8601String().split('T').first,
+        'p_message': note.isEmpty ? null : note,
+      });
+      try {
+        await sendQuoteRequestMessage(
+          weddingId: wedding.id,
+          partnerId: widget.partner.id,
+          partnerName: widget.partner.name,
+          eventDate: wedding.weddingDate,
+          message: [summary, if (note.isNotEmpty) note].join('\n'),
+        );
+      } catch (_) {}
+      ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
+      if (mounted) _comingSoon('Pedido enviado! ${widget.partner.name} aceita ou recusa.');
+    } on PostgrestException catch (e) {
+      if (!mounted) return;
+      if (e.code == 'PGRST202' || e.code == '42883') {
+        setState(() => _requestingQuote = false);
+        await _requestQuote(initialMessage: 'Olá! Queremos o ${summary.substring(0, 1).toLowerCase()}${summary.substring(1)}.${note.isEmpty ? '' : ' $note'}');
+        return;
+      }
+      final message = switch (e.code) {
+        'P0002' => 'Este parceiro já não está disponível.',
+        'P0010' => PartnerUnavailableException.message,
+        'P0003' => 'Escolhe uma data com pelo menos 7 dias de antecedência.',
+        'P0009' => 'Já fizeste um pedido a este parceiro. Só podes pedir outra vez se o pedido ou a reserva for cancelado.',
+        _ when e.message.contains('too_few_people') => 'Este pacote pede mais pessoas.',
+        _ when e.message.contains('too_many_people') => 'Este pacote não dá para tantas pessoas.',
+        _ => 'Não foi possível enviar o pedido.',
+      };
+      _comingSoon(message);
+    } catch (_) {
+      if (mounted) _comingSoon('Não foi possível enviar o pedido.');
+    } finally {
+      if (mounted) setState(() => _requestingQuote = false);
+    }
+  }
 
   @override
   void initState() {
@@ -249,6 +318,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     final packages = ref
         .watch(partnerPackagesForProvider(partner.id))
         .maybeWhen(data: (p) => p, orElse: () => const <ServicePackage>[]);
+    final extras = ref
+        .watch(partnerExtrasForProvider(partner.id))
+        .maybeWhen(data: (e) => e, orElse: () => const <ServiceExtra>[]);
+    final weddingGuests = ref.watch(weddingControllerProvider.select((s) => s.wedding?.estimatedGuests));
     final portfolio = ref
         .watch(partnerPortfolioForProvider(partner.id))
         .maybeWhen(data: (p) => p, orElse: () => const <PortfolioItem>[]);
@@ -434,31 +507,117 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                       : () => setState(() => _selectedPackage = _selectedPackage == i ? null : i),
                         ),
                       ),
-                    if (!widget.selectionMode && !alreadyRelated && _selectedPackage != null && _selectedPackage! < packages.length) ...[
-                      const SizedBox(height: 16),
+                    if (!widget.selectionMode && !alreadyRelated && _selectedPackage != null && _selectedPackage! < packages.length)
                       Builder(builder: (context) {
                         final p = packages[_selectedPackage!];
-                        final label = p.isStartingPrice
-                            ? 'Pedir proposta · ${p.name}'
-                            : 'Pedir ${p.name} · ${euros(p.price)}';
-                        return FilledButton(
-                          onPressed: _requestingQuote
-                              ? null
-                              : () => _requestQuote(
-                                    initialMessage:
-                                        'Olá! Queremos o pacote "${p.name}" (${p.isStartingPrice ? 'desde ' : ''}${euros(p.price)}).',
+                        final pkgExtras = extras.where((e) => e.appliesTo(p.id)).toList();
+                        final people = (_people ?? weddingGuests ?? p.minPeople ?? 1)
+                            .clamp(p.minPeople ?? 1, p.maxPeople ?? 9999);
+                        double each(String unit, double price) => unit == 'person' ? price * people : price;
+                        final total = each(p.priceUnit, p.price) +
+                            pkgExtras.where((e) => _selectedExtras.contains(e.id)).fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
+                        final label = p.isStartingPrice ? 'Pedir proposta · ${p.name}' : 'Pedir este pacote · ${euros(total)}';
+                        TextStyle btn(double size) => TextStyle(
+                            fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: size, fontWeight: FontWeight.w700);
+                        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                          if (p.perPerson || pkgExtras.any((e) => e.priceUnit == 'person')) ...[
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                              child: Row(children: [
+                                const Expanded(
+                                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                    Text('Para quantas pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
+                                    Text('Do teu evento · podes mudar', style: TextStyle(fontSize: 13, color: muted)),
+                                  ]),
+                                ),
+                                _StepButton(icon: Hi.minus, onTap: people > (p.minPeople ?? 1) ? () => setState(() => _people = people - 1) : null),
+                                SizedBox(width: 44, child: Text('$people', textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink))),
+                                _StepButton(icon: Hi.plus, onTap: people < (p.maxPeople ?? 9999) ? () => setState(() => _people = people + 1) : null),
+                              ]),
+                            ),
+                          ],
+                          // Extras só depois de escolher o pacote, e só se o
+                          // parceiro os criou (2026-11-15).
+                          if (pkgExtras.isNotEmpty) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(top: 24, bottom: 12),
+                              child: Text('Juntar ao ${p.name}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ink)),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                              child: Column(children: [
+                                for (var i = 0; i < pkgExtras.length; i++)
+                                  _ExtraRow(
+                                    extra: pkgExtras[i],
+                                    on: _selectedExtras.contains(pkgExtras[i].id),
+                                    last: i == pkgExtras.length - 1,
+                                    onTap: () => setState(() => _selectedExtras.contains(pkgExtras[i].id)
+                                        ? _selectedExtras.remove(pkgExtras[i].id)
+                                        : _selectedExtras.add(pkgExtras[i].id)),
                                   ),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: ink,
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size.fromHeight(52),
-                            shape: const StadiumBorder(),
-                            textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                              ]),
+                            ),
+                          ],
+                          const Padding(
+                            padding: EdgeInsets.only(top: 24, bottom: 8),
+                            child: Text('MENSAGEM', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: muted)),
                           ),
-                          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        );
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                            child: TextField(
+                              controller: _packageMessage,
+                              minLines: 3,
+                              maxLines: 5,
+                              maxLength: 300,
+                              style: const TextStyle(fontSize: 15, color: ink),
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                filled: false,
+                                hintText: 'Opcional · o que o parceiro deve saber',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          if (!p.isStartingPrice)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: Row(children: [
+                                Expanded(
+                                  child: Text(
+                                    [p.name, if (_selectedExtras.isNotEmpty) '+ ${pkgExtras.where((e) => _selectedExtras.contains(e.id)).length} extra', if (p.perPerson) '$people pessoas'].join(' · '),
+                                    style: const TextStyle(fontSize: 13, color: muted),
+                                  ),
+                                ),
+                                Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
+                              ]),
+                            ),
+                          FilledButton(
+                            onPressed: _requestingQuote ? null : () => _requestPackage(p, pkgExtras, people),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: ink,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size.fromHeight(52),
+                              shape: const StadiumBorder(),
+                              textStyle: btn(15),
+                            ),
+                            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            p.isStartingPrice
+                                ? '${widget.partner.name} envia uma proposta com o preço final.'
+                                : '${widget.partner.name} aceita ou recusa. Se aceitar, fica reservado e pagas o sinal.',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 13, color: muted),
+                          ),
+                        ]);
                       }),
-                    ],
                     if (!widget.selectionMode && !alreadyRelated) ...[
                       const SizedBox(height: 14),
                       Center(
@@ -1021,7 +1180,7 @@ class _PackageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final fg = selected ? Colors.white : AppTheme.ink;
     final mu = selected ? Colors.white.withValues(alpha: 0.85) : AppTheme.inkMuted;
-    final price = package.isStartingPrice ? 'desde ${euros(package.price)}' : euros(package.price);
+    final price = '${package.isStartingPrice ? 'desde ' : ''}${euros(package.price)}${priceUnitSuffix(package.priceUnit)}';
     return Semantics(
       button: true,
       selected: selected,
@@ -1056,6 +1215,24 @@ class _PackageCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(package.description.trim(), style: TextStyle(fontSize: 13, height: 1.4, color: mu)),
                 ],
+                // «Inclui / Não inclui» do parceiro, no pacote escolhido (188).
+                if (selected && package.includes.isNotEmpty) ...[
+                  Container(height: 1, margin: const EdgeInsets.symmetric(vertical: 10), color: Colors.white.withValues(alpha: 0.3)),
+                  const Text('INCLUI', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
+                  const SizedBox(height: 4),
+                  for (final l in package.includes)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Padding(padding: EdgeInsets.only(top: 7, right: 8), child: CircleAvatar(radius: 2.5, backgroundColor: Colors.white)),
+                        Expanded(child: Text(l, style: const TextStyle(fontSize: 13, height: 1.4, color: Colors.white))),
+                      ]),
+                    ),
+                  if (package.excludes != null) ...[
+                    const SizedBox(height: 6),
+                    Text('NÃO INCLUI: ${package.excludes}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: mu)),
+                  ],
+                ],
               ]),
             ),
           ]),
@@ -1063,4 +1240,69 @@ class _PackageCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _StepButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+  const _StepButton({required this.icon, this.onTap});
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: onTap == null ? const Color(0xFFCFC8B8) : AppTheme.ink, width: 1.5),
+          ),
+          child: Icon(icon, size: 16, color: onTap == null ? const Color(0xFFCFC8B8) : AppTheme.ink),
+        ),
+      );
+}
+
+/// Linha de um extra: nome, o que é, preço e o botão + / ✓ (188).
+class _ExtraRow extends StatelessWidget {
+  final ServiceExtra extra;
+  final bool on;
+  final bool last;
+  final VoidCallback onTap;
+  const _ExtraRow({required this.extra, required this.on, required this.last, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        selected: on,
+        child: SnappyTap(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(border: last ? null : const Border(bottom: BorderSide(color: Color(0xFFECE7DC)))),
+            child: Row(children: [
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(extra.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  if (extra.details.isNotEmpty)
+                    Text(extra.details.join(' · '), style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                ]),
+              ),
+              const SizedBox(width: 10),
+              Text('+${euros(extra.price)}${priceUnitSuffix(extra.priceUnit)}',
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(width: 10),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: on ? AppTheme.accentOliveDark : Colors.white,
+                  border: on ? null : Border.all(color: AppTheme.ink, width: 1.5),
+                ),
+                child: Icon(on ? Hi.check : Hi.plus, size: 18, color: on ? Colors.white : AppTheme.ink),
+              ),
+            ]),
+          ),
+        ),
+      );
 }

@@ -136,9 +136,21 @@ Expanded(child: ScrollingHeader(
                       ),
                     ]),
                   ),
+                  // Pedido de um pacote (188): o que escolheram, tal como
+                  // estava quando pediram.
+                  if (booking.isPackageRequest) ...[
+                    const KitCaps('O que escolheram', top: 20),
+                    _ChosenPackageCard(booking: booking),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(4, 8, 4, 0),
+                      child: Text('É o texto do teu pacote tal como estava quando pediram. Se o mudares depois, este pedido não muda.',
+                          style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    ),
+                  ],
                   const KitCaps('O pedido', top: 20),
                   KitGroup([
                     KitSetRow(label: 'Data', value: dateLabel),
+                    if (booking.people != null) KitSetRow(label: 'Pessoas', value: '${booking.people}'),
                     if (booking.city.isNotEmpty) KitSetRow(label: 'Local', value: booking.city),
                     KitSetRow(
                       label: 'Serviço',
@@ -186,7 +198,37 @@ Expanded(child: ScrollingHeader(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (booking.fromQuoteRequest && !booking.proposalSent) ...[
+                  // Pacote de preço fixo (188): aceitar cria a reserva.
+                  if (booking.canAcceptPackage && !booking.proposalSent) ...[
+                    SizedBox(
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: _busy
+                            ? null
+                            : () => _run(() async {
+                                  await supabase.rpc('accept_package_request', params: {'p_quote_request_id': booking.id});
+                                  ref.invalidate(partnerBookingsProvider);
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Pedido aceite. Fica reservado e o cliente paga o sinal.')),
+                                    );
+                                    context.pop();
+                                  }
+                                }),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppTheme.ink,
+                          shape: const StadiumBorder(),
+                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                        ),
+                        child: const Text('Aceitar pacote'),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8, bottom: 10),
+                      child: Text('Ao aceitar, fica reservado e o cliente paga o sinal.',
+                          textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    ),
+                  ] else if (booking.fromQuoteRequest && !booking.proposalSent) ...[
                     SizedBox(
                       height: 52,
                       child: FilledButton(
@@ -371,6 +413,78 @@ Expanded(child: ScrollingHeader(
           ],
         ),
       ),
+    );
+  }
+}
+
+/// O pacote e os extras que o cliente escolheu (188), com as contas.
+class _ChosenPackageCard extends StatelessWidget {
+  final Booking booking;
+  const _ChosenPackageCard({required this.booking});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = booking.packageSnapshot!;
+    final people = booking.people ?? 1;
+    final unit = p['price_unit'] as String? ?? 'total';
+    final price = (p['price'] as num?)?.toDouble() ?? 0;
+    final includes = [for (final x in (p['includes'] as List?) ?? const []) '$x'];
+    final starting = p['is_starting_price'] == true;
+    String line(String u, double v) => u == 'person' ? '${euros(v)} × $people = ${euros(v * people)}' : euros(v);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppTheme.accentOliveDark, width: 1.5),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          const KitTag('Pacote'),
+          if (booking.extrasSnapshot.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            KitTag('${booking.extrasSnapshot.length} ${booking.extrasSnapshot.length == 1 ? 'extra' : 'extras'}', kind: KitTagKind.neutral),
+          ],
+        ]),
+        const SizedBox(height: 10),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: Text('${p['name'] ?? 'Pacote'}', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+          Text('${starting ? 'desde ' : ''}${euros(price)}${priceUnitSuffix(unit)}',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        ]),
+        for (final l in includes)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text('•  $l', style: const TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF3A3733))),
+          ),
+        if ((p['excludes'] as String?)?.trim().isNotEmpty == true)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text('Não inclui: ${p['excludes']}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          ),
+        for (final e in booking.extrasSnapshot) ...[
+          Container(height: 1, margin: const EdgeInsets.symmetric(vertical: 10), color: const Color(0xFFECE7DC)),
+          Row(children: [
+            Expanded(child: Text('+ ${e['name']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            Text('${euros((e['price'] as num?)?.toDouble() ?? 0)}${priceUnitSuffix(e['price_unit'] as String? ?? 'total')}',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ]),
+          if ((e['details'] as List?)?.isNotEmpty == true)
+            Text((e['details'] as List).join(' · '), style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        ],
+        if (!starting && booking.totalAmount != null) ...[
+          Container(height: 1, margin: const EdgeInsets.symmetric(vertical: 10), color: const Color(0xFFECE7DC)),
+          Text(line(unit, price), style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          for (final e in booking.extrasSnapshot)
+            Text('${e['name']}: ${line(e['price_unit'] as String? ?? 'total', (e['price'] as num?)?.toDouble() ?? 0)}',
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          const SizedBox(height: 6),
+          Row(children: [
+            const Expanded(child: Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            Text(euros(booking.totalAmount!), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ]),
+        ],
+      ]),
     );
   }
 }

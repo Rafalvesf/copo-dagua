@@ -51,7 +51,9 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
   final quoteFuture = supabase
       .from('quote_requests')
       .select(
-        'id, partner_id, wedding_id, couple_id, event_date, location, message, status, profiles(full_name, avatar_url), weddings(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
+        // `*` (e não a lista de colunas) para trazer o pacote/extras da
+        // 188 quando a migração já correu, sem falhar antes.
+        '*, profiles(full_name, avatar_url), weddings(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
       )
       .eq('partner_id', partnerId)
       .neq('status', 'accepted')
@@ -113,6 +115,10 @@ Booking _bookingFromQuoteRequestRow(
   final wedding = row['weddings'] as Map<String, dynamic>?;
   final coupleId = row['couple_id'] as String;
   return Booking(
+    packageSnapshot: (row['package_snapshot'] as Map?)?.cast<String, dynamic>(),
+    extrasSnapshot: [for (final e in (row['extras_snapshot'] as List?) ?? const []) if (e is Map) e.cast<String, dynamic>()],
+    people: row['people'] as int?,
+    totalAmount: (row['total_amount'] as num?)?.toDouble(),
     id: row['id'] as String,
     partnerId: row['partner_id'] as String,
     weddingId: row['wedding_id'] as String,
@@ -648,16 +654,40 @@ final partnerPricingProvider = FutureProvider<PartnerPricingData>((ref) async {
   );
 });
 
-ServicePackage _servicePackageFromRow(Map<String, dynamic> row) =>
-    ServicePackage(
-      id: row['id'] as String,
-      partnerId: row['partner_id'] as String,
-      name: row['name'] as String,
-      description: row['description'] as String? ?? '',
-      price: (row['price'] as num).toDouble(),
-      isStartingPrice: row['is_starting_price'] as bool? ?? false,
-      position: row['position'] as int? ?? 0,
-    );
+ServicePackage _servicePackageFromRow(Map<String, dynamic> row) => ServicePackage.fromRow(row);
+
+/// Escreve numa tabela tentando primeiro com os campos novos (188); se a
+/// migração ainda não correu (coluna em falta), volta a tentar só com os
+/// campos antigos.
+Future<void> _writeWithFallback(
+  Future<void> Function(Map<String, dynamic> data) write,
+  Map<String, dynamic> base,
+  Map<String, dynamic> extra,
+) async {
+  try {
+    await write({...base, ...extra});
+  } on PostgrestException catch (e) {
+    if (e.code == '42703' || e.code == 'PGRST204') {
+      await write(base);
+    } else {
+      rethrow;
+    }
+  }
+}
+
+Map<String, dynamic> _packageDetail({
+  List<String> includes = const [],
+  String? excludes,
+  String priceUnit = 'total',
+  int? minPeople,
+  int? maxPeople,
+}) => {
+      'includes': includes,
+      'excludes': excludes,
+      'price_unit': priceUnit,
+      'min_people': minPeople,
+      'max_people': maxPeople,
+    };
 
 Future<void> setPartnerPricingMode(String pricingMode) async {
   final partnerId = supabase.auth.currentUser!.id;
@@ -695,16 +725,25 @@ Future<void> addServicePackage({
   required double price,
   required bool isStartingPrice,
   required int position,
+  List<String> includes = const [],
+  String? excludes,
+  String priceUnit = 'total',
+  int? minPeople,
+  int? maxPeople,
 }) async {
   final partnerId = supabase.auth.currentUser!.id;
-  await supabase.from('partner_service_packages').insert({
-    'partner_id': partnerId,
-    'name': name,
-    'description': description,
-    'price': price,
-    'is_starting_price': isStartingPrice,
-    'position': position,
-  });
+  await _writeWithFallback(
+    (data) async => await supabase.from('partner_service_packages').insert(data),
+    {
+      'partner_id': partnerId,
+      'name': name,
+      'description': description,
+      'price': price,
+      'is_starting_price': isStartingPrice,
+      'position': position,
+    },
+    _packageDetail(includes: includes, excludes: excludes, priceUnit: priceUnit, minPeople: minPeople, maxPeople: maxPeople),
+  );
 }
 
 Future<void> editServicePackage(
@@ -713,17 +752,70 @@ Future<void> editServicePackage(
   required String description,
   required double price,
   required bool isStartingPrice,
+  List<String> includes = const [],
+  String? excludes,
+  String priceUnit = 'total',
+  int? minPeople,
+  int? maxPeople,
 }) async {
-  await supabase
-      .from('partner_service_packages')
-      .update({
-        'name': name,
-        'description': description,
-        'price': price,
-        'is_starting_price': isStartingPrice,
-        'updated_at': DateTime.now().toIso8601String(),
-      })
-      .eq('id', id);
+  await _writeWithFallback(
+    (data) async => await supabase.from('partner_service_packages').update(data).eq('id', id),
+    {
+      'name': name,
+      'description': description,
+      'price': price,
+      'is_starting_price': isStartingPrice,
+      'updated_at': DateTime.now().toIso8601String(),
+    },
+    _packageDetail(includes: includes, excludes: excludes, priceUnit: priceUnit, minPeople: minPeople, maxPeople: maxPeople),
+  );
+}
+
+/// Extras do próprio parceiro (188). Vazio antes da migração.
+final partnerOwnExtrasProvider = FutureProvider<List<ServiceExtra>>((ref) async {
+  final partnerId = _partnerId(ref);
+  try {
+    final rows = await supabase
+        .from('partner_service_extras')
+        .select()
+        .eq('partner_id', partnerId)
+        .order('position', ascending: true);
+    return rows.map(ServiceExtra.fromRow).toList();
+  } catch (_) {
+    return const <ServiceExtra>[];
+  }
+});
+
+Future<void> saveServiceExtra({
+  String? id,
+  required String name,
+  required List<String> details,
+  required double price,
+  required String priceUnit,
+  required List<String> packageIds,
+  int position = 0,
+}) async {
+  final data = {
+    'name': name,
+    'details': details,
+    'price': price,
+    'price_unit': priceUnit,
+    'package_ids': packageIds,
+    'updated_at': DateTime.now().toIso8601String(),
+  };
+  if (id == null) {
+    await supabase.from('partner_service_extras').insert({
+      ...data,
+      'partner_id': supabase.auth.currentUser!.id,
+      'position': position,
+    });
+  } else {
+    await supabase.from('partner_service_extras').update(data).eq('id', id);
+  }
+}
+
+Future<void> removeServiceExtra(String id) async {
+  await supabase.from('partner_service_extras').delete().eq('id', id);
 }
 
 Future<void> removeServicePackage(String id) async {

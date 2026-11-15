@@ -105,7 +105,18 @@ class RequestRow extends StatelessWidget {
       return KitRow(
         lead: V2Avatar(booking.clientName, imageUrl: booking.clientAvatarUrl),
         title: booking.clientName,
-        sub: [meta, if (booking.packageLabel.isNotEmpty) booking.packageLabel].join(' · '),
+        // 188: num pedido de pacote mostra o pacote e o nº de pessoas.
+        sub: [
+          meta,
+          if (booking.isPackageRequest) ...[
+            'Pacote ${booking.packageSnapshot!['name']}',
+            if (booking.extrasSnapshot.isNotEmpty) '+ ${booking.extrasSnapshot.length} extra',
+            if (booking.people != null) '${booking.people} p.',
+          ] else if (booking.fromQuoteRequest)
+            'Orçamento'
+          else if (booking.packageLabel.isNotEmpty)
+            booking.packageLabel,
+        ].join(' · '),
         trailing: _tag,
         onTap: onTap,
       );
