@@ -9,12 +9,9 @@ import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
-import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
-import '../../../shared/widgets/page_header.dart';
-import '../../../shared/widgets/alert_outline.dart' show AlertTone;
-import '../../../shared/widgets/dense_card.dart' show AlertStrip;
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gallery_placeholder.dart';
 import '../../../core/gallery/gallery_social.dart';
@@ -74,19 +71,16 @@ class GalleryScreen extends ConsumerWidget {
             bottom: false,
             child: Column(
               children: [
-                PageHeader(
-                  title: 'Galeria',
-                  topPadding: 8,
-                  // Sem seta de voltar sempre que há navbar (casal ou
-                  // convidado) — mesma convenção dos outros ecrãs raiz.
-                  showBack: !showGuestNav,
-                  // Redesign 2026-10: "+" para carregar fotos, no mesmo
-                  // sítio que nos outros ecrãs (antes era um cartão rosa).
-                  trailing: AddActionButton(
-                    onTap: () => _upload(context, ref, resolvedWeddingId),
-                  ),
+                // Mockup «Páginas do evento» → Galeria (2026-11-14).
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    KitHeader(actions: [
+                      KitAddButton(tooltip: 'Carregar fotos', onTap: () => _upload(context, ref, resolvedWeddingId)),
+                    ]),
+                    const KitTitle('Galeria', subtitle: 'Fotos vossas e dos convidados.'),
+                  ]),
                 ),
-                const SizedBox(height: 16),
                 Expanded(
                   child: _GalleryBody(
                     weddingId: resolvedWeddingId,
@@ -209,48 +203,47 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
             ? photos.where((p) => p.status == 'pending').toList()
             : const <GalleryPhoto>[];
         var approved = photos.where((p) => p.status == 'approved').toList();
+        final meta = ref.watch(galleryFeedMetaProvider(widget.weddingId)).asData?.value ?? const {};
+        final allCount = approved.length;
+        final mineCount = approved.where((p) => p.uploadedBy == widget.currentUserId).length;
+        final favCount = approved.where((p) => meta[p.id]?.likedByMe ?? false).length;
         if (_tab == _GalleryTab.mine) {
           approved = approved.where((p) => p.uploadedBy == widget.currentUserId).toList();
         } else if (_tab == _GalleryTab.favorites) {
           // "Favoritas" = fotos de que gostaste (gostos reais, 078).
-          final meta = ref.watch(galleryFeedMetaProvider(widget.weddingId)).asData?.value ?? const {};
           approved = approved.where((p) => meta[p.id]?.likedByMe ?? false).toList();
         }
 
-        const tabs = [
-          _GalleryTab.all,
-          _GalleryTab.mine,
-          _GalleryTab.favorites,
-        ];
         final list = ListView(
-          padding: EdgeInsets.fromLTRB(
-            AppTheme.screenMargin,
-            0,
-            AppTheme.screenMargin,
-            FloatingFilterBar.bottomPadding(aboveNav: widget.aboveNav),
-          ),
+          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 120),
           children: [
             if (pending.isNotEmpty) ...[
-              // Alerta pendente (DESIGN §7: fundo branco + linha amarela,
-              // nunca fundo amarelo); "Rever" abre a lista para aprovar.
-              AlertStrip(
-                tone: AlertTone.pending,
+              // Alerta pendente (DESIGN §7): «Rever» abre a lista para aprovar.
+              KitAlert(
                 text: pending.length == 1
                     ? '1 foto de convidados à espera da vossa aprovação.'
                     : '${pending.length} fotos de convidados à espera da vossa aprovação.',
-                cta: _showPending ? 'Fechar' : 'Rever',
-                onTap: () => setState(() => _showPending = !_showPending),
+                action: _showPending ? 'Fechar' : 'Rever',
+                onAction: () => setState(() => _showPending = !_showPending),
               ),
-              const SizedBox(height: 12),
               if (_showPending) ...[
+                const SizedBox(height: 12),
                 for (final photo in pending)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _PendingPhotoCard(photo: photo, weddingId: widget.weddingId),
                   ),
               ],
-              const SizedBox(height: 8),
             ],
+            KitPills([
+              KitPill(label: 'Todas', count: allCount, selected: _tab == _GalleryTab.all,
+                  onTap: () => setState(() => _tab = _GalleryTab.all)),
+              KitPill(label: widget.isCouple ? 'Vossas' : 'As tuas', count: mineCount, selected: _tab == _GalleryTab.mine,
+                  onTap: () => setState(() => _tab = _GalleryTab.mine)),
+              KitPill(label: 'Favoritas', count: favCount, selected: _tab == _GalleryTab.favorites,
+                  onTap: () => setState(() => _tab = _GalleryTab.favorites)),
+            ]),
+            const SizedBox(height: 16),
             if (approved.isEmpty)
               GalleryEmptyState(
                 message: switch (_tab) {
@@ -265,31 +258,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
               GallerySocialGrid(weddingId: widget.weddingId, photos: approved),
           ],
         );
-        final filters = FilterChipsRow(
-          items: const [
-            FilterBarItem('Todas'),
-            FilterBarItem('As tuas'),
-            FilterBarItem('Favoritas'),
-          ],
-          selected: tabs.indexOf(_tab),
-          onSelected: (i) => setState(() => _tab = tabs[i]),
-        );
-        if (widget.navBuilder != null) return withNav(list, top: filters);
-        return Stack(
-          children: [
-            Positioned.fill(child: list),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: FloatingFilterBar(
-                items: filters.items,
-                selected: filters.selected,
-                onSelected: filters.onSelected,
-              ),
-            ),
-          ],
-        );
+        return withNav(list);
       },
     );
   }

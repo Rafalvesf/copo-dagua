@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/checklist/checklist_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
-import '../../../shared/category_tag_color.dart';
-import '../../../shared/widgets/assignee_cluster.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/month_calendar_grid.dart';
-import '../../../shared/widgets/page_header.dart';
-import '../../../shared/widgets/staggered_fade_in.dart';
+import '../../../shared/widgets/page_kit.dart';
+import '../../checklist/screens/checklist_screen.dart' show addChecklistTaskFlow;
 
 String _whoLabel(List<String> seeds) => seeds
     .map((s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1))
@@ -51,145 +48,43 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         .toList()
       ..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
 
+    final weekday = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][selected.weekday - 1];
+    final dayTitle = '$weekday, ${selected.day} de ${monthNamesPt[selected.month - 1].toLowerCase()}';
+
+    // Mockup «Páginas do evento» → Calendário (2026-11-14).
     return GradientScaffold(
       background: AppBackground.feed,
-      body: SafeArea(top: false, 
-        bottom: false,
-        child: ScrollingHeader(
- header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-            const PageHeader(
-              title: 'Calendário',
-              centered: true,
-              subtitle: 'As reuniões e prazos do vosso casamento.',
-            ),
-            const SizedBox(height: 16)
- ],
- body: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.screenMargin,
-                  0,
-                  AppTheme.screenMargin,
-                  24,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    MonthCalendarGrid(
-                      visibleMonth: visibleMonth,
-                      selected: selected,
-                      markedDays: markedDays,
-                      onSelectDay: (day) => setState(() => _selected = day),
-                      onMonthChanged: (month) =>
-                          setState(() => _visibleMonth = month),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Compromissos de ${formatShortDatePt(selected)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: AppFontSize.lg,
-                        color: AppTheme.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (dayItems.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Text(
-                          'Sem compromissos neste dia.',
-                          style: TextStyle(color: AppTheme.inkMuted),
-                        ),
-                      )
-                    else
-                      StaggeredFadeIn(
-                        listKey: selected,
-                        children: [
-                          for (final item in dayItems)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _TaskAgendaCard(item: item),
-                            ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-),
-      ),
-    );
-  }
-}
-
-class _TaskAgendaCard extends StatelessWidget {
-  final ChecklistItem item;
-
-  const _TaskAgendaCard({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.gray),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: KitPage(
         children: [
-          SizedBox(
-            width: 48,
-            child: Text(
-              formatTimePt(item.dueDate!),
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: AppFontSize.md,
-                color: AppTheme.accentOliveDark,
-              ),
-            ),
+          KitHeader(actions: [
+            KitAddButton(tooltip: 'Nova tarefa', onTap: () => addChecklistTaskFlow(context, ref)),
+          ]),
+          const KitTitle('Calendário', subtitle: 'As reuniões e os prazos do vosso evento.'),
+          const SizedBox(height: 20),
+          MonthCalendarGrid(
+            visibleMonth: visibleMonth,
+            selected: selected,
+            markedDays: markedDays,
+            onSelectDay: (day) => setState(() => _selected = day),
+            onMonthChanged: (month) => setState(() => _visibleMonth = month),
           ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: AppFontSize.lg,
-                    color: AppTheme.ink,
+          KitSection(dayTitle),
+          KitGroup([
+            if (dayItems.isEmpty)
+              const KitRow(title: 'Sem compromissos neste dia.')
+            else
+              for (final item in dayItems)
+                KitRow(
+                  lead: SizedBox(
+                    width: 44,
+                    child: Text(formatTimePt(item.dueDate!),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                   ),
+                  title: item.title,
+                  sub: item.assigneeSeeds.isEmpty ? null : _whoLabel(item.assigneeSeeds),
+                  trailing: item.category.isEmpty ? null : KitTag(item.category, kind: KitTagKind.neutral),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  item.category,
-                  style: TextStyle(
-                    color: colorForTagLabel(item.category),
-                    fontSize: AppFontSize.sm,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (item.assigneeSeeds.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      AssigneeCluster(seeds: item.assigneeSeeds),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          _whoLabel(item.assigneeSeeds),
-                          style: const TextStyle(
-                            color: AppTheme.inkMuted,
-                            fontSize: AppFontSize.sm,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
+          ]),
         ],
       ),
     );

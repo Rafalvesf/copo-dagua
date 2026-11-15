@@ -343,6 +343,17 @@ class _AddTaskResult {
   _AddTaskResult({required this.title, required this.category, this.dueDate});
 }
 
+/// «+» do Calendário: a mesma folha de nova tarefa da Checklist.
+Future<void> addChecklistTaskFlow(BuildContext context, WidgetRef ref) async {
+  final weddingId = ref.read(checklistControllerProvider.notifier).currentWeddingId;
+  if (weddingId == null) return;
+  final result = await _showAddTaskSheet(context);
+  if (result == null) return;
+  ref.read(checklistControllerProvider.notifier).addItem(
+        ChecklistItem(id: '', weddingId: weddingId, title: result.title, category: result.category, dueDate: result.dueDate),
+      );
+}
+
 Future<_AddTaskResult?> _showAddTaskSheet(BuildContext context) {
   return showIslandSheet<_AddTaskResult>(
     context: context,
