@@ -447,7 +447,7 @@ class _PageBody extends ConsumerWidget {
       const _BookingsSection(),
       _ManageList(wedding: wedding),
     ];
-    final padding = EdgeInsets.fromLTRB(0, (classic ? 0 : 40) + MediaQuery.paddingOf(context).top, 0, 140);
+    final padding = EdgeInsets.fromLTRB(0, classic ? 0 : 40 + MediaQuery.paddingOf(context).top, 0, 140);
     if (!scrollable) {
       // Pré-visualização (modo de edição): sem lista que desliza.
       return Padding(
