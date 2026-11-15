@@ -707,7 +707,6 @@ void main() {
   // Sem sessão
   testWidgets('00 boas-vindas', (t) => _shoot(t, '00_welcome', signedOut, '/welcome'));
   testWidgets('01 login', (t) => _shoot(t, '01_login', signedOut, '/login'));
-  testWidgets('02 tipo de conta', (t) => _shoot(t, '02_role', signedOut, '/role'));
   testWidgets('03 registo', (t) => _shoot(t, '03_register', signedOut, '/register?role=couple'));
   testWidgets('04 onboarding', (t) => _shoot(
         t,

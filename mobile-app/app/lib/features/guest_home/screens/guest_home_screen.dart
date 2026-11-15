@@ -28,8 +28,7 @@ import '../../../shared/widgets/v2_kit.dart';
 import 'guest_table_screen.dart';
 import '../widgets/guest_home_sections.dart';
 
-/// Home de quem se regista com `UserRole.guest` (`role_selection_screen.dart`,
-/// "Sou convidado") — pedido explícito do utilizador (mockup de
+/// Home de quem se regista com `UserRole.guest` («Começar» → convidado) — pedido explícito do utilizador (mockup de
 /// referência): página de aterragem "O nosso casamento" (foto de capa,
 /// contagem decrescente, data/local/hashtag, citação), em vez da lista
 /// simples de casamentos que existia antes. Um convidado ligado a mais
