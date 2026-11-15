@@ -423,7 +423,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/guest-profile/:weddingId',
         builder: (context, state) =>l29.HomeFeedScreen(guestMode: true, guestWeddingId: state.pathParameters['weddingId']),
       ),
-      // Resposta, menu, acompanhantes e mesa de um evento (antigo perfil
+      // Resposta, acompanhantes e mesa de um evento (antigo perfil
       // do convidado).
       GoRoute(
         path: '/guest-presenca/:weddingId',
