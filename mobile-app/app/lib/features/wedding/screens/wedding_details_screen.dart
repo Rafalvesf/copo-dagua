@@ -2553,17 +2553,18 @@ class _StatBlocks extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: _card(radius: 20),
+          // Conteúdo ao centro (pedido 2026-11-15).
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+              Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
               const SizedBox(height: 6),
               Text.rich(TextSpan(children: [
                 TextSpan(text: value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                 if (of != null) TextSpan(text: ' $of', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-              ])),
+              ]), textAlign: TextAlign.center),
               const SizedBox(height: 4),
-              Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis,
+              Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: subColor ?? AppTheme.inkMuted)),
             ],
           ),
