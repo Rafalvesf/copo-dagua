@@ -243,10 +243,11 @@ Expanded(child: ScrollingHeader(
                                   }
                                 }),
                           style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
+                            // Secundário: contorno preto 1,5 (DESIGN.md §2).
+                            minimumSize: const Size.fromHeight(52),
                             backgroundColor: Colors.white,
-                            foregroundColor: AppTheme.accentOliveDark,
-                            side: BorderSide.none,
+                            foregroundColor: AppTheme.ink,
+                            side: const BorderSide(color: AppTheme.ink, width: 1.5),
                             elevation: 0,
                             shadowColor: const Color(0x22171713),
                             shape: const StadiumBorder(),
