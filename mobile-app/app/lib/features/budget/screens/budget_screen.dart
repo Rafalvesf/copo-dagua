@@ -25,6 +25,7 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/island_sheet.dart';
@@ -123,94 +124,57 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           ),
       ],
     ];
-    final total = expenseState.expenses.length;
+    final shown = switch (_filter) {
+      _BudgetFilter.all => [..._byDueDate(pending), ...paid],
+      _BudgetFilter.paid => paid,
+      _BudgetFilter.pending => _byDueDate(pending),
+    };
 
+    // Mockup «Páginas do evento» → Orçamento (2026-11-14).
     return GradientScaffold(
       background: AppBackground.feed,
       body: budget == null
           ? const Center(child: CircularProgressIndicator())
-          : Stack(
+          : KitPage(
               children: [
-                SafeArea(top: false, 
-                  bottom: false,
-                  child: EdgeFade(
-                    topFadeHeight: 8,
-                    bottomFadeHeight: 32,
-                    child: ListView(
-                      padding: ( EdgeInsets.zero).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
-                      children: [
-                        PageHeader(
-                          title: 'Orçamento',
-                          centered: true,
-                          trailing: AddActionButton(onTap: _addExpense),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            AppTheme.screenMargin,
-                            16,
-                            AppTheme.screenMargin,
-                            FloatingFilterBar.bottomPadding(aboveNav: false),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _SummaryCard(budget: budget),
-                              if (_filter == _BudgetFilter.paid) ...[
-                                SectionTitle('Pagas', trailing: _TotalTag(paid)),
-                                _ExpenseList(expenses: paid),
-                              ] else if (_filter == _BudgetFilter.pending) ...[
-                                SectionTitle('Pendentes', trailing: _TotalTag(pending)),
-                                _ExpenseList(expenses: _byDueDate(pending)),
-                              ] else ...[
-                                const SizedBox(height: 24),
-                                _CategoriesSection(
-                                  categories: budget.categories,
-                                  expanded: _categoriesExpanded,
-                                  onToggleExpand: () => setState(
-                                    () => _categoriesExpanded =
-                                        !_categoriesExpanded,
-                                  ),
-                                ),
-                                const SectionTitle('Pagamentos próximos'),
-                                _ExpenseList(expenses: _byDueDate(pending)),
-                                // Relatórios para descarregar (2026-10-20).
-                                const SectionTitle('Exportar'),
-                                ExportCard(
-                                  reportLabel: 'Gastos e parceiros',
-                                  partnerSide: false,
-                                  load: () => loadCoupleReport(ref.read(weddingControllerProvider).wedding!.id),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                KitHeader(actions: [KitAddButton(tooltip: 'Nova despesa', onTap: _addExpense)]),
+                const KitTitle('Orçamento'),
+                _SummaryCard(budget: budget),
+                const KitSection('Categorias'),
+                _CategoriesSection(
+                  categories: budget.categories,
+                  expanded: _categoriesExpanded,
+                  onToggleExpand: () => setState(() => _categoriesExpanded = !_categoriesExpanded),
                 ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: FloatingFilterBar(
-                    items: const [
-                      FilterBarItem('Todas'),
-                      FilterBarItem('Pagas'),
-                      FilterBarItem('Pendentes'),
-                    ],
-                    selected: const [
-                      _BudgetFilter.all,
-                      _BudgetFilter.paid,
-                      _BudgetFilter.pending,
-                    ].indexOf(_filter),
-                    onSelected: (i) => setState(
-                      () => _filter = const [
-                        _BudgetFilter.all,
-                        _BudgetFilter.paid,
-                        _BudgetFilter.pending,
-                      ][i],
-                    ),
+                const KitSection('Pagamentos'),
+                KitPills(top: 0, [
+                  KitPill(
+                    label: 'Todos',
+                    count: paid.length + pending.length,
+                    selected: _filter == _BudgetFilter.all,
+                    onTap: () => setState(() => _filter = _BudgetFilter.all),
                   ),
+                  KitPill(
+                    label: 'Pendentes',
+                    count: pending.length,
+                    selected: _filter == _BudgetFilter.pending,
+                    onTap: () => setState(() => _filter = _BudgetFilter.pending),
+                  ),
+                  KitPill(
+                    label: 'Pagos',
+                    count: paid.length,
+                    selected: _filter == _BudgetFilter.paid,
+                    onTap: () => setState(() => _filter = _BudgetFilter.paid),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                _ExpenseList(expenses: shown),
+                // Relatórios para descarregar (2026-10-20).
+                const KitSection('Exportar'),
+                ExportCard(
+                  reportLabel: 'Gastos e parceiros',
+                  partnerSide: false,
+                  load: () => loadCoupleReport(ref.read(weddingControllerProvider).wedding!.id),
                 ),
               ],
             ),
@@ -221,19 +185,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
 List<Expense> _byDueDate(List<Expense> list) => List.of(list)
   ..sort((a, b) => (a.dueDate ?? DateTime(2100)).compareTo(b.dueDate ?? DateTime(2100)));
 
-class _TotalTag extends StatelessWidget {
-  final List<Expense> expenses;
-  const _TotalTag(this.expenses);
-
-  @override
-  Widget build(BuildContext context) {
-    final total = expenses.fold<double>(0, (sum, e) => sum + e.amount);
-    return Text(euros(total),
-        style: TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark));
-  }
-}
-
-/// Canvas "Orçamento — redesign": cartão verde "AINDA TENS".
+/// Resumo «Ainda tens» (mockup Orçamento).
 class _SummaryCard extends StatelessWidget {
   final EffectiveBudget budget;
 
@@ -243,21 +195,12 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final pct = (budget.progress * 100).round();
     final over = budget.remaining < 0;
-    return GreenHero(
-      label: over ? 'ACIMA DO ORÇAMENTO' : 'AINDA TENS',
+    return KitSummary(
+      kicker: over ? 'Acima do orçamento' : 'Ainda tens',
       value: euros(budget.remaining.abs()),
-      suffix: 'de ${euros(budget.total)}',
+      unit: 'de ${euros(budget.total)}',
       progress: budget.progress,
-      doodles: const [Hi.banknotes, Hi.currencyEuro, Hi.heartOutline],
-      footer: Row(
-        children: [
-          Expanded(
-            child: Text('Gasto ${euros(budget.spent)}',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
-          ),
-          HeroPill(over ? '$pct% · acima do orçamento' : '$pct% · dentro do orçamento', solid: true),
-        ],
-      ),
+      footer: 'Gastos ${euros(budget.spent)} · $pct% do orçamento',
     );
   }
 }
@@ -281,39 +224,20 @@ class _CategoriesSection extends StatelessWidget {
         : categories.take(_categoriesCollapsedLimit).toList();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text('Categorias', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        const SizedBox(height: 12),
-        for (final (index, category) in visible.indexed) ...[
-          _CategoryRow(category: category, index: index),
-          if (index != visible.length - 1) const SizedBox(height: 10),
-        ],
-        if (categories.length > _categoriesCollapsedLimit) ...[
-          const SizedBox(height: 10),
-          SnappyTap(
-            onTap: onToggleExpand,
-            child: Row(
-              children: [
-                Text(
-                  expanded
-                      ? 'Ver menos'
-                      : 'Ver todas as categorias (${categories.length})',
-                  style: TextStyle(
-                    color: AppTheme.accentOliveDark,
-                    fontWeight: FontWeight.w700,
-                    fontSize: AppFontSize.md,
-                  ),
-                ),
-                Icon(
-                  expanded ? Hi.chevronUp : Hi.chevronDown,
-                  size: 18,
-                  color: AppTheme.accentOliveDark,
-                ),
-              ],
+        KitGroup([for (final category in visible) _CategoryRow(category: category)]),
+        if (categories.length > _categoriesCollapsedLimit)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: SnappyTap(
+              onTap: onToggleExpand,
+              child: Text(
+                expanded ? 'Ver menos' : 'Ver todas as categorias (${categories.length})',
+                style: const TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 14),
+              ),
             ),
           ),
-        ],
       ],
     );
   }
@@ -321,9 +245,8 @@ class _CategoriesSection extends StatelessWidget {
 
 class _CategoryRow extends ConsumerWidget {
   final EffectiveBudgetCategory category;
-  final int index;
 
-  const _CategoryRow({required this.category, required this.index});
+  const _CategoryRow({required this.category});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -333,10 +256,6 @@ class _CategoryRow extends ConsumerWidget {
     final booked = weddingId == null ? const <String, List<String>>{} : (ref.watch(bookedPartnersBySlugProvider(weddingId)).value ?? const {});
     final partners = [for (final slug in slugsForBudgetCategory(category.base.partnerCategory)) ...?booked[slug]];
     final ratio = allocated == 0 ? 0.0 : category.amount / allocated;
-    final icon = category.base.partnerCategory == null
-        ? Hi.documentText
-        : iconForPartnerCategory(category.base.partnerCategory!);
-
     return SnappyTap(
       onTap: () => showIslandSheet<void>(
         context: context,
@@ -347,58 +266,13 @@ class _CategoryRow extends ConsumerWidget {
         ),
         builder: (_) => _CategorySheet(category: category.base),
       ),
-      // Canvas: cartão branco com a linha fina, ícone "autocolante",
-      // "gasto de alocado" e uma barra (vermelha acima de 85%).
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: whiteLineCard(),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            StickerIcon(icon, turns: StickerIcon.tilt(index)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          category.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${euros(category.amount)} de ${euros(allocated)}',
-                        style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-                      ),
-                    ],
-                  ),
-                  if (partners.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Align(alignment: Alignment.centerLeft, child: BookedPartnerBadge(partners)),
-                  ],
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                    child: LinearProgressIndicator(
-                      value: ratio > 1 ? 1 : ratio.toDouble(),
-                      minHeight: 6,
-                      backgroundColor: const Color(0xFFEEF2EB),
-                      valueColor: AlwaysStoppedAnimation(
-                        ratio > 0.85 ? AppStatusColors.declined : AppTheme.accentOliveDark,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      child: KitRow(
+        title: category.name,
+        sub: '${euros(category.amount)} de ${euros(allocated)}',
+        trailing: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end, children: [
+          SizedBox(width: 92, child: KitBar(ratio, height: 6)),
+          if (partners.isNotEmpty) ...[const SizedBox(height: 6), BookedPartnerBadge(partners)],
+        ]),
       ),
     );
   }
@@ -505,12 +379,10 @@ class _ExpenseList extends ConsumerWidget {
         ),
       );
     }
-    return Column(
-      children: [
-        for (final (i, expense) in expenses.indexed) ...[
+    return KitGroup([
+        for (final expense in expenses)
           _ExpenseRow(
             expense: expense,
-            index: i,
             onTap: () {
               // Pagamentos de reservas pagam-se nas Reservas.
               if (expense.id.startsWith('booking:')) {
@@ -537,100 +409,38 @@ class _ExpenseList extends ConsumerWidget {
               );
             },
           ),
-          const SizedBox(height: 10),
-        ],
-      ],
-    );
+      ]);
   }
 }
 
-/// Canvas: pendentes com data em cartão rosa; pagas em cartão branco
-/// com "PAGO"; a data num quadrado branco inclinado.
+/// Linha de pagamento: valor e data por baixo; etiqueta à direita —
+/// vermelha a 3 dias ou menos, amarela pendente, verde paga.
 class _ExpenseRow extends StatelessWidget {
   final Expense expense;
   final VoidCallback onTap;
-  final int index;
 
-  const _ExpenseRow({required this.expense, required this.onTap, this.index = 0});
+  const _ExpenseRow({required this.expense, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final due = expense.dueDate;
-    final icon = expense.categorySlug != null
-        ? iconForCategorySlug(expense.categorySlug!)
-        : expense.category == null
-        ? Hi.documentText
-        : iconForPartnerCategory(expense.category!);
-    final pink = !expense.paid && due != null && due.difference(DateTime.now()).inDays <= 30;
-
-    return SnappyTap(
+    String dm(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}'
+        '${d.year == DateTime.now().year ? '' : '/${d.year}'}';
+    final today = DateUtils.dateOnly(DateTime.now());
+    final days = due == null ? null : DateUtils.dateOnly(due).difference(today).inDays;
+    final KitTag tag = expense.paid
+        ? const KitTag('Pago')
+        : days != null && days <= 3
+            ? KitTag(days < 0 ? 'Atrasado' : (days == 0 ? 'Hoje' : (days == 1 ? '1 dia' : '$days dias')), kind: KitTagKind.urgent)
+            : const KitTag('Pendente', kind: KitTagKind.pending);
+    return KitRow(
+      title: expense.title,
+      sub: [
+        euros(expense.amount),
+        if (!expense.paid && due != null) 'até ${dm(due)}',
+      ].join(' · '),
+      trailing: tag,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: pink
-            ? BoxDecoration(
-                color: const Color(0xFFF6E3DF),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-              )
-            : whiteLineCard(radius: 20),
-        child: Row(
-          children: [
-            due != null
-                ? DateSticker(
-                    date: due,
-                    turns: StickerIcon.tilt(index),
-                    monthColor: pink ? const Color(0xFFA3412E) : AppTheme.accentOliveDark,
-                  )
-                : StickerIcon(icon, size: 44, turns: StickerIcon.tilt(index)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    expense.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    expense.id.startsWith('booking:')
-                        ? (expense.paid ? 'Reserva · pago na app' : 'Reserva · toca para pagar')
-                        : expense.paid
-                            ? 'Paga · toca para desfazer'
-                            : 'Pendente · toca para marcar como paga',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(euros(expense.amount),
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base)),
-                if (expense.paid) ...[
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.accentOliveDark.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text('PAGO',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
