@@ -8,6 +8,7 @@ import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../partner_bookings/widgets/request_row.dart';
 import '../../../shared/widgets/month_calendar_grid.dart';
@@ -33,92 +34,50 @@ class _PartnerCalendarScreenState
   Widget build(BuildContext context) {
     final bookingsAsync = ref.watch(partnerBookingsProvider(null));
 
+    // Mockup «Páginas do parceiro» → Calendário (2026-11-14). Sem
+    // «Bloquear dia»: a app ainda não tem dias bloqueados.
+    final bookings = bookingsAsync.value ?? const <Booking>[];
+    final markedDays = bookings.map((b) => dayOnly(b.eventDate)).toSet();
+    final dayBookings = bookings.where((b) => dayOnly(b.eventDate) == _selected).toList();
     return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(top: false, 
-        bottom: false,
-        child: ScrollingHeader(
- header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-            const PageHeader(title: 'Calendário', centered: true),
-            const SizedBox(height: 18)
- ],
- body: bookingsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerBookingsProvider(null))),
-                data: (bookings) {
-                  final markedDays = bookings
-                      .map((b) => dayOnly(b.eventDate))
-                      .toSet();
-                  final dayBookings = bookings
-                      .where((b) => dayOnly(b.eventDate) == _selected)
-                      .toList();
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      0,
-                      AppTheme.screenMargin,
-                      24,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Canvas "Parceiro — calendário (redesign)": mês num
-                        // cartão branco com sombra suave.
-                        // Só a sombra: o cartão (e o interior) já vêm do
-                        // MonthCalendarGrid — antes ficava um cartão dentro
-                        // de outro, com duas margens.
-                        Container(
-                          decoration: softCard(),
-                          child: MonthCalendarGrid(
-                            visibleMonth: _visibleMonth,
-                            selected: _selected,
-                            markedDays: markedDays,
-                            onSelectDay: (day) =>
-                                setState(() => _selected = day),
-                            onMonthChanged: (month) =>
-                                setState(() => _visibleMonth = month),
-                          ),
-                        ),
-                        SectionTitle(_dayTitle(_selected)),
-                        if (dayBookings.isEmpty)
-                          const V2RowCard(
-                            lead: StickerIcon(Hi.calendar),
-                            title: 'Sem compromissos neste dia',
-                            sub: 'Os dias com reservas aparecem marcados no mês.',
-                          )
-                        else
-                          StaggeredFadeIn(
-                            listKey: _selected,
-                            children: [
-                              for (final booking in dayBookings)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: RequestRow(
-                                    booking: booking,
-                                    compact: true,
-                                    onTap: () => context.push(
-                                      '/partner-requests/${booking.id}',
-                                      extra: booking,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-),
+      background: AppBackground.feed,
+      body: KitPage(
+        children: [
+          const KitHeader(),
+          const KitTitle('Calendário', subtitle: 'As tuas reservas, dia a dia.'),
+          const SizedBox(height: 20),
+          if (bookingsAsync.hasError)
+            AsyncErrorView(onRetry: () => ref.invalidate(partnerBookingsProvider(null)))
+          else ...[
+            MonthCalendarGrid(
+              visibleMonth: _visibleMonth,
+              selected: _selected,
+              markedDays: markedDays,
+              onSelectDay: (day) => setState(() => _selected = day),
+              onMonthChanged: (month) => setState(() => _visibleMonth = month),
+            ),
+            KitSection(_dayTitle(_selected)),
+            KitGroup([
+              if (bookingsAsync.isLoading && bookings.isEmpty)
+                const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()))
+              else if (dayBookings.isEmpty)
+                const KitRow(title: 'Sem compromissos neste dia', sub: 'Os dias com reservas aparecem marcados no mês.')
+              else
+                for (final booking in dayBookings)
+                  RequestRow(
+                    booking: booking,
+                    flat: true,
+                    onTap: () => context.push('/partner-requests/${booking.id}', extra: booking),
+                  ),
+            ]),
+          ],
+        ],
       ),
     );
   }
 }
 
-const _weekdaysLong = [
-  'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira',
-  'Sexta-feira', 'Sábado', 'Domingo',
-];
+const _weekdaysLong = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 String _dayTitle(DateTime d) =>
     '${_weekdaysLong[d.weekday - 1]}, ${d.day} de ${monthNamesPt[d.month - 1].toLowerCase()}';

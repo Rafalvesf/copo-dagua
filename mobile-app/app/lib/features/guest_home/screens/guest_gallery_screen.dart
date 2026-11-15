@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import '../../../core/events/event_pass.dart' show myEventPassProvider, GuestSections;
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -130,82 +131,57 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
     final open = opts.galleryOpen(date);
     final canUpload = open && opts.galleryUpload;
 
+    final back = widget.weddingId == null ? '/guest-home' : '/guest-home/${widget.weddingId}';
+    // Mockup «Páginas do convidado» → Galeria (2026-11-14): voltar e «+»
+    // em cima, título, filtros em pílula e a grelha; sem barra de baixo.
     return GradientScaffold(
-      background: AppBackground.subtle,
-      body: Stack(
+      background: AppBackground.feed,
+      body: KitPage(
         children: [
-          SafeArea(top: false, 
-            bottom: false,
-            child: ScrollingHeader(
- header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-                GuestEventsPillRow(to: widget.weddingId == null ? '/guest-home' : '/guest-home/${widget.weddingId}'),
-                // Canvas "Convidado · Galeria": título ao centro e "+" verde.
-                // Redesign 2026-10-19: "+" verde redondo como no canvas.
-                PageHeader(
-                  title: 'Galeria',
-                  showBack: false,
-                  centered: true,
-                  trailing: canUpload ? V2RoundButton(icon: Hi.plus, tooltip: 'Partilhar fotos', solid: true, onTap: _upload) : null,
-                ),
-                const SizedBox(height: 16)
- ],
- body: !open
-                      ? const EmptyStateView(message: 'A galeria abre no dia do evento.', icon: Hi.rectangleStack)
-                      : photosAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId))),
-                    data: (photos) {
-                      var approved = photos.where((p) => p.status == 'approved').toList();
-                      if (_tab == _GalleryTab.mine) {
-                        approved = approved.where((p) => p.uploadedBy == myUserId).toList();
-                      } else if (_tab == _GalleryTab.favorites) {
-                        final meta = ref.watch(galleryFeedMetaProvider(widget.weddingId)).asData?.value ?? const {};
-                        approved = approved.where((p) => meta[p.id]?.likedByMe ?? false).toList();
-                      }
-
-                      return ListView(
-                        padding: EdgeInsets.fromLTRB(
-                          AppTheme.screenMargin,
-                          0,
-                          AppTheme.screenMargin,
-                          FloatingFilterBar.bottomPadding(aboveNav: true),
-                        ),
-                        children: [
-                          const Text(
-                            'As tuas fotos aparecem depois de os anfitriões aprovarem.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
-                          ),
-                          const V2Caps('Esta semana'),
-                          if (approved.isEmpty)
-                            const GalleryEmptyState(
-                              message: 'Ainda não existem fotos. Carrega as primeiras.',
-                            )
-                          else
-                            GallerySocialGrid(weddingId: widget.weddingId, photos: approved),
-                        ],
-                      );
-                    },
-                  ),
-),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: GuestBottomNav(current: GuestTab.gallery, weddingId: widget.weddingId, top: FilterChipsRow(
-              items: const [
-                FilterBarItem('Todas'),
-                FilterBarItem('As tuas'),
-                FilterBarItem('Favoritas'),
-              ],
-              selected: _GalleryTab.values.indexOf(_tab),
-              onSelected: (i) => setState(() => _tab = _GalleryTab.values[i]),
-            )),
-          ),
+          Row(children: [
+            GuestEventsPill(to: back),
+            const Spacer(),
+            if (canUpload) KitAddButton(tooltip: 'Partilhar fotos', onTap: _upload),
+          ]),
+          const KitTitle('Galeria', subtitle: 'As tuas fotos aparecem depois de os anfitriões aprovarem.'),
+          if (!open)
+            const Padding(
+              padding: EdgeInsets.only(top: 40),
+              child: EmptyStateView(message: 'A galeria abre no dia do evento.', icon: Hi.rectangleStack),
+            )
+          else
+            photosAsync.when(
+              loading: () => const Padding(padding: EdgeInsets.only(top: 60), child: Center(child: CircularProgressIndicator())),
+              error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId))),
+              data: (photos) {
+                final all = photos.where((p) => p.status == 'approved').toList();
+                final meta = ref.watch(galleryFeedMetaProvider(widget.weddingId)).asData?.value ?? const {};
+                final mine = all.where((p) => p.uploadedBy == myUserId).toList();
+                final favs = all.where((p) => meta[p.id]?.likedByMe ?? false).toList();
+                final shown = switch (_tab) {
+                  _GalleryTab.mine => mine,
+                  _GalleryTab.favorites => favs,
+                  _ => all,
+                };
+                return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  KitPills([
+                    KitPill(label: 'Todas', count: all.length, selected: _tab == _GalleryTab.values.first,
+                        onTap: () => setState(() => _tab = _GalleryTab.values.first)),
+                    KitPill(label: 'As tuas', count: mine.length, selected: _tab == _GalleryTab.mine,
+                        onTap: () => setState(() => _tab = _GalleryTab.mine)),
+                    KitPill(label: 'Favoritas', count: favs.length, selected: _tab == _GalleryTab.favorites,
+                        onTap: () => setState(() => _tab = _GalleryTab.favorites)),
+                  ]),
+                  const KitCaps('Esta semana', top: 20),
+                  if (shown.isEmpty)
+                    const GalleryEmptyState(message: 'Ainda não existem fotos. Carrega as primeiras.')
+                  else
+                    GallerySocialGrid(weddingId: widget.weddingId, photos: shown),
+                ]);
+              },
+            ),
         ],
       ),
     );
   }
 }
-

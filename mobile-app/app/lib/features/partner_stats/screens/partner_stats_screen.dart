@@ -6,6 +6,7 @@ import '../../../core/partners/partner_pro.dart';
 
 import '../../../core/partner_app/partner_analytics.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/charts.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -99,12 +100,11 @@ class _PeriodSwitch extends StatelessWidget {
   // Pílula branca com o período ativo a verde (redesign 2026-10-19).
   @override
   Widget build(BuildContext context) {
-    const values = AnalyticsPeriod.values;
-    return V2Segment(
-      options: [for (final p in values) p.label],
-      selected: values.indexOf(value),
-      onChanged: (i) => onChanged(values[i]),
-    );
+    // Mockup «Páginas do parceiro» → Resultados: filtros em pílula.
+    return KitPills(top: 0, [
+      for (final p in AnalyticsPeriod.values)
+        KitPill(label: p.label, selected: p == value, onTap: () => onChanged(p)),
+    ]);
   }
 }
 
@@ -151,7 +151,7 @@ class _Dashboard extends StatelessWidget {
           const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
-            decoration: softCard(),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               LineAreaChart(
                 values: [for (final p in a.revenueSeries) p.value],
@@ -191,7 +191,7 @@ class _Dashboard extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
-            childAspectRatio: 1.35,
+            childAspectRatio: 1.2,
             children: [
               _KpiTile(
                 label: 'Reservas',
@@ -233,7 +233,7 @@ class _Dashboard extends StatelessWidget {
                 child: Text(
                   'Pedidos por semana',
                   style: TextStyle(
-                    fontSize: AppFontSize.xl,
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.ink,
                   ),
@@ -248,7 +248,7 @@ class _Dashboard extends StatelessWidget {
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),
-            decoration: softCard(),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
             child: SimpleBarChart(
             values: [for (final p in a.requestsByWeek) p.value],
             labels: [
@@ -262,7 +262,7 @@ class _Dashboard extends StatelessWidget {
           const Text(
             'Do pedido à reserva',
             style: TextStyle(
-              fontSize: AppFontSize.xl,
+              fontSize: 22,
               fontWeight: FontWeight.w700,
               color: AppTheme.ink,
             ),
@@ -270,7 +270,7 @@ class _Dashboard extends StatelessWidget {
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: softCard(),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
             child: Column(children: [
               _FunnelRow(label: 'Pedidos recebidos', value: a.requests, total: a.requests),
               const SizedBox(height: 14),
@@ -282,7 +282,7 @@ class _Dashboard extends StatelessWidget {
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: softCard(),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
             child: Row(
               children: [
                 const StickerIcon(Hi.starOutline),
@@ -337,8 +337,8 @@ class _Dashboard extends StatelessWidget {
 
   static String? _countDelta(int current, int previous) {
     final d = current - previous;
-    if (d == 0) return null;
-    return '${d.abs()}';
+    if (d == 0) return 'igual a antes';
+    return '${d > 0 ? '+' : '−'}${d.abs()} que antes';
   }
 
   static String? _pctText(double? pct) {
@@ -446,50 +446,26 @@ class _KpiTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = spark;
+    // Mockup: rótulo 13, número 28 e uma linha 13 por baixo («+2 que antes»).
+    final sub = caption ?? deltaText;
     return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: softCard(),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-          ),
+          Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           const SizedBox(height: 4),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    value,
-                    style: const TextStyle(
-                      fontSize: AppFontSize.h3,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.ink,
-                    ),
-                  ),
-                ),
-              ),
-              if (deltaText != null) ...[
-                const SizedBox(width: 6),
-                _DeltaLabel(up: up, text: deltaText!, fontSize: AppFontSize.sm),
-              ],
-            ],
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
-          const Spacer(),
-          if (s != null && s.any((v) => v > 0))
-            Sparkline(values: s)
-          else if (caption != null)
-            Text(
-              caption!,
-              style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-            ),
+          if (sub != null) ...[
+            const SizedBox(height: 4),
+            Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          ],
         ],
       ),
     );
@@ -568,7 +544,7 @@ class _ProInsights extends ConsumerWidget {
           borderRadius: BorderRadius.circular(22),
           child: Container(
             padding: const EdgeInsets.all(16),
-            decoration: softCard(),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
             child: Row(children: [
               Icon(Hi.lockClosed, color: green),
               const SizedBox(width: 12),
@@ -591,7 +567,7 @@ class _ProInsights extends ConsumerWidget {
     Widget tile(String label, String value, [String? sub]) => Expanded(
           child: Container(
             padding: const EdgeInsets.all(14),
-            decoration: softCard(),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
               const SizedBox(height: 4),
@@ -606,7 +582,7 @@ class _ProInsights extends ConsumerWidget {
         Row(children: [
           Icon(Hi.trophy, size: 18, color: green),
           const SizedBox(width: 6),
-          const Text('Premium · últimos 30 dias', style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const Text('Premium · últimos 30 dias', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
         const SizedBox(height: 12),
         Row(children: [
@@ -624,7 +600,7 @@ class _ProInsights extends ConsumerWidget {
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),
-            decoration: softCard(),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
             child: SimpleBarChart(
               values: [for (final w in st.viewsByWeek) w.views.toDouble()],
               labels: [for (final w in st.viewsByWeek) '${w.start.day}/${w.start.month}'],

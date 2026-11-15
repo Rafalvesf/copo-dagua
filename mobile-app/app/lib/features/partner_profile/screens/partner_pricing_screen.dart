@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/vat_confirm.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -119,32 +120,16 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                       24,
                     ),
                     children: [
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _SegmentButton(
-                              label: 'Pacotes',
-                              selected: isPackages,
-                              onTap: _busy ? null : () => _setMode('packages'),
-                            ),
-                            const SizedBox(width: 8),
-                            _SegmentButton(
-                              label: 'Só orçamento',
-                              selected: !isPackages,
-                              onTap: _busy ? null : () => _setMode('quote_only'),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                      // Mockup «Páginas do parceiro» → Serviços e preços.
+                      KitPills(top: 0, [
+                        KitPill(label: 'Pacotes', selected: isPackages, onTap: _busy ? null : () => _setMode('packages')),
+                        KitPill(label: 'Só orçamento', selected: !isPackages, onTap: _busy ? null : () => _setMode('quote_only')),
+                      ]),
+                      const SizedBox(height: 16),
                       if (!isPackages)
                         Container(
                           padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surface,
-                            borderRadius: BorderRadius.circular(AppRadius.lg),
-                          ),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -162,15 +147,33 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                           ),
                         )
                       else ...[
-                        for (final pkg in packages)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 14),
-                            child: _PackageCard(
-                              pkg: pkg,
-                              onEdit: _busy ? null : () => _editPackage(pkg),
-                              onDelete: _busy ? null : () => _removePackage(pkg),
-                            ),
-                          ),
+                        if (packages.isNotEmpty)
+                          KitGroup([
+                            for (final pkg in packages)
+                              KitRow(
+                                title: pkg.name,
+                                sub: [
+                                  '${pkg.isStartingPrice ? 'A partir de ' : ''}${euros(pkg.price)}',
+                                  if (pkg.description.trim().isNotEmpty) pkg.description.trim(),
+                                ].join(' · '),
+                                onTap: _busy ? null : () => _editPackage(pkg),
+                                trailing: PopupMenuButton<String>(
+                                  tooltip: 'Mais opções',
+                                  padding: EdgeInsets.zero,
+                                  icon: const Icon(Hi.ellipsisHorizontal, size: 18, color: AppTheme.inkMuted),
+                                  onSelected: (v) {
+                                    if (_busy) return;
+                                    if (v == 'edit') _editPackage(pkg);
+                                    if (v == 'delete') _removePackage(pkg);
+                                  },
+                                  itemBuilder: (_) => const [
+                                    PopupMenuItem(value: 'edit', child: Text('Editar')),
+                                    PopupMenuItem(value: 'delete', child: Text('Remover')),
+                                  ],
+                                ),
+                              ),
+                          ]),
+                        const SizedBox(height: 16),
                         if (packages.length < _maxPackages)
                           SnappyTap(
                             onTap: _busy ? () {} : () => _addPackage(packages.length),

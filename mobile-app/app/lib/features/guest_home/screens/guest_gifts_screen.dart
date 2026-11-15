@@ -12,6 +12,7 @@ import '../../gifts/screens/gift_list_screens.dart' show GuestGiftListSection;
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -113,7 +114,7 @@ class GuestGiftsScreen extends ConsumerWidget {
     final hasList = wedding?.giftListUrl?.trim().isNotEmpty == true;
     // Canvas "Convidado · Presentes".
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.feed,
       body: Stack(
         children: [
           SafeArea(top: false, 
@@ -121,62 +122,58 @@ class GuestGiftsScreen extends ConsumerWidget {
             child: ListView(
               padding: ( const EdgeInsets.only(bottom: 140)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
               children: [
-                GuestEventsPillRow(to: weddingId == null ? '/guest-home' : '/guest-home/$weddingId'),
-                const PageHeader(title: 'Presentes', showBack: false, centered: true),
+                // Mockup «Páginas do convidado» → Presentes (2026-11-14).
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, AppTheme.screenMargin, 0),
+                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: GuestEventsPill(to: weddingId == null ? '/guest-home' : '/guest-home/$weddingId'),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Redesign 2026-10-19 (canvas "Convidado — presentes").
-                      GreenHero(
-                        label: 'DOS ANFITRIÕES',
-                        value: '',
-                        doodles: const [Hi.gift, Hi.heartOutline, Hi.sun],
-                        footer: Text(
-                          message?.isNotEmpty == true
-                              ? message!
-                              : 'A vossa presença é o melhor presente. Se quiserem mesmo oferecer algo, deixamos aqui as opções.',
-                          style: const TextStyle(fontSize: 14, height: 1.5, color: AppTheme.ink),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      // Lista de presentes na app (migração 160).
-                      if (wedding != null) GuestGiftListSection(weddingId: wedding.weddingId),
-                      if (hasList)
-                      SnappyTap(
-                        onTap: () => _openList(context, wedding),
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: softCard(),
-                          child: Row(
-                            children: [
-                              const StickerIcon(Hi.gift),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('Lista de presentes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                                    Text(
-                                      hasList ? 'Abre a lista dos anfitriões' : 'Os anfitriões ainda não indicaram',
-                                      style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text('ou', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                      ),
+                      const KitTitle('Presentes'),
+                      const SizedBox(height: 16),
                       Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: softCard(),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          const Text('DOS ANFITRIÕES',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                          const SizedBox(height: 8),
+                          Text(
+                            '«${message?.isNotEmpty == true ? message! : 'A vossa presença é o melhor presente. Se quiserem mesmo oferecer algo, deixamos aqui as opções.'}»',
+                            style: const TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                          ),
+                        ]),
+                      ),
+                      // Lista de presentes na app (migração 160).
+                      if (wedding != null) ...[const SizedBox(height: 14), GuestGiftListSection(weddingId: wedding.weddingId)],
+                      const KitSection('Como oferecer'),
+                      if (hasList || iban?.isNotEmpty != true)
+                        KitGroup([
+                          if (iban?.isNotEmpty != true)
+                            const KitRow(
+                              title: 'Envelope digital',
+                              sub: 'Os anfitriões ainda não indicaram um IBAN.',
+                              trailing: KitTag('Ainda não', kind: KitTagKind.neutral),
+                            ),
+                          if (hasList)
+                            KitRow(
+                              title: 'Lista de presentes',
+                              sub: 'Abre a lista dos anfitriões',
+                              chevron: true,
+                              onTap: () => _openList(context, wedding),
+                            ),
+                        ]),
+                      if (iban?.isNotEmpty == true) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -244,17 +241,12 @@ class GuestGiftsScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
+                      ],
                     ],
                   ),
                 ),
               ],
             ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: GuestBottomNav(current: GuestTab.gifts, weddingId: weddingId),
           ),
         ],
       ),

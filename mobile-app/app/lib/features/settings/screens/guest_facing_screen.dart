@@ -1666,12 +1666,13 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
 
     // Igual ao mockup "Para os convidados" (2026-11-08): título, dois
     // seletores e uma nota; com Pago, o preço por baixo.
-    return Container(
+    // Mockup 2026-11-14: «ACESSO E ENTRADA» como título de grupo.
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const KitCaps('Acesso e entrada', top: 10),
+      Container(
       padding: const EdgeInsets.all(16),
       decoration: _whiteCard(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const Text('Acesso e entrada', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        const SizedBox(height: 12),
         _segment([
           _choice(
             label: 'Privado',
@@ -1811,7 +1812,8 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
         const SizedBox(height: 18),
         _CapacityBlock(weddingId: _id, segment: _segment, choice: _choice, stepBtn: _stepBtn),
       ]),
-    );
+      ),
+    ]);
   }
 }
 
@@ -2056,12 +2058,8 @@ class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
 
 const _heroGreen = Color(0xFF3F5A3B);
 
-BoxDecoration _whiteCard() => BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFFDCD8CE)),
-      boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-    );
+// Cartão branco liso, cantos 22, sem linha nem sombra (DESIGN.md §4).
+BoxDecoration _whiteCard() => BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22));
 
 /// Cartão verde: código em grande, Partilhar convite e Ver como convidado.
 class _CodeHero extends ConsumerWidget {

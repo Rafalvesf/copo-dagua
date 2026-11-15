@@ -1,3 +1,5 @@
+import 'organizers_card.dart' show RowPillButton;
+import 'snappy_tap.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'line_icon.dart';
@@ -57,19 +59,19 @@ class ReviewTile extends StatelessWidget {
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          V2Avatar(r.coupleDisplayName, size: 40, imageUrl: r.coupleAvatarUrl, flat: true),
+          V2Avatar(r.coupleDisplayName, size: partnerSide ? 44 : 40, imageUrl: r.coupleAvatarUrl, flat: true),
           const SizedBox(width: 10),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(r.coupleDisplayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              Text(meta, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: v2Muted)),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),
           ),
-          const SizedBox(width: 8),
-          _RatingChip(r.rating),
+          // Do lado do parceiro as estrelas já estão por baixo (mockup).
+          if (!partnerSide) ...[const SizedBox(width: 8), _RatingChip(r.rating)],
         ]),
         if (partnerSide || r.status != 'published') ...[
         const SizedBox(height: 10),
@@ -78,7 +80,7 @@ class ReviewTile extends StatelessWidget {
             Icon(i <= r.rating ? Hi.star : Hi.starOutline, size: 18, color: const Color(0xFFF2B33D)),
           if (partnerSide) ...[
             const SizedBox(width: 8),
-            Text(_date(r.createdAt), style: const TextStyle(fontSize: AppFontSize.xs, color: v2Muted)),
+            Text(_date(r.createdAt), style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ],
           if (r.status != 'published') ...[
             const SizedBox(width: 8),
@@ -115,19 +117,19 @@ class ReviewTile extends StatelessWidget {
         if (partnerSide && (onRespond != null || onReport != null)) ...[
           const SizedBox(height: 12),
           Row(children: [
+            // Mockup «Páginas do parceiro» → Avaliações: «Responder»
+            // secundário 36 e «Denunciar» em texto.
             if (onRespond != null)
-              _Pill(
-                icon: r.response == null ? Hi.arrowUturnLeft : Hi.pencil,
+              RowPillButton(
                 label: r.response == null ? 'Responder' : 'Editar resposta',
-                onTap: onRespond!,
+                secondary: true,
+                onTap: onRespond,
               ),
             const Spacer(),
             if (onReport != null && r.status == 'published')
-              TextButton.icon(
-                onPressed: onReport,
-                style: TextButton.styleFrom(foregroundColor: v2Muted),
-                icon: const Icon(Hi.flag, size: 16),
-                label: const Text('Denunciar', style: TextStyle(fontSize: AppFontSize.sm)),
+              SnappyTap(
+                onTap: onReport,
+                child: const Text('Denunciar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
           ]),
         ],
@@ -248,7 +250,7 @@ class ReviewSummaryCard extends StatelessWidget {
     final counts = {for (var s = 1; s <= 5; s++) s: reviews.where((r) => r.rating == s).length};
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: softCard(radius: 24),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Row(children: [
         Column(children: [
           Text(avg.toStringAsFixed(1).replaceAll('.', ','),

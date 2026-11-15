@@ -1,6 +1,7 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../../../core/events/event_pass.dart' show myEventPassProvider, GuestSections;
+import '../../../shared/widgets/onb_kit.dart';
 import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
 import '../../../shared/widgets/first_run_tour.dart' show TourRole;
 import '../../../core/supabase/supabase_config.dart';
@@ -407,14 +408,16 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   children: [
                     // Seta sempre visível (2026-10-18): volta um passo ou,
                     // no primeiro, sai para o início do evento.
-                    CircleBackButton(
+                    // Mockup «Páginas do convidado» → GOnb (kit do onboarding).
+                    OnbBackButton(
                       onTap: _index > 0 && _index > widget.initialStep
                           ? () => setState(() => _index--)
                           : widget.rsvpToken != null
                               ? () => Navigator.of(context).maybePop()
                               : () => context.go('/guest-home/${widget.weddingId}'),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 12),
+                    Expanded(child: OnbProgress(value: 0.2 + 0.8 * (_index + 1) / (steps.length + 1))),
                     if (step == _Step.allergies)
                       TextButton(
                         onPressed: () {
@@ -434,26 +437,12 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              Text('Passo ${_index + 1} de ${steps.length}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(end: (_index + 1) / steps.length),
-                  duration: const Duration(milliseconds: 260),
-                  builder: (context, v, _) => LinearProgressIndicator(
-                    value: v,
-                    minHeight: 3,
-                    backgroundColor: AppTheme.borderMuted,
-                    color: AppTheme.accentOliveDark,
-                  ),
-                ),
-              ),
+              const SizedBox(height: 28),
+              OnbGroupLabel('${_index + 1} de ${steps.length}'),
               Expanded(child: SingleChildScrollView(child: _buildStep(step))),
               const SizedBox(height: 12),
               SizedBox(
-                height: 54,
+                height: 52,
                 child: FilledButton(
                   onPressed: _saving ? null : () => _continue(steps),
                   style: FilledButton.styleFrom(
@@ -541,11 +530,11 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
           subtitle: prefilled
               ? 'Já tínhamos a tua resposta e preenchemos o que sabíamos. Só tens de confirmar nos próximos passos.'
               : (sub.isEmpty ? null : sub),
-          child: Row(
+          child: Column(
             children: [
-              Expanded(child: _BigChoice(icon: Hi.checkCircle, label: 'Sim, vou!', selected: _going, onTap: () => setState(() => _going = true))),
-              const SizedBox(width: 12),
-              Expanded(child: _BigChoice(icon: Hi.xMark, label: 'Não vou poder ir', selected: !_going, onTap: () => setState(() => _going = false))),
+              OnbOption(title: 'Sim, vou!', subtitle: 'Confirma a tua presença.', selected: _going, onTap: () => setState(() => _going = true)),
+              const SizedBox(height: 12),
+              OnbOption(title: 'Não vou poder ir', subtitle: 'Os anfitriões ficam a saber.', selected: !_going, onTap: () => setState(() => _going = false)),
             ],
           ),
         );
@@ -966,26 +955,24 @@ class _CompanionPageState extends State<_CompanionPage> {
   Widget build(BuildContext context) {
     return AuthPage(
       children: [
-        const SizedBox(height: 20),
-        Text('Passo ${widget.step} de ${widget.total}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        // Mockup «Páginas do convidado» → Acompanhante.
+        const SizedBox(height: 16),
+        OnbProgress(value: 0.2 + 0.8 * widget.step / (widget.total + 1)),
+        const SizedBox(height: 28),
+        OnbGroupLabel('${widget.step} de ${widget.total}'),
         const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: LinearProgressIndicator(
-            value: widget.step / widget.total,
-            minHeight: 3,
-            backgroundColor: AppTheme.borderMuted,
-            color: AppTheme.accentOliveDark,
-          ),
-        ),
-        const SizedBox(height: 32),
-        const Text('Quem é o teu acompanhante?', style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        const SizedBox(height: 22),
-        AuthField(label: 'Nome', controller: _name, topGap: 24),
+        const Text('Quem é o teu acompanhante?', style: TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 8),
+        const Text('O nome aparece na lista dos anfitriões.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
         const SizedBox(height: 24),
-        // Idade em etiquetas, como os filtros do resto da app (2026-11-11).
-        const Text('Idade', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-        const SizedBox(height: 10),
+        OnbField(label: 'Nome', controller: _name, hint: 'Nome e apelido'),
+        const SizedBox(height: 16),
+        if (!_child) ...[
+          OnbField(label: 'Telemóvel (opcional)', controller: _phone, hint: '912 345 678', keyboardType: TextInputType.phone),
+          const SizedBox(height: 16),
+        ],
+        const OnbGroupLabel('Idade'),
+        const SizedBox(height: 8),
         Wrap(spacing: 8, runSpacing: 8, children: [
           for (final (k, l) in const [('adult', 'Adulto'), ('child', 'Criança'), ('teen', 'Adolescente'), ('senior', 'Sénior')])
             _AgeChip(label: l, selected: _group == k, onTap: () => setState(() => _group = k)),
@@ -993,7 +980,6 @@ class _CompanionPageState extends State<_CompanionPage> {
         if (_child) AuthField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
         // Telemóvel do acompanhante (opcional, 2026-10-19): permite-lhe
         // entrar na app depois e ficar ligado a esta resposta.
-        if (!_child) AuthField(label: 'Telemóvel (opcional)', controller: _phone, keyboardType: TextInputType.phone),
         if (!_adult && widget.others.isNotEmpty) ...[
           const SizedBox(height: 22),
           const Text('Vai com quem?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -1037,20 +1023,15 @@ class _AgeChip extends StatelessWidget {
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 18),
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
               color: selected ? AppTheme.accentOliveDark : Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFFE4E1D8)),
+              borderRadius: BorderRadius.circular(19),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              if (selected) ...[
-                const Icon(Hi.check, size: 16, color: Colors.white),
-                const SizedBox(width: 6),
-              ],
               Text(label,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
             ]),
           ),
         ),
@@ -1117,13 +1098,13 @@ class _StepScaffold extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 32),
-        Text(question, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 8),
+        Text(question, style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         if (subtitle != null) ...[
           const SizedBox(height: 8),
-          Text(subtitle!, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+          Text(subtitle!, style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.inkMuted)),
         ],
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
         child,
       ],
     );

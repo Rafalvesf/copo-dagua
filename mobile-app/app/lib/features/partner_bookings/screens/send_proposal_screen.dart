@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
+import '../../../shared/widgets/onb_kit.dart';
 import '../../../shared/widgets/vat_confirm.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -180,32 +181,42 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
           )
  ],
  body: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (_formError != null) ErrorBanner(message: _formError!),
-              AuthTextField(
-                label: 'Título do serviço',
-                controller: _title,
-                errorText: _titleError,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _description,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Descrição (opcional)',
+              // Mockup «Páginas do parceiro» → Enviar proposta: rótulos em
+              // maiúsculas por cima das caixas em pílula.
+              OnbField(label: 'Título do serviço', controller: _title, error: _titleError),
+              const SizedBox(height: 16),
+              const OnbGroupLabel('Descrição (opcional)'),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                child: TextField(
+                  controller: _description,
+                  maxLines: 4,
+                  minLines: 3,
+                  style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+                  decoration: const InputDecoration(
+                    isCollapsed: true,
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    hintText: 'Conta o que está incluído.',
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-              AuthTextField(
+              const SizedBox(height: 16),
+              OnbField(
                 label: 'Valor total (€)',
                 controller: _price,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                errorText: _priceError,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                error: _priceError,
+                onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 12),
               _DepositPreview(priceText: _price.text),
@@ -213,7 +224,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(22),
                 ),
                 child: SwitchListTile.adaptive(
                   value: _depositRefundable,
@@ -221,20 +232,21 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
                   activeTrackColor: AppTheme.accentOliveDark,
                   title: const Text(
                     'Sinal reembolsável',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.base),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                   subtitle: Text(
                     _depositRefundable
                         ? 'Se o organizador cancelar nas 48 h depois de pagar, recebe o sinal de volta. Depois disso, fica contigo.'
                         : 'Se o organizador cancelar, o sinal fica sempre contigo. Se fores tu a cancelar, o organizador recebe tudo de volta.',
-                    style: const TextStyle(fontSize: AppFontSize.xs),
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              AuthTextField(
+              OnbField(
                 label: 'Condições de pagamento (opcional)',
                 controller: _paymentTerms,
+                hint: 'Ex.: restante até 30 dias antes',
               ),
               const SizedBox(height: 20),
               PrimaryButton(

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/partner_profile/partner_profile_controller.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -166,16 +167,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                   48,
                 ),
                 children: [
-                  const Text(
-                    'DADOS DO NEGÓCIO',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: AppFontSize.sm,
-                      letterSpacing: 1,
-                      color: Color(0xFF6E6A63),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
+                  const KitCaps('Dados do negócio', top: 8),
                   _GroupedCard(
                     rows: [
                       _InfoRow(
@@ -417,19 +409,13 @@ class _GroupedCard extends StatelessWidget {
 
   const _GroupedCard({required this.rows});
 
+  // Mockup «Páginas do parceiro» → O teu negócio: grupo de linhas.
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.gray),
-      ),
-      child: Column(children: rows),
-    );
-  }
+  Widget build(BuildContext context) => KitGroup(rows);
 }
 
+/// Linha de definições do mockup: nome curto à esquerda, valor à direita
+/// (ou por baixo, quando é comprido) e a seta. Sem ícones (DESIGN.md §4).
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -447,58 +433,23 @@ class _InfoRow extends StatelessWidget {
     required this.onTap,
   });
 
+  static String _short(String l) => switch (l) {
+        'Nome do negócio' => 'Nome',
+        'Categoria (até 5)' => 'Categorias',
+        'Localização' => 'Morada',
+        'Anos de experiência' => 'Experiência',
+        'Telefone profissional' => 'Telefone',
+        'Email de contacto' => 'Email',
+        _ => l,
+      };
+
   @override
   Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        decoration: BoxDecoration(
-          border: isLast
-              ? null
-              : const Border(
-                  bottom: BorderSide(color: AppColors.gray, width: 1),
-                ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 19, color: AppTheme.inkMuted),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      color: AppTheme.inkMuted,
-                      fontSize: AppFontSize.xs,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppTheme.ink,
-                      fontSize: AppFontSize.md,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              editable ? Hi.pencil : Hi.chevronRight,
-              size: editable ? 16 : 20,
-              color: AppTheme.inkMuted,
-            ),
-          ],
-        ),
-      ),
-    );
+    final v = value.startsWith('Adicion') ? 'Adicionar' : value;
+    if (v.length > 26) {
+      return KitRow(title: _short(label), sub: v, chevron: true, onTap: onTap);
+    }
+    return KitSetRow(label: _short(label), value: v, onTap: onTap);
   }
 }
 

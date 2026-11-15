@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/pastel_colors.dart';
 import '../../../core/wedding/wedding_venue.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/navigation_sheet.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
@@ -43,15 +44,14 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
     final lat = wedding.venueLatitude ?? (wedding.venueAddress?.isNotEmpty == true ? null : appVenue?.latitude);
     final lng = wedding.venueLongitude ?? (wedding.venueAddress?.isNotEmpty == true ? null : appVenue?.longitude);
     return GradientScaffold(
-      background: AppBackground.subtle,
-      gradientOverride: guestPageGradient,
+      background: AppBackground.feed,
       body: Stack(
         children: [
           SafeArea(top: false, 
             bottom: false,
             child: ScrollingHeader(
  header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-                PageHeader(title: 'Programa', centered: true, subtitle: preview ? 'Pré-visualização · como os convidados veem' : null)
+                PageHeader(title: 'Programa', subtitle: preview ? 'Pré-visualização · como os convidados veem' : null)
  ],
  body: ListView(
                     padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 120),
@@ -60,16 +60,18 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                       // (redesign)"): mensagem num cartão verde, o dia em
                       // cartões com hora e autocolante, local e dress code.
                       if (wedding.welcomeMessage?.isNotEmpty == true) ...[
-                        GreenHero(
-                          label: 'DOS ANFITRIÕES',
-                          value: '',
-                          doodles: const [Hi.heartOutline, Hi.beaker, Hi.sparkles],
-                          footer: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('“${wedding.welcomeMessage}”',
-                                style: const TextStyle(fontSize: 15, height: 1.5, fontStyle: FontStyle.italic, color: AppTheme.ink)),
-                            const SizedBox(height: 10),
-                            Text('— ${wedding.displayNames}',
-                                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                        // Mockup «Páginas do convidado» → Programa.
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const Text('DOS ANFITRIÕES',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                            const SizedBox(height: 8),
+                            Text('«${wedding.welcomeMessage}»',
+                                style: const TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            const SizedBox(height: 6),
+                            Text(wedding.displayNames, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                           ]),
                         ),
                       ],
@@ -82,8 +84,8 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                       ),
                       // Linha do tempo com o momento atual marcado no dia
                       // e o local com Como chegar (canvas 2026-11-07).
-                      GuestTimeline(
-                        program: wedding.program.isNotEmpty
+                      Builder(builder: (context) {
+                        final program = wedding.program.isNotEmpty
                             ? wedding.program
                             : [
                                 ProgramItem(
@@ -91,10 +93,22 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                                   title: 'Cerimónia',
                                   place: wedding.venue?.isNotEmpty == true ? wedding.venue! : 'Local a confirmar',
                                 ),
-                              ],
-                        live: _isToday(wedding.weddingDate),
-                      ),
-                      const SizedBox(height: 22),
+                              ];
+                        // No dia, a linha do tempo com o momento atual.
+                        if (_isToday(wedding.weddingDate)) return GuestTimeline(program: program, live: true);
+                        return KitGroup([
+                          for (final it in program)
+                            KitRow(
+                              lead: SizedBox(
+                                width: 44,
+                                child: Text(it.time,
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                              ),
+                              title: it.title,
+                              sub: it.place.isEmpty ? null : it.place,
+                            ),
+                        ]);
+                      }),
                       const SectionTitle('Onde'),
                       GuestPlaceCard(wedding: wedding),
                       if (wedding.themeColors.isNotEmpty) ...[
@@ -116,22 +130,15 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                       if (wedding.quote?.isNotEmpty == true) ...[
                         const SizedBox(height: 24),
                         Text(
-                          '"${wedding.quote}"',
+                          '«${wedding.quote}»',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontStyle: FontStyle.italic, color: AppTheme.ink, fontSize: AppFontSize.base),
+                          style: const TextStyle(color: AppTheme.inkMuted, fontSize: 14),
                         ),
                       ],
                     ],
                   ),
 ),
           ),
-          if (!preview)
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: GuestBottomNav(current: GuestTab.home),
-            ),
         ],
       ),
     );
