@@ -254,7 +254,7 @@ class KitSection extends StatelessWidget {
             SnappyTap(
               onTap: onAction,
               child: Text(action!,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
             ),
         ]),
       );
@@ -512,7 +512,7 @@ class KitCheck extends StatelessWidget {
               ? Container(
                   width: 10,
                   height: 10,
-                  decoration: const BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))
+                  decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle))
               : null,
     );
     return onTap == null ? box : SnappyTap(onTap: onTap, child: box);

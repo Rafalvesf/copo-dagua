@@ -11,7 +11,9 @@ import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
-import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/organizers_card.dart' show RowPillButton;
+import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_widgets.dart';
 import '../../../shared/widgets/initials_avatar.dart';
@@ -44,102 +46,10 @@ class GuestDetailScreen extends ConsumerWidget {
       );
     }
 
+    // Mockup «Páginas do evento» → Convidado (2026-11-14).
     return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _GuestDetailHeader(guest: guest),
-            Expanded(child: _GuestDetailBody(guest: guest)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GuestDetailHeader extends ConsumerWidget {
-  final Guest guest;
-
-  const _GuestDetailHeader({required this.guest});
-
-  Future<void> _copyInviteLink(BuildContext context) async {
-    final link = publicLink('/rsvp/${guest.rsvpToken}');
-    await copyText(link);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Link de convite copiado.')),
-      );
-    }
-  }
-
-  Future<void> _edit(BuildContext context, WidgetRef ref) async {
-    final result = await showGuestFormSheet(context, existing: guest);
-    if (result == null) return;
-    ref.read(guestsControllerProvider.notifier).updateGuest(
-          guest.copyWith(
-            name: result.name,
-            email: result.email,
-            phone: result.phone,
-            group: result.group,
-            side: result.side,
-            plusOneAllowed: result.plusOneAllowed,
-            maxCompanions: result.maxCompanions,
-          ),
-        );
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.screenMargin,
-        20,
-        AppTheme.screenMargin,
-        0,
-      ),
-      child: Row(
-        children: [
-          const CircleBackButton(),
-          const Spacer(),
-          SnappyTap(
-            onTap: () => _edit(context, ref),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Hi.pencil, size: 16, color: AppTheme.ink),
-                  SizedBox(width: 6),
-                  Text(
-                    'Editar',
-                    style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.ink),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          PopupMenuButton<String>(
-            padding: EdgeInsets.zero,
-            icon: const Icon(Hi.ellipsisVertical, color: AppTheme.ink),
-            onSelected: (value) {
-              if (value == 'copy_link') _copyInviteLink(context);
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'copy_link',
-                enabled: guest.rsvpToken != null,
-                child: const Text('Copiar link de convite'),
-              ),
-            ],
-          ),
-        ],
-      ),
+      background: AppBackground.feed,
+      body: _GuestDetailBody(guest: guest),
     );
   }
 }
@@ -287,222 +197,176 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
     if (mounted) Navigator.of(context).pop();
   }
 
+  Future<void> _copyInviteLink() async {
+    final link = publicLink('/rsvp/${guest.rsvpToken}');
+    await copyText(link);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link de convite copiado.')));
+    }
+  }
+
+  Future<void> _edit() async {
+    final result = await showGuestFormSheet(context, existing: guest);
+    if (result == null) return;
+    ref.read(guestsControllerProvider.notifier).updateGuest(
+          guest.copyWith(
+            name: result.name,
+            email: result.email,
+            phone: result.phone,
+            group: result.group,
+            side: result.side,
+            plusOneAllowed: result.plusOneAllowed,
+            maxCompanions: result.maxCompanions,
+          ),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final history = _buildHistory(guest);
+    final companions = ref.watch(guestCompanionsProvider(guest.id)).asData?.value ?? const [];
+    final limit = guest.maxCompanions == 0 ? 'Vem sozinho' : 'Pode trazer ${CompanionLimitRow.label(guest.maxCompanions)}';
+    final bringing = companions.map((c) => c.name.split(' ').first).join(', ');
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.screenMargin,
-        20,
-        AppTheme.screenMargin,
-        40,
-      ),
+    Widget action(IconData icon, String label, VoidCallback? onTap) => Expanded(
+          child: Opacity(
+            opacity: onTap == null ? 0.4 : 1,
+            child: Column(children: [
+              V2RoundButton(icon: icon, tooltip: label, onTap: onTap),
+              const SizedBox(height: 6),
+              Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+            ]),
+          ),
+        );
+
+    return KitPage(
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InitialsAvatar(
-              name: guest.name,
-              radius: 36,
-              // Branco (como nas listas): na cor do fundo o círculo não se via.
-              background: Colors.white,
-              foreground: AppTheme.ink,
-            ),
-            const SizedBox(width: 16),
+        KitHeader(actions: [
+          V2RoundButton(
+            icon: _favorited ? Hi.heart : Hi.heartOutline,
+            tooltip: 'Favorito',
+            onTap: () => setState(() => _favorited = !_favorited),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Mais opções',
+            padding: EdgeInsets.zero,
+            onSelected: (v) {
+              if (v == 'copy_link') _copyInviteLink();
+              if (v == 'edit') _edit();
+              if (v == 'remove') _confirmRemove();
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(value: 'edit', child: Text('Editar')),
+              PopupMenuItem(value: 'copy_link', enabled: guest.rsvpToken != null, child: const Text('Copiar link de convite')),
+              const PopupMenuItem(value: 'remove', child: Text('Remover')),
+            ],
+            child: const IgnorePointer(child: V2RoundButton(icon: Hi.ellipsisHorizontal, tooltip: 'Mais opções')),
+          ),
+        ]),
+        Container(
+          margin: const EdgeInsets.only(top: 20),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          child: Row(children: [
+            V2Avatar(guest.name, size: 76),
+            const SizedBox(width: 14),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    guest.name,
-                    style: const TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    [guest.group.isEmpty ? 'Convidado' : guest.group, if (guest.ageGroup != 'adult') ageGroupLabel(guest.ageGroup)].join(' · '),
-                    style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.base),
-                  ),
-                  const SizedBox(height: 8),
-                  SnappyTap(
-                    onTap: _pickRsvpStatus,
-                    child: RsvpStatusBadge(status: guest.rsvpStatus, showIcon: true),
-                  ),
-                ],
-              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(guest.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                const SizedBox(height: 4),
+                Text(
+                  [guest.group.isEmpty ? 'Convidado' : guest.group, if (guest.ageGroup != 'adult') ageGroupLabel(guest.ageGroup)].join(' · '),
+                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                ),
+                const SizedBox(height: 8),
+                SnappyTap(
+                  onTap: _pickRsvpStatus,
+                  child: switch (guest.rsvpStatus) {
+                    RsvpStatus.confirmed => const KitTag('Confirmado'),
+                    RsvpStatus.declined => const KitTag('Não vem', kind: KitTagKind.neutral),
+                    _ => const KitTag('Por responder', kind: KitTagKind.pending),
+                  },
+                ),
+              ]),
             ),
-            SnappyTap(
-              onTap: () => setState(() => _favorited = !_favorited),
-              child: Icon(
-                _favorited ? Hi.heart : Hi.heartOutline,
-                color: _favorited ? AppStatusColors.declined : AppTheme.ink,
-              ),
-            ),
-          ],
+          ]),
         ),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: _ContactActionButton(
-                icon: Hi.chatBubbleOvalLeft,
-                label: 'Mensagem',
-                onTap: guest.phone == null
-                    ? null
-                    : () => _launchContact(context, Uri(scheme: 'sms', path: guest.phone)),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _ContactActionButton(
-                icon: Hi.phone,
-                label: 'Ligar',
-                onTap: guest.phone == null
-                    ? null
-                    : () => _launchContact(context, Uri(scheme: 'tel', path: guest.phone)),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _ContactActionButton(
-                icon: Hi.envelope,
-                label: 'Email',
-                onTap: guest.email == null
-                    ? null
-                    : () => _launchContact(context, Uri(scheme: 'mailto', path: guest.email)),
-              ),
-            ),
+        Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Row(children: [
+            action(Hi.chatBubbleOvalLeft, 'Mensagem',
+                guest.phone == null ? null : () => _launchContact(context, Uri(scheme: 'sms', path: guest.phone))),
+            action(Hi.phone, 'Ligar', guest.phone == null ? null : () => _launchContact(context, Uri(scheme: 'tel', path: guest.phone))),
+            action(Hi.envelope, 'Email',
+                guest.email == null ? null : () => _launchContact(context, Uri(scheme: 'mailto', path: guest.email))),
             // «Ver perfil» (2026-11-15): só quando a pessoa já tem conta na
             // app (entrou com o link ou o código) — para a seguir.
-            if (guest.linkedProfileId != null) ...[
-              const SizedBox(width: 10),
-              Expanded(
-                child: _ContactActionButton(
-                  icon: Hi.user,
-                  label: 'Ver perfil',
-                  onTap: () => context.push('/u/${guest.linkedProfileId}'),
-                ),
-              ),
-            ],
-          ],
+            if (guest.linkedProfileId != null)
+              action(Hi.user, 'Ver perfil', () => context.push('/u/${guest.linkedProfileId}')),
+          ]),
         ),
-        const SizedBox(height: 20),
-        Container(
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
+        const KitCaps('Na festa'),
+        KitGroup([
+          KitSetRow(
+            label: 'Acompanhantes',
+            value: bringing.isEmpty ? limit : 'Traz $bringing',
+            onTap: () => _editCompanionLimit(context, guest),
           ),
-          child: Column(
-            children: [
-              // Limite de acompanhantes, editável aqui (091), e quem o
-              // convidado indicou que traz.
-              _InfoRow(
-                icon: Hi.users,
-                label: () {
-                  final names = ref.watch(guestCompanionsProvider(guest.id)).asData?.value
-                          .map((c) => [
-                                c.name,
-                                if (c.ageGroup != 'adult') '(${ageGroupLabel(c.ageGroup).toLowerCase()})',
-                                if (c.linkedGuestId != null) '(na lista)',
-                              ].join(' '))
-                          .toList() ??
-                      const <String>[];
-                  final limit = guest.maxCompanions == 0 ? 'Vem sozinho' : 'Pode trazer ${CompanionLimitRow.label(guest.maxCompanions)}';
-                  return names.isEmpty ? limit : '$limit · traz ${names.join(', ')}';
-                }(),
-                trailing: const Icon(Hi.chevronRight, color: AppTheme.inkMuted),
-                onTap: () => _editCompanionLimit(context, guest),
-              ),
-              // Menu e restrições vêm do próprio convidado (antes mostrava
-              // sempre "Menu normal" quando não havia restrições).
-              _InfoRow(
-                icon: Hi.buildingStorefront,
-                label: guest.menuSelection?.isNotEmpty == true
-                    ? 'Menu: ${guest.menuSelection}'
-                    : 'Menu por escolher',
-              ),
-              if (guest.dietaryRestrictions?.isNotEmpty == true)
-                _InfoRow(
-                  icon: Hi.noSymbol,
-                  label: guest.dietaryRestrictions!,
-                ),
-              _InfoRow(
-                icon: Hi.pencilSquare,
-                label: 'Notas',
-                subtitle: guest.notes?.isNotEmpty == true ? guest.notes : 'Toca para adicionar notas privadas',
-                onTap: _editNotes,
-              ),
-            ],
+          KitSetRow(
+            label: 'Menu',
+            value: guest.menuSelection?.isNotEmpty == true ? guest.menuSelection : 'Por escolher',
           ),
-        ),
-        if (history.isNotEmpty) ...[
-          const SizedBox(height: 28),
-          const Text(
-            'Histórico',
-            style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink),
+          if (guest.dietaryRestrictions?.isNotEmpty == true)
+            KitSetRow(label: 'Alergias', value: guest.dietaryRestrictions),
+          KitSetRow(
+            label: 'Notas',
+            value: guest.notes?.isNotEmpty == true ? guest.notes : 'Adicionar',
+            onTap: _editNotes,
           ),
-          const SizedBox(height: 12),
-          for (var i = 0; i < history.length; i++)
-            _HistoryTile(entry: history[i], isLast: i == history.length - 1),
+        ]),
+        if (guest.rsvpToken != null) ...[
+          const KitCaps('Convite'),
+          KitGroup([
+            KitRow(
+              title: 'Link de convite',
+              sub: 'Pessoal, só para ${guest.name.split(' ').first}',
+              trailing: RowPillButton(label: 'Copiar', onTap: _copyInviteLink),
+            ),
+          ]),
         ],
-        const SizedBox(height: 28),
-        SnappyTap(
-          onTap: () async {
-            final result = await showGuestFormSheet(context, existing: guest);
-            if (result == null) return;
-            ref.read(guestsControllerProvider.notifier).updateGuest(
-                  guest.copyWith(
-                    name: result.name,
-                    email: result.email,
-                    phone: result.phone,
-                    group: result.group,
-                    side: result.side,
-                    plusOneAllowed: result.plusOneAllowed,
-                    maxCompanions: result.maxCompanions,
-                  ),
-                );
-          },
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppTheme.ink,
-              borderRadius: BorderRadius.circular(AppRadius.pill),
+        if (history.isNotEmpty) ...[
+          const KitCaps('Histórico'),
+          KitGroup([
+            for (final e in history) KitRow(title: e.label, sub: _formatHistoryDate(e.time)),
+          ]),
+        ],
+        Padding(
+          padding: const EdgeInsets.only(top: 24),
+          child: FilledButton(
+            onPressed: _edit,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.ink,
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(52),
+              shape: const StadiumBorder(),
+              textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Hi.pencil, size: 18, color: Colors.white),
-                SizedBox(width: 8),
-                Text('Editar convidado', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
-              ],
-            ),
+            child: const Text('Editar convidado'),
           ),
         ),
-        const SizedBox(height: 12),
-        SnappyTap(
-          onTap: _confirmRemove,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-              border: Border.all(color: AppStatusColors.declined, width: 1.5),
+        Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: OutlinedButton(
+            onPressed: _confirmRemove,
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppStatusColors.declined,
+              minimumSize: const Size.fromHeight(52),
+              side: const BorderSide(color: AppStatusColors.declined, width: 1.5),
+              shape: const StadiumBorder(),
+              textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Hi.trash, size: 18, color: AppStatusColors.declined),
-                const SizedBox(width: 8),
-                Text(
-                  'Remover convidado',
-                  style: TextStyle(fontWeight: FontWeight.w700, color: AppStatusColors.declined),
-                ),
-              ],
-            ),
+            child: const Text('Remover convidado'),
           ),
         ),
       ],
@@ -549,89 +413,6 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
   }
 }
 
-class _ContactActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  const _ContactActionButton({required this.icon, required this.label, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final disabled = onTap == null;
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 20, color: disabled ? AppTheme.inkMuted.withValues(alpha: 0.4) : AppTheme.ink),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: AppFontSize.sm,
-                fontWeight: FontWeight.w600,
-                color: disabled ? AppTheme.inkMuted.withValues(alpha: 0.4) : AppTheme.ink,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String? subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    this.subtitle,
-    this.trailing,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          crossAxisAlignment: subtitle == null ? CrossAxisAlignment.center : CrossAxisAlignment.start,
-          children: [
-            Icon(icon, size: 20, color: AppTheme.inkMuted),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: const TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w600)),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 4),
-                    Text(subtitle!, style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md)),
-                  ],
-                ],
-              ),
-            ),
-            ?trailing,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _HistoryEntry {
   final IconData icon;
   final Color color;
@@ -639,52 +420,6 @@ class _HistoryEntry {
   final DateTime time;
 
   const _HistoryEntry({required this.icon, required this.color, required this.label, required this.time});
-}
-
-class _HistoryTile extends StatelessWidget {
-  final _HistoryEntry entry;
-  final bool isLast;
-
-  const _HistoryTile({required this.entry, required this.isLast});
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(color: entry.color.withValues(alpha: 0.15), shape: BoxShape.circle),
-                child: Icon(entry.icon, size: 16, color: entry.color),
-              ),
-              if (!isLast) Expanded(child: Container(width: 2, color: AppTheme.borderMuted)),
-            ],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : 20, top: 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(entry.label, style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.ink)),
-                  const SizedBox(height: 2),
-                  Text(
-                    _formatHistoryDate(entry.time),
-                    style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 extension _FirstOrNull<T> on Iterable<T> {
