@@ -22,6 +22,7 @@ import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 
@@ -57,13 +58,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     Future.microtask(() => ref.read(taskEngineControllerProvider.notifier).recompute());
   }
 
-  static Color _priorityColor(TaskPriority priority) => switch (priority) {
-    TaskPriority.urgent => AppStatusColors.declined,
-    TaskPriority.high => AppTheme.accentOliveDark,
-    TaskPriority.normal => AppTheme.inkMuted,
-    TaskPriority.low => AppTheme.inkMuted,
-  };
-
   Future<void> _openTask(WeddingTask task) => openTask(context, ref, task);
 
   @override
@@ -79,170 +73,114 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           ),
         );
 
+    final todoCount = state.systemActive.length + state.userTasks.where((t) => t.status == TaskStatus.active).length;
+    final total = todoCount + doneItems.length;
+    String date(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+
+    // Mockup «Páginas do evento» → Tarefas (2026-11-14).
     return GradientScaffold(
       background: AppBackground.feed,
-      body: Stack(
+      body: KitPage(
+        bleed: const {_PartnerSuggestions},
         children: [
-          SafeArea(top: false, 
-            bottom: false,
-            child: EdgeFade(
-              topFadeHeight: 8,
-              bottomFadeHeight: 140,
-              child: ListView(
-                padding: ( EdgeInsets.only(
-                  bottom: FloatingFilterBar.bottomPadding(aboveNav: false),
-                )).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
-                children: [
-                  PageHeader(
-                    title: 'Tarefas',
-                    // Redesign 2026-10: mesmo topo que Orçamento/Lugares —
-                    // voltar · título ao centro · "+".
-                    centered: true,
-                    trailing: AddActionButton(
-                      onTap: () => _showNewTaskSheet(context, ref),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),
-                    child: Builder(builder: (context) {
-                      final total = state.systemActive.length +
-                          state.userTasks.where((t) => t.status == TaskStatus.active).length +
-                          doneItems.length;
-                      return GreenHero(
-                        label: 'O VOSSO PLANO',
-                        value: '${doneItems.length}',
-                        suffix: 'de $total feitas',
-                        progress: total == 0 ? 0 : doneItems.length / total,
-                        doodles: const [Hi.clipboardDocumentList, Hi.heartOutline, Hi.sparkles],
-                        footer: Transform.rotate(
-                          angle: -0.035,
-                          alignment: Alignment.centerLeft,
-                          child: const HeroPill('O plano guia-vos, vocês executam', solid: true),
-                        ),
-                      );
-                    }),
-                  ),
-                  // Sugestões do que tem andado a procurar (migração 155).
-                  const _PartnerSuggestions(),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      8,
-                      AppTheme.screenMargin,
-                      0,
-                    ),
-                    child: _tab == _TasksTab.todo
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SectionTitle('Próximas tarefas'),
-                              if (state.loading && state.systemActive.isEmpty)
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 20),
-                                  child: Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                )
-                              else if (state.systemActive.isEmpty)
-                                const InfoNote('Sem tarefas recomendadas por agora — bom trabalho!', icon: Hi.checkCircle)
-                              else
-                                for (final (i, task) in state.systemActive.indexed) ...[
-                                  _TaskRow(
-                                    task: task,
-                                    index: i,
-                                    icon: taskIcon(task.category),
-                                    color: _priorityColor(task.priority),
-                                    onTap: () => _openTask(task),
-                                  ),
-                                  const SizedBox(height: 10),
-                                ],
-                              const SizedBox(height: 4),
-                              const Text('As tuas tarefas',
-                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Criadas por vocês — sem limite, sem pressa.',
-                                style: TextStyle(
-                                  color: AppTheme.inkMuted,
-                                  fontSize: AppFontSize.sm,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              if (state.userTasks
-                                  .where((t) => t.status == TaskStatus.active)
-                                  .isEmpty)
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(18),
-                                  decoration: whiteLineCard(radius: 20),
-                                  child: const Text(
-                                    'Ainda não criaram nenhuma tarefa vossa.',
-                                  ),
-                                )
-                              else
-                                for (final task in state.userTasks.where(
-                                  (t) => t.status == TaskStatus.active,
-                                )) ...[
-                                  _UserTaskRow(
-                                    task: task,
-                                    onComplete: () => ref
-                                        .read(
-                                          taskEngineControllerProvider.notifier,
-                                        )
-                                        .completeTask(task.id),
-                                  ),
-                                  const SizedBox(height: 10),
-                                ],
-                            ],
-                          )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SectionTitle('Feito',
-                                  trailing: Text('${doneItems.length} ${doneItems.length == 1 ? 'tarefa' : 'tarefas'}',
-                                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
-                              if (doneItems.isEmpty)
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(18),
-                                  decoration: whiteLineCard(radius: 20),
-                                  child: const Text(
-                                    'Ainda não concluíram nenhuma tarefa.',
-                                  ),
-                                )
-                              else
-                                for (final task in doneItems) ...[
-                                  _DoneTaskRow(
-                                    task: task,
-                                    icon: taskIcon(task.category),
-                                  ),
-                                  const SizedBox(height: 10),
-                                ],
-                            ],
-                          ),
-                  ),
-                ],
-              ),
+          KitHeader(actions: [
+            KitAddButton(tooltip: 'Nova tarefa', onTap: () => _showNewTaskSheet(context, ref)),
+          ]),
+          const KitTitle('Tarefas', subtitle: 'O plano guia-vos, vocês executam.'),
+          KitPills([
+            KitPill(
+              label: 'Por fazer',
+              count: todoCount,
+              selected: _tab == _TasksTab.todo,
+              onTap: () => setState(() => _tab = _TasksTab.todo),
             ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: FloatingFilterBar(
-              items: [
-                FilterBarItem('Por fazer'),
-                FilterBarItem('Feito'),
-              ],
-              selected: _tab == _TasksTab.todo ? 0 : 1,
-              onSelected: (i) => setState(
-                () => _tab = i == 0 ? _TasksTab.todo : _TasksTab.done,
-              ),
+            KitPill(
+              label: 'Feito',
+              count: doneItems.length,
+              selected: _tab == _TasksTab.done,
+              onTap: () => setState(() => _tab = _TasksTab.done),
             ),
+          ]),
+          KitSummary(
+            kicker: 'O vosso plano',
+            value: '${doneItems.length}',
+            unit: 'de $total feitas',
+            progress: total == 0 ? 0 : doneItems.length / total,
           ),
+          if (_tab == _TasksTab.todo) ...[
+            // Sugestões do que tem andado a procurar (migração 155).
+            const _PartnerSuggestions(),
+            const KitSection('Próximas tarefas'),
+            if (state.loading && state.systemActive.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (state.systemActive.isEmpty)
+              const KitGroup([KitRow(title: 'Sem tarefas recomendadas por agora', sub: 'Bom trabalho!')])
+            else
+              KitGroup([
+                for (final task in state.systemActive)
+                  KitRow(
+                    lead: const KitCheck(),
+                    title: task.title,
+                    sub: _taskSub(task),
+                    trailing: task.seen ? null : const KitTag('Nova'),
+                    chevron: true,
+                    onTap: () => _openTask(task),
+                  ),
+              ]),
+            const KitSection('As vossas tarefas'),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: Text('Criadas por vocês, sem limite.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ),
+            KitGroup([
+              if (state.userTasks.where((t) => t.status == TaskStatus.active).isEmpty)
+                const KitRow(title: 'Ainda não criaram nenhuma tarefa vossa.')
+              else
+                for (final task in state.userTasks.where((t) => t.status == TaskStatus.active))
+                  KitRow(
+                    lead: KitCheck(
+                      onTap: () => ref.read(taskEngineControllerProvider.notifier).completeTask(task.id),
+                    ),
+                    title: task.title,
+                    sub: task.dueDate == null ? null : 'Até ${date(task.dueDate!)}',
+                  ),
+            ]),
+          ] else ...[
+            const KitSection('Feito'),
+            KitGroup([
+              if (doneItems.isEmpty)
+                const KitRow(title: 'Ainda não concluíram nenhuma tarefa.')
+              else
+                for (final task in doneItems)
+                  KitRow(
+                    lead: const KitCheck(done: true),
+                    title: task.title,
+                    done: true,
+                    sub: () {
+                      // Uma sugestão aberta pelo CTA fica «Explorada»; só
+                      // o que precisou de ação real é «Concluída».
+                      final word = task.completionSource == 'cta_opened' ? 'Explorada' : 'Concluída';
+                      final at = task.completedAt;
+                      return at == null ? word : '$word a ${date(at)}';
+                    }(),
+                  ),
+            ]),
+          ],
         ],
       ),
     );
+  }
+
+  /// «Sugestão» / «Para concluir» + a primeira frase da descrição.
+  static String? _taskSub(WeddingTask task) {
+    final type = task.displayType;
+    final typeLabel = type == null ? null : (type == TaskDisplayType.suggestion ? 'Sugestão' : 'Para concluir');
+    final desc = task.description?.split(RegExp(r'(?<=[.!?])\s')).first.trim();
+    final parts = [?typeLabel, if (desc != null && desc.isNotEmpty) desc];
+    return parts.isEmpty ? null : parts.join(' · ');
   }
 
   Future<void> _showNewTaskSheet(BuildContext context, WidgetRef ref) async {
@@ -263,240 +201,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 }
 
-
-class _TaskRow extends StatelessWidget {
-  final WeddingTask task;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-  final int index;
-
-  const _TaskRow({
-    required this.task,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-    this.index = 0,
-  });
-
-  // Como "Próximas tarefas" no design: ícone num quadrado verde, ponto
-  // de prioridade, título numa linha, selo NOVA, e uma só linha por
-  // baixo com "Sugestão"/"Para concluir" + o resumo (menos texto).
-  Color get _priorityColor => switch (task.priority) {
-        TaskPriority.urgent || TaskPriority.high => const Color(0xFFC8553D),
-        TaskPriority.normal => const Color(0xFFF2A01B),
-        TaskPriority.low => const Color(0xFF3F8A5A),
-      };
-
-  @override
-  Widget build(BuildContext context) {
-    final type = task.displayType;
-    final typeLabel = type == null
-        ? null
-        : (type == TaskDisplayType.suggestion ? 'Sugestão' : 'Para concluir');
-    final desc = task.description?.split(RegExp(r'(?<=[.!?])\s')).first.trim();
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: whiteLineCard(),
-        child: Row(
-          children: [
-            StickerIcon(icon, turns: StickerIcon.tilt(index)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(color: _priorityColor, shape: BoxShape.circle),
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          task.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                        ),
-                      ),
-                      if (!task.seen) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppTheme.accentOliveDark,
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                          ),
-                          child: const Text(
-                            'NOVA',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (typeLabel != null || (desc != null && desc.isNotEmpty)) ...[
-                    const SizedBox(height: 4),
-                    Text.rich(
-                      TextSpan(children: [
-                        if (typeLabel != null)
-                          TextSpan(
-                            text: typeLabel,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: type == TaskDisplayType.suggestion
-                                  ? AppTheme.inkMuted
-                                  : AppTheme.accentOliveDark,
-                            ),
-                          ),
-                        if (typeLabel != null && desc != null && desc.isNotEmpty)
-                          const TextSpan(text: ' · '),
-                        if (desc != null && desc.isNotEmpty) TextSpan(text: desc),
-                      ]),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Icon(Hi.chevronRight, size: 18, color: Color(0xFF6E6A63)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Linha do histórico ("Feito") — pedido explícito do utilizador: uma
-/// sugestão concluída ao abrir o CTA mostra "Explorado", nunca
-/// "Concluído" (essa palavra fica só para tarefas que precisaram
-/// mesmo de uma ação real). Internamente ambas continuam `completed`,
-/// isto é só apresentação (`completionSource` já guarda o `'cta_opened'`
-/// que distingue as duas, ver `task_engine_controller.dart`).
-class _DoneTaskRow extends StatelessWidget {
-  final WeddingTask task;
-  final IconData icon;
-
-  const _DoneTaskRow({required this.task, required this.icon});
-
-  String _formatDate(DateTime d) =>
-      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-
-  @override
-  Widget build(BuildContext context) {
-    final wasCtaOpened = task.completionSource == 'cta_opened';
-    final at = task.completedAt;
-    final label = at == null
-        ? (wasCtaOpened ? 'Explorado' : 'Concluído')
-        : '${wasCtaOpened ? 'Explorado' : 'Concluído'} a ${_formatDate(at)}';
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: whiteLineCard(radius: 20),
-      child: Row(
-        children: [
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              color: AppTheme.accentOliveDark,
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child: const Icon(Hi.check, size: 16, color: Colors.white),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: AppFontSize.base,
-                    color: Color(0xFF6E6A63),
-                    decoration: TextDecoration.lineThrough,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _UserTaskRow extends StatelessWidget {
-  final WeddingTask task;
-  final VoidCallback onComplete;
-
-  const _UserTaskRow({required this.task, required this.onComplete});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: whiteLineCard(radius: 20),
-      child: Row(
-        children: [
-          SnappyTap(
-            onTap: onComplete,
-            child: Container(
-              width: 26,
-              height: 26,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(color: AppTheme.accentOliveDark, width: 2),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: AppFontSize.md,
-                  ),
-                ),
-                if (task.dueDate != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    '${task.dueDate!.day.toString().padLeft(2, '0')}/${task.dueDate!.month.toString().padLeft(2, '0')}/${task.dueDate!.year}',
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _NewUserTaskResult {
   final String title;
@@ -617,11 +321,11 @@ class _PartnerSuggestions extends ConsumerWidget {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
           child: Text('Sugestões para ti',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ),
         const Padding(
           padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 2, AppTheme.screenMargin, 10),
-          child: Text('Com base no que tens procurado.', style: TextStyle(fontSize: AppFontSize.sm + 1, color: AppTheme.inkMuted)),
+          child: Text('Com base no que tens procurado.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         ),
         // O mesmo cartão das sugestões do painel (2026-11-11).
         SnapCarousel(

@@ -1,4 +1,3 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/booked_partner_badge.dart';
 import 'package:copo_dagua_app/core/budget/booked_partners.dart';
@@ -9,14 +8,9 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
-import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/green_hero.dart';
-import '../../../shared/widgets/sticker_icon.dart';
-import '../../../shared/widgets/v2_kit.dart';
-import '../../partners/partner_style.dart';
 
 /// "O que já têm tratado?" — pedido explícito do utilizador (RN37/38
 /// do motor de tarefas): por categoria real, o casal diz se ainda
@@ -114,87 +108,72 @@ class _ServicePreferencesScreenState extends ConsumerState<ServicePreferencesScr
     final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
     final booked = weddingId == null ? const <String, List<String>>{} : (ref.watch(bookedPartnersBySlugProvider(weddingId)).value ?? const {});
 
+    // Mockup «Páginas do evento» → Já têm tratado? (2026-11-14).
     return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(top: false, 
-        bottom: false,
-        child: EdgeFade(
-          topFadeHeight: 24,
-          bottomFadeHeight: 40,
-          child: ListView(
-            padding: ( EdgeInsets.zero).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
-            children: [
-              const PageHeader(
-                title: 'Já têm tratado?',
-                subtitle: 'Ajuda-nos a não sugerir o que já resolveram.',
-                centered: true,
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 60),
-                child: categoriesAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (err, st) => const Text('Não foi possível carregar as categorias.'),
-                  data: (categories) {
-                    if (_loading) return const Center(child: CircularProgressIndicator());
-                    // Redesign 2026-10-20: resumo verde + cartão por serviço
-                    // com ícone, estado e escolha segmentada.
-                    final done = categories.where((c) => _preferences[c.slug] == 'already_booked').length;
-                    final skipped = categories.where((c) => _preferences[c.slug] == 'not_needed').length;
-                    final needed = categories.length - done - skipped;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        GreenHero(
-                          label: 'SERVIÇOS TRATADOS',
-                          value: '$done',
-                          suffix: 'de ${categories.length - skipped} ${categories.length - skipped == 1 ? 'serviço' : 'serviços'}',
-                          progress: categories.length - skipped == 0 ? 0 : done / (categories.length - skipped),
-                          doodles: const [Hi.checkCircle, Hi.buildingStorefront, Hi.sparkles],
-                          footer: Wrap(spacing: 8, runSpacing: 8, children: [
-                            HeroPill('$needed por tratar', solid: true),
-                            if (skipped > 0) HeroPill('$skipped não precisam'),
-                          ]),
-                        ),
-                        const SizedBox(height: 18),
-                        for (final (i, category) in categories.indexed) ...[
-                          _CategoryPreferenceCard(
-                            index: i,
-                            slug: category.slug,
-                            label: category.label,
-                            preference: _preferences[category.slug] ?? 'needed',
-                            partners: booked[category.slug] ?? const [],
-                            onChanged: (pref) => _setPreference(category.slug, pref),
-                            // Contratado na app: o nome já aparece, não se pede.
-                            nameField: _preferences[category.slug] == 'already_booked' && (booked[category.slug] ?? const []).isEmpty
-                                ? TextField(
-                                    controller: _externalNameControllers.putIfAbsent(category.slug, () => TextEditingController()),
-                                    onEditingComplete: () => _saveExternalName(category.slug),
-                                    onTapOutside: (_) => _saveExternalName(category.slug),
-                                    decoration: const InputDecoration(
-                                      isDense: true,
-                                      prefixIcon: Icon(Hi.buildingStorefront, size: 18),
-                                      hintText: 'Com quem? (opcional)',
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ],
+      background: AppBackground.feed,
+      body: KitPage(
+        bottom: 60,
+        children: [
+          const KitHeader(),
+          const KitTitle('Já têm tratado?', subtitle: 'Ajuda-nos a não sugerir o que já resolveram.'),
+          categoriesAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.only(top: 40),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (err, st) => const Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: Text('Não foi possível carregar as categorias.'),
+            ),
+            data: (categories) {
+              if (_loading) {
+                return const Padding(padding: EdgeInsets.only(top: 40), child: Center(child: CircularProgressIndicator()));
+              }
+              final done = categories.where((c) => _preferences[c.slug] == 'already_booked').length;
+              final skipped = categories.where((c) => _preferences[c.slug] == 'not_needed').length;
+              final needed = categories.length - done - skipped;
+              final total = categories.length - skipped;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  KitSummary(
+                    kicker: 'Serviços tratados',
+                    value: '$done',
+                    unit: 'de $total ${total == 1 ? 'serviço' : 'serviços'}',
+                    progress: total == 0 ? 0 : done / total,
+                    footer: ['$needed por tratar', if (skipped > 0) '$skipped dispensados'].join(' · '),
+                  ),
+                  const KitSection('Serviços'),
+                  for (final category in categories) ...[
+                    _CategoryPreferenceCard(
+                      slug: category.slug,
+                      label: category.label,
+                      preference: _preferences[category.slug] ?? 'needed',
+                      partners: booked[category.slug] ?? const [],
+                      onChanged: (pref) => _setPreference(category.slug, pref),
+                      // Contratado na app: o nome já aparece, não se pede.
+                      nameField: _preferences[category.slug] == 'already_booked' && (booked[category.slug] ?? const []).isEmpty
+                          ? TextField(
+                              controller: _externalNameControllers.putIfAbsent(category.slug, () => TextEditingController()),
+                              onEditingComplete: () => _saveExternalName(category.slug),
+                              onTapOutside: (_) => _saveExternalName(category.slug),
+                              decoration: const InputDecoration(isDense: true, hintText: 'Com quem? (opcional)'),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ],
+              );
+            },
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
 class _CategoryPreferenceCard extends StatelessWidget {
-  final int index;
   final String slug;
   final String label;
   final String preference;
@@ -205,7 +184,6 @@ class _CategoryPreferenceCard extends StatelessWidget {
   final List<String> partners;
 
   const _CategoryPreferenceCard({
-    required this.index,
     required this.slug,
     required this.label,
     required this.preference,
@@ -216,83 +194,64 @@ class _CategoryPreferenceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (status, color) = switch (preference) {
-      'already_booked' => ('Tratado', AppTheme.accentOliveDark),
-      'not_needed' => ('Não precisam', v2Muted),
-      _ => ('Por tratar', const Color(0xFFB7791F)),
+    final tag = switch (preference) {
+      'already_booked' => const KitTag('Tratado'),
+      'not_needed' => const KitTag('Dispensado', kind: KitTagKind.neutral),
+      _ => const KitTag('Por tratar', kind: KitTagKind.pending),
     };
     const options = [
-      ('needed', 'Precisamos', Hi.magnifyingGlass),
-      ('already_booked', 'Já tratámos', Hi.checkCircle),
-      ('not_needed', 'Dispensamos', Hi.noSymbol),
+      ('needed', 'Precisamos'),
+      ('already_booked', 'Já tratámos'),
+      ('not_needed', 'Dispensamos'),
     ];
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      decoration: softCard(radius: 22),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          Transform.rotate(
-            angle: StickerIcon.tilt(index) * 6.283,
-            child: Container(
-              width: 42,
-              height: 42,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(color: colorForCategorySlug(slug), borderRadius: BorderRadius.circular(14), boxShadow: StickerIcon.shadow),
-              child: Icon(iconForCategorySlug(slug), color: AppTheme.accentOliveDark, size: 21),
-            ),
-          ),
-          const SizedBox(width: 12),
+        Row(children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-              Text(label, style: const TextStyle(fontSize: AppFontSize.base, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              if (partners.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: BookedPartnerBadge(partners),
-                ),
+              Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              if (partners.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: BookedPartnerBadge(partners)),
             ]),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(99)),
-            child: Text(status, style: TextStyle(fontSize: AppFontSize.xs, fontWeight: FontWeight.w700, color: color)),
-          ),
+          tag,
         ]),
         const SizedBox(height: 12),
-        // Escolha segmentada numa só pista.
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(99)),
-          child: Row(children: [
-            for (final (value, text, icon) in options)
-              Expanded(
+        Row(children: [
+          for (final (i, (value, text)) in options.indexed) ...[
+            if (i > 0) const SizedBox(width: 6),
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: preference == value,
                 child: SnappyTap(
                   onTap: () => onChanged(value),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(vertical: 9),
+                    duration: const Duration(milliseconds: 160),
+                    height: 34,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: preference == value ? AppTheme.accentOliveDark : Colors.transparent,
-                      borderRadius: BorderRadius.circular(99),
+                      color: preference == value ? AppTheme.accentOliveDark : AppTheme.background,
+                      borderRadius: BorderRadius.circular(17),
                     ),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Icon(icon, size: 14, color: preference == value ? Colors.white : v2Muted),
-                      const SizedBox(width: 4),
-                      Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Text(text,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                                fontSize: AppFontSize.xs,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 color: preference == value ? Colors.white : AppTheme.ink)),
                       ),
-                    ]),
+                    ),
                   ),
                 ),
               ),
-          ]),
-        ),
+            ),
+          ],
+        ]),
         if (nameField != null) ...[const SizedBox(height: 10), nameField!],
       ]),
     );

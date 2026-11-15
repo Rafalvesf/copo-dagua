@@ -18,6 +18,7 @@ import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 
@@ -97,107 +98,62 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
         s: state.items.where((i) => i.status == s).toList(),
     };
 
+    final pct = state.totalCount == 0 ? 0 : (state.doneCount * 100 / state.totalCount).round();
+    void toggle(ChecklistItem item) => ref.read(checklistControllerProvider.notifier).toggleDone(item.id);
+    void remove(ChecklistItem item) => ref.read(checklistControllerProvider.notifier).removeItem(item.id);
+
+    // Mockup «Páginas do evento» → Checklist (2026-11-14).
     return GradientScaffold(
       background: AppBackground.feed,
       body: state.loading && state.items.isEmpty
           ? const Center(child: CircularProgressIndicator())
-          : Stack(
+          : KitPage(
               children: [
-                SafeArea(top: false, 
-                  bottom: false,
-                  child: EdgeFade(
-                    topFadeHeight: 8,
-                    bottomFadeHeight: 140,
-                    child: ListView(
-                      padding: ( EdgeInsets.zero).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
-                      children: [
-                        PageHeader(
-                          title: 'Tarefas',
-                          subtitle: 'Organizem tudo e nunca percam nada',
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _DateShortcut(
-                                onTap: () => context.push('/calendar'),
-                              ),
-                              const SizedBox(width: 8),
-                              AddActionButton(onTap: _addTask),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            AppTheme.screenMargin,
-                            20,
-                            AppTheme.screenMargin,
-                            FloatingFilterBar.bottomPadding(aboveNav: false),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _OverallProgressCard(
-                                done: state.doneCount,
-                                total: state.totalCount,
-                                progress: state.totalCount == 0
-                                    ? 0
-                                    : state.doneCount / state.totalCount,
-                              ),
-                              const SizedBox(height: 24),
-                              if (state.items.isEmpty)
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 40),
-                                  child: Center(
-                                    child: Text('Sem tarefas ainda.'),
-                                  ),
-                                )
-                              else
-                                for (final status in _visibleStatuses) ...[
-                                  _StatusGroup(
-                                    title: _groupTitles[status]!,
-                                    items: byStatus[status]!,
-                                    expanded: _expandedGroups.contains(status),
-                                    onToggleExpand: () => setState(() {
-                                      if (!_expandedGroups.remove(status)) {
-                                        _expandedGroups.add(status);
-                                      }
-                                    }),
-                                    onToggleDone: (item) => ref
-                                        .read(
-                                          checklistControllerProvider.notifier,
-                                        )
-                                        .toggleDone(item.id),
-                                    onRemove: (item) => ref
-                                        .read(
-                                          checklistControllerProvider.notifier,
-                                        )
-                                        .removeItem(item.id),
-                                    onPickPartner: _pickPartner,
-                                  ),
-                                  const SizedBox(height: 22),
-                                ],
-                            ],
-                          ),
-                        ),
-                      ],
+                KitHeader(actions: [
+                  _DateShortcut(onTap: () => context.push('/calendar')),
+                  KitAddButton(tooltip: 'Nova tarefa', onTap: _addTask),
+                ]),
+                const KitTitle('Checklist', subtitle: 'Organizem tudo e nunca percam nada.'),
+                KitPills([
+                  for (final f in _StatusFilter.values)
+                    KitPill(
+                      label: switch (f) {
+                        _StatusFilter.all => 'Todas',
+                        _StatusFilter.todo => 'Por fazer',
+                        _StatusFilter.inProgress => 'Em curso',
+                        _StatusFilter.done => 'Concluídas',
+                      },
+                      count: switch (f) {
+                        _StatusFilter.all => state.items.length,
+                        _StatusFilter.todo => byStatus[ChecklistStatus.todo]!.length,
+                        _StatusFilter.inProgress => byStatus[ChecklistStatus.inProgress]!.length,
+                        _StatusFilter.done => byStatus[ChecklistStatus.done]!.length,
+                      },
+                      selected: _filter == f,
+                      onTap: () => setState(() => _filter = f),
                     ),
-                  ),
+                ]),
+                KitSummary(
+                  kicker: 'Progresso',
+                  value: '$pct%',
+                  unit: '${state.doneCount} de ${state.totalCount} tarefas concluídas',
+                  progress: state.totalCount == 0 ? 0 : state.doneCount / state.totalCount,
                 ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: FloatingFilterBar(
-                    items: [
-                      FilterBarItem('Todas'),
-                      FilterBarItem('Por fazer'),
-                      FilterBarItem('Em curso'),
-                      FilterBarItem('Concluídas'),
-                    ],
-                    selected: _StatusFilter.values.indexOf(_filter),
-                    onSelected: (i) =>
-                        setState(() => _filter = _StatusFilter.values[i]),
-                  ),
-                ),
+                if (state.items.isEmpty)
+                  const KitGroup([KitRow(title: 'Sem tarefas ainda.')], top: 24)
+                else
+                  for (final status in _visibleStatuses)
+                    _StatusGroup(
+                      title: _groupTitles[status]!,
+                      items: byStatus[status]!,
+                      expanded: _expandedGroups.contains(status),
+                      onToggleExpand: () => setState(() {
+                        if (!_expandedGroups.remove(status)) _expandedGroups.add(status);
+                      }),
+                      onToggleDone: toggle,
+                      onRemove: remove,
+                      onPickPartner: _pickPartner,
+                    ),
               ],
             ),
     );
@@ -215,111 +171,20 @@ class _DateShortcut extends StatelessWidget {
   Widget build(BuildContext context) {
     return SnappyTap(
       onTap: onTap,
+      semanticLabel: 'Abrir calendário',
       child: Container(
-        height: 46,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         alignment: Alignment.center,
-        decoration: softCard(radius: AppRadius.pill),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Hi.calendar,
-              size: 15,
-              color: AppTheme.accentOliveDark,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              formatShortDatePt(DateTime.now()),
-              style: const TextStyle(
-                fontSize: AppFontSize.sm,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.ink,
-              ),
-            ),
-          ],
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        child: Text(
+          formatShortDatePt(DateTime.now()),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink),
         ),
       ),
     );
   }
 }
-
-class _OverallProgressCard extends StatelessWidget {
-  final int done;
-  final int total;
-  final double progress;
-
-  const _OverallProgressCard({
-    required this.done,
-    required this.total,
-    required this.progress,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final pct = (progress * 100).round();
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: softCard(radius: AppRadius.lg),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Progresso geral',
-                  style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$pct%',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: AppFontSize.h2,
-                    color: AppTheme.accentOliveDark,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 7,
-                    backgroundColor: Colors.white,
-                    valueColor: AlwaysStoppedAnimation(
-                      AppTheme.accentOliveDark,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$done de $total tarefas concluídas',
-                  style: const TextStyle(
-                    fontSize: AppFontSize.sm,
-                    color: AppTheme.inkMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Opacity(
-            opacity: 0.3,
-            child: Icon(
-              Hi.globeEuropeAfrica,
-              size: 46,
-              color: AppTheme.accentOliveDark,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 
 class _StatusGroup extends StatelessWidget {
   final String title;
@@ -356,60 +221,27 @@ class _StatusGroup extends StatelessWidget {
     final visible = showAll ? sorted : sorted.take(_collapsedLimit).toList();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppColors.muted,
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-              ),
-              child: Text(
-                '${sorted.length}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: AppFontSize.xs,
-                  color: AppTheme.inkMuted,
-                ),
-              ),
+        KitCaps('$title · ${sorted.length}', top: 24),
+        KitGroup([
+          for (final item in visible)
+            _TaskTile(
+              item: item,
+              onToggle: () => onToggleDone(item),
+              onRemove: () => onRemove(item),
+              onPickPartner: item.partnerCategory == null ? null : () => onPickPartner(item),
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        for (final item in visible) ...[
-          _TaskTile(
-            item: item,
-            onToggle: () => onToggleDone(item),
-            onRemove: () => onRemove(item),
-            onPickPartner: item.partnerCategory == null
-                ? null
-                : () => onPickPartner(item),
-          ),
-          const SizedBox(height: 10),
-        ],
+        ]),
         if (sorted.length > _collapsedLimit)
-          SnappyTap(
-            onTap: onToggleExpand,
-            child: Row(
-              children: [
-                Text(
-                  expanded ? 'Ver menos' : 'Ver todas (${sorted.length})',
-                  style: TextStyle(
-                    color: AppTheme.accentOliveDark,
-                    fontWeight: FontWeight.w700,
-                    fontSize: AppFontSize.md,
-                  ),
-                ),
-                Icon(
-                  expanded ? Hi.chevronUp : Hi.chevronDown,
-                  size: 18,
-                  color: AppTheme.accentOliveDark,
-                ),
-              ],
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: SnappyTap(
+              onTap: onToggleExpand,
+              child: Text(
+                expanded ? 'Ver menos' : 'Ver todas (${sorted.length})',
+                style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 14),
+              ),
             ),
           ),
       ],
@@ -433,73 +265,32 @@ class _TaskTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final due = item.dueDate;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: softCard(radius: AppRadius.md),
-      child: Row(
-        children: [
-          SnappyTap(
-            onTap: onToggle,
-            child: _StatusIndicator(item: item),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: AppFontSize.md,
-                    decoration: item.done ? TextDecoration.lineThrough : null,
-                    color: item.done ? AppTheme.inkMuted : AppTheme.ink,
-                  ),
-                ),
-                if (due != null) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    item.done
-                        ? 'Concluída a ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}'
-                        : 'Até ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}',
-                    style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.xs),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (item.assigneeSeeds.isNotEmpty) ...[
-            AssigneeCluster(seeds: item.assigneeSeeds),
-            const SizedBox(width: 8),
-          ],
-          StatusPill(
-            label: item.category,
-            color: colorForTagLabel(item.category),
-          ),
-          PopupMenuButton<String>(
-            padding: EdgeInsets.zero,
-            icon: const Icon(
-              Hi.ellipsisHorizontal,
-              size: 18,
-              color: AppTheme.inkMuted,
-            ),
-            onSelected: (value) {
-              if (value == 'remove') onRemove();
-              if (value == 'partner') onPickPartner?.call();
-            },
-            itemBuilder: (context) => [
-              if (onPickPartner != null)
-                const PopupMenuItem(
-                  value: 'partner',
-                  child: Text('Escolher parceiro'),
-                ),
-              const PopupMenuItem(value: 'remove', child: Text('Remover')),
-            ],
-          ),
+    String dm(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+    return KitRow(
+      lead: SnappyTap(onTap: onToggle, child: _StatusIndicator(item: item)),
+      title: item.title,
+      done: item.done,
+      sub: due == null ? null : (item.done ? 'Concluída a ${dm(due)}' : 'Até ${dm(due)}'),
+      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+        if (item.assigneeSeeds.isNotEmpty) ...[
+          AssigneeCluster(seeds: item.assigneeSeeds),
+          const SizedBox(width: 8),
         ],
-      ),
+        if (item.category.isNotEmpty) KitTag(item.category, kind: KitTagKind.neutral),
+        PopupMenuButton<String>(
+          padding: EdgeInsets.zero,
+          tooltip: 'Mais opções',
+          icon: const Icon(Hi.ellipsisHorizontal, size: 18, color: AppTheme.inkMuted),
+          onSelected: (value) {
+            if (value == 'remove') onRemove();
+            if (value == 'partner') onPickPartner?.call();
+          },
+          itemBuilder: (context) => [
+            if (onPickPartner != null) const PopupMenuItem(value: 'partner', child: Text('Escolher parceiro')),
+            const PopupMenuItem(value: 'remove', child: Text('Remover')),
+          ],
+        ),
+      ]),
     );
   }
 }
@@ -511,13 +302,7 @@ class _StatusIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (item.done) {
-      return const CircleAvatar(
-        radius: 12,
-        backgroundColor: AppStatusColors.confirmed,
-        child: Icon(Hi.check, size: 14, color: Colors.white),
-      );
-    }
+    if (item.done) return const KitCheck(done: true);
     final progress = item.progressPercent;
     if (progress != null && progress > 0) {
       return SizedBox(
@@ -546,14 +331,7 @@ class _StatusIndicator extends StatelessWidget {
         ),
       );
     }
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: AppTheme.borderMuted, width: 2),
-      ),
-    );
+    return KitCheck(inProgress: item.status == ChecklistStatus.inProgress);
   }
 }
 
@@ -563,6 +341,17 @@ class _AddTaskResult {
   final DateTime? dueDate;
 
   _AddTaskResult({required this.title, required this.category, this.dueDate});
+}
+
+/// «+» do Calendário: a mesma folha de nova tarefa da Checklist.
+Future<void> addChecklistTaskFlow(BuildContext context, WidgetRef ref) async {
+  final weddingId = ref.read(checklistControllerProvider.notifier).currentWeddingId;
+  if (weddingId == null) return;
+  final result = await _showAddTaskSheet(context);
+  if (result == null) return;
+  ref.read(checklistControllerProvider.notifier).addItem(
+        ChecklistItem(id: '', weddingId: weddingId, title: result.title, category: result.category, dueDate: result.dueDate),
+      );
 }
 
 Future<_AddTaskResult?> _showAddTaskSheet(BuildContext context) {

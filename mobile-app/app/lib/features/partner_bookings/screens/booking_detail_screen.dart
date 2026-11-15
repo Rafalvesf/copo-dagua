@@ -14,6 +14,7 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/money.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../widgets/event_brief.dart';
@@ -103,65 +104,54 @@ Expanded(child: ScrollingHeader(
  body: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                 children: [
-                  // Canvas "Parceiro — pedido (redesign)".
-                  const Row(children: [
-                    CircleBackButton(),
-                    Expanded(
-                      child: Text('Pedido',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    ),
-                    SizedBox(width: 44),
-                  ]),
-                  const SizedBox(height: 18),
-                  GreenHero(
-                    label: switch (booking.status) {
-                      BookingStatus.novo || BookingStatus.emAnalise => 'PEDIDO RECEBIDO · ${booking.eventType.label.toUpperCase()}',
-                      BookingStatus.aceite => 'À ESPERA DO SINAL',
-                      BookingStatus.confirmado => 'RESERVA CONFIRMADA',
-                      BookingStatus.concluido => 'CONCLUÍDO',
-                      BookingStatus.recusado => 'RECUSADO',
-                    },
-                    value: booking.clientName,
-                    doodles: EventDecor.of(booking.eventType).doodles.take(3).toList(),
-                    footer: booking.fromQuoteRequest
-                        ? Wrap(spacing: 8, runSpacing: 8, children: [
-                            HeroPill(booking.proposalSent ? 'Proposta enviada' : 'Por responder', solid: true),
-                            HeroPill(booking.proposalSent
-                                ? 'A aguardar resposta do cliente'
-                                : 'O cliente espera a tua proposta'),
-                          ])
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  V2RowCard(
-                    lead: DateSticker(date: date),
-                    title: dateLabel,
-                    sub: booking.city.isEmpty ? null : booking.city,
-                  ),
-                  const SizedBox(height: 10),
-                  V2RowCard(
-                    lead: StickerIcon(Hi.buildingStorefront, turns: StickerIcon.tilt(1)),
-                    title: booking.category ?? 'Serviço',
-                    sub: booking.packageLabel.isEmpty ? null : booking.packageLabel,
-                  ),
-                  if (booking.messageFromCouple != null &&
-                      booking.messageFromCouple!.trim().isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: softCard(),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Row(children: [
-                          StickerIcon(Hi.chatBubbleOvalLeft, size: 36, turns: StickerIcon.tilt(2)),
-                          const SizedBox(width: 10),
-                          const Text('Mensagem do cliente',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  // Mockup «Páginas do parceiro» → Pedido (2026-11-14).
+                  const KitHeader(),
+                  Container(
+                    margin: const EdgeInsets.only(top: 20),
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                    child: Row(children: [
+                      V2Avatar(booking.clientName, size: 76, imageUrl: booking.clientAvatarUrl),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(booking.eventType.label.toUpperCase(),
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                          const SizedBox(height: 6),
+                          Text(booking.clientName,
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          const SizedBox(height: 6),
+                          if (booking.proposalSent && booking.status != BookingStatus.confirmado && booking.status != BookingStatus.concluido)
+                            const KitTag('Proposta enviada', kind: KitTagKind.neutral)
+                          else
+                            switch (booking.status) {
+                              BookingStatus.novo => const KitTag('Por responder', kind: KitTagKind.pending),
+                              BookingStatus.emAnalise => const KitTag('Em análise', kind: KitTagKind.neutral),
+                              BookingStatus.aceite => const KitTag('À espera do sinal', kind: KitTagKind.pending),
+                              BookingStatus.confirmado => const KitTag('Reserva confirmada'),
+                              BookingStatus.concluido => const KitTag('Concluído', kind: KitTagKind.neutral),
+                              BookingStatus.recusado => const KitTag('Recusado', kind: KitTagKind.neutral),
+                            },
                         ]),
-                        const SizedBox(height: 8),
-                        Text('“${booking.messageFromCouple!.trim()}”',
-                            style: const TextStyle(fontSize: 14, height: 1.5, fontStyle: FontStyle.italic, color: AppTheme.ink)),
-                      ]),
+                      ),
+                    ]),
+                  ),
+                  const KitCaps('O pedido', top: 20),
+                  KitGroup([
+                    KitSetRow(label: 'Data', value: dateLabel),
+                    if (booking.city.isNotEmpty) KitSetRow(label: 'Local', value: booking.city),
+                    KitSetRow(
+                      label: 'Serviço',
+                      value: [booking.category ?? 'Serviço', if (booking.packageLabel.isNotEmpty) booking.packageLabel].join(' · '),
+                    ),
+                  ]),
+                  if (booking.messageFromCouple != null && booking.messageFromCouple!.trim().isNotEmpty) ...[
+                    const KitCaps('Mensagem do cliente', top: 20),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                      child: Text('«${booking.messageFromCouple!.trim()}»',
+                          style: const TextStyle(fontSize: 15, height: 1.45, color: AppTheme.ink)),
                     ),
                   ],
                   // Convidados, menus, alergias e mesas do evento (migração 140).
@@ -169,7 +159,7 @@ Expanded(child: ScrollingHeader(
                     const SizedBox(height: 18),
                     const Padding(
                       padding: EdgeInsets.only(left: 4, bottom: 8),
-                      child: Text('Informação do evento', style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      child: Text('Informação do evento', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     PartnerEventBrief(bookingId: booking.id),
                   ],
@@ -178,7 +168,7 @@ Expanded(child: ScrollingHeader(
                     const SizedBox(height: 18),
                     const Padding(
                       padding: EdgeInsets.only(left: 4, bottom: 8),
-                      child: Text('Documentos', style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      child: Text('Documentos', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     ExportCard(
                       reportLabel: 'Resumo da reserva',
@@ -198,7 +188,7 @@ Expanded(child: ScrollingHeader(
                 children: [
                   if (booking.fromQuoteRequest && !booking.proposalSent) ...[
                     SizedBox(
-                      height: 54,
+                      height: 52,
                       child: FilledButton(
                         onPressed: () => context.push(
                           '/partner-requests/${booking.id}/proposal',
@@ -208,7 +198,7 @@ Expanded(child: ScrollingHeader(
                           backgroundColor: AppTheme.ink,
                           shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
-                            fontSize: AppFontSize.lg,
+                            fontSize: 15,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -253,10 +243,11 @@ Expanded(child: ScrollingHeader(
                                   }
                                 }),
                           style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
+                            // Secundário: contorno preto 1,5 (DESIGN.md §2).
+                            minimumSize: const Size.fromHeight(52),
                             backgroundColor: Colors.white,
-                            foregroundColor: AppTheme.accentOliveDark,
-                            side: BorderSide.none,
+                            foregroundColor: AppTheme.ink,
+                            side: const BorderSide(color: AppTheme.ink, width: 1.5),
                             elevation: 0,
                             shadowColor: const Color(0x22171713),
                             shape: const StadiumBorder(),

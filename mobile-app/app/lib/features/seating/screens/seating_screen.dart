@@ -1,6 +1,8 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:math' as math;
+import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/v2_kit.dart' show V2RoundButton;
 import '../../../shared/widgets/feedback.dart';
 
 import 'package:flutter/material.dart';
@@ -154,10 +156,15 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                     child: ListView(
                       padding: ( EdgeInsets.zero).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
                       children: [
-                        PageHeader(
-                          title: 'Lugares',
-                          centered: true,
-                          trailing: AddActionButton(
+                        // Mockup «Páginas do evento» → Lugares (2026-11-14).
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                        KitHeader(actions: [
+                          if (!noTables)
+                            V2RoundButton(icon: Hi.ellipsisHorizontal, tooltip: 'Mais opções', onTap: () => _showMoreOptions(context)),
+                          KitAddButton(
+                            tooltip: 'Nova mesa',
                             onTap: state.isFull
                                 ? () => ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -177,11 +184,14 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                     existing: state.nextTable,
                                   ),
                           ),
+                        ]),
+                        const KitTitle('Lugares'),
+                          ]),
                         ),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(
                             AppTheme.screenMargin,
-                            16,
+                            0,
                             AppTheme.screenMargin,
                             40,
                           ),
@@ -198,30 +208,10 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                               if (noTables)
                                 _NoTablesCard(hasVenue: state.hasVenue)
                               else ...[
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _ViewToggle(
-                                        selected: _view,
-                                        onChanged: (v) => setState(() => _view = v),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    SnappyTap(
-                                      onTap: () => _showMoreOptions(context),
-                                      child: Container(
-                                        width: 46,
-                                        height: 46,
-                                        alignment: Alignment.center,
-                                        decoration: whiteLineCard(radius: 999),
-                                        child: const Icon(
-                                          Hi.ellipsisHorizontal,
-                                          color: AppTheme.ink,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                KitPills(top: 0, [
+                                  KitPill(label: 'Planta', selected: _view == _PlanView.plan, onTap: () => setState(() => _view = _PlanView.plan)),
+                                  KitPill(label: 'Lista', selected: _view != _PlanView.plan, onTap: () => setState(() => _view = _PlanView.list)),
+                                ]),
                                 const SizedBox(height: 18),
                                 _ShapeCategories(
                                   state: state,
@@ -306,20 +296,15 @@ class _StatsHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final left = (totalGuests - seated) < 0 ? 0 : totalGuests - seated;
-    return GreenHero(
-      label: 'LUGARES SENTADOS',
+    return KitSummary(
+      kicker: 'Lugares sentados',
       value: '$seated',
-      suffix: 'de $totalGuests ${totalGuests == 1 ? 'convidado' : 'convidados'}',
+      unit: 'de $totalGuests ${totalGuests == 1 ? 'convidado' : 'convidados'}',
       progress: totalGuests == 0 ? 0 : seated / totalGuests,
-      doodles: const [Hi.tableCells, Hi.heartOutline, Hi.beaker],
-      footer: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          HeroPill(hasVenue ? '$totalTables ${totalTables == 1 ? 'mesa' : 'mesas'}' : 'Sem espaço reservado', solid: true),
-          HeroPill('$left por sentar'),
-        ],
-      ),
+      footer: [
+        hasVenue ? '$totalTables ${totalTables == 1 ? 'mesa' : 'mesas'}' : 'Sem espaço reservado',
+        left == 0 ? 'ninguém por sentar' : '$left por sentar',
+      ].join(' · '),
     );
   }
 }

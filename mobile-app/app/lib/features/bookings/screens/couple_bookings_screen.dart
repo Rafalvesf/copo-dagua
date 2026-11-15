@@ -18,6 +18,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../features/partner_bookings/booking_style.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -58,18 +59,20 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
         // Parceiros: a página inteira desliza, como no Orçamento e nos
         // Lugares (pedido 2026-11-08). Convidados (ofertas) fica igual.
         child: Builder(builder: (context) {
+          // Mockup «Páginas do evento» → Reservas (2026-11-14).
           final top = <Widget>[
-            const PageHeader(
-              title: 'Reservas',
-              centered: true,
-              subtitle: 'Parceiros contratados e reservas dos convidados.',
-            ),
-            const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-              child: _TabSwitch(guests: _guests, onChanged: (g) => setState(() => _guests = g)),
+              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                const KitHeader(),
+                const KitTitle('Reservas', subtitle: 'Parceiros contratados e reservas dos convidados.'),
+                KitPills([
+                  KitPill(label: 'Serviços', selected: !_guests, onTap: () => setState(() => _guests = false)),
+                  KitPill(label: 'Convidados', selected: _guests, onTap: () => setState(() => _guests = true)),
+                ]),
+              ]),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 4),
           ];
           if (_guests) {
             return ScrollingHeader(
@@ -110,27 +113,28 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                         final active = bookings.where((b) => b.status != BookingStatus.recusado).toList();
                         final handled = active.where((b) => b.paidAmount > 0 || b.status == BookingStatus.concluido).length;
                         final urgent = active.where((b) => b.pendingDepositPaymentId != null || b.pendingFinalPaymentId != null).length;
-                        return GreenHero(
-                          label: 'SERVIÇOS TRATADOS',
+                        return KitSummary(
+                          kicker: 'Serviços tratados',
                           value: '$handled',
-                          suffix: 'de ${active.length} ${active.length == 1 ? 'serviço' : 'serviços'}',
+                          unit: 'de ${active.length} ${active.length == 1 ? 'serviço' : 'serviços'}',
                           progress: active.isEmpty ? 0 : handled / active.length,
-                          doodles: const [Hi.briefcase, Hi.camera, Hi.musicalNote],
-                          footer: Wrap(spacing: 8, runSpacing: 8, children: [
-                            HeroPill('$urgent ${urgent == 1 ? 'pagamento urgente' : 'pagamentos urgentes'}', solid: true),
-                            HeroPill('${proposals.length} ${proposals.length == 1 ? 'proposta' : 'propostas'}'),
-                          ]),
+                          footer: urgent == 0 && proposals.isEmpty
+                              ? null
+                              : [
+                                  if (urgent > 0) '$urgent ${urgent == 1 ? 'pagamento por fazer' : 'pagamentos por fazer'}',
+                                  if (proposals.isNotEmpty) '${proposals.length} ${proposals.length == 1 ? 'proposta' : 'propostas'}',
+                                ].join(' · '),
                         );
                       }),
                       if (proposals.isNotEmpty) ...[
-                        const SectionTitle('Propostas recebidas'),
+                        const KitSection('Propostas recebidas'),
                         for (final proposal in proposals)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: _ProposalRow(proposal: proposal),
                           ),
                       ],
-                      if (bookings.isNotEmpty) const SectionTitle('Os vossos serviços'),
+                      if (bookings.isNotEmpty) const KitSection('Os vossos serviços'),
                       for (final booking in bookings)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -870,45 +874,6 @@ class ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// "Serviços | Convidados" — pílula branca com a linha fina verde.
-class _TabSwitch extends StatelessWidget {
-  final bool guests;
-  final ValueChanged<bool> onChanged;
-  const _TabSwitch({required this.guests, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppTheme.accentOliveDark;
-    Widget tab(String label, bool selected, bool value) => Expanded(
-          child: Semantics(
-            selected: selected,
-            button: true,
-            child: GestureDetector(
-              onTap: () => onChanged(value),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                height: 40,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(color: selected ? c : Colors.transparent, borderRadius: BorderRadius.circular(999)),
-                child: Text(label,
-                    style: TextStyle(fontSize: AppFontSize.md, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.inkMuted)),
-              ),
-            ),
-          ),
-        );
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: c.withValues(alpha: 0.45)),
-        boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-      ),
-      child: Row(children: [tab('Serviços', !guests, false), const SizedBox(width: 4), tab('Convidados', guests, true)]),
     );
   }
 }

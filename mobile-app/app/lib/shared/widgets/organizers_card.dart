@@ -77,7 +77,7 @@ class RowPillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const text = TextStyle(fontSize: 13, fontWeight: FontWeight.w700);
+    const text = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700);
     const pad = EdgeInsets.symmetric(horizontal: 16);
     if (secondary) {
       return OutlinedButton(

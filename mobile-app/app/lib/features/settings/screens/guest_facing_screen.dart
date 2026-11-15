@@ -18,6 +18,7 @@ import '../../../core/wedding/guest_facing.dart';
 import '../../../core/wedding/pastel_colors.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/wedding_venue.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/guest_widgets.dart' show CompanionLimitRow;
 import '../../../shared/widgets/navigation_sheet.dart';
@@ -352,7 +353,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
   @override
   Widget build(BuildContext context) {
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.feed,
       body: SafeArea(
         bottom: false,
         // A página inteira desliza, cabeçalho incluído, como no Orçamento
@@ -361,20 +362,27 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
           children: [
             Expanded(
               child: _loading
-                  ? const Column(children: [
-                      PageHeader(title: 'Para os convidados', titleFontSize: 24),
-                      Expanded(child: Center(child: CircularProgressIndicator())),
-                    ])
+                  ? const Padding(
+                      padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                        KitHeader(),
+                        KitTitle('Para os convidados', subtitle: 'O que os convidados veem e como entram.'),
+                        Expanded(child: Center(child: CircularProgressIndicator())),
+                      ]),
+                    )
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
                       // Redesign 2026-11-08 (canvas "Para os convidados"):
                       // código, acompanhantes, acesso e uma só lista com
                       // cada parte da página; cada parte numa folha.
                       children: [
-                        const PageHeader(title: 'Para os convidados', titleFontSize: 24),
+                        // Mockup «Páginas do evento» → Para os convidados (2026-11-14).
                         Padding(
                           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
                           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                        const KitHeader(),
+                        const KitTitle('Para os convidados', subtitle: 'O que os convidados veem e como entram.'),
+                        const SizedBox(height: 20),
                         _CodeHero(
                           wedding: widget.wedding,
                           onShare: widget.wedding.inviteUrl == null ? null : () => _shareLink(widget.wedding.inviteUrl!),
@@ -2066,85 +2074,78 @@ class _CodeHero extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final code = wedding.guestCode;
     final isPublic = ref.watch(eventIsPublicProvider(wedding.id)).value ?? false;
+    const btnText = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700);
     return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(color: _heroGreen, borderRadius: BorderRadius.circular(26)),
-      child: Stack(children: [
-        Positioned(
-          right: -50,
-          top: -60,
-          child: Container(
-            width: 180,
-            height: 180,
-            decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x14FFFFFF)),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        const Text('CÓDIGO DO EVENTO',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(code?.isNotEmpty == true ? code! : '—',
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.ink)),
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Text('CÓDIGO DO EVENTO',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.4, color: Color(0xFFDDE5D3))),
-            const SizedBox(height: 6),
-            Row(children: [
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(code?.isNotEmpty == true ? code! : '—',
-                      style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700, letterSpacing: 1, color: Colors.white)),
-                ),
+          if (code?.isNotEmpty == true)
+            SnappyTap(
+              semanticLabel: 'Copiar código',
+              onTap: () async {
+                await copyText(code!);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
+                }
+              },
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
+                child: const Icon(Hi.documentDuplicate, size: 20, color: AppTheme.ink),
               ),
-              if (code?.isNotEmpty == true)
-                Material(
-                  color: const Color(0x29FFFFFF),
-                  borderRadius: BorderRadius.circular(12),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () async {
-                      await copyText(code!);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
-                      }
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Icon(Hi.documentDuplicate, size: 18, color: Colors.white, semanticLabel: 'Copiar código'),
-                    ),
-                  ),
-                ),
-            ]),
-            const SizedBox(height: 6),
-            Text(
-              isPublic ? 'Aparece a todos em Eventos · público' : 'Quem tem o código ou o link entra · privado',
-              style: const TextStyle(fontSize: 13, color: Color(0xFFDDE5D3)),
             ),
-            const SizedBox(height: 14),
-            // Um por linha (2026-11-08: "Ver como convidado desformatado").
-            FilledButton.icon(
+        ]),
+        const SizedBox(height: 6),
+        Text(
+          isPublic ? 'Aparece a todos em Eventos · público' : 'Quem tem o código ou o link entra · privado',
+          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+        ),
+        const SizedBox(height: 14),
+        Row(children: [
+          Expanded(
+            child: FilledButton(
               onPressed: onShare,
-              icon: const Icon(Hi.arrowUpOnSquare, size: 18),
-              label: const Text('Partilhar convite', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: _heroGreen,
-                minimumSize: const Size.fromHeight(48),
-                shape: const StadiumBorder(),
-              ),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: onPreview,
-              icon: const Icon(Hi.eye, size: 18),
-              label: const Text('Ver como convidado', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-              style: OutlinedButton.styleFrom(
+                backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
-                side: const BorderSide(color: Color(0x80FFFFFF), width: 1.5),
-                minimumSize: const Size.fromHeight(48),
+                minimumSize: const Size.fromHeight(44),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 shape: const StadiumBorder(),
+                textStyle: btnText,
               ),
+              child: const FittedBox(child: Text('Partilhar convite')),
             ),
-          ]),
-        ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: OutlinedButton(
+              onPressed: onPreview,
+              style: OutlinedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppTheme.ink,
+                side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                minimumSize: const Size.fromHeight(44),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                shape: const StadiumBorder(),
+                textStyle: btnText,
+              ),
+              child: const FittedBox(child: Text('Ver como convidado')),
+            ),
+          ),
+        ]),
       ]),
     );
   }
@@ -2205,18 +2206,8 @@ class _PartsListState extends ConsumerState<_PartsList> {
     final parts = widget.parts;
     final countable = parts.where((p) => !p.locked).toList();
     final ready = countable.where((p) => !p.missing).length;
-    const amber = Color(0xFF8A4B10);
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(2, 12, 2, 10),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-          const Expanded(
-            child: Text('A página', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          ),
-          Text('$ready de ${countable.length} prontas',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-        ]),
-      ),
+      KitSection('A página', action: '$ready de ${countable.length} prontas', top: 16),
       Container(
         decoration: _whiteCard(),
         clipBehavior: Clip.antiAlias,
@@ -2224,38 +2215,24 @@ class _PartsListState extends ConsumerState<_PartsList> {
           type: MaterialType.transparency,
           child: Column(children: [
             for (final (i, p) in parts.indexed) ...[
-              if (i > 0) const Divider(height: 1, indent: 64, color: Color(0xFFF2F0EB)),
+              if (i > 0) const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0xFFECE7DC)),
               InkWell(
                 onTap: p.locked
                     ? () => ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Dormir e transporte ainda não está disponível. Avisamos quando abrir.')))
                     : p.onOpen,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
                   child: Row(children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: p.locked ? const Color(0xFFF2F0EB) : (p.missing ? const Color(0xFFF7EACA) : const Color(0xFFDDE5D3)),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(p.icon, size: 19, color: p.locked ? AppTheme.inkMuted : (p.missing ? amber : _heroGreen)),
-                    ),
-                    const SizedBox(width: 12),
                     Expanded(
                       child: Opacity(
                         opacity: p.locked ? 0.6 : 1,
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(p.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          Text(p.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                           Text(p.status,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: p.missing ? FontWeight.w700 : FontWeight.w600,
-                                color: p.missing ? amber : AppTheme.inkMuted,
-                              )),
+                              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                         ]),
                       ),
                     ),
@@ -2263,11 +2240,7 @@ class _PartsListState extends ConsumerState<_PartsList> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(999)),
-                        child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                          Icon(Hi.lockClosed, size: 13, color: AppTheme.inkMuted),
-                          SizedBox(width: 4),
-                          Text('Em breve', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                        ]),
+                        child: const Text('Em breve', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
                       )
                     else if (p.section != null)
                       Switch.adaptive(
@@ -2286,7 +2259,7 @@ class _PartsListState extends ConsumerState<_PartsList> {
       ),
       const SizedBox(height: 10),
       const Text('Toca numa parte para a editar. Guarda sozinho.',
-          textAlign: TextAlign.center, style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+          textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
       ...[
         const SizedBox(height: 6),
         Center(

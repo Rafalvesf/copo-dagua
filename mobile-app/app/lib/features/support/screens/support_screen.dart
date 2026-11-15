@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
-import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/home/home_providers.dart';
@@ -10,7 +8,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/estrela.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/island_sheet.dart';
@@ -34,74 +33,65 @@ class SupportScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ticketsAsync = ref.watch(coupleSupportTicketsProvider);
 
+    // Mockup «Páginas do evento» → Falar com a equipa (2026-11-14).
     return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(
-        child: Column(
-          children: [
-Expanded(child: ScrollingHeader(
- header: [
-            const PageHeader(
-              title: 'Falar com a equipa',
-              subtitle: 'Os vossos pedidos de ajuda.',
-            ),
-            const SizedBox(height: 16)
- ],
- body: ticketsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(coupleSupportTicketsProvider)),
-                data: (tickets) {
-                  if (tickets.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          'Ainda não abriram nenhum pedido de suporte.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: AppTheme.inkMuted),
-                        ),
-                      ),
-                    );
-                  }
-                  return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.screenMargin,
-                      0,
-                      AppTheme.screenMargin,
-                      140,
-                    ),
-                    itemCount: tickets.length,
-                    itemBuilder: (context, index) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _TicketRow(ticket: tickets[index]),
-                    ),
-                  );
-                },
-              ),
-)),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.screenMargin,
-                0,
-                AppTheme.screenMargin,
-                20,
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => _showNewTicketSheet(context, ref),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.ink,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: const StadiumBorder(),
+      background: AppBackground.feed,
+      body: Column(
+        children: [
+          Expanded(
+            child: KitPage(
+              bottom: 20,
+              children: [
+                const KitHeader(),
+                const KitTitle('Falar com a equipa', subtitle: 'Os vossos pedidos de ajuda.'),
+                ticketsAsync.when(
+                  loading: () => const Padding(
+                    padding: EdgeInsets.only(top: 60),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
-                  child: const Text('Novo pedido de suporte'),
+                  error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(coupleSupportTicketsProvider)),
+                  data: (tickets) {
+                    if (tickets.isEmpty) {
+                      // Lista vazia → a estrela a dormir (DESIGN.md §6).
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 80),
+                        child: Column(children: [
+                          EstrelaMascot(Estrela.dormir, size: 88),
+                          SizedBox(height: 16),
+                          Text('Ainda não abriram nenhum pedido',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          SizedBox(height: 4),
+                          Text('Quando precisarem, abram um pedido e respondemos por aqui.',
+                              textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                        ]),
+                      );
+                    }
+                    return KitGroup(top: 20, [for (final t in tickets) _TicketRow(ticket: t)]);
+                  },
                 ),
+              ],
+            ),
+          ),
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.only(bottom: 20),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+              child: FilledButton(
+                onPressed: () => _showNewTicketSheet(context, ref),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.ink,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(52),
+                  shape: const StadiumBorder(),
+                  textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+                child: const Text('Novo pedido de suporte'),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -112,93 +102,18 @@ class _TicketRow extends StatelessWidget {
 
   const _TicketRow({required this.ticket});
 
-  Color get _statusColor => switch (ticket.status) {
-    SupportTicketStatus.open => AppStatusColors.declined,
-    SupportTicketStatus.pending => AppTheme.accentOliveDark,
-    SupportTicketStatus.resolved => AppTheme.inkMuted,
-  };
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: softCard().boxShadow,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (ticket.category == SupportTicketCategory.disputeDelay) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppStatusColors.declined.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: Text(
-                    'Disputa / atraso',
-                    style: TextStyle(
-                      color: AppStatusColors.declined,
-                      fontSize: AppFontSize.xxs,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-              ],
-              Expanded(
-                child: Text(
-                  ticket.subject,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
-                ),
-              ),
-              StatusPill(label: ticket.status.label, color: _statusColor),
-            ],
-          ),
-          if (ticket.description.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(
-              ticket.description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.sm),
-            ),
-          ],
-          if (ticket.resolutionNote != null) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.muted,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Resposta da equipa',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: AppFontSize.xs,
-                      color: AppTheme.accentOliveDark,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    ticket.resolutionNote!,
-                    style: TextStyle(color: AppTheme.ink, fontSize: AppFontSize.sm, height: 1.4),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
+    final tag = switch (ticket.status) {
+      SupportTicketStatus.open => const KitTag('Aberto', kind: KitTagKind.pending),
+      SupportTicketStatus.pending => const KitTag('A aguardar', kind: KitTagKind.pending),
+      SupportTicketStatus.resolved => const KitTag('Resolvido'),
+    };
+    final sub = [
+      if (ticket.category == SupportTicketCategory.disputeDelay) 'Disputa / atraso',
+      if (ticket.resolutionNote != null) 'Equipa: ${ticket.resolutionNote}' else if (ticket.description.isNotEmpty) ticket.description,
+    ].join(' · ');
+    return KitRow(title: ticket.subject, sub: sub.isEmpty ? null : sub, trailing: tag);
   }
 }
 

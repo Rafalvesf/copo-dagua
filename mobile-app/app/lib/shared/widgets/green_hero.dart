@@ -1,11 +1,12 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'page_kit.dart';
 
-/// Cartão verde do topo dos ecrãs redesenhados (canvas 2026-10-18):
-/// etiqueta em maiúsculas, número grande, barra e etiquetas por baixo,
-/// com três ícones decorativos a branco transparente.
+/// Cartão de resumo do topo (antes verde; desde os mockups de 2026-11-14
+/// é o cartão branco das «Páginas do evento»): rótulo em maiúsculas,
+/// número 40, unidade 13, barra verde de 10 e etiquetas por baixo.
+/// [doodles] ficou só por compatibilidade — já não se desenham.
 class GreenHero extends StatelessWidget {
   final String label;
   final String value;
@@ -21,99 +22,62 @@ class GreenHero extends StatelessWidget {
     this.suffix,
     this.progress,
     this.footer,
-    this.doodles = const [Hi.heartOutline, Hi.sparkles, Hi.globeEuropeAfrica],
+    this.doodles = const [],
   });
 
   @override
   Widget build(BuildContext context) {
-    final c = AppTheme.accentOliveDark;
-    const faded = Color(0x38FFFFFF);
     return Container(
       width: double.infinity,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: c,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-      ),
-      child: Stack(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (doodles.isNotEmpty)
-            Positioned(right: 18, top: 16, child: Transform.rotate(angle: 0.24, child: Icon(doodles[0], size: 26, color: faded))),
-          if (doodles.length > 1)
-            Positioned(right: 64, top: 22, child: Transform.rotate(angle: -0.2, child: Icon(doodles[1], size: 20, color: faded))),
-          if (doodles.length > 2)
-            Positioned(right: 150, top: 12, child: Transform.rotate(angle: 0.14, child: Icon(doodles[2], size: 16, color: faded))),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Text(label.toUpperCase(),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+          if (value.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.end,
+              spacing: 8,
               children: [
-                Text(label,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: Colors.white)),
-                // Valores compridos (nomes) em 28 px, como no canvas; sem
-                // valor, só a etiqueta e o conteúdo (ex.: mensagem).
-                if (value.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.end,
-                  spacing: 8,
-                  children: [
-                    Text(value,
-                        style: value.length > 12
-                            ? const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: Colors.white)
-                            : const TextStyle(fontSize: 40, height: 44 / 40, fontWeight: FontWeight.w700, color: Colors.white)),
-                    if (suffix != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Text(suffix!, style: const TextStyle(fontSize: 14, color: Colors.white)),
-                      ),
-                  ],
-                ),
-                ],
-                if (progress != null) ...[
-                  const SizedBox(height: 14),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: LinearProgressIndicator(
-                      value: progress!.clamp(0.0, 1.0),
-                      minHeight: 10,
-                      backgroundColor: Colors.white.withValues(alpha: 0.28),
-                      color: Colors.white,
-                    ),
+                Text(value,
+                    style: value.length > 12
+                        ? const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)
+                        : const TextStyle(fontSize: 40, height: 44 / 40, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                if (suffix != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(suffix!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   ),
-                ],
-                if (footer != null) ...[const SizedBox(height: 14), footer!],
               ],
             ),
-          ),
+          ],
+          if (progress != null) ...[const SizedBox(height: 12), KitBar(progress!)],
+          if (footer != null) ...[const SizedBox(height: 12), footer!],
         ],
       ),
     );
   }
 }
 
-/// Etiqueta do cartão verde: branca sólida (destaque) ou translúcida.
+/// Etiqueta do resumo: verde quando é o destaque, neutra no resto, ou
+/// pendente (linha amarela) — as etiquetas da DESIGN.md §6.
 class HeroPill extends StatelessWidget {
   final String text;
   final bool solid;
-  const HeroPill(this.text, {super.key, this.solid = false});
+  final bool pending;
+  const HeroPill(this.text, {super.key, this.solid = false, this.pending = false});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: solid ? Colors.white : Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(text,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: solid ? AppTheme.accentOliveDark : Colors.white)),
-    );
-  }
+  Widget build(BuildContext context) => KitTag(
+        text,
+        kind: pending ? KitTagKind.pending : (solid ? KitTagKind.green : KitTagKind.neutral),
+      );
 }
 
-/// Título de secção (18, negrito) com um extra opcional à direita.
+/// Título de secção (22, negrito) com um extra opcional à direita.
 class SectionTitle extends StatelessWidget {
   final String text;
   final Widget? trailing;

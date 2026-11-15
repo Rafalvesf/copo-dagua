@@ -1,5 +1,6 @@
 import '../../../core/moderation/word_filter.dart';
 import '../../../shared/widgets/onb_kit.dart';
+import '../../../shared/widgets/page_kit.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../../core/exports/export_files.dart' show deliverFile;
 import '../../../core/notifications/push.dart';
@@ -500,95 +501,165 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
     super.dispose();
   }
 
+  /// Grava o que está nos campos (cada linha grava ao mudar).
+  Future<void> _save() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final name = _name.text.trim();
+    if (name.isEmpty || !WordFilter.allowed(name) || !WordFilter.allowed(_typeName.text)) {
+      messenger.showSnackBar(SnackBar(content: Text(name.isEmpty ? 'Escreve o nome do evento.' : WordFilter.message)));
+      return;
+    }
+    final w = ref.read(weddingControllerProvider).wedding ?? widget.wedding;
+    // Nome igual ao de antes: mantém os dois nomes do casal.
+    final same = name == w.displayNames;
+    try {
+      await ref.read(weddingControllerProvider.notifier).update(
+            w.copyWith(
+              partnerName1: same ? w.partnerName1 : name,
+              partnerName2: same ? (w.partnerName2 ?? '') : '',
+              location: _location.text.trim(),
+              venue: _venue.text.trim(),
+              quote: _quote.text.trim(),
+              weddingDate: _date,
+              ceremonyType: _ceremonyType,
+            ),
+          );
+      if (_type != w.eventType || (_type == EventType.other && _typeName.text.trim() != (w.eventTypeOther ?? ''))) {
+        await ref.read(weddingControllerProvider.notifier).setEventType(_type, otherLabel: _typeName.text);
+      }
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(WordFilter.serverMessage(e) ?? 'Não foi possível guardar.')));
+      return;
+    }
+    messenger.showSnackBar(const SnackBar(content: Text('Evento atualizado.')));
+  }
+
+  /// Folha com uma caixa de texto; grava ao tocar em «Guardar».
+  Future<void> _editText(String title, TextEditingController c, {int? maxLength, String? hint}) async {
+    final tmp = TextEditingController(text: c.text);
+    final ok = await showIslandSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheet) => StatefulBuilder(
+        builder: (sheet, setSheet) => Padding(
+          padding: EdgeInsets.fromLTRB(20, 22, 20, 20 + MediaQuery.viewInsetsOf(sheet).bottom),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 14),
+            OnbField(
+              controller: tmp,
+              hint: hint,
+              maxLength: maxLength,
+              autofocus: true,
+              error: WordFilter.allowed(tmp.text) ? null : WordFilter.message,
+              onChanged: (_) => setSheet(() {}),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => Navigator.of(sheet).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.ink,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(52),
+                shape: const StadiumBorder(),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+              child: const Text('Guardar'),
+            ),
+          ]),
+        ),
+      ),
+    );
+    if (ok != true || !mounted) return;
+    setState(() => c.text = tmp.text.trim());
+    await _save();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final loading = ref.watch(weddingControllerProvider).loading;
     final isWedding = widget.wedding.eventType == EventType.wedding;
+    String dmy(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+    String? v(TextEditingController c) => c.text.trim().isEmpty ? 'Adicionar' : c.text.trim();
+    // Mockup «Páginas do evento» → Detalhes do evento (2026-11-14): a
+    // grelha do criar evento e as linhas do evento; cada uma grava logo.
     return _SettingsPage(
       title: 'Detalhes do evento',
       children: [
-        // Mesma grelha do criar evento; «Outro» pede o nome (até 24).
-        const SizedBox(height: 14),
+        const SizedBox(height: 20),
         const OnbGroupLabel('Tipo de evento'),
         const SizedBox(height: 8),
-        OnbTypeGrid(selected: _type, onTap: (t) => setState(() => _type = t)),
-        if (_type == EventType.other) ...[
-          const SizedBox(height: 12),
-          OnbField(
-            controller: _typeName,
-            label: 'Que evento é?',
-            hint: 'Ex.: Despedida de solteira',
-            maxLength: 24,
-            error: WordFilter.allowed(_typeName.text) ? null : WordFilter.message,
-            onChanged: (_) => setState(() {}),
-          ),
-        ],
-        const SizedBox(height: 16),
-        OnbField(
-          controller: _name,
-          label: 'Nome do evento',
-          maxLength: 40,
-          error: WordFilter.allowed(_name.text) ? null : WordFilter.message,
-          onChanged: (_) => setState(() {}),
-        ),
-        const SizedBox(height: 12),
-        DatePickerField(label: 'Data', value: _date, allowUnknown: false, onChanged: (d) => setState(() => _date = d)),
-        const SizedBox(height: 12),
-        AuthTextField(label: 'Região / localidade', controller: _location),
-        const SizedBox(height: 12),
-        AuthTextField(label: 'Local', controller: _venue),
-        const SizedBox(height: 12),
-        AuthTextField(label: 'Frase de destaque', controller: _quote),
-        if (isWedding) ...[
-          const SizedBox(height: 12),
-          DropdownButtonFormField<CeremonyType>(
-            initialValue: _ceremonyType,
-            decoration: const InputDecoration(labelText: 'Tipo de cerimónia'),
-            items: const [
-              DropdownMenuItem(value: CeremonyType.civil, child: Text('Civil')),
-              DropdownMenuItem(value: CeremonyType.religious, child: Text('Religiosa')),
-              DropdownMenuItem(value: CeremonyType.both, child: Text('Ambas')),
-            ],
-            onChanged: (v) => setState(() => _ceremonyType = v ?? _ceremonyType),
-          ),
-        ],
-        const SizedBox(height: 24),
-        PrimaryButton(
-          label: 'Guardar',
-          loading: loading,
-          onPressed: () async {
-            final messenger = ScaffoldMessenger.of(context);
-            final name = _name.text.trim();
-            if (name.isEmpty || !WordFilter.allowed(name) || !WordFilter.allowed(_typeName.text)) {
-              messenger.showSnackBar(SnackBar(content: Text(name.isEmpty ? 'Escreve o nome do evento.' : WordFilter.message)));
-              return;
+        OnbTypeGrid(
+          selected: _type,
+          onTap: (t) async {
+            setState(() => _type = t);
+            if (t == EventType.other) {
+              await _editText('Que evento é?', _typeName, maxLength: 24, hint: 'Ex.: Despedida de solteira');
+            } else {
+              await _save();
             }
-            // Nome igual ao de antes: mantém os dois nomes do casal.
-            final same = name == widget.wedding.displayNames;
-            try {
-            await ref.read(weddingControllerProvider.notifier).update(
-                  widget.wedding.copyWith(
-                    partnerName1: same ? widget.wedding.partnerName1 : name,
-                    partnerName2: same ? (widget.wedding.partnerName2 ?? '') : '',
-                    location: _location.text.trim(),
-                    venue: _venue.text.trim(),
-                    quote: _quote.text.trim(),
-                    weddingDate: _date,
-                    ceremonyType: _ceremonyType,
-                  ),
-                );
-            if (_type != widget.wedding.eventType || (_type == EventType.other && _typeName.text.trim() != (widget.wedding.eventTypeOther ?? ''))) {
-              await ref.read(weddingControllerProvider.notifier).setEventType(_type, otherLabel: _typeName.text);
-            }
-            } catch (e) {
-              messenger.showSnackBar(SnackBar(content: Text(WordFilter.serverMessage(e) ?? 'Não foi possível guardar.')));
-              return;
-            }
-            if (!context.mounted) return;
-            messenger.showSnackBar(const SnackBar(content: Text('Evento atualizado.')));
-            Navigator.of(context).pop();
           },
         ),
+        const SizedBox(height: 24),
+        const OnbGroupLabel('O evento'),
+        const SizedBox(height: 8),
+        KitGroup([
+          KitSetRow(label: 'Nome', value: v(_name), onTap: () => _editText('Nome do evento', _name, maxLength: 40)),
+          KitSetRow(
+            label: 'Data',
+            value: _date == null ? 'Adicionar' : dmy(_date!),
+            onTap: () async {
+              final now = DateTime.now();
+              final d = await showOnbDateSheet(
+                context,
+                initial: _date,
+                first: DateTime(now.year - 1),
+                last: DateTime(now.year + 10),
+              );
+              if (d == null || !mounted) return;
+              setState(() => _date = d);
+              await _save();
+            },
+          ),
+          KitSetRow(
+            label: 'Região',
+            value: v(_location),
+            onTap: () async {
+              final place = await showOnbPlaceSheet(context, current: _location.text);
+              if (place == null || !mounted) return;
+              setState(() => _location.text = place);
+              await _save();
+            },
+          ),
+          KitSetRow(label: 'Local', value: v(_venue), onTap: () => _editText('Local', _venue)),
+          KitSetRow(label: 'Frase', value: v(_quote), onTap: () => _editText('Frase de destaque', _quote)),
+          if (isWedding)
+            KitSetRow(
+              label: 'Cerimónia',
+              value: switch (_ceremonyType) {
+                CeremonyType.civil => 'Civil',
+                CeremonyType.religious => 'Religiosa',
+                _ => 'Ambas',
+              },
+              onTap: () async {
+                final c = await showIslandSheet<CeremonyType>(
+                  context: context,
+                  builder: (sheet) => SafeArea(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      for (final (t, l) in const [
+                        (CeremonyType.civil, 'Civil'),
+                        (CeremonyType.religious, 'Religiosa'),
+                        (CeremonyType.both, 'Ambas'),
+                      ])
+                        ListTile(title: Text(l), onTap: () => Navigator.of(sheet).pop(t)),
+                    ]),
+                  ),
+                );
+                if (c == null || !mounted) return;
+                setState(() => _ceremonyType = c);
+                await _save();
+              },
+            ),
+        ]),
       ],
     );
   }

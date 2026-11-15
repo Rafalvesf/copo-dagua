@@ -1,3 +1,5 @@
+import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 
@@ -25,11 +27,10 @@ const guestPageGradient = LinearGradient(
   colors: [Color(0xFFE9E8E4), Colors.white],
 );
 
-/// Cartão branco com borda e sombra (o mesmo do "O meu evento").
-BoxDecoration guestCard({double radius = 20}) => BoxDecoration(
+/// Cartão branco com a sombra suave, sem linha à volta (DESIGN.md §4/§5).
+BoxDecoration guestCard({double radius = 22}) => BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: const Color(0xFFDCD8CE)),
       boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
     );
 
@@ -44,6 +45,7 @@ int? programMinutes(String raw) {
 }
 
 String _cap(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+
 
 const _weekdays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -74,56 +76,31 @@ class GuestHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final date = wedding.weddingDate;
-    final meta = [
-      if (date != null) '${_weekdays[date.weekday - 1]}, ${date.day} de ${monthNamesPt[date.month - 1].toLowerCase()}',
-      if (wedding.ceremonyTime?.isNotEmpty == true) wedding.ceremonyTime!,
-      if (place.isNotEmpty) place,
-    ].join(' · ');
     final today = DateTime.now();
     final days = date == null
         ? null
         : DateTime(date.year, date.month, date.day).difference(DateTime(today.year, today.month, today.day)).inDays;
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(color: guestHeroGreen, borderRadius: BorderRadius.circular(26)),
-      child: Stack(children: [
-        const Positioned.fill(child: _Circles()),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(wedding.eventType.label.toUpperCase(),
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: Color(0xCCFFFFFF))),
-            const SizedBox(height: 6),
-            Text(wedding.displayNames,
-                style: AppTypography.displaySerif(fontSize: 30, fontWeight: FontWeight.w800, color: Colors.white)),
-            if (meta.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(meta, style: const TextStyle(fontSize: 13.5, color: Color(0xE6FFFFFF))),
-            ],
-            const SizedBox(height: 18),
-            Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              if (days != null && days > 0) ...[
-                Text('$days', style: const TextStyle(fontSize: 44, height: 1, fontWeight: FontWeight.w800, color: Colors.white)),
-                const SizedBox(width: 6),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 5),
-                  child: Text(days == 1 ? 'dia' : 'dias',
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xE6FFFFFF))),
-                ),
-              ] else if (days != null && days < 0)
-                const Text('Já foi', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
-              const Spacer(),
-              if (goingWith != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(color: const Color(0x26FFFFFF), borderRadius: BorderRadius.circular(999)),
-                  child: Text(goingWith!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
-                ),
-            ]),
-          ]),
+    // Mockup «Páginas do convidado» → Início (2026-11-14): tipo em
+    // maiúsculas, nome do evento 28 e a data/hora/local por baixo.
+    final when = [
+      if (date != null) '${date.day} ${monthNamesPt[date.month - 1].substring(0, 3).toLowerCase()} ${date.year}',
+      if (wedding.ceremonyTime?.isNotEmpty == true) wedding.ceremonyTime!,
+      if (place.isNotEmpty) place,
+    ].join(' · ');
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(wedding.eventType.label.toUpperCase(),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+      const SizedBox(height: 6),
+      Text(wedding.displayNames,
+          style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      if (when.isNotEmpty) ...[
+        const SizedBox(height: 6),
+        Text(
+          [when, if (days != null && days > 0) days == 1 ? 'falta 1 dia' : 'faltam $days dias', ?goingWith].join(' · '),
+          style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
         ),
-      ]),
-    );
+      ],
+    ]);
   }
 }
 
@@ -150,26 +127,22 @@ class GuestShortcutsRow extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1.45,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 1.35,
       children: [
         for (final it in items)
           SnappyTap(
             onTap: it.onTap,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-              decoration: BoxDecoration(
-                color: it.color,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-              ),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Container(
                   width: 40,
                   height: 40,
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13)),
-                  child: Icon(it.icon, size: 21, color: guestHeroGreen),
+                  decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
+                  child: Icon(it.icon, size: 20, color: AppTheme.ink),
                 ),
                 const Spacer(),
                 Text(it.label,
@@ -179,7 +152,7 @@ class GuestShortcutsRow extends StatelessWidget {
                 Text(it.sub,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12.5, color: Color(0xFF57534E))),
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ]),
             ),
           ),
@@ -249,42 +222,25 @@ class GuestAnswerCard extends ConsumerWidget {
       for (final c in companions) (c.name, detail(c.menu, c.allergies.isEmpty ? null : c.allergies.join(', '))),
       if (companions.isEmpty && guest.plusOneName?.isNotEmpty == true) (guest.plusOneName!, 'Acompanhante'),
     ];
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-      decoration: guestCard(),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(children: [
-          const Expanded(
-            child: Text('A TUA RESPOSTA',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.1, color: AppTheme.inkMuted)),
-          ),
-          GestureDetector(
-            onTap: edit,
-            child: const Text('Alterar', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: guestButtonGreen)),
-          ),
-        ]),
-        const SizedBox(height: 6),
-        for (final (name, sub) in rows)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Row(children: [
-              CircleAvatar(
-                radius: 17,
-                backgroundColor: const Color(0xFFDDE5D3),
-                child: Text(name.characters.first.toUpperCase(),
-                    style: const TextStyle(fontWeight: FontWeight.w800, color: guestHeroGreen)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(name, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
-                ]),
-              ),
-            ]),
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      KitCaps(
+        'A tua resposta',
+        top: 10,
+        trailing: GestureDetector(
+          onTap: edit,
+          child: const Text('Alterar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: guestButtonGreen)),
+        ),
+      ),
+      KitGroup([
+        for (final (i, (name, sub)) in rows.indexed)
+          KitRow(
+            lead: V2Avatar(name, size: 44),
+            title: name,
+            sub: sub,
+            trailing: i == 0 ? const KitTag('Vou') : null,
           ),
       ]),
-    );
+    ]);
   }
 }
 

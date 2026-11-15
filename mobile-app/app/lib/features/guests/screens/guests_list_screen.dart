@@ -16,7 +16,9 @@ import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_widgets.dart';
-import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/search_pill.dart';
+import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -96,240 +98,92 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
       return matchesGroup && matchesQuery;
     }).toList();
 
+    int countIn(String g) => state.guests.where((x) => x.group == g).length;
+
+    // Mockup «Páginas do evento» → Convidados (2026-11-14).
     return GradientScaffold(
       background: AppBackground.feed,
       body: state.loading && state.guests.isEmpty
           ? const Center(child: CircularProgressIndicator())
-          : Stack(
+          : KitPage(
               children: [
-                SafeArea(top: false, 
-                  bottom: false,
-                  // A página inteira desliza, como no Orçamento e nos Lugares
-                  // (pedido 2026-11-08): cabeçalho e cartão sobem com a lista.
-                  child: CustomScrollView(
-                    slivers: [SliverToBoxAdapter(child: SizedBox(height: MediaQuery.paddingOf(context).top)),
-                      SliverToBoxAdapter(child: Column(children: [
-                      PageHeader(
-                        title: 'Convidados',
-                        centered: true,
-                        trailing: AddActionButton(onTap: _addGuest),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),
-                        child: _ListHero(
-                          total: total,
-                          confirmed: state.confirmedCount,
-                          pending: state.pendingCount,
-                          declined: state.declinedCount,
-                          onFilter: (f) => ref.read(guestsControllerProvider.notifier).setFilter(f),
-                        ),
-                      ),
-                      if (wedding != null)
-                        Padding(
-                          // Sem margens: o carrossel põe as suas.
-                          padding: EdgeInsets.zero,
-                          child: JoinRequestsCard(weddingId: wedding.id),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppTheme.screenMargin,
-                          16,
-                          AppTheme.screenMargin,
-                          0,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              // A linha fina é só a do cartão: o campo não tem
-                              // fundo nem contorno próprios (antes o fundo do
-                              // campo tapava metade da linha — 2026-10-18).
-                              child: Container(
-                                height: 46,
-                                alignment: Alignment.center,
-                                decoration: whiteLineCard(radius: AppRadius.pill),
-                                child: TextField(
-                                  controller: _search,
-                                  textAlignVertical: TextAlignVertical.center,
-                                  decoration: const InputDecoration(
-                                    hintText: 'Pesquisar convidados...',
-                                    prefixIcon: Icon(Hi.magnifyingGlass, size: 20),
-                                    filled: false,
-                                    isCollapsed: true,
-                                    border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    focusedBorder: InputBorder.none,
-                                    errorBorder: InputBorder.none,
-                                    disabledBorder: InputBorder.none,
-                                    focusedErrorBorder: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(vertical: 13),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            if (wedding != null) ...[
-                              const SizedBox(width: 10),
-                              CircleIconButton(
-                                semanticLabel: 'Partilhar',
-                                icon: Hi.arrowUpOnSquare,
-                                background: Colors.white,
-                                size: 46,
-                                onTap: () => _shareInvite(wedding),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      ])),
-                      if (state.guests.isEmpty)
-                        SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: IllustratedEmptyState(
-                            mascot: MascotPose.wave,
-                            title: 'Quem vem celebrar convosco?',
-                            message: 'Comecem pela família mais próxima. A lista pode crescer aos poucos, e cada convidado confirma pelo link do convite.',
-                            primaryLabel: 'Adicionar o primeiro convidado',
-                            onPrimary: _addGuest,
-                            secondaryLabel: wedding == null ? null : 'Partilhar convite',
-                            onSecondary: wedding == null ? null : () => _shareInvite(wedding),
-                          ),
-                        )
-                      else if (visible.isEmpty)
-                        const SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: EmptyStateView(message: 'Sem convidados nesta categoria.', icon: Hi.users),
-                        )
-                      else
-                        SliverPadding(
-                          padding: EdgeInsets.fromLTRB(
-                            AppTheme.screenMargin,
-                            16,
-                            AppTheme.screenMargin,
-                            groups.isEmpty ? 40 : FloatingFilterBar.bottomPadding(aboveNav: false),
-                          ),
-                          sliver: SliverList.builder(
-                            itemCount: visible.length,
-                            itemBuilder: (context, index) {
-                              final guest = visible[index];
-                              return GuestListItem(
-                                guest: guest,
-                                onTap: () => context.push('/guests/${guest.id}'),
-                              );
-                            },
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                if (groups.isNotEmpty)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: FloatingFilterBar(
-                      items: [
-                        FilterBarItem('Todos'),
-                        for (final group in groups)
-                          FilterBarItem(group),
-                      ],
-                      selected: _groupFilter == null
-                          ? 0
-                          : groups.indexOf(_groupFilter!) + 1,
-                      onSelected: (i) => setState(
-                        () => _groupFilter = i == 0 ? null : groups[i - 1],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-    );
-  }
-}
-
-/// Canvas "Convidados — redesign": cartão verde "A VOSSA LISTA" com a
-/// barra dividida e três chips brancos (tocar filtra a lista).
-int _flex(int v) => v < 1 ? 1 : v;
-
-class _ListHero extends StatelessWidget {
-  final int total;
-  final int confirmed;
-  final int pending;
-  final int declined;
-  final ValueChanged<GuestFilter> onFilter;
-
-  const _ListHero({
-    required this.total,
-    required this.confirmed,
-    required this.pending,
-    required this.declined,
-    required this.onFilter,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    Widget chip(String label, int n, Color dot, GuestFilter f) => Expanded(
-          child: SnappyTap(
-            onTap: () => onFilter(f),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(width: 8, height: 8, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text('$n', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                ],
-              ),
-            ),
-          ),
-        );
-    final t = total == 0 ? 1 : total;
-    return SnappyTap(
-      onTap: () => onFilter(GuestFilter.all),
-      child: GreenHero(
-        label: 'A VOSSA LISTA',
-        value: '$total',
-        suffix: total == 1 ? 'convidado' : 'convidados',
-        doodles: const [Hi.users, Hi.heartOutline, Hi.beaker],
-        footer: Column(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: SizedBox(
-                height: 10,
-                child: Row(
-                  children: [
-                    if (confirmed > 0) Expanded(flex: _flex(confirmed * 1000 ~/ t), child: Container(color: Colors.white)),
-                    if (pending > 0) Expanded(flex: _flex(pending * 1000 ~/ t), child: Container(color: Colors.white.withValues(alpha: 0.55))),
-                    Expanded(flex: _flex(1000 - (confirmed + pending) * 1000 ~/ t), child: Container(color: Colors.white.withValues(alpha: 0.28))),
+                KitHeader(actions: [KitAddButton(tooltip: 'Adicionar convidado', onTap: _addGuest)]),
+                const KitTitle('Convidados'),
+                KitSummary(
+                  kicker: 'A vossa lista',
+                  value: '$total',
+                  unit: total == 1 ? 'convidado' : 'convidados',
+                  progress: total == 0 ? 0 : state.confirmedCount / total,
+                  legend: [
+                    KitLegend(AppTheme.accentOliveDark, '${state.confirmedCount}', 'sim'),
+                    KitLegend(const Color(0xFFF2A01B), '${state.pendingCount}', 'por responder'),
+                    KitLegend(const Color(0xFFC8553D), '${state.declinedCount}', 'não'),
                   ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                chip('Sim', confirmed, AppStatusColors.confirmed, GuestFilter.confirmed),
-                const SizedBox(width: 8),
-                chip('Por responder', pending, AppStatusColors.pending, GuestFilter.pending),
-                const SizedBox(width: 8),
-                chip('Não', declined, AppStatusColors.declined, GuestFilter.declined),
+                if (wedding != null) KitBleed(JoinRequestsCard(weddingId: wedding.id)),
+                if (state.guests.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 24),
+                    child: IllustratedEmptyState(
+                      mascot: MascotPose.wave,
+                      title: 'Quem vem celebrar convosco?',
+                      message: 'Comecem pela família mais próxima. A lista pode crescer aos poucos, e cada convidado confirma pelo link do convite.',
+                      primaryLabel: 'Adicionar o primeiro convidado',
+                      onPrimary: _addGuest,
+                      secondaryLabel: wedding == null ? null : 'Partilhar convite',
+                      onSecondary: wedding == null ? null : () => _shareInvite(wedding),
+                    ),
+                  )
+                else ...[
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: Row(children: [
+                      Expanded(child: SearchPill(controller: _search, hint: 'Pesquisar convidados')),
+                      if (wedding != null) ...[
+                        const SizedBox(width: 10),
+                        V2RoundButton(icon: Hi.arrowUpOnSquare, tooltip: 'Partilhar convite', onTap: () => _shareInvite(wedding)),
+                      ],
+                    ]),
+                  ),
+                  if (groups.isNotEmpty)
+                    KitPills([
+                      KitPill(
+                        label: 'Todos',
+                        count: total,
+                        selected: _groupFilter == null,
+                        onTap: () => setState(() => _groupFilter = null),
+                      ),
+                      for (final g in groups)
+                        KitPill(
+                          label: g,
+                          count: countIn(g),
+                          selected: _groupFilter == g,
+                          onTap: () => setState(() => _groupFilter = g),
+                        ),
+                    ]),
+                  if (visible.isEmpty)
+                    const KitGroup([KitRow(title: 'Sem convidados aqui.')], top: 16)
+                  else
+                    KitGroup(top: 16, [
+                      for (final guest in visible)
+                        KitRow(
+                          lead: V2Avatar(guest.name, size: 44),
+                          title: guest.name,
+                          sub: [
+                            guest.group.isEmpty ? 'Convidado' : guest.group,
+                            if (guest.maxCompanions > 0) 'pode trazer ${guest.maxCompanions}',
+                          ].join(' · '),
+                          trailing: switch (guest.rsvpStatus) {
+                            RsvpStatus.confirmed => const KitTag('Confirmado'),
+                            RsvpStatus.declined => const KitTag('Não vem', kind: KitTagKind.neutral),
+                            _ => const KitTag('Por responder', kind: KitTagKind.pending),
+                          },
+                          onTap: () => context.push('/guests/${guest.id}'),
+                        ),
+                    ]),
+                ],
               ],
             ),
-          ],
-        ),
-      ),
     );
   }
 }

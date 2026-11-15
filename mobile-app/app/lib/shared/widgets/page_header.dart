@@ -33,158 +33,74 @@ class PageHeader extends StatelessWidget {
     this.centered = false,
   });
 
-  /// Altura da linha do título — a dos botões redondos do Perfil (46).
-  static const double _rowHeight = 46;
-
-  Widget _subtitle({required bool center}) {
-    return Row(
-      mainAxisAlignment: center ? MainAxisAlignment.center : MainAxisAlignment.start,
-      children: [
-        Flexible(
-          child: Text(
-            subtitle!,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppTheme.inkMuted,
-              fontSize: AppFontSize.md,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+  Widget _subtitle() => Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Text(
+          subtitle!,
+          style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13, height: 1.4),
         ),
-        const SizedBox(width: 6),
-        Icon(Hi.heart, size: 15, color: AppTheme.accentOliveDark),
-      ],
-    );
-  }
+      );
 
   @override
   Widget build(BuildContext context) {
-    // Pedido do utilizador (2026-10-16): "alinha os títulos todos à mesma
-    // altura que o título Perfil" — mesma margem de topo (20) e a linha
-    // do título sempre com 46 de altura (a dos botões redondos), em todos
-    // os ecrãs. Por isso [topPadding] nunca fica abaixo de 20, e os ecrãs
-    // com voltar usam sempre a forma de uma linha (voltar · título).
+    // Mockups «Páginas do evento» (2026-11-14), em todos os ecrãs: voltar
+    // redondo branco 44 numa linha (com as ações à direita) e o título de
+    // página 28 à esquerda, por baixo, com o subtítulo 13. Nos separadores
+    // principais (sem voltar) o título fica na linha das ações.
+    // [titleFontSize] e [centered] ficaram só por compatibilidade.
     final padding = EdgeInsets.fromLTRB(
       AppTheme.screenMargin,
-      topPadding < 20 ? 20 : topPadding,
+      topPadding < 12 ? 12 : topPadding,
       AppTheme.screenMargin,
       0,
     );
-
-    if ((centered || showBack) && title != null) {
-      return Padding(
-        padding: padding,
-        child: Column(
-          children: [
-            SizedBox(
-              height: _rowHeight,
-              child: Row(
-              children: [
-                showBack ? const CircleBackButton() : const SizedBox(width: 44, height: 44),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    title!,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.displaySerif(
-                      fontSize: AppFontSize.h3,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.ink,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                trailing ?? const SizedBox(width: 44, height: 44),
-              ],
-            ),
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 8),
-              _subtitle(center: true),
-            ],
-          ],
-        ),
-      );
-    }
-
     final titleText = title == null
         ? null
         : Text(
             title!,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: AppTypography.displaySerif(
-              fontSize: titleFontSize,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.ink,
-            ),
+            style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink),
           );
 
-    // Separador principal: título e ações na mesma linha.
-    if (!showBack && trailing != null && titleText != null) {
+    if (!showBack && !centered) {
       return Padding(
         padding: padding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: _rowHeight,
-              child: Row(
-                children: [
-                  Expanded(child: titleText),
-                  const SizedBox(width: 12),
-                  trailing!,
-                ],
-              ),
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 6),
-              _subtitle(center: false),
-            ],
-          ],
-        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          SizedBox(
+            height: 44,
+            child: Row(children: [
+              if (titleText != null) Expanded(child: titleText) else const Spacer(),
+              if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+            ]),
+          ),
+          if (subtitle != null) _subtitle(),
+        ]),
       );
     }
 
-    final hasIconRow = showBack || trailing != null;
     return Padding(
       padding: padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (hasIconRow) ...[
-            Row(
-              children: [
-                if (showBack) const CircleBackButton(),
-                const Spacer(),
-                ?trailing,
-              ],
-            ),
-            const SizedBox(height: 18),
-          ],
-          if (titleText != null) ...[
-            if (hasIconRow)
-              titleText
-            else
-              SizedBox(
-                height: _rowHeight,
-                child: Align(alignment: Alignment.centerLeft, child: titleText),
-              ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 6),
-              _subtitle(center: false),
-            ],
-          ],
+          SizedBox(
+            height: 44,
+            child: Row(children: [
+              if (showBack) const CircleBackButton(),
+              const Spacer(),
+              ?trailing,
+            ]),
+          ),
+          if (titleText != null) ...[const SizedBox(height: 20), titleText],
+          if (subtitle != null) _subtitle(),
         ],
       ),
     );
   }
 }
 
-/// Botão circular verde-oliva com ícone "+" — o padrão de ação
+/// Botão circular preto com ícone "+" (DESIGN.md §2) — o padrão de ação
 /// primária (nova tarefa, adicionar despesa, nova mesa) usado nos
 /// cabeçalhos de Tarefas/Orçamento/Lugares. Só ícone, sem rótulo, para
 /// nunca competir por espaço com o título grande ao lado.

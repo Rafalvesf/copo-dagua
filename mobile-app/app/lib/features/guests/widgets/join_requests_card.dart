@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/events/events_providers.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/green_hero.dart';
+import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/snap_carousel.dart';
 import '../../../shared/widgets/v2_kit.dart';
 
@@ -42,7 +42,7 @@ class _JoinRequestsCardState extends ConsumerState<JoinRequestsCard> {
       children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-          child: SectionTitle('Pedidos para entrar'),
+          child: KitSection('Pedidos para entrar'),
         ),
         SnapCarousel(
           itemCount: requests.length,
@@ -172,7 +172,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                     minimumSize: const Size(0, 44),
                     side: const BorderSide(color: AppTheme.ink, width: 1.5),
                     shape: const StadiumBorder(),
-                    textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                    textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Recusar'),
                 ),
@@ -186,7 +186,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                     foregroundColor: Colors.white,
                     minimumSize: const Size(0, 44),
                     shape: const StadiumBorder(),
-                    textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                    textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Aceitar'),
                 ),
