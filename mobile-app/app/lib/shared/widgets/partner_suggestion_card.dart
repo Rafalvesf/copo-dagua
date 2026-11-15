@@ -25,7 +25,7 @@ class PartnerSuggestionCard extends ConsumerWidget {
     final rating = p?.rating;
     final price = p == null
         ? null
-        : (p.startingPrice != null ? ('DESDE', euros(p.startingPrice!)) : ('POR', 'Orçamento'));
+        : (p.startingPrice != null ? ('DESDE', euros(p.startingPrice!)) : ('', 'Por orçamento'));
     return FeaturedOverlayCard(
       onTap: onTap,
       image: k.coverPhotoUrl == null

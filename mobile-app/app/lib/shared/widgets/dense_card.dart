@@ -315,7 +315,11 @@ class PriceBox extends StatelessWidget {
         constraints: const BoxConstraints(minWidth: 40),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
+        // Sem rótulo: "Por orçamento" numa só linha (DESIGN.md §6, Preço).
+        child: label.isEmpty
+            ? const Text('Por orçamento',
+                style: TextStyle(fontSize: 13, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink))
+            : Column(mainAxisSize: MainAxisSize.min, children: [
           Text(label,
               style: const TextStyle(fontSize: 9, height: 1.2, letterSpacing: 0.4, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
           Text(value, style: const TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
@@ -352,7 +356,7 @@ class FeaturedOverlayCard extends StatelessWidget {
         onTap: onTap,
         child: Semantics(
           button: true,
-          label: [title, subtitle, if (price != null) '${price!.$1} ${price!.$2}'].join(', '),
+          label: [title, subtitle, if (price != null) '${price!.$1} ${price!.$2}'.trim()].join(', '),
           excludeSemantics: true,
           child: Container(
             height: height,

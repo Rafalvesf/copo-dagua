@@ -2553,17 +2553,18 @@ class _StatBlocks extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: _card(radius: 20),
+          // Conteúdo ao centro (pedido 2026-11-15).
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+              Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
               const SizedBox(height: 6),
               Text.rich(TextSpan(children: [
                 TextSpan(text: value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                 if (of != null) TextSpan(text: ' $of', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-              ])),
+              ]), textAlign: TextAlign.center),
               const SizedBox(height: 4),
-              Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis,
+              Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: subColor ?? AppTheme.inkMuted)),
             ],
           ),
@@ -2741,30 +2742,30 @@ class _InviteCodeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('O convite', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
-                    SizedBox(height: 2),
-                    Text('Código para entrar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),
-                  ]),
-                ),
-                if (code != null)
-                  Semantics(
-                    button: true,
-                    label: 'Copiar o link do convite',
-                    child: SnappyTap(
-                      onTap: () {
-                        copyText(wedding.inviteUrl ?? code);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link do convite copiado.')));
-                      },
-                      child: Text(code, style: const TextStyle(fontSize: 20, letterSpacing: 2, fontWeight: FontWeight.w800, color: Colors.white)),
-                    ),
+            // Título em cima e o código por baixo, na largura toda: lado a
+            // lado, um código comprido (JANTARDENATAL-7984) esmagava o
+            // título letra a letra (2026-11-15).
+            const Text('O convite', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: Colors.white)),
+            const SizedBox(height: 2),
+            const Text('Código para entrar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),
+            if (code != null) ...[
+              const SizedBox(height: 10),
+              Semantics(
+                button: true,
+                label: 'Copiar o link do convite',
+                child: SnappyTap(
+                  onTap: () {
+                    copyText(wedding.inviteUrl ?? code);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link do convite copiado.')));
+                  },
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(code, maxLines: 1, style: const TextStyle(fontSize: 22, letterSpacing: 2, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
-              ],
-            ),
+                ),
+              ),
+            ],
             const SizedBox(height: 14),
             Row(
               children: [
