@@ -11,6 +11,7 @@ import '../../../core/chat/chat_attachments.dart';
 import '../../../core/chat/chat_delete.dart';
 import '../../../core/chat/group_chat.dart';
 import '../../../core/chat/presence.dart';
+import '../../../core/social/social.dart' show followPerson;
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/moderation/moderation.dart';
 import '../../../core/theme/app_theme.dart';
@@ -449,6 +450,19 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                     final m = msgs[i];
                     final mine = m.senderId == me;
                     final sender = people[m.senderId];
+                    // Resposta ao convite (189): cartão ao centro com o perfil
+                    // para seguir (mockup «Grupo do evento», 2026-11-15).
+                    if (m.isRsvp) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: _RsvpCard(
+                          message: m,
+                          name: sender?.name ?? (m.body ?? '').replaceAll(RegExp(r' disse que (não )?vai\$'), ''),
+                          avatarUrl: sender?.avatarUrl,
+                          mine: mine,
+                        ),
+                      );
+                    }
                     // Nome/foto só na primeira de uma sequência do mesmo autor.
                     final older = i + 1 < msgs.length ? msgs[i + 1] : null;
                     final firstOfRun = older == null || older.senderId != m.senderId;
@@ -539,6 +553,121 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
               .read(typingNowProvider('g:${widget.group.id}').notifier)
               .typing(ref.read(authControllerProvider).profile?.fullName ?? ''),
         ),
+      ]),
+    );
+  }
+}
+
+/// «Canela disse que vai» no grupo, com o perfil para seguir.
+class _RsvpCard extends StatefulWidget {
+  final GroupMessage message;
+  final String name;
+  final String? avatarUrl;
+  final bool mine;
+  const _RsvpCard({required this.message, required this.name, this.avatarUrl, required this.mine});
+
+  @override
+  State<_RsvpCard> createState() => _RsvpCardState();
+}
+
+class _RsvpCardState extends State<_RsvpCard> {
+  bool? _following;
+  bool _busy = false;
+
+  String get _personId => (widget.message.meta?['profile_id'] as String?) ?? widget.message.senderId;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.mine) _load();
+  }
+
+  Future<void> _load() async {
+    final me = supabase.auth.currentUser?.id;
+    if (me == null) return;
+    try {
+      final r = await supabase.from('follows').select('profile_id').eq('follower_id', me).eq('profile_id', _personId).maybeSingle();
+      if (mounted) setState(() => _following = r != null);
+    } catch (_) {
+      if (mounted) setState(() => _following = false);
+    }
+  }
+
+  Future<void> _toggle() async {
+    final next = !(_following ?? false);
+    setState(() => _busy = true);
+    try {
+      await followPerson(_personId, next);
+      if (mounted) setState(() => _following = next);
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não deu para seguir. Tenta outra vez.')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final going = widget.message.rsvpGoing;
+    final t = widget.message.sentAt.toLocal();
+    final hhmm = '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+    final title = widget.mine
+        ? (going ? 'Tu disseste que vais' : 'Tu disseste que não vais')
+        : '${widget.name} ${going ? 'disse que vai' : 'disse que não vai'}';
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      child: Row(children: [
+        V2Avatar(widget.name, size: 44, imageUrl: widget.avatarUrl, flat: true),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 2),
+            Row(children: [
+              Text(hhmm, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: going ? const Color(0xFFE6EDE1) : const Color(0xFFF2F0EB),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(going ? 'Vai' : 'Não vai',
+                    style: TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700, color: going ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733))),
+              ),
+            ]),
+          ]),
+        ),
+        if (!widget.mine && _following != null) ...[
+          const SizedBox(width: 8),
+          _following!
+              ? OutlinedButton(
+                  onPressed: _busy ? null : _toggle,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    shape: const StadiumBorder(),
+                    side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                    foregroundColor: AppTheme.ink,
+                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                  ),
+                  child: const Text('A seguir'),
+                )
+              : FilledButton(
+                  onPressed: _busy ? null : _toggle,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    shape: const StadiumBorder(),
+                    backgroundColor: AppTheme.ink,
+                    foregroundColor: Colors.white,
+                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                  ),
+                  child: const Text('Seguir'),
+                ),
+        ],
       ]),
     );
   }

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/public_link.dart';
@@ -29,6 +30,13 @@ class InviteScreen extends ConsumerStatefulWidget {
 }
 
 class _InviteScreenState extends ConsumerState<InviteScreen> {
+  /// 0 = por mensagem, 1 = quem sigo (189).
+  int _tab = 0;
+  /// Quem sigo; null enquanto carrega ou se a migração 189 ainda não correu
+  /// (aí não aparecem as pílulas).
+  List<_Followed>? _followed;
+  final _inviting = <String>{};
+
   @override
   void initState() {
     super.initState();
@@ -37,7 +45,80 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
       if (w != null && ref.read(guestsControllerProvider).guests.isEmpty) {
         ref.read(guestsControllerProvider.notifier).load(w.id);
       }
+      if (w != null) _loadFollowed(w.id);
     });
+  }
+
+  Future<void> _loadFollowed(String weddingId) async {
+    try {
+      final rows = await supabase.rpc('event_followed_people', params: {'p_wedding_id': weddingId});
+      if (!mounted) return;
+      setState(() => _followed = [for (final r in (rows as List).cast<Map<String, dynamic>>()) _Followed.fromRow(r)]);
+    } catch (_) {
+      // Sem a migração 189: só o convite por mensagem.
+    }
+  }
+
+  Future<void> _inviteFollowed(String weddingId, _Followed p) async {
+    setState(() => _inviting.add(p.id));
+    try {
+      await supabase.rpc('invite_followed', params: {'p_wedding_id': weddingId, 'p_profile_id': p.id});
+      await _loadFollowed(weddingId);
+      await ref.read(guestsControllerProvider.notifier).load(weddingId);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível convidar. Tenta outra vez.')));
+      }
+    } finally {
+      if (mounted) setState(() => _inviting.remove(p.id));
+    }
+  }
+
+  List<Widget> _followedTab(Wedding? wedding) {
+    final list = _followed ?? const <_Followed>[];
+    if (list.isEmpty) {
+      return const [
+        SizedBox(height: 24),
+        Text('Ainda não segues ninguém na app. Quem seguires aparece aqui para convidares sem link.',
+            style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+      ];
+    }
+    final toInvite = list.where((p) => !p.invited).toList();
+    final invited = list.where((p) => p.invited).toList();
+    Widget tag(_Followed p) => switch (p.rsvp) {
+          'confirmed' => const KitTag('Vai'),
+          'declined' => const KitTag('Não vai', kind: KitTagKind.neutral),
+          _ => const KitTag('Convidado', kind: KitTagKind.neutral),
+        };
+    return [
+      if (toInvite.isNotEmpty) ...[
+        KitCaps('Quem sigo · ${toInvite.length}'),
+        KitGroup([
+          for (final p in toInvite)
+            KitRow(
+              lead: V2Avatar(p.name, size: 44, imageUrl: p.avatarUrl),
+              title: p.name,
+              sub: p.mutual ? 'Segue-te também' : (p.username != null ? '@${p.username}' : 'Na app'),
+              trailing: RowPillButton(
+                label: 'Convidar',
+                onTap: wedding == null || _inviting.contains(p.id) ? null : () => _inviteFollowed(wedding.id, p),
+              ),
+            ),
+        ]),
+      ],
+      if (invited.isNotEmpty) ...[
+        KitCaps('Já convidados · ${invited.length}'),
+        KitGroup([
+          for (final p in invited)
+            KitRow(
+              lead: V2Avatar(p.name, size: 44, imageUrl: p.avatarUrl),
+              title: p.name,
+              sub: 'Vê o evento na app',
+              trailing: tag(p),
+            ),
+        ]),
+      ],
+    ];
   }
 
   @override
@@ -72,7 +153,16 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
       background: AppBackground.subtle,
       body: KitPage(children: [
         KitHeader(onBack: () => context.canPop() ? context.pop() : context.go('/guests')),
-        const KitTitle('Convidar', subtitle: 'Envia o convite a cada pessoa, com o link dela.'),
+        KitTitle('Convidar',
+            subtitle: _tab == 1
+                ? 'Quem segues recebe o convite na app, sem link.'
+                : 'Envia o convite a cada pessoa, com o link dela.'),
+        if (_followed != null)
+          KitPills([
+            KitPill(label: 'Por mensagem', selected: _tab == 0, onTap: () => setState(() => _tab = 0)),
+            KitPill(label: 'Quem sigo', selected: _tab == 1, count: _followed!.where((p) => !p.invited).length, onTap: () => setState(() => _tab = 1)),
+          ]),
+        if (_tab == 1) ..._followedTab(wedding) else ...[
         KitSummary(
           kicker: 'Convites enviados',
           value: '${done.length}',
@@ -139,6 +229,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
             ]),
           ),
         ],
+        ],
       ]),
     );
   }
@@ -161,6 +252,27 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
       }
     }
   }
+}
+
+class _Followed {
+  final String id;
+  final String name;
+  final String? avatarUrl;
+  final String? username;
+  final bool mutual;
+  final bool invited;
+  final String? rsvp;
+  const _Followed(this.id, this.name, this.avatarUrl, this.username, this.mutual, this.invited, this.rsvp);
+
+  factory _Followed.fromRow(Map<String, dynamic> r) => _Followed(
+        r['id'] as String,
+        ((r['full_name'] as String?)?.trim().isNotEmpty ?? false) ? (r['full_name'] as String).trim() : 'Sem nome',
+        r['avatar_url'] as String?,
+        r['username'] as String?,
+        r['mutual'] == true,
+        r['invited'] == true,
+        r['rsvp'] as String?,
+      );
 }
 
 String _ago(DateTime t) {

@@ -49,6 +49,9 @@ class GroupMessage {
   final String? attachmentType;
   final String? attachmentName;
   final DateTime sentAt;
+  /// Mensagem automática (189): 'rsvp' = «X disse que vai / não vai».
+  final String? kind;
+  final Map<String, dynamic>? meta;
   const GroupMessage({
     required this.id,
     required this.senderId,
@@ -57,7 +60,12 @@ class GroupMessage {
     this.attachmentType,
     this.attachmentName,
     required this.sentAt,
+    this.kind,
+    this.meta,
   });
+
+  bool get isRsvp => kind == 'rsvp';
+  bool get rsvpGoing => meta?['status'] == 'confirmed';
 
   factory GroupMessage.fromRow(Map<String, dynamic> r) => GroupMessage(
         id: r['id'] as String,
@@ -67,6 +75,8 @@ class GroupMessage {
         attachmentType: r['attachment_type'] as String?,
         attachmentName: r['attachment_name'] as String?,
         sentAt: DateTime.parse(r['created_at'] as String),
+        kind: r['kind'] as String?,
+        meta: r['meta'] is Map ? Map<String, dynamic>.from(r['meta'] as Map) : null,
       );
 }
 
@@ -180,7 +190,7 @@ class GroupThreadState {
 /// Mensagens de um grupo. As novas chegam em tempo real (Supabase
 /// Realtime, 2026-10-25 — antes perguntava ao servidor a cada 4 s). Fica
 /// uma verificação a cada 60 s para o caso de a ligação em tempo real cair.
-const _groupColumns = 'id, group_id, sender_id, body, attachment_url, attachment_type, attachment_name, created_at';
+const _groupColumns = '*';
 
 class GroupThreadController extends Notifier<GroupThreadState> {
   GroupThreadController(this.groupId);
@@ -281,3 +291,28 @@ final groupThreadControllerProvider =
     NotifierProvider.autoDispose.family<GroupThreadController, GroupThreadState, String>(GroupThreadController.new);
 
 String currentUserId() => _me;
+
+
+/// Grupo «todos» do evento (189). Null se a migração ainda não correu.
+Future<ChatGroup?> openEventGroup(String weddingId) async {
+  try {
+    final id = await supabase.rpc('my_event_group', params: {'p_wedding_id': weddingId});
+    if (id is! String) return null;
+    final r = await supabase
+        .from('chat_groups')
+        .select('id, wedding_id, name, last_message, last_message_at, created_at, created_by')
+        .eq('id', id)
+        .maybeSingle();
+    if (r == null) return null;
+    return ChatGroup(
+      id: r['id'] as String,
+      weddingId: r['wedding_id'] as String,
+      name: r['name'] as String,
+      lastMessage: r['last_message'] as String?,
+      lastMessageAt: r['last_message_at'] == null ? null : DateTime.parse(r['last_message_at'] as String),
+      createdBy: r['created_by'] as String?,
+    );
+  } catch (_) {
+    return null;
+  }
+}

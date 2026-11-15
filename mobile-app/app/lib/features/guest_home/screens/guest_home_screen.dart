@@ -7,6 +7,7 @@ import 'package:copo_dagua_app/core/events/event_pass.dart';
 import 'package:copo_dagua_app/features/events/screens/ticket_pass_screens.dart' show TicketPassCard;
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import 'package:flutter/material.dart';
+import '../../../core/chat/group_chat.dart' show openEventGroup;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/organizers_card.dart';
@@ -243,7 +244,16 @@ class _GuestHomeBody extends ConsumerWidget {
     final tail = <Widget>[
       if (show(GuestSection.grupos) || show(GuestSection.estadia)) const SizedBox(height: 22),
       // Grupo do evento no estilo das Mensagens (mockup 2026-11-15).
-      if (show(GuestSection.grupos)) GuestGroupRow(onTap: () => context.push('/groups/${wedding.weddingId}')),
+      if (show(GuestSection.grupos)) GuestGroupRow(onTap: () async {
+                // Grupo «todos» do evento (189); antes da migração, a lista de grupos.
+                final g = await openEventGroup(wedding.weddingId);
+                if (!context.mounted) return;
+                if (g != null) {
+                  context.push('/group/${g.id}', extra: g);
+                } else {
+                  context.push('/groups/${wedding.weddingId}');
+                }
+              }),
       if (show(GuestSection.estadia)) _StayCard(weddingId: wedding.weddingId),
     ];
 
