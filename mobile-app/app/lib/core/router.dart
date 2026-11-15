@@ -54,6 +54,7 @@ import '../features/guest_home/screens/guest_wedding_details_screen.dart' deferr
 import '../features/gallery/screens/gallery_screen.dart' deferred as l26;
 import '../features/guests/screens/guest_detail_screen.dart' deferred as l27;
 import '../features/guests/screens/guests_list_screen.dart' deferred as l28;
+import '../features/guests/screens/invite_screen.dart' deferred as l28b;
 import '../features/home/screens/home_feed_screen.dart' as l29;
 import '../features/auth/screens/join_wedding_screen.dart' deferred as l30;
 import '../features/invite/screens/invite_page_screen.dart' deferred as l31;
@@ -558,6 +559,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/guests',
         builder: (context, state) =>lazyPage([l28.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.convidados, child: l28.GuestsListScreen())),
+      ),
+      // «Convidar» (2026-11-15) — antes de /guests/:id.
+      GoRoute(
+        path: '/guests/convidar',
+        builder: (context, state) =>lazyPage([l28b.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.convidados, child: l28b.InviteScreen())),
       ),
       GoRoute(
         path: '/guests/:id',

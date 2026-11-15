@@ -162,6 +162,19 @@ class GuestsController extends Notifier<GuestsState> {
     state = state.copyWith(guests: [...state.guests, guestFromRow(row)]);
   }
 
+  /// «Convidar» (2026-11-15): grava quando o convite foi enviado a esta
+  /// pessoa (`guests.invite_sent_at`, que até aqui ninguém escrevia).
+  Future<void> markInviteSent(String guestId) async {
+    final row = await supabase
+        .from('guests')
+        .update({'invite_sent_at': DateTime.now().toIso8601String()})
+        .eq('id', guestId)
+        .select()
+        .single();
+    final updated = guestFromRow(row);
+    state = state.copyWith(guests: [for (final g in state.guests) g.id == guestId ? updated : g]);
+  }
+
   Future<void> updateGuest(Guest guest) async {
     Guest? previous;
     for (final g in state.guests) {

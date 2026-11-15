@@ -385,7 +385,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                         const SizedBox(height: 20),
                         _CodeHero(
                           wedding: widget.wedding,
-                          onShare: widget.wedding.inviteUrl == null ? null : () => _shareLink(widget.wedding.inviteUrl!),
+                          onShare: () => context.push('/guests/convidar'),
                           onPreview: _preview,
                         ),
                         const SizedBox(height: 14),
