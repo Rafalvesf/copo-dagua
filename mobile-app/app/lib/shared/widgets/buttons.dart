@@ -139,12 +139,13 @@ class CircleBackButton extends StatelessWidget {
         child: Container(
           width: 44,
           height: 44,
+          // Branco, ícone 20 (DESIGN.md §2 — botão redondo).
           decoration: const BoxDecoration(
-            color: AppTheme.surface,
+            color: Colors.white,
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
-          child: const Icon(Hi.chevronLeft, color: AppTheme.ink, size: 26),
+          child: const Icon(Hi.chevronLeft, color: AppTheme.ink, size: 20),
         ),
       ),
     );

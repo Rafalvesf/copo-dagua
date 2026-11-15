@@ -137,7 +137,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                           message?.isNotEmpty == true
                               ? message!
                               : 'A vossa presença é o melhor presente. Se quiserem mesmo oferecer algo, deixamos aqui as opções.',
-                          style: const TextStyle(fontSize: 16, height: 1.5, color: Colors.white),
+                          style: const TextStyle(fontSize: 14, height: 1.5, color: AppTheme.ink),
                         ),
                       ),
                       const SizedBox(height: 14),

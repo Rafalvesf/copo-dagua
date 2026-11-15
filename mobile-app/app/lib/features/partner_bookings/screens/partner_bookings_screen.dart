@@ -103,7 +103,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                             suffix: received == 1 ? 'pedido no total' : 'pedidos no total',
                             doodles: const [Hi.inbox, Hi.heartOutline, Hi.sparkles],
                             footer: Wrap(spacing: 8, runSpacing: 8, children: [
-                              HeroPill('$toAnswer por responder', solid: true),
+                              HeroPill('$toAnswer por responder', pending: true),
                               HeroPill('$sent ${sent == 1 ? 'proposta enviada' : 'propostas enviadas'}'),
                             ]),
                           ),

@@ -66,10 +66,10 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                           doodles: const [Hi.heartOutline, Hi.beaker, Hi.sparkles],
                           footer: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             Text('“${wedding.welcomeMessage}”',
-                                style: const TextStyle(fontSize: 17, height: 25 / 17, fontStyle: FontStyle.italic, color: Colors.white)),
+                                style: const TextStyle(fontSize: 15, height: 1.5, fontStyle: FontStyle.italic, color: AppTheme.ink)),
                             const SizedBox(height: 10),
                             Text('— ${wedding.displayNames}',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+                                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                           ]),
                         ),
                       ],

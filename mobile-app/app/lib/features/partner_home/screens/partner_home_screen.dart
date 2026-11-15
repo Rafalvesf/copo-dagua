@@ -194,8 +194,8 @@ class PartnerHomeScreen extends ConsumerWidget {
                     suffix: stats == null ? null : '${stats.bookings} ${stats.bookings == 1 ? 'reserva confirmada' : 'reservas confirmadas'}',
                     doodles: const [Hi.buildingStorefront, Hi.sparkles, Hi.heartOutline],
                     footer: Wrap(spacing: 8, runSpacing: 8, children: [
-                      HeroPill('${newRequests.length} ${newRequests.length == 1 ? 'pedido novo' : 'pedidos novos'}', solid: true),
-                      HeroPill('$pending ${pending == 1 ? 'reserva pendente' : 'reservas pendentes'}'),
+                      HeroPill('${newRequests.length} ${newRequests.length == 1 ? 'pedido novo' : 'pedidos novos'}'),
+                      HeroPill('$pending ${pending == 1 ? 'reserva pendente' : 'reservas pendentes'}', pending: true),
                     ]),
                   ),
                 ),
