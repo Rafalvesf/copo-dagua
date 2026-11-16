@@ -1,4 +1,8 @@
 import '../../../core/moderation/word_filter.dart';
+import '../../../core/partner_app/partner_analytics.dart';
+import '../../../core/partners/partner_pro.dart';
+import '../../../shared/money.dart';
+import '../widgets/invite_benefits_card.dart';
 import '../../../shared/widgets/onb_kit.dart';
 import '../../../shared/widgets/page_kit.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
@@ -349,6 +353,7 @@ class _CoupleSettings extends ConsumerWidget {
       ),
       // "Perfil" entre Organização e Conta (mockup).
       ...afterOrganization,
+      const _InviteSection(),
       const _SectionTitle('Conta'),
       const _AccountSection(),
       if (help) ...[
@@ -432,6 +437,8 @@ class PartnerAccountSections extends ConsumerWidget {
             _Row(icon: Hi.calendarDays, label: 'Calendário e datas bloqueadas', onTap: () => context.push('/partner-calendar')),
           ],
         ),
+        const _ProSection(),
+        const _InviteSection(),
         const _SectionTitle('Conta'),
         const _AccountSection(),
         const _SectionTitle('Ajuda'),
@@ -453,6 +460,7 @@ class GuestAccountSections extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const _InviteSection(),
         const _SectionTitle('Conta'),
         const _AccountSection(),
         const _SectionTitle('Eventos'),
@@ -705,6 +713,67 @@ class _PanelPage extends ConsumerWidget {
   }
 }
 
+/// «Convidar» (193): link de convite, «1 de 5» e descontos. Para todos.
+class _InviteSection extends StatelessWidget {
+  const _InviteSection();
+
+  @override
+  Widget build(BuildContext context) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [_SectionTitle('Convidar'), InviteBenefitsCard()],
+      );
+}
+
+/// «Plano Pro» do parceiro: a mensalidade e o que poupou na taxa este
+/// mês (antes no Painel; pedido 2026-11-16).
+class _ProSection extends ConsumerWidget {
+  const _ProSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pro = ref.watch(myPartnerProProvider).value;
+    if (pro == null || (!pro.active && !pro.enabled)) return const SizedBox.shrink();
+    final stats = pro.active ? ref.watch(partnerAnalyticsProvider(AnalyticsPeriod.month)).value : null;
+    final saving = stats == null ? null : stats.revenue * pro.feeDiscount / 100;
+    String d(DateTime t) => '${t.day.toString().padLeft(2, '0')}/${t.month.toString().padLeft(2, '0')}/${t.year}';
+    final monthly = pro.interval == 'year' ? pro.priceYearly / 12 : pro.priceMonthly;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const _SectionTitle('Plano Pro'),
+      _Group(children: [
+        if (pro.active) ...[
+          _Row(
+            icon: Hi.sparkles,
+            label: 'Mensalidade',
+            value: pro.interval == 'gift'
+                ? (pro.until == null ? 'Oferta' : 'Oferta até ${d(pro.until!)}')
+                : '${euros(monthly)}/mês${pro.interval == 'year' ? ' (anual)' : ''}',
+            onTap: () => context.push('/partner-pro'),
+          ),
+          if (saving != null)
+            _Row(
+              icon: Hi.banknotes,
+              label: 'Poupaste na taxa este mês',
+              value: euros(saving),
+              onTap: () => context.push('/partner-stats'),
+            ),
+          _Row(
+            icon: Hi.cog6Tooth,
+            label: 'Gerir subscrição',
+            value: pro.until == null ? 'Ativo' : 'Até ${d(pro.until!)}',
+            onTap: () => context.push('/partner-pro'),
+          ),
+        ] else
+          _Row(
+            icon: Hi.sparkles,
+            label: 'Passar a Pro',
+            value: '${euros(pro.priceMonthly)}/mês',
+            onTap: () => context.push('/partner-pro'),
+          ),
+      ]),
+    ]);
+  }
+}
+
 // ───────────────────────── Parceiros ─────────────────────────
 
 class _PartnerSettings extends ConsumerWidget {
@@ -754,6 +823,8 @@ class _PartnerSettings extends ConsumerWidget {
             _Row(icon: Hi.documentText, label: 'Contratos', onTap: () => context.push('/partner-contracts')),
           ],
         ),
+        const _ProSection(),
+        const _InviteSection(),
         const _SectionTitle('Conta'),
         const _AccountSection(),
         const _SectionTitle('Ajuda'),
@@ -774,6 +845,7 @@ class _GuestSettings extends StatelessWidget {
     return _SettingsPage(
       title: 'Definições',
       children: [
+        const _InviteSection(),
         const _SectionTitle('Conta'),
         const _AccountSection(),
         const _SectionTitle('Eventos'),

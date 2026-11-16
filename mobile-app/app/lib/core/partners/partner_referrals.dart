@@ -20,7 +20,10 @@ class PartnerReferralResult {
   final String partnerId;
   final String businessName;
   final bool valid;
-  const PartnerReferralResult(this.partnerId, this.businessName, this.valid);
+
+  /// O convite é de um parceiro (senão, de outra pessoa — 193).
+  final bool fromPartner;
+  const PartnerReferralResult(this.partnerId, this.businessName, this.valid, {this.fromPartner = true});
 }
 
 class PartnerReferralError implements Exception {
@@ -35,6 +38,17 @@ class PartnerReferralError implements Exception {
 }
 
 Future<PartnerReferralResult> claimPartnerReferral(String code) async {
+  // 193: o mesmo link serve para convites de parceiros e de organizadores.
+  try {
+    final rows = await supabase.rpc('claim_invite', params: {'p_code': code.trim()}) as List;
+    final r = (rows.first as Map).cast<String, dynamic>();
+    return PartnerReferralResult(r['inviter_id'] as String, r['inviter_name'] as String? ?? 'Alguém', r['valid'] == true,
+        fromPartner: r['kind'] == 'partner');
+  } on PostgrestException catch (e) {
+    if (e.code != 'PGRST202' && e.code != '42883') {
+      throw PartnerReferralError(e.code == 'P0002' ? 'not_found' : e.message.contains('own_code') ? 'own_code' : 'unknown');
+    }
+  }
   try {
     final rows = await supabase.rpc('claim_partner_referral', params: {'p_code': code.trim()}) as List;
     final r = (rows.first as Map).cast<String, dynamic>();

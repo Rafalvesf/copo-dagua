@@ -368,6 +368,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Botão «Mensagem» nos perfis: abre uma conversa direta na app entre quem se segue ou está no mesmo evento (sem SMS, chamada nem email).",
     check: { kind: "marker", id: "192" },
   },
+  {
+    file: "193_invites_and_fee_discounts.sql",
+    date: "2026-11-16",
+    title: "Convites: 50 % na taxa a cada 5; 50 % na 1.ª transação",
+    what: "Parceiros e organizadores convidam pelo link; a cada 5 convidados que fazem o 1.º pagamento, quem convidou tem 50 % de desconto na taxa da próxima transação (sem mínimo de 500 €; Pro igual). Contas novas têm 50 % na 1.ª transação.",
+    check: { kind: "marker", id: "193" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

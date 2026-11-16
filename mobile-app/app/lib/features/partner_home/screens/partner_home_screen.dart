@@ -14,7 +14,6 @@ import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_bookings/widgets/request_row.dart';
-import '../widgets/partner_invite_card.dart';
 import '../widgets/partner_promotion_card.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/v2_kit.dart';
@@ -82,7 +81,6 @@ class PartnerHomeScreen extends ConsumerWidget {
     final proStatsAll = ref.watch(partnerProStatsProvider).value;
     final proStats = isPro ? proStatsAll : null;
     // Poupança da comissão −N% sobre as vendas do mês (estimativa).
-    final commissionSaving = stats == null || pro == null ? 0.0 : stats.revenue * pro.feeDiscount / 100;
     return GradientScaffold(
       background: AppBackground.subtle,
       body: Stack(
@@ -176,14 +174,6 @@ class PartnerHomeScreen extends ConsumerWidget {
                     child: _ProHero(stats: stats, year: yearStats, pending: pending),
                   ),
                   const SizedBox(height: 14),
-                  _ProSavingsCard(
-                    saving: commissionSaving,
-                    bookings: stats?.bookings ?? 0,
-                    feeDiscount: pro.feeDiscount,
-                    price: pro.interval == 'year' ? pro.priceYearly / 12 : pro.priceMonthly,
-                    gift: pro.interval == 'gift',
-                  ),
-                  const SizedBox(height: 14),
                   _ProStatsRow(stats: stats, pro: proStats),
                 ] else
                 SnappyTap(
@@ -242,30 +232,10 @@ class PartnerHomeScreen extends ConsumerWidget {
                   ('Resultados', 'Pedidos e conversão', false, '/partner-stats'),
                 ]),
                 const SizedBox(height: 18),
-                if (!isPro && pro != null && pro.enabled) ...[
-                  _ProUpsellCard(pro: pro, saving: commissionSaving, bookings: stats?.bookings ?? 0),
-                  const SizedBox(height: 14),
-                ],
-                // Convite de clientes e selo de fundador (migração 151).
-                const PartnerInviteCard(),
-                const SizedBox(height: 14),
+                // Mensalidade do Pro e convites passaram para as Definições
+                // (pedido 2026-11-16).
                 // Destaque pago (migração 155).
                 const PartnerPromotionCard(),
-                if (isPro && pro != null) ...[
-                  const SizedBox(height: 18),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => context.push('/partner-pro'),
-                      style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted),
-                      child: Text(
-                        pro.until == null
-                            ? 'Premium ativo · Gerir subscrição'
-                            : 'Premium até ${_shortDate(pro.until!)} · Gerir subscrição',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -518,7 +488,6 @@ const _proMuted = Color(0xFFDDE5D3);
 const _proText = Color(0xFF171713);
 const _months = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
 
-String _shortDate(DateTime d) => '${d.day} ${_months[d.month - 1]}';
 
 String _num(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');
 
@@ -646,59 +615,6 @@ class _ProHero extends StatelessWidget {
   }
 }
 
-/// "O Pro este mês": quanto poupou na comissão, ao lado do preço do Pro.
-class _ProSavingsCard extends StatelessWidget {
-  final double saving;
-  final int bookings;
-  final double feeDiscount;
-  final double price;
-  final bool gift;
-  const _ProSavingsCard({required this.saving, required this.bookings, required this.feeDiscount, required this.price, required this.gift});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFDCD8CE)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Hi.trophy, size: 20, color: _goldInk),
-                SizedBox(width: 8),
-                Text('O PREMIUM ESTE MÊS', style: TextStyle(fontSize: 12, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: _goldInk)),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(euros(saving), style: const TextStyle(fontSize: 30, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    gift ? 'poupados · Premium oferecido' : 'poupados · o Premium custa ${euros(price)}/mês',
-                    style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              bookings == 0
-                  ? 'Taxa de serviço −${_num(feeDiscount)}% em cada reserva que fechares.'
-                  : 'Taxa de serviço −${_num(feeDiscount)}% em $bookings ${bookings == 1 ? 'reserva' : 'reservas'} este mês.',
-              style: const TextStyle(fontSize: 14, color: AppTheme.ink),
-            ),
-          ],
-        ),
-      );
-}
-
 /// Visitas ao perfil, pedidos e conversão (últimos 30 dias).
 class _ProStatsRow extends StatelessWidget {
   final PartnerAnalytics? stats;
@@ -747,80 +663,3 @@ class _ProStatsRow extends StatelessWidget {
   }
 }
 
-/// "Passa a Pro" (parceiro sem Pro).
-class _ProUpsellCard extends StatelessWidget {
-  final PartnerPro pro;
-  final double saving;
-  final int bookings;
-  const _ProUpsellCard({required this.pro, required this.saving, required this.bookings});
-
-  @override
-  Widget build(BuildContext context) {
-    Widget cell(String big, String small) => Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(border: Border.all(color: const Color(0x40FFFFFF)), borderRadius: BorderRadius.circular(14)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(big, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _gold)),
-                const SizedBox(height: 4),
-                Text(small, style: const TextStyle(fontSize: 12, height: 1.3, color: _proMuted)),
-              ],
-            ),
-          ),
-        );
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: _proInk, borderRadius: BorderRadius.circular(22)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              const _ProBadge(onGreen: true),
-              const SizedBox(width: 8),
-              Text('${euros(pro.priceMonthly)}/mês ou ${euros(pro.priceYearly)}/ano',
-                  style: const TextStyle(fontSize: 13, color: _proMuted)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Text('Paga menos taxa de serviço e aparece primeiro',
-              style: TextStyle(fontSize: 22, height: 1.2, fontWeight: FontWeight.w700, color: Colors.white)),
-          const SizedBox(height: 14),
-          Row(children: [
-            cell('−${_num(pro.feeDiscount)}%', 'de taxa de serviço'),
-            const SizedBox(width: 8),
-            cell('1 em ${pro.proReferralFreeEvery}', 'clientes trazidos sem taxa (em vez de 1 em ${pro.referralFreeEvery})'),
-          ]),
-          const SizedBox(height: 8),
-          Row(children: [
-            cell('+${_num(pro.proPromotionExtraPct)}%', 'no destaque, em vez de +${_num(pro.promotionExtraPct)}%'),
-            const SizedBox(width: 8),
-            cell('Sem limite', 'de produtos na loja (em vez de ${pro.freeShopProducts})'),
-          ]),
-          if (bookings > 0) ...[
-            const SizedBox(height: 12),
-            Text(
-              'Com as tuas $bookings ${bookings == 1 ? 'reserva' : 'reservas'} deste mês, terias poupado cerca de ${euros(saving)} em taxas de serviço.',
-              style: const TextStyle(fontSize: 13, height: 1.4, color: _proMuted),
-            ),
-          ],
-          const SizedBox(height: 14),
-          SizedBox(
-            height: 50,
-            child: FilledButton(
-              onPressed: () => context.push('/partner-pro'),
-              style: FilledButton.styleFrom(
-                backgroundColor: _gold,
-                foregroundColor: _proInk,
-                shape: const StadiumBorder(),
-              ),
-              child: const Text('Ser Premium', style: TextStyle(fontWeight: FontWeight.w700)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
