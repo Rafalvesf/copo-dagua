@@ -14,7 +14,12 @@ export type Signup = {
   created_at: string;
 };
 
-type Col = { key: string; label: string; get: (r: Signup) => string; width?: number };
+type Col = {
+  key: string;
+  label: string;
+  get: (r: Signup) => string;
+  width?: number;
+};
 
 const date = (s: string) => new Date(s).toLocaleDateString("pt-PT");
 
@@ -23,7 +28,12 @@ const COLS: Record<"organizador" | "parceiro", Col[]> = {
     { key: "name", label: "Nome", get: (r) => r.name ?? "", width: 160 },
     { key: "email", label: "Email", get: (r) => r.email, width: 220 },
     { key: "age", label: "Idade", get: (r) => r.age_range ?? "", width: 80 },
-    { key: "interests", label: "Eventos", get: (r) => (r.interests ?? []).join(", "), width: 240 },
+    {
+      key: "interests",
+      label: "Eventos",
+      get: (r) => (r.interests ?? []).join(", "),
+      width: 240,
+    },
     { key: "city", label: "Cidade", get: (r) => r.city ?? "", width: 120 },
     { key: "country", label: "País", get: (r) => r.country ?? "", width: 100 },
     { key: "date", label: "Data", get: (r) => r.created_at, width: 90 },
@@ -31,8 +41,18 @@ const COLS: Record<"organizador" | "parceiro", Col[]> = {
   parceiro: [
     { key: "name", label: "Nome", get: (r) => r.name ?? "", width: 160 },
     { key: "email", label: "Email", get: (r) => r.email, width: 220 },
-    { key: "business", label: "Negócio", get: (r) => r.business_name ?? "", width: 160 },
-    { key: "interests", label: "Categorias", get: (r) => (r.interests ?? []).join(", "), width: 220 },
+    {
+      key: "business",
+      label: "Negócio",
+      get: (r) => r.business_name ?? "",
+      width: 160,
+    },
+    {
+      key: "interests",
+      label: "Categorias",
+      get: (r) => (r.interests ?? []).join(", "),
+      width: 220,
+    },
     { key: "city", label: "Cidade", get: (r) => r.city ?? "", width: 120 },
     { key: "country", label: "País", get: (r) => r.country ?? "", width: 100 },
     { key: "date", label: "Data", get: (r) => r.created_at, width: 90 },
@@ -52,13 +72,32 @@ const DEFAULT_BODY = {
 };
 
 const FIELDS = {
-  organizador: ["nome", "primeiro_nome", "email", "eventos", "cidade", "pais", "idade"],
-  parceiro: ["nome", "primeiro_nome", "email", "negocio", "categorias", "cidade", "pais"],
+  organizador: [
+    "nome",
+    "primeiro_nome",
+    "email",
+    "eventos",
+    "cidade",
+    "pais",
+    "idade",
+  ],
+  parceiro: [
+    "nome",
+    "primeiro_nome",
+    "email",
+    "negocio",
+    "categorias",
+    "cidade",
+    "pais",
+  ],
 };
 
 function fill(tpl: string, r: Signup) {
   const interests = (r.interests ?? []).map((s) => s.toLowerCase());
-  const list = interests.length <= 1 ? interests.join("") : `${interests.slice(0, -1).join(", ")} e ${interests.at(-1)}`;
+  const list =
+    interests.length <= 1
+      ? interests.join("")
+      : `${interests.slice(0, -1).join(", ")} e ${interests.at(-1)}`;
   const vals: Record<string, string> = {
     nome: r.name ?? "",
     primeiro_nome: (r.name ?? "").split(/\s+/)[0] ?? "",
@@ -79,10 +118,52 @@ function csvCell(v: string) {
   return /[";\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 }
 
-export function SignupsSheet({ kind, rows }: { kind: "organizador" | "parceiro"; rows: Signup[] }) {
+// Exportação (pedido 2026-11-16): as mesmas 4 colunas para os dois tipos,
+// para servir de base a emails personalizados.
+export const EXPORT_HEAD = [
+  "Nome",
+  "Tipo de Negócio",
+  "Nome do Negócio",
+  "Contacto",
+];
+const ORG_HEAD = ["Nome", "Tipo de Evento", "Cidade", "Contacto"];
+
+function exportRow(kind: "organizador" | "parceiro", r: Signup) {
+  const types = (r.interests ?? []).join(", ");
+  return kind === "parceiro"
+    ? [r.name ?? "", types, r.business_name ?? "", r.email]
+    : [r.name ?? "", types, r.city ?? "", r.email];
+}
+
+export function downloadCsv(kind: "organizador" | "parceiro", rows: Signup[]) {
+  const head = kind === "parceiro" ? EXPORT_HEAD : ORG_HEAD;
+  const lines = rows.map((r) => exportRow(kind, r).map(csvCell).join(";"));
+  // BOM + «;» para o Excel em português abrir com acentos e colunas certas.
+  const blob = new Blob(["\ufeff" + [head.join(";"), ...lines].join("\r\n")], {
+    type: "text/csv;charset=utf-8",
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `pre-registos-${kind === "parceiro" ? "parceiros" : "organizadores"}-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+export function SignupsSheet({
+  kind,
+  rows,
+}: {
+  kind: "organizador" | "parceiro";
+  rows: Signup[];
+}) {
   const cols = COLS[kind];
   const [q, setQ] = useState("");
-  const [sort, setSort] = useState<{ key: string; dir: 1 | -1 }>({ key: "date", dir: -1 });
+  const [sort, setSort] = useState<{ key: string; dir: 1 | -1 }>({
+    key: "date",
+    dir: -1,
+  });
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [subject, setSubject] = useState(DEFAULT_SUBJECT[kind]);
   const [body, setBody] = useState(DEFAULT_BODY[kind]);
@@ -115,17 +196,7 @@ export function SignupsSheet({ kind, rows }: { kind: "organizador" | "parceiro";
   }
 
   function download() {
-    const head = [...cols.map((c) => c.label), "Assunto", "Mensagem"];
-    const lines = target.map((r) =>
-      [...cols.map((c) => (c.key === "date" ? date(r.created_at) : c.get(r))), fill(subject, r), fill(body, r)].map(csvCell).join(";"),
-    );
-    // BOM + «;» para o Excel em português abrir com acentos e colunas certas.
-    const blob = new Blob(["﻿" + [head.join(";"), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `pre-registos-${kind === "parceiro" ? "parceiros" : "organizadores"}-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    downloadCsv(kind, target);
   }
 
   const toggle = (email: string) =>
@@ -136,54 +207,142 @@ export function SignupsSheet({ kind, rows }: { kind: "organizador" | "parceiro";
       return n;
     });
 
-  const cell: React.CSSProperties = { borderRight: "1px solid var(--border)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
+  const cell: React.CSSProperties = {
+    borderRight: "1px solid var(--border)",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <section className="card" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+      <section
+        className="card"
+        style={{
+          padding: 16,
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+        }}
+      >
         <div className="field">
           <span className="field-label">Assunto</span>
-          <input className="input" value={subject} onChange={(e) => setSubject(e.target.value)} />
+          <input
+            className="input"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          />
         </div>
         <div className="field">
           <span className="field-label">Mensagem</span>
-          <textarea className="textarea" rows={7} value={body} onChange={(e) => setBody(e.target.value)} />
+          <textarea
+            className="textarea"
+            rows={7}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+          />
           <span className="field-hint">
-            Campos que mudam para cada pessoa: {FIELDS[kind].map((f) => `{${f}}`).join(" ")}. Vê a mensagem de cada um na tabela
-            («Ver») ou descarrega tudo para o Excel com as colunas Assunto e Mensagem já preenchidas.
+            Campos que mudam para cada pessoa:{" "}
+            {FIELDS[kind].map((f) => `{${f}}`).join(" ")}. Vê a mensagem de cada
+            um na tabela («Ver») O Excel sai com as colunas{" "}
+            {kind === "parceiro"
+              ? "Nome, Tipo de Negócio, Nome do Negócio e Contacto"
+              : "Nome, Tipo de Evento, Cidade e Contacto"}
+            .
           </span>
         </div>
       </section>
 
       <section className="card" style={{ padding: 0 }}>
-        <div className="toolbar" style={{ padding: 12, borderBottom: "1px solid var(--border)" }}>
-          <input className="input" style={{ maxWidth: 260 }} placeholder="Procurar…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <div
+          className="toolbar"
+          style={{ padding: 12, borderBottom: "1px solid var(--border)" }}
+        >
+          <input
+            className="input"
+            style={{ maxWidth: 260 }}
+            placeholder="Procurar…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
           <span className="field-hint">
-            {sel.size ? `${sel.size} selecionados` : `${view.length} ${view.length === 1 ? "linha" : "linhas"}`}
+            {sel.size
+              ? `${sel.size} selecionados`
+              : `${view.length} ${view.length === 1 ? "linha" : "linhas"}`}
           </span>
           <span style={{ flex: 1 }} />
           {note && <span className="field-hint">{note}</span>}
-          <button type="button" className="btn btn-secondary btn-sm" disabled={!target.length} onClick={() => copy(target.map((r) => r.email).join(", "), `${target.length} emails copiados.`)}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            disabled={!target.length}
+            onClick={() =>
+              copy(
+                target.map((r) => r.email).join(", "),
+                `${target.length} emails copiados.`,
+              )
+            }
+          >
             Copiar emails{sel.size ? ` (${sel.size})` : ""}
           </button>
-          <button type="button" className="btn btn-primary btn-sm" disabled={!target.length} onClick={download}>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            disabled={!target.length}
+            onClick={download}
+          >
             Descarregar Excel{sel.size ? ` (${sel.size})` : ""}
           </button>
         </div>
-        <div className="table-wrap" style={{ maxHeight: "65vh", overflow: "auto" }}>
-          <table className="table" style={{ tableLayout: "fixed", minWidth: 40 + 120 + cols.reduce((s, c) => s + (c.width ?? 120), 0) }}>
-            <thead style={{ position: "sticky", top: 0, zIndex: 1, background: "var(--surface)" }}>
+        <div
+          className="table-wrap"
+          style={{ maxHeight: "65vh", overflow: "auto" }}
+        >
+          <table
+            className="table"
+            style={{
+              tableLayout: "fixed",
+              minWidth:
+                40 + 120 + cols.reduce((s, c) => s + (c.width ?? 120), 0),
+            }}
+          >
+            <thead
+              style={{
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+                background: "var(--surface)",
+              }}
+            >
               <tr>
                 <th style={{ width: 40, ...cell }}>
                   <input
                     type="checkbox"
                     aria-label="Selecionar todos"
                     checked={allOn}
-                    onChange={() => setSel(allOn ? new Set() : new Set(view.map((r) => r.email)))}
+                    onChange={() =>
+                      setSel(
+                        allOn ? new Set() : new Set(view.map((r) => r.email)),
+                      )
+                    }
                   />
                 </th>
                 {cols.map((c) => (
-                  <th key={c.key} style={{ width: c.width, cursor: "pointer", userSelect: "none", ...cell }} onClick={() => setSort((s) => ({ key: c.key, dir: s.key === c.key ? (s.dir === 1 ? -1 : 1) : 1 }))}>
+                  <th
+                    key={c.key}
+                    style={{
+                      width: c.width,
+                      cursor: "pointer",
+                      userSelect: "none",
+                      ...cell,
+                    }}
+                    onClick={() =>
+                      setSort((s) => ({
+                        key: c.key,
+                        dir: s.key === c.key ? (s.dir === 1 ? -1 : 1) : 1,
+                      }))
+                    }
+                  >
                     {c.label}
                     {sort.key === c.key ? (sort.dir === 1 ? " ▲" : " ▼") : ""}
                   </th>
@@ -197,12 +356,25 @@ export function SignupsSheet({ kind, rows }: { kind: "organizador" | "parceiro";
                 const s = fill(subject, r);
                 const b = fill(body, r);
                 return [
-                  <tr key={r.email} style={{ background: sel.has(r.email) ? "var(--accent-bg, rgba(79,107,74,.08))" : undefined }}>
+                  <tr
+                    key={r.email}
+                    style={{
+                      background: sel.has(r.email)
+                        ? "var(--accent-bg, rgba(79,107,74,.08))"
+                        : undefined,
+                    }}
+                  >
                     <td style={cell}>
-                      <input type="checkbox" aria-label={`Selecionar ${r.email}`} checked={sel.has(r.email)} onChange={() => toggle(r.email)} />
+                      <input
+                        type="checkbox"
+                        aria-label={`Selecionar ${r.email}`}
+                        checked={sel.has(r.email)}
+                        onChange={() => toggle(r.email)}
+                      />
                     </td>
                     {cols.map((c) => {
-                      const v = c.key === "date" ? date(r.created_at) : c.get(r);
+                      const v =
+                        c.key === "date" ? date(r.created_at) : c.get(r);
                       return (
                         <td key={c.key} style={cell} title={v}>
                           {v}
@@ -210,22 +382,50 @@ export function SignupsSheet({ kind, rows }: { kind: "organizador" | "parceiro";
                       );
                     })}
                     <td>
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setOpen(isOpen ? null : r.email)}>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setOpen(isOpen ? null : r.email)}
+                      >
                         {isOpen ? "Fechar" : "Ver"}
                       </button>
                     </td>
                   </tr>,
                   isOpen && (
                     <tr key={`${r.email}-msg`}>
-                      <td colSpan={cols.length + 2} style={{ background: "var(--surface-muted, #F7F6F2)" }}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 640, padding: "4px 0" }}>
+                      <td
+                        colSpan={cols.length + 2}
+                        style={{ background: "var(--surface-muted, #F7F6F2)" }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 8,
+                            maxWidth: 640,
+                            padding: "4px 0",
+                          }}
+                        >
                           <strong>{s}</strong>
-                          <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{b}</div>
+                          <div
+                            style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}
+                          >
+                            {b}
+                          </div>
                           <div className="toolbar">
-                            <button type="button" className="btn btn-secondary btn-sm" onClick={() => copy(`${s}\n\n${b}`, "Mensagem copiada.")}>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() =>
+                                copy(`${s}\n\n${b}`, "Mensagem copiada.")
+                              }
+                            >
                               Copiar mensagem
                             </button>
-                            <a className="btn btn-primary btn-sm" href={`mailto:${r.email}?subject=${encodeURIComponent(s)}&body=${encodeURIComponent(b)}`}>
+                            <a
+                              className="btn btn-primary btn-sm"
+                              href={`mailto:${r.email}?subject=${encodeURIComponent(s)}&body=${encodeURIComponent(b)}`}
+                            >
                               Abrir no email
                             </a>
                           </div>
