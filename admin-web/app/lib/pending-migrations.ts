@@ -393,7 +393,7 @@ export const MIGRATIONS: PendingMigration[] = [
     file: "196_newsletter_sending.sql",
     date: "2026-11-16",
     title: "Enviar emails aos pré-registos",
-    what: "Envio pelo Resend a partir de Pré-registos: modelo guardado por tipo, data do último envio, histórico e «Deixar de receber».",
+    what: "Envio pelo Resend a partir de Pré-registos: editor de email por blocos com modelos guardados e imagens, data do último envio, histórico e «Deixar de receber».",
     check: { kind: "marker", id: "196" },
   },
 ];

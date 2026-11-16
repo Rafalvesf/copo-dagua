@@ -1,13 +1,13 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import { type NlKind, type NlRow, nlRender } from "../_shared/newsletter.ts";
+import { type NlKind, type NlRow, nlCleanBlocks, nlRender } from "../_shared/newsletter.ts";
 
 // Envio de emails aos pré-registos pelo admin (migração 196, 2026-11-16).
 // Só admins. Usa o Resend (segredo RESEND_API_KEY; remetente RESEND_FROM,
 // ex.: «À Nossa! <ola@anossa.pt>»; sem domínio usa onboarding@resend.dev,
 // que o Resend só deixa enviar para o email da própria conta).
 //
-// Body: { kind, subject, body, button_label?, button_url?,
+// Body: { kind, subject, blocks (título, texto, imagem, botão, separador),
 //         emails?: string[]  (só estes; sem isto: quem ainda não recebeu),
 //         test?: boolean     (um email só para o admin, com os dados de
 //                             `preview_email` ou do primeiro da lista) }
@@ -41,13 +41,8 @@ Deno.serve(async (req) => {
   }
   const kind: NlKind = b.kind === "parceiro" ? "parceiro" : "organizador";
   const str = (v: unknown, n: number) => (typeof v === "string" ? v.slice(0, n) : "");
-  const content = {
-    subject: str(b.subject, 200),
-    body: str(b.body, 10000),
-    buttonLabel: str(b.button_label, 60) || null,
-    buttonUrl: str(b.button_url, 500) || null,
-  };
-  if (!content.subject.trim() || !content.body.trim()) return json({ error: "empty" }, 400);
+  const content = { subject: str(b.subject, 200), blocks: nlCleanBlocks(b.blocks) };
+  if (!content.subject.trim() || content.blocks.length === 0) return json({ error: "empty" }, 400);
   const emails = Array.isArray(b.emails) ? (b.emails as unknown[]).filter((e) => typeof e === "string").slice(0, 2000) as string[] : null;
   const test = b.test === true;
 

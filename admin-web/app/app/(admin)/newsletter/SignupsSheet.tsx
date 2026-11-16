@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { nlJoin, nlPhrases } from "@/lib/newsletter-email";
-import { EmailComposer, type Template } from "./EmailComposer";
+import { EmailComposer, type Design } from "./EmailComposer";
 
 export type Signup = {
   email: string;
@@ -113,12 +113,12 @@ export function downloadCsv(kind: "organizador" | "parceiro", rows: Signup[]) {
 export function SignupsSheet({
   kind,
   rows,
-  template,
+  designs,
   ready,
 }: {
   kind: "organizador" | "parceiro";
   rows: Signup[];
-  template: Template | null;
+  designs: Design[];
   ready: boolean;
 }) {
   const cols = COLS[kind];
@@ -183,7 +183,7 @@ export function SignupsSheet({
         selected={[...sel]}
         previewEmail={previewEmail}
         onPreviewEmail={setPreviewEmail}
-        template={template}
+        designs={designs}
         ready={ready}
       />
 

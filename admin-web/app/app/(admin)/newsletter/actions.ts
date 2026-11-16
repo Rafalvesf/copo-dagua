@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
+import { nlCleanBlocks, type NlBlock } from "@/lib/newsletter-email";
 
 // Pré-registos (migração 196, 2026-11-16): guardar o modelo de cada tipo e
 // enviar pela Edge Function `send-newsletter` (Resend). A função volta a
@@ -13,42 +14,64 @@ export type NlResult =
 
 type Kind = "organizador" | "parceiro";
 
-export async function saveNewsletterTemplate(input: {
+export async function saveNewsletterDesign(input: {
+  id?: string | null;
   kind: Kind;
+  name: string;
   subject: string;
-  body: string;
-  buttonLabel: string;
-  buttonUrl: string;
-}): Promise<NlResult> {
+  blocks: NlBlock[];
+}): Promise<NlResult & { id?: string }> {
   const { userId } = await requireAdmin();
   const supabase = await createClient();
-  const { error } = await supabase.from("newsletter_templates").upsert({
+  const row = {
     kind: input.kind === "parceiro" ? "parceiro" : "organizador",
+    name: input.name.trim().slice(0, 80) || "Sem nome",
     subject: input.subject.slice(0, 200),
-    body: input.body.slice(0, 10000),
-    button_label: input.buttonLabel.trim().slice(0, 60) || null,
-    button_url: input.buttonUrl.trim().slice(0, 500) || null,
+    blocks: nlCleanBlocks(input.blocks),
     updated_at: new Date().toISOString(),
     updated_by: userId,
-  });
+  };
+  const q = input.id
+    ? supabase
+        .from("newsletter_designs")
+        .update(row)
+        .eq("id", input.id)
+        .select("id")
+        .single()
+    : supabase.from("newsletter_designs").insert(row).select("id").single();
+  const { data, error } = await q;
   if (error) {
     return {
       ok: false,
-      error: error.message.includes("newsletter_templates")
+      error: error.message.includes("newsletter_designs")
         ? "Falta aplicar a migração 196."
         : "Não foi possível guardar.",
     };
   }
   revalidatePath("/newsletter");
-  return { ok: true, message: "Modelo guardado." };
+  return {
+    ok: true,
+    message: "Modelo guardado.",
+    id: (data as { id: string }).id,
+  };
+}
+
+export async function deleteNewsletterDesign(id: string): Promise<NlResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("newsletter_designs")
+    .delete()
+    .eq("id", id);
+  if (error) return { ok: false, error: "Não foi possível apagar." };
+  revalidatePath("/newsletter");
+  return { ok: true, message: "Modelo apagado." };
 }
 
 export async function sendNewsletter(input: {
   kind: Kind;
   subject: string;
-  body: string;
-  buttonLabel: string;
-  buttonUrl: string;
+  blocks: NlBlock[];
   emails?: string[];
   test?: boolean;
   previewEmail?: string;
@@ -59,9 +82,7 @@ export async function sendNewsletter(input: {
     body: {
       kind: input.kind,
       subject: input.subject,
-      body: input.body,
-      button_label: input.buttonLabel,
-      button_url: input.buttonUrl,
+      blocks: input.blocks,
       ...(input.emails ? { emails: input.emails } : {}),
       ...(input.test ? { test: true, preview_email: input.previewEmail } : {}),
     },
@@ -88,7 +109,7 @@ export async function sendNewsletter(input: {
         "Falta a chave do Resend: põe RESEND_API_KEY nos segredos das Edge Functions do Supabase.",
       resend_error: `O Resend recusou o envio${message ? `: ${message}` : "."}`,
       forbidden: "Não tens permissão para enviar.",
-      empty: "Escreve o assunto e a mensagem.",
+      empty: "Escreve o assunto e pelo menos um bloco.",
       no_admin_email:
         "A tua conta de admin não tem email para receber o teste.",
     };
