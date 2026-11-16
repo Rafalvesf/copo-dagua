@@ -2,8 +2,8 @@
 -- 195 · Pré-registo no site antes das lojas
 -- ============================================================
 --
--- Pedido do Rafael (2026-11-16): no site de apresentação, quem quer
--- novidades deixa o email e diz se organiza eventos ou é parceiro. A
+-- Pedido do Rafael (2026-11-16): no site de apresentação, os parceiros
+-- (só parceiros) deixam o email para o pré-registo. A
 -- lista vê-se no admin («Pré-registos»). Ainda não se enviam emails.
 -- ============================================================
 

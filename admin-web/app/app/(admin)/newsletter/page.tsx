@@ -13,14 +13,13 @@ export default async function NewsletterPage() {
     .order("created_at", { ascending: false })
     .limit(2000);
   const rows = (data ?? []) as { email: string; kind: string; source: string | null; created_at: string }[];
-  const partners = rows.filter((r) => r.kind === "parceiro").length;
   const emails = rows.map((r) => r.email).join(", ");
 
   return (
     <div className="page">
       <PageHeader
         title="Pré-registos"
-        subtitle={`${rows.length} pré-registos no site (${rows.length - partners} organizadores, ${partners} parceiros). Ainda não se enviam emails.`}
+        subtitle={`${rows.length} pré-registos de parceiros no site. Ainda não se enviam emails.`}
       />
       {rows.length > 0 && (
         <Card title="Copiar todos os emails">

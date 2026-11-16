@@ -386,7 +386,7 @@ export const MIGRATIONS: PendingMigration[] = [
     file: "195_newsletter_signups.sql",
     date: "2026-11-16",
     title: "Pré-registo no site",
-    what: "Formulário de pré-registo no site de apresentação (email + organizador/parceiro); a lista aparece em Pré-registos no admin.",
+    what: "Formulário de pré-registo para parceiros no site de apresentação; a lista aparece em Pré-registos no admin.",
     check: { kind: "marker", id: "195" },
   },
 ];

@@ -190,12 +190,7 @@ h1, h2 {{ margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance;
 .cta p {{ font-size: 20px; opacity: .9; margin: 6px 0 28px; }}
 .cta .btn {{ background: #fff; color: var(--euc); }}
 .news {{ max-width: 520px; margin: 34px auto 0; display: flex; flex-direction: column; gap: 12px; text-align: left; }}
-.news b {{ font-size: 18px; text-align: center; }}
-.news-kind {{ display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }}
-.news-kind input {{ position: absolute; opacity: 0; pointer-events: none; }}
-.news-kind span {{ display: inline-flex; align-items: center; height: 38px; padding: 0 16px; border-radius: 19px; background: rgba(255,255,255,.14); font-size: 14px; font-weight: 700; cursor: pointer; }}
-.news-kind input:checked + span {{ background: #fff; color: var(--euc); }}
-.news-kind input:focus-visible + span {{ outline: 3px solid var(--gold); outline-offset: 2px; }}
+.news b {{ font-size: 20px; text-align: center; text-wrap: balance; }}
 .news-row {{ display: flex; gap: 8px; flex-wrap: wrap; }}
 .news-row input {{ flex: 1 1 220px; min-width: 0; height: 52px; border: 0; border-radius: 26px; padding: 0 20px; font: inherit; font-size: 15px; color: #171713; }}
 .news-row button {{ flex: 0 0 auto; height: 52px; padding: 0 22px; border: 0; border-radius: 26px; background: #171713; color: #fff; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }}
@@ -268,17 +263,13 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
   <p>Para todas as festas.</p>
   <a class="btn" href="{APP}" target="_blank" rel="noopener">Abrir a app</a>
   <form class="news" id="news" novalidate>
-    <b>Faz já o teu pré-registo</b>
-    <span class="news-sub">A app está quase nas lojas. Deixa o email e avisamos-te primeiro.</span>
-    <div class="news-kind" role="radiogroup" aria-label="Sou">
-      <label><input type="radio" name="kind" value="organizador" checked><span>Organizo eventos</span></label>
-      <label><input type="radio" name="kind" value="parceiro"><span>Sou parceiro</span></label>
-    </div>
+    <b>Tens um negócio de eventos?</b>
+    <span class="news-sub">Restaurantes, espaços, fotografia, flores, música… Faz já o pré-registo: os primeiros 100 parceiros ficam como Parceiros Fundadores, com 3 meses sem taxa.</span>
     <div class="news-row">
-      <input type="email" name="email" placeholder="O teu email" autocomplete="email" required aria-label="Email">
+      <input type="email" name="email" placeholder="O email do teu negócio" autocomplete="email" required aria-label="Email">
       <button type="submit">Pré-registar</button>
     </div>
-    <small id="newsMsg">Só usamos o teu email para te avisar do lançamento e das novidades da À Nossa!.</small>
+    <small id="newsMsg">Só usamos o teu email para te avisar do lançamento e das novidades para parceiros.</small>
   </form>
 </section>
 </main>
@@ -431,7 +422,7 @@ tick();
   f.addEventListener('submit', function (e) {{
     e.preventDefault();
     var email = f.email.value.trim();
-    var kind = (f.querySelector('input[name=kind]:checked') || {{}}).value || 'organizador';
+    var kind = 'parceiro';
     if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) {{ msg.textContent = 'Escreve um email válido.'; f.email.focus(); return; }}
     var b = f.querySelector('button'); b.disabled = true; msg.textContent = 'A guardar…';
     fetch('https://yknbtsmcmjxzzhijyiav.supabase.co/rest/v1/rpc/newsletter_signup', {{
@@ -440,8 +431,8 @@ tick();
       body: JSON.stringify({{ p_email: email, p_kind: kind, p_source: 'site' }})
     }}).then(function (r) {{
       if (!r.ok) throw new Error(r.status);
-      f.querySelector('.news-row').hidden = true; f.querySelector('.news-kind').hidden = true;
-      msg.textContent = 'Pré-registo feito! Avisamos-te quando a À Nossa! sair nas lojas.';
+      f.querySelector('.news-row').hidden = true;
+      msg.textContent = 'Pré-registo feito! Avisamos-te quando a À Nossa! sair nas lojas para criares o teu perfil.';
     }}).catch(function () {{
       b.disabled = false; msg.textContent = 'Não foi possível guardar. Tenta outra vez.';
     }});
