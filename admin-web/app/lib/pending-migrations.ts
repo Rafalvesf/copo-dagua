@@ -389,6 +389,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Pré-registo no site de apresentação com as perguntas do onboarding (papel, eventos ou categorias, de onde és, idade ou negócio, nome e email); a lista aparece em Pré-registos no admin.",
     check: { kind: "marker", id: "195" },
   },
+  {
+    file: "196_newsletter_sending.sql",
+    date: "2026-11-16",
+    title: "Enviar emails aos pré-registos",
+    what: "Envio pelo Resend a partir de Pré-registos: modelo guardado por tipo, data do último envio, histórico e «Deixar de receber».",
+    check: { kind: "marker", id: "196" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

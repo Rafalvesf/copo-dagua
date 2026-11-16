@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { nlJoin, nlPhrases } from "@/lib/newsletter-email";
+import { EmailComposer, type Template } from "./EmailComposer";
 
 export type Signup = {
   email: string;
@@ -12,6 +14,9 @@ export type Signup = {
   country: string | null;
   age_range: string | null;
   created_at: string;
+  last_sent_at?: string | null;
+  unsubscribed_at?: string | null;
+  sent_count?: number | null;
 };
 
 type Col = {
@@ -22,6 +27,12 @@ type Col = {
 };
 
 const date = (s: string) => new Date(s).toLocaleDateString("pt-PT");
+
+function sentLabel(r: Signup) {
+  if (r.unsubscribed_at) return "Saiu da lista";
+  if (!r.last_sent_at) return "—";
+  return `${date(r.last_sent_at)}${(r.sent_count ?? 0) > 1 ? ` (${r.sent_count}×)` : ""}`;
+}
 
 const COLS: Record<"organizador" | "parceiro", Col[]> = {
   organizador: [
@@ -37,6 +48,7 @@ const COLS: Record<"organizador" | "parceiro", Col[]> = {
     { key: "city", label: "Cidade", get: (r) => r.city ?? "", width: 120 },
     { key: "country", label: "País", get: (r) => r.country ?? "", width: 100 },
     { key: "date", label: "Data", get: (r) => r.created_at, width: 90 },
+    { key: "sent", label: "Enviado", get: sentLabel, width: 110 },
   ],
   parceiro: [
     { key: "name", label: "Nome", get: (r) => r.name ?? "", width: 160 },
@@ -56,96 +68,9 @@ const COLS: Record<"organizador" | "parceiro", Col[]> = {
     { key: "city", label: "Cidade", get: (r) => r.city ?? "", width: 120 },
     { key: "country", label: "País", get: (r) => r.country ?? "", width: 100 },
     { key: "date", label: "Data", get: (r) => r.created_at, width: 90 },
+    { key: "sent", label: "Enviado", get: sentLabel, width: 110 },
   ],
 };
-
-const DEFAULT_SUBJECT = {
-  organizador: "A À Nossa! está quase a chegar",
-  parceiro: "{negocio} na À Nossa!",
-};
-
-const DEFAULT_BODY = {
-  organizador:
-    "Olá {primeiro_nome},\n\nObrigado pelo pré-registo na À Nossa!. Vimos que gostavas de organizar {eventos}, na zona de {cidade}.\n\nAvisamos-te assim que a app estiver nas lojas.\n\nAté já,\nRafael",
-  parceiro:
-    "Olá {primeiro_nome},\n\nObrigado por registares {negocio} na À Nossa!. Vimos que trabalhas em {categorias}, na zona de {cidade}.\n\nOs primeiros 100 parceiros ficam Parceiros Fundadores, com 3 meses sem taxa de serviço. Avisamos-te assim que a app estiver nas lojas.\n\nAté já,\nRafael",
-};
-
-const FIELDS = {
-  organizador: [
-    "nome",
-    "primeiro_nome",
-    "email",
-    "eventos",
-    "cidade",
-    "pais",
-    "idade",
-  ],
-  parceiro: [
-    "nome",
-    "primeiro_nome",
-    "email",
-    "negocio",
-    "categorias",
-    "cidade",
-    "pais",
-  ],
-};
-
-// Como cada escolha do site se lê numa frase («trabalhas em restauração e
-// fotografia», «organizar casamentos e jantares»). «Outro» fica de fora.
-const PHRASE: Record<string, string> = {
-  restaurante: "restauração",
-  bar: "bares",
-  espaço: "espaços para eventos",
-  catering: "catering",
-  fotografia: "fotografia",
-  "música e dj": "música e DJ",
-  "flores e decoração": "flores e decoração",
-  bolos: "bolos e pastelaria",
-  convites: "convites",
-  animação: "animação",
-  aluguer: "aluguer de material",
-  transporte: "transportes",
-  casamento: "casamentos",
-  aniversário: "aniversários",
-  batizado: "batizados",
-  festa: "festas",
-  despedida: "despedidas",
-  "evento de empresa": "eventos de empresa",
-  jantar: "jantares",
-};
-
-export function phrases(items: string[] | null) {
-  return (items ?? [])
-    .map((s) => s.trim().toLowerCase())
-    .filter((s) => s && s !== "outro")
-    .map((s) => PHRASE[s] ?? s);
-}
-
-export function joinPt(items: string[]) {
-  return items.length <= 1
-    ? items.join("")
-    : `${items.slice(0, -1).join(", ")} e ${items.at(-1)}`;
-}
-
-function fill(tpl: string, r: Signup) {
-  const list = joinPt(phrases(r.interests));
-  const vals: Record<string, string> = {
-    nome: r.name ?? "",
-    primeiro_nome: (r.name ?? "").split(/\s+/)[0] ?? "",
-    email: r.email,
-    eventos: list || "eventos",
-    categorias: list || "eventos",
-    negocio: r.business_name || "o teu negócio",
-    cidade: r.city || r.country || "Portugal",
-    pais: r.country ?? "",
-    idade: r.age_range ?? "",
-  };
-  return tpl
-    .replace(/\{(\w+)\}/g, (m, k) => (k in vals ? vals[k] : m))
-    .replace(/Olá ,/g, "Olá,");
-}
 
 function csvCell(v: string) {
   return /[";\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
@@ -162,7 +87,7 @@ export const EXPORT_HEAD = [
 const ORG_HEAD = ["Nome", "Tipo de Evento", "Cidade", "Contacto"];
 
 function exportRow(kind: "organizador" | "parceiro", r: Signup) {
-  const p = joinPt(phrases(r.interests));
+  const p = nlJoin(nlPhrases(r.interests));
   const types = p ? p[0].toUpperCase() + p.slice(1) : "";
   return kind === "parceiro"
     ? [r.name ?? "", types, r.business_name ?? "", r.email]
@@ -188,9 +113,13 @@ export function downloadCsv(kind: "organizador" | "parceiro", rows: Signup[]) {
 export function SignupsSheet({
   kind,
   rows,
+  template,
+  ready,
 }: {
   kind: "organizador" | "parceiro";
   rows: Signup[];
+  template: Template | null;
+  ready: boolean;
 }) {
   const cols = COLS[kind];
   const [q, setQ] = useState("");
@@ -199,9 +128,7 @@ export function SignupsSheet({
     dir: -1,
   });
   const [sel, setSel] = useState<Set<string>>(new Set());
-  const [subject, setSubject] = useState(DEFAULT_SUBJECT[kind]);
-  const [body, setBody] = useState(DEFAULT_BODY[kind]);
-  const [open, setOpen] = useState<string | null>(null);
+  const [previewEmail, setPreviewEmail] = useState<string | null>(null);
   const [note, setNote] = useState("");
 
   const view = useMemo(() => {
@@ -250,42 +177,15 @@ export function SignupsSheet({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <section
-        className="card"
-        style={{
-          padding: 16,
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-        }}
-      >
-        <div className="field">
-          <span className="field-label">Assunto</span>
-          <input
-            className="input"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-          />
-        </div>
-        <div className="field">
-          <span className="field-label">Mensagem</span>
-          <textarea
-            className="textarea"
-            rows={7}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-          />
-          <span className="field-hint">
-            Campos que mudam para cada pessoa:{" "}
-            {FIELDS[kind].map((f) => `{${f}}`).join(" ")}. Vê a mensagem de cada
-            um na tabela («Ver») O Excel sai com as colunas{" "}
-            {kind === "parceiro"
-              ? "Nome, Tipo de Negócio, Nome do Negócio e Contacto"
-              : "Nome, Tipo de Evento, Cidade e Contacto"}
-            .
-          </span>
-        </div>
-      </section>
+      <EmailComposer
+        kind={kind}
+        rows={rows}
+        selected={[...sel]}
+        previewEmail={previewEmail}
+        onPreviewEmail={setPreviewEmail}
+        template={template}
+        ready={ready}
+      />
 
       <section className="card" style={{ padding: 0 }}>
         <div
@@ -381,94 +281,50 @@ export function SignupsSheet({
                     {sort.key === c.key ? (sort.dir === 1 ? " ▲" : " ▼") : ""}
                   </th>
                 ))}
-                <th style={{ width: 120 }}>Mensagem</th>
+                <th style={{ width: 120 }}>Email</th>
               </tr>
             </thead>
             <tbody>
-              {view.map((r) => {
-                const isOpen = open === r.email;
-                const s = fill(subject, r);
-                const b = fill(body, r);
-                return [
-                  <tr
-                    key={r.email}
-                    style={{
-                      background: sel.has(r.email)
-                        ? "var(--accent-bg, rgba(79,107,74,.08))"
-                        : undefined,
-                    }}
-                  >
-                    <td style={cell}>
-                      <input
-                        type="checkbox"
-                        aria-label={`Selecionar ${r.email}`}
-                        checked={sel.has(r.email)}
-                        onChange={() => toggle(r.email)}
-                      />
-                    </td>
-                    {cols.map((c) => {
-                      const v =
-                        c.key === "date" ? date(r.created_at) : c.get(r);
-                      return (
-                        <td key={c.key} style={cell} title={v}>
-                          {v}
-                        </td>
-                      );
-                    })}
-                    <td>
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => setOpen(isOpen ? null : r.email)}
-                      >
-                        {isOpen ? "Fechar" : "Ver"}
-                      </button>
-                    </td>
-                  </tr>,
-                  isOpen && (
-                    <tr key={`${r.email}-msg`}>
-                      <td
-                        colSpan={cols.length + 2}
-                        style={{ background: "var(--surface-muted, #F7F6F2)" }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 8,
-                            maxWidth: 640,
-                            padding: "4px 0",
-                          }}
-                        >
-                          <strong>{s}</strong>
-                          <div
-                            style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}
-                          >
-                            {b}
-                          </div>
-                          <div className="toolbar">
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-sm"
-                              onClick={() =>
-                                copy(`${s}\n\n${b}`, "Mensagem copiada.")
-                              }
-                            >
-                              Copiar mensagem
-                            </button>
-                            <a
-                              className="btn btn-primary btn-sm"
-                              href={`mailto:${r.email}?subject=${encodeURIComponent(s)}&body=${encodeURIComponent(b)}`}
-                            >
-                              Abrir no email
-                            </a>
-                          </div>
-                        </div>
+              {view.map((r) => (
+                <tr
+                  key={r.email}
+                  style={{
+                    background: sel.has(r.email)
+                      ? "var(--accent-bg, rgba(79,107,74,.08))"
+                      : undefined,
+                    opacity: r.unsubscribed_at ? 0.55 : 1,
+                  }}
+                >
+                  <td style={cell}>
+                    <input
+                      type="checkbox"
+                      aria-label={`Selecionar ${r.email}`}
+                      checked={sel.has(r.email)}
+                      onChange={() => toggle(r.email)}
+                    />
+                  </td>
+                  {cols.map((c) => {
+                    const v = c.key === "date" ? date(r.created_at) : c.get(r);
+                    return (
+                      <td key={c.key} style={cell} title={v}>
+                        {v}
                       </td>
-                    </tr>
-                  ),
-                ];
-              })}
+                    );
+                  })}
+                  <td>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => {
+                        setPreviewEmail(r.email);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                    >
+                      Ver email
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
