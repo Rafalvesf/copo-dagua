@@ -929,6 +929,22 @@ class Booking {
   final int? people;
   final double? totalAmount;
 
+  /// 190: «Como escolhem» ('same' / 'each') e «Quem paga»
+  /// ('organizer' / 'each').
+  final String choiceMode;
+  final String payerMode;
+  bool get eachChooses => choiceMode == 'each';
+  bool get eachPays => payerMode == 'each';
+  bool get canAcceptTable => fromQuoteRequest && eachChooses;
+  final DateTime? choiceDeadline;
+  String? get choiceDeadlineLabel {
+    final d = choiceDeadline;
+    if (d == null) return null;
+    const w = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const m = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    return '${w[d.weekday - 1]}, ${d.day} ${m[d.month - 1]}';
+  }
+
   bool get isPackageRequest => packageSnapshot != null;
   bool get canAcceptPackage =>
       fromQuoteRequest && packageSnapshot != null && packageSnapshot!['is_starting_price'] != true && (totalAmount ?? 0) > 0;
@@ -953,9 +969,15 @@ class Booking {
     this.extrasSnapshot = const [],
     this.people,
     this.totalAmount,
+    this.choiceMode = 'same',
+    this.payerMode = 'organizer',
+    this.choiceDeadline,
   });
 
   Booking copyWith({BookingStatus? status}) => Booking(
+    choiceMode: choiceMode,
+    payerMode: payerMode,
+    choiceDeadline: choiceDeadline,
     packageSnapshot: packageSnapshot,
     extrasSnapshot: extrasSnapshot,
     people: people,

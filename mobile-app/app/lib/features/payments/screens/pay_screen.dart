@@ -362,7 +362,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         _Step.mbWayWaiting => 'Aprova na app MB WAY',
         _Step.multibanco => 'Referência Multibanco',
         _Step.done => '${a.title} pago',
-        _ => a.isBooking ? (a.kind == 'deposit' ? 'Pagar sinal' : 'Pagar o resto') : 'Pagar',
+        _ => a.isGuestShare ? 'Pagar a tua parte' : a.isBooking ? (a.kind == 'deposit' ? 'Pagar sinal' : 'Pagar o resto') : 'Pagar',
       };
 
   bool get _canGoBack =>
@@ -618,7 +618,9 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           const Center(child: EstrelaMascot(Estrela.parabens, size: 120)),
           const SizedBox(height: 12),
           Text(
-            a.isBooking
+            a.isGuestShare
+                ? 'A tua parte a ${a.partnerName} está paga.'
+                : a.isBooking
                 ? (a.kind == 'deposit'
                     ? '${a.partnerName} está reservado. O resto paga-se até 30 dias antes.'
                     : 'Está tudo pago a ${a.partnerName}.')
@@ -675,7 +677,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           button = _SheetButton(label: _method == PayMethod.card ? 'Pagar $_amountLabel' : 'Continuar', onTap: _continue);
         }
         extras.add(const _SecureNote('Pagamento seguro pela Stripe, dentro da app.'));
-        if (a.isBooking) extras.add(_CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit'));
+        if (a.isBooking && !a.isGuestShare) extras.add(_CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit'));
       case _Step.card:
         button = _SheetButton(label: 'Pagar $_amountLabel', onTap: _cardMounted && _card.complete ? _payCard : null);
         extras.add(const _SecureNote('O número do cartão vai direto para a Stripe.'));
@@ -684,8 +686,9 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       case _Step.mbWayPhone:
         button = _SheetButton(label: 'Enviar pedido MB WAY', onTap: _sendMbWay);
       case _Step.done:
-        button = _SheetButton(label: a.isBooking ? 'Ver reserva' : 'Fechar', onTap: () => a.isBooking ? context.go('/bookings') : context.pop());
-        if (a.isBooking) {
+        final toBooking = a.isBooking && !a.isGuestShare;
+        button = _SheetButton(label: toBooking ? 'Ver reserva' : 'Fechar', onTap: () => toBooking ? context.go('/bookings') : context.pop());
+        if (toBooking) {
           final chat = a.onChat;
           extras.add(chat != null
               ? _SheetButton(label: 'Falar com ${a.partnerName}', secondary: true, onTap: () => chat(context))

@@ -69,9 +69,12 @@ class PayArgs {
   /// Reserva (sinal ou restante) — tem regra de cancelamento.
   bool get isBooking => create == null;
 
+  /// A parte de um convidado quando «cada um paga o seu» (190).
+  bool get isGuestShare => kind == 'guest_share';
+
   bool get feeByCard => isBooking || cardFee;
 
-  String get title => titleOverride ?? (kind == 'deposit' ? 'Sinal' : 'Restante');
+  String get title => titleOverride ?? (kind == 'deposit' ? 'Sinal' : isGuestShare ? 'A tua parte' : 'Restante');
 
   Future<PaymentIntentInfo> createIntent(PayMethod method, {String? phone, String? paymentMethodId}) =>
       create != null

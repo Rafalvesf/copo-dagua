@@ -7,7 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/guest_home/event_tables.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
+import '../../../core/home/home_providers.dart' show amountWithCommission, platformCommissionPercentageProvider;
+import '../../../core/payments/payments.dart' show PayArgs;
+import '../../../shared/money.dart';
+import '../../../shared/widgets/alert_outline.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
@@ -700,6 +705,132 @@ class GuestTimeline extends StatelessWidget {
             ]),
           ),
       ]),
+    );
+  }
+}
+
+/// «Falta o teu menu» / «A tua parte» (190, mockup «Início do convidado ·
+/// menu por escolher»): linha fina amarela com o próximo passo e botão
+/// preto. Vermelho quando a escolha fecha em 3 dias ou menos.
+class GuestTablesAlerts extends ConsumerWidget {
+  final String weddingId;
+  const GuestTablesAlerts({super.key, required this.weddingId});
+
+  Future<void> _pay(BuildContext context, WidgetRef ref, EventTable t) async {
+    try {
+      final share = await myShareEnsure(t.bookingId);
+      final pct = await ref.read(platformCommissionPercentageProvider.future);
+      if (!context.mounted) return;
+      await context.push('/pay', extra: PayArgs(
+        paymentId: share.paymentId,
+        partnerName: t.partnerName,
+        kind: 'guest_share',
+        amount: amountWithCommission(share.amount, pct),
+        baseAmount: share.amount,
+      ));
+      ref.invalidate(myEventTablesProvider(weddingId));
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível abrir o pagamento.')));
+      }
+    }
+  }
+
+  Future<void> _payChoice(BuildContext context, WidgetRef ref, EventTable t) async {
+    final id = t.myPayment?['id'] as String?;
+    final amount = (t.myPayment?['amount'] as num?)?.toDouble();
+    if (id == null || amount == null) {
+      context.push('/mesa/$weddingId', extra: t);
+      return;
+    }
+    final pct = await ref.read(platformCommissionPercentageProvider.future);
+    if (!context.mounted) return;
+    await context.push('/pay', extra: PayArgs(
+      paymentId: id,
+      partnerName: t.partnerName,
+      kind: 'guest_share',
+      amount: amountWithCommission(amount, pct),
+      baseAmount: amount,
+    ));
+    ref.invalidate(myEventTablesProvider(weddingId));
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tables = ref.watch(myEventTablesProvider(weddingId)).value ?? const <EventTable>[];
+    final todo = tables.where((t) => t.needsAction).toList();
+    if (todo.isEmpty) return const SizedBox.shrink();
+    return Column(children: [
+      for (final t in todo)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _alert(context, ref, t),
+        ),
+    ]);
+  }
+
+  Widget _alert(BuildContext context, WidgetRef ref, EventTable t) {
+    final deadline = t.choiceDeadline;
+    final tone = deadline == null ? AlertTone.pending : toneForDue(deadline);
+    final until = deadline == null ? null : 'Até ${shortDate(deadline)}';
+    final String caps;
+    final String title;
+    final String sub;
+    final String cta;
+    final VoidCallback onTap;
+    if (t.eachChooses && !t.chose) {
+      caps = 'FALTA O TEU MENU';
+      title = t.eachPays ? 'Escolhe o teu menu e paga a tua parte' : 'Escolhe o teu menu';
+      sub = [?until, t.partnerName].join(' · ');
+      cta = 'Escolher';
+      onTap = () => context.push('/mesa/$weddingId', extra: t);
+    } else if (t.eachChooses) {
+      caps = 'FALTA PAGAR';
+      title = 'A tua parte · ${euros(t.myAmount ?? 0)}';
+      sub = [?until, (t.myChoice?['package_snapshot'] as Map?)?['name'] as String? ?? t.partnerName].join(' · ');
+      cta = 'Pagar';
+      onTap = () => _payChoice(context, ref, t);
+    } else {
+      caps = 'FALTA PAGAR';
+      title = 'A tua parte · ${euros(t.myAmount ?? 0)}';
+      sub = [?until, (t.package?['name'] as String?) ?? t.partnerName].join(' · ');
+      cta = 'Pagar';
+      onTap = () => _pay(context, ref, t);
+    }
+    final capsColor = switch (tone) {
+      AlertTone.urgent => const Color(0xFFC8553D),
+      AlertTone.invite => const Color(0xFF3F7A4F),
+      _ => AppTheme.inkMuted,
+    };
+    return SnappyTap(
+      onTap: onTap,
+      child: AlertOutline(
+        tone: tone,
+        radius: 22,
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+        child: Row(children: [
+          AlertDot(tone),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Text(caps, style: TextStyle(fontSize: 11, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: capsColor)),
+              Text(title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 15, height: 1.25, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+            child: Text(cta, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+          ),
+        ]),
+      ),
     );
   }
 }

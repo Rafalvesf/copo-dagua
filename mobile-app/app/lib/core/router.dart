@@ -55,6 +55,8 @@ import '../features/gallery/screens/gallery_screen.dart' deferred as l26;
 import '../features/guests/screens/guest_detail_screen.dart' deferred as l27;
 import '../features/guests/screens/guests_list_screen.dart' deferred as l28;
 import '../features/guests/screens/invite_screen.dart' deferred as l28b;
+import '../features/guest_home/screens/choose_menu_screen.dart' deferred as l28c;
+import 'guest_home/event_tables.dart' show EventTable;
 import '../features/home/screens/home_feed_screen.dart' as l29;
 import '../features/auth/screens/join_wedding_screen.dart' deferred as l30;
 import '../features/invite/screens/invite_page_screen.dart' deferred as l31;
@@ -564,6 +566,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/guests/convidar',
         builder: (context, state) =>lazyPage([l28b.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.convidados, child: l28b.InviteScreen())),
+      ),
+      // «O teu menu» (190): cada convidado escolhe (e paga) o seu.
+      GoRoute(
+        path: '/mesa/:weddingId',
+        redirect: (context, state) => state.extra is EventTable ? null : '/guest-home',
+        builder: (context, state) => lazyPage([l28c.loadLibrary],
+            () => l28c.ChooseMenuScreen(weddingId: state.pathParameters['weddingId']!, table: state.extra as EventTable)),
       ),
       GoRoute(
         path: '/guests/:id',

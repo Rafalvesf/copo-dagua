@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/chat/chat_helpers.dart';
+import '../../../core/guest_home/event_tables.dart' show bookingChoicesProvider, BookingChoice;
 import '../../../core/models/models.dart';
 import '../../../core/wedding/menu_style.dart' show EventDecor;
 import '../../../core/partner_app/partner_app_providers.dart';
@@ -150,13 +151,23 @@ Expanded(child: ScrollingHeader(
                   const KitCaps('O pedido', top: 20),
                   KitGroup([
                     KitSetRow(label: 'Data', value: dateLabel),
-                    if (booking.people != null) KitSetRow(label: 'Pessoas', value: '${booking.people}'),
+                    if (booking.people != null)
+                      KitSetRow(label: 'Pessoas', value: booking.eachChooses ? '${booking.people} reservadas' : '${booking.people}'),
+                    // 190: como escolhem e quem paga.
+                    if (booking.eachChooses || booking.eachPays) ...[
+                      KitSetRow(label: 'Como escolhem', value: booking.eachChooses ? 'Cada um escolhe' : 'Igual para todos'),
+                      KitSetRow(label: 'Quem paga', value: booking.eachPays ? 'Cada um paga o seu' : 'Os organizadores'),
+                    ],
                     if (booking.city.isNotEmpty) KitSetRow(label: 'Local', value: booking.city),
                     KitSetRow(
                       label: 'Serviço',
                       value: [booking.category ?? 'Serviço', if (booking.packageLabel.isNotEmpty) booking.packageLabel].join(' · '),
                     ),
                   ]),
+                  // Mesa «cada um escolhe» ou cada um paga (190): o que já
+                  // escolheram e quanto já está pago.
+                  if (!booking.fromQuoteRequest && (booking.eachChooses || booking.eachPays))
+                    BookingChoicesSummary(booking: booking),
                   if (booking.messageFromCouple != null && booking.messageFromCouple!.trim().isNotEmpty) ...[
                     const KitCaps('Mensagem do cliente', top: 20),
                     Container(
@@ -210,7 +221,10 @@ Expanded(child: ScrollingHeader(
                                   ref.invalidate(partnerBookingsProvider);
                                   if (mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Pedido aceite. Fica reservado e o cliente paga o sinal.')),
+                                      SnackBar(
+                                          content: Text(booking.eachPays
+                                              ? 'Pedido aceite. Fica reservado e cada convidado paga a sua parte.'
+                                              : 'Pedido aceite. Fica reservado e o cliente paga o sinal.')),
                                     );
                                     context.pop();
                                   }
@@ -223,9 +237,43 @@ Expanded(child: ScrollingHeader(
                         child: const Text('Aceitar pacote'),
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, bottom: 10),
+                      child: Text(
+                          booking.eachPays
+                              ? 'Fica reservado. Cada convidado paga ${euros((booking.totalAmount ?? 0) / ((booking.people ?? 1) < 1 ? 1 : booking.people!))} na app, 3 dias antes.'
+                              : 'Ao aceitar, fica reservado e o cliente paga o sinal.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    ),
+                  ] else if (booking.canAcceptTable && !booking.proposalSent) ...[
+                    // Mesa «cada um escolhe» (190): aceitar reserva já, sem sinal.
+                    SizedBox(
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: _busy
+                            ? null
+                            : () => _run(() async {
+                                  await supabase.rpc('accept_table_request', params: {'p_quote_request_id': booking.id});
+                                  ref.invalidate(partnerBookingsProvider);
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Pedido aceite. Fica reservado na tua agenda.')),
+                                    );
+                                    context.pop();
+                                  }
+                                }),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppTheme.ink,
+                          shape: const StadiumBorder(),
+                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                        ),
+                        child: const Text('Aceitar pedido'),
+                      ),
+                    ),
                     const Padding(
                       padding: EdgeInsets.only(top: 8, bottom: 10),
-                      child: Text('Ao aceitar, fica reservado e o cliente paga o sinal.',
+                      child: Text('Fica reservado na tua agenda. Cada convidado escolhe o seu menu na app; vês aqui o que escolheram.',
                           textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                     ),
                   ] else if (booking.fromQuoteRequest && !booking.proposalSent) ...[
@@ -418,6 +466,120 @@ Expanded(child: ScrollingHeader(
 }
 
 /// O pacote e os extras que o cliente escolheu (188), com as contas.
+/// «O que escolheram» / «Valores» numa reserva da 190 (mockup «Parceiro ·
+/// mesa em que cada um escolhe»): quantos já escolheram, cada menu e
+/// extra, o total até agora e o que já está pago.
+class BookingChoicesSummary extends ConsumerWidget {
+  final Booking booking;
+  const BookingChoicesSummary({super.key, required this.booking});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final choices = ref.watch(bookingChoicesProvider(booking.id)).value ?? const <BookingChoice>[];
+    final paid = ref.watch(_guestSharesPaidProvider(booking.id)).value ?? (count: 0, amount: 0.0);
+    final people = booking.people ?? 0;
+    Widget line(String a, String b, {bool bold = false}) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(children: [
+            Expanded(child: Text(a, style: TextStyle(fontSize: 14, fontWeight: bold ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink))),
+            Text(b, style: TextStyle(fontSize: bold ? 16 : 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ]),
+        );
+    final byMenu = <String, int>{};
+    final byExtra = <String, int>{};
+    for (final c in choices) {
+      byMenu.update(c.packageName ?? 'Menu', (n) => n + 1, ifAbsent: () => 1);
+      for (final e in c.extras) {
+        byExtra.update(e, (n) => n + 1, ifAbsent: () => 1);
+      }
+    }
+    final allergies = [for (final c in choices) if ((c.allergies ?? '').trim().isNotEmpty) c.allergies!.trim()];
+    final sum = choices.fold<double>(0, (s, c) => s + c.amount);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      if (booking.eachChooses) ...[
+        const KitCaps('O que escolheram', top: 20),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              Text('${choices.length}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1)),
+              const SizedBox(width: 8),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(people > 0 ? 'de $people já escolheram' : 'já escolheram',
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ),
+            ]),
+            if (people > 0) ...[
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(5),
+                child: LinearProgressIndicator(
+                  value: (choices.length / people).clamp(0, 1).toDouble(),
+                  minHeight: 10,
+                  backgroundColor: const Color(0xFFECE7DC),
+                  color: AppTheme.accentOliveDark,
+                ),
+              ),
+            ],
+            if (byMenu.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              for (final e in byMenu.entries) line(e.key, '${e.value}'),
+              for (final e in byExtra.entries) line('+ ${e.key}', '${e.value}'),
+            ],
+            if (allergies.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text('Alergias: ${allergies.join(' · ')}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ],
+          ]),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+          child: Text(
+            booking.choiceDeadlineLabel == null
+                ? 'Cada escolha guarda o texto do menu tal como estava.'
+                : 'Cada escolha guarda o texto do menu tal como estava. A escolha fecha ${booking.choiceDeadlineLabel}.',
+            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+          ),
+        ),
+      ],
+      const KitCaps('Valores', top: 20),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        child: Column(children: [
+          if (booking.eachChooses) line('Total até agora', euros(sum), bold: true) else line('Total', euros(booking.totalAmount ?? 0), bold: true),
+          if (booking.eachPays) line('Já pago', '${euros(paid.amount)} · ${paid.count} ${paid.count == 1 ? 'pessoa' : 'pessoas'}'),
+        ]),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+        child: Text(
+          booking.eachPays
+              ? (booking.eachChooses
+                  ? 'Cada convidado paga a sua parte quando escolhe.'
+                  : 'Cada convidado paga a sua parte na app, 3 dias antes.')
+              : 'Pagam os organizadores, depois de a escolha fechar.',
+          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+        ),
+      ),
+    ]);
+  }
+}
+
+/// Partes de convidados já pagas nesta reserva (o parceiro vê os
+/// pagamentos com o seu `partner_id`).
+final _guestSharesPaidProvider = FutureProvider.autoDispose.family<({int count, double amount}), String>((ref, bookingId) async {
+  try {
+    final rows = await supabase.from('payments').select('amount').eq('booking_id', bookingId).eq('type', 'guest_share').eq('status', 'paid');
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    return (count: list.length, amount: list.fold<double>(0, (s, r) => s + ((r['amount'] as num?)?.toDouble() ?? 0)));
+  } catch (_) {
+    return (count: 0, amount: 0.0);
+  }
+});
+
 class _ChosenPackageCard extends StatelessWidget {
   final Booking booking;
   const _ChosenPackageCard({required this.booking});
