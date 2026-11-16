@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Empty, FilterTabs, PageHeader } from "@/components/ui";
 import { SignupsSheet, type Signup } from "./SignupsSheet";
+import type { Template } from "./EmailComposer";
 import { BulkExport } from "./BulkExport";
 
 // Pré-registos do site (migração 195), separados em organizadores e
@@ -16,21 +17,26 @@ export default async function NewsletterPage({
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("newsletter_signups")
-    .select(
-      "email, kind, name, interests, business_name, city, country, age_range, created_at",
-    )
+    // `*`: aguenta antes e depois da migração 196 (colunas de envio).
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(5000);
   const all = (data ?? []) as Signup[];
   const partners = all.filter((r) => r.kind === "parceiro");
   const organizers = all.filter((r) => r.kind !== "parceiro");
   const rows = kind === "parceiro" ? partners : organizers;
+  const { data: tpl, error: tplError } = await supabase
+    .from("newsletter_templates")
+    .select("subject, body, button_label, button_url")
+    .eq("kind", kind)
+    .maybeSingle();
+  const ready = !tplError;
 
   return (
     <div className="page">
       <PageHeader
         title="Pré-registos"
-        subtitle="Quem se inscreveu no site antes das lojas. Escreve a mensagem, vê como fica para cada pessoa e descarrega para o Excel."
+        subtitle="Quem se inscreveu no site antes das lojas. Escreve o email, vê como chega a cada pessoa e envia daqui (Resend) ou descarrega para o Excel."
         actions={<BulkExport partners={partners} organizers={organizers} />}
       />
       <FilterTabs
@@ -71,7 +77,13 @@ export default async function NewsletterPage({
           />
         </Card>
       ) : (
-        <SignupsSheet key={kind} kind={kind} rows={rows} />
+        <SignupsSheet
+          key={kind}
+          kind={kind}
+          rows={rows}
+          template={(tpl as Template | null) ?? null}
+          ready={ready}
+        />
       )}
     </div>
   );

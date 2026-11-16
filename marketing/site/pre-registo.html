@@ -115,6 +115,24 @@ footer { text-align: center; font-size: 13px; color: var(--muted); padding: 18px
 <footer>© 2026 À Nossa! · Feito em Portugal</footer>
 <script>
 (function () {
+  // «Deixar de receber» dos emails (migração 196): ?sair=<token>.
+  var sair = new URLSearchParams(location.search).get('sair');
+  if (sair) {
+    var main = document.querySelector('main');
+    main.innerHTML = '<div class="intro"><h1>Até breve!</h1><p id="sairMsg">A tirar-te da lista…</p></div>';
+    fetch('https://yknbtsmcmjxzzhijyiav.supabase.co/rest/v1/rpc/newsletter_unsubscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_TkmeAQOlKuN4kUii5i70Rg_Qiz8D7cc' },
+      body: JSON.stringify({ p_token: sair })
+    }).then(function (r) { return r.ok ? r.json() : false; }).then(function (ok) {
+      document.getElementById('sairMsg').textContent = ok
+        ? 'Já não vais receber emails da À Nossa!. Se mudares de ideias, basta voltares a fazer o pré-registo.'
+        : 'Este link já não é válido. Se continuares a receber emails, responde a um deles e tiramos-te da lista.';
+    }).catch(function () {
+      document.getElementById('sairMsg').textContent = 'Não foi possível tirar-te da lista agora. Tenta outra vez daqui a pouco.';
+    });
+    return;
+  }
   var f = document.getElementById('news');
   if (!f) return;
   var EVENTS = ['Casamento', 'Aniversário', 'Batizado', 'Festa', 'Despedida', 'Evento de empresa', 'Jantar', 'Outro'];

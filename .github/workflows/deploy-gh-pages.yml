@@ -8,6 +8,7 @@ on:
       - 'mobile-app/app/**'
       - 'marketing/site/a-nossa-site.html'
       - 'marketing/site/pre-registo.html'
+      - 'marketing/site/assets/estrela_feliz.png'
       - 'marketing/site/a-nossa.mp4'
       - 'marketing/site/poster.jpg'
       - '.github/workflows/deploy-gh-pages.yml'
@@ -133,6 +134,8 @@ jobs:
           cp ../../marketing/site/a-nossa-site.html build/web/site/index.html
           mkdir -p build/web/site/pre-registo
           cp ../../marketing/site/pre-registo.html build/web/site/pre-registo/index.html
+          mkdir -p build/web/site/assets
+          cp ../../marketing/site/assets/estrela_feliz.png build/web/site/assets/
           cp ../../marketing/site/a-nossa.mp4 ../../marketing/site/poster.jpg build/web/site/
 
       # O Vercel (admin, pasta admin-web/app) tenta compilar todos os ramos;
