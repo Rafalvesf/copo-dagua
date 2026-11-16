@@ -1,16 +1,14 @@
 import 'dart:async';
 
 export '../payments/fee_config.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, FunctionResponse, PostgrestException;
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../auth/auth_controller.dart';
 import '../bookings/hire_privacy.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import '../payments/refunds.dart';
-import '../../shared/public_link.dart';
 import '../payments/fee_config.dart';
 
 /// Providers para o painel do casal (`home_feed_screen.dart`) — mesmo
@@ -278,48 +276,10 @@ BookingStatus mapRealBookingStatus(String status) => switch (status) {
   _ => BookingStatus.emAnalise,
 };
 
-/// Abre o checkout Stripe hospedado para o sinal de uma reserva — chama
-/// a Edge Function `create-deposit-checkout`
-/// (`supabase/functions/create-deposit-checkout/`, ver
-/// `mobile-app/payments/stripe-connect.md`) e devolve o URL a abrir no
-/// browser. `success_url`/`cancel_url` usam um esquema próprio
-/// (`anossa://`) para o caso de vir a existir deep linking — ainda
-/// não está registado em nenhuma plataforma, por isso o retorno à app
-/// não é automático ainda; o pagamento em si e a confirmação via webhook
-/// não dependem disso.
 /// Motivo legível quando o checkout não pode abrir (409 da função).
 class CheckoutUnavailable implements Exception {
   final String reason;
   const CheckoutUnavailable(this.reason);
-}
-
-Future<String> createDepositCheckoutUrl(String paymentId) async {
-  // Na web volta às Reservas da app depois de pagar (antes era um
-  // esquema `anossa://` que o browser não sabe abrir).
-  final success = kIsWeb ? publicLink('/bookings') : 'anossa://payment-success';
-  final cancel = kIsWeb ? publicLink('/bookings') : 'anossa://payment-cancelled';
-  final FunctionResponse response;
-  try {
-    response = await supabase.functions.invoke(
-      'create-deposit-checkout',
-      body: {
-        'payment_id': paymentId,
-        'success_url': success,
-        'cancel_url': cancel,
-      },
-    );
-  } on FunctionException catch (e) {
-    final details = e.details;
-    final code = details is Map ? details['error'] as String? : null;
-    if (code != null) throw CheckoutUnavailable(code);
-    rethrow;
-  }
-  final data = response.data as Map<String, dynamic>?;
-  final url = data?['url'] as String?;
-  if (url == null) {
-    throw Exception('Checkout sem URL devolvido');
-  }
-  return url;
 }
 
 /// `platform_settings.platform_commission_percentage` — legível por
@@ -467,7 +427,7 @@ final platformDepositPercentageProvider = FutureProvider<double>((ref) async {
 /// 2026-09-05: "ao valor que o parceiro cobra nós adicionamos a nossa
 /// comissão sobre o valor"; o parceiro continua a receber
 /// `partnerAmount` por inteiro). Mesma matemática em cêntimos que
-/// `supabase/functions/create-deposit-checkout/index.ts` — tem de dar
+/// `supabase/functions/create-payment-intent/index.ts` — tem de dar
 /// exatamente o mesmo valor que a Stripe vai mostrar a seguir, nunca só
 /// uma aproximação.
 /// Valor de um pagamento com a taxa de serviço: a percentagem mais o valor

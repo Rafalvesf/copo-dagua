@@ -10,7 +10,7 @@ import { cardRegion, type FeeTier, fixedFeeCents, organizerTiersForCard, parseTi
 // iframe da própria Stripe: nenhum dado de cartão passa pela app nem por
 // este código) e confirma ali mesmo.
 //
-// Mesmas regras que `create-deposit-checkout`: só o pagador, só
+// Só o pagador, só
 // pagamentos `pending` (sinal ou restante), destination charge com a
 // comissão POR CIMA do valor do parceiro.
 //

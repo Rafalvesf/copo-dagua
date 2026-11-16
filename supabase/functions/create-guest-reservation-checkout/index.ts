@@ -4,7 +4,7 @@ import { stripeClient } from "../_shared/stripe.ts";
 
 // Reservas para os convidados (099_guest_offers.sql): o convidado paga na
 // app o quarto ou o lugar no transporte que o organizador combinou com
-// um parceiro. Mesmo modelo de create-deposit-checkout: destination
+// um parceiro. Destination
 // charge para a conta Stripe do parceiro, comissão da plataforma
 // ADICIONADA por cima do valor do parceiro.
 //
