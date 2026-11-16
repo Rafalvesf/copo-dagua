@@ -224,7 +224,6 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
 
 <header class="top" id="top">
   <a class="brand" href="#"><img src="{img('estrela_feliz.svg')}" alt="">À Nossa!</a>
-  <a class="btn" href="{APP}" target="_blank" rel="noopener">Abrir a app</a>
 </header>
 
 <main>
@@ -261,7 +260,6 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
   <img src="{img('estrela_feliz.svg')}" alt="">
   <h2>À Nossa!</h2>
   <p>Para todas as festas.</p>
-  <a class="btn" href="{APP}" target="_blank" rel="noopener">Abrir a app</a>
   <form class="news" id="news" novalidate>
     <b>Tens um negócio de eventos?</b>
     <span class="news-sub">Restaurantes, espaços, fotografia, flores, música… Faz já o pré-registo: os primeiros 100 parceiros ficam como Parceiros Fundadores, com 3 meses sem taxa.</span>
