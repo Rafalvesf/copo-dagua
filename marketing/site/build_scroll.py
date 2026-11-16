@@ -60,7 +60,7 @@ TEXTS = [
 CHAPTERS = [('Organizadores', 0.6, 7.5), ('Parceiros', 7.5, 10.5), ('Galeria', 10.5, 11.5),
             ('Convidados', 11.5, 13.5), ('Profissionais', 13.5, 15.6)]
 
-BG = [(0, '#4F6B4A'), (0.9, '#F2F5EE'), (2, '#E9F0E5'), (2.7, '#F8E6EC'), (3.4, '#E4EEF5'), (4.1, '#F6EEDA'),
+BG = [(0, '#FFFFFF'), (0.9, '#F2F5EE'), (2, '#E9F0E5'), (2.7, '#F8E6EC'), (3.4, '#E4EEF5'), (4.1, '#F6EEDA'),
       (5, '#F2F5EE'), (7, '#F2F5EE'), (8, '#FBF3E2'), (10, '#FBF3E2'), (11, '#F4F1EC'), (12, '#FBEFF0'),
       (13, '#FBEFF0'), (14, '#EEF2F6'), (15, '#EEF2F6'), (16.2, '#FFFFFF')]
 
@@ -112,7 +112,7 @@ h1, h2 {{ margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance;
 /* barra de topo */
 .top {{ position: fixed; z-index: 30; top: env(safe-area-inset-top, 0px); left: 0; right: 0; display: flex; align-items: center; gap: 12px;
   padding: 12px max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px)); color: #fff; transition: color .3s;
-  background: var(--bgc, #4F6B4A); }}
+  background: var(--bgc, #FFFFFF); }}
 .top .brand {{ display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 21px; text-decoration: none; }}
 .top .brand img {{ width: 38px; }}
 .top .btn {{ margin-left: auto; height: 40px; padding: 0 18px; font-size: 14px; background: #fff; color: var(--euc); box-shadow: 0 8px 20px rgba(0,0,0,.12); }}
@@ -158,11 +158,11 @@ h1, h2 {{ margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance;
 #styDots i.on {{ box-shadow: 0 0 0 3px #fff, 0 0 0 5px currentColor; transform: scale(1.08); }}
 
 /* abertura e fecho */
-.hero {{ position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding-top: 15vh; color: #fff; text-align: center; }}
+.hero {{ position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding-top: 15vh; color: var(--ink); text-align: center; }}
 .hero img {{ width: min(190px, 40vw); }}
 .hero h1 {{ font-size: clamp(56px, 10vw, 128px); line-height: .95; margin-top: 6px; letter-spacing: -3px; }}
 .hero p {{ font-size: clamp(17px, 1.8vw, 22px); margin: 14px 0 0; opacity: .9; }}
-.cue {{ position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); color: #fff; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; opacity: .8; }}
+.cue {{ position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); color: var(--muted); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; opacity: .8; }}
 .cue::after {{ content: ""; display: block; width: 2px; height: 28px; margin: 10px auto 0; background: currentColor; animation: cue 1.6s ease-in-out infinite; transform-origin: top; }}
 @keyframes cue {{ 0%, 100% {{ transform: scaleY(.3); }} 50% {{ transform: scaleY(1); }} }}
 .fin {{ position: absolute; left: 0; right: 0; top: 8vh; text-align: center; opacity: 0; padding: 0 20px; }}
@@ -184,15 +184,15 @@ h1, h2 {{ margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance;
 .vid h2 {{ font-size: clamp(30px, 4vw, 48px); }}
 .vid p {{ color: var(--muted); font-size: 18px; margin: 10px 0 30px; }}
 .vid video {{ display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; border-radius: 26px; background: #111; box-shadow: 0 40px 80px -40px rgba(23,23,19,.45); }}
-.cta {{ background: var(--euc); color: #fff; text-align: center; }}
+.cta {{ background: #fff; color: var(--ink); text-align: center; }}
 .cta img {{ width: min(230px, 56vw); }}
 .cta h2 {{ font-size: clamp(54px, 9vw, 110px); letter-spacing: -3px; margin-top: 8px; }}
 .cta p {{ font-size: 20px; opacity: .9; margin: 6px 0 28px; }}
-.cta .btn {{ background: #fff; color: var(--euc); }}
+.cta .btn {{ background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }}
 .news {{ max-width: 520px; margin: 34px auto 0; display: flex; flex-direction: column; gap: 12px; text-align: left; }}
 .news b {{ font-size: 20px; text-align: center; text-wrap: balance; }}
 .news-row {{ display: flex; gap: 8px; flex-wrap: wrap; }}
-.news-row input {{ flex: 1 1 220px; min-width: 0; height: 52px; border: 0; border-radius: 26px; padding: 0 20px; font: inherit; font-size: 15px; color: #171713; }}
+.news-row input {{ flex: 1 1 220px; min-width: 0; height: 52px; border: 1.5px solid #171713; border-radius: 26px; padding: 0 20px; font: inherit; font-size: 15px; color: #171713; }}
 .news-row button {{ flex: 0 0 auto; height: 52px; padding: 0 22px; border: 0; border-radius: 26px; background: #171713; color: #fff; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }}
 .news-row button[disabled] {{ opacity: .6; cursor: default; }}
 @media (max-width: 480px) {{ .news-row button {{ flex: 1 1 100%; }} }}
@@ -223,7 +223,7 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
 </style>
 
 <header class="top" id="top">
-  <a class="brand" href="#"><img src="{img('estrela_parabens_circulo.svg')}" alt="">À Nossa!</a>
+  <a class="brand" href="#"><img src="{img('estrela_parabens.svg')}" alt="">À Nossa!</a>
   <a class="btn" href="{APP}" target="_blank" rel="noopener">Abrir a app</a>
 </header>
 
@@ -232,7 +232,7 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
   {snaps}
   <div class="pin" id="pin">
     <div class="hero" id="hero">
-      <img src="{img('estrela_parabens_circulo.svg')}" alt="A estrela da À Nossa! a celebrar">
+      <img src="{img('estrela_parabens.svg')}" alt="A estrela da À Nossa! a celebrar">
       <h1>À Nossa!</h1>
       <p>O teu evento, num só lugar.</p>
     </div>
@@ -258,7 +258,7 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
 </section>
 
 <section class="band cta">
-  <img src="{img('estrela_parabens_circulo.svg')}" alt="">
+  <img src="{img('estrela_parabens.svg')}" alt="">
   <h2>À Nossa!</h2>
   <p>Para todas as festas.</p>
   <a class="btn" href="{APP}" target="_blank" rel="noopener">Abrir a app</a>
@@ -308,7 +308,7 @@ function frame() {{
   const bgc = bgAt(p);
   document.body.style.background = bgc;
   document.documentElement.style.setProperty('--bgc', bgc);
-  top_.classList.toggle('ink', p > .3);
+  top_.classList.add('ink');
   // abertura
   const h = ss(.02, .4, p);
   $('hero').style.opacity = 1 - h; $('hero').style.transform = `translateY(${{-60 * h}}px) scale(${{1 - .08 * h}})`;
