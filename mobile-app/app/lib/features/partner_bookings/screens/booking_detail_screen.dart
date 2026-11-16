@@ -128,7 +128,7 @@ Expanded(child: ScrollingHeader(
                             switch (booking.status) {
                               BookingStatus.novo => const KitTag('Por responder', kind: KitTagKind.pending),
                               BookingStatus.emAnalise => const KitTag('Em análise', kind: KitTagKind.neutral),
-                              BookingStatus.aceite => const KitTag('À espera do sinal', kind: KitTagKind.pending),
+                              BookingStatus.aceite => const KitTag('À espera do pagamento', kind: KitTagKind.pending),
                               BookingStatus.confirmado => const KitTag('Reserva confirmada'),
                               BookingStatus.concluido => const KitTag('Concluído', kind: KitTagKind.neutral),
                               BookingStatus.recusado => const KitTag('Recusado', kind: KitTagKind.neutral),
@@ -224,7 +224,7 @@ Expanded(child: ScrollingHeader(
                                       SnackBar(
                                           content: Text(booking.eachPays
                                               ? 'Pedido aceite. Fica reservado e cada convidado paga a sua parte.'
-                                              : 'Pedido aceite. Fica reservado e o cliente paga o sinal.')),
+                                              : 'Pedido aceite. O cliente paga para confirmar.')),
                                     );
                                     context.pop();
                                   }
@@ -242,7 +242,7 @@ Expanded(child: ScrollingHeader(
                       child: Text(
                           booking.eachPays
                               ? 'Fica reservado. Cada convidado paga ${euros((booking.totalAmount ?? 0) / ((booking.people ?? 1) < 1 ? 1 : booking.people!))} na app, 3 dias antes.'
-                              : 'Ao aceitar, fica reservado e o cliente paga o sinal.',
+                              : 'Ao aceitar, o cliente paga para confirmar a reserva.',
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                     ),

@@ -344,7 +344,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
   void _acceptedFeedback() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Proposta aceite! Paga o sinal para confirmar.'),
+        content: const Text('Proposta aceite! Paga para confirmar.'),
         action: SnackBarAction(
           label: 'Pagar',
           onPressed: () => _openPay(
@@ -425,7 +425,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
                       : e.code == 'P0010'
                           ? PartnerUnavailableException.message
                       : e.code == 'P0008'
-                          ? 'Já tens uma reserva com este parceiro. Só podes aceitar outra se essa for cancelada sem o sinal pago.'
+                          ? 'Já tens uma reserva com este parceiro. Só podes aceitar outra se essa for cancelada sem nada pago.'
                           : 'Não foi possível aceitar a proposta. Tenta novamente.',
             ),
           ),

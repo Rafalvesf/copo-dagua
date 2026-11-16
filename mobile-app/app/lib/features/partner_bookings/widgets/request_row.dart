@@ -87,7 +87,7 @@ class RequestRow extends StatelessWidget {
     return switch (booking.status) {
       BookingStatus.novo => 'Por responder',
       BookingStatus.emAnalise => 'Em análise',
-      BookingStatus.aceite => 'À espera do sinal',
+      BookingStatus.aceite => 'À espera do pagamento',
       BookingStatus.confirmado => 'Reserva confirmada',
       BookingStatus.concluido => 'Concluído',
       BookingStatus.recusado => 'Recusado',

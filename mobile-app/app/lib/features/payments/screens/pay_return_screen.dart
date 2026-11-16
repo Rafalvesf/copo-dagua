@@ -65,9 +65,10 @@ class _PayReturnScreenState extends ConsumerState<PayReturnScreen> {
           .eq('id', id)
           .maybeSingle();
       partner = (row?['partner_profiles'] as Map?)?['business_name'] as String? ?? partner;
-      title = row?['type'] == 'deposit' ? 'Sinal' : 'Restante';
       final base = (row?['amount'] as num?)?.toDouble() ?? 0;
       final total = ((row?['bookings'] as Map?)?['total_amount'] as num?)?.toDouble() ?? base;
+      // 191: sem sinal (categoria) — o «sinal» é o valor todo.
+      title = row?['type'] == 'deposit' ? (total > 0 && base >= total ? 'Pagamento' : 'Sinal') : 'Restante';
       final pid = row?['partner_id'] as String?;
       final cfg = pid == null
           ? await ref.read(organizerFeeConfigProvider.future)

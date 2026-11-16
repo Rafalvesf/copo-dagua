@@ -1,8 +1,24 @@
 import 'package:flutter/widgets.dart' show BuildContext;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, FunctionResponse;
 
 import '../supabase/supabase_config.dart';
 import '../home/home_providers.dart' show CheckoutUnavailable;
+
+/// 191: o «sinal» desta reserva é o valor todo (categorias sem sinal —
+/// restaurantes, flores, bolos…): paga-se tudo de uma vez.
+final paymentIsFullProvider = FutureProvider.autoDispose.family<bool, String>((ref, paymentId) async {
+  try {
+    final r = await supabase.from('payments').select('type, bookings(total_amount, deposit_amount)').eq('id', paymentId).maybeSingle();
+    final b = r?['bookings'] as Map?;
+    if (r?['type'] != 'deposit' || b == null) return false;
+    final total = (b['total_amount'] as num?)?.toDouble() ?? 0;
+    final dep = (b['deposit_amount'] as num?)?.toDouble() ?? 0;
+    return total > 0 && dep >= total;
+  } catch (_) {
+    return false;
+  }
+});
 
 /// Métodos do ecrã de seleção (têm de estar ativos na conta Stripe).
 /// [wallet] só aparece quando o telemóvel tem Apple Pay ou Google Pay.

@@ -55,6 +55,9 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   Timer? _poll;
 
   PayArgs get a => widget.args;
+
+  /// 191: sem sinal nesta categoria — paga-se tudo de uma vez.
+  bool get _full => a.isBooking && a.kind == 'deposit' && (ref.watch(paymentIsFullProvider(a.paymentId)).value ?? false);
   String get _amountLabel => euros((_amountCents ?? (a.amount * 100).round()) / 100, cents: true);
   String? get _email => ref.read(authControllerProvider).profile?.email;
   String get _walletName => _wallet == 'apple_pay' ? 'Apple Pay' : 'Google Pay';
@@ -361,8 +364,12 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         _Step.mbWayPhone => 'MB WAY',
         _Step.mbWayWaiting => 'Aprova na app MB WAY',
         _Step.multibanco => 'Referência Multibanco',
-        _Step.done => '${a.title} pago',
-        _ => a.isGuestShare ? 'Pagar a tua parte' : a.isBooking ? (a.kind == 'deposit' ? 'Pagar sinal' : 'Pagar o resto') : 'Pagar',
+        _Step.done => _full ? 'Pago' : '${a.title} pago',
+        _ => a.isGuestShare
+            ? 'Pagar a tua parte'
+            : a.isBooking
+                ? (a.kind == 'deposit' ? (_full ? 'Pagar' : 'Pagar sinal') : 'Pagar o resto')
+                : 'Pagar',
       };
 
   bool get _canGoBack =>
@@ -622,7 +629,9 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                 ? 'A tua parte a ${a.partnerName} está paga.'
                 : a.isBooking
                 ? (a.kind == 'deposit'
-                    ? '${a.partnerName} está reservado. O resto paga-se até 30 dias antes.'
+                    ? (_full
+                        ? '${a.partnerName} está reservado e pago.'
+                        : '${a.partnerName} está reservado. O resto paga-se até 30 dias antes.')
                     : 'Está tudo pago a ${a.partnerName}.')
                 : 'Pagamento feito.',
             textAlign: TextAlign.center,
@@ -677,7 +686,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           button = _SheetButton(label: _method == PayMethod.card ? 'Pagar $_amountLabel' : 'Continuar', onTap: _continue);
         }
         extras.add(const _SecureNote('Pagamento seguro pela Stripe, dentro da app.'));
-        if (a.isBooking && !a.isGuestShare) extras.add(_CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit'));
+        if (a.isBooking && !a.isGuestShare) extras.add(_CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit' && !_full));
       case _Step.card:
         button = _SheetButton(label: 'Pagar $_amountLabel', onTap: _cardMounted && _card.complete ? _payCard : null);
         extras.add(const _SecureNote('O número do cartão vai direto para a Stripe.'));

@@ -815,7 +815,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                 ? '${widget.partner.name} envia uma proposta com o preço final.'
                                 : _eachPays
                                     ? 'Cada convidado paga ${euros(total / people)} na app, 3 dias antes. ${widget.partner.name} aceita ou recusa.'
-                                    : '${widget.partner.name} aceita ou recusa. Se aceitar, fica reservado e pagas o sinal.',
+                                    : '${widget.partner.name} aceita ou recusa. Se aceitar, pagas para confirmar.',
                             textAlign: TextAlign.center,
                             style: const TextStyle(fontSize: 13, color: muted),
                           ),

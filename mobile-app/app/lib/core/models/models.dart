@@ -1388,6 +1388,9 @@ class CoupleBooking {
   final String? pendingDepositPaymentId;
   final double? depositAmount;
 
+  /// 191: sem sinal nesta categoria — o primeiro pagamento é o valor todo.
+  bool get depositIsFull => amount > 0 && (depositAmount ?? 0) >= amount;
+
   /// Prazo do sinal pendente (`payments.due_at`) — para os "Pagamentos
   /// próximos" do menu.
   final DateTime? pendingDepositDueAt;
