@@ -223,7 +223,7 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
 </style>
 
 <header class="top" id="top">
-  <a class="brand" href="#"><img src="{img('glass_gold.png')}" alt="">À Nossa!</a>
+  <a class="brand" href="#"><img src="{img('estrela_parabens_circulo.svg')}" alt="">À Nossa!</a>
   <a class="btn" href="{APP}" target="_blank" rel="noopener">Abrir a app</a>
 </header>
 
@@ -232,7 +232,7 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
   {snaps}
   <div class="pin" id="pin">
     <div class="hero" id="hero">
-      <img src="{img('duo_clink.png')}" alt="Duas taças a brindar">
+      <img src="{img('estrela_parabens_circulo.svg')}" alt="A estrela da À Nossa! a celebrar">
       <h1>À Nossa!</h1>
       <p>O teu evento, num só lugar.</p>
     </div>
@@ -258,7 +258,7 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
 </section>
 
 <section class="band cta">
-  <img src="{img('duo_clink.png')}" alt="">
+  <img src="{img('estrela_parabens_circulo.svg')}" alt="">
   <h2>À Nossa!</h2>
   <p>Para todas as festas.</p>
   <a class="btn" href="{APP}" target="_blank" rel="noopener">Abrir a app</a>
