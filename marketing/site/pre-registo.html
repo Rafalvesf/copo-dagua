@@ -89,7 +89,7 @@ footer { text-align: center; font-size: 13px; color: var(--muted); padding: 18px
     <div class="pre-step" data-step="3" hidden>
       <span class="pre-caps">3 DE 4</span>
       <h3>De onde és?</h3>
-      <p>Para te mostrar parceiros e eventos perto de ti.</p>
+      <p id="preS3">Para te mostrar parceiros e eventos perto de ti.</p>
       <label class="pre-lbl" id="preBizL" hidden>NOME DO NEGÓCIO<input name="business" autocomplete="organization" maxlength="80"></label>
       <label class="pre-lbl">PAÍS<input name="country" value="Portugal" autocomplete="country-name" maxlength="60"></label>
       <label class="pre-lbl">CIDADE OU REGIÃO<input name="city" autocomplete="address-level2" maxlength="80" placeholder="Ex.: Lisboa"></label>
@@ -162,6 +162,7 @@ footer { text-align: center; font-size: 13px; color: var(--muted); padding: 18px
     $('preQ2').textContent = partner ? 'O que fazes?' : 'Que tipos de eventos gostavas de organizar?';
     $('preS2').textContent = partner ? 'Escolhe as categorias do teu negócio.' : 'Escolhe os que quiseres. Mostramos-te ideias e parceiros a pensar nisso.';
     $('preBizL').hidden = !partner; $('preAgeW').hidden = partner;
+    $('preS3').textContent = partner ? 'Para te apresentar aos organizadores de eventos perto de ti.' : 'Para te mostrar parceiros e eventos perto de ti.';
   }
   [].forEach.call(f.querySelectorAll('.pre-opt'), function (b) {
     b.onclick = function () {

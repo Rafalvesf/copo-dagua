@@ -66,9 +66,9 @@ const DEFAULT_SUBJECT = {
 
 const DEFAULT_BODY = {
   organizador:
-    "Olá {primeiro_nome},\n\nObrigado pelo pré-registo na À Nossa!. Vimos que gostavas de organizar {eventos} em {cidade}.\n\nAvisamos-te assim que a app estiver nas lojas.\n\nAté já,\nRafael",
+    "Olá {primeiro_nome},\n\nObrigado pelo pré-registo na À Nossa!. Vimos que gostavas de organizar {eventos}, na zona de {cidade}.\n\nAvisamos-te assim que a app estiver nas lojas.\n\nAté já,\nRafael",
   parceiro:
-    "Olá {primeiro_nome},\n\nObrigado por registares {negocio} na À Nossa!. Vimos que trabalhas em {categorias} em {cidade}.\n\nOs primeiros 100 parceiros ficam Parceiros Fundadores, com 3 meses sem taxa de serviço. Avisamos-te assim que a app estiver nas lojas.\n\nAté já,\nRafael",
+    "Olá {primeiro_nome},\n\nObrigado por registares {negocio} na À Nossa!. Vimos que trabalhas em {categorias}, na zona de {cidade}.\n\nOs primeiros 100 parceiros ficam Parceiros Fundadores, com 3 meses sem taxa de serviço. Avisamos-te assim que a app estiver nas lojas.\n\nAté já,\nRafael",
 };
 
 const FIELDS = {
@@ -92,12 +92,45 @@ const FIELDS = {
   ],
 };
 
+// Como cada escolha do site se lê numa frase («trabalhas em restauração e
+// fotografia», «organizar casamentos e jantares»). «Outro» fica de fora.
+const PHRASE: Record<string, string> = {
+  restaurante: "restauração",
+  bar: "bares",
+  espaço: "espaços para eventos",
+  catering: "catering",
+  fotografia: "fotografia",
+  "música e dj": "música e DJ",
+  "flores e decoração": "flores e decoração",
+  bolos: "bolos e pastelaria",
+  convites: "convites",
+  animação: "animação",
+  aluguer: "aluguer de material",
+  transporte: "transportes",
+  casamento: "casamentos",
+  aniversário: "aniversários",
+  batizado: "batizados",
+  festa: "festas",
+  despedida: "despedidas",
+  "evento de empresa": "eventos de empresa",
+  jantar: "jantares",
+};
+
+export function phrases(items: string[] | null) {
+  return (items ?? [])
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => s && s !== "outro")
+    .map((s) => PHRASE[s] ?? s);
+}
+
+export function joinPt(items: string[]) {
+  return items.length <= 1
+    ? items.join("")
+    : `${items.slice(0, -1).join(", ")} e ${items.at(-1)}`;
+}
+
 function fill(tpl: string, r: Signup) {
-  const interests = (r.interests ?? []).map((s) => s.toLowerCase());
-  const list =
-    interests.length <= 1
-      ? interests.join("")
-      : `${interests.slice(0, -1).join(", ")} e ${interests.at(-1)}`;
+  const list = joinPt(phrases(r.interests));
   const vals: Record<string, string> = {
     nome: r.name ?? "",
     primeiro_nome: (r.name ?? "").split(/\s+/)[0] ?? "",
@@ -129,7 +162,8 @@ export const EXPORT_HEAD = [
 const ORG_HEAD = ["Nome", "Tipo de Evento", "Cidade", "Contacto"];
 
 function exportRow(kind: "organizador" | "parceiro", r: Signup) {
-  const types = (r.interests ?? []).join(", ");
+  const p = joinPt(phrases(r.interests));
+  const types = p ? p[0].toUpperCase() + p.slice(1) : "";
   return kind === "parceiro"
     ? [r.name ?? "", types, r.business_name ?? "", r.email]
     : [r.name ?? "", types, r.city ?? "", r.email];
