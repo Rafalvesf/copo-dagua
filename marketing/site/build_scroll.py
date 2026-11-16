@@ -189,6 +189,20 @@ h1, h2 {{ margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance;
 .cta h2 {{ font-size: clamp(54px, 9vw, 110px); letter-spacing: -3px; margin-top: 8px; }}
 .cta p {{ font-size: 20px; opacity: .9; margin: 6px 0 28px; }}
 .cta .btn {{ background: #fff; color: var(--euc); }}
+.news {{ max-width: 520px; margin: 34px auto 0; display: flex; flex-direction: column; gap: 12px; text-align: left; }}
+.news b {{ font-size: 18px; text-align: center; }}
+.news-kind {{ display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }}
+.news-kind input {{ position: absolute; opacity: 0; pointer-events: none; }}
+.news-kind span {{ display: inline-flex; align-items: center; height: 38px; padding: 0 16px; border-radius: 19px; background: rgba(255,255,255,.14); font-size: 14px; font-weight: 700; cursor: pointer; }}
+.news-kind input:checked + span {{ background: #fff; color: var(--euc); }}
+.news-kind input:focus-visible + span {{ outline: 3px solid var(--gold); outline-offset: 2px; }}
+.news-row {{ display: flex; gap: 8px; flex-wrap: wrap; }}
+.news-row input {{ flex: 1 1 220px; min-width: 0; height: 52px; border: 0; border-radius: 26px; padding: 0 20px; font: inherit; font-size: 15px; color: #171713; }}
+.news-row button {{ flex: 0 0 auto; height: 52px; padding: 0 22px; border: 0; border-radius: 26px; background: #171713; color: #fff; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }}
+.news-row button[disabled] {{ opacity: .6; cursor: default; }}
+@media (max-width: 480px) {{ .news-row button {{ flex: 1 1 100%; }} }}
+.news-sub {{ font-size: 14px; opacity: .9; text-align: center; margin-top: -6px; }}
+.news small {{ font-size: 13px; opacity: .85; text-align: center; }}
 footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; padding: 18px max(20px, env(safe-area-inset-right, 0px)) 18px max(20px, env(safe-area-inset-left, 0px));
   display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }}
 
@@ -253,6 +267,19 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
   <h2>À Nossa!</h2>
   <p>Para todas as festas.</p>
   <a class="btn" href="{APP}" target="_blank" rel="noopener">Abrir a app</a>
+  <form class="news" id="news" novalidate>
+    <b>Faz já o teu pré-registo</b>
+    <span class="news-sub">A app está quase nas lojas. Deixa o email e avisamos-te primeiro.</span>
+    <div class="news-kind" role="radiogroup" aria-label="Sou">
+      <label><input type="radio" name="kind" value="organizador" checked><span>Organizo eventos</span></label>
+      <label><input type="radio" name="kind" value="parceiro"><span>Sou parceiro</span></label>
+    </div>
+    <div class="news-row">
+      <input type="email" name="email" placeholder="O teu email" autocomplete="email" required aria-label="Email">
+      <button type="submit">Pré-registar</button>
+    </div>
+    <small id="newsMsg">Só usamos o teu email para te avisar do lançamento e das novidades da À Nossa!.</small>
+  </form>
 </section>
 </main>
 <footer><span>© 2026 À Nossa!</span><span>Feito em Portugal · Funciona no telemóvel e no computador</span></footer>
@@ -395,6 +422,31 @@ addEventListener('touchend', () => {{ touching = false; clearTimeout(idle); idle
 addEventListener('wheel', () => {{ anim = null; }}, {{ passive: true }});
 addEventListener('resize', tick);
 tick();
+</script>
+<script>
+(function () {{
+  var f = document.getElementById('news');
+  if (!f) return;
+  var msg = document.getElementById('newsMsg');
+  f.addEventListener('submit', function (e) {{
+    e.preventDefault();
+    var email = f.email.value.trim();
+    var kind = (f.querySelector('input[name=kind]:checked') || {{}}).value || 'organizador';
+    if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) {{ msg.textContent = 'Escreve um email válido.'; f.email.focus(); return; }}
+    var b = f.querySelector('button'); b.disabled = true; msg.textContent = 'A guardar…';
+    fetch('https://yknbtsmcmjxzzhijyiav.supabase.co/rest/v1/rpc/newsletter_signup', {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/json', apikey: 'sb_publishable_TkmeAQOlKuN4kUii5i70Rg_Qiz8D7cc' }},
+      body: JSON.stringify({{ p_email: email, p_kind: kind, p_source: 'site' }})
+    }}).then(function (r) {{
+      if (!r.ok) throw new Error(r.status);
+      f.querySelector('.news-row').hidden = true; f.querySelector('.news-kind').hidden = true;
+      msg.textContent = 'Pré-registo feito! Avisamos-te quando a À Nossa! sair nas lojas.';
+    }}).catch(function () {{
+      b.disabled = false; msg.textContent = 'Não foi possível guardar. Tenta outra vez.';
+    }});
+  }});
+}})();
 </script>
 """
 
