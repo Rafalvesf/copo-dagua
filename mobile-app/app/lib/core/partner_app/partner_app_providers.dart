@@ -63,7 +63,9 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
   final bookingFuture = supabase
       .from('bookings')
       .select(
-        'id, partner_id, wedding_id, couple_id, event_date, status, profiles(full_name, avatar_url), proposals(title), weddings(location, partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
+        // `*` para apanhar as colunas da 190 (choice_mode, payer_mode,
+        // people) sem falhar antes de a migração correr.
+        '*, profiles(full_name, avatar_url), proposals(title), weddings(location, partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
       )
       .eq('partner_id', partnerId)
       .order('event_date', ascending: false)
@@ -119,6 +121,8 @@ Booking _bookingFromQuoteRequestRow(
     extrasSnapshot: [for (final e in (row['extras_snapshot'] as List?) ?? const []) if (e is Map) e.cast<String, dynamic>()],
     people: row['people'] as int?,
     totalAmount: (row['total_amount'] as num?)?.toDouble(),
+    choiceMode: (row['choice_mode'] as String?) ?? 'same',
+    payerMode: (row['payer_mode'] as String?) ?? 'organizer',
     id: row['id'] as String,
     partnerId: row['partner_id'] as String,
     weddingId: row['wedding_id'] as String,
@@ -161,6 +165,11 @@ Booking _bookingFromBookingRow(Map<String, dynamic> row, String? category) {
     eventType: EventType.fromDb(wedding?['event_type'] as String?),
     clientAvatarUrl: _clientAvatar(wedding, couple),
     fromQuoteRequest: false,
+    people: (row['people'] as num?)?.toInt(),
+    totalAmount: (row['total_amount'] as num?)?.toDouble(),
+    choiceMode: (row['choice_mode'] as String?) ?? 'same',
+    payerMode: (row['payer_mode'] as String?) ?? 'organizer',
+    choiceDeadline: row['choice_deadline'] == null ? null : DateTime.tryParse(row['choice_deadline'] as String),
   );
 }
 

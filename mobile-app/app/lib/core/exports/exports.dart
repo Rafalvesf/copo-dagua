@@ -169,7 +169,7 @@ const _bookingStatus = {
   'payment_overdue': 'Pagamento em atraso',
   'disputed': 'Em disputa',
 };
-const _paymentType = {'deposit': 'Sinal', 'final_payment': 'Pagamento final'};
+const _paymentType = {'deposit': 'Sinal', 'final_payment': 'Pagamento final', 'guest_share': 'Parte de convidado'};
 const _paymentStatus = {'paid': 'Pago', 'pending': 'Pendente', 'failed': 'Falhou', 'refunded': 'Reembolsado'};
 
 double _num(Object? v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0;

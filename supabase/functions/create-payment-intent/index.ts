@@ -87,7 +87,9 @@ Deno.serve(async (req) => {
   if (paymentError || !payment) return json({ error: "not_found" }, 404);
   if (payment.payer_id !== user.id) return json({ error: "forbidden" }, 403);
   if (
-    (payment.type !== "deposit" && payment.type !== "final_payment") ||
+    // `guest_share` (190): a parte de um convidado quando «cada um paga
+    // o seu». O convidado é o `payer_id`; o resto é igual ao restante.
+    (payment.type !== "deposit" && payment.type !== "final_payment" && payment.type !== "guest_share") ||
     payment.status !== "pending"
   ) {
     return json({ error: "invalid_state" }, 409);
@@ -222,7 +224,7 @@ Deno.serve(async (req) => {
     ) + Math.round((partnerAmountCents * promoExtraPct) / 100) + fixedCents,
   );
   const bookingNumber = (payment.bookings as unknown as { booking_number: string } | null)?.booking_number ?? "";
-  const label = payment.type === "deposit" ? "Sinal" : "Pagamento final";
+  const label = payment.type === "deposit" ? "Sinal" : payment.type === "guest_share" ? "A tua parte" : "Pagamento final";
 
   // Sinal pago com cartão (Apple Pay e Google Pay incluídos) fica CATIVO
   // durante a janela de reembolso (2026-11-08): só é cobrado quando ela

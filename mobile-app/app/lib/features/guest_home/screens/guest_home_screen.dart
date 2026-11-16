@@ -291,6 +291,8 @@ class _GuestHomeBody extends ConsumerWidget {
           const SizedBox(height: 14),
           GuestPlaceCard(wedding: wedding),
         ] else ...[
+          // Menu por escolher / parte por pagar (190), antes da resposta.
+          GuestTablesAlerts(weddingId: wedding.weddingId),
           if (guest != null) ...[
             const SizedBox(height: 4),
             GuestAnswerCard(guest: guest, weddingId: wedding.weddingId),

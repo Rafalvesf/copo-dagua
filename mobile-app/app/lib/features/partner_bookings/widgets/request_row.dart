@@ -108,7 +108,10 @@ class RequestRow extends StatelessWidget {
         // 188: num pedido de pacote mostra o pacote e o nº de pessoas.
         sub: [
           meta,
-          if (booking.isPackageRequest) ...[
+          if (booking.canAcceptTable) ...[
+            'Mesa · cada um escolhe',
+            if (booking.people != null) '${booking.people} p.',
+          ] else if (booking.isPackageRequest) ...[
             'Pacote ${booking.packageSnapshot!['name']}',
             if (booking.extrasSnapshot.isNotEmpty) '+ ${booking.extrasSnapshot.length} extra',
             if (booking.people != null) '${booking.people} p.',

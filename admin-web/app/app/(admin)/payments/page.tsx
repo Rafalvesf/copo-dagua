@@ -34,6 +34,7 @@ const PAYMENT_TYPE_LABELS: Record<string, string> = {
   installment: "Prestação",
   final_payment: "Pagamento final",
   refund: "Reembolso",
+  guest_share: "Parte de convidado",
 };
 
 export default async function PaymentsPage({ searchParams }: PageProps<"/payments">) {

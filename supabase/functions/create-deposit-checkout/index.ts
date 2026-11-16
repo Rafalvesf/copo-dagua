@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
     .select(
-      "id, booking_id, payer_id, amount, type, status, bookings(booking_number), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name)",
+      "id, booking_id, payer_id, amount, type, status, provider_payment_id, bookings(booking_number), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name)",
     )
     .eq("id", paymentId)
     .single();
@@ -90,7 +90,9 @@ Deno.serve(async (req) => {
     return jsonError("forbidden", 403);
   }
   if (
-    (payment.type !== "deposit" && payment.type !== "final_payment") ||
+    // `guest_share` (190): a parte de um convidado quando «cada um paga o
+    // seu» — o convidado é o `payer_id`, mesmo fluxo.
+    (payment.type !== "deposit" && payment.type !== "final_payment" && payment.type !== "guest_share") ||
     payment.status !== "pending"
   ) {
     return jsonError("invalid_state", 409);
@@ -144,6 +146,21 @@ Deno.serve(async (req) => {
 
   const stripe = stripeClient();
 
+  // A parte de um convidado pode mudar de valor se ele mudar de menu:
+  // fecha a sessão anterior para não se pagar o valor antigo.
+  const previousSession = payment.provider_payment_id as string | null;
+  if (payment.type === "guest_share" && previousSession?.startsWith("cs_")) {
+    try {
+      await stripe.checkout.sessions.expire(previousSession);
+    } catch (_) {
+      // Já expirada ou concluída — nada a fazer.
+    }
+  }
+
+  const productName = payment.type === "guest_share"
+    ? `A tua parte — ${partner.business_name}`
+    : `${payment.type === "deposit" ? "Sinal" : "Pagamento final"} — reserva ${bookingNumber}`.trim();
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -153,7 +170,7 @@ Deno.serve(async (req) => {
             currency: "eur",
             unit_amount: totalChargeCents,
             product_data: {
-              name: `${payment.type === "deposit" ? "Sinal" : "Pagamento final"} — reserva ${bookingNumber}`.trim(),
+              name: productName,
               description: `Parceiro: ${partner.business_name}`,
             },
           },

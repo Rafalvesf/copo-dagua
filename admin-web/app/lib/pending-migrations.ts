@@ -347,6 +347,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Cada evento tem um grupo com toda a gente; quando um convidado diz que vai ou não vai aparece no grupo com o perfil para seguir; o organizador convida quem segue dentro da app (sem link).",
     check: { kind: "marker", id: "189" },
   },
+  {
+    file: "190_each_chooses_each_pays.sql",
+    date: "2026-11-16",
+    title: "Como escolhem e quem paga (cada um escolhe e paga o seu)",
+    what: "Reservar mesa em que cada convidado escolhe o seu menu e extras na app, e «cada um paga o seu»: cada convidado paga a sua parte. Correr depois da 188.",
+    check: { kind: "marker", id: "190" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

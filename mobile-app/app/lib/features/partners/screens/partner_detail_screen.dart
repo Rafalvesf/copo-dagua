@@ -25,6 +25,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../shared/widgets/page_kit.dart' show KitCaps, KitPills, KitPill;
 import '../../../core/partners/favorite_partners_controller.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/reviews/review_providers.dart';
@@ -98,6 +99,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   final Set<String> _selectedExtras = {};
   int? _people;
   final _packageMessage = TextEditingController();
+  /// «Como escolhem» (190): falso = igual para todos (escolhe-se aqui um
+  /// menu), verdadeiro = cada um escolhe o seu na app antes de pagar.
+  bool _eachChooses = false;
+  /// «Quem paga» (190): verdadeiro = cada convidado paga a sua parte.
+  bool _eachPays = false;
 
   @override
   void dispose() {
@@ -116,6 +122,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       'Pacote "${pkg.name}"',
       if (pkg.perPerson) 'para $people pessoas',
       if (chosen.isNotEmpty) 'com ${chosen.map((e) => e.name).join(', ')}',
+      if (_eachPays) '(cada um paga o seu)',
     ].join(' ');
     final note = _packageMessage.text.trim();
     setState(() => _requestingQuote = true);
@@ -129,6 +136,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         'p_people': people,
         'p_event_date': wedding.weddingDate?.toIso8601String().split('T').first,
         'p_message': note.isEmpty ? null : note,
+        if (_eachPays) 'p_payer_mode': 'each',
       });
       try {
         await sendQuoteRequestMessage(
@@ -163,6 +171,123 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     } finally {
       if (mounted) setState(() => _requestingQuote = false);
     }
+  }
+
+  /// «Reservar mesa» (190): cada um escolhe o seu menu e extras na app.
+  /// A reserva não tem sinal; quem paga é decidido em [_eachPays].
+  Future<void> _requestTable(int people) async {
+    final wedding = ref.read(weddingControllerProvider).wedding;
+    if (wedding == null || _requestingQuote) return;
+    final note = _packageMessage.text.trim();
+    final summary = 'Mesa para $people pessoas · cada um escolhe${_eachPays ? ' e paga' : ''} o seu';
+    setState(() => _requestingQuote = true);
+    Funnel.track('quote_request_start', ref: widget.partner.id);
+    try {
+      await supabase.rpc('request_table', params: {
+        'p_partner_id': widget.partner.id,
+        'p_wedding_id': wedding.id,
+        'p_people': people,
+        'p_event_date': wedding.weddingDate?.toIso8601String().split('T').first,
+        'p_message': note.isEmpty ? null : note,
+        'p_payer_mode': _eachPays ? 'each' : 'organizer',
+      });
+      try {
+        await sendQuoteRequestMessage(
+          weddingId: wedding.id,
+          partnerId: widget.partner.id,
+          partnerName: widget.partner.name,
+          eventDate: wedding.weddingDate,
+          message: [summary, if (note.isNotEmpty) note].join('\n'),
+        );
+      } catch (_) {}
+      ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
+      if (mounted) _comingSoon('Pedido enviado! ${widget.partner.name} aceita ou recusa.');
+    } on PostgrestException catch (e) {
+      if (!mounted) return;
+      if (e.code == 'PGRST202' || e.code == '42883') {
+        setState(() => _requestingQuote = false);
+        await _requestQuote(initialMessage: 'Olá! Queremos uma ${summary.substring(0, 1).toLowerCase()}${summary.substring(1)}.${note.isEmpty ? '' : ' $note'}');
+        return;
+      }
+      final message = switch (e.code) {
+        'P0002' => 'Este parceiro já não está disponível.',
+        'P0010' => PartnerUnavailableException.message,
+        'P0003' => 'Escolhe uma data com pelo menos 7 dias de antecedência.',
+        'P0009' => 'Já fizeste um pedido a este parceiro. Só podes pedir outra vez se o pedido ou a reserva for cancelado.',
+        _ => 'Não foi possível enviar o pedido.',
+      };
+      _comingSoon(message);
+    } catch (_) {
+      if (mounted) _comingSoon('Não foi possível enviar o pedido.');
+    } finally {
+      if (mounted) setState(() => _requestingQuote = false);
+    }
+  }
+
+  Widget _tableRequest(int people, Color ink, Color muted) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Text('Esta é a carta: cada convidado escolhe o seu menu e os extras na app.',
+            textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: muted)),
+      ),
+      Padding(
+        padding: const EdgeInsets.only(top: 24, bottom: 8),
+        child: Text('MENSAGEM PARA ${widget.partner.name.toUpperCase()}',
+            maxLines: 1, overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: muted)),
+      ),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        child: TextField(
+          controller: _packageMessage,
+          minLines: 3,
+          maxLines: 5,
+          maxLength: 300,
+          style: TextStyle(fontSize: 15, color: ink),
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            filled: false,
+            hintText: 'Ex.: mesa comprida junto à janela, um aniversariante…',
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
+      Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Row(children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Mesa para $people', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
+              Text(_eachPays ? 'Cada um escolhe e paga o seu' : 'Cada um escolhe · pagam vocês',
+                  style: TextStyle(fontSize: 13, color: muted)),
+            ]),
+          ),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text('0 €', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
+            Text('agora', style: TextStyle(fontSize: 13, color: muted)),
+          ]),
+        ]),
+      ),
+      FilledButton(
+        onPressed: _requestingQuote ? null : () => _requestTable(people),
+        style: FilledButton.styleFrom(
+          backgroundColor: ink,
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(52),
+          shape: const StadiumBorder(),
+          textStyle: TextStyle(
+              fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+        child: const Text('Reservar mesa'),
+      ),
+      const SizedBox(height: 8),
+      Text('${widget.partner.name} aceita ou recusa. A escolha fecha 3 dias antes do evento.',
+          textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: muted)),
+    ]);
   }
 
   @override
@@ -322,6 +447,22 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         .watch(partnerExtrasForProvider(partner.id))
         .maybeWhen(data: (e) => e, orElse: () => const <ServiceExtra>[]);
     final weddingGuests = ref.watch(weddingControllerProvider.select((s) => s.wedding?.estimatedGuests));
+    final eventType = ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType));
+    // Menus por pessoa (restaurantes, catering): pessoas e «Como escolhem»
+    // no topo da carta (190).
+    final perPersonMenus = !widget.selectionMode && !widget.publicView && packages.any((p) => p.perPerson);
+    // «Quem paga» só em jantares e festas de grupo (empresa, aniversário,
+    // curso…); nos eventos de família paga quem organiza (2026-11-15).
+    final askWhoPays = perPersonMenus &&
+        eventType != null &&
+        !const {
+          EventType.wedding, EventType.baptism, EventType.communion,
+          EventType.engagement, EventType.vowRenewal, EventType.babyShower,
+        }.contains(eventType);
+    final selPkg = !_eachChooses && _selectedPackage != null && _selectedPackage! < packages.length ? packages[_selectedPackage!] : null;
+    final peopleMin = selPkg?.minPeople ?? 1;
+    final peopleMax = selPkg?.maxPeople ?? 9999;
+    final topPeople = (_people ?? weddingGuests ?? peopleMin).clamp(peopleMin, peopleMax);
     final portfolio = ref
         .watch(partnerPortfolioForProvider(partner.id))
         .maybeWhen(data: (p) => p, orElse: () => const <PortfolioItem>[]);
@@ -492,26 +633,86 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    // Menus por pessoa (mockup «Restaurante · perfil»): pessoas,
+                    // «Como escolhem» e «Quem paga» antes da carta (190).
+                    if (perPersonMenus) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                        child: Row(children: [
+                          const Expanded(
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text('Para quantas pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
+                              Text('Do teu evento · podes mudar', style: TextStyle(fontSize: 13, color: muted)),
+                            ]),
+                          ),
+                          _StepButton(icon: Hi.minus, onTap: topPeople > peopleMin ? () => setState(() => _people = topPeople - 1) : null),
+                          SizedBox(width: 44, child: Text('$topPeople', textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink))),
+                          _StepButton(icon: Hi.plus, onTap: topPeople < peopleMax ? () => setState(() => _people = topPeople + 1) : null),
+                        ]),
+                      ),
+                      const KitCaps('Como escolhem'),
+                      KitPills([
+                        KitPill(label: 'Igual para todos', selected: !_eachChooses, onTap: () => setState(() => _eachChooses = false)),
+                        KitPill(
+                          label: 'Cada um escolhe',
+                          selected: _eachChooses,
+                          onTap: () => setState(() {
+                            _eachChooses = true;
+                            _selectedPackage = null;
+                            _selectedExtras.clear();
+                          }),
+                        ),
+                      ], top: 0),
+                      if (_eachChooses)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text('Reservam a mesa e cada convidado escolhe o seu menu e extras na app, antes de pagar.',
+                              style: TextStyle(fontSize: 13, color: muted)),
+                        ),
+                      if (askWhoPays) ...[
+                        const KitCaps('Quem paga'),
+                        KitPills([
+                          KitPill(label: 'Pagamos nós', selected: !_eachPays, onTap: () => setState(() => _eachPays = false)),
+                          KitPill(label: 'Cada um paga o seu', selected: _eachPays, onTap: () => setState(() => _eachPays = true)),
+                        ], top: 0),
+                        if (_eachPays)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              _eachChooses
+                                  ? 'Cada convidado paga a sua parte na app quando escolhe. A reserva é grátis.'
+                                  : 'Cada convidado paga a sua parte na app. O pedido de pagamento chega 3 dias antes.',
+                              style: const TextStyle(fontSize: 13, color: muted),
+                            ),
+                          ),
+                      ],
+                      const SizedBox(height: 16),
+                    ],
                     for (var i = 0; i < packages.length; i++)
                       Padding(
                         padding: EdgeInsets.only(top: i == 0 ? 0 : 10),
-                        child: _PackageCard(
+                        child: PackageChoiceCard(
                           package: packages[i],
-                          selected: _selectedPackage == i,
+                          selected: !_eachChooses && _selectedPackage == i,
                           onTap: widget.selectionMode
                               ? null
                               : pub
                                   ? _needAccount
                                   : alreadyRelated
                                       ? _openChat
-                                      : () => setState(() => _selectedPackage = _selectedPackage == i ? null : i),
+                                      : _eachChooses
+                                          ? null
+                                          : () => setState(() => _selectedPackage = _selectedPackage == i ? null : i),
                         ),
                       ),
-                    if (!widget.selectionMode && !alreadyRelated && _selectedPackage != null && _selectedPackage! < packages.length)
+                    if (_eachChooses && !widget.selectionMode && !alreadyRelated)
+                      _tableRequest(topPeople, ink, muted),
+                    if (!_eachChooses && !widget.selectionMode && !alreadyRelated && _selectedPackage != null && _selectedPackage! < packages.length)
                       Builder(builder: (context) {
                         final p = packages[_selectedPackage!];
                         final pkgExtras = extras.where((e) => e.appliesTo(p.id)).toList();
-                        final people = (_people ?? weddingGuests ?? p.minPeople ?? 1)
+                        final people = perPersonMenus ? topPeople : (_people ?? weddingGuests ?? p.minPeople ?? 1)
                             .clamp(p.minPeople ?? 1, p.maxPeople ?? 9999);
                         double each(String unit, double price) => unit == 'person' ? price * people : price;
                         final total = each(p.priceUnit, p.price) +
@@ -520,7 +721,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         TextStyle btn(double size) => TextStyle(
                             fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: size, fontWeight: FontWeight.w700);
                         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                          if (p.perPerson || pkgExtras.any((e) => e.priceUnit == 'person')) ...[
+                          if (!perPersonMenus && (p.perPerson || pkgExtras.any((e) => e.priceUnit == 'person'))) ...[
                             const SizedBox(height: 16),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -550,7 +751,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
                               child: Column(children: [
                                 for (var i = 0; i < pkgExtras.length; i++)
-                                  _ExtraRow(
+                                  ExtraChoiceRow(
                                     extra: pkgExtras[i],
                                     on: _selectedExtras.contains(pkgExtras[i].id),
                                     last: i == pkgExtras.length - 1,
@@ -612,7 +813,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                           Text(
                             p.isStartingPrice
                                 ? '${widget.partner.name} envia uma proposta com o preço final.'
-                                : '${widget.partner.name} aceita ou recusa. Se aceitar, fica reservado e pagas o sinal.',
+                                : _eachPays
+                                    ? 'Cada convidado paga ${euros(total / people)} na app, 3 dias antes. ${widget.partner.name} aceita ou recusa.'
+                                    : '${widget.partner.name} aceita ou recusa. Se aceitar, fica reservado e pagas o sinal.',
                             textAlign: TextAlign.center,
                             style: const TextStyle(fontSize: 13, color: muted),
                           ),
@@ -1170,11 +1373,11 @@ class _PartnerUnavailable extends StatelessWidget {
 
 /// Cartão de um pacote no perfil (mockup «Perfis dos parceiros»,
 /// 2026-11-15): branco com o círculo por escolher; verde quando escolhido.
-class _PackageCard extends StatelessWidget {
+class PackageChoiceCard extends StatelessWidget {
   final ServicePackage package;
   final bool selected;
   final VoidCallback? onTap;
-  const _PackageCard({required this.package, required this.selected, this.onTap});
+  const PackageChoiceCard({required this.package, required this.selected, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1263,12 +1466,12 @@ class _StepButton extends StatelessWidget {
 }
 
 /// Linha de um extra: nome, o que é, preço e o botão + / ✓ (188).
-class _ExtraRow extends StatelessWidget {
+class ExtraChoiceRow extends StatelessWidget {
   final ServiceExtra extra;
   final bool on;
   final bool last;
   final VoidCallback onTap;
-  const _ExtraRow({required this.extra, required this.on, required this.last, required this.onTap});
+  const ExtraChoiceRow({required this.extra, required this.on, required this.last, required this.onTap});
 
   @override
   Widget build(BuildContext context) => Semantics(

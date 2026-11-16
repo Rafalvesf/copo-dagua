@@ -208,7 +208,7 @@ export type PlatformSettings = {
 export type AdminRole = "super_admin" | "admin" | "support" | "finance" | "moderator";
 
 // Mirrors database/migrations/020_payments.sql.
-export type PaymentType = "deposit" | "installment" | "final_payment" | "refund";
+export type PaymentType = "deposit" | "installment" | "final_payment" | "refund" | "guest_share";
 export type PaymentStatus = "pending" | "paid" | "overdue" | "refunded" | "failed";
 
 export type Payment = {
