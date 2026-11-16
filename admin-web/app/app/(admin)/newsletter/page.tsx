@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Empty, FilterTabs, PageHeader } from "@/components/ui";
 import { SignupsSheet, type Signup } from "./SignupsSheet";
-import type { Template } from "./EmailComposer";
+import type { Design } from "./EmailComposer";
 import { BulkExport } from "./BulkExport";
 
 // Pré-registos do site (migração 195), separados em organizadores e
@@ -25,12 +25,12 @@ export default async function NewsletterPage({
   const partners = all.filter((r) => r.kind === "parceiro");
   const organizers = all.filter((r) => r.kind !== "parceiro");
   const rows = kind === "parceiro" ? partners : organizers;
-  const { data: tpl, error: tplError } = await supabase
-    .from("newsletter_templates")
-    .select("subject, body, button_label, button_url")
+  const { data: designs, error: designsError } = await supabase
+    .from("newsletter_designs")
+    .select("id, name, subject, blocks")
     .eq("kind", kind)
-    .maybeSingle();
-  const ready = !tplError;
+    .order("updated_at", { ascending: false });
+  const ready = !designsError;
 
   return (
     <div className="page">
@@ -81,7 +81,7 @@ export default async function NewsletterPage({
           key={kind}
           kind={kind}
           rows={rows}
-          template={(tpl as Template | null) ?? null}
+          designs={(designs ?? []) as Design[]}
           ready={ready}
         />
       )}

@@ -2,30 +2,68 @@
 
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { NL_FIELDS, nlRender, type NlKind } from "@/lib/newsletter-email";
-import { saveNewsletterTemplate, sendNewsletter } from "./actions";
+import { createClient } from "@/lib/supabase/client";
+import {
+  NL_FIELDS,
+  nlRender,
+  type NlBlock,
+  type NlKind,
+} from "@/lib/newsletter-email";
+import {
+  deleteNewsletterDesign,
+  saveNewsletterDesign,
+  sendNewsletter,
+} from "./actions";
 import type { Signup } from "./SignupsSheet";
 
-export type Template = {
+export type Design = {
+  id: string;
+  name: string;
   subject: string;
-  body: string;
-  button_label: string | null;
-  button_url: string | null;
+  blocks: NlBlock[];
 };
 
-export const DEFAULT_TEMPLATE: Record<NlKind, Template> = {
+const DEFAULTS: Record<NlKind, Omit<Design, "id">> = {
   organizador: {
+    name: "Boas-vindas",
     subject: "A À Nossa! está quase a chegar",
-    body: "Olá {primeiro_nome},\n\nObrigado pelo pré-registo na À Nossa!. Vimos que gostavas de organizar {eventos}, na zona de {cidade}.\n\nAvisamos-te assim que a app estiver nas lojas.\n\nAté já,\nRafael",
-    button_label: null,
-    button_url: null,
+    blocks: [
+      { type: "title", text: "Olá {primeiro_nome}!" },
+      {
+        type: "text",
+        text: "Obrigado pelo pré-registo na À Nossa!. Vimos que gostavas de organizar {eventos}, na zona de {cidade}.\n\nAvisamos-te assim que a app estiver nas lojas.",
+      },
+      { type: "text", text: "Até já,\nRafael" },
+    ],
   },
   parceiro: {
+    name: "Boas-vindas",
     subject: "{negocio} na À Nossa!",
-    body: "Olá {primeiro_nome},\n\nObrigado por registares {negocio} na À Nossa!. Vimos que trabalhas em {categorias}, na zona de {cidade}.\n\nOs primeiros 100 parceiros ficam **Parceiros Fundadores**, com 3 meses sem taxa de serviço. Avisamos-te assim que a app estiver nas lojas.\n\nAté já,\nRafael",
-    button_label: null,
-    button_url: null,
+    blocks: [
+      { type: "title", text: "Olá {primeiro_nome}!" },
+      {
+        type: "text",
+        text: "Obrigado por registares {negocio} na À Nossa!. Vimos que trabalhas em {categorias}, na zona de {cidade}.\n\nOs primeiros 100 parceiros ficam **Parceiros Fundadores**, com 3 meses sem taxa de serviço. Avisamos-te assim que a app estiver nas lojas.",
+      },
+      { type: "text", text: "Até já,\nRafael" },
+    ],
   },
+};
+
+const NEW_BLOCK: Record<NlBlock["type"], NlBlock> = {
+  title: { type: "title", text: "" },
+  text: { type: "text", text: "" },
+  image: { type: "image", url: "", alt: "", link: "" },
+  button: { type: "button", label: "", url: "" },
+  divider: { type: "divider" },
+};
+
+const BLOCK_NAME: Record<NlBlock["type"], string> = {
+  title: "Título",
+  text: "Texto",
+  image: "Imagem",
+  button: "Botão",
+  divider: "Separador",
 };
 
 const SAMPLE: Signup = {
@@ -40,15 +78,22 @@ const SAMPLE: Signup = {
   created_at: new Date().toISOString(),
 };
 
-/** Criador do email: assunto, mensagem com campos por pessoa, botão
- *  opcional, pré-visualização tal como chega e envio pelo Resend. */
+type Focus = {
+  block: number;
+  key: string;
+  el: HTMLInputElement | HTMLTextAreaElement;
+} | null;
+
+/** Editor do email por blocos (pedido 2026-11-16): título, texto, imagem,
+ *  botão e separador; campos por pessoa; vários modelos guardados;
+ *  pré-visualização tal como chega; envio pelo Resend. */
 export function EmailComposer({
   kind,
   rows,
   selected,
   previewEmail,
   onPreviewEmail,
-  template,
+  designs,
   ready,
 }: {
   kind: NlKind;
@@ -56,21 +101,25 @@ export function EmailComposer({
   selected: string[];
   previewEmail: string | null;
   onPreviewEmail: (email: string) => void;
-  template: Template | null;
+  designs: Design[];
   ready: boolean;
 }) {
   const router = useRouter();
-  const t = template ?? DEFAULT_TEMPLATE[kind];
-  const [subject, setSubject] = useState(t.subject);
-  const [body, setBody] = useState(t.body);
-  const [buttonLabel, setButtonLabel] = useState(t.button_label ?? "");
-  const [buttonUrl, setButtonUrl] = useState(t.button_url ?? "");
-  const [confirm, setConfirm] = useState(false);
+  const first = designs[0];
+  const [designId, setDesignId] = useState<string | null>(first?.id ?? null);
+  const [name, setName] = useState(first?.name ?? DEFAULTS[kind].name);
+  const [subject, setSubject] = useState(
+    first?.subject ?? DEFAULTS[kind].subject,
+  );
+  const [blocks, setBlocks] = useState<NlBlock[]>(
+    first?.blocks ?? DEFAULTS[kind].blocks,
+  );
+  const [confirm, setConfirm] = useState<"send" | "delete" | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const [uploading, setUploading] = useState<number | null>(null);
+  const focus = useRef<Focus>(null);
   const subjectRef = useRef<HTMLInputElement>(null);
-  const [lastFocus, setLastFocus] = useState<"subject" | "body">("body");
 
   const person = useMemo(
     () =>
@@ -79,8 +128,8 @@ export function EmailComposer({
     [rows, previewEmail, kind],
   );
   const preview = useMemo(
-    () => nlRender({ subject, body, buttonLabel, buttonUrl }, person, "#"),
-    [subject, body, buttonLabel, buttonUrl, person],
+    () => nlRender({ subject, blocks }, person, "#"),
+    [subject, blocks, person],
   );
 
   const active = rows.filter((r) => !r.unsubscribed_at);
@@ -89,114 +138,263 @@ export function EmailComposer({
   const count = selected.length ? sel.length : unsent.length;
   const willSend = Math.min(count, 100);
 
-  function insert(field: string) {
-    const token = `{${field}}`;
-    if (lastFocus === "subject") {
-      const el = subjectRef.current;
-      const a = el?.selectionStart ?? subject.length;
-      const b = el?.selectionEnd ?? subject.length;
-      setSubject(subject.slice(0, a) + token + subject.slice(b));
-      requestAnimationFrame(() => {
-        el?.focus();
-        el?.setSelectionRange(a + token.length, a + token.length);
-      });
+  function load(id: string) {
+    if (id === "") {
+      setDesignId(null);
+      setName("Novo email");
+      setSubject("");
+      setBlocks([
+        { type: "title", text: "Olá {primeiro_nome}!" },
+        { type: "text", text: "" },
+      ]);
       return;
     }
-    const el = bodyRef.current;
-    const a = el?.selectionStart ?? body.length;
-    const b = el?.selectionEnd ?? body.length;
-    setBody(body.slice(0, a) + token + body.slice(b));
+    const d = designs.find((x) => x.id === id);
+    if (!d) return;
+    setDesignId(d.id);
+    setName(d.name);
+    setSubject(d.subject);
+    setBlocks(d.blocks);
+  }
+
+  const update = (i: number, patch: Partial<NlBlock>) =>
+    setBlocks((bs) =>
+      bs.map((b, j) => (j === i ? ({ ...b, ...patch } as NlBlock) : b)),
+    );
+  const move = (i: number, d: -1 | 1) =>
+    setBlocks((bs) => {
+      const j = i + d;
+      if (j < 0 || j >= bs.length) return bs;
+      const n = [...bs];
+      [n[i], n[j]] = [n[j], n[i]];
+      return n;
+    });
+  const remove = (i: number) => setBlocks((bs) => bs.filter((_, j) => j !== i));
+  const duplicate = (i: number) =>
+    setBlocks((bs) => [
+      ...bs.slice(0, i + 1),
+      { ...bs[i] },
+      ...bs.slice(i + 1),
+    ]);
+  const add = (t: NlBlock["type"]) =>
+    setBlocks((bs) => [...bs, { ...NEW_BLOCK[t] }]);
+
+  // Põe {campo} no sítio do cursor do último campo de texto usado.
+  function insert(field: string) {
+    const f = focus.current;
+    const token = `{${field}}`;
+    const el = f?.el ?? subjectRef.current;
+    if (!el) return;
+    const a = el.selectionStart ?? el.value.length;
+    const b = el.selectionEnd ?? el.value.length;
+    const next = el.value.slice(0, a) + token + el.value.slice(b);
+    if (!f || f.block < 0) setSubject(next);
+    else update(f.block, { [f.key]: next } as Partial<NlBlock>);
     requestAnimationFrame(() => {
-      el?.focus();
-      el?.setSelectionRange(a + token.length, a + token.length);
+      el.focus();
+      el.setSelectionRange(a + token.length, a + token.length);
     });
   }
 
   function bold() {
-    const el = bodyRef.current;
-    if (!el) return;
-    const a = el.selectionStart;
-    const b = el.selectionEnd;
-    const inner = body.slice(a, b) || "texto";
-    setBody(body.slice(0, a) + `**${inner}**` + body.slice(b));
+    const f = focus.current;
+    if (!f || f.block < 0 || f.key !== "text") return;
+    const el = f.el;
+    const a = el.selectionStart ?? 0;
+    const b = el.selectionEnd ?? 0;
+    const inner = el.value.slice(a, b) || "texto";
+    update(f.block, {
+      text: el.value.slice(0, a) + `**${inner}**` + el.value.slice(b),
+    });
     requestAnimationFrame(() => {
       el.focus();
       el.setSelectionRange(a + 2, a + 2 + inner.length);
     });
   }
 
-  const payload = { kind, subject, body, buttonLabel, buttonUrl };
+  async function upload(i: number, file: File) {
+    setUploading(i);
+    setMsg(null);
+    try {
+      const ext = (file.name.split(".").pop() || "png")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const supabase = createClient();
+      const { error } = await supabase.storage
+        .from("newsletter-images")
+        .upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { data } = supabase.storage
+        .from("newsletter-images")
+        .getPublicUrl(path);
+      update(i, { url: data.publicUrl });
+    } catch {
+      setMsg({
+        ok: false,
+        text: ready
+          ? "Não foi possível carregar a imagem."
+          : "Para carregar imagens falta aplicar a migração 196.",
+      });
+    } finally {
+      setUploading(null);
+    }
+  }
+
   const run = (
-    fn: () => Promise<{ ok: boolean; message?: string; error?: string }>,
+    fn: () => Promise<{
+      ok: boolean;
+      message?: string;
+      error?: string;
+      id?: string;
+    }>,
   ) =>
     start(async () => {
       setMsg(null);
       const r = await fn();
       setMsg({ ok: r.ok, text: (r.ok ? r.message : r.error) ?? "" });
-      setConfirm(false);
+      setConfirm(null);
+      if (r.ok && r.id) setDesignId(r.id);
       if (r.ok) router.refresh();
     });
 
-  const label: React.CSSProperties = {
+  const onFocus =
+    (block: number, key: string) =>
+    (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      focus.current = { block, key, el: e.currentTarget };
+    };
+
+  const small: React.CSSProperties = {
     fontSize: 12,
     fontWeight: 700,
     letterSpacing: 1,
     color: "var(--ink-muted)",
   };
+  const iconBtn = "btn btn-ghost btn-sm";
 
   return (
     <section
       className="card"
       style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}
     >
+      {/* Modelos */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 10,
+          gap: 8,
           flexWrap: "wrap",
         }}
       >
-        <strong style={{ fontSize: 16 }}>
-          Email para {kind === "parceiro" ? "parceiros" : "organizadores"}
-        </strong>
+        <span style={small}>MODELO</span>
+        <select
+          className="select"
+          style={{ width: "auto", minWidth: 180 }}
+          value={designId ?? ""}
+          onChange={(e) => load(e.target.value)}
+        >
+          {designs.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.name}
+            </option>
+          ))}
+          <option value="">+ Novo email</option>
+        </select>
+        <input
+          className="input"
+          style={{ width: 200 }}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          aria-label="Nome do modelo"
+        />
         <span style={{ flex: 1 }} />
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          disabled={pending}
-          onClick={() => {
-            const d = DEFAULT_TEMPLATE[kind];
-            setSubject(d.subject);
-            setBody(d.body);
-            setButtonLabel("");
-            setButtonUrl("");
-          }}
-        >
-          Repor texto inicial
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm"
-          disabled={pending || !ready}
-          onClick={() => run(() => saveNewsletterTemplate(payload))}
-        >
-          Guardar modelo
-        </button>
+        {confirm === "delete" ? (
+          <>
+            <span style={{ fontSize: 13 }}>Apagar «{name}»?</span>
+            <button
+              type="button"
+              className="btn btn-danger btn-sm"
+              disabled={pending}
+              onClick={() =>
+                designId && run(() => deleteNewsletterDesign(designId))
+              }
+            >
+              Apagar
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => setConfirm(null)}
+            >
+              Cancelar
+            </button>
+          </>
+        ) : (
+          <>
+            {designId && (
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                disabled={pending}
+                onClick={() => setConfirm("delete")}
+              >
+                Apagar
+              </button>
+            )}
+            {designId && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                disabled={pending || !ready}
+                onClick={() =>
+                  run(() =>
+                    saveNewsletterDesign({
+                      kind,
+                      name: `${name} (cópia)`,
+                      subject,
+                      blocks,
+                    }),
+                  )
+                }
+              >
+                Guardar como novo
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              disabled={pending || !ready}
+              onClick={() =>
+                run(() =>
+                  saveNewsletterDesign({
+                    id: designId,
+                    kind,
+                    name,
+                    subject,
+                    blocks,
+                  }),
+                )
+              }
+            >
+              Guardar
+            </button>
+          </>
+        )}
       </div>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
           gap: 18,
         }}
       >
+        {/* Editor */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: 12,
+            gap: 10,
             minWidth: 0,
           }}
         >
@@ -206,70 +404,243 @@ export function EmailComposer({
               ref={subjectRef}
               className="input"
               value={subject}
-              onFocus={() => setLastFocus("subject")}
+              onFocus={(e) =>
+                (focus.current = {
+                  block: -1,
+                  key: "subject",
+                  el: e.currentTarget,
+                })
+              }
               onChange={(e) => setSubject(e.target.value)}
             />
           </div>
-          <div className="field">
-            <span className="field-label">Mensagem</span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {NL_FIELDS[kind].map((f) => (
-                <button
-                  key={f.key}
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => insert(f.key)}
-                >
-                  + {f.label}
-                </button>
-              ))}
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                onClick={bold}
-                style={{ fontWeight: 800 }}
-              >
-                Negrito
-              </button>
-            </div>
-            <textarea
-              ref={bodyRef}
-              className="textarea"
-              rows={12}
-              value={body}
-              onFocus={() => setLastFocus("body")}
-              onChange={(e) => setBody(e.target.value)}
-            />
-            <span className="field-hint">
-              Os botões «+» põem no sítio do cursor um campo que muda para cada
-              pessoa. Uma linha em branco separa parágrafos. Links começados por
-              https:// ficam clicáveis.
-            </span>
-          </div>
+
           <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10 }}
+            style={{
+              position: "sticky",
+              top: 0,
+              zIndex: 2,
+              background: "var(--surface)",
+              padding: "6px 0",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 6,
+              alignItems: "center",
+            }}
           >
-            <div className="field">
-              <span className="field-label">Botão (opcional)</span>
-              <input
-                className="input"
-                placeholder="Ex.: Ver o site"
-                value={buttonLabel}
-                onChange={(e) => setButtonLabel(e.target.value)}
-              />
+            <span style={small}>INSERIR</span>
+            {NL_FIELDS[kind].map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => insert(f.key)}
+              >
+                + {f.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              style={{ fontWeight: 800 }}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={bold}
+            >
+              Negrito
+            </button>
+          </div>
+
+          {blocks.map((b, i) => (
+            <div
+              key={i}
+              style={{
+                border: "1px solid var(--border)",
+                borderRadius: 12,
+                padding: 10,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={small}>{BLOCK_NAME[b.type].toUpperCase()}</span>
+                <span style={{ flex: 1 }} />
+                <button
+                  type="button"
+                  className={iconBtn}
+                  aria-label="Subir"
+                  disabled={i === 0}
+                  onClick={() => move(i, -1)}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  className={iconBtn}
+                  aria-label="Descer"
+                  disabled={i === blocks.length - 1}
+                  onClick={() => move(i, 1)}
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  className={iconBtn}
+                  onClick={() => duplicate(i)}
+                >
+                  Duplicar
+                </button>
+                <button
+                  type="button"
+                  className={iconBtn}
+                  aria-label="Apagar bloco"
+                  onClick={() => remove(i)}
+                >
+                  ✕
+                </button>
+              </div>
+              {b.type === "title" && (
+                <input
+                  className="input"
+                  style={{ fontWeight: 700, fontSize: 16 }}
+                  placeholder="Título"
+                  value={b.text}
+                  onFocus={onFocus(i, "text")}
+                  onChange={(e) => update(i, { text: e.target.value })}
+                />
+              )}
+              {b.type === "text" && (
+                <textarea
+                  className="textarea"
+                  rows={Math.min(
+                    12,
+                    Math.max(3, b.text.split("\n").length + 1),
+                  )}
+                  placeholder="Escreve aqui. Uma linha em branco separa parágrafos."
+                  value={b.text}
+                  onFocus={onFocus(i, "text")}
+                  onChange={(e) => update(i, { text: e.target.value })}
+                />
+              )}
+              {b.type === "image" && (
+                <>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <label
+                      className="btn btn-secondary btn-sm"
+                      style={{ cursor: "pointer" }}
+                    >
+                      {uploading === i
+                        ? "A carregar…"
+                        : b.url
+                          ? "Trocar imagem"
+                          : "Carregar imagem"}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/gif,image/webp"
+                        hidden
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) upload(i, f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    <input
+                      className="input"
+                      style={{ flex: 1, minWidth: 160 }}
+                      placeholder="ou cola o link da imagem (https://…)"
+                      value={b.url}
+                      onChange={(e) => update(i, { url: e.target.value })}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 8,
+                    }}
+                  >
+                    <input
+                      className="input"
+                      placeholder="Descrição (para quem não vê imagens)"
+                      value={b.alt ?? ""}
+                      onChange={(e) => update(i, { alt: e.target.value })}
+                    />
+                    <input
+                      className="input"
+                      placeholder="Link ao tocar (opcional)"
+                      value={b.link ?? ""}
+                      onChange={(e) => update(i, { link: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
+              {b.type === "button" && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 2fr",
+                    gap: 8,
+                  }}
+                >
+                  <input
+                    className="input"
+                    placeholder="Texto do botão"
+                    value={b.label}
+                    onFocus={onFocus(i, "label")}
+                    onChange={(e) => update(i, { label: e.target.value })}
+                  />
+                  <input
+                    className="input"
+                    placeholder="Link (https://…)"
+                    value={b.url}
+                    onChange={(e) => update(i, { url: e.target.value })}
+                  />
+                </div>
+              )}
+              {b.type === "divider" && (
+                <hr
+                  style={{
+                    border: 0,
+                    borderTop: "1px solid var(--border)",
+                    margin: "4px 0",
+                  }}
+                />
+              )}
             </div>
-            <div className="field">
-              <span className="field-label">Link do botão</span>
-              <input
-                className="input"
-                placeholder="https://…"
-                value={buttonUrl}
-                onChange={(e) => setButtonUrl(e.target.value)}
-              />
-            </div>
+          ))}
+
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 6,
+              alignItems: "center",
+            }}
+          >
+            <span style={small}>ADICIONAR</span>
+            {(Object.keys(NEW_BLOCK) as NlBlock["type"][]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => add(t)}
+              >
+                + {BLOCK_NAME[t]}
+              </button>
+            ))}
           </div>
         </div>
 
+        {/* Pré-visualização */}
         <div
           style={{
             display: "flex",
@@ -279,7 +650,7 @@ export function EmailComposer({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={label}>PRÉ-VISUALIZAR COMO</span>
+            <span style={small}>VER COMO</span>
             <select
               className="select"
               style={{ flex: 1, minWidth: 0 }}
@@ -300,7 +671,9 @@ export function EmailComposer({
           </div>
           <div style={{ fontSize: 13, color: "var(--ink-muted)" }}>
             Assunto:{" "}
-            <strong style={{ color: "var(--ink)" }}>{preview.subject}</strong>
+            <strong style={{ color: "var(--ink)" }}>
+              {preview.subject || "—"}
+            </strong>
           </div>
           <iframe
             title="Pré-visualização do email"
@@ -308,7 +681,7 @@ export function EmailComposer({
             sandbox=""
             style={{
               width: "100%",
-              height: 460,
+              height: 620,
               border: "1px solid var(--border)",
               borderRadius: 12,
               background: "#F2F0EB",
@@ -317,15 +690,16 @@ export function EmailComposer({
         </div>
       </div>
 
+      {/* Envio */}
       <div
         className="toolbar"
         style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}
       >
         {!ready ? (
           <span className="field-hint">
-            Para enviar daqui falta aplicar a migração 196.
+            Para guardar e enviar daqui falta aplicar a migração 196.
           </span>
-        ) : confirm ? (
+        ) : confirm === "send" ? (
           <>
             <span style={{ fontSize: 14 }}>
               Enviar a <strong>{willSend}</strong>{" "}
@@ -340,7 +714,9 @@ export function EmailComposer({
               onClick={() =>
                 run(() =>
                   sendNewsletter({
-                    ...payload,
+                    kind,
+                    subject,
+                    blocks,
                     ...(selected.length ? { emails: sel } : {}),
                   }),
                 )
@@ -352,7 +728,7 @@ export function EmailComposer({
               type="button"
               className="btn btn-ghost btn-sm"
               disabled={pending}
-              onClick={() => setConfirm(false)}
+              onClick={() => setConfirm(null)}
             >
               Cancelar
             </button>
@@ -366,7 +742,9 @@ export function EmailComposer({
               onClick={() =>
                 run(() =>
                   sendNewsletter({
-                    ...payload,
+                    kind,
+                    subject,
+                    blocks,
                     test: true,
                     previewEmail: rows.length ? person.email : undefined,
                   }),
@@ -379,7 +757,7 @@ export function EmailComposer({
               type="button"
               className="btn btn-primary btn-sm"
               disabled={pending || count === 0}
-              onClick={() => setConfirm(true)}
+              onClick={() => setConfirm("send")}
             >
               {selected.length
                 ? `Enviar aos ${sel.length} selecionados`

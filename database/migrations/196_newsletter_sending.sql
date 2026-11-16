@@ -4,7 +4,9 @@
 --
 -- • newsletter_signups: quando foi o último envio, quantos, e o
 --   «Deixar de receber» (token por pessoa, obrigatório pelo RGPD).
--- • newsletter_templates: o assunto/mensagem guardados de cada tipo.
+-- • newsletter_designs: emails montados por blocos (título, texto, imagem,
+--   botão, separador), vários modelos por tipo.
+-- • bucket newsletter-images: imagens dos emails (públicas, só admins enviam).
 -- • newsletter_sends: histórico de cada envio (quem, quando, quantos).
 -- • newsletter_unsubscribe(token): chamado pela página do site, sem sessão.
 -- O envio em si é a Edge Function `send-newsletter` (chave RESEND_API_KEY
@@ -21,20 +23,36 @@ alter table public.newsletter_signups
 create unique index if not exists newsletter_signups_unsub_token_idx
   on public.newsletter_signups (unsub_token);
 
-create table if not exists public.newsletter_templates (
-  kind text primary key check (kind in ('organizador', 'parceiro')),
+create table if not exists public.newsletter_designs (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('organizador', 'parceiro')),
+  name text not null default 'Sem nome',
   subject text not null default '',
-  body text not null default '',
-  button_label text,
-  button_url text,
+  blocks jsonb not null default '[]'::jsonb,
   updated_at timestamptz not null default now(),
   updated_by uuid references auth.users (id) on delete set null
 );
 
-alter table public.newsletter_templates enable row level security;
-drop policy if exists "Admins manage newsletter templates" on public.newsletter_templates;
-create policy "Admins manage newsletter templates" on public.newsletter_templates
+alter table public.newsletter_designs enable row level security;
+drop policy if exists "Admins manage newsletter designs" on public.newsletter_designs;
+create policy "Admins manage newsletter designs" on public.newsletter_designs
   for all using (public.is_admin()) with check (public.is_admin());
+
+-- Imagens dos emails: públicas (os clientes de email têm de as ver), só
+-- admins carregam/apagam. SELECT incluído para o upload funcionar (030).
+insert into storage.buckets (id, name, public)
+values ('newsletter-images', 'newsletter-images', true)
+on conflict (id) do nothing;
+
+drop policy if exists "Admins read newsletter images" on storage.objects;
+create policy "Admins read newsletter images" on storage.objects
+  for select using (bucket_id = 'newsletter-images' and public.is_admin());
+drop policy if exists "Admins upload newsletter images" on storage.objects;
+create policy "Admins upload newsletter images" on storage.objects
+  for insert with check (bucket_id = 'newsletter-images' and public.is_admin());
+drop policy if exists "Admins delete newsletter images" on storage.objects;
+create policy "Admins delete newsletter images" on storage.objects
+  for delete using (bucket_id = 'newsletter-images' and public.is_admin());
 
 create table if not exists public.newsletter_sends (
   id uuid primary key default gen_random_uuid(),
