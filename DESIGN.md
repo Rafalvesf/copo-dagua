@@ -155,6 +155,20 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
   de linhas (avatar 44, nome 16, meta 13, etiqueta à direita).
 - **Emojis:** só no "Parabéns! 🎉" do fim do criar evento (pedido do
   Rafael, 2026-11-12). Em mais lado nenhum.
+- **Botões redondos sobre imagens e «voltar ao topo»** (pedido do Rafael,
+  2026-11-16): quando um botão redondo (voltar/sair, definições, sino, ⋯)
+  assenta **sobre uma imagem** (foto de capa, herói com foto), o círculo é
+  **translúcido** — branco a ~55 % com a sombra suave e o ícone preto 20 bem
+  legível — em vez do branco cheio. Sobre o fundo liso (`#F2F0EB`) mantém o
+  branco 44 do §2.
+  Nas páginas com foto/herói no topo que fazem scroll, a **seta de voltar**
+  (canto superior esquerdo) muda com o scroll: ao descer para lá do herói,
+  perde a transparência (fica branco **opaco**, 0 % translúcido), o ícone
+  **roda de ← para ↑** e o toque passa a **subir a página até ao topo** (com
+  animação) em vez de voltar atrás; ao chegar ao topo volta a ser a seta de
+  voltar (←). Os restantes botões (definições, ⋯) só perdem a transparência
+  quando o cabeçalho sai de cima da imagem; a sua ação não muda. A transição
+  (transparência e rotação do ícone) é sempre animada, nunca instantânea.
 
 ## 7. Alertas
 
