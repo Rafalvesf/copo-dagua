@@ -189,7 +189,7 @@ h1, h2 {{ margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance;
 .cta h2 {{ font-size: clamp(54px, 9vw, 110px); letter-spacing: -3px; margin-top: 8px; }}
 .cta p {{ font-size: 20px; opacity: .9; margin: 6px 0 28px; }}
 .cta .btn {{ background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }}
-.news {{ max-width: 520px; margin: 34px auto 0; display: flex; flex-direction: column; gap: 12px; text-align: left; }}
+.news {{ scroll-margin-top: 120px; max-width: 520px; margin: 34px auto 0; display: flex; flex-direction: column; gap: 12px; text-align: left; }}
 .news b {{ font-size: 20px; text-align: center; text-wrap: balance; }}
 .news-row {{ display: flex; gap: 8px; flex-wrap: wrap; }}
 .news-row input {{ flex: 1 1 220px; min-width: 0; height: 52px; border: 1.5px solid #171713; border-radius: 26px; padding: 0 20px; font: inherit; font-size: 15px; color: #171713; }}
@@ -224,6 +224,7 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
 
 <header class="top" id="top">
   <a class="brand" href="#"><img src="{img('estrela_feliz.svg')}" alt="">À Nossa!</a>
+  <a class="btn" href="#news">Fazer pré-registo</a>
 </header>
 
 <main>
