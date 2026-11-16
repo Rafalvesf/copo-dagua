@@ -43,10 +43,6 @@ class _PartnerInviteScreenState extends ConsumerState<PartnerInviteScreen> {
       await savePendingPartnerReferral(widget.code);
       return;
     }
-    if (auth.profile?.role == UserRole.partner) {
-      setState(() => _error = 'Este link é para os clientes do parceiro. Entra com uma conta de cliente.');
-      return;
-    }
     setState(() => _busy = true);
     try {
       final r = await claimPartnerReferral(widget.code);
@@ -79,8 +75,8 @@ class _PartnerInviteScreenState extends ConsumerState<PartnerInviteScreen> {
       body = PublicStateView(
         pose: MascotPose.wave,
         title: 'Foste convidado para a À Nossa!',
-        message: 'Um parceiro convidou-te para organizares o teu evento na À Nossa!: orçamento, convidados, '
-            'contratos e pagamentos seguros num só sítio. Cria conta (ou entra) e o convite fica ligado a ti.',
+        message: 'Organiza o teu evento na À Nossa!: orçamento, convidados, contratos e pagamentos seguros num só sítio. '
+            'Cria conta (ou entra) e o convite fica ligado a ti. Contas novas têm 50 % de desconto na taxa de serviço da primeira transação.',
         actions: [
           PrimaryButton(label: 'Criar conta', onPressed: () => context.push('/comecar')),
           TextButton(onPressed: () => context.push('/login'), child: const Text('Já tenho conta')),
@@ -101,7 +97,11 @@ class _PartnerInviteScreenState extends ConsumerState<PartnerInviteScreen> {
       body = PublicStateView(
         pose: MascotPose.cheer,
         title: r!.valid ? 'Convite de ${r.businessName}' : 'Já estás ligado a ${r.businessName}',
-        message: r.valid
+        message: !r.fromPartner
+            ? (r.valid
+                ? '${r.businessName} convidou-te para a À Nossa!. Tens 50 % de desconto na taxa de serviço da tua primeira transação.'
+                : 'Este convite já não conta para ti, mas podes usar a app normalmente.')
+            : r.valid
             ? '${r.businessName} convidou-te para a À Nossa!. Faz as reservas e os pagamentos com eles pela app: '
                 'fica tudo com contrato, recibo e pagamento protegido.'
             : 'Já tinhas falado com ${r.businessName} pela app — continua tudo como estava.',

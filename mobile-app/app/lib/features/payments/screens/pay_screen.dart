@@ -51,6 +51,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   final _phone = TextEditingController();
   String? _error;
   int? _amountCents;
+  double _discountPct = 0;
   MultibancoRef? _mb;
   Timer? _poll;
 
@@ -149,6 +150,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           final info = await a.createIntent(PayMethod.multibanco);
           if (!mounted) return;
           _amountCents = info.amountCents;
+      _discountPct = info.feeDiscountPct;
           setState(() {
             _mb = info.multibanco;
             _step = info.multibanco == null ? _Step.select : _Step.multibanco;
@@ -216,6 +218,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       if (!mounted) return;
       final before = _amountCents ?? (a.amount * 100).round();
       _amountCents = info.amountCents;
+      _discountPct = info.feeDiscountPct;
       if (pmId != null && info.cardRegion != null && info.cardRegion != 'EEA' && info.amountCents > before) {
         final ok = await _confirmCardFee(info);
         if (!mounted) return;
@@ -260,6 +263,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       try {
         final info = await a.createIntent(PayMethod.wallet);
         _amountCents = info.amountCents;
+      _discountPct = info.feeDiscountPct;
         return info.clientSecret;
       } catch (e) {
         _fail(e, _Step.select);
@@ -287,6 +291,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       final info = await a.createIntent(PayMethod.mbWay, phone: phone);
       if (!mounted) return;
       _amountCents = info.amountCents;
+      _discountPct = info.feeDiscountPct;
       if (info.status == 'succeeded') return _done();
       setState(() => _step = _Step.mbWayWaiting);
       _startPolling();
@@ -464,7 +469,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       child: Column(children: [
         if (base != null && total > base) ...[
           line(a.title, euros(base, cents: true)),
-          line('Taxa de serviço', euros(total - base, cents: true)),
+          line(_discountPct > 0 ? 'Taxa de serviço (−${_discountPct.toStringAsFixed(0)} %)' : 'Taxa de serviço',
+              euros(total - base, cents: true)),
           const Divider(height: 8, color: Color(0xFFECE7DC)),
           const SizedBox(height: 8),
         ],

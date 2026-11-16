@@ -136,8 +136,6 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
             for (final b in [
               (Hi.percentBadge, 'Taxa de serviço mais baixa',
                   '−${_pts(pro.feeDiscount)}% em todas as reservas (ex.: 5% passa a ${_pts(5 - pro.feeDiscount)}%).'),
-              (Hi.userPlus, 'Convites valem mais',
-                  'Cada ${pro.proReferralFreeEvery}.º cliente que trazes fica sem taxa de serviço (sem o Premium, o ${pro.referralFreeEvery}.º).'),
               (Hi.megaphone, 'Destaque mais barato',
                   '+${_pts(pro.proPromotionExtraPct)}% nas reservas que vêm do destaque (sem o Premium, +${_pts(pro.promotionExtraPct)}%).'),
               (Hi.trophy, 'Selo Premium e mais visibilidade', 'Selo no perfil e na pesquisa, e apareces antes dos outros parceiros.'),

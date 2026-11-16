@@ -192,8 +192,12 @@ Deno.serve(async (req) => {
     tiers,
     commissionPct,
   ) + fixedCents;
-  const applicationFeeCents = feeFor(organizerTiersForCard(sett, region));
-  const baseChargeCents = partnerAmountCents + feeFor(organizerTiersForCard(sett, "EEA"));
+  // Migração 193: 50 % na taxa de serviço (1.ª transação ou prémio de
+  // convites) — reserva um crédito do pagador e outro do parceiro.
+  const payerDiscountPct = await takeFeeCredit(admin, user.id, payment.id as string);
+  const discounted = (cents: number, pct: number) => Math.round(cents * (1 - pct / 100));
+  const applicationFeeCents = discounted(feeFor(organizerTiersForCard(sett, region)), payerDiscountPct);
+  const baseChargeCents = partnerAmountCents + discounted(feeFor(organizerTiersForCard(sett, "EEA")), payerDiscountPct);
   const partnerTiers: FeeTier[] = parseTiers((settings as Record<string, unknown> | null)?.partner_fee_tiers);
   const totalChargeCents = partnerAmountCents + applicationFeeCents;
   // Escalões sobre o valor total da reserva (migração 126); cada pagamento
@@ -214,7 +218,9 @@ Deno.serve(async (req) => {
     (await isReferredClient(admin, payment.partner_id as string, coupleId, sett, isPro));
   // Migração 155: reserva que veio do destaque pago do parceiro → +6%.
   const promoExtraPct = partnerFree ? 0 : await promotionExtraPct(admin, payment.booking_id as string);
-  const partnerFeeCents = partnerFree ? 0 : Math.min(
+  // O crédito do parceiro só se gasta quando ele paga taxa.
+  const partnerDiscountPct = partnerFree ? 0 : await takeFeeCredit(admin, payment.partner_id as string, payment.id as string);
+  const partnerFeeCents = partnerFree ? 0 : discounted(Math.min(
     partnerAmountCents,
     paymentFeeCents(
       partnerAmountCents,
@@ -222,7 +228,7 @@ Deno.serve(async (req) => {
       proTiers(partnerTiers, isPro ? Number(sett.pro_fee_discount ?? 1) : 0),
       Math.max(0, partnerFeePct - (isPro ? Number(sett.pro_fee_discount ?? 1) : 0)),
     ) + Math.round((partnerAmountCents * promoExtraPct) / 100) + fixedCents,
-  );
+  ), partnerDiscountPct);
   const bookingNumber = (payment.bookings as unknown as { booking_number: string } | null)?.booking_number ?? "";
   const label = payment.type === "deposit" ? "Sinal" : payment.type === "guest_share" ? "A tua parte" : "Pagamento final";
 
@@ -327,6 +333,7 @@ Deno.serve(async (req) => {
     amount_cents: totalChargeCents,
     base_amount_cents: baseChargeCents,
     card_region: region,
+    fee_discount_pct: payerDiscountPct,
     email: user.email ?? null,
     status: intent.status,
     ...(mbNew ? { multibanco: { entity: mbNew.entity, reference: mbNew.reference, expires_at: mbNew.expires_at } } : {}),
@@ -420,6 +427,19 @@ async function partnerIsPro(admin: any, partnerId: string): Promise<boolean> {
 }
 
 // Escalões do parceiro com o desconto do Pro (nunca abaixo de 0%).
+// deno-lint-ignore no-explicit-any
+async function takeFeeCredit(admin: any, profileId: string | null, paymentId: string): Promise<number> {
+  if (!profileId) return 0;
+  try {
+    const { data, error } = await admin.rpc("take_fee_credit", { p_profile: profileId, p_payment: paymentId });
+    if (error) return 0;
+    const v = Number(data ?? 0);
+    return Number.isFinite(v) && v > 0 && v <= 100 ? v : 0;
+  } catch {
+    return 0;
+  }
+}
+
 function proTiers<T extends { pct: number }>(tiers: T[], discount: number): T[] {
   if (!discount || discount <= 0) return tiers;
   return tiers.map((t) => ({ ...t, pct: Math.max(0, t.pct - discount) }));

@@ -136,6 +136,7 @@ PaymentIntentInfo paymentIntentInfoFromJson(Map<String, dynamic> d) {
     multibanco: MultibancoRef.fromJson(d['multibanco'], amountCents: cents),
     baseAmountCents: (d['base_amount_cents'] as num?)?.toInt(),
     cardRegion: d['card_region'] as String?,
+    feeDiscountPct: (d['fee_discount_pct'] as num?)?.toDouble() ?? 0,
   );
 }
 
@@ -168,6 +169,9 @@ class PaymentIntentInfo {
   /// cartão (`EEA`, `GB`, `OTHER`).
   final int? baseAmountCents;
   final String? cardRegion;
+
+  /// 193: desconto na taxa de serviço (1.ª transação ou convites), em %.
+  final double feeDiscountPct;
   const PaymentIntentInfo({
     this.status,
     required this.clientSecret,
@@ -177,6 +181,7 @@ class PaymentIntentInfo {
     this.multibanco,
     this.baseAmountCents,
     this.cardRegion,
+    this.feeDiscountPct = 0,
   });
 }
 
@@ -211,6 +216,7 @@ Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method
     multibanco: MultibancoRef.fromJson(d['multibanco'], amountCents: cents),
     baseAmountCents: (d['base_amount_cents'] as num?)?.toInt(),
     cardRegion: d['card_region'] as String?,
+    feeDiscountPct: (d['fee_discount_pct'] as num?)?.toDouble() ?? 0,
   );
 }
 
