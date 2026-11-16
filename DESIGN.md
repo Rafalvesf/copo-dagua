@@ -163,15 +163,17 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
   branco, ou depois de o cabeçalho deixar de assentar na imagem, é o **branco
   cheio 44** do §2. Ou seja, a transparência é decidida por "há imagem por
   trás agora?", não pela quantidade de scroll.
-  Nas páginas com foto/herói no topo que fazem scroll, a **seta de voltar**
-  (canto superior esquerdo) muda à medida que a imagem sai de trás dela: fica
-  branco **opaco** (porque já não está sobre imagem), o ícone **roda de ← para
-  ↑** e o toque passa a **subir a página até ao topo** (com animação) em vez de
-  voltar atrás; ao voltar ao topo, com a imagem outra vez por trás, volta a ser
-  translúcida e a seta de voltar (←). Os restantes botões (definições, ⋯) só
-  deixam de ser translúcidos quando a imagem sai de trás deles; a sua ação não
-  muda. A transição (transparência e rotação do ícone) é sempre animada, nunca
-  instantânea.
+  Em **todas** as páginas que fazem scroll (com imagem ou sem), a **seta de
+  voltar** (canto superior esquerdo) muda com o scroll: ao descer, o ícone
+  **roda de ← para ↑** e o toque passa a **subir a página até ao topo** (com
+  animação) em vez de voltar atrás; ao chegar ao topo, volta a ser a seta de
+  voltar (←). A transparência é independente disto e segue só a regra de cima:
+  onde há imagem por trás, a seta é translúcida no topo (sobre a imagem) e fica
+  branco opaco depois de a imagem sair de trás; onde não há imagem, é sempre o
+  branco cheio 44. Os restantes botões (definições, ⋯) não mudam de ação; só
+  deixam de ser translúcidos quando a imagem sai de trás deles. A transição
+  (rotação do ícone e, onde se aplique, a transparência) é sempre animada,
+  nunca instantânea.
 
 ## 7. Alertas
 
