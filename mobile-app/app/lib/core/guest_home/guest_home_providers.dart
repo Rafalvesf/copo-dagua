@@ -271,6 +271,25 @@ Future<void> completeGuestOnboarding({
   );
 }
 
+/// Mudar a resposta (vou / não vou) depois do onboarding. O
+/// `complete_guest_onboarding` só escreve na primeira vez
+/// (`onboarding_completed_at is null`), por isso «Alterar» não fazia nada
+/// (reportado 2026-11-15). Vai pelo token deste convite, que só mexe
+/// nesta linha, e mantém o resto da resposta.
+Future<void> setMyRsvp(Guest guest, bool going) async {
+  final token = guest.rsvpToken;
+  if (token == null) throw StateError('sem token');
+  // O submit_rsvp reescreve a mensagem do convidado: manter a que lá está.
+  final row = await supabase.from('guests').select('guest_message').eq('id', guest.id).maybeSingle();
+  await supabase.rpc('submit_rsvp', params: {
+    'p_token': token,
+    'p_rsvp_status': going ? 'confirmed' : 'declined',
+    'p_plus_one_name': guest.plusOneName,
+    'p_dietary_restrictions': guest.dietaryRestrictions,
+    'p_guest_message': row?['guest_message'],
+  });
+}
+
 /// Um acompanhante do convidado (`guest_companions`, 081).
 class GuestCompanion {
   final String name;

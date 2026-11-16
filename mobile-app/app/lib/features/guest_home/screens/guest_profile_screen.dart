@@ -242,16 +242,11 @@ class _GuestProfileBody extends ConsumerWidget {
               _Segmented(
                 going: guest.rsvpStatus != RsvpStatus.declined,
                 onChanged: (going) async {
+                  if (going == (guest.rsvpStatus != RsvpStatus.declined) && guest.rsvpStatus != RsvpStatus.pending) return;
                   try {
-                    await completeGuestOnboarding(
-                      attending: going,
-                      plusOneName: guest.plusOneName,
-                      menuSelection: guest.menuSelection,
-                      dietaryRestrictions: guest.dietaryRestrictions,
-                      side: guest.side,
-                      groupLabel: guest.group.isEmpty ? null : guest.group,
-                    );
+                    await setMyRsvp(guest, going);
                     ref.invalidate(myGuestRowProvider(weddingId));
+                    ref.invalidate(guestWeddingsProvider);
                   } catch (_) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível mudar a resposta.')));
