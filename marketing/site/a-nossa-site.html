@@ -34,7 +34,7 @@ h1, h2 { margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance; 
 .top .brand img { width: 38px; }
 .top .btn { margin-left: auto; height: 40px; padding: 0 18px; font-size: 14px; background: #fff; color: var(--euc); box-shadow: 0 8px 20px rgba(0,0,0,.12); }
 .top.ink { color: var(--ink); }
-.top.ink .btn { background: var(--euc); color: #fff; }
+.top.ink .btn { background: #171713; color: #fff; }
 
 /* história em scroll */
 .story { position: relative; height: calc(17.2 * 100vh); }
@@ -106,36 +106,7 @@ h1, h2 { margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance; 
 .cta h2 { font-size: clamp(54px, 9vw, 110px); letter-spacing: -3px; margin-top: 8px; }
 .cta p { font-size: 20px; opacity: .9; margin: 6px 0 28px; }
 .cta .btn { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
-.pre { scroll-margin-top: 110px; max-width: 420px; margin: 34px auto 0; background: #F2F0EB; border-radius: 28px; padding: 20px; display: flex; flex-direction: column; gap: 14px; text-align: left; color: #171713; }
-.pre [hidden] { display: none !important; }
-.pre-top { display: flex; align-items: center; gap: 12px; }
-.pre-back { width: 44px; height: 44px; border-radius: 22px; border: 0; background: #fff; display: flex; align-items: center; justify-content: center; flex: none; cursor: pointer; }
-.pre-bar { flex: 1; height: 10px; border-radius: 5px; background: #E2DED5; overflow: hidden; }
-.pre-bar i { display: block; height: 10px; border-radius: 5px; background: #4F6B4A; width: 25%; transition: width .3s; }
-.pre-top span { font-size: 12px; font-weight: 700; color: #57534E; min-width: 34px; text-align: right; }
-.pre-step { display: flex; flex-direction: column; gap: 10px; }
-.pre-caps, .pre-lbl { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #57534E; }
-.pre h3 { margin: 0; font-size: 28px; line-height: 1.15; text-wrap: balance; }
-.pre p { margin: 0; font-size: 14px; color: #57534E; line-height: 1.45; opacity: 1; }
-.pre-opts { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
-.pre-opt { all: unset; box-sizing: border-box; cursor: pointer; background: #fff; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
-.pre-opt b { font-size: 16px; }
-.pre-opt span { font-size: 13px; color: #57534E; line-height: 1.4; }
-.pre-opt.on { background: #4F6B4A; color: #fff; }
-.pre-opt.on span { color: rgba(255,255,255,.85); }
-.pre-opt:focus-visible, .pre-pill:focus-visible { outline: 3px solid #F2D98D; outline-offset: 2px; }
-.pre-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-.pre-pill { all: unset; cursor: pointer; height: 38px; padding: 0 16px; border-radius: 19px; background: #fff; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; }
-.pre-pill.on { background: #4F6B4A; color: #fff; }
-.pre-lbl { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
-.pre-lbl input { height: 52px; box-sizing: border-box; border: 0; border-radius: 26px; background: #fff; padding: 0 18px; font: inherit; font-size: 15px; letter-spacing: 0; color: #171713; }
-.pre-go { height: 52px; border: 0; border-radius: 26px; background: #171713; color: #fff; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
-.pre-go[disabled] { opacity: .35; cursor: default; }
-.pre-msg { font-size: 13px; color: #C8553D; min-height: 0; }
-.pre-msg:empty { display: none; }
-.pre-note { font-size: 13px; color: #57534E; text-align: center; }
-.pre-done { align-items: center; text-align: center; padding: 10px 0; }
-.pre-done img { width: 150px; }
+.cta .go { display: inline-flex; align-items: center; justify-content: center; height: 52px; padding: 0 30px; margin-top: 26px; border-radius: 26px; background: #171713; color: #fff; font-size: 15px; font-weight: 700; text-decoration: none; }
 footer { background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; padding: 18px max(20px, env(safe-area-inset-right, 0px)) 18px max(20px, env(safe-area-inset-left, 0px));
   display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
 
@@ -195,7 +166,7 @@ footer { background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pad
 
 <header class="top" id="top">
   <a class="brand" href="#"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzODQgMzUwIj48ZWxsaXBzZSBjeD0iMTkyIiBjeT0iMzEyIiByeD0iNzAiIHJ5PSI2IiBmaWxsPSIjRTJERUQyIi8+PHN2ZyB4PSIwIiB5PSIwIiB3aWR0aD0iMzg0IiBoZWlnaHQ9IjM1MCIgdmlld0JveD0iMzkgMTIgMzg0IDM1MCI+PHBhdGggZmlsbD0iIzRGNkI0QSIgZmlsbC1ydWxlPSJldmVub2RkIiBkPSJNMjI1LDgwIEwyMjEsODIgTDIxNyw4NiBMMjAyLDEyMSBMMTkyLDEzNyBMMTg1LDE0NiBMMTY5LDE2MSBMMTU2LDE3MCBMMTIwLDE4OCBMMTE1LDE5MyBMMTEzLDE5NyBMMTEzLDIwNCBMMTE1LDIwOCBMMTIzLDIxNSBMMTI5LDIxNyBMMTM0LDIyMCBMMTM2LDIyMCBMMTU5LDIzMSBMMTYxLDIzMyBMMTcxLDIzOCBMMTgyLDI0NiBMMTkzLDI1NiBMMjA5LDI3NiBMMjEwLDI3OSBMMjE1LDI4NiBMMjI1LDMwOCBMMjI5LDMxMiBMMjMyLDMxMyBMMjM5LDMxMyBMMjQzLDMxMSBMMjQ3LDMwNiBMMjQ3LDMwNCBMMjU0LDI4OSBMMjU0LDI4NyBMMjYzLDI2OSBMMjc4LDI0OCBMMjk3LDIzMCBMMzE2LDIxOCBMMzQ0LDIwNCBMMzQ5LDE5NiBMMzQ5LDE5MCBMMzQ3LDE4NiBMMzQyLDE4MSBMMzI2LDE3MyBMMzI0LDE3MyBMMzAzLDE2MiBMMjgxLDE0NiBMMjcyLDEzNyBMMjU5LDEyMCBMMjQxLDg2IEwyMzcsODIgTDIzMyw4MCBaIE0xODYsMTk1IEwxODcsMTk0IEwxODcsMTkxIEwxODgsMTkwIEwxODgsMTg5IEwxODksMTg4IEwxODksMTg3IEwxOTUsMTgxIEwxOTYsMTgxIEwxOTcsMTgwIEwxOTgsMTgwIEwxOTksMTc5IEwyMDEsMTc5IEwyMDIsMTc4IEwyMDksMTc4IEwyMTAsMTc5IEwyMTIsMTc5IEwyMTMsMTgwIEwyMTQsMTgwIEwyMTYsMTgyIEwyMTcsMTgyIEwyMjAsMTg1IEwyMjAsMTg2IEwyMjIsMTg4IEwyMjIsMTg5IEwyMjMsMTkwIEwyMjMsMTkyIEwyMjQsMTkzIEwyMjQsMTk3IEwyMjEsMjAwIEwyMTksMjAwIEwyMTYsMTk3IEwyMTYsMTk2IEwyMTUsMTk1IEwyMTUsMTkzIEwyMTQsMTkyIEwyMTQsMTkxIEwyMTIsMTg5IEwyMTEsMTg5IEwyMTAsMTg4IEwyMDksMTg4IEwyMDgsMTg3IEwyMDMsMTg3IEwyMDIsMTg4IEwyMDAsMTg4IEwxOTYsMTkyIEwxOTYsMTkzIEwxOTUsMTk0IEwxOTUsMTk3IEwxOTQsMTk4IEwxOTQsMTk5IEwxOTIsMjAxIEwxODksMjAxIEwxODYsMTk4IFogTTI0NCwxOTIgTDI0NSwxOTEgTDI0NSwxODggTDI0NiwxODcgTDI0NiwxODYgTDI0NywxODUgTDI0NywxODQgTDI1NCwxNzcgTDI1NSwxNzcgTDI1NiwxNzYgTDI1NywxNzYgTDI1OCwxNzUgTDI2OSwxNzUgTDI3MCwxNzYgTDI3MSwxNzYgTDI3MiwxNzcgTDI3MywxNzcgTDI3OCwxODIgTDI3OCwxODMgTDI4MCwxODUgTDI4MCwxODcgTDI4MSwxODggTDI4MSwxOTAgTDI4MiwxOTEgTDI4MiwxOTIgTDI4MSwxOTMgTDI4MSwxOTQgTDI4MCwxOTUgTDI3OSwxOTUgTDI3OCwxOTYgTDI3NiwxOTYgTDI3MywxOTMgTDI3MywxOTAgTDI3MiwxODkgTDI3MiwxODggTDI2OSwxODUgTDI2OCwxODUgTDI2NywxODQgTDI1OSwxODQgTDI1OCwxODUgTDI1NywxODUgTDI1NSwxODcgTDI1NSwxODggTDI1NCwxODkgTDI1NCwxOTAgTDI1MywxOTEgTDI1MywxOTUgTDI1MCwxOTggTDI0OCwxOTggTDI0NywxOTcgTDI0NiwxOTcgTDI0NSwxOTYgTDI0NSwxOTUgTDI0NCwxOTQgWiIvPjxwYXRoIGZpbGw9IiM0RjZCNEEiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTM3MSwxMTcgTDM2OCwxMTQgTDM2NywxMTQgTDM2NiwxMTMgTDM2NSwxMTMgTDM2NCwxMTQgTDM2MSwxMTQgTDM2MCwxMTUgTDM1OCwxMTUgTDM1NywxMTYgTDM1NCwxMTYgTDM1MywxMTcgTDM1MCwxMTcgTDM0OSwxMTggTDM0NiwxMTggTDM0NSwxMTkgTDM0MywxMTkgTDM0MiwxMjAgTDMzOSwxMjAgTDMzOCwxMjEgTDMzNiwxMjEgTDMzNSwxMjIgTDMzMiwxMjIgTDMzMSwxMjMgTDMzMCwxMjMgTDMzMCwxMjQgTDMyOSwxMjUgTDMyOSwxMzAgTDMzMSwxMzIgTDMzNywxMzIgTDMzOCwxMzEgTDM0MiwxMzEgTDM0MywxMzAgTDM0NSwxMzAgTDM0NiwxMjkgTDM0OSwxMjkgTDM1MCwxMjggTDM1NCwxMjggTDM1NSwxMjcgTDM1OCwxMjcgTDM1OSwxMjYgTDM2MSwxMjYgTDM2MiwxMjUgTDM2NSwxMjUgTDM2NiwxMjQgTDM2OCwxMjQgTDM3MSwxMjEgWiBNMzU0LDc0IEwzNTMsNzMgTDM1Miw3MyBMMzUxLDcyIEwzNDcsNzIgTDM0Miw3NyBMMzQxLDc3IEwzMjYsOTIgTDMyNSw5MiBMMzE2LDEwMSBMMzE2LDEwMyBMMzE1LDEwNCBMMzE1LDEwNSBMMzE2LDEwNiBMMzE2LDEwNyBMMzE4LDEwOSBMMzIzLDEwOSBMMzI3LDEwNSBMMzI4LDEwNSBMMzM1LDk4IEwzMzYsOTggTDM0Myw5MSBMMzQ0LDkxIEwzNTEsODQgTDM1Miw4NCBMMzU0LDgyIEwzNTQsODEgTDM1NSw4MCBMMzU1LDc2IEwzNTQsNzUgWiBNMzA5LDUxIEwzMDcsNTEgTDMwNiw1MiBMMzA1LDUyIEwzMDMsNTQgTDMwMyw1NiBMMzAyLDU3IEwzMDIsNTkgTDMwMSw2MCBMMzAxLDYyIEwzMDAsNjMgTDMwMCw2NiBMMjk5LDY3IEwyOTksNjkgTDI5OCw3MCBMMjk4LDcyIEwyOTcsNzMgTDI5Nyw3NSBMMjk2LDc2IEwyOTYsNzggTDI5NSw3OSBMMjk1LDgxIEwyOTQsODIgTDI5NCw4NSBMMjkzLDg2IEwyOTMsODggTDI5Miw4OSBMMjkyLDkxIEwyOTMsOTIgTDI5Myw5MyBMMjk1LDk1IEwyOTksOTUgTDMwMiw5MiBMMzAyLDkxIEwzMDMsOTAgTDMwMyw4OCBMMzA0LDg3IEwzMDQsODUgTDMwNSw4NCBMMzA1LDgyIEwzMDYsODEgTDMwNiw4MCBMMzA3LDc5IEwzMDcsNzcgTDMwOCw3NiBMMzA4LDc1IEwzMDksNzQgTDMwOSw3MiBMMzEwLDcxIEwzMTAsNjkgTDMxMSw2OCBMMzExLDY2IEwzMTIsNjUgTDMxMiw2MyBMMzEzLDYyIEwzMTMsNjEgTDMxNCw2MCBMMzE0LDU1IEwzMTMsNTQgTDMxMyw1MyBMMzEyLDUzIEwzMTEsNTIgTDMxMCw1MiBaIi8+PC9zdmc+PC9zdmc+" alt="">À Nossa!</a>
-  <a class="btn" href="#news">Fazer pré-registo</a>
+  <a class="btn" href="pre-registo/">Fazer pré-registo</a>
 </header>
 
 <main>
@@ -248,48 +219,7 @@ footer { background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pad
   <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzODQgMzUwIj48ZWxsaXBzZSBjeD0iMTkyIiBjeT0iMzEyIiByeD0iNzAiIHJ5PSI2IiBmaWxsPSIjRTJERUQyIi8+PHN2ZyB4PSIwIiB5PSIwIiB3aWR0aD0iMzg0IiBoZWlnaHQ9IjM1MCIgdmlld0JveD0iMzkgMTIgMzg0IDM1MCI+PHBhdGggZmlsbD0iIzRGNkI0QSIgZmlsbC1ydWxlPSJldmVub2RkIiBkPSJNMjI1LDgwIEwyMjEsODIgTDIxNyw4NiBMMjAyLDEyMSBMMTkyLDEzNyBMMTg1LDE0NiBMMTY5LDE2MSBMMTU2LDE3MCBMMTIwLDE4OCBMMTE1LDE5MyBMMTEzLDE5NyBMMTEzLDIwNCBMMTE1LDIwOCBMMTIzLDIxNSBMMTI5LDIxNyBMMTM0LDIyMCBMMTM2LDIyMCBMMTU5LDIzMSBMMTYxLDIzMyBMMTcxLDIzOCBMMTgyLDI0NiBMMTkzLDI1NiBMMjA5LDI3NiBMMjEwLDI3OSBMMjE1LDI4NiBMMjI1LDMwOCBMMjI5LDMxMiBMMjMyLDMxMyBMMjM5LDMxMyBMMjQzLDMxMSBMMjQ3LDMwNiBMMjQ3LDMwNCBMMjU0LDI4OSBMMjU0LDI4NyBMMjYzLDI2OSBMMjc4LDI0OCBMMjk3LDIzMCBMMzE2LDIxOCBMMzQ0LDIwNCBMMzQ5LDE5NiBMMzQ5LDE5MCBMMzQ3LDE4NiBMMzQyLDE4MSBMMzI2LDE3MyBMMzI0LDE3MyBMMzAzLDE2MiBMMjgxLDE0NiBMMjcyLDEzNyBMMjU5LDEyMCBMMjQxLDg2IEwyMzcsODIgTDIzMyw4MCBaIE0xODYsMTk1IEwxODcsMTk0IEwxODcsMTkxIEwxODgsMTkwIEwxODgsMTg5IEwxODksMTg4IEwxODksMTg3IEwxOTUsMTgxIEwxOTYsMTgxIEwxOTcsMTgwIEwxOTgsMTgwIEwxOTksMTc5IEwyMDEsMTc5IEwyMDIsMTc4IEwyMDksMTc4IEwyMTAsMTc5IEwyMTIsMTc5IEwyMTMsMTgwIEwyMTQsMTgwIEwyMTYsMTgyIEwyMTcsMTgyIEwyMjAsMTg1IEwyMjAsMTg2IEwyMjIsMTg4IEwyMjIsMTg5IEwyMjMsMTkwIEwyMjMsMTkyIEwyMjQsMTkzIEwyMjQsMTk3IEwyMjEsMjAwIEwyMTksMjAwIEwyMTYsMTk3IEwyMTYsMTk2IEwyMTUsMTk1IEwyMTUsMTkzIEwyMTQsMTkyIEwyMTQsMTkxIEwyMTIsMTg5IEwyMTEsMTg5IEwyMTAsMTg4IEwyMDksMTg4IEwyMDgsMTg3IEwyMDMsMTg3IEwyMDIsMTg4IEwyMDAsMTg4IEwxOTYsMTkyIEwxOTYsMTkzIEwxOTUsMTk0IEwxOTUsMTk3IEwxOTQsMTk4IEwxOTQsMTk5IEwxOTIsMjAxIEwxODksMjAxIEwxODYsMTk4IFogTTI0NCwxOTIgTDI0NSwxOTEgTDI0NSwxODggTDI0NiwxODcgTDI0NiwxODYgTDI0NywxODUgTDI0NywxODQgTDI1NCwxNzcgTDI1NSwxNzcgTDI1NiwxNzYgTDI1NywxNzYgTDI1OCwxNzUgTDI2OSwxNzUgTDI3MCwxNzYgTDI3MSwxNzYgTDI3MiwxNzcgTDI3MywxNzcgTDI3OCwxODIgTDI3OCwxODMgTDI4MCwxODUgTDI4MCwxODcgTDI4MSwxODggTDI4MSwxOTAgTDI4MiwxOTEgTDI4MiwxOTIgTDI4MSwxOTMgTDI4MSwxOTQgTDI4MCwxOTUgTDI3OSwxOTUgTDI3OCwxOTYgTDI3NiwxOTYgTDI3MywxOTMgTDI3MywxOTAgTDI3MiwxODkgTDI3MiwxODggTDI2OSwxODUgTDI2OCwxODUgTDI2NywxODQgTDI1OSwxODQgTDI1OCwxODUgTDI1NywxODUgTDI1NSwxODcgTDI1NSwxODggTDI1NCwxODkgTDI1NCwxOTAgTDI1MywxOTEgTDI1MywxOTUgTDI1MCwxOTggTDI0OCwxOTggTDI0NywxOTcgTDI0NiwxOTcgTDI0NSwxOTYgTDI0NSwxOTUgTDI0NCwxOTQgWiIvPjxwYXRoIGZpbGw9IiM0RjZCNEEiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTM3MSwxMTcgTDM2OCwxMTQgTDM2NywxMTQgTDM2NiwxMTMgTDM2NSwxMTMgTDM2NCwxMTQgTDM2MSwxMTQgTDM2MCwxMTUgTDM1OCwxMTUgTDM1NywxMTYgTDM1NCwxMTYgTDM1MywxMTcgTDM1MCwxMTcgTDM0OSwxMTggTDM0NiwxMTggTDM0NSwxMTkgTDM0MywxMTkgTDM0MiwxMjAgTDMzOSwxMjAgTDMzOCwxMjEgTDMzNiwxMjEgTDMzNSwxMjIgTDMzMiwxMjIgTDMzMSwxMjMgTDMzMCwxMjMgTDMzMCwxMjQgTDMyOSwxMjUgTDMyOSwxMzAgTDMzMSwxMzIgTDMzNywxMzIgTDMzOCwxMzEgTDM0MiwxMzEgTDM0MywxMzAgTDM0NSwxMzAgTDM0NiwxMjkgTDM0OSwxMjkgTDM1MCwxMjggTDM1NCwxMjggTDM1NSwxMjcgTDM1OCwxMjcgTDM1OSwxMjYgTDM2MSwxMjYgTDM2MiwxMjUgTDM2NSwxMjUgTDM2NiwxMjQgTDM2OCwxMjQgTDM3MSwxMjEgWiBNMzU0LDc0IEwzNTMsNzMgTDM1Miw3MyBMMzUxLDcyIEwzNDcsNzIgTDM0Miw3NyBMMzQxLDc3IEwzMjYsOTIgTDMyNSw5MiBMMzE2LDEwMSBMMzE2LDEwMyBMMzE1LDEwNCBMMzE1LDEwNSBMMzE2LDEwNiBMMzE2LDEwNyBMMzE4LDEwOSBMMzIzLDEwOSBMMzI3LDEwNSBMMzI4LDEwNSBMMzM1LDk4IEwzMzYsOTggTDM0Myw5MSBMMzQ0LDkxIEwzNTEsODQgTDM1Miw4NCBMMzU0LDgyIEwzNTQsODEgTDM1NSw4MCBMMzU1LDc2IEwzNTQsNzUgWiBNMzA5LDUxIEwzMDcsNTEgTDMwNiw1MiBMMzA1LDUyIEwzMDMsNTQgTDMwMyw1NiBMMzAyLDU3IEwzMDIsNTkgTDMwMSw2MCBMMzAxLDYyIEwzMDAsNjMgTDMwMCw2NiBMMjk5LDY3IEwyOTksNjkgTDI5OCw3MCBMMjk4LDcyIEwyOTcsNzMgTDI5Nyw3NSBMMjk2LDc2IEwyOTYsNzggTDI5NSw3OSBMMjk1LDgxIEwyOTQsODIgTDI5NCw4NSBMMjkzLDg2IEwyOTMsODggTDI5Miw4OSBMMjkyLDkxIEwyOTMsOTIgTDI5Myw5MyBMMjk1LDk1IEwyOTksOTUgTDMwMiw5MiBMMzAyLDkxIEwzMDMsOTAgTDMwMyw4OCBMMzA0LDg3IEwzMDQsODUgTDMwNSw4NCBMMzA1LDgyIEwzMDYsODEgTDMwNiw4MCBMMzA3LDc5IEwzMDcsNzcgTDMwOCw3NiBMMzA4LDc1IEwzMDksNzQgTDMwOSw3MiBMMzEwLDcxIEwzMTAsNjkgTDMxMSw2OCBMMzExLDY2IEwzMTIsNjUgTDMxMiw2MyBMMzEzLDYyIEwzMTMsNjEgTDMxNCw2MCBMMzE0LDU1IEwzMTMsNTQgTDMxMyw1MyBMMzEyLDUzIEwzMTEsNTIgTDMxMCw1MiBaIi8+PC9zdmc+PC9zdmc+" alt="">
   <h2>À Nossa!</h2>
   <p>Para todas as festas. Casamentos, aniversários, noites e festivais.</p>
-  <form class="pre" id="news" novalidate>
-    <div class="pre-top"><button type="button" class="pre-back" id="preBack" aria-label="Voltar" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#171713" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div class="pre-bar"><i id="preBar"></i></div><span id="prePct">25%</span></div>
-    <div class="pre-step" data-step="1">
-      <span class="pre-caps">1 DE 4</span>
-      <h3>Como vais usar a À Nossa!?</h3>
-      <p>Faz já o pré-registo. Avisamos-te quando a app estiver disponível.</p>
-      <div class="pre-opts">
-        <button type="button" class="pre-opt" data-role="organizador"><b>Quero organizar eventos</b><span>Casamento, aniversário, festa. Convidados, orçamento e parceiros num só sítio.</span></button>
-        <button type="button" class="pre-opt" data-role="parceiro"><b>Quero ser parceiro</b><span>Fotógrafo, espaço, catering, música… Recebe pedidos de orçamento e reservas. Os primeiros 100 ficam Parceiros Fundadores, com 3 meses sem taxa.</span></button>
-      </div>
-    </div>
-    <div class="pre-step" data-step="2" hidden>
-      <span class="pre-caps">2 DE 4</span>
-      <h3 id="preQ2">Que tipos de eventos gostavas de organizar?</h3>
-      <p id="preS2">Escolhe os que quiseres.</p>
-      <div class="pre-pills" id="prePills"></div>
-    </div>
-    <div class="pre-step" data-step="3" hidden>
-      <span class="pre-caps">3 DE 4</span>
-      <h3>De onde és?</h3>
-      <p>Para te mostrar parceiros e eventos perto de ti.</p>
-      <label class="pre-lbl" id="preBizL" hidden>NOME DO NEGÓCIO<input name="business" autocomplete="organization" maxlength="80"></label>
-      <label class="pre-lbl">PAÍS<input name="country" value="Portugal" autocomplete="country-name" maxlength="60"></label>
-      <label class="pre-lbl">CIDADE OU REGIÃO<input name="city" autocomplete="address-level2" maxlength="80" placeholder="Ex.: Lisboa"></label>
-      <div id="preAgeW"><span class="pre-lbl">IDADE</span><div class="pre-pills" id="preAge"></div></div>
-    </div>
-    <div class="pre-step" data-step="4" hidden>
-      <span class="pre-caps">4 DE 4</span>
-      <h3>Deixa o teu contacto</h3>
-      <p>Avisamos-te por email quando a À Nossa! estiver disponível.</p>
-      <label class="pre-lbl">NOME<input name="name" autocomplete="name" maxlength="80"></label>
-      <label class="pre-lbl">EMAIL<input name="email" type="email" autocomplete="email" maxlength="254"></label>
-    </div>
-    <div class="pre-step pre-done" data-step="5" hidden>
-      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzODQgMzUwIj48ZWxsaXBzZSBjeD0iMTkyIiBjeT0iMzEyIiByeD0iNzAiIHJ5PSI2IiBmaWxsPSIjRTJERUQyIi8+PHN2ZyB4PSIwIiB5PSIwIiB3aWR0aD0iMzg0IiBoZWlnaHQ9IjM1MCIgdmlld0JveD0iMzkgMTIgMzg0IDM1MCI+PHBhdGggZmlsbD0iIzRGNkI0QSIgZmlsbC1ydWxlPSJldmVub2RkIiBkPSJNMjI1LDgwIEwyMjEsODIgTDIxNyw4NiBMMjAyLDEyMSBMMTkyLDEzNyBMMTg1LDE0NiBMMTY5LDE2MSBMMTU2LDE3MCBMMTIwLDE4OCBMMTE1LDE5MyBMMTEzLDE5NyBMMTEzLDIwNCBMMTE1LDIwOCBMMTIzLDIxNSBMMTI5LDIxNyBMMTM0LDIyMCBMMTM2LDIyMCBMMTU5LDIzMSBMMTYxLDIzMyBMMTcxLDIzOCBMMTgyLDI0NiBMMTkzLDI1NiBMMjA5LDI3NiBMMjEwLDI3OSBMMjE1LDI4NiBMMjI1LDMwOCBMMjI5LDMxMiBMMjMyLDMxMyBMMjM5LDMxMyBMMjQzLDMxMSBMMjQ3LDMwNiBMMjQ3LDMwNCBMMjU0LDI4OSBMMjU0LDI4NyBMMjYzLDI2OSBMMjc4LDI0OCBMMjk3LDIzMCBMMzE2LDIxOCBMMzQ0LDIwNCBMMzQ5LDE5NiBMMzQ5LDE5MCBMMzQ3LDE4NiBMMzQyLDE4MSBMMzI2LDE3MyBMMzI0LDE3MyBMMzAzLDE2MiBMMjgxLDE0NiBMMjcyLDEzNyBMMjU5LDEyMCBMMjQxLDg2IEwyMzcsODIgTDIzMyw4MCBaIE0xODYsMTk1IEwxODcsMTk0IEwxODcsMTkxIEwxODgsMTkwIEwxODgsMTg5IEwxODksMTg4IEwxODksMTg3IEwxOTUsMTgxIEwxOTYsMTgxIEwxOTcsMTgwIEwxOTgsMTgwIEwxOTksMTc5IEwyMDEsMTc5IEwyMDIsMTc4IEwyMDksMTc4IEwyMTAsMTc5IEwyMTIsMTc5IEwyMTMsMTgwIEwyMTQsMTgwIEwyMTYsMTgyIEwyMTcsMTgyIEwyMjAsMTg1IEwyMjAsMTg2IEwyMjIsMTg4IEwyMjIsMTg5IEwyMjMsMTkwIEwyMjMsMTkyIEwyMjQsMTkzIEwyMjQsMTk3IEwyMjEsMjAwIEwyMTksMjAwIEwyMTYsMTk3IEwyMTYsMTk2IEwyMTUsMTk1IEwyMTUsMTkzIEwyMTQsMTkyIEwyMTQsMTkxIEwyMTIsMTg5IEwyMTEsMTg5IEwyMTAsMTg4IEwyMDksMTg4IEwyMDgsMTg3IEwyMDMsMTg3IEwyMDIsMTg4IEwyMDAsMTg4IEwxOTYsMTkyIEwxOTYsMTkzIEwxOTUsMTk0IEwxOTUsMTk3IEwxOTQsMTk4IEwxOTQsMTk5IEwxOTIsMjAxIEwxODksMjAxIEwxODYsMTk4IFogTTI0NCwxOTIgTDI0NSwxOTEgTDI0NSwxODggTDI0NiwxODcgTDI0NiwxODYgTDI0NywxODUgTDI0NywxODQgTDI1NCwxNzcgTDI1NSwxNzcgTDI1NiwxNzYgTDI1NywxNzYgTDI1OCwxNzUgTDI2OSwxNzUgTDI3MCwxNzYgTDI3MSwxNzYgTDI3MiwxNzcgTDI3MywxNzcgTDI3OCwxODIgTDI3OCwxODMgTDI4MCwxODUgTDI4MCwxODcgTDI4MSwxODggTDI4MSwxOTAgTDI4MiwxOTEgTDI4MiwxOTIgTDI4MSwxOTMgTDI4MSwxOTQgTDI4MCwxOTUgTDI3OSwxOTUgTDI3OCwxOTYgTDI3NiwxOTYgTDI3MywxOTMgTDI3MywxOTAgTDI3MiwxODkgTDI3MiwxODggTDI2OSwxODUgTDI2OCwxODUgTDI2NywxODQgTDI1OSwxODQgTDI1OCwxODUgTDI1NywxODUgTDI1NSwxODcgTDI1NSwxODggTDI1NCwxODkgTDI1NCwxOTAgTDI1MywxOTEgTDI1MywxOTUgTDI1MCwxOTggTDI0OCwxOTggTDI0NywxOTcgTDI0NiwxOTcgTDI0NSwxOTYgTDI0NSwxOTUgTDI0NCwxOTQgWiIvPjxwYXRoIGZpbGw9IiM0RjZCNEEiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTM3MSwxMTcgTDM2OCwxMTQgTDM2NywxMTQgTDM2NiwxMTMgTDM2NSwxMTMgTDM2NCwxMTQgTDM2MSwxMTQgTDM2MCwxMTUgTDM1OCwxMTUgTDM1NywxMTYgTDM1NCwxMTYgTDM1MywxMTcgTDM1MCwxMTcgTDM0OSwxMTggTDM0NiwxMTggTDM0NSwxMTkgTDM0MywxMTkgTDM0MiwxMjAgTDMzOSwxMjAgTDMzOCwxMjEgTDMzNiwxMjEgTDMzNSwxMjIgTDMzMiwxMjIgTDMzMSwxMjMgTDMzMCwxMjMgTDMzMCwxMjQgTDMyOSwxMjUgTDMyOSwxMzAgTDMzMSwxMzIgTDMzNywxMzIgTDMzOCwxMzEgTDM0MiwxMzEgTDM0MywxMzAgTDM0NSwxMzAgTDM0NiwxMjkgTDM0OSwxMjkgTDM1MCwxMjggTDM1NCwxMjggTDM1NSwxMjcgTDM1OCwxMjcgTDM1OSwxMjYgTDM2MSwxMjYgTDM2MiwxMjUgTDM2NSwxMjUgTDM2NiwxMjQgTDM2OCwxMjQgTDM3MSwxMjEgWiBNMzU0LDc0IEwzNTMsNzMgTDM1Miw3MyBMMzUxLDcyIEwzNDcsNzIgTDM0Miw3NyBMMzQxLDc3IEwzMjYsOTIgTDMyNSw5MiBMMzE2LDEwMSBMMzE2LDEwMyBMMzE1LDEwNCBMMzE1LDEwNSBMMzE2LDEwNiBMMzE2LDEwNyBMMzE4LDEwOSBMMzIzLDEwOSBMMzI3LDEwNSBMMzI4LDEwNSBMMzM1LDk4IEwzMzYsOTggTDM0Myw5MSBMMzQ0LDkxIEwzNTEsODQgTDM1Miw4NCBMMzU0LDgyIEwzNTQsODEgTDM1NSw4MCBMMzU1LDc2IEwzNTQsNzUgWiBNMzA5LDUxIEwzMDcsNTEgTDMwNiw1MiBMMzA1LDUyIEwzMDMsNTQgTDMwMyw1NiBMMzAyLDU3IEwzMDIsNTkgTDMwMSw2MCBMMzAxLDYyIEwzMDAsNjMgTDMwMCw2NiBMMjk5LDY3IEwyOTksNjkgTDI5OCw3MCBMMjk4LDcyIEwyOTcsNzMgTDI5Nyw3NSBMMjk2LDc2IEwyOTYsNzggTDI5NSw3OSBMMjk1LDgxIEwyOTQsODIgTDI5NCw4NSBMMjkzLDg2IEwyOTMsODggTDI5Miw4OSBMMjkyLDkxIEwyOTMsOTIgTDI5Myw5MyBMMjk1LDk1IEwyOTksOTUgTDMwMiw5MiBMMzAyLDkxIEwzMDMsOTAgTDMwMyw4OCBMMzA0LDg3IEwzMDQsODUgTDMwNSw4NCBMMzA1LDgyIEwzMDYsODEgTDMwNiw4MCBMMzA3LDc5IEwzMDcsNzcgTDMwOCw3NiBMMzA4LDc1IEwzMDksNzQgTDMwOSw3MiBMMzEwLDcxIEwzMTAsNjkgTDMxMSw2OCBMMzExLDY2IEwzMTIsNjUgTDMxMiw2MyBMMzEzLDYyIEwzMTMsNjEgTDMxNCw2MCBMMzE0LDU1IEwzMTMsNTQgTDMxMyw1MyBMMzEyLDUzIEwzMTEsNTIgTDMxMCw1MiBaIi8+PC9zdmc+PC9zdmc+" alt="">
-      <h3>Pré-registo feito!</h3>
-      <p>Avisamos-te por email quando a À Nossa! estiver disponível.</p>
-    </div>
-    <small class="pre-msg" id="newsMsg" aria-live="polite"></small>
-    <button type="submit" class="pre-go" id="preGo" disabled>Continuar</button>
-    <small class="pre-note" id="preNote" hidden>Só usamos o teu email para te avisar do lançamento e das novidades da À Nossa!.</small>
-  </form>
+  <a class="go" href="pre-registo/">Fazer pré-registo</a>
 </section>
 </main>
 
@@ -448,90 +378,6 @@ function showCueLater() {
 addEventListener('scroll', showCueLater, { passive: true });
 addEventListener('touchstart', () => cue.classList.add('off'), { passive: true });
 tick();
-</script>
-<script>
-(function () {
-  var f = document.getElementById('news');
-  if (!f) return;
-  var EVENTS = ['Casamento', 'Aniversário', 'Batizado', 'Festa', 'Despedida', 'Evento de empresa', 'Jantar', 'Outro'];
-  var CATS = ['Restaurante', 'Bar', 'Espaço', 'Catering', 'Fotografia', 'Música e DJ', 'Flores e decoração', 'Bolos', 'Convites', 'Animação', 'Aluguer', 'Transporte', 'Outro'];
-  var AGES = ['18–24', '25–34', '35–44', '45–54', '55+'];
-  var st = { step: 1, role: null, picks: [], age: null };
-  var $ = function (id) { return document.getElementById(id); };
-  var go = $('preGo'), msg = $('newsMsg');
-  function pills(box, items, multi, sel, onChange) {
-    box.innerHTML = '';
-    items.forEach(function (t) {
-      var b = document.createElement('button');
-      b.type = 'button'; b.className = 'pre-pill' + (sel(t) ? ' on' : ''); b.textContent = t;
-      b.setAttribute('aria-pressed', sel(t) ? 'true' : 'false');
-      b.onclick = function () { onChange(t); };
-      box.appendChild(b);
-    });
-  }
-  function drawPicks() {
-    var items = st.role === 'parceiro' ? CATS : EVENTS;
-    pills($('prePills'), items, true, function (t) { return st.picks.indexOf(t) >= 0; }, function (t) {
-      var i = st.picks.indexOf(t); if (i >= 0) st.picks.splice(i, 1); else st.picks.push(t); drawPicks(); render();
-    });
-  }
-  function drawAge() {
-    pills($('preAge'), AGES, false, function (t) { return st.age === t; }, function (t) { st.age = st.age === t ? null : t; drawAge(); });
-  }
-  function valid() {
-    if (st.step === 1) return !!st.role;
-    if (st.step === 2) return st.picks.length > 0;
-    if (st.step === 3) return f.city.value.trim().length > 1 && (st.role !== 'parceiro' || f.business.value.trim().length > 1);
-    if (st.step === 4) return f.name.value.trim().length > 1 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.value.trim());
-    return false;
-  }
-  function render() {
-    [].forEach.call(f.querySelectorAll('.pre-step'), function (s) { s.hidden = +s.dataset.step !== st.step; });
-    var pct = Math.min(st.step, 4) * 25;
-    $('preBar').style.width = pct + '%'; $('prePct').textContent = pct + '%';
-    $('preBack').hidden = st.step === 1 || st.step === 5;
-    go.hidden = st.step === 5; $('preNote').hidden = st.step !== 4;
-    f.querySelector('.pre-top').hidden = st.step === 5;
-    go.textContent = st.step === 4 ? 'Fazer pré-registo' : 'Continuar';
-    go.disabled = !valid();
-    var partner = st.role === 'parceiro';
-    $('preQ2').textContent = partner ? 'O que fazes?' : 'Que tipos de eventos gostavas de organizar?';
-    $('preS2').textContent = partner ? 'Escolhe as categorias do teu negócio.' : 'Escolhe os que quiseres. Mostramos-te ideias e parceiros a pensar nisso.';
-    $('preBizL').hidden = !partner; $('preAgeW').hidden = partner;
-  }
-  [].forEach.call(f.querySelectorAll('.pre-opt'), function (b) {
-    b.onclick = function () {
-      if (st.role !== b.dataset.role) st.picks = [];
-      st.role = b.dataset.role;
-      [].forEach.call(f.querySelectorAll('.pre-opt'), function (o) { o.classList.toggle('on', o === b); o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
-      drawPicks(); render();
-    };
-  });
-  f.addEventListener('input', render);
-  $('preBack').onclick = function () { msg.textContent = ''; st.step = Math.max(1, st.step - 1); render(); };
-  f.addEventListener('submit', function (e) {
-    e.preventDefault();
-    if (!valid()) return;
-    msg.textContent = '';
-    if (st.step < 4) { st.step++; render(); return; }
-    go.disabled = true; go.textContent = 'A guardar…';
-    fetch('https://yknbtsmcmjxzzhijyiav.supabase.co/rest/v1/rpc/newsletter_signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_TkmeAQOlKuN4kUii5i70Rg_Qiz8D7cc' },
-      body: JSON.stringify({
-        p_email: f.email.value.trim(), p_kind: st.role, p_source: 'site', p_name: f.name.value.trim(),
-        p_interests: st.picks, p_business: st.role === 'parceiro' ? f.business.value.trim() : null,
-        p_country: f.country.value.trim(), p_city: f.city.value.trim(), p_age: st.role === 'parceiro' ? null : st.age
-      })
-    }).then(function (r) {
-      if (!r.ok) throw new Error(r.status);
-      st.step = 5; render();
-    }).catch(function () {
-      msg.textContent = 'Não foi possível guardar. Tenta outra vez.'; render();
-    });
-  });
-  drawAge(); render();
-})();
 </script>
 </body>
 </html>
