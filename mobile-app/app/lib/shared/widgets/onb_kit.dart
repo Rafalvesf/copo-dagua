@@ -77,7 +77,7 @@ class OnbButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const text = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700);
+    const text = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 17, fontWeight: FontWeight.w700);
     final child = loading
         ? SizedBox(
             width: 20,
@@ -85,7 +85,7 @@ class OnbButton extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2, color: secondary ? AppTheme.ink : Colors.white))
         : Text(label);
     return SizedBox(
-      height: 52,
+      height: 56,
       width: double.infinity,
       child: secondary
           ? OutlinedButton(
@@ -122,7 +122,7 @@ class OnbGroupLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(text.toUpperCase(),
-      style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted));
+      style: const TextStyle(fontSize: 13, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted));
 }
 
 /// Texto pequeno de apoio (13, cinzento).
@@ -169,10 +169,11 @@ class OnbStep extends StatelessWidget {
     final body = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       const SizedBox(height: 28),
       if (kicker != null) ...[OnbGroupLabel(kicker!), const SizedBox(height: 8)],
-      Text(title, style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      // Escala de primeiro contacto (DESIGN.md §6): título 32.
+      Text(title, style: const TextStyle(fontSize: 32, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       if (subtitle != null) ...[
         const SizedBox(height: 8),
-        Text(subtitle!, style: const TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+        Text(subtitle!, style: const TextStyle(fontSize: 17, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
       ],
       const SizedBox(height: 24),
       child,

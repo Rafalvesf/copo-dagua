@@ -6,6 +6,14 @@ import 'mascot.dart';
 /// Ecrã de estado das páginas públicas e de autenticação (convites,
 /// RSVP, verificar email…): mascote, título, texto e botões, centrados.
 /// Antes eram só uma linha de texto num fundo vazio (revisão 2026-10-17).
+/// Texto dos botões na escala de primeiro contacto (17, negrito).
+const _firstTouchButtonText = TextStyle(
+  fontFamily: AppTheme.fontFamily,
+  fontFamilyFallback: AppTheme.fontFamilyFallback,
+  fontSize: 17,
+  fontWeight: FontWeight.w700,
+);
+
 class PublicStateView extends StatelessWidget {
   final MascotPose pose;
   final String title;
@@ -36,22 +44,63 @@ class PublicStateView extends StatelessWidget {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 22, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                // Escala de primeiro contacto (DESIGN.md §3): título 32.
+                style: const TextStyle(fontSize: 32, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink),
               ),
               if (message != null) ...[
                 const SizedBox(height: 10),
                 Text(
                   message!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: AppFontSize.base + 1, height: 1.5, color: AppTheme.inkMuted),
+                  // Escala de primeiro contacto (DESIGN.md §3): texto 17.
+                  style: const TextStyle(fontSize: 17, height: 1.5, color: AppTheme.inkMuted),
                 ),
               ],
               if (actions.isNotEmpty) ...[
                 const SizedBox(height: 28),
-                for (var i = 0; i < actions.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 12),
-                  actions[i],
-                ],
+                // Escala de primeiro contacto: botões maiores (17/56) só
+                // nestes ecrãs, replicando o estilo global do tema (preto,
+                // pílula) para não o perder.
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    elevatedButtonTheme: ElevatedButtonThemeData(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(56),
+                        backgroundColor: AppTheme.ink,
+                        foregroundColor: Colors.white,
+                        shape: const StadiumBorder(),
+                        textStyle: _firstTouchButtonText,
+                      ),
+                    ),
+                    filledButtonTheme: FilledButtonThemeData(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(56),
+                        backgroundColor: AppTheme.ink,
+                        foregroundColor: Colors.white,
+                        shape: const StadiumBorder(),
+                        textStyle: _firstTouchButtonText,
+                      ),
+                    ),
+                    outlinedButtonTheme: OutlinedButtonThemeData(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(56),
+                        foregroundColor: AppTheme.ink,
+                        side: const BorderSide(color: AppTheme.ink),
+                        shape: const StadiumBorder(),
+                        textStyle: _firstTouchButtonText,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var i = 0; i < actions.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 12),
+                        actions[i],
+                      ],
+                    ],
+                  ),
+                ),
               ],
             ],
           ),

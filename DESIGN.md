@@ -80,6 +80,15 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
 | Título de grupo em maiúsculas ("HOJE", "CONTA") | 12, espaçamento 2 | negrito, `#57534E` |
 | Texto da navbar | 11 | negrito |
 
+**Páginas de primeiro contacto** (onboarding e páginas/estados públicos —
+`shared/widgets/onb_kit.dart` e `shared/widgets/public_state.dart`:
+boas-vindas, convites, `/juntar`, RSVP, verificar email, erros): letra maior,
+mais acolhedora. Só nestes ecrãs — e em mais lado nenhum — vale esta escala
+(pedido do Rafael, 2026-11-16): título **32**, texto/subtítulo **17**, título
+de grupo/eyebrow **13**, botões **17** (altura **56**). O 32 e o 17 são
+exceções conscientes à regra «sem tamanhos intermédios», limitadas a estes
+ecrãs. O resto da app mantém a tabela acima.
+
 ## 4. Espaços e formas
 
 - Margem lateral das páginas: **20** (`AppTheme.screenMargin`).
@@ -129,7 +138,8 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
 - **Onboarding** (`shared/widgets/onb_kit.dart`, mockup "Onboarding"
   2026-11-12): barra de progresso verde de **10** com a percentagem (12
   negrito) à direita — começa sempre em 20%; botão de voltar redondo
-  branco 44; "1 DE 4" como título de grupo; título 28, subtítulo 14;
+  branco 44; "1 DE 4" como título de grupo (13); título 32, subtítulo 17
+  (escala de primeiro contacto, §3);
   caixas de texto em pílula branca **52** (texto 15, contador 13 à
   direita, erro = linha vermelha 1,5 + ponto + frase 13); cartões de
   opção brancos (cantos 22, interior 16), **verdes quando escolhidos**;
