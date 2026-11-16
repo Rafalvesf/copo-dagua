@@ -193,7 +193,10 @@ class PartnerHomeScreen extends ConsumerWidget {
                 _WeekStrip(bookings: thisWeek),
                 const SectionTitle('O teu negócio'),
                 _BizGrid(items: [
-                  (Hi.calendarDays, 'Reservas', pending == 0 ? 'Tudo em dia' : '$pending ${pending == 1 ? 'pendente' : 'pendentes'}',
+                  (Hi.calendarDays, 'Reservas',
+                      profile?.onboardingComplete == false
+                          ? 'Cria o perfil do negócio'
+                          : pending == 0 ? 'Tudo em dia' : '$pending ${pending == 1 ? 'pendente' : 'pendentes'}',
                       '/partner-requests', newRequests.length),
                   (
                     Hi.calendarDays,

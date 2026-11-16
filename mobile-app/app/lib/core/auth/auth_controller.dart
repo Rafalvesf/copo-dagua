@@ -69,7 +69,10 @@ class AuthState {
     // Convidado não tem nenhum wizard de onboarding (não cria casamento nem
     // negócio) — `onboarding_completed` fica sempre `false` em `profiles`
     // para este role e nunca deve prender o convidado no wizard do casal.
-    if (profile.role != UserRole.guest && !profile.onboardingComplete) {
+    // Parceiro (canvas «Onboarding», 2026-11-16): entra logo na app depois
+    // de criar a conta; o perfil do negócio só é pedido ao tocar em
+    // «Reservas» (`/partner-setup`, ver router).
+    if (profile.role == UserRole.couple && !profile.onboardingComplete) {
       return AuthStatus.onboardingIncomplete;
     }
     return AuthStatus.active;
@@ -228,8 +231,45 @@ class AuthController extends Notifier<AuthState> {
     await _applyPendingPartnerInvite(user);
     final profile = await _loadProfile(user);
     _pendingSignup = null;
-    // Continua no onboarding (o router não sai de /onboarding).
-    state = AuthState(status: AuthStatus.onboardingIncomplete, profile: profile);
+    // Organizador: continua no onboarding (o router não sai de
+    // /onboarding). Parceiro: entra na app.
+    state = AuthState(status: AuthState.statusFor(profile), profile: profile);
+  }
+
+  /// Parceiro (2026-11-16): a conta é criada logo no fim do registo e
+  /// entra na app; o perfil do negócio fica para quando tocar em
+  /// «Reservas».
+  Future<void> registerPartner({
+    required String fullName,
+    required String email,
+    String? phone,
+    required String password,
+  }) async {
+    _pendingSignup = PendingSignup(fullName: fullName, email: email, phone: phone, password: password, role: UserRole.partner);
+    BrindeGate.pending = true;
+    state = const AuthState(status: AuthStatus.authenticating);
+    try {
+      await commitSignup();
+    } on SignupFailed catch (e) {
+      _pendingSignup = null;
+      if (state.status == AuthStatus.emailUnverified) return;
+      BrindeGate.pending = false;
+      state = AuthState(status: AuthStatus.error, errorMessage: e.message);
+    } catch (_) {
+      _pendingSignup = null;
+      BrindeGate.pending = false;
+      state = const AuthState(status: AuthStatus.error, errorMessage: 'Não foi possível criar a conta. Tenta novamente.');
+    }
+  }
+
+  /// Fim do perfil do negócio dentro da app (`/partner-setup`): marca o
+  /// onboarding como feito sem sair da sessão nem passar pelo brinde.
+  Future<void> completePartnerProfile() async {
+    final profile = state.profile;
+    if (profile == null) return;
+    await supabase.from('profiles').update({'onboarding_completed': true}).eq('id', profile.id);
+    final updated = profile.copyWith(onboardingComplete: true);
+    state = AuthState(status: AuthState.statusFor(updated), profile: updated);
   }
 
   static const _keepKey = 'keep_signed_in';

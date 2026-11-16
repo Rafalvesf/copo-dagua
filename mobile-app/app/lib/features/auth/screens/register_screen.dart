@@ -188,6 +188,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     // onboarding (no "Pronto") — até lá os dados ficam em memória.
     // Utilizador sem código: segue para o onboarding, que pergunta se
     // quer criar já um evento ou mais tarde (pedido 2026-11).
+    if (widget.role == UserRole.partner) {
+      // Parceiro (2026-11-16): cria já a conta e entra na app; o perfil do
+      // negócio só aparece ao tocar em «Reservas».
+      await ref.read(authControllerProvider.notifier).registerPartner(
+            fullName: _name.text.trim(),
+            email: _email.text.trim(),
+            phone: _phone.text.trim(),
+            password: _password.text,
+          );
+      return;
+    }
     if (widget.role != UserRole.guest || _codeOrNull == null) {
       ref.read(authControllerProvider.notifier).startSignup(
             fullName: _name.text.trim(),
