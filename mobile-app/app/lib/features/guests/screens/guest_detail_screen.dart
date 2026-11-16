@@ -5,8 +5,8 @@ import '../../../core/guest_home/guest_home_providers.dart' show guestCompanions
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/chat/group_chat.dart' show openDirectChat, DirectChatUnavailable;
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
@@ -111,12 +111,23 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
 
   Guest get guest => widget.guest;
 
-  Future<void> _launchContact(BuildContext context, Uri uri) async {
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && context.mounted) {
+  Future<void> _messageGuest(BuildContext context) async {
+    final id = guest.linkedProfileId;
+    if (id == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir a aplicação.')),
+        const SnackBar(content: Text('Ainda não tem conta na app. Envia-lhe o convite em «Convidar».')),
       );
+      return;
+    }
+    try {
+      final g = await openDirectChat(id);
+      if (context.mounted) await context.push('/group/${g.id}', extra: g);
+    } on DirectChatUnavailable catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível abrir a conversa.')));
+      }
     }
   }
 
@@ -294,11 +305,9 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
         Padding(
           padding: const EdgeInsets.only(top: 16),
           child: Row(children: [
-            action(Hi.chatBubbleOvalLeft, 'Mensagem',
-                guest.phone == null ? null : () => _launchContact(context, Uri(scheme: 'sms', path: guest.phone))),
-            action(Hi.phone, 'Ligar', guest.phone == null ? null : () => _launchContact(context, Uri(scheme: 'tel', path: guest.phone))),
-            action(Hi.envelope, 'Email',
-                guest.email == null ? null : () => _launchContact(context, Uri(scheme: 'mailto', path: guest.email))),
+            // «Mensagem» abre a conversa direta na app (192), sem SMS,
+            // chamada nem email (pedido 2026-11-16).
+            action(Hi.chatBubbleOvalLeft, 'Mensagem', () => _messageGuest(context)),
             // «Ver perfil» (2026-11-15): só quando a pessoa já tem conta na
             // app (entrou com o link ou o código) — para a seguir.
             if (guest.linkedProfileId != null)
