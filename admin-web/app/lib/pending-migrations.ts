@@ -375,6 +375,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Parceiros e organizadores convidam pelo link; a cada 5 convidados que fazem o 1.º pagamento, quem convidou tem 50 % de desconto na taxa da próxima transação (sem mínimo de 500 €; Pro igual). Contas novas têm 50 % na 1.ª transação.",
     check: { kind: "marker", id: "193" },
   },
+  {
+    file: "194_close_done_admin_tasks.sql",
+    date: "2026-11-16",
+    title: "Fechar tarefas já feitas",
+    what: "Marca como feitas: extras na reserva, cada um paga o seu e convites com desconto; acrescenta a tarefa de testar o que entrou a 15–16 nov.",
+    check: { kind: "marker", id: "194" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
