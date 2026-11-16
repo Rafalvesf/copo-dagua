@@ -1384,8 +1384,7 @@ class CoupleBooking {
   /// Id do pagamento pendente do sinal (`payments.id`, tipo `deposit`,
   /// estado `pending`) — `null` quando não há nenhum sinal por pagar
   /// (já foi pago, ou a reserva ainda não chegou a esse ponto). Usado
-  /// para abrir o checkout Stripe (`create-deposit-checkout`, ver
-  /// `mobile-app/payments/stripe-connect.md`).
+  /// para abrir o pagamento na app (`create-payment-intent`).
   final String? pendingDepositPaymentId;
   final double? depositAmount;
 

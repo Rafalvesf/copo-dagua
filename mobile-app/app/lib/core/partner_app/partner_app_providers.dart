@@ -454,8 +454,8 @@ final partnerStripeStatusProvider = FutureProvider<PartnerStripeStatus>((
 /// URL de onboarding da Stripe a abrir no browser.
 ///
 /// `return_url`/`refresh_url` têm de ser `https://` reais — ao contrário
-/// da Checkout Session (`createDepositCheckoutUrl`, que aceita esquemas
-/// próprios como `copodagua://` para redireccionar de volta à app), o
+/// de uma Checkout Session (que aceitava esquemas próprios como
+/// `copodagua://` para redireccionar de volta à app), o
 /// endpoint `account_links` da Stripe recusa qualquer URL que não seja
 /// `http(s)`, confirmado ao testar contra a API real (`url_invalid`).
 /// Sem nenhuma página web pública própria ainda para este projeto, usa-se
