@@ -136,7 +136,7 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
   grelha de tipos de evento em 3 colunas (82 de altura, ícone 24, texto
   12 negrito); contador de pessoas com número 40.
 - **Mascote — a estrela** (`shared/widgets/estrela.dart`, desenho do
-  Rafael, canvas «Estrela · reações», 2026-11-14): estrela verde `#596440`,
+  Rafael, canvas «Estrela · reações», 2026-11-14): estrela no verde da app `#4F6B4A` (pedido 2026-11-16),
   lisa, com sombra no chão; 12 reações (feliz, parabéns, apaixonada, fixe,
   piscar o olho, surpresa, a dormir, a pensar, contente, triste, zangada,
   ideia). Anima 3 vezes ao aparecer e fica parada; só «a pensar» pode
