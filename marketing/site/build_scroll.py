@@ -189,6 +189,15 @@ h1, h2 {{ margin: 0; font-weight: 700; letter-spacing: -1px; text-wrap: balance;
 .cta h2 {{ font-size: clamp(54px, 9vw, 110px); letter-spacing: -3px; margin-top: 8px; }}
 .cta p {{ font-size: 20px; opacity: .9; margin: 6px 0 28px; }}
 .cta .btn {{ background: #fff; color: var(--euc); }}
+.news {{ max-width: 520px; margin: 34px auto 0; display: flex; flex-direction: column; gap: 12px; text-align: left; }}
+.news b {{ font-size: 20px; text-align: center; text-wrap: balance; }}
+.news-row {{ display: flex; gap: 8px; flex-wrap: wrap; }}
+.news-row input {{ flex: 1 1 220px; min-width: 0; height: 52px; border: 0; border-radius: 26px; padding: 0 20px; font: inherit; font-size: 15px; color: #171713; }}
+.news-row button {{ flex: 0 0 auto; height: 52px; padding: 0 22px; border: 0; border-radius: 26px; background: #171713; color: #fff; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }}
+.news-row button[disabled] {{ opacity: .6; cursor: default; }}
+@media (max-width: 480px) {{ .news-row button {{ flex: 1 1 100%; }} }}
+.news-sub {{ font-size: 14px; opacity: .9; text-align: center; margin-top: -6px; }}
+.news small {{ font-size: 13px; opacity: .85; text-align: center; }}
 footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; padding: 18px max(20px, env(safe-area-inset-right, 0px)) 18px max(20px, env(safe-area-inset-left, 0px));
   display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }}
 
@@ -214,7 +223,7 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
 </style>
 
 <header class="top" id="top">
-  <a class="brand" href="#"><img src="{img('glass_gold.png')}" alt="">À Nossa!</a>
+  <a class="brand" href="#"><img src="{img('estrela_parabens_circulo.svg')}" alt="">À Nossa!</a>
   <a class="btn" href="{APP}" target="_blank" rel="noopener">Abrir a app</a>
 </header>
 
@@ -223,7 +232,7 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
   {snaps}
   <div class="pin" id="pin">
     <div class="hero" id="hero">
-      <img src="{img('duo_clink.png')}" alt="Duas taças a brindar">
+      <img src="{img('estrela_parabens_circulo.svg')}" alt="A estrela da À Nossa! a celebrar">
       <h1>À Nossa!</h1>
       <p>O teu evento, num só lugar.</p>
     </div>
@@ -249,10 +258,19 @@ footer {{ background: #3E5539; color: rgba(255,255,255,.75); font-size: 13px; pa
 </section>
 
 <section class="band cta">
-  <img src="{img('duo_clink.png')}" alt="">
+  <img src="{img('estrela_parabens_circulo.svg')}" alt="">
   <h2>À Nossa!</h2>
   <p>Para todas as festas.</p>
   <a class="btn" href="{APP}" target="_blank" rel="noopener">Abrir a app</a>
+  <form class="news" id="news" novalidate>
+    <b>Tens um negócio de eventos?</b>
+    <span class="news-sub">Restaurantes, espaços, fotografia, flores, música… Faz já o pré-registo: os primeiros 100 parceiros ficam como Parceiros Fundadores, com 3 meses sem taxa.</span>
+    <div class="news-row">
+      <input type="email" name="email" placeholder="O email do teu negócio" autocomplete="email" required aria-label="Email">
+      <button type="submit">Pré-registar</button>
+    </div>
+    <small id="newsMsg">Só usamos o teu email para te avisar do lançamento e das novidades para parceiros.</small>
+  </form>
 </section>
 </main>
 <footer><span>© 2026 À Nossa!</span><span>Feito em Portugal · Funciona no telemóvel e no computador</span></footer>
@@ -395,6 +413,31 @@ addEventListener('touchend', () => {{ touching = false; clearTimeout(idle); idle
 addEventListener('wheel', () => {{ anim = null; }}, {{ passive: true }});
 addEventListener('resize', tick);
 tick();
+</script>
+<script>
+(function () {{
+  var f = document.getElementById('news');
+  if (!f) return;
+  var msg = document.getElementById('newsMsg');
+  f.addEventListener('submit', function (e) {{
+    e.preventDefault();
+    var email = f.email.value.trim();
+    var kind = 'parceiro';
+    if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) {{ msg.textContent = 'Escreve um email válido.'; f.email.focus(); return; }}
+    var b = f.querySelector('button'); b.disabled = true; msg.textContent = 'A guardar…';
+    fetch('https://yknbtsmcmjxzzhijyiav.supabase.co/rest/v1/rpc/newsletter_signup', {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/json', apikey: 'sb_publishable_TkmeAQOlKuN4kUii5i70Rg_Qiz8D7cc' }},
+      body: JSON.stringify({{ p_email: email, p_kind: kind, p_source: 'site' }})
+    }}).then(function (r) {{
+      if (!r.ok) throw new Error(r.status);
+      f.querySelector('.news-row').hidden = true;
+      msg.textContent = 'Pré-registo feito! Avisamos-te quando a À Nossa! sair nas lojas para criares o teu perfil.';
+    }}).catch(function () {{
+      b.disabled = false; msg.textContent = 'Não foi possível guardar. Tenta outra vez.';
+    }});
+  }});
+}})();
 </script>
 """
 

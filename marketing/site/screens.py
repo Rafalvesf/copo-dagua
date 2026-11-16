@@ -9,7 +9,8 @@ def b64(name):
         return base64.b64encode(f.read()).decode()
 
 def img(name):
-    return f"data:image/png;base64,{b64(name)}"
+    mime = 'image/svg+xml' if name.endswith('.svg') else 'image/png'
+    return f"data:{mime};base64,{b64(name)}"
 
 PHOTOS = os.path.join(HERE, 'photos')
 _pc = {}

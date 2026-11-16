@@ -382,6 +382,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Marca como feitas: extras na reserva, cada um paga o seu e convites com desconto; acrescenta a tarefa de testar o que entrou a 15–16 nov.",
     check: { kind: "marker", id: "194" },
   },
+  {
+    file: "195_newsletter_signups.sql",
+    date: "2026-11-16",
+    title: "Pré-registo no site",
+    what: "Formulário de pré-registo para parceiros no site de apresentação; a lista aparece em Pré-registos no admin.",
+    check: { kind: "marker", id: "195" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
