@@ -17,16 +17,16 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 /// Com sessão: junta logo a conta ao casamento. Sem sessão: mostra de
 /// quem é o casamento e leva a criar conta/entrar, guardando o convite
 /// para ser aplicado a seguir.
-class JoinWeddingScreen extends ConsumerStatefulWidget {
+class JoinEventsScreen extends ConsumerStatefulWidget {
   final String token;
 
-  const JoinWeddingScreen({super.key, required this.token});
+  const JoinEventsScreen({super.key, required this.token});
 
   @override
-  ConsumerState<JoinWeddingScreen> createState() => _JoinWeddingScreenState();
+  ConsumerState<JoinEventsScreen> createState() => _JoinEventsScreenState();
 }
 
-class _JoinWeddingScreenState extends ConsumerState<JoinWeddingScreen> {
+class _JoinEventsScreenState extends ConsumerState<JoinEventsScreen> {
   late final Future<({String names, bool valid})?> _invite = fetchPartnerInvite(widget.token);
   String? _error;
   bool _joining = false;
