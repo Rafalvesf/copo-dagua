@@ -15,6 +15,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/organizers_card.dart' show RowPillButton;
 import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/search_pill.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'guests_list_screen.dart' show shareWeddingInvite;
 
@@ -36,10 +37,21 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
   /// (aí não aparecem as pílulas).
   List<_Followed>? _followed;
   final _inviting = <String>{};
+  final _search = TextEditingController();
+  bool _showAllFollowed = false;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
+    _search.addListener(() {
+      if (mounted) setState(() {});
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final w = ref.read(weddingControllerProvider).wedding;
       if (w != null && ref.read(guestsControllerProvider).guests.isEmpty) {
@@ -75,49 +87,79 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
   }
 
   List<Widget> _followedTab(Wedding? wedding) {
-    final list = _followed ?? const <_Followed>[];
-    if (list.isEmpty) {
+    final all = _followed ?? const <_Followed>[];
+    if (all.isEmpty) {
       return const [
         SizedBox(height: 24),
         Text('Ainda não segues ninguém na app. Quem seguires aparece aqui para convidares sem link.',
             style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
       ];
     }
-    final toInvite = list.where((p) => !p.invited).toList();
-    final invited = list.where((p) => p.invited).toList();
-    Widget tag(_Followed p) => switch (p.rsvp) {
-          'confirmed' => const KitTag('Vai'),
-          'declined' => const KitTag('Não vai', kind: KitTagKind.neutral),
-          _ => const KitTag('Convidado', kind: KitTagKind.neutral),
-        };
+    final q = _search.text.trim().toLowerCase();
+    final list = q.isEmpty
+        ? all
+        : all.where((p) => p.name.toLowerCase().contains(q) || (p.username ?? '').toLowerCase().contains(q)).toList();
+    final mutual = list.where((p) => p.mutual).toList();
+    final onlyMe = list.where((p) => !p.mutual).toList();
+    // «Ver todos (N)» (mockup «Convidar · quem sigo»): os primeiros 5 de
+    // «Só tu segues» até carregar no botão ou pesquisar.
+    final showAll = _showAllFollowed || q.isNotEmpty;
+    final onlyMeShown = showAll ? onlyMe : onlyMe.take(5).toList();
+
+    Widget row(_Followed p) => KitRow(
+          lead: V2Avatar(p.name, size: 44, imageUrl: p.avatarUrl),
+          title: p.name,
+          sub: p.username != null ? '@${p.username}' : 'Na app',
+          trailing: p.invited
+              ? switch (p.rsvp) {
+                  'confirmed' => const KitTag('Vai'),
+                  'declined' => const KitTag('Não vai', kind: KitTagKind.neutral),
+                  _ => const KitTag('Convidado'),
+                }
+              : RowPillButton(
+                  label: 'Convidar',
+                  onTap: wedding == null || _inviting.contains(p.id) ? null : () => _inviteFollowed(wedding.id, p),
+                ),
+        );
+
     return [
-      if (toInvite.isNotEmpty) ...[
-        KitCaps('Quem sigo · ${toInvite.length}'),
-        KitGroup([
-          for (final p in toInvite)
-            KitRow(
-              lead: V2Avatar(p.name, size: 44, imageUrl: p.avatarUrl),
-              title: p.name,
-              sub: p.mutual ? 'Segue-te também' : (p.username != null ? '@${p.username}' : 'Na app'),
-              trailing: RowPillButton(
-                label: 'Convidar',
-                onTap: wedding == null || _inviting.contains(p.id) ? null : () => _inviteFollowed(wedding.id, p),
-              ),
-            ),
-        ]),
+      const SizedBox(height: 16),
+      SearchPill(controller: _search, hint: 'Pesquisar quem segues'),
+      if (mutual.isNotEmpty) ...[
+        KitCaps('Seguem-se um ao outro · ${mutual.length}'),
+        KitGroup([for (final p in mutual) row(p)]),
       ],
-      if (invited.isNotEmpty) ...[
-        KitCaps('Já convidados · ${invited.length}'),
-        KitGroup([
-          for (final p in invited)
-            KitRow(
-              lead: V2Avatar(p.name, size: 44, imageUrl: p.avatarUrl),
-              title: p.name,
-              sub: 'Vê o evento na app',
-              trailing: tag(p),
+      if (onlyMe.isNotEmpty) ...[
+        KitCaps('Só tu segues · ${onlyMe.length}'),
+        KitGroup([for (final p in onlyMeShown) row(p)]),
+        if (onlyMeShown.length < onlyMe.length) ...[
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: () => setState(() => _showAllFollowed = true),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.ink,
+              minimumSize: const Size.fromHeight(44),
+              side: const BorderSide(color: AppTheme.ink, width: 1.5),
+              shape: const StadiumBorder(),
+              textStyle: const TextStyle(
+                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
             ),
-        ]),
+            child: Text('Ver todos (${onlyMe.length})'),
+          ),
+        ],
       ],
+      if (list.isEmpty) ...[
+        const SizedBox(height: 24),
+        const Text('Ninguém com esse nome.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+      ],
+      const Padding(
+        padding: EdgeInsets.fromLTRB(4, 16, 4, 0),
+        child: Text(
+          'Recebem o convite na app, com notificação, e respondem lá. Entram logo na lista de convidados como «Por responder».',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+        ),
+      ),
     ];
   }
 
@@ -154,13 +196,13 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
       body: KitPage(children: [
         KitHeader(onBack: () => context.canPop() ? context.pop() : context.go('/guests')),
         KitTitle('Convidar',
-            subtitle: _tab == 1
-                ? 'Quem segues recebe o convite na app, sem link.'
+            subtitle: _followed != null
+                ? 'Por mensagem, com o link de cada um, ou pela app a quem já segues.'
                 : 'Envia o convite a cada pessoa, com o link dela.'),
         if (_followed != null)
           KitPills([
-            KitPill(label: 'Por mensagem', selected: _tab == 0, onTap: () => setState(() => _tab = 0)),
-            KitPill(label: 'Quem sigo', selected: _tab == 1, count: _followed!.where((p) => !p.invited).length, onTap: () => setState(() => _tab = 1)),
+            KitPill(label: 'Por mensagem', selected: _tab == 0, count: guests.length, onTap: () => setState(() => _tab = 0)),
+            KitPill(label: 'Quem sigo', selected: _tab == 1, count: _followed!.length, onTap: () => setState(() => _tab = 1)),
           ]),
         if (_tab == 1) ..._followedTab(wedding) else ...[
         KitSummary(
