@@ -354,6 +354,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Reservar mesa em que cada convidado escolhe o seu menu e extras na app, e «cada um paga o seu»: cada convidado paga a sua parte. Correr depois da 188.",
     check: { kind: "marker", id: "190" },
   },
+  {
+    file: "191_no_deposit_categories.sql",
+    date: "2026-11-16",
+    title: "Sem sinal em restaurantes, flores, bolos e serviços mais baratos",
+    what: "Nestas categorias o cliente paga tudo ao confirmar (um só pagamento); o dinheiro vai para o parceiro 3 dias depois do evento e as devoluções seguem as regras de cancelamento do parceiro.",
+    check: { kind: "marker", id: "191" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

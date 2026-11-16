@@ -234,7 +234,7 @@ Future<String?> fetchProposalBookingState(String proposalId) async {
   await syncPendingStripePayments(proposalId: proposalId);
   final row = await supabase
       .from('bookings')
-      .select('status, payments(type, status)')
+      .select('status, total_amount, deposit_amount, payments(type, status)')
       .eq('proposal_id', proposalId)
       .order('created_at', ascending: false)
       .limit(1)
@@ -247,6 +247,10 @@ Future<String?> fetchProposalBookingState(String proposalId) async {
   if (has('final_payment', 'pending')) return 'final_due';
   if (has('final_payment', 'paid')) return 'paid';
   if (status == 'completed') return 'completed';
+  // 191: sem sinal nesta categoria — o primeiro pagamento é tudo.
+  final total = (row['total_amount'] as num?)?.toDouble() ?? 0;
+  final full = total > 0 && ((row['deposit_amount'] as num?)?.toDouble() ?? 0) >= total;
+  if (full && has('deposit', 'paid')) return 'paid';
   if (has('deposit', 'paid') || status == 'confirmed') return 'deposit_paid';
   return 'deposit_due';
 }
@@ -413,6 +417,20 @@ final organizerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
 /// partir desta percentagem, só editável pelo administrador
 /// (`/admin/commissions`). Usado aqui só para mostrar ao parceiro, antes
 /// de enviar, o valor exato que `send_proposal()` vai calcular a seguir.
+/// 191: sinal deste parceiro (o da plataforma, ou 100 % nas categorias
+/// sem sinal — restaurantes, flores, bolos…). Antes da migração, o da
+/// plataforma.
+final myDepositPercentageProvider = FutureProvider<double>((ref) async {
+  final me = supabase.auth.currentUser?.id;
+  if (me != null) {
+    try {
+      final v = await supabase.rpc('partner_deposit_pct', params: {'p_partner_id': me});
+      if (v is num) return v.toDouble();
+    } catch (_) {}
+  }
+  return ref.watch(platformDepositPercentageProvider.future);
+});
+
 final platformDepositPercentageProvider = FutureProvider<double>((ref) async {
   final row = await supabase
       .from('platform_settings')

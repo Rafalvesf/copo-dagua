@@ -99,7 +99,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
       // — o parceiro nunca escolhe este valor. `depositPct` aqui é só
       // para o cartão do chat mostrar o mesmo valor sem esperar por um
       // segundo pedido de rede.
-      final depositPct = ref.read(platformDepositPercentageProvider).maybeWhen(
+      final depositPct = ref.read(myDepositPercentageProvider).maybeWhen(
         data: (pct) => pct,
         orElse: () => 20.0,
       );
@@ -156,7 +156,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
             ? 'Este pedido já teve uma proposta enviada ou já não está disponível.'
             // `P0008` = `already_booked_with_partner` (migração 102).
             : e.code == 'P0008'
-                ? 'Este cliente já tem uma reserva contigo. Só podes enviar outra proposta se essa for cancelada sem o sinal pago.'
+                ? 'Este cliente já tem uma reserva contigo. Só podes enviar outra proposta se essa for cancelada sem nada pago.'
                 : 'Não foi possível enviar a proposta.';
       });
     } catch (_) {
@@ -170,6 +170,8 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 191: categorias sem sinal — o cliente paga tudo ao aceitar.
+    final noDeposit = (ref.watch(myDepositPercentageProvider).value ?? 0) >= 100;
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(top: false, 
@@ -230,12 +232,16 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
                   value: _depositRefundable,
                   onChanged: (v) => setState(() => _depositRefundable = v),
                   activeTrackColor: AppTheme.accentOliveDark,
-                  title: const Text(
-                    'Sinal reembolsável',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  title: Text(
+                    noDeposit ? 'Reembolsável nas primeiras 48 h' : 'Sinal reembolsável',
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                   subtitle: Text(
-                    _depositRefundable
+                    noDeposit
+                        ? (_depositRefundable
+                            ? 'O cliente paga tudo ao aceitar. Se cancelar nas 48 h depois de pagar, recebe tudo de volta; depois valem as tuas regras de cancelamento.'
+                            : 'O cliente paga tudo ao aceitar. Se cancelar, valem as tuas regras de cancelamento. Se fores tu a cancelar, recebe tudo de volta.')
+                        : _depositRefundable
                         ? 'Se o organizador cancelar nas 48 h depois de pagar, recebe o sinal de volta. Depois disso, fica contigo.'
                         : 'Se o organizador cancelar, o sinal fica sempre contigo. Se fores tu a cancelar, o organizador recebe tudo de volta.',
                     style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
@@ -276,7 +282,7 @@ class _DepositPreview extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final depositPct = ref.watch(platformDepositPercentageProvider).value;
+    final depositPct = ref.watch(myDepositPercentageProvider).value;
     // Migração 180: a taxa do cliente depende do país deste parceiro.
     final me = supabase.auth.currentUser?.id;
     final orgFee = me == null ? ref.watch(organizerFeeConfigProvider).value : ref.watch(organizerFeeForPartnerProvider(me)).value;
@@ -291,9 +297,13 @@ class _DepositPreview extends ConsumerWidget {
     final fee = price == null ? null : total! - price;
     final depositTotal = deposit == null ? null : amountWithCommission(deposit, commissionPct);
     final pct = commissionPct % 1 == 0 ? commissionPct.toStringAsFixed(0) : commissionPct.toStringAsFixed(1);
+    // 191: sem sinal (categoria) — um só pagamento com o valor todo.
+    final full = depositPct >= 100;
     final partnerFee = price == null || deposit == null
         ? null
-        : feeCfg.feeForPayment(deposit, price) + feeCfg.feeForPayment(price - deposit, price);
+        : full
+            ? feeCfg.feeForPayment(price, price)
+            : feeCfg.feeForPayment(deposit, price) + feeCfg.feeForPayment(price - deposit, price);
     final net = price == null ? null : price - partnerFee!;
     final depositNet = deposit == null || price == null ? null : deposit - feeCfg.feeForPayment(deposit, price);
     final effPct = price == null || price <= 0 || partnerFee == null ? null : partnerFee / price * 100;
@@ -339,15 +349,17 @@ class _DepositPreview extends ConsumerWidget {
             line('A tua taxa de serviço$feeLabel', partnerFee == null ? '—' : '− ${money(partnerFee)}', muted: true),
             line('Recebes no total', money(net), strong: true),
           ],
-          const Divider(height: 16, color: AppTheme.borderMuted),
-          line('Sinal (${depositPct.toStringAsFixed(0)}%) para o cliente', money(depositTotal), strong: true),
-          line('Recebes de sinal', money(feeCfg.isZero ? deposit : depositNet), muted: true),
+          if (!full) ...[
+            const Divider(height: 16, color: AppTheme.borderMuted),
+            line('Sinal (${depositPct.toStringAsFixed(0)}%) para o cliente', money(depositTotal), strong: true),
+            line('Recebes de sinal', money(feeCfg.isZero ? deposit : depositNet), muted: true),
+          ],
           const SizedBox(height: 4),
           Text(
             feeCfg.isFree
                 ? 'O cliente paga a taxa de serviço por cima do teu valor. Oferta de lançamento: não pagas taxa de serviço até ${_d(feeCfg.freeUntil!)}. Depois: ${feeCfg.describe((v) => euros(v))} do valor da reserva, mais 1 € por pagamento (IVA incluído).'
                 : !feeCfg.isZero
-                ? 'O cliente paga a taxa de serviço por cima do teu valor. A tua é de ${feeCfg.describe((v) => euros(v))} do valor da reserva, mais 1 € por pagamento. Recebes o sinal 48 h depois de o cliente o pagar e o restante 3 dias depois do evento. Valores com IVA incluído.'
+                ? 'O cliente paga a taxa de serviço por cima do teu valor. A tua é de ${feeCfg.describe((v) => euros(v))} do valor da reserva, mais 1 € por pagamento. ${full ? 'Sem sinal: o cliente paga tudo ao aceitar e recebes 3 dias depois do evento.' : 'Recebes o sinal 48 h depois de o cliente o pagar e o restante 3 dias depois do evento.'} Valores com IVA incluído.'
                 : 'A taxa de serviço é paga pelo cliente, por cima do teu valor — recebes o valor por inteiro.',
             style: const TextStyle(fontSize: AppFontSize.sm, height: 1.35, color: AppTheme.inkMuted),
           ),

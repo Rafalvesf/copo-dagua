@@ -396,7 +396,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     shape: const StadiumBorder(),
                   ),
                   child: Text(
-                    'Pagar sinal — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}',
+                    '${booking.depositIsFull ? 'Pagar' : 'Pagar sinal'} — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}',
                   ),
                 ),
               ),
@@ -495,7 +495,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
       ref.invalidate(coupleBookingsProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Proposta aceite! Paga o sinal abaixo para confirmar a reserva.')),
+          const SnackBar(content: Text('Proposta aceite! Paga abaixo para confirmar a reserva.')),
         );
       }
     } on PostgrestException catch (e) {
@@ -523,7 +523,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
                       : e.code == 'P0010'
                           ? PartnerUnavailableException.message
                       : e.code == 'P0008'
-                          ? 'Já tens uma reserva com este parceiro. Só podes aceitar outra se essa for cancelada sem o sinal pago.'
+                          ? 'Já tens uma reserva com este parceiro. Só podes aceitar outra se essa for cancelada sem nada pago.'
                           : 'Não foi possível aceitar a proposta. Tenta novamente.',
             ),
           ),

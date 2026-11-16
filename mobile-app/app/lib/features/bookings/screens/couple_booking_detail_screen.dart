@@ -129,7 +129,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                   // Pagar daqui mesmo (2026-10-19), sem voltar à lista.
                   for (final (id, label, amount) in [
                     if (booking.pendingDepositPaymentId != null)
-                      (booking.pendingDepositPaymentId!, 'Pagar sinal', booking.depositAmount ?? 0),
+                      (booking.pendingDepositPaymentId!, booking.depositIsFull ? 'Pagar' : 'Pagar sinal', booking.depositAmount ?? 0),
                     if (booking.pendingFinalPaymentId != null)
                       (booking.pendingFinalPaymentId!, 'Pagar restante', booking.finalPaymentAmount ?? 0),
                   ]) ...[

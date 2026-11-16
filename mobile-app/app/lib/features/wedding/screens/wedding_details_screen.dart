@@ -3346,13 +3346,13 @@ class _StatusPill extends StatelessWidget {
         tone: AlertTone.pending,
         radius: 999,
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-        child: Text('Falta o sinal', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        child: Text('Falta pagar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       );
     }
     final (label, bg, fg) = switch (status) {
       BookingStatus.confirmado => ('Confirmado', const Color(0xFFDDE5D3), _greenDark),
       BookingStatus.concluido => ('Concluído', const Color(0xFFDDE5D3), _greenDark),
-      BookingStatus.aceite => ('Falta o sinal', const Color(0xFFF7EACA), const Color(0xFF5A3E0C)),
+      BookingStatus.aceite => ('Falta pagar', const Color(0xFFF7EACA), const Color(0xFF5A3E0C)),
       _ => ('Pendente', const Color(0xFFECE7DC), AppTheme.ink),
     };
     return Container(
