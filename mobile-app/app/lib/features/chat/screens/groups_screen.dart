@@ -399,10 +399,16 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
         SafeArea(
           top: false,
           bottom: false,
+          // Conversa direta (192): o nome da outra pessoa; tocar abre o perfil.
           child: ChatHeader(
-            name: widget.group.name,
-            subtitle: subtitle,
-            onOpenProfile: _menu,
+            name: widget.group.isDirect ? (others.firstOrNull?.name ?? 'Conversa') : widget.group.name,
+            subtitle: widget.group.isDirect ? 'Mensagem direta' : subtitle,
+            onOpenProfile: widget.group.isDirect
+                ? () {
+                    final o = others.firstOrNull;
+                    if (o != null) context.push('/u/${o.id}');
+                  }
+                : _menu,
             leading: SizedBox(
               width: 46,
               height: 44,

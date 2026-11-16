@@ -361,6 +361,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Nestas categorias o cliente paga tudo ao confirmar (um só pagamento); o dinheiro vai para o parceiro 3 dias depois do evento e as devoluções seguem as regras de cancelamento do parceiro.",
     check: { kind: "marker", id: "191" },
   },
+  {
+    file: "192_direct_messages.sql",
+    date: "2026-11-16",
+    title: "Mensagens diretas entre pessoas",
+    what: "Botão «Mensagem» nos perfis: abre uma conversa direta na app entre quem se segue ou está no mesmo evento (sem SMS, chamada nem email).",
+    check: { kind: "marker", id: "192" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

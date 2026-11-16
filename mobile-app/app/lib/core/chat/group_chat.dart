@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
-    show PostgresChangeEvent, PostgresChangeFilter, PostgresChangeFilterType, RealtimeChannel;
+    show PostgresChangeEvent, PostgresChangeFilter, PostgresChangeFilterType, PostgrestException, RealtimeChannel;
 
 import '../supabase/supabase_config.dart';
 import 'chat_attachments.dart';
@@ -20,6 +20,10 @@ class ChatGroup {
   final DateTime? lastMessageAt;
   final bool unread;
   final String? createdBy;
+
+  /// Conversa direta entre duas pessoas (192): sem evento (`weddingId`
+  /// vazio); mostra-se com o nome e a foto da outra pessoa.
+  final bool isDirect;
   const ChatGroup({
     required this.id,
     required this.weddingId,
@@ -28,6 +32,7 @@ class ChatGroup {
     this.lastMessageAt,
     this.unread = false,
     this.createdBy,
+    this.isDirect = false,
   });
 
   bool get isMine => createdBy != null && createdBy == supabase.auth.currentUser?.id;
@@ -105,12 +110,13 @@ final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, St
         final read = readAt[r['id']];
         return ChatGroup(
           id: r['id'] as String,
-          weddingId: r['wedding_id'] as String,
+          weddingId: (r['wedding_id'] as String?) ?? '',
           name: r['name'] as String,
           lastMessage: r['last_message'] as String?,
           lastMessageAt: last,
           unread: last != null && (read == null || last.isAfter(read)),
           createdBy: r['created_by'] as String?,
+          isDirect: r['is_direct'] == true,
         );
       }(),
   ];
@@ -123,7 +129,8 @@ final myChatGroupsProvider = FutureProvider.autoDispose<List<ChatGroup>>((ref) a
   if (supabase.auth.currentUser == null) return const [];
   final rows = await supabase
       .from('chat_groups')
-      .select('id, wedding_id, name, last_message, last_message_at, created_at, created_by')
+      // `*` para apanhar `is_direct` (192) sem falhar antes da migração.
+      .select('*')
       .order('last_message_at', ascending: false, nullsFirst: false);
   final reads = await supabase.from('chat_group_members').select('group_id, last_read_at').eq('profile_id', _me);
   final readAt = {
@@ -140,12 +147,13 @@ final myChatGroupsProvider = FutureProvider.autoDispose<List<ChatGroup>>((ref) a
           final read = readAt[r['id']];
           return ChatGroup(
             id: r['id'] as String,
-            weddingId: r['wedding_id'] as String,
+            weddingId: (r['wedding_id'] as String?) ?? '',
             name: r['name'] as String,
             lastMessage: r['last_message'] as String?,
             lastMessageAt: last,
             unread: r['last_message_at'] != null && (read == null || last.isAfter(read)),
             createdBy: r['created_by'] as String?,
+            isDirect: r['is_direct'] == true,
           );
         }(),
   ];
@@ -306,7 +314,7 @@ Future<ChatGroup?> openEventGroup(String weddingId) async {
     if (r == null) return null;
     return ChatGroup(
       id: r['id'] as String,
-      weddingId: r['wedding_id'] as String,
+      weddingId: (r['wedding_id'] as String?) ?? '',
       name: r['name'] as String,
       lastMessage: r['last_message'] as String?,
       lastMessageAt: r['last_message_at'] == null ? null : DateTime.parse(r['last_message_at'] as String),
@@ -315,4 +323,39 @@ Future<ChatGroup?> openEventGroup(String weddingId) async {
   } catch (_) {
     return null;
   }
+}
+
+
+/// Abre (ou cria) a conversa direta com esta pessoa (192). Lança
+/// [DirectChatUnavailable] quando não é possível (sem se seguirem nem
+/// evento em comum, bloqueio, ou migração por correr).
+class DirectChatUnavailable implements Exception {
+  final String message;
+  const DirectChatUnavailable(this.message);
+}
+
+Future<ChatGroup> openDirectChat(String profileId) async {
+  final Object? id;
+  try {
+    id = await supabase.rpc('open_direct_chat', params: {'p_profile_id': profileId});
+  } on PostgrestException catch (e) {
+    if (e.message.contains('not_allowed')) {
+      throw const DirectChatUnavailable('Para mandar mensagem, segue esta pessoa ou estejam no mesmo evento.');
+    }
+    if (e.message.contains('blocked')) throw const DirectChatUnavailable('Não é possível enviar mensagem a esta pessoa.');
+    if (e.code == 'PGRST202' || e.code == '42883') {
+      throw const DirectChatUnavailable('As mensagens diretas ainda não estão disponíveis.');
+    }
+    throw const DirectChatUnavailable('Não foi possível abrir a conversa. Tenta outra vez.');
+  }
+  final r = await supabase.from('chat_groups').select('*').eq('id', id as String).single();
+  return ChatGroup(
+    id: r['id'] as String,
+    weddingId: (r['wedding_id'] as String?) ?? '',
+    name: r['name'] as String,
+    lastMessage: r['last_message'] as String?,
+    lastMessageAt: r['last_message_at'] == null ? null : DateTime.parse(r['last_message_at'] as String),
+    createdBy: r['created_by'] as String?,
+    isDirect: true,
+  );
 }

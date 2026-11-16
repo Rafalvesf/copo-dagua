@@ -253,7 +253,12 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           if (match(c.name) && (_filter != _Filter.unread || c.unreadCount > 0)) (c.lastMessageAt, c),
       if (_filter != _Filter.partners)
         for (final g in allGroups)
-          if (match(g.name) && (_filter != _Filter.unread || g.unread)) (g.lastMessageAt, g),
+          // Conversas diretas (192) não são grupos: ficam em «Todas» e
+          // procuram-se pelo nome da outra pessoa.
+          if (!(g.isDirect && _filter == _Filter.groups) &&
+              match(g.isDirect ? _directName(ref, g, me) : g.name) &&
+              (_filter != _Filter.unread || g.unread))
+            (g.lastMessageAt, g),
     ]..sort((a, b) {
         if (a.$1 == null && b.$1 == null) return 0;
         if (a.$1 == null) return 1;
@@ -262,6 +267,26 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       });
 
     Widget row(Object it, bool last) {
+      if (it is ChatGroup && it.isDirect) {
+        final other = ref.watch(groupPeopleProvider(it.id)).value?.values.where((p) => p.id != me).firstOrNull;
+        final name = other?.name ?? 'Conversa';
+        return _deletable(
+          it.id,
+          it,
+          MessageRow(
+            avatar: V2Avatar(name, size: 52, imageUrl: other?.avatarUrl, flat: true),
+            title: name,
+            time: messageTime(it.lastMessageAt),
+            preview: it.lastMessage ?? 'Mensagem direta',
+            unread: it.unread ? 1 : 0,
+            last: last,
+            onTap: () async {
+              await context.push('/group/${it.id}', extra: it);
+              ref.invalidate(myChatGroupsProvider);
+            },
+          ),
+        );
+      }
       if (it is ChatGroup) {
         final people = ref.watch(groupPeopleProvider(it.id)).value?.values.where((p) => p.id != me).toList() ??
             const <EventPerson>[];
@@ -437,6 +462,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 }
 
 enum _Filter { all, unread, partners, groups }
+
+/// Nome da outra pessoa numa conversa direta (192).
+String _directName(WidgetRef ref, ChatGroup g, String? me) =>
+    ref.watch(groupPeopleProvider(g.id)).value?.values.where((p) => p.id != me).firstOrNull?.name ?? '';
 
 enum _Status { none, proposal, toPay, booked }
 

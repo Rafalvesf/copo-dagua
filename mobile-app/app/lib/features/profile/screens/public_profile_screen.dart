@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/chat/group_chat.dart' show openDirectChat, DirectChatUnavailable;
 
 import '../../../core/moderation/moderation.dart' show blockProfile;
 import '../../../core/social/social.dart';
@@ -33,6 +36,23 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível. Tenta outra vez.')));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// «Mensagem» (192): conversa direta na app.
+  Future<void> _message(PublicProfile p) async {
+    setState(() => _busy = true);
+    try {
+      final g = await openDirectChat(p.id);
+      if (mounted) await context.push('/group/${g.id}', extra: g);
+    } on DirectChatUnavailable catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível abrir a conversa.')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -111,6 +131,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                             : [
                                 ProfileButton(p.iFollow ? 'A seguir' : (p.followsMe ? 'Seguir também' : 'Seguir'),
                                     dark: !p.iFollow, onTap: _busy ? null : () => _follow(p)),
+                                ProfileButton('Mensagem', onTap: _busy ? null : () => _message(p)),
                               ],
                       ),
                     ),
