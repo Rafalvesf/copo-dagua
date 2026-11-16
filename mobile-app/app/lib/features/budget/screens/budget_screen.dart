@@ -140,12 +140,15 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                 KitHeader(actions: [KitAddButton(tooltip: 'Nova despesa', onTap: _addExpense)]),
                 const KitTitle('Orçamento'),
                 _SummaryCard(budget: budget),
-                const KitSection('Categorias'),
-                _CategoriesSection(
-                  categories: budget.categories,
-                  expanded: _categoriesExpanded,
-                  onToggleExpand: () => setState(() => _categoriesExpanded = !_categoriesExpanded),
-                ),
+                // Sem categorias, sem secção (o título aparecia sozinho).
+                if (budget.categories.isNotEmpty) ...[
+                  const KitSection('Categorias'),
+                  _CategoriesSection(
+                    categories: budget.categories,
+                    expanded: _categoriesExpanded,
+                    onToggleExpand: () => setState(() => _categoriesExpanded = !_categoriesExpanded),
+                  ),
+                ],
                 const KitSection('Pagamentos'),
                 KitPills(top: 0, [
                   KitPill(
