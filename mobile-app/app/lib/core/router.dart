@@ -101,6 +101,7 @@ import '../features/legal/legal_screen.dart' deferred as l60;
 import '../features/messages/admin_message_screen.dart' deferred as l61;
 import '../features/legal/legal_texts.dart';
 import '../features/settings/screens/username_screen.dart' deferred as l62;
+import '../features/partner_onboarding/screens/partner_welcome_screen.dart' deferred as l63;
 
 /// Rotas que vale a pena guardar para depois do login (não o início).
 bool _deepLinkWorthKeeping(String location) =>
@@ -250,6 +251,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (location == '/partner-home' && role != UserRole.partner) return homeForRole;
           if (location == '/guest-home' && role != UserRole.guest) return homeForRole;
           if (location == '/eventos' && role == UserRole.partner) return homeForRole;
+          // Parceiro sem perfil do negócio (canvas «Onboarding», 2026-11-16):
+          // usa a app, e «Reservas» abre primeiro o «Olá, parceiro!».
+          if (role == UserRole.partner) {
+            final needsProfile = auth.profile?.onboardingComplete == false;
+            if (needsProfile && location == '/partner-requests') return '/partner-setup';
+            if (!needsProfile && location == '/partner-setup') return '/partner-requests';
+          }
           // Sem ecrã de transição entre modo organizador e convidado
           // (pedido 2026-11-12: "remove a animação"); só se regista o modo.
           if (role == UserRole.couple && location != '/modo') {
@@ -298,6 +306,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           final step = int.tryParse(state.uri.queryParameters['step'] ?? '') ?? 0;
           return lazyPage([l34.loadLibrary], () => l34.OnboardingWizardScreen(key: ValueKey('onb$step'), initialStep: step));
         },
+      ),
+      GoRoute(
+        path: '/partner-setup',
+        builder: (context, state) => lazyPage([l63.loadLibrary], () => l63.PartnerWelcomeScreen()),
       ),
       GoRoute(
         path: '/maintenance',

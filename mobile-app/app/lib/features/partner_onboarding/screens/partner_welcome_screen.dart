@@ -7,6 +7,7 @@ import '../../../shared/widgets/onb_kit.dart';
 import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
 import '../../../shared/widgets/first_run_tour.dart' show TourRole;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
@@ -526,13 +527,14 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
           if (areas.isNotEmpty) areas,
           'Fica visível aos clientes depois de aprovado',
         ].where((t) => t.isNotEmpty).toList(),
-        onContinue: () => ref.read(authControllerProvider.notifier).completeOnboarding(),
+        // Dentro da app: o router leva a «Reservas» assim que fica feito.
+        onContinue: () => ref.read(authControllerProvider.notifier).completePartnerProfile(),
       );
     }
     if (_step == _Step.intro) {
       return _IntroView(
         onStart: () => setState(() => _stepIndex++),
-        onExit: () => exitOnboarding(context, ref),
+        onExit: () => _deferred ? exitOnboarding(context, ref) : context.go('/partner-home'),
       );
     }
 
