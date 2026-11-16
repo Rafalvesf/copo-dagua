@@ -79,20 +79,9 @@ class FloatingBottomNav extends ConsumerWidget {
             // "centra o icon os noivos e coloca as margens iguais em
             // todos os icons".
             children: [
-              Expanded(
-                child: Center(
-                  child: _NavIcon(
-                    icon: Hi.sparkles,
-                    activeIcon: Hi.sparklesOutline,
-                    active: current == AppTab.partners,
-                    accent: menuColor.color,
-                    onAccent: menuColor.on,
-                    onTap: () => context.go('/partners'),
-                    label: 'Parceiros',
-                  ),
-                ),
-              ),
               // Eventos (2026-11): os meus eventos + eventos públicos.
+              // Trocado com Parceiros (2026-11-16): Eventos passou para a
+              // esquerda e Parceiros para o seu lugar.
               Expanded(
                 child: Center(
                   child: _NavIcon(
@@ -105,6 +94,19 @@ class FloatingBottomNav extends ConsumerWidget {
                     onAccent: menuColor.on,
                     onTap: () => context.go('/eventos'),
                     label: 'Eventos',
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: _NavIcon(
+                    icon: Hi.sparkles,
+                    activeIcon: Hi.sparklesOutline,
+                    active: current == AppTab.partners,
+                    accent: menuColor.color,
+                    onAccent: menuColor.on,
+                    onTap: () => context.go('/partners'),
+                    label: 'Parceiros',
                   ),
                 ),
               ),
