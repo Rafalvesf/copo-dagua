@@ -99,14 +99,14 @@ class _StartFlowScreenState extends ConsumerState<StartFlowScreen> {
           bottom: OnbButton(label: 'Continuar', onPressed: _next),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             OnbOption(
-              title: 'Vou organizar um evento',
+              title: 'Quero organizar eventos',
               subtitle: 'Casamento, aniversário, festa. Convidados, orçamento e parceiros num só sítio.',
               selected: !_partner,
               onTap: () => setState(() => _partner = false),
             ),
             const SizedBox(height: 12),
             OnbOption(
-              title: 'Sou parceiro',
+              title: 'Quero ser parceiro',
               subtitle: 'Fotógrafo, espaço, catering, música… Recebe pedidos de orçamento e reservas.',
               selected: _partner,
               onTap: () => setState(() => _partner = true),
