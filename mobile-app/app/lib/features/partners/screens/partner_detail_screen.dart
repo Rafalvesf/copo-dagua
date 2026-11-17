@@ -33,6 +33,8 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/organizers.dart';
+import '../../../shared/widgets/scroll_aware_back_button.dart';
+import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../partner_style.dart';
@@ -142,6 +144,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   final Set<String> _selectedExtras = {};
   int? _people;
   final _packageMessage = TextEditingController();
+  final _scroll = ScrollController();
   /// «Como escolhem» (190): falso = igual para todos (escolhe-se aqui um
   /// menu), verdadeiro = cada um escolhe o seu na app antes de pagar.
   bool _eachChooses = false;
@@ -151,6 +154,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   @override
   void dispose() {
     _packageMessage.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -166,7 +170,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _EventPickerSheet(events: bookable, partnerName: widget.partner.name),
+      builder: (_) => _EventPickerSheet(
+        events: bookable,
+        partnerName: widget.partner.name,
+        myId: ref.read(authControllerProvider).profile?.id,
+      ),
     );
   }
 
@@ -631,9 +639,12 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     // depois Pacotes, Avaliações e Onde fica, em cartões brancos.
     return Material(
       color: cream,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 32),
-        child: Column(
+      child: Stack(
+        children: [
+          SingleChildScrollView(
+            controller: _scroll,
+            padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 32),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _PhotoCarousel(
@@ -710,12 +721,33 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 offset: const Offset(0, -28),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                  child: Text(
-                    relationshipStatus == PartnerRelationshipStatus.booked
-                        ? 'Já reservaste ${partner.name} para este evento. Fala com ele pela Mensagem.'
-                        : 'Já pediste orçamento a ${partner.name} para este evento. Fala com ele pela Mensagem.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 13, color: Color(0xFF57534E)),
+                  // Nota de estado em caixa (DESIGN.md §7): branco + linha fina
+                  // + ponto. Amarelo = pedido pendente, verde = já reservado.
+                  child: AlertOutline(
+                    tone: relationshipStatus == PartnerRelationshipStatus.booked
+                        ? AlertTone.invite
+                        : AlertTone.pending,
+                    child: Row(children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: relationshipStatus == PartnerRelationshipStatus.booked
+                              ? const Color(0xFF4F6B4A)
+                              : const Color(0xFFF2A01B),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          relationshipStatus == PartnerRelationshipStatus.booked
+                              ? 'Já reservaste ${partner.name} para este evento.'
+                              : 'Já pediste orçamento a ${partner.name} para este evento.',
+                          style: const TextStyle(fontSize: 13, color: ink, height: 1.35),
+                        ),
+                      ),
+                    ]),
                   ),
                 ),
               ),
@@ -727,12 +759,24 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 offset: const Offset(0, -28),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    Text('Já tens um pedido com ${partner.name} neste evento. Reserva-o para outro evento:',
-                        style: const TextStyle(fontSize: 13, color: muted)),
-                    const SizedBox(height: 10),
-                    ProfileButton('Pedir orçamento', onTap: _requestingQuote ? null : () => _requestQuote()),
-                  ]),
+                  // Reservar noutro evento dentro de um cartão branco (§4).
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      const Text('RESERVAR NOUTRO EVENTO',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: muted)),
+                      const SizedBox(height: 8),
+                      Text('Já pediste a ${partner.name} neste evento. Reserva-o para outro evento:',
+                          style: const TextStyle(fontSize: 13, color: muted, height: 1.4)),
+                      const SizedBox(height: 14),
+                      ProfileButton('Pedir orçamento', dark: true, onTap: _requestingQuote ? null : () => _requestQuote()),
+                    ]),
+                  ),
                 ),
               ),
             if (packages.isNotEmpty) ...[
@@ -910,56 +954,72 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                 Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
                               ]),
                             ),
-                          FilledButton(
-                            onPressed: _requestingQuote ? null : () => _requestPackage(p, pkgExtras, people),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: ink,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size.fromHeight(52),
-                              shape: const StadiumBorder(),
-                              textStyle: btn(15),
+                          // Botão Reservar dentro de um cartão branco (§4).
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(22),
+                              boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
                             ),
-                            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                            padding: const EdgeInsets.all(16),
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                              FilledButton(
+                                onPressed: _requestingQuote ? null : () => _requestPackage(p, pkgExtras, people),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: ink,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size.fromHeight(52),
+                                  shape: const StadiumBorder(),
+                                  textStyle: btn(15),
+                                ),
+                                child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              ),
+                              // Sem a frase "envia uma proposta com o preço
+                              // final" nos pacotes por orçamento (2026-11-17).
+                              // Mantém-se só a explicação do pagamento nos de
+                              // preço fixo.
+                              if (!p.isStartingPrice) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  _eachPays
+                                      ? 'Cada convidado paga ${euros(total / people)} na app, 3 dias antes. ${widget.partner.name} aceita ou recusa.'
+                                      : '${widget.partner.name} aceita ou recusa. Se aceitar, pagas para confirmar.',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 13, color: muted),
+                                ),
+                              ],
+                            ]),
                           ),
-                          // Sem a frase "envia uma proposta com o preço final"
-                          // nos pacotes por orçamento (pedido do Rafael,
-                          // 2026-11-17). Mantém-se só a explicação do pagamento
-                          // nos pacotes de preço fixo.
-                          if (!p.isStartingPrice) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              _eachPays
-                                  ? 'Cada convidado paga ${euros(total / people)} na app, 3 dias antes. ${widget.partner.name} aceita ou recusa.'
-                                  : '${widget.partner.name} aceita ou recusa. Se aceitar, pagas para confirmar.',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 13, color: muted),
-                            ),
-                          ],
                         ]);
                       }),
                     if (!widget.selectionMode && canReserve) ...[
-                      const SizedBox(height: 16),
-                      const Text('Nada disto serve?',
-                          textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: muted)),
-                      const SizedBox(height: 8),
-                      // Secundário (DESIGN.md §2): contorno preto 1,5, pílula,
-                      // altura 44 — mais pequeno que o preto (52), mas um botão
-                      // bem visível em vez do antigo link.
-                      SizedBox(
-                        height: 44,
-                        child: OutlinedButton(
-                          onPressed: pub ? _needAccount : (_requestingQuote ? null : () => _requestQuote()),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: ink,
-                            side: const BorderSide(color: ink, width: 1.5),
-                            shape: const StadiumBorder(),
-                            textStyle: const TextStyle(
-                                fontFamily: AppTheme.fontFamily,
-                                fontFamilyFallback: AppTheme.fontFamilyFallback,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700),
+                      const SizedBox(height: 12),
+                      // Pedir orçamento à medida dentro de um cartão branco (§4):
+                      // secundário (contorno preto 1,5, pílula, 44), sem texto
+                      // solto por fora.
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(22),
+                          boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: SizedBox(
+                          height: 44,
+                          child: OutlinedButton(
+                            onPressed: pub ? _needAccount : (_requestingQuote ? null : () => _requestQuote()),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: ink,
+                              side: const BorderSide(color: ink, width: 1.5),
+                              shape: const StadiumBorder(),
+                              textStyle: const TextStyle(
+                                  fontFamily: AppTheme.fontFamily,
+                                  fontFamilyFallback: AppTheme.fontFamilyFallback,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                            child: const Text('Pedir orçamento à medida'),
                           ),
-                          child: const Text('Pedir orçamento à medida'),
                         ),
                       ),
                     ],
@@ -1025,6 +1085,22 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               ),
           ],
         ),
+          ),
+          // Seta de voltar fixa do §6: fica sempre no ecrã, roda ←→↑, sobe ao
+          // topo, e é translúcida sobre a foto — opaca depois de a foto sair.
+          if (!pub)
+            Positioned(
+              left: 20,
+              top: MediaQuery.paddingOf(context).top + 20,
+              child: ScrollAwareBackButton(
+                controller: _scroll,
+                onBack: () => Navigator.of(context).canPop()
+                    ? Navigator.of(context).pop()
+                    : context.go('/partners'),
+                imageExtent: 236,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -1148,17 +1224,8 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
                 ),
               ),
           ] else ...[
-            Positioned(
-              top: top + 20,
-              left: 20,
-              child: _round(const LineIcon(LineIcon.back, stroke: 2.2), 'Voltar', () {
-                if (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
-                } else {
-                  context.go('/partners');
-                }
-              }),
-            ),
+            // O voltar é agora a seta fixa do §6 (fica no ecrã, não no
+            // carrossel). Aqui ficam só partilhar e guardar, à direita.
             Positioned(
               top: top + 20,
               right: 20,
@@ -1642,7 +1709,22 @@ class ExtraChoiceRow extends StatelessWidget {
 class _EventPickerSheet extends StatelessWidget {
   final List<Wedding> events;
   final String partnerName;
-  const _EventPickerSheet({required this.events, required this.partnerName});
+  final String? myId;
+  const _EventPickerSheet({required this.events, required this.partnerName, this.myId});
+
+  // Etiqueta do papel (§1): «Organizo» (dono) verde, «Posso contratar» neutra.
+  Widget _roleChip(bool owner) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: owner ? const Color(0xFFE6EDE1) : const Color(0xFFF2F0EB),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(owner ? 'Organizo' : 'Posso contratar',
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: owner ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733))),
+      );
 
   String _meta(Wedding w) {
     final parts = <String>[];
@@ -1679,7 +1761,7 @@ class _EventPickerSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
-            const Text('Para qual evento?',
+            const Text('Reservar — para qual evento?',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 4),
             Text('$partnerName vai ficar reservado no evento que escolheres.',
@@ -1704,6 +1786,8 @@ class _EventPickerSheet extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           child: Row(children: [
+                            V2Avatar(events[i].displayNames, size: 44),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1723,7 +1807,8 @@ class _EventPickerSheet extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            const Icon(Hi.chevronRight, size: 20, color: Color(0xFF57534E)),
+                            const SizedBox(width: 10),
+                            _roleChip(events[i].ownerId == myId),
                           ]),
                         ),
                       ),
@@ -1732,6 +1817,10 @@ class _EventPickerSheet extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+            const Text('Só aparecem os eventos que organizas ou onde podes contratar.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Color(0xFF57534E))),
           ],
         ),
       ),
