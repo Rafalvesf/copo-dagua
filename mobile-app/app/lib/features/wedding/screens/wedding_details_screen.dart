@@ -30,6 +30,7 @@ import '../../../core/wedding/menu_style.dart';
 import '../../guests/screens/guests_list_screen.dart' show shareWeddingInvite;
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/fading_scroll.dart';
+import '../../../shared/widgets/scroll_aware_back_button.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/skeleton.dart';
@@ -112,6 +113,9 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
   int _color = 0;
   PageController? _layoutPager;
   PageController? _colorPager;
+  // Controlador da lista do painel: a seta fixa de voltar/voltar-ao-topo
+  // (DESIGN.md §6) lê o scroll e sobe ao topo por ele.
+  final ScrollController _scroll = ScrollController();
 
   @override
   void initState() {
@@ -156,6 +160,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
   void dispose() {
     _layoutPager?.dispose();
     _colorPager?.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -196,6 +201,8 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
   }
 
   Widget _normal(BuildContext context, Wedding wedding, MenuLayout layout) {
+    final hasCover = wedding.coverPhotoUrlCacheBusted != null;
+    final topInset = MediaQuery.paddingOf(context).top;
     return Stack(
       key: const ValueKey('normal'),
       children: [
@@ -211,8 +218,20 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
             child: EdgeFade(
               topFadeHeight: layout == MenuLayout.classic ? 0 : 8,
               bottomFadeHeight: 140,
-              child: _PageBody(wedding: wedding, layout: layout),
+              child: _PageBody(wedding: wedding, layout: layout, controller: _scroll),
             ),
+          ),
+        ),
+        // DESIGN.md §6: seta fixa que roda ←→↑ e sobe ao topo; translúcida só
+        // enquanto a capa (foto) está por trás dela.
+        Positioned(
+          left: 16,
+          top: topInset + 12,
+          child: ScrollAwareBackButton(
+            controller: _scroll,
+            onBack: () => context.go('/eventos'),
+            backLabel: 'Voltar a Eventos',
+            imageExtent: layout == MenuLayout.classic && hasCover ? 174 : 0,
           ),
         ),
         const Positioned(
@@ -422,7 +441,8 @@ class _PageBody extends ConsumerWidget {
   final Wedding wedding;
   final MenuLayout layout;
   final bool scrollable;
-  const _PageBody({required this.wedding, required this.layout, this.scrollable = true});
+  final ScrollController? controller;
+  const _PageBody({required this.wedding, required this.layout, this.scrollable = true, this.controller});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -459,7 +479,7 @@ class _PageBody extends ConsumerWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: children),
       );
     }
-    return ListView(padding: padding, children: children);
+    return ListView(controller: controller, padding: padding, children: children);
   }
 }
 
@@ -3087,7 +3107,8 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
           right: 16,
           top: 12 + inset,
           child: Row(children: [
-            _round(Hi.chevronLeft, 'Voltar a Eventos', () => context.go('/eventos')),
+            // A seta de voltar é agora a seta fixa do overlay (DESIGN.md §6),
+            // que fica sempre no ecrã e sobe ao topo. Aqui fica só o ⋯.
             const Spacer(),
             // Arquivar ou apagar o evento (185).
             _round(Hi.ellipsisHorizontal, 'Mais opções', () => showEventActionsSheet(context, ref,
