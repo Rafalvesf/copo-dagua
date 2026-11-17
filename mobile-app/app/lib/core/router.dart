@@ -58,7 +58,7 @@ import '../features/guests/screens/invite_screen.dart' deferred as l28b;
 import '../features/guest_home/screens/choose_menu_screen.dart' deferred as l28c;
 import 'guest_home/event_tables.dart' show EventTable;
 import '../features/home/screens/home_feed_screen.dart' as l29;
-import '../features/auth/screens/join_wedding_screen.dart' deferred as l30;
+import '../features/auth/screens/join_events_screen.dart' deferred as l30;
 import '../features/invite/screens/invite_page_screen.dart' deferred as l31;
 import '../features/invite/screens/rsvp_page_screen.dart' deferred as l32;
 import '../features/calendar/screens/calendar_screen.dart' deferred as l33;
@@ -348,7 +348,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/apagar-conta', builder: (context, state) =>lazyPage([l60.loadLibrary], () =>  l60.LegalScreen(doc: deleteAccountDoc))),
       GoRoute(
         path: '/juntar/:token',
-        builder: (context, state) =>lazyPage([l30.loadLibrary], () =>  l30.JoinWeddingScreen(token: state.pathParameters['token']!)),
+        builder: (context, state) =>lazyPage([l30.loadLibrary], () =>  l30.JoinEventsScreen(token: state.pathParameters['token']!)),
       ),
       GoRoute(
         path: '/i/:token',
