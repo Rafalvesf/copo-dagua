@@ -94,6 +94,7 @@ import '../features/profile/screens/public_profile_screen.dart' deferred as lpub
 import '../features/support/screens/support_screen.dart' deferred as l58;
 import '../features/wedding/screens/wedding_details_screen.dart' deferred as l59;
 import 'auth/auth_controller.dart';
+import 'theme/app_theme.dart';
 import 'models/models.dart';
 import 'partners/partner_providers.dart';
 import 'platform/maintenance_controller.dart';
@@ -131,7 +132,9 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refresh = RouterRefreshNotifier(ref);
 
   return GoRouter(
-    initialLocation: '/welcome',
+    // Arranca no splash; o `redirect` leva para casa ou para «criar conta»
+    // assim que a sessão guardada estiver decidida (sem piscar o registo).
+    initialLocation: '/splash',
     // A barra do topo acompanha a página visível (2026-10-19).
     observers: [BarColorObserver()],
     refreshListenable: refresh,
@@ -201,6 +204,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       switch (auth.status) {
+        case AuthStatus.restoring:
+          // Arranque: fica no splash enquanto a sessão guardada é recuperada,
+          // em vez de mostrar «criar conta» e piscar. (As rotas públicas já
+          // devolveram `null` acima, por isso links de convite abrem logo.)
+          if (location == '/splash') return null;
+          // Refresh web numa página autenticada: guarda o link para o
+          // repor quando a sessão ficar ativa (o caso `active` abaixo faz o
+          // `PendingDeepLink.take()` quando se está em `/splash`).
+          if (_deepLinkWorthKeeping(location)) PendingDeepLink.save(state.uri.toString());
+          return '/splash';
         case AuthStatus.unauthenticated:
         case AuthStatus.error:
           // App instalada a partir do convite ("Descarregar a app", 162):
@@ -237,7 +250,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (PayReturn.pending != null && location != '/pay/return') return '/pay/return';
           if (_authRoutes.contains(location) ||
               location == '/verify-email' ||
-              location == '/onboarding') {
+              location == '/onboarding' ||
+              location == '/splash') {
             // Link que a pessoa abriu antes de entrar (2026-11-03).
             final pending = PendingDeepLink.take();
             if (pending != null) return pending;
@@ -269,6 +283,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
     },
     routes: [
+      // Ecrã de arranque: mostrado enquanto a sessão guardada é recuperada,
+      // para o registo não piscar antes do login automático.
+      GoRoute(path: '/splash', builder: (context, state) => const _SplashScreen()),
       GoRoute(
         path: '/welcome',
         builder: (context, state) => const WelcomeScreen(),
@@ -763,4 +780,25 @@ Future<void> preloadDeferredPages() async {
   final loads = <Future<void> Function()>[l1.loadLibrary, l2.loadLibrary, l3.loadLibrary, l4.loadLibrary, l5.loadLibrary, l6.loadLibrary, l7.loadLibrary, l8.loadLibrary, l9.loadLibrary, l10.loadLibrary, l11.loadLibrary, l12.loadLibrary, l13.loadLibrary, l14.loadLibrary, l15.loadLibrary, l16.loadLibrary, l17.loadLibrary, l18.loadLibrary, l20.loadLibrary, l21.loadLibrary, l22.loadLibrary, l23.loadLibrary, l24.loadLibrary, l25.loadLibrary, l26.loadLibrary, l27.loadLibrary, l28.loadLibrary, l30.loadLibrary, l31.loadLibrary, l32.loadLibrary, l33.loadLibrary, l34.loadLibrary, l35.loadLibrary, l36.loadLibrary, l37.loadLibrary, l38.loadLibrary, l40.loadLibrary, l41.loadLibrary, l42.loadLibrary, l43.loadLibrary, l44.loadLibrary, l45.loadLibrary, l46.loadLibrary, l47.loadLibrary, l48.loadLibrary, l49.loadLibrary, l50.loadLibrary, l51.loadLibrary, l52.loadLibrary, l53.loadLibrary, l54.loadLibrary, l55.loadLibrary, l56.loadLibrary, l57.loadLibrary, l58.loadLibrary, l59.loadLibrary, l60.loadLibrary, l61.loadLibrary, l62.loadLibrary];
   await Future.wait([for (final l in loads) l()]);
   LazyPage.markLoaded(loads);
+}
+
+/// Ecrã de arranque (splash). Mostrado só no primeiro instante, enquanto a
+/// app recupera a sessão guardada — evita que a página «criar conta» pisque
+/// antes do login automático. Fundo liso da app (§1) e um indicador discreto.
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: AppTheme.background,
+      child: Center(
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.brandGreen),
+        ),
+      ),
+    );
+  }
 }
