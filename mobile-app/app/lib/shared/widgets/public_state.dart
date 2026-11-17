@@ -18,6 +18,15 @@ class PublicStateView extends StatelessWidget {
   final MascotPose pose;
   final String title;
   final String? message;
+
+  /// Linha curta em maiúsculas (verde) por cima do título — ex.: "CONVITE
+  /// PARA ORGANIZAR". Opcional.
+  final String? eyebrow;
+
+  /// Conteúdo extra (ex.: um cartão "O QUE ISTO SIGNIFICA") entre o texto e
+  /// os botões. Opcional.
+  final Widget? extra;
+
   final List<Widget> actions;
 
   const PublicStateView({
@@ -25,6 +34,8 @@ class PublicStateView extends StatelessWidget {
     required this.pose,
     required this.title,
     this.message,
+    this.eyebrow,
+    this.extra,
     this.actions = const [],
   });
 
@@ -41,6 +52,15 @@ class PublicStateView extends StatelessWidget {
             children: [
               Center(child: TchinMascot(pose: pose, width: 170)),
               const SizedBox(height: 22),
+              if (eyebrow != null) ...[
+                Text(
+                  eyebrow!,
+                  textAlign: TextAlign.center,
+                  // Eyebrow da escala de primeiro contacto (DESIGN.md §3): 13.
+                  style: const TextStyle(fontSize: 13, height: 1.3, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.accentOliveDark),
+                ),
+                const SizedBox(height: 8),
+              ],
               Text(
                 title,
                 textAlign: TextAlign.center,
@@ -55,6 +75,10 @@ class PublicStateView extends StatelessWidget {
                   // Escala de primeiro contacto (DESIGN.md §3): texto 17.
                   style: const TextStyle(fontSize: 17, height: 1.5, color: AppTheme.inkMuted),
                 ),
+              ],
+              if (extra != null) ...[
+                const SizedBox(height: 20),
+                extra!,
               ],
               if (actions.isNotEmpty) ...[
                 const SizedBox(height: 28),
