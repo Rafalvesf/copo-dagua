@@ -1,8 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
-import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
-import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,10 +11,22 @@ import '../../../shared/public_link.dart';
 import '../../../core/wedding/organizers.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/page_header.dart';
+
+/// Uma só sombra dos cartões em destaque (DESIGN.md §5).
+const _soft = [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))];
+
+/// Título de grupo em maiúsculas (DESIGN.md §3): 12, espaçamento 2, `#57534E`.
+Widget _caps(String text) => Padding(
+      padding: const EdgeInsets.only(top: 6, bottom: 2),
+      child: Text(text,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+    );
+
+BoxDecoration _card() => BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), boxShadow: _soft);
 
 /// Organizadores do evento (migração 159): o dono escolhe o que cada
 /// co-organizador pode fazer, ou retira-o. Os outros veem o que podem.
+/// Estilo do mockup «Organizadores» (2026-11-17).
 class OrganizersScreen extends ConsumerWidget {
   const OrganizersScreen({super.key});
 
@@ -25,77 +35,164 @@ class OrganizersScreen extends ConsumerWidget {
     final wedding = ref.watch(weddingControllerProvider.select((s) => s.wedding));
     final listAsync = wedding == null ? null : ref.watch(weddingOrganizersProvider(wedding.id));
     final mine = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final topInset = MediaQuery.paddingOf(context).top;
+
+    Widget content;
+    if (listAsync == null) {
+      content = const SizedBox.shrink();
+    } else {
+      content = listAsync.when(
+        loading: () => const Padding(padding: EdgeInsets.only(top: 60), child: Center(child: CircularProgressIndicator())),
+        error: (e, s) => const _Message('Não foi possível carregar os organizadores.'),
+        data: (list) {
+          if (list == null) {
+            return const _Message('Falta correr a migração 159 para escolher o que cada organizador pode fazer.');
+          }
+          final owners = list.where((o) => o.isOwner).toList();
+          final others = list.where((o) => !o.isOwner).toList();
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (owners.isNotEmpty) ...[
+                _caps('ORGANIZADOR PRINCIPAL'),
+                const SizedBox(height: 6),
+                for (final o in owners) _OwnerCard(o),
+              ],
+              if (mine.isOwner) ...[
+                const SizedBox(height: 14),
+                _InviteCard(wedding: wedding!),
+              ],
+              const SizedBox(height: 14),
+              _caps('A ORGANIZAR CONTIGO · ${others.length}'),
+              const SizedBox(height: 6),
+              if (others.isEmpty)
+                const _Message('Ainda não há mais ninguém a organizar.')
+              else
+                for (final o in others) ...[
+                  _CollaboratorCard(organizer: o, editable: mine.isOwner, weddingId: wedding!.id),
+                  const SizedBox(height: 12),
+                ],
+            ],
+          );
+        },
+      );
+    }
+
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(top: false, 
-        bottom: false,
-        child: ScrollingHeader(
- header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-          const PageHeader(title: 'Organizadores', centered: true)
- ],
- body: listAsync == null
-                ? const SizedBox.shrink()
-                : listAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => const _Message('Não foi possível carregar os organizadores.'),
-                    data: (list) {
-                      if (list == null) {
-                        return const _Message('Falta correr a migração 159 para escolher o que cada organizador pode fazer.');
-                      }
-                      final others = list.where((o) => !o.isOwner).toList();
-                      return ListView(
-                        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 40),
-                        children: [
-                          for (final o in list.where((o) => o.isOwner)) _OwnerTile(o),
-                          const SizedBox(height: 12),
-                          // Convidar o par ou outro organizador, só por link
-                          // (pedido 2026-11-08: juntar aqui e sem email).
-                          if (mine.isOwner) ...[
-                            _InviteCard(wedding: wedding!),
-                            const SizedBox(height: 12),
-                          ],
-                          if (others.isEmpty)
-                            const _Message('Ainda não há mais ninguém a organizar.')
-                          else
-                            for (final o in others) ...[
-                              _CollaboratorCard(organizer: o, editable: mine.isOwner, weddingId: wedding!.id),
-                              const SizedBox(height: 12),
-                            ],
-                        ],
-                      );
-                    },
-                  ),
-),
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, topInset + 12, AppTheme.screenMargin, 40),
+        children: [
+          // Voltar redondo branco 44 (§2).
+          _RoundButton(
+            icon: Hi.chevronLeft,
+            label: 'Voltar',
+            onTap: () => context.canPop() ? context.pop() : context.go('/home'),
+          ),
+          const SizedBox(height: 14),
+          const Text('Organizadores', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 4),
+          const Text('Quem organiza o evento contigo. Convida por link e escolhe o que cada um pode fazer.',
+              style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
+          const SizedBox(height: 14),
+          content,
+        ],
       ),
     );
   }
+}
+
+class _RoundButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _RoundButton({required this.icon, required this.label, required this.onTap});
+  @override
+  Widget build(BuildContext context) => Align(
+        alignment: Alignment.centerLeft,
+        child: Semantics(
+          button: true,
+          label: label,
+          child: Material(
+            color: Colors.white,
+            shape: const CircleBorder(),
+            elevation: 0,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onTap,
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Icon(icon, size: 20, color: AppTheme.ink),
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+/// Toggle verde do mockup (ligado = verde, knob branco). 44×26.
+class _PermToggle extends StatelessWidget {
+  final bool on;
+  const _PermToggle(this.on);
+  @override
+  Widget build(BuildContext context) => AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        width: 44,
+        height: 26,
+        decoration: BoxDecoration(
+          color: on ? AppTheme.accentOliveDark : const Color(0xFFD8D3C8),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: AnimatedAlign(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
+          alignment: on ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.all(3),
+            width: 20,
+            height: 20,
+            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          ),
+        ),
+      );
 }
 
 class _Message extends StatelessWidget {
   final String text;
   const _Message(this.text);
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
+  Widget build(BuildContext context) => Container(
+        decoration: _card(),
+        padding: const EdgeInsets.all(16),
+        child: Text(text, style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
       );
 }
 
-class _OwnerTile extends StatelessWidget {
+class _OwnerCard extends StatelessWidget {
   final Organizer o;
-  const _OwnerTile(this.o);
+  const _OwnerCard(this.o);
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(14),
-        color: AppTheme.surface,
+        decoration: _card(),
+        padding: const EdgeInsets.all(16),
         child: Row(children: [
           _Avatar(o.name),
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(o.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const Text('Organizador principal · pode tudo', style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+              Text(o.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Text('Pode tudo', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
+            child: const Text('Tu',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
           ),
         ]),
       );
@@ -105,12 +202,14 @@ class _Avatar extends StatelessWidget {
   final String name;
   const _Avatar(this.name);
   @override
-  Widget build(BuildContext context) => CircleAvatar(
-        radius: 18,
-        backgroundColor: AppTheme.accentTint,
+  Widget build(BuildContext context) => Container(
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(color: Color(0xFFE6EDE1), shape: BoxShape.circle),
         child: Text(
           name.trim().isEmpty ? '?' : name.trim().characters.first.toUpperCase(),
-          style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
         ),
       );
 }
@@ -178,70 +277,149 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
   Widget build(BuildContext context) {
     final o = widget.organizer;
     final perms = _local ?? o.perms;
-    final green = AppTheme.accentOliveDark;
     final pending = o.status == 'pending';
+    final total = OrganizerPerm.values.length;
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
-      color: AppTheme.surface,
+      decoration: _card(),
+      padding: const EdgeInsets.all(16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
           _Avatar(o.name),
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(o.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(o.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               Text(
-                pending ? 'Convite por aceitar' : '${perms.count} de ${OrganizerPerm.values.length} permissões',
-                style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted),
+                pending ? 'Convite por aceitar' : 'A organizar contigo',
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
               ),
             ]),
           ),
-          if (_saving) const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
-          if (widget.editable)
-            IconButton(
-              onPressed: _remove,
-              tooltip: 'Retirar organizador',
-              icon: const Icon(Hi.userMinus, color: AppTheme.inkMuted),
-            ),
+          if (_saving)
+            const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+          else if (widget.editable)
+            _RemoveButton(onTap: _remove, label: 'Retirar ${o.name}'),
         ]),
         if (widget.editable) ...[
-          const SizedBox(height: 8),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            ChoiceChip(
-              label: const Text('Tudo'),
-              selected: perms.count == OrganizerPerm.values.length,
-              showCheckmark: false,
-              onSelected: _saving ? null : (_) => _set(OrganizerPerms(isOwner: false, map: {for (final p in OrganizerPerm.values) p.key: true})),
+          const Divider(height: 28, color: Color(0xFFECE7DC)),
+          _caps('O QUE PODE FAZER'),
+          const SizedBox(height: 10),
+          // Presets rápidos (filtro §6): ativo verde, inativo branco.
+          Row(children: [
+            _Preset(
+              label: 'Tudo',
+              selected: perms.count == total,
+              onTap: _saving ? null : () => _set(OrganizerPerms(isOwner: false, map: {for (final p in OrganizerPerm.values) p.key: true})),
             ),
-            ChoiceChip(
-              label: const Text('Só bilhetes e entradas'),
+            const SizedBox(width: 8),
+            _Preset(
+              label: 'Só bilhetes e entradas',
               selected: perms.count == 1 && perms.can(OrganizerPerm.bilhetes),
-              showCheckmark: false,
-              onSelected: _saving
+              onTap: _saving
                   ? null
-                  : (_) => _set(OrganizerPerms(isOwner: false, map: {for (final p in OrganizerPerm.values) p.key: p == OrganizerPerm.bilhetes})),
+                  : () => _set(OrganizerPerms(isOwner: false, map: {for (final p in OrganizerPerm.values) p.key: p == OrganizerPerm.bilhetes})),
             ),
           ]),
+          const SizedBox(height: 4),
+          for (var i = 0; i < OrganizerPerm.values.length; i++) ...[
+            if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
+            _PermRow(
+              perm: OrganizerPerm.values[i],
+              on: perms.can(OrganizerPerm.values[i]),
+              onTap: _saving ? null : () => _set(perms.withPerm(OrganizerPerm.values[i], !perms.can(OrganizerPerm.values[i]))),
+            ),
+          ],
+        ] else ...[
+          const Divider(height: 28, color: Color(0xFFECE7DC)),
+          _caps('O QUE PODE FAZER'),
+          const SizedBox(height: 4),
+          for (var i = 0; i < OrganizerPerm.values.length; i++) ...[
+            if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
+            _PermRow(perm: OrganizerPerm.values[i], on: perms.can(OrganizerPerm.values[i]), onTap: null),
+          ],
         ],
-        const SizedBox(height: 4),
-        for (final p in OrganizerPerm.values)
-          widget.editable
-              ? SwitchListTile.adaptive(
-                  contentPadding: EdgeInsets.zero,
-                  secondary: Icon(p.icon, color: perms.can(p) ? green : AppTheme.inkMuted),
-                  title: Text(p.label, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  subtitle: Text(p.description, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
-                  value: perms.can(p),
-                  onChanged: _saving ? null : (v) => _set(perms.withPerm(p, v)),
-                )
-              : ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(p.icon, color: perms.can(p) ? green : AppTheme.inkMuted),
-                  title: Text(p.label, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  trailing: Icon(perms.can(p) ? Hi.check : Hi.noSymbol,
-                      color: perms.can(p) ? green : AppTheme.inkMuted, semanticLabel: perms.can(p) ? 'Pode' : 'Não pode'),
-                ),
       ]),
+    );
+  }
+}
+
+class _RemoveButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final String label;
+  const _RemoveButton({required this.onTap, required this.label});
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: label,
+        child: Material(
+          color: AppTheme.background,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: const SizedBox(
+              width: 44,
+              height: 44,
+              child: Icon(Hi.trash, size: 20, color: Color(0xFFC8553D)),
+            ),
+          ),
+        ),
+      );
+}
+
+class _Preset extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+  const _Preset({required this.label, required this.selected, this.onTap});
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 38,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: selected ? AppTheme.accentOliveDark : Colors.white,
+            borderRadius: BorderRadius.circular(19),
+          ),
+          child: Text(label,
+              style: TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
+        ),
+      );
+}
+
+class _PermRow extends StatelessWidget {
+  final OrganizerPerm perm;
+  final bool on;
+  final VoidCallback? onTap;
+  const _PermRow({required this.perm, required this.on, this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    final green = AppTheme.accentOliveDark;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(children: [
+          Icon(perm.icon, size: 22, color: on ? green : AppTheme.inkMuted),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(perm.label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(perm.description, style: const TextStyle(fontSize: 13, height: 1.35, color: AppTheme.inkMuted)),
+            ]),
+          ),
+          const SizedBox(width: 10),
+          onTap == null
+              ? Icon(on ? Hi.check : Hi.noSymbol, color: on ? green : AppTheme.inkMuted, semanticLabel: on ? 'Pode' : 'Não pode')
+              : _PermToggle(on),
+        ]),
+      ),
     );
   }
 }
@@ -338,47 +516,42 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
   Widget build(BuildContext context) {
     final isWedding = widget.wedding.eventType == EventType.wedding;
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: const Color(0xFFDCD8CE)),
-      ),
+      decoration: _card(),
+      padding: const EdgeInsets.all(18),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(isWedding ? 'Convidar o teu par ou outro organizador' : 'Convidar outro organizador',
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 4),
         const Text('Envia o link a quem vai organizar contigo. Cada link serve para uma pessoa.',
-            style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
-        const SizedBox(height: 12),
+            style: TextStyle(fontSize: 13, height: 1.45, color: AppTheme.inkMuted)),
+        const SizedBox(height: 14),
         Row(children: [
           Expanded(
             child: FilledButton.icon(
               onPressed: _busy ? null : _share,
               icon: const Icon(Hi.arrowUpOnSquare, size: 18),
-              label: const FittedBox(child: Text('Enviar link', maxLines: 1, style: TextStyle(fontWeight: FontWeight.w700))),
+              label: const FittedBox(child: Text('Enviar link', maxLines: 1, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(46),
+                minimumSize: const Size.fromHeight(52),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 shape: const StadiumBorder(),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: OutlinedButton(
               onPressed: _busy ? null : () => _copy(),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.ink,
-                side: const BorderSide(color: Color(0xFFDCD8CE), width: 1.5),
-                minimumSize: const Size.fromHeight(46),
+                side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                minimumSize: const Size.fromHeight(52),
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 shape: const StadiumBorder(),
               ),
-              // Numa linha só, como o Enviar link (2026-11-08: "desformatado").
-              child: const FittedBox(child: Text('Copiar link', maxLines: 1, style: TextStyle(fontWeight: FontWeight.w700))),
+              child: const FittedBox(child: Text('Copiar link', maxLines: 1, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
             ),
           ),
         ]),

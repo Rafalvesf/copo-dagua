@@ -94,19 +94,39 @@ class _JoinEventsScreenState extends ConsumerState<JoinEventsScreen> {
                       }
                       final invite = snap.data;
                       if (invite == null || !invite.valid) {
+                        // Inválido e já usado passam a ter a mesma mensagem
+                        // (mockup «Link inválido ou já usado», 2026-11-17).
                         return PublicStateView(
                           pose: MascotPose.sad,
-                          title: invite == null ? 'Link inválido' : 'Convite já usado',
-                          message: invite == null
-                              ? 'Este link de convite não é válido. Pede um novo a quem te convidou.'
-                              : 'Este convite já foi usado ou expirou. Pede um novo link.',
+                          title: 'Este convite já não é válido',
+                          message:
+                              'Pode já ter sido usado ou quem te convidou criou um novo. Pede-lhe um link novo para organizarem juntos.',
                           actions: [PrimaryButton(label: 'Ir para o início', onPressed: () => context.go('/welcome'))],
                         );
                       }
                       return PublicStateView(
                         pose: MascotPose.cheer,
-                        title: 'Organiza com ${invite.names}',
-                        message: 'Cria conta ou entra para ficares com acesso ao evento.',
+                        eyebrow: 'CONVITE PARA ORGANIZAR',
+                        title: invite.names,
+                        message: 'convidam-te para organizar o evento com eles.',
+                        extra: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(22),
+                            boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+                          ),
+                          padding: const EdgeInsets.all(18),
+                          child: const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('O QUE ISTO SIGNIFICA',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                              SizedBox(height: 8),
+                              Text('Ficas com acesso ao evento para ajudarem a organizar, lado a lado. Quem te convidou escolhe o que podes fazer.',
+                                  style: TextStyle(fontSize: 17, height: 1.5, color: AppTheme.ink)),
+                            ],
+                          ),
+                        ),
                         actions: [
                           PrimaryButton(
                             label: 'Criar conta',
