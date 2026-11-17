@@ -32,6 +32,7 @@ import '../../../core/reviews/review_providers.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/wedding/organizers.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../partner_style.dart';
@@ -111,12 +112,52 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     super.dispose();
   }
 
+  /// Eventos onde posso reservar este parceiro: os que organizo (dono) e os
+  /// que co-organizo com permissão de tratar de parceiros (pedidos de
+  /// orçamento — `OrganizerPerm.conversas`). Antes da migração de permissões,
+  /// tudo é permitido.
+  Future<List<Wedding>> _eligibleEvents() async {
+    final myId = ref.read(authControllerProvider).profile?.id;
+    final events = ref.read(weddingControllerProvider).events;
+    final out = <Wedding>[];
+    for (final w in events) {
+      if (w.ownerId == myId) {
+        out.add(w);
+        continue;
+      }
+      try {
+        final r = await supabase.rpc('my_wedding_permissions', params: {'p_wedding': w.id});
+        final perms = r is Map ? OrganizerPerms.fromJson(r, isOwner: r['is_owner'] == true) : OrganizerPerms.all;
+        if (perms.can(OrganizerPerm.conversas)) out.add(w);
+      } catch (_) {
+        out.add(w);
+      }
+    }
+    return out;
+  }
+
+  /// Escolhe o evento para onde reservar. Com um só evento elegível, usa-o
+  /// direto (comportamento de sempre); com mais do que um, mostra o popup.
+  Future<Wedding?> _chooseEvent() async {
+    final eligible = await _eligibleEvents();
+    if (eligible.isEmpty) return ref.read(weddingControllerProvider).wedding;
+    if (eligible.length == 1) return eligible.first;
+    if (!mounted) return null;
+    return showModalBottomSheet<Wedding>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _EventPickerSheet(events: eligible, partnerName: widget.partner.name),
+    );
+  }
+
   /// «Pedir este pacote» (188): pacote, extras, pessoas e mensagem. Antes
   /// da migração (função em falta) cai no pedido de orçamento normal com
   /// o pacote na mensagem.
   Future<void> _requestPackage(ServicePackage pkg, List<ServiceExtra> extras, int people) async {
-    final wedding = ref.read(weddingControllerProvider).wedding;
-    if (wedding == null || _requestingQuote) return;
+    if (_requestingQuote) return;
+    final wedding = await _chooseEvent();
+    if (wedding == null || !mounted) return;
     final chosen = extras.where((e) => _selectedExtras.contains(e.id)).toList();
     final summary = [
       'Pacote "${pkg.name}"',
@@ -176,8 +217,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// «Reservar mesa» (190): cada um escolhe o seu menu e extras na app.
   /// A reserva não tem sinal; quem paga é decidido em [_eachPays].
   Future<void> _requestTable(int people) async {
-    final wedding = ref.read(weddingControllerProvider).wedding;
-    if (wedding == null || _requestingQuote) return;
+    if (_requestingQuote) return;
+    final wedding = await _chooseEvent();
+    if (wedding == null || !mounted) return;
     final note = _packageMessage.text.trim();
     final summary = 'Mesa para $people pessoas · cada um escolhe${_eachPays ? ' e paga' : ''} o seu';
     setState(() => _requestingQuote = true);
@@ -344,8 +386,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   }
 
   Future<void> _requestQuote({String? initialMessage}) async {
-    final wedding = ref.read(weddingControllerProvider).wedding;
-    if (wedding == null || _requestingQuote) return;
+    if (_requestingQuote) return;
+    final wedding = await _chooseEvent();
+    if (wedding == null || !mounted) return;
 
     final result = await showIslandSheet<_RequestQuoteResult>(
       context: context,
@@ -717,7 +760,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         double each(String unit, double price) => unit == 'person' ? price * people : price;
                         final total = each(p.priceUnit, p.price) +
                             pkgExtras.where((e) => _selectedExtras.contains(e.id)).fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
-                        final label = p.isStartingPrice ? 'Pedir proposta · ${p.name}' : 'Pedir este pacote · ${euros(total)}';
+                        final label = p.isStartingPrice ? 'Reservar · ${p.name}' : 'Reservar · ${euros(total)}';
                         TextStyle btn(double size) => TextStyle(
                             fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: size, fontWeight: FontWeight.w700);
                         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -822,17 +865,28 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         ]);
                       }),
                     if (!widget.selectionMode && !alreadyRelated) ...[
-                      const SizedBox(height: 14),
-                      Center(
-                        child: SnappyTap(
-                          onTap: pub ? _needAccount : (_requestingQuote ? null : () => _requestQuote()),
-                          child: Text.rich(TextSpan(children: [
-                            const TextSpan(text: 'Nada disto serve? ', style: TextStyle(fontSize: 13, color: muted)),
-                            TextSpan(
-                              text: 'Pedir orçamento à medida',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
-                            ),
-                          ])),
+                      const SizedBox(height: 16),
+                      const Text('Nada disto serve?',
+                          textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: muted)),
+                      const SizedBox(height: 8),
+                      // Secundário (DESIGN.md §2): contorno preto 1,5, pílula,
+                      // altura 44 — mais pequeno que o preto (52), mas um botão
+                      // bem visível em vez do antigo link.
+                      SizedBox(
+                        height: 44,
+                        child: OutlinedButton(
+                          onPressed: pub ? _needAccount : (_requestingQuote ? null : () => _requestQuote()),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: ink,
+                            side: const BorderSide(color: ink, width: 1.5),
+                            shape: const StadiumBorder(),
+                            textStyle: const TextStyle(
+                                fontFamily: AppTheme.fontFamily,
+                                fontFamilyFallback: AppTheme.fontFamilyFallback,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700),
+                          ),
+                          child: const Text('Pedir orçamento à medida'),
                         ),
                       ),
                     ],
@@ -1508,4 +1562,106 @@ class ExtraChoiceRow extends StatelessWidget {
           ),
         ),
       );
+}
+
+/// Popup "Para qual evento?" — escolhe o evento onde reservar o parceiro
+/// quando há mais do que um evento elegível (DESIGN.md §2/§4).
+class _EventPickerSheet extends StatelessWidget {
+  final List<Wedding> events;
+  final String partnerName;
+  const _EventPickerSheet({required this.events, required this.partnerName});
+
+  String _meta(Wedding w) {
+    final parts = <String>[];
+    final d = w.weddingDate;
+    if (d != null) {
+      const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+      parts.add('${d.day} ${meses[d.month - 1]} ${d.year}');
+    }
+    final place = (w.venue?.isNotEmpty == true) ? w.venue! : (w.location ?? '');
+    if (place.isNotEmpty) parts.add(place);
+    return parts.join(' · ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 14, 20, 24 + bottom),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: const Color(0xFFD8D3C8), borderRadius: BorderRadius.circular(999)),
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text('Para qual evento?',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 4),
+            Text('$partnerName vai ficar reservado no evento que escolheres.',
+                style: const TextStyle(fontSize: 13, color: Color(0xFF57534E))),
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 0; i < events.length; i++) ...[
+                    if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
+                    InkWell(
+                      onTap: () => Navigator.of(context).pop(events[i]),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 64),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          child: Row(children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(events[i].displayNames,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                  if (_meta(events[i]).isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(_meta(events[i]),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 13, color: Color(0xFF57534E))),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            const Icon(Hi.chevronRight, size: 20, color: Color(0xFF57534E)),
+                          ]),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
