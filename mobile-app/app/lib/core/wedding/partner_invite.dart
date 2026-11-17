@@ -16,15 +16,18 @@ class PendingPartnerInviteNotifier extends Notifier<String?> {
 final pendingPartnerInviteProvider =
     NotifierProvider<PendingPartnerInviteNotifier, String?>(PendingPartnerInviteNotifier.new);
 
-/// Nomes do casal e se o link ainda é válido — `null` se o link não existe.
-Future<({String names, bool valid})?> fetchPartnerInvite(String token) async {
+/// Nomes do casal do evento, o nome de quem enviou o convite (`inviterName`,
+/// pode ser `null`) e se o link ainda é válido — `null` se o link não existe.
+Future<({String names, String? inviterName, bool valid})?> fetchPartnerInvite(String token) async {
   final rows = await supabase.rpc('get_partner_invite', params: {'p_token': token}) as List;
   if (rows.isEmpty) return null;
   final r = rows.first as Map<String, dynamic>;
   final n1 = (r['partner_name_1'] as String?) ?? '';
   final n2 = r['partner_name_2'] as String?;
+  final inviter = (r['inviter_name'] as String?)?.trim();
   return (
     names: (n2 == null || n2.isEmpty) ? n1 : '$n1 & $n2',
+    inviterName: (inviter == null || inviter.isEmpty) ? null : inviter,
     valid: r['valid'] as bool? ?? false,
   );
 }
