@@ -463,7 +463,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
         name: created.displayNames,
         saving: _saving,
         onGuests: () => _finish('/guests'),
-        onEvent: () => _finish('/wedding'),
+        onEvent: () => _finish('/evento'),
       );
     }
 

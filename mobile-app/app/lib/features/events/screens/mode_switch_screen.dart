@@ -23,7 +23,7 @@ class AppModeTracker {
     '/guest-onboarding/',
     '/guest-wedding-details',
   ];
-  static const _organizerPaths = ['/home', '/partners', '/wedding', '/chat', '/eventos', '/novo-evento'];
+  static const _organizerPaths = ['/home', '/partners', '/evento', '/wedding', '/chat', '/eventos', '/novo-evento'];
 
   static AppMode? modeOf(String location) {
     if (_guestPrefixes.any(location.startsWith)) return AppMode.guest;

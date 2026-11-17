@@ -2683,7 +2683,7 @@ class _ManageList extends ConsumerWidget {
       // — Organização (vinha das Definições, 2026-11-16) —
       (Hi.calendar, 'Detalhes do evento', '', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditEventPage(wedding: w)))),
       (Hi.squaresPlus, 'Painel do evento', 'o que aparece', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PanelPage()))),
-      (Hi.swatch, 'Aparência do menu', '', () => context.go('/wedding?aparencia=1')),
+      (Hi.swatch, 'Aparência do menu', '', () => context.go('/evento?aparencia=1')),
       (Hi.ticket, 'Acesso e entrada', 'para os convidados', () => push('/guest-page')),
       (Hi.archiveBox, 'Eventos arquivados e apagados', '', () => push('/eventos-arquivados')),
     ];
