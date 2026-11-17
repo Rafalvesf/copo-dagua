@@ -193,7 +193,7 @@ Future<ReportData> loadPartnerReport() async {
   final business = (profile?['business_name'] ?? 'Parceiro').toString();
   final rows = await supabase
       .from('bookings')
-      .select('id, booking_number, event_date, status, total_amount, weddings(partner_name_1, partner_name_2, location), proposals(title)')
+      .select('id, booking_number, event_date, status, total_amount, events(partner_name_1, partner_name_2, location), proposals(title)')
       .eq('partner_id', uid)
       .order('event_date', ascending: false);
   final pays = await supabase
@@ -207,10 +207,10 @@ Future<ReportData> loadPartnerReport() async {
 /// Gastos e parceiros do casamento [weddingId] (organizador).
 Future<ReportData> loadCoupleReport(String weddingId) async {
   await _loadCommission();
-  final wedding = await supabase.from('weddings').select('partner_name_1, partner_name_2').eq('id', weddingId).maybeSingle();
+  final wedding = await supabase.from('events').select('partner_name_1, partner_name_2').eq('id', weddingId).maybeSingle();
   final rows = await supabase
       .from('bookings')
-      .select('id, booking_number, event_date, status, total_amount, partner_profiles(business_name), weddings(partner_name_1, partner_name_2, location), proposals(title)')
+      .select('id, booking_number, event_date, status, total_amount, partner_profiles(business_name), events(partner_name_1, partner_name_2, location), proposals(title)')
       .eq('wedding_id', weddingId)
       .order('event_date', ascending: false);
   final ids = [for (final r in rows) r['id'] as String];
@@ -244,7 +244,7 @@ Future<ReportData> loadSingleBookingReport(String bookingId, {bool partnerSide =
   await _loadCommission();
   final rows = await supabase
       .from('bookings')
-      .select('id, booking_number, event_date, status, total_amount, partner_profiles(business_name), weddings(partner_name_1, partner_name_2, location), proposals(title)')
+      .select('id, booking_number, event_date, status, total_amount, partner_profiles(business_name), events(partner_name_1, partner_name_2, location), proposals(title)')
       .eq('id', bookingId);
   final pays = await supabase
       .from('payments')
@@ -255,7 +255,7 @@ Future<ReportData> loadSingleBookingReport(String bookingId, {bool partnerSide =
       ? (partnerSide ? 'Parceiro' : 'Organizador')
       : partnerSide
           ? ((rows.first['partner_profiles'] as Map?)?['business_name'] ?? 'Parceiro').toString()
-          : _couple(rows.first['weddings'] as Map?);
+          : _couple(rows.first['events'] as Map?);
   final partnerName = rows.isEmpty ? '' : ((rows.first['partner_profiles'] as Map?)?['business_name'] ?? '').toString();
   final base = _assemble(owner, 'Reserva ${rows.isEmpty ? '' : bookingRef(rows.first['booking_number'], partnerName)}', rows, pays, partnerSide: partnerSide);
   return base;
@@ -274,14 +274,14 @@ ReportData _assemble(String owner, String title, List<Map<String, dynamic>> rows
   String other(Map<String, dynamic>? r) => r == null
       ? ''
       : partnerSide
-          ? _couple(r['weddings'] as Map?)
+          ? _couple(r['events'] as Map?)
           : ((r['partner_profiles'] as Map?)?['business_name'] ?? 'Parceiro').toString();
   String service(Map<String, dynamic>? r) => ((r?['proposals'] as Map?)?['title'] ?? '').toString();
   final payments = [
     for (final p in pays)
       () {
         final r = byBooking[p['booking_id']];
-        final couple = _couple(r?['weddings'] as Map?);
+        final couple = _couple(r?['events'] as Map?);
         final partner = ((r?['partner_profiles'] as Map?)?['business_name'] ?? (partnerSide ? owner : '')).toString();
         return ReportPayment(
           bookingNumber: bookingRef(r?['booking_number'], partner),
@@ -312,7 +312,7 @@ ReportData _assemble(String owner, String title, List<Map<String, dynamic>> rows
         counterpart: other(r),
         service: service(r),
         eventDate: _date(r['event_date']),
-        location: ((r['weddings'] as Map?)?['location'] ?? '').toString(),
+        location: ((r['events'] as Map?)?['location'] ?? '').toString(),
         status: _bookingStatus[r['status']] ?? '${r['status']}',
         total: _num(r['total_amount']),
         paid: paidByBooking[r['id']] ?? 0,

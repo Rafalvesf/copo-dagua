@@ -483,12 +483,12 @@ final _convMetaProvider = FutureProvider.autoDispose<Map<String, _ConvMeta>>((re
   final convs = ref.watch(chatListControllerProvider).conversations;
   if (convs.isEmpty) return const {};
   final ids = [for (final c in convs) c.id];
-  final weddings = {for (final c in convs) if (c.weddingId != null) c.weddingId!}.toList();
+  final events = {for (final c in convs) if (c.weddingId != null) c.weddingId!}.toList();
   final out = <String, _ConvMeta>{};
   final status = <String, _Status>{};
   String key(String? w, String? p) => '$w|$p';
   try {
-    final b = await supabase.from('bookings').select('wedding_id, partner_id, status').inFilter('wedding_id', weddings);
+    final b = await supabase.from('bookings').select('wedding_id, partner_id, status').inFilter('wedding_id', events);
     for (final r in (b as List).cast<Map<String, dynamic>>()) {
       final s = r['status'] as String? ?? '';
       final k = key(r['wedding_id'] as String?, r['partner_id'] as String?);
@@ -503,7 +503,7 @@ final _convMetaProvider = FutureProvider.autoDispose<Map<String, _ConvMeta>>((re
     final p = await supabase
         .from('proposals')
         .select('partner_id, status, quote_requests!inner(wedding_id)')
-        .inFilter('quote_requests.wedding_id', weddings)
+        .inFilter('quote_requests.wedding_id', events)
         .inFilter('status', ['sent', 'pending']);
     for (final r in (p as List).cast<Map<String, dynamic>>()) {
       final w = (r['quote_requests'] as Map?)?['wedding_id'] as String?;

@@ -61,7 +61,7 @@ final partnerContractsProvider = FutureProvider<List<PartnerContract>>((ref) asy
       .select(
         'id, booking_number, event_date, total_amount, deposit_amount, status, '
         'proposals(title, description, payment_terms), '
-        'weddings(partner_name_1, partner_name_2, venue, location, profile_photo_url, cover_photo_url), '
+        'events(partner_name_1, partner_name_2, venue, location, profile_photo_url, cover_photo_url), '
         'payments(status, amount), partner_profiles(business_name)',
       )
       .eq('partner_id', partnerId)
@@ -69,7 +69,7 @@ final partnerContractsProvider = FutureProvider<List<PartnerContract>>((ref) asy
   return [
     for (final r in (rows as List).cast<Map<String, dynamic>>())
       () {
-        final w = r['weddings'] as Map<String, dynamic>?;
+        final w = r['events'] as Map<String, dynamic>?;
         final p = r['proposals'] as Map<String, dynamic>?;
         final n1 = (w?['partner_name_1'] as String?) ?? '';
         final n2 = (w?['partner_name_2'] as String?) ?? '';

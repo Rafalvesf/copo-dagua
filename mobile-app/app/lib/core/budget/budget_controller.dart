@@ -37,7 +37,7 @@ BudgetCategory _categoryFromRow(Map<String, dynamic> row) => BudgetCategory(
 /// reportado: "a página orçamento fica a carregar infinitamente").
 /// `budget == null` nunca acontece depois de carregado: um casamento
 /// sem `budgets` ainda gera um [Budget] com o total semeado a partir de
-/// `weddings.estimated_budget` (ou 0€, se também não existir) em vez de
+/// `events.estimated_budget` (ou 0€, se também não existir) em vez de
 /// ficar por resolver.
 class BudgetController extends Notifier<BudgetState> {
   String? currentWeddingId;
@@ -73,7 +73,7 @@ class BudgetController extends Notifier<BudgetState> {
     } else {
       // Sem nenhuma linha em `budgets` ainda — semeia a partir do
       // "orçamento estimado" já dado no onboarding
-      // (`weddings.estimated_budget`, `wedding_controller.dart#create`)
+      // (`events.estimated_budget`, `wedding_controller.dart#create`)
       // em vez de mostrar sempre 0€. Pedido explícito do utilizador: "o
       // orçamento foi colocado no onboarding mas não ficou atualizado
       // no orçamento dentro da app" — as duas telas mostravam o mesmo

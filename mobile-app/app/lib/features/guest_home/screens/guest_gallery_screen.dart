@@ -39,7 +39,7 @@ enum _GalleryTab { all, mine, favorites }
 /// `wedding_gallery_photos`), não persiste entre sessões.
 class GuestGalleryScreen extends ConsumerWidget {
   /// `null` = conta 100% convidado, sem "Modo convidado" — resolve o
-  /// casamento sozinho via [guestWeddingsProvider] (`weddings.first`,
+  /// casamento sozinho via [guestWeddingsProvider] (`events.first`,
   /// mesmo padrão de [GuestHomeScreen]).
   final String? weddingId;
 
@@ -53,11 +53,11 @@ class GuestGalleryScreen extends ConsumerWidget {
     return weddingsAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, st) => Scaffold(body: AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider))),
-      data: (weddings) {
-        if (weddings.isEmpty) {
+      data: (events) {
+        if (events.isEmpty) {
           return const Scaffold(body: EmptyStateView(message: 'Sem casamento associado.', icon: Hi.heartOutline));
         }
-        return _GuestGalleryBody(weddingId: weddings.first.weddingId);
+        return _GuestGalleryBody(weddingId: events.first.weddingId);
       },
     );
   }

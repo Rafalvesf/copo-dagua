@@ -28,7 +28,7 @@ export default async function WeddingsPage({ searchParams }: PageProps<"/wedding
 
   const supabase = await createClient();
   let q = supabase
-    .from("weddings")
+    .from("events")
     .select("id, partner_name_1, partner_name_2, wedding_date, location, status, event_type, event_type_other, bookings(count), guests(count)")
     .order("created_at", { ascending: false });
   if (type !== "all") q = q.eq("event_type", type);

@@ -8,7 +8,7 @@ import '../models/models.dart' show EventType;
 import '../supabase/supabase_config.dart';
 
 /// Partes da página do evento que o organizador pode mostrar ou esconder
-/// aos convidados (migração 158, `weddings.guest_sections`).
+/// aos convidados (migração 158, `events.guest_sections`).
 enum GuestSection {
   programa('programa', 'Programa', 'Horários, local e como chegar', Hi.clock),
   mesa('mesa', 'A tua mesa', 'Onde cada convidado fica sentado', Hi.tableCells),
@@ -128,7 +128,7 @@ final myEventPassProvider = FutureProvider.family<EventPass, String>((ref, weddi
 /// O organizador: o que os convidados veem neste evento.
 final guestSectionsProvider = FutureProvider.family<GuestSections?, String>((ref, weddingId) async {
   try {
-    final row = await supabase.from('weddings').select('guest_sections').eq('id', weddingId).maybeSingle();
+    final row = await supabase.from('events').select('guest_sections').eq('id', weddingId).maybeSingle();
     return GuestSections.fromJson(row?['guest_sections']);
   } on PostgrestException {
     // Antes da migração 158.

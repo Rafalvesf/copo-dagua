@@ -17,7 +17,7 @@ class GuestFacingInfo {
   /// `false` quando a migração 075 ainda não correu.
   final bool giftsAvailable;
 
-  /// `weddings.guest_join_mode`: 'code_open', 'code_with_match' ou
+  /// `events.guest_join_mode`: 'code_open', 'code_with_match' ou
   /// 'invite_only'.
   final String? joinMode;
 
@@ -69,7 +69,7 @@ Future<GuestFacingInfo> loadGuestFacingInfo(String weddingId) async {
   ];
   for (var i = 0; i < tiers.length; i++) {
     try {
-      final r = await supabase.from('weddings').select(tiers[i]).eq('id', weddingId).single();
+      final r = await supabase.from('events').select(tiers[i]).eq('id', weddingId).single();
       return GuestFacingInfo(
         ceremonyTime: r['ceremony_time'] as String?,
         welcomeMessage: r['welcome_message'] as String?,
@@ -97,7 +97,7 @@ Future<GuestFacingInfo> loadGuestFacingInfo(String weddingId) async {
 String? _clean(String? v) => (v == null || v.trim().isEmpty) ? null : v.trim();
 
 Future<void> saveGuestFacingInfo(String weddingId, GuestFacingInfo info) async {
-  await supabase.from('weddings').update({
+  await supabase.from('events').update({
     'ceremony_time': _clean(info.ceremonyTime),
     'welcome_message': _clean(info.welcomeMessage),
     'theme_colors': info.themeColors,

@@ -21,7 +21,7 @@ import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 
 /// "Presentes" — pedido explícito do utilizador (mockup de referência).
-/// Ligado em 2026-10-16 aos campos `weddings.gift_*`
+/// Ligado em 2026-10-16 aos campos `events.gift_*`
 /// (`075_connect_remaining.sql`), que o casal preenche nas Definições:
 /// "Ver lista de presentes" abre o link da lista; "Contribuir com um
 /// valor" mostra o IBAN para transferência. Sem pagamento dentro da app.
@@ -101,9 +101,9 @@ class GuestGiftsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final weddings = ref.watch(guestWeddingsProvider).asData?.value ?? const <GuestWedding>[];
+    final events = ref.watch(guestWeddingsProvider).asData?.value ?? const <GuestWedding>[];
     GuestWedding? wedding;
-    for (final w in weddings) {
+    for (final w in events) {
       if (weddingId == null || w.weddingId == weddingId) {
         wedding = w;
         break;

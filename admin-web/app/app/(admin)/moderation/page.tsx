@@ -22,7 +22,7 @@ const STATUS_ORDER: Record<ReviewStatus, number> = { flagged: 0, published: 1, r
 
 type ReviewRow = Review & {
   partner_profiles: { business_name: string } | null;
-  weddings: { partner_name_1: string; partner_name_2: string | null } | null;
+  events: { partner_name_1: string; partner_name_2: string | null } | null;
   bookings: { booking_number: string } | null;
 };
 
@@ -35,7 +35,7 @@ export default async function ModerationPage({ searchParams }: PageProps<"/moder
   let query = supabase
     .from("reviews")
     .select(
-      "*, partner_profiles(business_name), weddings(partner_name_1, partner_name_2), bookings(booking_number)",
+      "*, partner_profiles(business_name), events(partner_name_1, partner_name_2), bookings(booking_number)",
     )
     .order("created_at", { ascending: false });
 
@@ -73,10 +73,10 @@ export default async function ModerationPage({ searchParams }: PageProps<"/moder
       ) : (
         <div className="grid grid-2">
           {sorted.map((r) => {
-            const coupleName = r.weddings
-              ? r.weddings.partner_name_2
-                ? `${r.weddings.partner_name_1} & ${r.weddings.partner_name_2}`
-                : r.weddings.partner_name_1
+            const coupleName = r.events
+              ? r.events.partner_name_2
+                ? `${r.events.partner_name_1} & ${r.events.partner_name_2}`
+                : r.events.partner_name_1
               : "Organizador";
             return (
               <Card key={r.id} tone={r.status === "flagged" ? "danger" : undefined}>

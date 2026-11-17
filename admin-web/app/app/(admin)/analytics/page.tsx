@@ -62,7 +62,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
     reviewsR, disputesR, supportR, galleryR, offersR, settingsR, messagesR, groupMessagesR,
   ] = await Promise.all([
     q("profiles", "id, role, created_at, status"),
-    q("weddings", "id, created_at, event_type, wedding_date, location, estimated_budget, estimated_guests"),
+    q("events", "id, created_at, event_type, wedding_date, location, estimated_budget, estimated_guests"),
     q("guests", "wedding_id, rsvp_status, linked_profile_id, created_at"),
     q("quote_requests", "id, partner_id, created_at, status"),
     q("proposals", "id, partner_id, quote_request_id, created_at, status, price, deposit_refundable"),

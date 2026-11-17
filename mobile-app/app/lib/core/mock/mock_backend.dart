@@ -24,7 +24,7 @@ class MockBackend {
   static const demoPassword = 'teste1234';
 
   final List<Profile> profiles = [];
-  final List<Wedding> weddings = [];
+  final List<Wedding> events = [];
   final List<Collaborator> collaboratorsByWedding = [];
   final List<Guest> guests = [];
   final List<ChatMessage> chatMessages = [];
@@ -82,7 +82,7 @@ class MockBackend {
       estimatedBudget: 25000,
       status: WeddingStatus.planning,
     );
-    weddings.add(wedding);
+    events.add(wedding);
 
     collaboratorsByWedding.addAll([
       Collaborator(
@@ -499,7 +499,7 @@ class MockBackend {
       estimatedGuests: estimatedGuests,
       estimatedBudget: estimatedBudget,
     );
-    weddings.add(wedding);
+    events.add(wedding);
     collaboratorsByWedding.add(
       Collaborator(
         id: _nextId('collab'),
@@ -520,18 +520,18 @@ class MockBackend {
 
   Future<Wedding?> getWeddingForOwner(String ownerId) async {
     await Future.delayed(_latency ~/ 2);
-    return weddings.where((w) => w.ownerId == ownerId).firstOrNull;
+    return events.where((w) => w.ownerId == ownerId).firstOrNull;
   }
 
   Future<Wedding?> getWeddingBySlug(String slug) async {
     await Future.delayed(_latency ~/ 2);
-    return weddings.where((w) => w.inviteSlug == slug).firstOrNull;
+    return events.where((w) => w.inviteSlug == slug).firstOrNull;
   }
 
   Future<Wedding> updateWedding(Wedding wedding) async {
     await Future.delayed(_latency);
-    final index = weddings.indexWhere((w) => w.id == wedding.id);
-    if (index != -1) weddings[index] = wedding;
+    final index = events.indexWhere((w) => w.id == wedding.id);
+    if (index != -1) events[index] = wedding;
     return wedding;
   }
 

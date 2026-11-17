@@ -10,7 +10,7 @@ import '../../../core/wedding/guest_facing.dart';
 ///
 /// O dia ao minuto: etapas com um parceiro ou à mão (ex.: "Passeio no
 /// parque"). Dá para editar nome/data/hora, remover e **arrastar para
-/// reordenar**. É guardado em `weddings.program` (via `saveGuestFacingInfo`),
+/// reordenar**. É guardado em `events.program` (via `saveGuestFacingInfo`),
 /// o mesmo sítio que o convidado vê na página do convite.
 ///
 /// Nota: o programa vive aqui, no painel — saiu da "Página dos convidados".

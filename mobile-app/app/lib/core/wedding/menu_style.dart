@@ -168,12 +168,12 @@ class EventMenuStyle {
   static const fallback = EventMenuStyle(MenuLayout.classic, MenuColor('eucalyptus', 'Eucalipto', Color(0xFF4F6B4A), Color(0xFFDCE4D8), Color(0xFFF3EBDD)));
 }
 
-/// Lê `weddings.menu_layout`/`menu_color` do evento atual.
+/// Lê `events.menu_layout`/`menu_color` do evento atual.
 final menuStyleProvider = FutureProvider<EventMenuStyle>((ref) async {
   final id = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
   if (id == null) return EventMenuStyle.fallback;
   try {
-    final row = await supabase.from('weddings').select('menu_layout, menu_color').eq('id', id).maybeSingle();
+    final row = await supabase.from('events').select('menu_layout, menu_color').eq('id', id).maybeSingle();
     if (row == null) return EventMenuStyle.fallback;
     return EventMenuStyle(MenuLayout.fromDb(row['menu_layout'] as String?), MenuColor.fromId(row['menu_color'] as String?));
   } catch (_) {
@@ -193,7 +193,7 @@ final currentMenuStyleProvider = Provider<EventMenuStyle>(
 Future<void> saveMenuStyle(WidgetRef ref, {MenuLayout? layout, MenuColor? color}) async {
   final id = ref.read(weddingControllerProvider).wedding?.id;
   if (id == null) return;
-  await supabase.from('weddings').update({
+  await supabase.from('events').update({
     if (layout != null) 'menu_layout': layout.db,
     if (color != null) 'menu_color': color.id,
   }).eq('id', id);

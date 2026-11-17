@@ -261,7 +261,7 @@ export const MIGRATIONS: PendingMigration[] = [
     date: "2026-11-11",
     title: "Painel do evento: ligar e desligar blocos",
     what: "Guarda o que cada organizador escondeu no painel (contagem, números, sugestões, galeria…).",
-    check: { kind: "column", table: "weddings", column: "panel_hidden" },
+    check: { kind: "column", table: "events", column: "panel_hidden" },
   },
   {
     file: "178_public_events_going.sql",
@@ -296,7 +296,7 @@ export const MIGRATIONS: PendingMigration[] = [
     date: "2026-11-11",
     title: "Limite de pessoas por evento",
     what: "O organizador escolhe quantas pessoas podem ir; quando chega ao limite, ninguém mais entra nem compra bilhete.",
-    check: { kind: "column", table: "weddings", column: "max_attendees" },
+    check: { kind: "column", table: "events", column: "max_attendees" },
   },
   {
     file: "183_social_profile.sql",

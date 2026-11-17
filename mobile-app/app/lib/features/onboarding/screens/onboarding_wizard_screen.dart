@@ -272,7 +272,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
         // Público/privado e preço (141/142) — ignora em silêncio sem as colunas.
         try {
           final public = _isPublic && _eventType.canBePublic;
-          await supabase.from('weddings').update({
+          await supabase.from('events').update({
             'is_public': public,
             'is_paid': public && (_price ?? 0) > 0,
             'entry_price': public && (_price ?? 0) > 0 ? _price : null,

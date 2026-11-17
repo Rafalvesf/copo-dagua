@@ -179,7 +179,7 @@ String? _cleanUrl(String? url) {
 /// Morada para os parceiros enviarem os presentes da loja.
 final giftDeliveryAddressProvider = FutureProvider.family<String?, String>((ref, weddingId) async {
   try {
-    final row = await supabase.from('weddings').select('gift_delivery_address').eq('id', weddingId).maybeSingle();
+    final row = await supabase.from('events').select('gift_delivery_address').eq('id', weddingId).maybeSingle();
     return row?['gift_delivery_address'] as String?;
   } on PostgrestException {
     return null;
@@ -187,7 +187,7 @@ final giftDeliveryAddressProvider = FutureProvider.family<String?, String>((ref,
 });
 
 Future<void> saveGiftDeliveryAddress(String weddingId, String address) async {
-  await supabase.from('weddings').update({'gift_delivery_address': address.trim().isEmpty ? null : address.trim()}).eq('id', weddingId);
+  await supabase.from('events').update({'gift_delivery_address': address.trim().isEmpty ? null : address.trim()}).eq('id', weddingId);
 }
 
 // ---------- Loja ----------

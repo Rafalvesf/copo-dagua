@@ -44,7 +44,7 @@ export default async function DisputeDetailPage(props: PageProps<"/disputes/[id]
     supabase
       .from("bookings")
       .select(
-        "id, booking_number, status, event_date, total_amount, deposit_amount, partner_id, couple_id, partner_profiles(business_name), weddings(partner_name_1, partner_name_2), proposals(title, deposit_refundable)",
+        "id, booking_number, status, event_date, total_amount, deposit_amount, partner_id, couple_id, partner_profiles(business_name), events(partner_name_1, partner_name_2), proposals(title, deposit_refundable)",
       )
       .eq("id", d.booking_id)
       .single(),
@@ -70,7 +70,7 @@ export default async function DisputeDetailPage(props: PageProps<"/disputes/[id]
     partner_id: string;
     couple_id: string;
     partner_profiles: { business_name: string } | null;
-    weddings: { partner_name_1: string | null; partner_name_2: string | null } | null;
+    events: { partner_name_1: string | null; partner_name_2: string | null } | null;
     proposals: { title: string; deposit_refundable: boolean } | null;
   };
   const pct = Number(settings?.platform_commission_percentage ?? 0);
@@ -79,7 +79,7 @@ export default async function DisputeDetailPage(props: PageProps<"/disputes/[id]
   const refundable = payments
     .filter((p) => p.status === "paid")
     .reduce((a, p) => a + Math.max(0, paidByCouple(Number(p.amount)) - Number(p.refunded_amount)), 0);
-  const couple = [b?.weddings?.partner_name_1, b?.weddings?.partner_name_2].filter(Boolean).join(" & ") || "Organizador";
+  const couple = [b?.events?.partner_name_1, b?.events?.partner_name_2].filter(Boolean).join(" & ") || "Organizador";
   const partnerName = b?.partner_profiles?.business_name ?? "Parceiro";
 
   return (

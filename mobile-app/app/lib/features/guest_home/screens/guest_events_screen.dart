@@ -31,7 +31,7 @@ class GuestEventsScreen extends ConsumerWidget {
         child: weddingsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider)),
-          data: (weddings) => ListView(
+          data: (events) => ListView(
             padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
             children: [
               // Mesmo cabeçalho de "Convidados"/"Orçamento" do organizador
@@ -46,7 +46,7 @@ class GuestEventsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 18),
-              for (final w in weddings)
+              for (final w in events)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 10),
                   child: GuestEventCard(wedding: w),

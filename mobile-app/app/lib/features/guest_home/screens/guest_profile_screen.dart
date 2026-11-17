@@ -61,13 +61,13 @@ class GuestProfileScreen extends ConsumerWidget {
  body: weddingsAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider)),
-                    data: (weddings) {
-                      if (weddings.isEmpty || profile == null) {
+                    data: (events) {
+                      if (events.isEmpty || profile == null) {
                         return const EmptyStateView(message: 'Ainda sem casamento associado.', icon: Hi.heartOutline);
                       }
                       final resolvedWeddingId = weddingId == null
-                          ? weddings.first.weddingId
-                          : (weddings.any((w) => w.weddingId == weddingId) ? weddingId! : weddings.first.weddingId);
+                          ? events.first.weddingId
+                          : (events.any((w) => w.weddingId == weddingId) ? weddingId! : events.first.weddingId);
                       return _GuestProfileBody(weddingId: resolvedWeddingId, profile: profile, onMore: () => _openSettings(context, ref, isCouple));
                     },
                   ),

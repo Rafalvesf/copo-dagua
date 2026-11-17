@@ -59,7 +59,7 @@ final _partnerBookableEventsProvider =
   for (final w in events) {
     if (w.ownerId != myId) {
       try {
-        final r = await supabase.rpc('my_wedding_permissions', params: {'p_wedding': w.id});
+        final r = await supabase.rpc('my_event_permissions', params: {'p_wedding': w.id});
         final perms = r is Map ? OrganizerPerms.fromJson(r, isOwner: r['is_owner'] == true) : OrganizerPerms.all;
         if (!perms.can(OrganizerPerm.conversas)) continue;
       } catch (_) {

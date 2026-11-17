@@ -53,7 +53,7 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
       .select(
         // `*` (e não a lista de colunas) para trazer o pacote/extras da
         // 188 quando a migração já correu, sem falhar antes.
-        '*, profiles(full_name, avatar_url), weddings(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
+        '*, profiles(full_name, avatar_url), events(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
       )
       .eq('partner_id', partnerId)
       .neq('status', 'accepted')
@@ -65,7 +65,7 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
       .select(
         // `*` para apanhar as colunas da 190 (choice_mode, payer_mode,
         // people) sem falhar antes de a migração correr.
-        '*, profiles(full_name, avatar_url), proposals(title), weddings(location, partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
+        '*, profiles(full_name, avatar_url), proposals(title), events(location, partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
       )
       .eq('partner_id', partnerId)
       .order('event_date', ascending: false)
@@ -114,7 +114,7 @@ Booking _bookingFromQuoteRequestRow(
   String? category,
 ) {
   final couple = row['profiles'] as Map<String, dynamic>?;
-  final wedding = row['weddings'] as Map<String, dynamic>?;
+  final wedding = row['events'] as Map<String, dynamic>?;
   final coupleId = row['couple_id'] as String;
   return Booking(
     packageSnapshot: (row['package_snapshot'] as Map?)?.cast<String, dynamic>(),
@@ -149,7 +149,7 @@ Booking _bookingFromQuoteRequestRow(
 Booking _bookingFromBookingRow(Map<String, dynamic> row, String? category) {
   final couple = row['profiles'] as Map<String, dynamic>?;
   final proposal = row['proposals'] as Map<String, dynamic>?;
-  final wedding = row['weddings'] as Map<String, dynamic>?;
+  final wedding = row['events'] as Map<String, dynamic>?;
   final coupleId = row['couple_id'] as String;
   return Booking(
     id: row['id'] as String,
@@ -265,7 +265,7 @@ Future<void> removePortfolioItem(PortfolioItem item) async {
 /// Avaliações reais do próprio parceiro (`reviews`, 045_reviews.sql) —
 /// inclui `flagged`/`removed` aqui (o parceiro vê o que denunciou e o
 /// que o admin removeu, só o Marketplace público esconde essas).
-/// `weddings`/`profiles` embutidos — pedido explícito do utilizador:
+/// `events`/`profiles` embutidos — pedido explícito do utilizador:
 /// "as reviews devem mostrar o nome dos noivos e o icon deles, tal
 /// como o perfil deles. a quanto tempo tem conta e outras informações
 /// que aches interessantes mas não secretas ou pessoais". Só campos já
@@ -278,7 +278,7 @@ final partnerReviewsProvider = FutureProvider<List<Review>>((ref) async {
       .from('reviews')
       .select(
         'id, booking_id, partner_id, rating, comment, partner_response, partner_response_at, status, created_at, '
-        'weddings(partner_name_1, partner_name_2, cover_photo_url, wedding_date, location, estimated_guests), '
+        'events(partner_name_1, partner_name_2, cover_photo_url, wedding_date, location, estimated_guests), '
         'profiles(created_at)',
       )
       .eq('partner_id', partnerId)
@@ -332,13 +332,13 @@ final partnerConversationsProvider = FutureProvider<List<ChatConversation>>((
   final rows = await supabase
       .from('conversations')
       .select(
-        'id, wedding_id, partner_id, last_message, last_message_at, weddings(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url)',
+        'id, wedding_id, partner_id, last_message, last_message_at, events(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url)',
       )
       .eq('partner_id', partnerId)
       .order('last_message_at', ascending: false);
   return (rows as List).map((r) {
     final row = r as Map<String, dynamic>;
-    final wedding = row['weddings'] as Map<String, dynamic>?;
+    final wedding = row['events'] as Map<String, dynamic>?;
     final name1 = wedding?['partner_name_1'] as String?;
     final name2 = wedding?['partner_name_2'] as String?;
     final name = (name1 == null || name1.isEmpty)
@@ -556,7 +556,7 @@ final partnerBalanceProvider = FutureProvider<PartnerBalanceData>((ref) async {
   try {
     rows = await supabase
         .from('bookings')
-        .select('total_amount, status, event_date, profiles(full_name), weddings(partner_name_1, partner_name_2), '
+        .select('total_amount, status, event_date, profiles(full_name), events(partner_name_1, partner_name_2), '
             'payments(type, status, amount, released_at, paid_at)')
         .eq('partner_id', partnerId)
         .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
@@ -596,7 +596,7 @@ final partnerBalanceProvider = FutureProvider<PartnerBalanceData>((ref) async {
           final paidAt = DateTime.tryParse((p['paid_at'] as String?) ?? '');
           final event = DateTime.tryParse((row['event_date'] as String?) ?? '');
           incoming.add(IncomingPayment(
-            client: _clientDisplayName(row['weddings'] as Map<String, dynamic>?, row['profiles'] as Map<String, dynamic>?),
+            client: _clientDisplayName(row['events'] as Map<String, dynamic>?, row['profiles'] as Map<String, dynamic>?),
             deposit: deposit,
             amount: amount,
             releaseAt: deposit ? paidAt?.add(const Duration(hours: 48)) : event?.add(const Duration(days: 3)),
