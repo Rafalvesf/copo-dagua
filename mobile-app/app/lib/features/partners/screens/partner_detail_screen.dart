@@ -567,9 +567,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         .watch(partnerKeyFigureProvider(partner.id))
         .maybeWhen(data: (v) => v, orElse: () => null);
     final figureValue = capacity ?? keyFigure;
-    final weddingDate = ref.watch(
-      weddingControllerProvider.select((s) => s.wedding?.weddingDate),
-    );
 
     final photos = <String>[
       ?partner.imageUrl,
@@ -582,17 +579,15 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     final fromPrice = minPackage ?? partner.startingPrice;
 
     final figureText = figureValue == null ? null : figure.format(figureValue);
-    final ratingText = summary.count > 0
-        ? '${summary.average.toStringAsFixed(1).replaceAll('.', ',')} (${summary.count})'
-        : null;
+    // Avaliações: a nota média em cima e o nº de avaliações por baixo, numa
+    // caixa com contorno (como o Main). Sem avaliações: «—».
+    final avgText = summary.count > 0
+        ? summary.average.toStringAsFixed(1).replaceAll('.', ',')
+        : '—';
+    final revLabel = summary.count > 0
+        ? '${summary.count} ${summary.count == 1 ? 'avaliação' : 'avaliações'}'
+        : 'Avaliações';
     final stats = ref.watch(partnerPublicStatsProvider(partner.id)).value;
-    final dateChip = weddingDate == null
-        ? null
-        : '${_shortDate(weddingDate)} · ${switch (relationshipStatus) {
-            PartnerRelationshipStatus.booked => 'Reservado',
-            PartnerRelationshipStatus.requestPending => 'Pedido enviado',
-            _ => 'Perguntar',
-          }}';
     const ink = AppTheme.ink;
     const muted = Color(0xFF57534E);
     const cream = Color(0xFFF2F0EB);
@@ -671,11 +666,17 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               offset: const Offset(0, -28),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                child: ProfileCard(
-                  // Sem pfp: a foto do parceiro já está no topo da página.
+                // Cabeça própria do parceiro, estilo "Parceiro com pacotes"
+                // (mockup 2026-11-17): nome + caixa de preço em cima, descrição,
+                // três números em caixas com contorno e etiquetas; depois os
+                // botões. Não é o ProfileCard_Users (perfis de amigos).
+                child: ProfileCard_Partners(
                   name: partner.name,
                   nameBadge: ProBadge(partner.id),
-                  // Caixa "Desde €X" / "Por orçamento" no topo (§6), ao lado do nome.
+                  handleLine:
+                      [partner.primaryCategoryLabel, if (partner.location.isNotEmpty) partner.location].join(' · '),
+                  bio: partner.description,
+                  // Caixa "DESDE €X" / "POR Orçamento" (§6), ao lado do nome.
                   priceBox: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
@@ -683,7 +684,12 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: fromPrice == null
-                        ? const Text('Por orçamento', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: ink))
+                        ? const Column(mainAxisSize: MainAxisSize.min, children: [
+                            Text('POR',
+                                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1.5, color: muted)),
+                            Text('Orçamento',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink, height: 1.1)),
+                          ])
                         : Column(mainAxisSize: MainAxisSize.min, children: [
                             const Text('DESDE',
                                 style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1.5, color: muted)),
@@ -691,27 +697,16 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink, height: 1.1)),
                           ]),
                   ),
-                  handleLine: [partner.primaryCategoryLabel, if (partner.location.isNotEmpty) partner.location].join(' · '),
-                  bio: partner.description,
-                  labels: const ['Eventos', 'Seguidores', 'Avaliações'],
-                  events: stats?.eventsDone ?? 0,
-                  followers: stats?.followers ?? 0,
-                  following: summary.count,
+                  // Três números em caixas com contorno: nota, seguidores, eventos.
+                  stats: [
+                    (avgText, revLabel),
+                    ('${stats?.followers ?? 0}', 'Seguidores'),
+                    ('${stats?.eventsDone ?? 0}', 'Eventos'),
+                  ],
                   extra: Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
                     FounderBadge(partner.id, long: true),
-                    if (ratingText != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(color: cream, borderRadius: BorderRadius.circular(999)),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          const LineIcon(LineIcon.star, size: 12, fill: true, color: Color(0xFFC9A24A)),
-                          const SizedBox(width: 4),
-                          Text(ratingText,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
-                        ]),
-                      ),
                     if (figureText != null) chip(figureText),
-                    if (dateChip != null) chip(dateChip),
+                    // O estado ("Reservado") saiu daqui: é dito no aviso (§7).
                     if (responds != null) chip(responds, green: true),
                   ]),
                   followedBy: widget.selectionMode
@@ -720,8 +715,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                           partnerId: partner.id,
                           onNeedAccount: pub ? _needAccount : null,
                           // Com pacotes, o caminho é escolher um pacote (em
-                          // baixo); o orçamento à medida fica como linha
-                          // secundária por baixo dos pacotes (2026-11-15).
+                          // baixo); o orçamento à medida fica em baixo dos
+                          // pacotes (2026-11-15).
                           second: packages.isNotEmpty && !alreadyRelated
                               ? null
                               : ProfileButton(mainLabel, onTap: _requestingQuote || _openingChat ? null : mainAction),
@@ -774,24 +769,42 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 offset: const Offset(0, -28),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                  // Reservar noutro evento dentro de um cartão branco (§4).
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(22),
-                      boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+                  // Avisos na própria página (§7), não num cartão pesado: a
+                  // linha fina diz o estado; o botão reserva noutro evento.
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    AlertOutline(
+                      tone: relationshipStatus == PartnerRelationshipStatus.booked
+                          ? AlertTone.invite
+                          : AlertTone.pending,
+                      child: Row(children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: relationshipStatus == PartnerRelationshipStatus.booked
+                                ? const Color(0xFF4F6B4A)
+                                : const Color(0xFFF2A01B),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            relationshipStatus == PartnerRelationshipStatus.booked
+                                ? 'Já reservaste ${partner.name} para este evento.'
+                                : 'Já pediste orçamento a ${partner.name} para este evento.',
+                            style: const TextStyle(fontSize: 13, color: ink, height: 1.35),
+                          ),
+                        ),
+                      ]),
                     ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      const Text('RESERVAR NOUTRO EVENTO',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: muted)),
-                      const SizedBox(height: 8),
-                      Text('Já pediste a ${partner.name} neste evento. Reserva-o para outro evento:',
-                          style: const TextStyle(fontSize: 13, color: muted, height: 1.4)),
-                      const SizedBox(height: 14),
-                      ProfileButton('Pedir orçamento', dark: true, onTap: _requestingQuote ? null : () => _requestQuote()),
-                    ]),
-                  ),
+                    const SizedBox(height: 12),
+                    ProfileButton('Pedir orçamento', dark: true, onTap: _requestingQuote ? null : () => _requestQuote()),
+                    const SizedBox(height: 8),
+                    const Text('Para reservar noutro evento teu.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 13, color: muted, height: 1.4)),
+                  ]),
                 ),
               ),
             if (packages.isNotEmpty) ...[
@@ -1109,13 +1122,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     }
   }
 }
-
-const _monthAbbrPt = [
-  'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-  'jul', 'ago', 'set', 'out', 'nov', 'dez',
-];
-
-String _shortDate(DateTime d) => '${d.day} ${_monthAbbrPt[d.month - 1]} ${d.year}';
 
 /// Fotos do parceiro (capa + portefólio) a toda a largura da folha, com
 /// a pega por cima, o coração para guardar e o contador "1 / N".

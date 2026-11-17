@@ -125,7 +125,17 @@ ecrãs. O resto da app mantém a tabela acima.
 - **Números nos cartões de evento** (`MiniStats`: "2 convidados", "2 confirmados"):
   fundo branco, linha preta 1,5 px à volta, cantos 12, conteúdo ao centro
   (número 16 negrito, rótulo 11). Exceção pedida à regra "sem linha".
-- **Preço:** caixa `DESDE` (rótulo 9, valor 16) ou "Por orçamento".
+- **Preço:** caixa com contorno e **duas linhas** — rótulo 9 em cima + valor 16
+  por baixo: `DESDE` + `€X`, ou, para quem trabalha por orçamento, `POR` +
+  `Orçamento`. A mesma caixa no topo do parceiro e nos cartões de evento e de
+  parceiro (`PriceBox`). Nunca "Por orçamento" numa só linha.
+- **Cabeça do perfil:** duas cabeças próprias — `ProfileCard_Users` (amigos, o
+  meu perfil: avatar e os três números em colunas no topo) e
+  `ProfileCard_Partners` (parceiro: a foto já está no topo da página, por isso
+  é nome + caixa de preço em cima, descrição, e os três números — nota,
+  seguidores, eventos — em **caixas com contorno** como os `MiniStats`). O
+  estado ("Reservado", "Pedido enviado") não é uma etiqueta solta: é dito uma
+  só vez no aviso (§7), por baixo da cabeça.
 - **Navbar:** branca, flutuante, margens 16 laterais / 20 em baixo, cantos 35;
   ícone 24 + texto 11 negrito; inativo `#57534E`, ativo `#171713` com pílula
   `#EDEAE3`.

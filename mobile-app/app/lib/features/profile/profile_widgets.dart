@@ -74,8 +74,11 @@ class FollowedByRow extends StatelessWidget {
   }
 }
 
-/// Cartão branco do topo: foto, números, nome, @ · cidade, bio e botões.
-class ProfileCard extends StatelessWidget {
+/// Cartão branco do topo dos perfis de utilizador (amigos, o meu): foto,
+/// números em colunas, nome, @ · cidade, bio e botões. O parceiro tem a sua
+/// própria cabeça — `ProfileCard_Partners`.
+// ignore: camel_case_types
+class ProfileCard_Users extends StatelessWidget {
   /// Opcional: o parceiro não o usa (a foto já está no topo da página).
   final Widget? avatar;
   final String name;
@@ -98,7 +101,7 @@ class ProfileCard extends StatelessWidget {
   final List<Widget> buttons;
   /// Etiquetas dos três números (o parceiro mostra avaliações).
   final List<String> labels;
-  const ProfileCard({
+  const ProfileCard_Users({
     super.key,
     this.avatar,
     required this.name,
@@ -166,6 +169,110 @@ class ProfileCard extends StatelessWidget {
               ],
             ]),
           ],
+        ]),
+      );
+}
+
+/// Cabeça do perfil do parceiro (mockup "Parceiro com pacotes", 2026-11-17):
+/// nome + caixa de preço em cima, descrição por baixo, e os três números em
+/// caixas com contorno (DESIGN.md §6). A foto do parceiro já está no topo da
+/// página, por isso não há avatar aqui. Diferente do `ProfileCard_Users`.
+// ignore: camel_case_types
+class ProfileCard_Partners extends StatelessWidget {
+  final String name;
+  final String handleLine;
+  final String? bio;
+
+  /// Ao lado do nome (o visto de verificado).
+  final Widget? nameBadge;
+
+  /// À direita do nome: a caixa "DESDE €X" / "POR Orçamento".
+  final Widget? priceBox;
+
+  /// Três números em caixas com contorno: (número, rótulo).
+  final List<(String, String)> stats;
+
+  /// Por baixo da descrição (etiquetas).
+  final Widget? extra;
+
+  /// Botões (Seguir + Mensagem / Pedir orçamento).
+  final Widget? followedBy;
+
+  const ProfileCard_Partners({
+    super.key,
+    required this.name,
+    required this.handleLine,
+    this.bio,
+    this.nameBadge,
+    this.priceBox,
+    this.stats = const [],
+    this.extra,
+    this.followedBy,
+  });
+
+  // Número em caixa com contorno (§6 MiniStats): nº 16, rótulo 11.
+  Widget _statBox(String number, String label) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppTheme.ink, width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(number, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
+        ]),
+      );
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Flexible(
+                    child: Text(name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  ),
+                  ?nameBadge,
+                ]),
+                if (handleLine.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(handleLine, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                ],
+              ]),
+            ),
+            if (priceBox != null) ...[const SizedBox(width: 12), priceBox!],
+          ]),
+          if (bio != null && bio!.trim().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(bio!.trim(),
+                textAlign: TextAlign.justify,
+                style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.ink)),
+          ],
+          if (stats.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Row(children: [
+              for (var i = 0; i < stats.length; i++) ...[
+                if (i > 0) const SizedBox(width: 10),
+                Expanded(child: _statBox(stats[i].$1, stats[i].$2)),
+              ],
+            ]),
+          ],
+          if (extra != null) ...[const SizedBox(height: 14), extra!],
+          if (followedBy != null) ...[const SizedBox(height: 16), followedBy!],
         ]),
       );
 }
