@@ -24,7 +24,7 @@ void installBrowserBackDetection() => back.listenBrowserBack(() => _browserBackA
 /// Ordem dos separadores de cada navbar (organizadores, parceiros e
 /// convidados). Decide para que lado desliza a troca de separador.
 const Map<String, int> _tabOrder = {
-  '/partners': 0, '/eventos': 1, '/wedding': 1, '/chat': 2, '/home': 3,
+  '/eventos': 0, '/wedding': 0, '/partners': 1, '/chat': 2, '/home': 3,
   '/partner-home': 0, '/partner-requests': 1, '/partner-messages': 2, '/partner-profile': 3,
   '/guest-home': 0, '/guest-gallery': 1, '/guest-gifts': 2, '/guest-profile': 3,
 };
