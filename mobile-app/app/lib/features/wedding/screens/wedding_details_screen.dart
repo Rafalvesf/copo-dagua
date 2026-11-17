@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../events/widgets/event_actions_sheet.dart';
+import '../../settings/screens/settings_screen.dart' show EditEventPage, PanelPage;
 import '../../../shared/text_case.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../shared/widgets/alert_outline.dart';
@@ -2670,19 +2671,27 @@ class _ManageList extends ConsumerWidget {
     final s = _shortcuts(ref);
     String sub(String label) => s.firstWhere((x) => x.label == label, orElse: () => const _Shortcut(Icons.circle, '', '', '')).subtitle;
     final fourth = _fourthOf(w.eventType);
-    final rows = <(IconData, String, String, String)>[
-      (Hi.gift, 'Página dos convidados', 'programa e presentes', '/guest-page'),
-      if (fourth == _Fourth.gifts) (Hi.giftTop, 'Lista de presentes', '', '/gift-list'),
-      if (fourth == _Fourth.tickets) (Hi.ticket, 'Bilhetes', '', '/bilhetes'),
-      (Hi.rectangleStack, 'Galeria', sub('Galeria'), '/gallery'),
-      (Hi.handRaised, 'Serviços tratados', sub('Serviços tratados'), '/service-preferences'),
-      (Hi.userPlus, 'Organizadores', 'convidar quem ajuda', '/organizadores'),
+    void push(String r) => context.push(r);
+    final rows = <(IconData, String, String, VoidCallback)>[
+      // — Gerir —
+      (Hi.gift, 'Página dos convidados', 'programa e presentes', () => push('/guest-page')),
+      if (fourth == _Fourth.gifts) (Hi.giftTop, 'Lista de presentes', '', () => push('/gift-list')),
+      if (fourth == _Fourth.tickets) (Hi.ticket, 'Bilhetes', '', () => push('/bilhetes')),
+      (Hi.rectangleStack, 'Galeria', sub('Galeria'), () => push('/gallery')),
+      (Hi.handRaised, 'Serviços tratados', sub('Serviços tratados'), () => push('/service-preferences')),
+      (Hi.userPlus, 'Organizadores', 'convidar quem ajuda', () => push('/organizadores')),
+      // — Organização (vinha das Definições, 2026-11-16) —
+      (Hi.calendar, 'Detalhes do evento', '', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditEventPage(wedding: w)))),
+      (Hi.squaresPlus, 'Painel do evento', 'o que aparece', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PanelPage()))),
+      (Hi.swatch, 'Aparência do menu', '', () => context.go('/wedding?aparencia=1')),
+      (Hi.ticket, 'Acesso e entrada', 'para os convidados', () => push('/guest-page')),
+      (Hi.archiveBox, 'Eventos arquivados e apagados', '', () => push('/eventos-arquivados')),
     ];
     return _Section(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Gerir', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          const Text('Definições deste evento', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
           const SizedBox(height: 10),
           Container(
             decoration: _card(),
@@ -2691,10 +2700,10 @@ class _ManageList extends ConsumerWidget {
               type: MaterialType.transparency,
               child: Column(
                 children: [
-                  for (final (i, (icon, label, subtitle, route)) in rows.indexed) ...[
+                  for (final (i, (icon, label, subtitle, onTap)) in rows.indexed) ...[
                     if (i > 0) const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0xFFEFEBE2)),
                     InkWell(
-                      onTap: () => context.push(route),
+                      onTap: onTap,
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(minHeight: 56),
                         child: Padding(
@@ -3073,8 +3082,6 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
                 weddingId: w.id,
                 name: capFirst(w.displayNames),
                 isOwner: w.ownerId == ref.read(authControllerProvider).profile?.id)),
-            const SizedBox(width: 8),
-            _round(Hi.cog6Tooth, 'Definições do evento', () => context.push('/settings')),
           ]),
         ),
         Padding(
