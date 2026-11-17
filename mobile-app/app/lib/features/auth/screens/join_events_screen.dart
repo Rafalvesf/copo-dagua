@@ -118,14 +118,15 @@ class _JoinEventsScreenState extends ConsumerState<JoinEventsScreen> {
                             boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
                           ),
                           padding: const EdgeInsets.all(18),
-                          child: const Column(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('O QUE ISTO SIGNIFICA',
+                              const Text('O QUE ISTO SIGNIFICA',
                                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
-                              SizedBox(height: 8),
-                              Text('Ficas com acesso ao evento para ajudarem a organizar, lado a lado. Quem te convidou escolhe o que podes fazer.',
-                                  style: TextStyle(fontSize: 17, height: 1.5, color: AppTheme.ink)),
+                              const SizedBox(height: 8),
+                              Text(
+                                  'Ficas com acesso ao evento para ajudarem a organizar, lado a lado. ${invite.inviterName ?? 'Quem te convidou'} escolhe o que podes fazer.',
+                                  style: const TextStyle(fontSize: 17, height: 1.5, color: AppTheme.ink)),
                             ],
                           ),
                         ),
