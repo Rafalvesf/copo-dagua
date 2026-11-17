@@ -921,16 +921,20 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                             ),
                             child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            p.isStartingPrice
-                                ? '${widget.partner.name} envia uma proposta com o preço final.'
-                                : _eachPays
-                                    ? 'Cada convidado paga ${euros(total / people)} na app, 3 dias antes. ${widget.partner.name} aceita ou recusa.'
-                                    : '${widget.partner.name} aceita ou recusa. Se aceitar, pagas para confirmar.',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 13, color: muted),
-                          ),
+                          // Sem a frase "envia uma proposta com o preço final"
+                          // nos pacotes por orçamento (pedido do Rafael,
+                          // 2026-11-17). Mantém-se só a explicação do pagamento
+                          // nos pacotes de preço fixo.
+                          if (!p.isStartingPrice) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              _eachPays
+                                  ? 'Cada convidado paga ${euros(total / people)} na app, 3 dias antes. ${widget.partner.name} aceita ou recusa.'
+                                  : '${widget.partner.name} aceita ou recusa. Se aceitar, pagas para confirmar.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 13, color: muted),
+                            ),
+                          ],
                         ]);
                       }),
                     if (!widget.selectionMode && canReserve) ...[
