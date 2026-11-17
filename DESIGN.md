@@ -184,6 +184,14 @@ ecrãs. O resto da app mantém a tabela acima.
   deixam de ser translúcidos quando a imagem sai de trás deles. A transição
   (rotação do ícone e, onde se aplique, a transparência) é sempre animada,
   nunca instantânea.
+  - **Componente:** a seta fixa é o `ScrollAwareBackButton`
+    (`shared/widgets/scroll_aware_back_button.dart`): recebe o
+    `ScrollController` da lista do ecrã, a ação de voltar e `imageExtent` (os px
+    de scroll em que ainda há imagem por trás; 0 = sem imagem, nunca
+    translúcido). Fica num overlay fixo por cima da lista (não desce com ela).
+    Todo o ecrã com scroll usa-o — o painel do evento já o usa
+    (`wedding_details_screen.dart`, no `Stack` do `_normal`). **Nunca** refazer
+    esta seta à mão: ligar o componente.
 
 ## 7. Alertas
 

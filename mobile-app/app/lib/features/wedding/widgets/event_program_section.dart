@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/guest_facing.dart';
@@ -12,15 +14,15 @@ import '../../../core/wedding/guest_facing.dart';
 /// o mesmo sítio que o convidado vê na página do convite.
 ///
 /// Nota: o programa vive aqui, no painel — saiu da "Página dos convidados".
-class EventProgramSection extends StatefulWidget {
+class EventProgramSection extends ConsumerStatefulWidget {
   final String weddingId;
   const EventProgramSection({super.key, required this.weddingId});
 
   @override
-  State<EventProgramSection> createState() => _EventProgramSectionState();
+  ConsumerState<EventProgramSection> createState() => _EventProgramSectionState();
 }
 
-class _EventProgramSectionState extends State<EventProgramSection> {
+class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
   GuestFacingInfo? _info;
   List<ProgramItem> _items = [];
   bool _loading = true;
@@ -29,6 +31,10 @@ class _EventProgramSectionState extends State<EventProgramSection> {
   // é temável (não const).
   static const _green = Color(0xFF4F6B4A);
   static const _shadow = [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))];
+  // Altura fixa de cada linha. É o que torna a lista determinística: com uma
+  // altura total conhecida (linhas × _rowHeight) a ReorderableListView vive
+  // numa caixa limitada e deixa de medir mal / sobrepor as linhas.
+  static const _rowHeight = 64.0;
 
   @override
   void initState() {
@@ -97,7 +103,38 @@ class _EventProgramSectionState extends State<EventProgramSection> {
       builder: (_) => const _AddChooser(),
     );
     if (withPartner == null) return;
-    final item = await _editItem(const ProgramItem(), partnerMode: withPartner);
+
+    String partnerSeed = '';
+    if (withPartner) {
+      // Parceiros reservados deste evento (nome do negócio).
+      List<String> names = const [];
+      try {
+        final bookings = await ref.read(coupleBookingsProvider.future);
+        names = bookings
+            .where((b) => b.weddingId == widget.weddingId)
+            .map((b) => b.partnerName.trim())
+            .where((n) => n.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
+      } catch (_) {
+        names = const [];
+      }
+      if (!mounted) return;
+      if (names.isNotEmpty) {
+        final picked = await showModalBottomSheet<String>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => _PartnerPicker(names: names),
+        );
+        if (picked == null) return; // cancelou
+        partnerSeed = picked; // '' = escrever à mão
+      }
+    }
+
+    final seed = partnerSeed.isNotEmpty ? ProgramItem(title: partnerSeed, partner: partnerSeed) : const ProgramItem();
+    final item = await _editItem(seed, partnerMode: withPartner);
     if (item != null && !item.isEmpty) {
       setState(() => _items.add(item));
       _persist();
@@ -152,24 +189,31 @@ class _EventProgramSectionState extends State<EventProgramSection> {
             Container(
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), boxShadow: _shadow),
               clipBehavior: Clip.antiAlias,
-              child: ReorderableListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                buildDefaultDragHandles: false,
-                itemCount: _items.length,
-                onReorder: _reorder,
-                itemBuilder: (context, i) {
-                  final it = _items[i];
-                  return _ProgramRow(
-                    // Identidade estável por instância: sobrevive ao reordenar
-                    // (as mesmas instâncias são movidas na lista).
-                    key: ValueKey(identityHashCode(it)),
-                    index: i,
-                    item: it,
-                    first: i == 0,
-                    onTap: () => _editExisting(i),
-                  );
-                },
+              // Caixa com altura exata (linhas × _rowHeight): dá à
+              // ReorderableListView limites fixos, por isso não precisa de
+              // shrinkWrap e as linhas deixam de se sobrepor.
+              child: SizedBox(
+                height: _items.length * _rowHeight,
+                child: ReorderableListView.builder(
+                  padding: EdgeInsets.zero,
+                  physics: const NeverScrollableScrollPhysics(),
+                  buildDefaultDragHandles: false,
+                  itemCount: _items.length,
+                  onReorder: _reorder,
+                  itemBuilder: (context, i) {
+                    final it = _items[i];
+                    return _ProgramRow(
+                      // Identidade estável por instância: sobrevive ao reordenar
+                      // (as mesmas instâncias são movidas na lista).
+                      key: ValueKey(identityHashCode(it)),
+                      index: i,
+                      item: it,
+                      first: i == 0,
+                      height: _rowHeight,
+                      onTap: () => _editExisting(i),
+                    );
+                  },
+                ),
               ),
             ),
           const SizedBox(height: 10),
@@ -209,67 +253,70 @@ class _ProgramRow extends StatelessWidget {
   final int index;
   final ProgramItem item;
   final bool first;
+  final double height;
   final VoidCallback onTap;
-  const _ProgramRow({super.key, required this.index, required this.item, required this.first, required this.onTap});
+  const _ProgramRow({super.key, required this.index, required this.item, required this.first, required this.height, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final sub = item.partner.trim().isNotEmpty
         ? item.partner.trim()
         : (item.place.trim().isNotEmpty ? item.place.trim() : 'Sem parceiro');
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (!first) const Divider(height: 1, color: Color(0xFFECE7DC)),
-        InkWell(
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 64),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                children: [
-                  ReorderableDragStartListener(
-                    index: index,
-                    child: const Padding(
-                      padding: EdgeInsets.only(right: 6),
-                      child: Icon(Icons.drag_indicator, size: 22, color: Color(0xFFC9C4B8)),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 52,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(item.time.trim().isEmpty ? '—' : item.time.trim(),
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                        if (item.date.trim().isNotEmpty)
-                          Text(_shortDate(item.date), style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted, letterSpacing: .5)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(item.title.trim().isEmpty ? 'Etapa' : item.title.trim(),
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                        const SizedBox(height: 2),
-                        Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right, size: 20, color: AppTheme.inkMuted),
-                ],
+    // Linha de altura fixa que estica à largura toda. A divisória é a borda
+    // de topo (menos a primeira), por isso a altura total é exatamente
+    // linhas × height — sem sobreposição.
+    return SizedBox(
+      height: height,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            border: first ? null : const Border(top: BorderSide(color: Color(0xFFECE7DC), width: 1)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: [
+              ReorderableDragStartListener(
+                index: index,
+                child: const Padding(
+                  padding: EdgeInsets.only(right: 6),
+                  child: Icon(Icons.drag_indicator, size: 22, color: Color(0xFFC9C4B8)),
+                ),
               ),
-            ),
+              SizedBox(
+                width: 52,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(item.time.trim().isEmpty ? '—' : item.time.trim(),
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    if (item.date.trim().isNotEmpty)
+                      Text(_shortDate(item.date), style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted, letterSpacing: .5)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(item.title.trim().isEmpty ? 'Etapa' : item.title.trim(),
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    const SizedBox(height: 2),
+                    Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, size: 20, color: AppTheme.inkMuted),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -369,6 +416,56 @@ class _ChooserCard extends StatelessWidget {
           ),
         ),
       );
+}
+
+/// Folha para escolher um parceiro reservado do evento (ou escrever o nome).
+class _PartnerPicker extends StatelessWidget {
+  final List<String> names;
+  const _PartnerPicker({required this.names});
+  @override
+  Widget build(BuildContext context) {
+    return _Sheet(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('Qual parceiro?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 14),
+          Container(
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22),
+                boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))]),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < names.length; i++) ...[
+                  if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
+                  InkWell(
+                    onTap: () => Navigator.of(context).pop(names[i]),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 56),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(children: [
+                          Expanded(child: Text(names[i], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+                          const Icon(Icons.chevron_right, size: 20, color: AppTheme.inkMuted),
+                        ]),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(''),
+            child: const Text('Escrever o nome', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF4F6B4A))),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Folha "Editar etapa": nome, (parceiro), data e hora.
