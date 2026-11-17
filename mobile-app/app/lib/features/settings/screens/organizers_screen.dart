@@ -209,7 +209,7 @@ class _Avatar extends StatelessWidget {
         decoration: const BoxDecoration(color: Color(0xFFE6EDE1), shape: BoxShape.circle),
         child: Text(
           name.trim().isEmpty ? '?' : name.trim().characters.first.toUpperCase(),
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
         ),
       );
 }

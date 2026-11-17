@@ -57,7 +57,7 @@ class PublicStateView extends StatelessWidget {
                   eyebrow!,
                   textAlign: TextAlign.center,
                   // Eyebrow da escala de primeiro contacto (DESIGN.md §3): 13.
-                  style: const TextStyle(fontSize: 13, height: 1.3, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.accentOliveDark),
+                  style: TextStyle(fontSize: 13, height: 1.3, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.accentOliveDark),
                 ),
                 const SizedBox(height: 8),
               ],
