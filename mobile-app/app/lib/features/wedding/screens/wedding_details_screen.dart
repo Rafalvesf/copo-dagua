@@ -2691,66 +2691,167 @@ class _ManageList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final w = wedding;
-    final s = _shortcuts(ref);
-    String sub(String label) => s.firstWhere((x) => x.label == label, orElse: () => const _Shortcut(Icons.circle, '', '', '')).subtitle;
-    final fourth = _fourthOf(w.eventType);
-    void push(String r) => context.push(r);
-    final rows = <(IconData, String, String, VoidCallback)>[
-      // — Gerir —
-      (Hi.gift, 'Página dos convidados', 'programa e presentes', () => push('/guest-page')),
-      if (fourth == _Fourth.gifts) (Hi.giftTop, 'Lista de presentes', '', () => push('/gift-list')),
-      if (fourth == _Fourth.tickets) (Hi.ticket, 'Bilhetes', '', () => push('/bilhetes')),
-      (Hi.rectangleStack, 'Galeria', sub('Galeria'), () => push('/gallery')),
-      (Hi.handRaised, 'Serviços tratados', sub('Serviços tratados'), () => push('/service-preferences')),
-      (Hi.userPlus, 'Organizadores', 'convidar quem ajuda', () => push('/organizadores')),
-      // — Organização (vinha das Definições, 2026-11-16) —
-      (Hi.calendar, 'Detalhes do evento', '', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditEventPage(wedding: w)))),
-      (Hi.squaresPlus, 'Painel do evento', 'o que aparece', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PanelPage()))),
-      (Hi.swatch, 'Aparência do menu', '', () => context.go('/evento?aparencia=1')),
-      (Hi.ticket, 'Acesso e entrada', 'para os convidados', () => push('/guest-page')),
-      (Hi.archiveBox, 'Eventos arquivados e apagados', '', () => push('/eventos-arquivados')),
-    ];
+    // Deixou de ser uma lista comprida aqui no painel: agora é uma única
+    // entrada que abre a página "Definições do evento", organizada por temas
+    // (pedido do Rafael — mockup «Definições do evento», 2026-11-17).
     return _Section(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text('Definições deste evento', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-          const SizedBox(height: 10),
-          Container(
-            decoration: _card(),
-            clipBehavior: Clip.antiAlias,
-            child: Material(
-              type: MaterialType.transparency,
-              child: Column(
-                children: [
-                  for (final (i, (icon, label, subtitle, onTap)) in rows.indexed) ...[
-                    if (i > 0) const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0xFFEFEBE2)),
-                    InkWell(
-                      onTap: onTap,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(minHeight: 56),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          child: Row(
-                            children: [
-                              Icon(icon, size: 22, color: _green),
-                              const SizedBox(width: 14),
-                              Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.right,
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(Hi.chevronRight, size: 20, color: AppTheme.inkMuted),
-                            ],
-                          ),
-                        ),
+      child: Container(
+        decoration: _card(),
+        clipBehavior: Clip.antiAlias,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EventSettingsPage(wedding: w))),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 60),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Definições do evento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          SizedBox(height: 2),
+                          Text('Detalhes, convidados, conteúdo e arquivo', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                        ],
                       ),
                     ),
+                    const Icon(Hi.chevronRight, size: 20, color: AppTheme.inkMuted),
                   ],
-                ],
+                ),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Página "Definições do evento": tudo sobre este evento, por temas
+/// (O EVENTO / CONVIDADOS / CONTEÚDO / ARQUIVO). Mockup «Definições do
+/// evento», 2026-11-17. Linhas sem ícones (DESIGN.md §4). A seta de voltar
+/// é a do §6 (fixa, roda ←→↑, sobe ao topo).
+class _EventSettingsPage extends StatefulWidget {
+  final Wedding wedding;
+  const _EventSettingsPage({required this.wedding});
+
+  @override
+  State<_EventSettingsPage> createState() => _EventSettingsPageState();
+}
+
+class _EventSettingsPageState extends State<_EventSettingsPage> {
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final w = widget.wedding;
+    final topInset = MediaQuery.paddingOf(context).top;
+    final fourth = _fourthOf(w.eventType);
+    void push(String r) => context.push(r);
+
+    final groups = <(String, List<(String, String, VoidCallback)>)>[
+      ('O evento', [
+        ('Detalhes do evento', 'Nome, data, local',
+            () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditEventPage(wedding: w)))),
+        ('Painel do evento', 'O que aparece',
+            () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PanelPage()))),
+        ('Aparência do menu', '', () => context.go('/evento?aparencia=1')),
+      ]),
+      ('Convidados', [
+        ('Página dos convidados', 'Programa e presentes', () => push('/guest-page')),
+        ('Acesso e entrada', 'Para os convidados', () => push('/guest-page')),
+        ('Organizadores', 'Convidar quem ajuda', () => push('/organizadores')),
+      ]),
+      ('Conteúdo', [
+        ('Galeria', '', () => push('/gallery')),
+        if (fourth == _Fourth.gifts) ('Lista de presentes', '', () => push('/gift-list')),
+        if (fourth == _Fourth.tickets) ('Bilhetes', '', () => push('/bilhetes')),
+        ('Serviços tratados', '', () => push('/service-preferences')),
+      ]),
+      ('Arquivo', [
+        ('Eventos arquivados e apagados', '', () => push('/eventos-arquivados')),
+      ]),
+    ];
+
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      body: Stack(
+        children: [
+          ListView(
+            controller: _scroll,
+            padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, topInset + 12, AppTheme.screenMargin, 40),
+            children: [
+              const SizedBox(height: 44), // espaço por baixo da seta fixa
+              const SizedBox(height: 8),
+              const Text('Definições do evento',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 4),
+              const Text('Tudo sobre este evento, organizado por tema.',
+                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              for (final (title, rows) in groups) ...[
+                Padding(
+                  padding: const EdgeInsets.only(top: 18, bottom: 8, left: 2),
+                  child: Text(title.toUpperCase(),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                ),
+                Container(
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                  clipBehavior: Clip.antiAlias,
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: Column(
+                      children: [
+                        for (final (i, (label, value, onTap)) in rows.indexed) ...[
+                          if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
+                          InkWell(
+                            onTap: onTap,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(minHeight: 56),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                    ),
+                                    if (value.isNotEmpty) ...[
+                                      const SizedBox(width: 12),
+                                      Flexible(
+                                        child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.right,
+                                            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                                      ),
+                                    ],
+                                    const SizedBox(width: 6),
+                                    const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          Positioned(
+            left: AppTheme.screenMargin,
+            top: topInset + 12,
+            child: ScrollAwareBackButton(
+              controller: _scroll,
+              onBack: () => Navigator.of(context).maybePop(),
             ),
           ),
         ],
