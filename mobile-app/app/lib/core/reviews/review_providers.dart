@@ -24,10 +24,10 @@ final publicReviewsForPartnerProvider = FutureProvider.family<List<Review>, Stri
       .eq('status', 'published')
       .order('created_at', ascending: false);
 
-  // `weddings` não é legível por um visitante qualquer do Marketplace
+  // `events` não é legível por um visitante qualquer do Marketplace
   // (RLS de `003_wedding.sql`) — nome/foto do casal autor vêm à parte,
   // via `get_review_authors()` (`069_public_review_authors.sql`), que
-  // expõe deliberadamente só isso, nunca o resto de `weddings`. Pedido
+  // expõe deliberadamente só isso, nunca o resto de `events`. Pedido
   // explícito do utilizador (2026-09-13): mostrar nome+ícone no cartão
   // de avaliação do perfil público do parceiro.
   final authorRows = await supabase.rpc('get_review_authors', params: {'p_partner_id': partnerId}) as List;
@@ -41,7 +41,7 @@ final publicReviewsForPartnerProvider = FutureProvider.family<List<Review>, Stri
     return Review.fromRow({
       ...row,
       if (author != null)
-        'weddings': {
+        'events': {
           'partner_name_1': author['display_name'],
           'cover_photo_url': author['cover_photo_url'],
         },

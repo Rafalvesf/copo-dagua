@@ -2,7 +2,7 @@ import 'dart:ui';
 
 /// Paleta pastel para o dress code (pedido 2026-10-17: "oferece opção
 /// dos organizadores escolherem entre opções de cores pastel"). Guardada
-/// em `weddings.theme_colors` como hex ("#RRGGBB").
+/// em `events.theme_colors` como hex ("#RRGGBB").
 class PastelColor {
   final String hex;
   final String name;

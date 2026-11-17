@@ -114,7 +114,7 @@ Future<void> joinPublicEvent(String weddingId) async {
 /// "Evento público" do evento que organizo (interruptor nas Definições).
 final eventIsPublicProvider = FutureProvider.family<bool, String>((ref, weddingId) async {
   try {
-    final row = await supabase.from('weddings').select('is_public').eq('id', weddingId).maybeSingle();
+    final row = await supabase.from('events').select('is_public').eq('id', weddingId).maybeSingle();
     return row?['is_public'] == true;
   } on PostgrestException {
     return false;
@@ -122,13 +122,13 @@ final eventIsPublicProvider = FutureProvider.family<bool, String>((ref, weddingI
 });
 
 Future<void> setEventPublic(String weddingId, bool value) async {
-  await supabase.from('weddings').update({'is_public': value}).eq('id', weddingId);
+  await supabase.from('events').update({'is_public': value}).eq('id', weddingId);
 }
 
 /// Limite de pessoas do evento que organizo (migração 182; null = sem limite).
 final eventMaxAttendeesProvider = FutureProvider.family<int?, String>((ref, weddingId) async {
   try {
-    final row = await supabase.from('weddings').select('max_attendees').eq('id', weddingId).maybeSingle();
+    final row = await supabase.from('events').select('max_attendees').eq('id', weddingId).maybeSingle();
     return (row?['max_attendees'] as num?)?.toInt();
   } on PostgrestException {
     return null;
@@ -138,7 +138,7 @@ final eventMaxAttendeesProvider = FutureProvider.family<int?, String>((ref, wedd
 /// O máximo de pessoas é um só número (pedido 2026-11-12): o limite de
 /// entradas e os convidados previstos andam sempre juntos.
 Future<void> setEventMaxAttendees(String weddingId, int? value) async {
-  await supabase.from('weddings').update({
+  await supabase.from('events').update({
     'max_attendees': value,
     if (value != null) 'estimated_guests': value,
   }).eq('id', weddingId);
@@ -239,7 +239,7 @@ Future<void> reviewJoinRequest(String requestId, {required bool approve, String?
 /// Entrada do evento que organizo: grátis ou preço por pessoa (142).
 final eventEntryProvider = FutureProvider.family<({bool paid, double? price}), String>((ref, weddingId) async {
   try {
-    final row = await supabase.from('weddings').select('is_paid, entry_price').eq('id', weddingId).maybeSingle();
+    final row = await supabase.from('events').select('is_paid, entry_price').eq('id', weddingId).maybeSingle();
     return (paid: row?['is_paid'] == true, price: (row?['entry_price'] as num?)?.toDouble());
   } on PostgrestException {
     return (paid: false, price: null);
@@ -247,7 +247,7 @@ final eventEntryProvider = FutureProvider.family<({bool paid, double? price}), S
 });
 
 Future<void> setEventEntry(String weddingId, {required bool paid, double? price}) async {
-  await supabase.from('weddings').update({'is_paid': paid, 'entry_price': paid ? price : null}).eq('id', weddingId);
+  await supabase.from('events').update({'is_paid': paid, 'entry_price': paid ? price : null}).eq('id', weddingId);
 }
 
 /// O organizador já ativou os pagamentos (conta Stripe pronta para

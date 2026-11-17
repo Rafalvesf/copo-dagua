@@ -19,7 +19,7 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
       'quote, cover_photo_url, ceremony_time, welcome_message, theme_colors, updated_at';
   Future<List<Map<String, dynamic>>> query(String columns) async => (await supabase
           .from('wedding_guest_members')
-          .select('wedding_id, weddings($columns)')
+          .select('wedding_id, events($columns)')
           .eq('guest_id', userId)
           .order('joined_at', ascending: false))
       .cast<Map<String, dynamic>>();
@@ -33,7 +33,7 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
     baseColumns,
   ];
   List<Map<String, dynamic>> rows = const [];
-  // 089: os convidados não podem ler `weddings` diretamente (a policy é
+  // 089: os convidados não podem ler `events` diretamente (a policy é
   // só do casal) — esta função devolve só os campos pensados para eles.
   // Antes o convidado não via nada do que o organizador preparou.
   var viaRpc = false;
@@ -41,7 +41,7 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
     final r = await supabase.rpc('get_my_guest_weddings') as List;
     rows = [
       for (final m in r.cast<Map<String, dynamic>>())
-        {'wedding_id': m['wedding_id'], 'weddings': m['wedding']},
+        {'wedding_id': m['wedding_id'], 'events': m['wedding']},
     ];
     viaRpc = true;
   } on PostgrestException {
@@ -57,7 +57,7 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
   }
 
   return rows.map<GuestWedding>((row) {
-    final wedding = row['weddings'] as Map<String, dynamic>?;
+    final wedding = row['events'] as Map<String, dynamic>?;
     final weddingDate = wedding?['wedding_date'] as String?;
     final updatedAt = wedding?['updated_at'] as String?;
     return GuestWedding(

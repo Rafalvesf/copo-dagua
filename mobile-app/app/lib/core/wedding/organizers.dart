@@ -46,7 +46,7 @@ final myWeddingPermsProvider = FutureProvider<OrganizerPerms>((ref) async {
   final id = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
   if (id == null) return OrganizerPerms.all;
   try {
-    final r = await supabase.rpc('my_wedding_permissions', params: {'p_wedding': id});
+    final r = await supabase.rpc('my_event_permissions', params: {'p_wedding': id});
     if (r is! Map) return OrganizerPerms.all;
     return OrganizerPerms.fromJson(r, isOwner: r['is_owner'] == true);
   } on PostgrestException {

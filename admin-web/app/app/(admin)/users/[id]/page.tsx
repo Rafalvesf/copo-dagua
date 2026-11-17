@@ -25,7 +25,7 @@ export default async function UserDetailPage(props: PageProps<"/users/[id]">) {
 
   const { data: wedding } =
     u.role === "couple"
-      ? await supabase.from("weddings").select("id").eq("owner_id", id).maybeSingle()
+      ? await supabase.from("events").select("id").eq("owner_id", id).maybeSingle()
       : { data: null };
 
   const isSelf = id === viewerId;

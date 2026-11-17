@@ -23,7 +23,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
         supabase.from("profiles").select("id, full_name, role").ilike("full_name", like).limit(10),
         supabase.from("partner_profiles").select("id, business_name, status, city").ilike("business_name", like).limit(10),
         supabase
-          .from("weddings")
+          .from("events")
           .select("id, partner_name_1, partner_name_2, location, event_type, event_type_other, wedding_date")
           .or(`partner_name_1.ilike.${like},partner_name_2.ilike.${like},location.ilike.${like}`)
           .limit(10),

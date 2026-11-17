@@ -19,7 +19,7 @@ type Row = {
   bookings: {
     booking_number: string;
     partner_profiles: { business_name: string } | null;
-    weddings: { partner_name_1: string | null; partner_name_2: string | null } | null;
+    events: { partner_name_1: string | null; partner_name_2: string | null } | null;
   } | null;
 };
 
@@ -38,7 +38,7 @@ export default async function DisputesPage({ searchParams }: PageProps<"/dispute
   let q = supabase
     .from("disputes")
     .select(
-      "id, booking_id, opened_by_role, reason, status, resolution, refund_amount, created_at, resolved_at, bookings(booking_number, partner_profiles(business_name), weddings(partner_name_1, partner_name_2))",
+      "id, booking_id, opened_by_role, reason, status, resolution, refund_amount, created_at, resolved_at, bookings(booking_number, partner_profiles(business_name), events(partner_name_1, partner_name_2))",
     )
     .order("created_at", { ascending: status === "open" });
   if (status !== "all") q = q.eq("status", status);
@@ -76,7 +76,7 @@ export default async function DisputesPage({ searchParams }: PageProps<"/dispute
               </thead>
               <tbody>
                 {rows.map((d) => {
-                  const w = d.bookings?.weddings;
+                  const w = d.bookings?.events;
                   const couple = [w?.partner_name_1, w?.partner_name_2].filter(Boolean).join(" & ") || "Organizador";
                   return (
                     <tr key={d.id}>

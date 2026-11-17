@@ -25,7 +25,7 @@ type Pay = {
     booking_number: string;
     status: string;
     partner_profiles: { business_name: string } | null;
-    weddings: { partner_name_1: string | null; partner_name_2: string | null } | null;
+    events: { partner_name_1: string | null; partner_name_2: string | null } | null;
   } | null;
 };
 
@@ -36,7 +36,7 @@ export default async function RefundsPage() {
   const supabase = await createClient();
 
   const select =
-    "id, booking_id, type, amount, refunded_amount, status, paid_at, updated_at, bookings!inner(booking_number, status, partner_profiles(business_name), weddings(partner_name_1, partner_name_2))";
+    "id, booking_id, type, amount, refunded_amount, status, paid_at, updated_at, bookings!inner(booking_number, status, partner_profiles(business_name), events(partner_name_1, partner_name_2))";
 
   const [{ data: pendingRows, error }, { data: doneRows }, { data: settings }] = await Promise.all([
     supabase
@@ -189,7 +189,7 @@ function ref(p: Pay) {
   return `${p.bookings?.booking_number ?? "—"} · ${p.bookings?.partner_profiles?.business_name ?? "Parceiro"}`;
 }
 function couple(p: Pay) {
-  const w = p.bookings?.weddings;
+  const w = p.bookings?.events;
   const a = w?.partner_name_1 ?? "";
   const b = w?.partner_name_2 ?? "";
   return a && b ? `${a} & ${b}` : a || b || "Organizador";

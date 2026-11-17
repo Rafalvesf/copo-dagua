@@ -37,7 +37,7 @@ class WeddingState {
 
 const _activeEventKey = 'active_event_id';
 
-/// Liga-se à tabela `weddings` real (`database/migrations/002_onboarding.sql`,
+/// Liga-se à tabela `events` real (`database/migrations/002_onboarding.sql`,
 /// `003_wedding.sql`, `012_wedding_quote.sql`) — substitui
 /// `MockBackend.getWeddingForOwner/createWedding/updateWedding`. Ver
 /// `ROADMAP.md`, 2026-08-30, Fase 2.
@@ -69,7 +69,7 @@ class WeddingController extends Notifier<WeddingState> {
   Future<void> load(String ownerId, {String? activeId}) async {
     state = state.copyWith(loading: true);
     // Os dois pedidos e a preferência guardada ao mesmo tempo (2026-11-09).
-    final ownedF = supabase.from('weddings').select().eq('owner_id', ownerId).order('created_at', ascending: false).then((r) => r);
+    final ownedF = supabase.from('events').select().eq('owner_id', ownerId).order('created_at', ascending: false).then((r) => r);
     final linksF = supabase
         .from('wedding_collaborators')
         .select('wedding_id')
@@ -88,7 +88,7 @@ class WeddingController extends Notifier<WeddingState> {
     ];
     final collab = collabIds.isEmpty
         ? const <Map<String, dynamic>>[]
-        : (await supabase.from('weddings').select().inFilter('id', collabIds)).cast<Map<String, dynamic>>();
+        : (await supabase.from('events').select().inFilter('id', collabIds)).cast<Map<String, dynamic>>();
     // Arquivados e apagados (185) só aparecem nas Definições.
     bool visible(Map<String, dynamic> r) => r['archived_at'] == null && r['deleted_at'] == null;
     final events = [for (final r in [...owned, ...collab]) if (visible(r)) _fromRow(r)];
@@ -116,7 +116,7 @@ class WeddingController extends Notifier<WeddingState> {
     String? phone2,
   }) async {
     try {
-      await supabase.from('weddings').update({
+      await supabase.from('events').update({
         'event_types': [for (final t in eventTypes) t.dbValue],
         'event_type_other': otherLabel,
         'partner1_phone': phone1,
@@ -144,7 +144,7 @@ class WeddingController extends Notifier<WeddingState> {
     state = state.copyWith(loading: true);
     final ownerId = supabase.auth.currentUser!.id;
     // Duas chamadas em vez de `.insert(...).select().single()` de
-    // propósito: a policy de select de `weddings` (`is_wedding_member()`,
+    // propósito: a policy de select de `events` (`is_wedding_member()`,
     // `003_wedding.sql`) faz uma subquery à própria tabela para decidir
     // visibilidade — o Postgres aplica essa policy também ao `RETURNING`
     // do INSERT, mas nesse momento a linha ainda não existe para a
@@ -167,7 +167,7 @@ class WeddingController extends Notifier<WeddingState> {
       'estimated_budget': estimatedBudget,
     };
     try {
-      await supabase.from('weddings').insert({
+      await supabase.from('events').insert({
         ...values,
         'event_type': eventType.dbValue,
       });
@@ -178,18 +178,18 @@ class WeddingController extends Notifier<WeddingState> {
       // Tipos novos (081) numa base de dados que ainda só aceita os 4
       // antigos: grava como "other" em vez de falhar.
       if (e.code == '23514' && !eventType.legacy) {
-        await supabase.from('weddings').insert({...values, 'event_type': 'other'});
+        await supabase.from('events').insert({...values, 'event_type': 'other'});
       } else {
         final missingColumn = e.code == 'PGRST204' ||
             e.code == '42703' ||
             e.message.contains('event_type');
         if (!missingColumn) rethrow;
-        await supabase.from('weddings').insert(values);
+        await supabase.from('events').insert(values);
       }
     }
     // Vários eventos por conta (2026-11): o novo é o mais recente.
     final row = await supabase
-        .from('weddings')
+        .from('events')
         .select()
         .eq('owner_id', ownerId)
         .order('created_at', ascending: false)
@@ -208,7 +208,7 @@ class WeddingController extends Notifier<WeddingState> {
   Future<void> update(Wedding wedding) async {
     state = state.copyWith(loading: true);
     final row = await supabase
-        .from('weddings')
+        .from('events')
         .update({
           'partner_name_1': wedding.partnerName1,
           'partner_name_2': wedding.partnerName2,
@@ -263,7 +263,7 @@ class WeddingController extends Notifier<WeddingState> {
     final bannerUrl = supabase.storage.from('wedding-banners').getPublicUrl(path);
 
     final row = await supabase
-        .from('weddings')
+        .from('events')
         .update({
           'cover_photo_url': bannerUrl,
           'updated_at': DateTime.now().toIso8601String(),
@@ -295,7 +295,7 @@ class WeddingController extends Notifier<WeddingState> {
     final photoUrl = supabase.storage.from('wedding-banners').getPublicUrl(path);
 
     final row = await supabase
-        .from('weddings')
+        .from('events')
         .update({
           'profile_photo_url': photoUrl,
           'updated_at': DateTime.now().toIso8601String(),
@@ -353,7 +353,7 @@ class WeddingController extends Notifier<WeddingState> {
     final w = state.wedding;
     if (w == null) return;
     final other = type == EventType.other ? ((otherLabel ?? '').trim().isEmpty ? null : otherLabel!.trim()) : null;
-    await supabase.from('weddings').update({
+    await supabase.from('events').update({
       'event_type': type.dbValue,
       'event_types': [type.dbValue],
       'event_type_other': other,
@@ -366,7 +366,7 @@ class WeddingController extends Notifier<WeddingState> {
     final w = state.wedding;
     if (w == null) return;
     final v = (label == null || label.trim().isEmpty) ? null : label.trim();
-    await supabase.from('weddings').update({'event_type_other': v}).eq('id', w.id);
+    await supabase.from('events').update({'event_type_other': v}).eq('id', w.id);
     final updated = Wedding(
       id: w.id, ownerId: w.ownerId, partnerName1: w.partnerName1, partnerName2: w.partnerName2,
       partner1Age: w.partner1Age, partner2Age: w.partner2Age, weddingDate: w.weddingDate,
@@ -387,7 +387,7 @@ class WeddingController extends Notifier<WeddingState> {
     shown ? hidden.remove(key) : hidden.add(key);
     _replace(w.copyWith(panelHidden: hidden.toList()));
     try {
-      await supabase.from('weddings').update({'panel_hidden': hidden.toList()}).eq('id', w.id);
+      await supabase.from('events').update({'panel_hidden': hidden.toList()}).eq('id', w.id);
     } catch (_) {}
   }
 

@@ -47,7 +47,7 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
     count("profiles", (q) => q.select("id", { count: "exact", head: true }).gte("created_at", since)),
     count("profiles", (q) => q.select("id", { count: "exact", head: true }).gte("created_at", since).eq("role", "couple")),
     count("partner_profiles", (q) => q.select("id", { count: "exact", head: true }).gte("created_at", since)),
-    count("weddings", (q) => q.select("id", { count: "exact", head: true }).gte("created_at", since)),
+    count("events", (q) => q.select("id", { count: "exact", head: true }).gte("created_at", since)),
     count("quote_requests", (q) => q.select("id", { count: "exact", head: true }).gte("created_at", since)),
     count("payments", (q) => q.select("id", { count: "exact", head: true }).eq("type", "deposit").eq("status", "paid").gte("paid_at", since)),
     count("event_tickets", (q) => q.select("id", { count: "exact", head: true }).eq("status", "paid").gte("paid_at", since)),

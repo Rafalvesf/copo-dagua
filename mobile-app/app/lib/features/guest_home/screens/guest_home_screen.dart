@@ -45,7 +45,7 @@ class GuestHomeScreen extends ConsumerWidget {
   /// (`guest_mode_screen.dart`, `/guest-home/:weddingId`) — uma conta
   /// de casal pode estar ligada a mais do que um casamento como
   /// convidado, por isso escolhe explicitamente qual mostrar em vez de
-  /// assumir sempre `weddings.first`.
+  /// assumir sempre `events.first`.
   final String? weddingId;
 
   const GuestHomeScreen({super.key, this.weddingId});
@@ -87,13 +87,13 @@ class GuestHomeScreen extends ConsumerWidget {
             child: weddingsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar o teu casamento.', onRetry: () => ref.invalidate(guestWeddingsProvider)),
-              data: (weddings) {
-                if (weddings.isEmpty) {
+              data: (events) {
+                if (events.isEmpty) {
                   return _EmptyState(profile: profile, ref: ref);
                 }
                 final wedding = weddingId == null
-                    ? weddings.first
-                    : weddings.where((w) => w.weddingId == weddingId).firstOrNull ?? weddings.first;
+                    ? events.first
+                    : events.where((w) => w.weddingId == weddingId).firstOrNull ?? events.first;
 
                 // Mostra o wizard "Vais ao casamento?" uma única vez,
                 // assim que a conta fica ligada a uma linha de `guests`
@@ -118,7 +118,7 @@ class GuestHomeScreen extends ConsumerWidget {
                   }
                 });
 
-                return _GuestHomeBody(wedding: wedding, eventCount: weddings.length);
+                return _GuestHomeBody(wedding: wedding, eventCount: events.length);
               },
             ),
           ),

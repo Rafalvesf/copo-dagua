@@ -22,7 +22,7 @@ enum WeddingStatus { planning, completed }
 
 /// Tipo de evento escolhido no onboarding (pedido do utilizador
 /// 2026-10-16: "adiciona uma opção para as pessoas escolherem entre
-/// eventos, e não só casamentos"). Guardado em `weddings.event_type`
+/// eventos, e não só casamentos"). Guardado em `events.event_type`
 /// (`074_wedding_event_type.sql`); o resto da app continua por agora a
 /// tratar todos como "casamento".
 enum EventType {
@@ -593,7 +593,7 @@ class Guest {
 /// mínima só com o que `guest_home_screen.dart` mostra, não o [Wedding]
 /// completo (o convidado não tem acesso ao resto dos dados do
 /// casamento).
-/// Um momento do Programa (`weddings.program`, 085): hora, título e local.
+/// Um momento do Programa (`events.program`, 085): hora, título e local.
 class ProgramItem {
   final String time;
   final String title;
@@ -665,7 +665,7 @@ class GuestWedding {
   final String? quote;
   final String? coverPhotoUrl;
 
-  /// `weddings.ceremony_time`/`welcome_message`/`theme_colors`
+  /// `events.ceremony_time`/`welcome_message`/`theme_colors`
   /// (`067_guest_self_service.sql`) — mostrados no ecrã de Detalhes do
   /// casamento do convidado; todos opcionais, sem ecrã de edição
   /// próprio ainda para o casal os preencher.
@@ -673,7 +673,7 @@ class GuestWedding {
   final String? welcomeMessage;
   final List<String> themeColors;
 
-  /// `weddings.updated_at` — mesma razão de [Wedding.updatedAt]: o
+  /// `events.updated_at` — mesma razão de [Wedding.updatedAt]: o
   /// caminho no Storage é fixo por casamento (`upsert: true`), por isso
   /// um novo upload de foto de capa devolve sempre o mesmo URL e ficava
   /// preso em cache do browser sem isto. Pedido explícito do
@@ -722,10 +722,10 @@ class GuestWedding {
   final String? dressCode;
   final String? venueAddress;
 
-  /// `weddings.event_type` (074) — casamento por omissão.
+  /// `events.event_type` (074) — casamento por omissão.
   final EventType eventType;
 
-  /// Presentes (`weddings.gift_*`, `075_connect_remaining.sql`) — definidos
+  /// Presentes (`events.gift_*`, `075_connect_remaining.sql`) — definidos
   /// pelo casal nas Definições; `null` quando não indicaram nada.
   final String? giftListUrl;
   final String? giftIban;
@@ -924,11 +924,11 @@ class Booking {
   final BookingStatus status;
   final String? messageFromCouple;
 
-  /// Tipo de evento do pedido (`weddings.event_type`) — muda os textos do
+  /// Tipo de evento do pedido (`events.event_type`) — muda os textos do
   /// lado do parceiro ("O casal…", "A família…").
   final EventType eventType;
 
-  /// Foto do casal (`weddings.profile_photo_url`, senão a capa) — PFP
+  /// Foto do casal (`events.profile_photo_url`, senão a capa) — PFP
   /// em toda a app (2026-10-20).
   final String? clientAvatarUrl;
 
@@ -1154,13 +1154,13 @@ String priceUnitSuffix(String unit) => switch (unit) {
       _ => '',
     };
 
-/// Avaliação real (`reviews`, 045_reviews.sql). `weddings` só é
+/// Avaliação real (`reviews`, 045_reviews.sql). `events` só é
 /// legível pelos próprios membros/admin (RLS de `003_wedding.sql`) —
 /// por isso `coupleDisplayName`/`coupleAvatarUrl` no perfil público do
 /// parceiro (`partner_detail_screen.dart`) vêm de uma função à parte
 /// (`get_review_authors()`, `069_public_review_authors.sql`) que expõe
 /// deliberadamente só nome+foto de casamentos com review publicada
-/// desse parceiro, nunca o resto de `weddings`. Pedido explícito do
+/// desse parceiro, nunca o resto de `events`. Pedido explícito do
 /// utilizador (2026-09-13): mostrar isto a qualquer visitante do
 /// Marketplace, não só a quem tem relação real com o casal.
 class Review {
@@ -1174,14 +1174,14 @@ class Review {
   final DateTime? responseAt;
   final String status;
 
-  /// Nome a mostrar ("Rafael & Inês") — o mesmo `weddings.partner_name_1`/
+  /// Nome a mostrar ("Rafael & Inês") — o mesmo `events.partner_name_1`/
   /// `partner_name_2` que aparece em "Os noivos", não o nome da conta
   /// individual (`profiles.full_name`). Pedido explícito do utilizador:
   /// "devem mostrar o nome dos noivos e o icon deles, tal como o perfil
   /// deles".
   final String coupleDisplayName;
 
-  /// `weddings.cover_photo_url` — mesma foto do "perfil" do casal
+  /// `events.cover_photo_url` — mesma foto do "perfil" do casal
   /// (`wedding_details_screen.dart`). `null` quando ainda não
   /// escolheram nenhuma, cai em iniciais na UI.
   final String? coupleAvatarUrl;
@@ -1217,7 +1217,7 @@ class Review {
   });
 
   factory Review.fromRow(Map<String, dynamic> row) {
-    final wedding = row['weddings'] as Map<String, dynamic>?;
+    final wedding = row['events'] as Map<String, dynamic>?;
     final profile = row['profiles'] as Map<String, dynamic>?;
     final name1 = wedding?['partner_name_1'] as String?;
     final name2 = wedding?['partner_name_2'] as String?;

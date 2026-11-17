@@ -244,7 +244,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
     var ok = true;
     try {
       await saveGuestFacingInfo(widget.wedding.id, _current());
-      // Nome do local (weddings.venue), editado na folha Local.
+      // Nome do local (events.venue), editado na folha Local.
       final w = ref.read(weddingControllerProvider).wedding;
       final name = _venueName.text.trim();
       if (w != null && name != (w.venue ?? '')) {
@@ -1272,7 +1272,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
 
   Future<void> _load() async {
     try {
-      final r = await supabase.from('weddings').select('default_max_companions').eq('id', widget.weddingId).single();
+      final r = await supabase.from('events').select('default_max_companions').eq('id', widget.weddingId).single();
       if (mounted) setState(() => _value = (r['default_max_companions'] as int?) ?? 1);
     } catch (_) {
       if (mounted) setState(() => _available = false);
@@ -1282,7 +1282,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
   Future<void> _set(int v) async {
     setState(() => _value = v);
     try {
-      await supabase.from('weddings').update({'default_max_companions': v}).eq('id', widget.weddingId);
+      await supabase.from('events').update({'default_max_companions': v}).eq('id', widget.weddingId);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar.')));

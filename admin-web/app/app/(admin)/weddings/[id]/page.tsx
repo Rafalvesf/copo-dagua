@@ -14,7 +14,7 @@ export default async function WeddingDetailPage(props: PageProps<"/weddings/[id]
 
   const supabase = await createClient();
   const [{ data: wedding }, { data: collaborators }, { data: bookings }, { count: guestCount }] = await Promise.all([
-    supabase.from("weddings").select("*").eq("id", id).single(),
+    supabase.from("events").select("*").eq("id", id).single(),
     supabase.from("wedding_collaborators").select("invited_email, status").eq("wedding_id", id),
     supabase
       .from("bookings")

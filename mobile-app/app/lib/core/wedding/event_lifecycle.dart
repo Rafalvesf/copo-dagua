@@ -21,7 +21,7 @@ final hiddenEventsProvider = FutureProvider.autoDispose<List<HiddenEvent>>((ref)
   if (me == null) return const [];
   try {
     final rows = (await supabase
-            .from('weddings')
+            .from('events')
             .select('id, owner_id, partner_name_1, partner_name_2, wedding_date, archived_at, deleted_at')
             .or('archived_at.not.is.null,deleted_at.not.is.null')
             .order('updated_at', ascending: false))
