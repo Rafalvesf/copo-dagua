@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../events/widgets/event_actions_sheet.dart';
 import '../../settings/screens/settings_screen.dart' show EditEventPage, PanelPage;
+import '../widgets/event_program_section.dart';
 import '../../../shared/text_case.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../shared/widgets/alert_outline.dart';
@@ -442,6 +443,8 @@ class _PageBody extends ConsumerWidget {
           },
         ),
       _NextSteps(wedding: wedding),
+      // Programa do evento — logo a seguir a "Esta semana" (2026-11-17).
+      EventProgramSection(weddingId: wedding.id),
       _StatBlocks(wedding: wedding),
       _InviteCodeCard(wedding: wedding),
       _Suggestions(wedding: wedding),
