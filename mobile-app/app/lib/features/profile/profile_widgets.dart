@@ -76,7 +76,8 @@ class FollowedByRow extends StatelessWidget {
 
 /// Cartão branco do topo: foto, números, nome, @ · cidade, bio e botões.
 class ProfileCard extends StatelessWidget {
-  final Widget avatar;
+  /// Opcional: o parceiro não o usa (a foto já está no topo da página).
+  final Widget? avatar;
   final String name;
   final String handleLine;
   final String? bio;
@@ -90,12 +91,16 @@ class ProfileCard extends StatelessWidget {
 
   /// Ao lado do nome (o visto de verificado do parceiro).
   final Widget? nameBadge;
+
+  /// À direita do nome (a caixa "Desde €X" / "Por orçamento" do parceiro).
+  final Widget? priceBox;
+
   final List<Widget> buttons;
   /// Etiquetas dos três números (o parceiro mostra avaliações).
   final List<String> labels;
   const ProfileCard({
     super.key,
-    required this.avatar,
+    this.avatar,
     required this.name,
     required this.handleLine,
     this.bio,
@@ -105,6 +110,7 @@ class ProfileCard extends StatelessWidget {
     this.followedBy,
     this.extra,
     this.nameBadge,
+    this.priceBox,
     this.buttons = const [],
     this.labels = const ['Eventos', 'Seguidores', 'A seguir'],
   });
@@ -121,16 +127,23 @@ class ProfileCard extends StatelessWidget {
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
-            SizedBox(width: 76, height: 76, child: avatar),
-            const SizedBox(width: 16),
+            if (avatar != null) ...[
+              SizedBox(width: 76, height: 76, child: avatar),
+              const SizedBox(width: 16),
+            ],
             Expanded(child: _stat(events, labels[0])),
             Expanded(child: _stat(followers, labels[1])),
             Expanded(child: _stat(following, labels[2])),
           ]),
           const SizedBox(height: 14),
           Row(children: [
-            Flexible(child: Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-            ?nameBadge,
+            Expanded(
+              child: Row(children: [
+                Flexible(child: Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+                ?nameBadge,
+              ]),
+            ),
+            if (priceBox != null) ...[const SizedBox(width: 10), priceBox!],
           ]),
           if (handleLine.isNotEmpty) ...[
             const SizedBox(height: 2),

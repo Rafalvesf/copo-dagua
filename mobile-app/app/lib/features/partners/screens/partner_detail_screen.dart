@@ -672,9 +672,25 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                 child: ProfileCard(
-                  avatar: V2Avatar(partner.name, size: 76, imageUrl: partner.imageUrl),
+                  // Sem pfp: a foto do parceiro já está no topo da página.
                   name: partner.name,
                   nameBadge: ProBadge(partner.id),
+                  // Caixa "Desde €X" / "Por orçamento" no topo (§6), ao lado do nome.
+                  priceBox: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: ink, width: 1.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: fromPrice == null
+                        ? const Text('Por orçamento', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: ink))
+                        : Column(mainAxisSize: MainAxisSize.min, children: [
+                            const Text('DESDE',
+                                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1.5, color: muted)),
+                            Text(euros(fromPrice),
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink, height: 1.1)),
+                          ]),
+                  ),
                   handleLine: [partner.primaryCategoryLabel, if (partner.location.isNotEmpty) partner.location].join(' · '),
                   bio: partner.description,
                   labels: const ['Eventos', 'Seguidores', 'Avaliações'],
@@ -683,7 +699,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                   following: summary.count,
                   extra: Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
                     FounderBadge(partner.id, long: true),
-                    chip(fromPrice == null ? 'Por orçamento' : 'Desde ${euros(fromPrice)}'),
                     if (ratingText != null)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -954,72 +969,51 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                 Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
                               ]),
                             ),
-                          // Botão Reservar dentro de um cartão branco (§4).
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(22),
-                              boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+                          // Reservar a toda a largura, como no mockup "parceiro
+                          // com pacote" (sem caixa branca por trás).
+                          FilledButton(
+                            onPressed: _requestingQuote ? null : () => _requestPackage(p, pkgExtras, people),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: ink,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size.fromHeight(52),
+                              shape: const StadiumBorder(),
+                              textStyle: btn(15),
                             ),
-                            padding: const EdgeInsets.all(16),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                              FilledButton(
-                                onPressed: _requestingQuote ? null : () => _requestPackage(p, pkgExtras, people),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: ink,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size.fromHeight(52),
-                                  shape: const StadiumBorder(),
-                                  textStyle: btn(15),
-                                ),
-                                child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-                              ),
-                              // Sem a frase "envia uma proposta com o preço
-                              // final" nos pacotes por orçamento (2026-11-17).
-                              // Mantém-se só a explicação do pagamento nos de
-                              // preço fixo.
-                              if (!p.isStartingPrice) ...[
-                                const SizedBox(height: 8),
-                                Text(
-                                  _eachPays
-                                      ? 'Cada convidado paga ${euros(total / people)} na app, 3 dias antes. ${widget.partner.name} aceita ou recusa.'
-                                      : '${widget.partner.name} aceita ou recusa. Se aceitar, pagas para confirmar.',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 13, color: muted),
-                                ),
-                              ],
-                            ]),
+                            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
                           ),
+                          // Explicação do pagamento só nos pacotes de preço fixo.
+                          if (!p.isStartingPrice) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              _eachPays
+                                  ? 'Cada convidado paga ${euros(total / people)} na app, 3 dias antes. ${widget.partner.name} aceita ou recusa.'
+                                  : '${widget.partner.name} aceita ou recusa. Se aceitar, pagas para confirmar.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 13, color: muted),
+                            ),
+                          ],
                         ]);
                       }),
                     if (!widget.selectionMode && canReserve) ...[
                       const SizedBox(height: 12),
-                      // Pedir orçamento à medida dentro de um cartão branco (§4):
-                      // secundário (contorno preto 1,5, pílula, 44), sem texto
-                      // solto por fora.
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(22),
-                          boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        child: SizedBox(
-                          height: 44,
-                          child: OutlinedButton(
-                            onPressed: pub ? _needAccount : (_requestingQuote ? null : () => _requestQuote()),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: ink,
-                              side: const BorderSide(color: ink, width: 1.5),
-                              shape: const StadiumBorder(),
-                              textStyle: const TextStyle(
-                                  fontFamily: AppTheme.fontFamily,
-                                  fontFamilyFallback: AppTheme.fontFamilyFallback,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700),
-                            ),
-                            child: const Text('Pedir orçamento à medida'),
+                      // Secundário (§2): contorno preto 1,5, pílula, 44 — a
+                      // toda a largura, sem caixa branca por trás.
+                      SizedBox(
+                        height: 44,
+                        child: OutlinedButton(
+                          onPressed: pub ? _needAccount : (_requestingQuote ? null : () => _requestQuote()),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: ink,
+                            side: const BorderSide(color: ink, width: 1.5),
+                            shape: const StadiumBorder(),
+                            textStyle: const TextStyle(
+                                fontFamily: AppTheme.fontFamily,
+                                fontFamilyFallback: AppTheme.fontFamilyFallback,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700),
                           ),
+                          child: const Text('Pedir orçamento à medida'),
                         ),
                       ),
                     ],
