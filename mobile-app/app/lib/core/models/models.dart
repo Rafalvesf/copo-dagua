@@ -599,17 +599,42 @@ class ProgramItem {
   final String title;
   final String place;
 
-  const ProgramItem({this.time = '', this.title = '', this.place = ''});
+  /// Data da etapa (texto livre, p.ex. "2026-07-12"); vazio = o dia do evento.
+  /// Permite programas de mais do que um dia (2026-11-17).
+  final String date;
+
+  /// Nome do parceiro, quando a etapa é de um parceiro do evento; vazio = sem
+  /// parceiro (etapa à mão, p.ex. "Passeio no parque").
+  final String partner;
+
+  const ProgramItem({this.time = '', this.title = '', this.place = '', this.date = '', this.partner = ''});
 
   factory ProgramItem.fromJson(Map<String, dynamic> j) => ProgramItem(
         time: (j['time'] as String?) ?? '',
         title: (j['title'] as String?) ?? '',
         place: (j['place'] as String?) ?? '',
+        date: (j['date'] as String?) ?? '',
+        partner: (j['partner'] as String?) ?? '',
       );
 
-  Map<String, dynamic> toJson() => {'time': time.trim(), 'title': title.trim(), 'place': place.trim()};
+  Map<String, dynamic> toJson() => {
+        'time': time.trim(),
+        'title': title.trim(),
+        'place': place.trim(),
+        if (date.trim().isNotEmpty) 'date': date.trim(),
+        if (partner.trim().isNotEmpty) 'partner': partner.trim(),
+      };
 
-  bool get isEmpty => time.trim().isEmpty && title.trim().isEmpty && place.trim().isEmpty;
+  ProgramItem copyWith({String? time, String? title, String? place, String? date, String? partner}) => ProgramItem(
+        time: time ?? this.time,
+        title: title ?? this.title,
+        place: place ?? this.place,
+        date: date ?? this.date,
+        partner: partner ?? this.partner,
+      );
+
+  bool get isEmpty =>
+      time.trim().isEmpty && title.trim().isEmpty && place.trim().isEmpty && date.trim().isEmpty && partner.trim().isEmpty;
 
   static List<ProgramItem> listFrom(Object? raw) => raw is List
       ? raw.whereType<Map>().map((m) => ProgramItem.fromJson(m.cast<String, dynamic>())).where((i) => !i.isEmpty).toList()
