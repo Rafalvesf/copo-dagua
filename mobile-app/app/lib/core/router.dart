@@ -557,13 +557,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>lazyPage([l33.loadLibrary], () =>  l33.CalendarScreen()),
       ),
       tabRoute(
-        path: '/wedding',
+        // Painel do evento — serve todos os tipos de evento, não só
+        // casamentos. O caminho antigo `/wedding` redireciona para aqui
+        // (ver abaixo), mantendo os links e partilhas antigos a funcionar.
+        path: '/evento',
         // `?aparencia=1`: abre logo no modo de mudar estilo e cor
         // (Definições → Aparência do menu).
         builder: (context, state) =>lazyPage([l59.loadLibrary], () =>  l59.WeddingDetailsScreen(
           key: ValueKey(state.uri.toString()),
           startEditing: state.uri.queryParameters['aparencia'] == '1',
         )),
+      ),
+      // Compatibilidade: `/wedding` antigo → `/evento` (mantém o `?aparencia`).
+      GoRoute(
+        path: '/wedding',
+        redirect: (context, state) => state.uri.query.isEmpty ? '/evento' : '/evento?${state.uri.query}',
       ),
       GoRoute(
         path: '/gallery',

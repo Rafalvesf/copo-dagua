@@ -274,7 +274,7 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
     final e = widget.event;
     if (e.mine) {
       await ref.read(weddingControllerProvider.notifier).select(e.weddingId);
-      if (mounted) context.go('/wedding');
+      if (mounted) context.go('/evento');
       return;
     }
     if (e.joined) {
@@ -788,7 +788,7 @@ class _MyEventCard extends ConsumerWidget {
 
   Future<void> _open(BuildContext context, WidgetRef ref) async {
     await ref.read(weddingControllerProvider.notifier).select(wedding.id);
-    if (context.mounted) context.go('/wedding');
+    if (context.mounted) context.go('/evento');
   }
 
   @override

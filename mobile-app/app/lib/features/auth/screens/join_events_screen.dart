@@ -52,7 +52,7 @@ class _JoinEventsScreenState extends ConsumerState<JoinEventsScreen> {
       await acceptPartnerInvite(widget.token);
       ref.invalidate(weddingControllerProvider);
       if (!mounted) return;
-      context.go('/wedding');
+      context.go('/evento');
     } catch (e) {
       if (!mounted) return;
       setState(() {
