@@ -27,7 +27,7 @@ class JoinEventsScreen extends ConsumerStatefulWidget {
 }
 
 class _JoinEventsScreenState extends ConsumerState<JoinEventsScreen> {
-  late final Future<({String names, bool valid})?> _invite = fetchPartnerInvite(widget.token);
+  late final Future<({String names, String? inviterName, bool valid})?> _invite = fetchPartnerInvite(widget.token);
   String? _error;
   bool _joining = false;
 
@@ -108,7 +108,9 @@ class _JoinEventsScreenState extends ConsumerState<JoinEventsScreen> {
                         pose: MascotPose.cheer,
                         eyebrow: 'CONVITE PARA ORGANIZAR',
                         title: invite.names,
-                        message: 'convidam-te para organizar o evento com eles.',
+                        message: invite.inviterName != null
+                            ? '${invite.inviterName} convidou-te para organizarem o evento juntos.'
+                            : 'Convidam-te para organizar o evento com eles.',
                         extra: Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
