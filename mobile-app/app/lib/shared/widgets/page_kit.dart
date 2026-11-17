@@ -14,7 +14,7 @@ const _track = Color(0xFFECE9E2);
 
 /// Página com a margem lateral 20 em todos os blocos, menos os que vão
 /// de ponta a ponta (carrosséis), cujo tipo está em [bleed].
-class KitPage extends StatelessWidget {
+class KitPage extends StatefulWidget {
   final List<Widget> children;
   final Set<Type> bleed;
   final double bottom;
@@ -22,17 +22,77 @@ class KitPage extends StatelessWidget {
   const KitPage({super.key, required this.children, this.bleed = const {}, this.bottom = 40, this.controller});
 
   @override
-  Widget build(BuildContext context) => ListView(
-        controller: controller,
-        padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + 12, bottom: bottom),
-        children: [
-          for (final c in children)
-            if (bleed.contains(c.runtimeType) || c is KitBleed)
-              c
-            else
-              Padding(padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin), child: c),
-        ],
-      );
+  State<KitPage> createState() => _KitPageState();
+}
+
+class _KitPageState extends State<KitPage> {
+  // Usa o controlador do ecrã, se houver; senão cria um só para o
+  // "voltar ao topo".
+  ScrollController? _own;
+  ScrollController get _controller => widget.controller ?? (_own ??= ScrollController());
+
+  // Mostra o botão de "voltar ao topo" depois de passar o cabeçalho.
+  bool _scrolled = false;
+
+  void _onScroll() {
+    final v = _controller.hasClients && _controller.offset > 120;
+    if (v != _scrolled && mounted) setState(() => _scrolled = v);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onScroll);
+    _own?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
+    return Stack(children: [
+      Positioned.fill(
+        child: ListView(
+          controller: _controller,
+          padding: EdgeInsets.only(top: topInset + 12, bottom: widget.bottom),
+          children: [
+            for (final c in widget.children)
+              if (widget.bleed.contains(c.runtimeType) || c is KitBleed)
+                c
+              else
+                Padding(padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin), child: c),
+          ],
+        ),
+      ),
+      // DESIGN.md §6: a seta de voltar (canto superior esquerdo), ao fazer
+      // scroll, "roda" para ↑ e passa a subir a página até ao topo. Aqui o
+      // cabeçalho (com a seta de voltar) sobe com a lista e, no mesmo canto,
+      // aparece este botão ↑ que leva ao topo; ao voltar ao topo desaparece
+      // e fica de novo a seta de voltar do cabeçalho.
+      Positioned(
+        left: AppTheme.screenMargin,
+        top: topInset + 12,
+        child: IgnorePointer(
+          ignoring: !_scrolled,
+          child: AnimatedOpacity(
+            opacity: _scrolled ? 1 : 0,
+            duration: const Duration(milliseconds: 180),
+            child: V2RoundButton(
+              icon: Hi.arrowUp,
+              tooltip: 'Voltar ao topo',
+              onTap: () => _controller.animateTo(0,
+                  duration: const Duration(milliseconds: 320), curve: Curves.easeOut),
+            ),
+          ),
+        ),
+      ),
+    ]);
+  }
 }
 
 /// Marca um bloco de [KitPage] que vai de ponta a ponta.

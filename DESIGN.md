@@ -165,6 +165,25 @@ ecrãs. O resto da app mantém a tabela acima.
   de linhas (avatar 44, nome 16, meta 13, etiqueta à direita).
 - **Emojis:** só no "Parabéns! 🎉" do fim do criar evento (pedido do
   Rafael, 2026-11-12). Em mais lado nenhum.
+- **Botões redondos sobre imagens e «voltar ao topo»** (pedido do Rafael,
+  2026-11-16): um botão redondo (voltar/sair, definições, sino, ⋯) é
+  **translúcido só quando — e enquanto — tem uma imagem por trás** (foto de
+  capa, herói com foto): branco a ~55 % com a sombra suave e o ícone preto 20
+  bem legível. **Em mais lado nenhum:** sobre o fundo liso (`#F2F0EB`), sobre
+  branco, ou depois de o cabeçalho deixar de assentar na imagem, é o **branco
+  cheio 44** do §2. Ou seja, a transparência é decidida por "há imagem por
+  trás agora?", não pela quantidade de scroll.
+  Em **todas** as páginas que fazem scroll (com imagem ou sem), a **seta de
+  voltar** (canto superior esquerdo) muda com o scroll: ao descer, o ícone
+  **roda de ← para ↑** e o toque passa a **subir a página até ao topo** (com
+  animação) em vez de voltar atrás; ao chegar ao topo, volta a ser a seta de
+  voltar (←). A transparência é independente disto e segue só a regra de cima:
+  onde há imagem por trás, a seta é translúcida no topo (sobre a imagem) e fica
+  branco opaco depois de a imagem sair de trás; onde não há imagem, é sempre o
+  branco cheio 44. Os restantes botões (definições, ⋯) não mudam de ação; só
+  deixam de ser translúcidos quando a imagem sai de trás deles. A transição
+  (rotação do ícone e, onde se aplique, a transparência) é sempre animada,
+  nunca instantânea.
 
 ## 7. Alertas
 
