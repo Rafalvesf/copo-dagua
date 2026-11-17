@@ -110,8 +110,12 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
 
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: KitPage(bottom: 140, children: [
-        KitHeader(onBack: () => context.canPop() ? context.pop() : context.go('/guest-home')),
+      body: KitPage(
+        pinnedBack: true,
+        onBack: () => context.canPop() ? context.pop() : context.go('/guest-home'),
+        bottom: 140,
+        children: [
+        const KitHeader(),
         KitTitle('O teu menu',
             subtitle: [t.partnerName, if (deadline != null) 'escolhe até ${shortDate(deadline)}'].join(' · ')),
         KitCaps('A carta · ${packages.length}'),

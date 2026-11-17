@@ -40,6 +40,7 @@ class SupportScreen extends ConsumerWidget {
         children: [
           Expanded(
             child: KitPage(
+              pinnedBack: true,
               bottom: 20,
               children: [
                 const KitHeader(),

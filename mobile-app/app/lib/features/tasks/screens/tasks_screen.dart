@@ -81,6 +81,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     return GradientScaffold(
       background: AppBackground.feed,
       body: KitPage(
+        pinnedBack: true,
         bleed: const {_PartnerSuggestions},
         children: [
           KitHeader(actions: [

@@ -55,6 +55,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return GradientScaffold(
       background: AppBackground.feed,
       body: KitPage(
+        pinnedBack: true,
         children: [
           KitHeader(actions: [
             KitAddButton(tooltip: 'Nova tarefa', onTap: () => addChecklistTaskFlow(context, ref)),
