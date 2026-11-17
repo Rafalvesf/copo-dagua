@@ -22,6 +22,10 @@ class _Unset {
 const _unset = _Unset();
 
 enum AuthStatus {
+  // Arranque: a app ainda não sabe se há sessão guardada. Enquanto está
+  // assim, o router mostra o ecrã de arranque (splash) em vez de «criar
+  // conta», para a página de registo não piscar antes do login automático.
+  restoring,
   unauthenticated,
   authenticating,
   emailUnverified,
@@ -277,7 +281,10 @@ class AuthController extends Notifier<AuthState> {
   @override
   AuthState build() {
     Future.microtask(_restoreSession);
-    return const AuthState.unauthenticated();
+    // Começa em `restoring` (não `unauthenticated`): assim o router fica no
+    // splash e não manda para «criar conta» enquanto a sessão guardada ainda
+    // está a ser recuperada.
+    return const AuthState(status: AuthStatus.restoring);
   }
 
   /// "Manter sessão iniciada" (pedido 2026-10-17): se a pessoa escolheu
@@ -293,8 +300,14 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> _restoreSessionInner() async {
+    // Só corre no arranque (estado `restoring`). Mantém-se em `restoring`
+    // (splash) até saber o resultado — nunca passa por «criar conta».
+    if (state.status != AuthStatus.restoring) return;
     final session = supabase.auth.currentSession;
-    if (session == null || state.status != AuthStatus.unauthenticated) return;
+    if (session == null) {
+      state = const AuthState.unauthenticated();
+      return;
+    }
     bool keep = false;
     try {
       keep = (await SharedPreferences.getInstance()).getBool(_keepKey) ?? false;
@@ -303,12 +316,11 @@ class AuthController extends Notifier<AuthState> {
       try {
         await supabase.auth.signOut();
       } catch (_) {}
+      state = const AuthState.unauthenticated();
       return;
     }
-    if (state.status != AuthStatus.unauthenticated) return;
     // Sem brinde quando volta de um pagamento (vai direto à confirmação).
     BrindeGate.pending = PayReturn.pending == null;
-    state = state.copyWith(status: AuthStatus.authenticating, errorMessage: null);
     try {
       await _applyPendingSocialChoices();
       final profile = await _loadProfile(session.user);
