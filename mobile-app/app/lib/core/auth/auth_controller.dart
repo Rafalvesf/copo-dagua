@@ -295,7 +295,12 @@ class AuthController extends Notifier<AuthState> {
     try {
       await _restoreSessionInner();
     } catch (_) {
-      // Supabase ainda não iniciado (ex.: testes) — começa sem sessão.
+      // Supabase ainda não iniciado (ex.: testes) ou falha a recuperar:
+      // sai do splash e segue sem sessão (mostra «criar conta»), em vez de
+      // ficar preso no arranque.
+      if (state.status == AuthStatus.restoring) {
+        state = const AuthState.unauthenticated();
+      }
     }
   }
 
