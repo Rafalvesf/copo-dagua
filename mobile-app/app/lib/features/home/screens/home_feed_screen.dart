@@ -643,7 +643,7 @@ class _MyProfileCard extends ConsumerWidget {
     if (profile == null) return const SizedBox.shrink();
     final pub = ref.watch(publicProfileProvider(profile.id)).value;
     final name = profile.fullName?.trim().isNotEmpty == true ? profile.fullName! : (pub?.name ?? '');
-    return ProfileCard(
+    return ProfileCard_Users(
       avatar: Semantics(
         button: true,
         label: 'Mudar foto de perfil',

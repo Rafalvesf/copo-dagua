@@ -169,7 +169,7 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
     final stats = ref.watch(partnerPublicStatsProvider(p.id)).value;
     final follow = ref.watch(partnerFollowInfoProvider(p.id)).value;
     final pub = ref.watch(publicProfileProvider(p.id)).value;
-    return ProfileCard(
+    return ProfileCard_Users(
       avatar: Semantics(
         button: true,
         label: 'Mudar foto de perfil',

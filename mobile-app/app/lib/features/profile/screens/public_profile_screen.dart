@@ -117,7 +117,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                     const SizedBox(height: 18),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                      child: ProfileCard(
+                      child: ProfileCard_Users(
                         avatar: V2Avatar(p.name, size: 76, imageUrl: p.avatarUrl, flat: true),
                         name: p.name,
                         handleLine: p.city ?? '',
