@@ -182,13 +182,16 @@ class _GuestProfileBody extends ConsumerWidget {
         // Mesmo estilo dos perfis do organizador e do parceiro
         // (pedido 2026-10-17): título grande, foto redonda com câmara,
         // e secções com títulos em maiúsculas e linhas com divisórias.
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 140),
-          children: [
+        return ScrollBackView(
+          onBack: () => context.canPop() ? context.pop() : context.go('/eventos'),
+          builder: (context, scrollCtrl) => ListView(
+            controller: scrollCtrl,
+            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 140),
+            children: [
             // Redesign 2026-10-19 (canvas "Convidado — perfil (redesign)").
             // Kit das páginas (2026-11-15): voltar, título à esquerda e o
             // cartão do perfil. Sem «Em modo convidado»: só a categoria.
-            KitHeader(onBack: () => context.canPop() ? context.pop() : context.go('/eventos')),
+            const KitHeader(),
             const KitTitle('A tua presença'),
             const SizedBox(height: 16),
             _GuestHeader(
@@ -359,6 +362,7 @@ class _GuestProfileBody extends ConsumerWidget {
               KitGroup([KitSetRow(label: 'Definições do teu evento', onTap: onMore)]),
             ],
           ],
+          ),
         );
       },
     );

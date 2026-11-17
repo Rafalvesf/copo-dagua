@@ -55,6 +55,55 @@ class _KitPageScope extends InheritedWidget {
   bool updateShouldNotify(_KitPageScope old) => old.pinnedBack != pinnedBack;
 }
 
+/// Envolve um ecrã com scroll próprio (que não usa [KitPage]) e dá-lhe a seta
+/// fixa do DESIGN.md §6: gere o [ScrollController], põe a seta no overlay
+/// (sempre no ecrã, roda ←→↑, sobe ao topo) e, via o mesmo scope, faz o
+/// [KitHeader] lá dentro deixar de desenhar o seu próprio voltar.
+///
+/// Uso: `ScrollBackView(onBack: ..., builder: (ctx, c) => ListView(controller: c, ...))`.
+class ScrollBackView extends StatefulWidget {
+  final Widget Function(BuildContext context, ScrollController controller) builder;
+  final VoidCallback? onBack;
+
+  /// Px de scroll em que ainda há imagem por trás da seta (0 = sem imagem).
+  final double imageExtent;
+
+  const ScrollBackView({super.key, required this.builder, this.onBack, this.imageExtent = 0});
+
+  @override
+  State<ScrollBackView> createState() => _ScrollBackViewState();
+}
+
+class _ScrollBackViewState extends State<ScrollBackView> {
+  final _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
+    return _KitPageScope(
+      pinnedBack: true,
+      child: Stack(children: [
+        Positioned.fill(child: widget.builder(context, _controller)),
+        Positioned(
+          left: AppTheme.screenMargin,
+          top: topInset + 12,
+          child: ScrollAwareBackButton(
+            controller: _controller,
+            onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
+            imageExtent: widget.imageExtent,
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
 class _KitPageState extends State<KitPage> {
   // Usa o controlador do ecrã, se houver; senão cria um só para o
   // "voltar ao topo".
