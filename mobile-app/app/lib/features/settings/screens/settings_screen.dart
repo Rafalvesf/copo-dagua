@@ -310,48 +310,10 @@ class _CoupleSettings extends ConsumerWidget {
   List<Widget> _sections(BuildContext context, WidgetRef ref, Wedding wedding,
       {bool help = true, bool signOut = true, List<Widget> afterOrganization = const []}) {
     return [
-      const _SectionTitle('Organização'),
-      _Group(
-        children: [
-          // Quem organiza e o que pode fazer (migração 159).
-          _Row(
-            icon: Hi.shieldCheck,
-            label: wedding.eventType == EventType.wedding ? 'Organizadores e o teu par' : 'Organizadores',
-            value: 'Convidar',
-            onTap: () => context.push('/organizadores'),
-          ),
-          _Row(
-            icon: Hi.calendar,
-            label: 'Detalhes do evento',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EditEventPage(wedding: wedding))),
-          ),
-          _Row(
-            icon: Hi.squaresPlus,
-            label: 'Painel do evento',
-            value: 'O que aparece',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const _PanelPage())),
-          ),
-          _Row(
-            icon: Hi.swatch,
-            label: 'Aparência do menu',
-            onTap: () => context.go('/wedding?aparencia=1'),
-          ),
-          // Público/privado e entrada passaram para "Para os convidados" (2026-11-03).
-          _Row(
-            icon: Hi.ticket,
-            label: 'Acesso e entrada',
-            value: 'Para os convidados',
-            onTap: () => context.push('/guest-page'),
-          ),
-          // Arquivados e apagados (185) — só aqui.
-          _Row(
-            icon: Hi.archiveBox,
-            label: 'Eventos arquivados e apagados',
-            onTap: () => context.push('/eventos-arquivados'),
-          ),
-        ],
-      ),
-      // "Perfil" entre Organização e Conta (mockup).
+      // A secção "Organização" passou para "Definições deste evento", no
+      // painel do evento (`wedding_details_screen.dart`, 2026-11-16), onde se
+      // juntou ao "Gerir". As páginas `EditEventPage` e `PanelPage` ficam
+      // aqui definidas (agora públicas) e são usadas a partir de lá.
       ...afterOrganization,
       const _InviteSection(),
       const _SectionTitle('Conta'),
@@ -480,15 +442,15 @@ class GuestAccountSections extends StatelessWidget {
   }
 }
 
-class _EditEventPage extends ConsumerStatefulWidget {
+class EditEventPage extends ConsumerStatefulWidget {
   final Wedding wedding;
-  const _EditEventPage({required this.wedding});
+  const EditEventPage({required this.wedding});
 
   @override
-  ConsumerState<_EditEventPage> createState() => _EditEventPageState();
+  ConsumerState<EditEventPage> createState() => _EditEventPageState();
 }
 
-class _EditEventPageState extends ConsumerState<_EditEventPage> {
+class _EditEventPageState extends ConsumerState<EditEventPage> {
   // Nome do evento (até 40) — o que aparece em todo o lado.
   late final _name = TextEditingController(text: widget.wedding.displayNames);
   late EventType _type = widget.wedding.eventType;
@@ -675,8 +637,8 @@ class _EditEventPageState extends ConsumerState<_EditEventPage> {
 
 /// Definições → Painel do evento: o organizador escolhe o que aparece no
 /// painel (2026-11-11). Esconder não apaga nada.
-class _PanelPage extends ConsumerWidget {
-  const _PanelPage();
+class PanelPage extends ConsumerWidget {
+  const PanelPage();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
