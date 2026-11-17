@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/guest_facing.dart';
@@ -102,39 +102,17 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
       backgroundColor: Colors.transparent,
       builder: (_) => const _AddChooser(),
     );
-    if (withPartner == null) return;
+    if (withPartner == null || !mounted) return;
 
-    String partnerSeed = '';
+    // Com um parceiro: leva à página dos parceiros para explorar e escolher
+    // lá um (pedido do Rafael, 2026-11-17), em vez de um seletor inline.
     if (withPartner) {
-      // Parceiros reservados deste evento (nome do negócio).
-      List<String> names = const [];
-      try {
-        final bookings = await ref.read(coupleBookingsProvider.future);
-        names = bookings
-            .where((b) => b.weddingId == widget.weddingId)
-            .map((b) => b.partnerName.trim())
-            .where((n) => n.isNotEmpty)
-            .toSet()
-            .toList()
-          ..sort();
-      } catch (_) {
-        names = const [];
-      }
-      if (!mounted) return;
-      if (names.isNotEmpty) {
-        final picked = await showModalBottomSheet<String>(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (_) => _PartnerPicker(names: names),
-        );
-        if (picked == null) return; // cancelou
-        partnerSeed = picked; // '' = escrever à mão
-      }
+      context.push('/partners');
+      return;
     }
 
-    final seed = partnerSeed.isNotEmpty ? ProgramItem(title: partnerSeed, partner: partnerSeed) : const ProgramItem();
-    final item = await _editItem(seed, partnerMode: withPartner);
+    // Sem parceiro: cria a etapa à mão.
+    final item = await _editItem(const ProgramItem(), partnerMode: false);
     if (item != null && !item.isEmpty) {
       setState(() => _items.add(item));
       _persist();
@@ -174,13 +152,11 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              const Expanded(child: Text('Programa', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-              _RoundAdd(onTap: _add),
-            ],
-          ),
-          const SizedBox(height: 4),
+          // Título como grupo em maiúsculas (a força de "O EVENTO" nas
+          // Definições), sem o botão "+" (adicionar é o botão em baixo).
+          const Text('PROGRAMA',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+          const SizedBox(height: 8),
           const Text('O dia ao minuto. Arrasta para reordenar.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           const SizedBox(height: 12),
           if (_items.isEmpty)
@@ -227,26 +203,6 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
       ),
     );
   }
-}
-
-class _RoundAdd extends StatelessWidget {
-  final VoidCallback onTap;
-  const _RoundAdd({required this.onTap});
-  @override
-  Widget build(BuildContext context) => Semantics(
-        button: true,
-        label: 'Adicionar etapa',
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const CircleBorder(),
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-            child: const Icon(Icons.add, size: 22, color: Colors.white),
-          ),
-        ),
-      );
 }
 
 class _ProgramRow extends StatelessWidget {
@@ -416,56 +372,6 @@ class _ChooserCard extends StatelessWidget {
           ),
         ),
       );
-}
-
-/// Folha para escolher um parceiro reservado do evento (ou escrever o nome).
-class _PartnerPicker extends StatelessWidget {
-  final List<String> names;
-  const _PartnerPicker({required this.names});
-  @override
-  Widget build(BuildContext context) {
-    return _Sheet(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text('Qual parceiro?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          const SizedBox(height: 14),
-          Container(
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22),
-                boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))]),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (var i = 0; i < names.length; i++) ...[
-                  if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
-                  InkWell(
-                    onTap: () => Navigator.of(context).pop(names[i]),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 56),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(children: [
-                          Expanded(child: Text(names[i], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-                          const Icon(Icons.chevron_right, size: 20, color: AppTheme.inkMuted),
-                        ]),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(''),
-            child: const Text('Escrever o nome', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF4F6B4A))),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// Folha "Editar etapa": nome, (parceiro), data e hora.
