@@ -108,6 +108,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
       body: state.loading && state.items.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : KitPage(
+              pinnedBack: true,
               children: [
                 KitHeader(actions: [
                   _DateShortcut(onTap: () => context.push('/calendar')),

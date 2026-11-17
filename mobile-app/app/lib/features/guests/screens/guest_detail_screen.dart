@@ -251,6 +251,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
         );
 
     return KitPage(
+      pinnedBack: true,
       children: [
         KitHeader(actions: [
           V2RoundButton(

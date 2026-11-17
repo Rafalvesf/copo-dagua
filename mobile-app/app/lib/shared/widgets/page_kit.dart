@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../hero_icons.dart';
+import 'scroll_aware_back_button.dart';
 import 'snappy_tap.dart';
 import 'v2_kit.dart';
 
@@ -19,10 +20,39 @@ class KitPage extends StatefulWidget {
   final Set<Type> bleed;
   final double bottom;
   final ScrollController? controller;
-  const KitPage({super.key, required this.children, this.bleed = const {}, this.bottom = 40, this.controller});
+
+  /// Liga a seta de voltar fixa do DESIGN.md §6 (fica sempre no ecrã, roda
+  /// ←→↑ e sobe ao topo). Com isto ligado, o [KitHeader] desta página deixa
+  /// de desenhar o seu próprio voltar (passa a ser o do overlay). Usar só em
+  /// páginas que fazem "push" (que têm voltar) — não em raízes de separador.
+  final bool pinnedBack;
+
+  /// Ação de voltar da seta fixa (quando [pinnedBack]). Omitir = `maybePop`.
+  final VoidCallback? onBack;
+
+  const KitPage({
+    super.key,
+    required this.children,
+    this.bleed = const {},
+    this.bottom = 40,
+    this.controller,
+    this.pinnedBack = false,
+    this.onBack,
+  });
 
   @override
   State<KitPage> createState() => _KitPageState();
+}
+
+/// Marca a subárvore de um [KitPage] com a seta fixa ligada, para o
+/// [KitHeader] saber que não deve desenhar o seu próprio voltar.
+class _KitPageScope extends InheritedWidget {
+  final bool pinnedBack;
+  const _KitPageScope({required this.pinnedBack, required super.child});
+  static _KitPageScope? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_KitPageScope>();
+  @override
+  bool updateShouldNotify(_KitPageScope old) => old.pinnedBack != pinnedBack;
 }
 
 class _KitPageState extends State<KitPage> {
@@ -55,43 +85,55 @@ class _KitPageState extends State<KitPage> {
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
-    return Stack(children: [
-      Positioned.fill(
-        child: ListView(
-          controller: _controller,
-          padding: EdgeInsets.only(top: topInset + 12, bottom: widget.bottom),
-          children: [
-            for (final c in widget.children)
-              if (widget.bleed.contains(c.runtimeType) || c is KitBleed)
-                c
-              else
-                Padding(padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin), child: c),
-          ],
-        ),
-      ),
-      // DESIGN.md §6: a seta de voltar (canto superior esquerdo), ao fazer
-      // scroll, "roda" para ↑ e passa a subir a página até ao topo. Aqui o
-      // cabeçalho (com a seta de voltar) sobe com a lista e, no mesmo canto,
-      // aparece este botão ↑ que leva ao topo; ao voltar ao topo desaparece
-      // e fica de novo a seta de voltar do cabeçalho.
-      Positioned(
-        left: AppTheme.screenMargin,
-        top: topInset + 12,
-        child: IgnorePointer(
-          ignoring: !_scrolled,
-          child: AnimatedOpacity(
-            opacity: _scrolled ? 1 : 0,
-            duration: const Duration(milliseconds: 180),
-            child: V2RoundButton(
-              icon: Hi.arrowUp,
-              tooltip: 'Voltar ao topo',
-              onTap: () => _controller.animateTo(0,
-                  duration: const Duration(milliseconds: 320), curve: Curves.easeOut),
-            ),
+    return _KitPageScope(
+      pinnedBack: widget.pinnedBack,
+      child: Stack(children: [
+        Positioned.fill(
+          child: ListView(
+            controller: _controller,
+            padding: EdgeInsets.only(top: topInset + 12, bottom: widget.bottom),
+            children: [
+              for (final c in widget.children)
+                if (widget.bleed.contains(c.runtimeType) || c is KitBleed)
+                  c
+                else
+                  Padding(padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin), child: c),
+            ],
           ),
         ),
-      ),
-    ]);
+        // DESIGN.md §6. Com [pinnedBack]: a seta de voltar fica sempre no
+        // ecrã, roda de ← para ↑ ao descer e passa a subir ao topo (é o
+        // ScrollAwareBackButton; o KitHeader deixa de desenhar o seu voltar).
+        // Sem [pinnedBack]: mantém-se o botão ↑ que aparece ao fazer scroll.
+        if (widget.pinnedBack)
+          Positioned(
+            left: AppTheme.screenMargin,
+            top: topInset + 12,
+            child: ScrollAwareBackButton(
+              controller: _controller,
+              onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
+            ),
+          )
+        else
+          Positioned(
+            left: AppTheme.screenMargin,
+            top: topInset + 12,
+            child: IgnorePointer(
+              ignoring: !_scrolled,
+              child: AnimatedOpacity(
+                opacity: _scrolled ? 1 : 0,
+                duration: const Duration(milliseconds: 180),
+                child: V2RoundButton(
+                  icon: Hi.arrowUp,
+                  tooltip: 'Voltar ao topo',
+                  onTap: () => _controller.animateTo(0,
+                      duration: const Duration(milliseconds: 320), curve: Curves.easeOut),
+                ),
+              ),
+            ),
+          ),
+      ]),
+    );
   }
 }
 
@@ -113,10 +155,16 @@ class KitHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nav = Navigator.of(context);
+    // Numa página com a seta fixa do §6, o voltar é o do overlay: aqui fica
+    // só um espaço de 44 por baixo dele, e as ações à direita.
+    final pinned = _KitPageScope.of(context)?.pinnedBack ?? false;
     return SizedBox(
       height: 44,
       child: Row(children: [
-        V2RoundButton(icon: Hi.chevronLeft, tooltip: 'Voltar', onTap: onBack ?? () => nav.maybePop()),
+        if (pinned)
+          const SizedBox(width: 44)
+        else
+          V2RoundButton(icon: Hi.chevronLeft, tooltip: 'Voltar', onTap: onBack ?? () => nav.maybePop()),
         const Spacer(),
         for (final (i, a) in actions.indexed) ...[if (i > 0) const SizedBox(width: 10), a],
       ]),

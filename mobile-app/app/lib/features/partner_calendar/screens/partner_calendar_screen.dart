@@ -42,6 +42,7 @@ class _PartnerCalendarScreenState
     return GradientScaffold(
       background: AppBackground.feed,
       body: KitPage(
+        pinnedBack: true,
         children: [
           const KitHeader(),
           const KitTitle('Calendário', subtitle: 'As tuas reservas, dia a dia.'),

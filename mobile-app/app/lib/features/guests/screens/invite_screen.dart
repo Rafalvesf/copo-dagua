@@ -193,8 +193,11 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
 
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: KitPage(children: [
-        KitHeader(onBack: () => context.canPop() ? context.pop() : context.go('/guests')),
+      body: KitPage(
+        pinnedBack: true,
+        onBack: () => context.canPop() ? context.pop() : context.go('/guests'),
+        children: [
+        const KitHeader(),
         KitTitle('Convidar',
             subtitle: _followed != null
                 ? 'Por mensagem, com o link de cada um, ou pela app a quem já segues.'

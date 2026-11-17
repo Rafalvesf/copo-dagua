@@ -51,6 +51,7 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
     return GradientScaffold(
       background: AppBackground.feed,
       body: KitPage(
+        pinnedBack: true,
         children: [
           KitHeader(actions: [KitAddButton(tooltip: 'Novo tipo de mesa', onTap: () => _add(context, ref))]),
           const KitTitle('Mesas do local', subtitle: 'Tipos de mesa disponíveis para os clientes.'),

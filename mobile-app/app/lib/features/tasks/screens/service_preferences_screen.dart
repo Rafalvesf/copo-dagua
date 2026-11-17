@@ -112,6 +112,7 @@ class _ServicePreferencesScreenState extends ConsumerState<ServicePreferencesScr
     return GradientScaffold(
       background: AppBackground.feed,
       body: KitPage(
+        pinnedBack: true,
         bottom: 60,
         children: [
           const KitHeader(),
