@@ -45,6 +45,48 @@ import '../../partner_pro/partner_pro_screen.dart' show ProBadge;
 import '../../../core/profile/username.dart';
 
 
+/// Eventos onde ainda dá para reservar este parceiro: elegíveis (sou dono, ou
+/// co-organizador com permissão de tratar de parceiros — `OrganizerPerm.conversas`)
+/// E onde ainda não pedi orçamento nem pacote. Em dúvida (erro), não oferece
+/// (conservador, para nunca sugerir um duplo pedido).
+final _partnerBookableEventsProvider =
+    FutureProvider.autoDispose.family<List<Wedding>, String>((ref, partnerId) async {
+  final myId = ref.watch(authControllerProvider).profile?.id;
+  final events = ref.watch(weddingControllerProvider.select((s) => s.events));
+  final out = <Wedding>[];
+  for (final w in events) {
+    if (w.ownerId != myId) {
+      try {
+        final r = await supabase.rpc('my_wedding_permissions', params: {'p_wedding': w.id});
+        final perms = r is Map ? OrganizerPerms.fromJson(r, isOwner: r['is_owner'] == true) : OrganizerPerms.all;
+        if (!perms.can(OrganizerPerm.conversas)) continue;
+      } catch (_) {
+        // Antes da migração de permissões: permitido.
+      }
+    }
+    try {
+      final booking = await supabase
+          .from('bookings')
+          .select('id')
+          .eq('wedding_id', w.id)
+          .eq('partner_id', partnerId)
+          .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
+      if (booking.isNotEmpty) continue;
+      final quote = await supabase
+          .from('quote_requests')
+          .select('id')
+          .eq('wedding_id', w.id)
+          .eq('partner_id', partnerId)
+          .inFilter('status', ['pending', 'viewed', 'proposal_sent']);
+      if (quote.isNotEmpty) continue;
+    } catch (_) {
+      continue; // em dúvida, não oferecer este evento
+    }
+    out.add(w);
+  }
+  return out;
+});
+
 class PartnerDetailScreen extends ConsumerStatefulWidget {
   final Partner partner;
   final bool selectionMode;
@@ -112,42 +154,19 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     super.dispose();
   }
 
-  /// Eventos onde posso reservar este parceiro: os que organizo (dono) e os
-  /// que co-organizo com permissão de tratar de parceiros (pedidos de
-  /// orçamento — `OrganizerPerm.conversas`). Antes da migração de permissões,
-  /// tudo é permitido.
-  Future<List<Wedding>> _eligibleEvents() async {
-    final myId = ref.read(authControllerProvider).profile?.id;
-    final events = ref.read(weddingControllerProvider).events;
-    final out = <Wedding>[];
-    for (final w in events) {
-      if (w.ownerId == myId) {
-        out.add(w);
-        continue;
-      }
-      try {
-        final r = await supabase.rpc('my_wedding_permissions', params: {'p_wedding': w.id});
-        final perms = r is Map ? OrganizerPerms.fromJson(r, isOwner: r['is_owner'] == true) : OrganizerPerms.all;
-        if (perms.can(OrganizerPerm.conversas)) out.add(w);
-      } catch (_) {
-        out.add(w);
-      }
-    }
-    return out;
-  }
-
-  /// Escolhe o evento para onde reservar. Com um só evento elegível, usa-o
-  /// direto (comportamento de sempre); com mais do que um, mostra o popup.
+  /// Escolhe o evento para onde reservar, entre os eventos **reserváveis**
+  /// (elegíveis e onde ainda não pedi — [_partnerBookableEventsProvider]).
+  /// Com um só, usa-o direto; com mais do que um, mostra o popup.
   Future<Wedding?> _chooseEvent() async {
-    final eligible = await _eligibleEvents();
-    if (eligible.isEmpty) return ref.read(weddingControllerProvider).wedding;
-    if (eligible.length == 1) return eligible.first;
+    final bookable = await ref.read(_partnerBookableEventsProvider(widget.partner.id).future);
+    if (bookable.isEmpty) return ref.read(weddingControllerProvider).wedding;
+    if (bookable.length == 1) return bookable.first;
     if (!mounted) return null;
     return showModalBottomSheet<Wedding>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _EventPickerSheet(events: eligible, partnerName: widget.partner.name),
+      builder: (_) => _EventPickerSheet(events: bookable, partnerName: widget.partner.name),
     );
   }
 
@@ -189,6 +208,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         );
       } catch (_) {}
       ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
+      ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
       if (mounted) _comingSoon('Pedido enviado! ${widget.partner.name} aceita ou recusa.');
     } on PostgrestException catch (e) {
       if (!mounted) return;
@@ -243,6 +263,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         );
       } catch (_) {}
       ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
+      ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
       if (mounted) _comingSoon('Pedido enviado! ${widget.partner.name} aceita ou recusa.');
     } on PostgrestException catch (e) {
       if (!mounted) return;
@@ -438,6 +459,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       } catch (_) {}
       // O botão passa logo a "Pedido já enviado".
       ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
+      ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
       if (mounted) {
         _comingSoon(
           'Pedido de orçamento enviado! O parceiro vai responder em breve.',
@@ -482,6 +504,21 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         .maybeWhen(data: (s) => s, orElse: () => null);
     final alreadyRelated =
         !pub && !widget.selectionMode && relationshipStatus != PartnerRelationshipStatus.none;
+    // Posso reservar se houver pelo menos um evento reservável (elegível e sem
+    // pedido). Mesmo "já relacionado" neste evento, se existir outro evento
+    // livre, a zona de reservar reaparece (a Mensagem fica em cima). Enquanto
+    // carrega (null) é conservador: não mostra, para nunca piscar um reservar
+    // que leve a duplo pedido.
+    final bookable = ref.watch(_partnerBookableEventsProvider(partner.id)).maybeWhen(data: (l) => l, orElse: () => null);
+    final canReserve = !pub && !widget.selectionMode && bookable != null && bookable.isNotEmpty;
+    // Só Mensagem: já pedi/reservei a este parceiro e não sobra nenhum evento
+    // livre (ex.: tenho um só evento e já o escolhi). Aí explico porquê.
+    final onlyMessage = !pub &&
+        !widget.selectionMode &&
+        relationshipStatus != null &&
+        relationshipStatus != PartnerRelationshipStatus.none &&
+        bookable != null &&
+        bookable.isEmpty;
     final summary = ref.watch(publicReviewSummaryForPartnerProvider(partner.id));
     final packages = ref
         .watch(partnerPackagesForProvider(partner.id))
@@ -666,6 +703,38 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 ),
               ),
             ),
+            // Só Mensagem (nenhum evento livre): explica que já foi escolhido
+            // para este evento. (2026-11-17)
+            if (onlyMessage)
+              Transform.translate(
+                offset: const Offset(0, -28),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: Text(
+                    relationshipStatus == PartnerRelationshipStatus.booked
+                        ? 'Já reservaste ${partner.name} para este evento. Fala com ele pela Mensagem.'
+                        : 'Já pediste orçamento a ${partner.name} para este evento. Fala com ele pela Mensagem.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 13, color: Color(0xFF57534E)),
+                  ),
+                ),
+              ),
+            // Sem pacotes e já pedi a este parceiro neste evento, mas há outro
+            // evento livre: a Mensagem fica em cima e aqui em baixo dá para o
+            // reservar para esse outro evento (orçamento à medida). (2026-11-17)
+            if (packages.isEmpty && !widget.selectionMode && alreadyRelated && canReserve)
+              Transform.translate(
+                offset: const Offset(0, -28),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    Text('Já tens um pedido com ${partner.name} neste evento. Reserva-o para outro evento:',
+                        style: const TextStyle(fontSize: 13, color: muted)),
+                    const SizedBox(height: 10),
+                    ProfileButton('Pedir orçamento', onTap: _requestingQuote ? null : () => _requestQuote()),
+                  ]),
+                ),
+              ),
             if (packages.isNotEmpty) ...[
               Transform.translate(
                 offset: const Offset(0, -28),
@@ -742,16 +811,16 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                               ? null
                               : pub
                                   ? _needAccount
-                                  : alreadyRelated
+                                  : !canReserve
                                       ? _openChat
                                       : _eachChooses
                                           ? null
                                           : () => setState(() => _selectedPackage = _selectedPackage == i ? null : i),
                         ),
                       ),
-                    if (_eachChooses && !widget.selectionMode && !alreadyRelated)
+                    if (_eachChooses && !widget.selectionMode && canReserve)
                       _tableRequest(topPeople, ink, muted),
-                    if (!_eachChooses && !widget.selectionMode && !alreadyRelated && _selectedPackage != null && _selectedPackage! < packages.length)
+                    if (!_eachChooses && !widget.selectionMode && canReserve && _selectedPackage != null && _selectedPackage! < packages.length)
                       Builder(builder: (context) {
                         final p = packages[_selectedPackage!];
                         final pkgExtras = extras.where((e) => e.appliesTo(p.id)).toList();
@@ -864,7 +933,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                           ),
                         ]);
                       }),
-                    if (!widget.selectionMode && !alreadyRelated) ...[
+                    if (!widget.selectionMode && canReserve) ...[
                       const SizedBox(height: 16),
                       const Text('Nada disto serve?',
                           textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: muted)),
