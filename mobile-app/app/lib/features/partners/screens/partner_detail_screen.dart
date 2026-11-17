@@ -1786,7 +1786,8 @@ class _EventPickerSheet extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           child: Row(children: [
-                            V2Avatar(events[i].displayNames, size: 44),
+                            // Foto principal do evento (cai nas iniciais se não houver).
+                            V2Avatar(events[i].displayNames, size: 44, imageUrl: events[i].coverPhotoUrlCacheBusted),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
