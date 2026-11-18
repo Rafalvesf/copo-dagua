@@ -2765,15 +2765,15 @@ class _ManageList extends ConsumerWidget {
 /// (O EVENTO / CONVIDADOS / CONTEÚDO / ARQUIVO). Mockup «Definições do
 /// evento», 2026-11-17. Linhas sem ícones (DESIGN.md §4). A seta de voltar
 /// é a do §6 (fixa, roda ←→↑, sobe ao topo).
-class _EventSettingsPage extends StatefulWidget {
+class _EventSettingsPage extends ConsumerStatefulWidget {
   final Wedding wedding;
   const _EventSettingsPage({required this.wedding});
 
   @override
-  State<_EventSettingsPage> createState() => _EventSettingsPageState();
+  ConsumerState<_EventSettingsPage> createState() => _EventSettingsPageState();
 }
 
-class _EventSettingsPageState extends State<_EventSettingsPage> {
+class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
   final _scroll = ScrollController();
 
   @override
@@ -2789,27 +2789,37 @@ class _EventSettingsPageState extends State<_EventSettingsPage> {
     final fourth = _fourthOf(w.eventType);
     void push(String r) => context.push(r);
 
+    // Um co-organizador só vê o que pode fazer; o dono vê tudo. As linhas de
+    // dono (Organizadores, Arquivo) ficam só para o dono.
+    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final canEvento = perms.can(OrganizerPerm.evento);
+    final canOrcamento = perms.can(OrganizerPerm.orcamento);
+    final canBilhetes = perms.can(OrganizerPerm.bilhetes);
+    final isOwner = perms.isOwner;
+
     final groups = <(String, List<(String, String, VoidCallback)>)>[
       ('O evento', [
-        ('Detalhes do evento', 'Nome, data, local',
-            () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditEventPage(wedding: w)))),
-        ('Painel do evento', 'O que aparece',
-            () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PanelPage()))),
-        ('Aparência do menu', '', () => context.go('/evento?aparencia=1')),
+        if (canEvento)
+          ('Detalhes do evento', 'Nome, data, local',
+              () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditEventPage(wedding: w)))),
+        if (canEvento)
+          ('Painel do evento', 'O que aparece',
+              () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PanelPage()))),
+        if (canEvento) ('Aparência do menu', '', () => context.go('/evento?aparencia=1')),
       ]),
       ('Convidados', [
-        ('Página dos convidados', 'Programa e presentes', () => push('/guest-page')),
-        ('Acesso e entrada', 'Para os convidados', () => push('/guest-page')),
-        ('Organizadores', 'Convidar quem ajuda', () => push('/organizadores')),
+        if (canEvento) ('Página dos convidados', 'Programa e presentes', () => push('/guest-page')),
+        if (canEvento) ('Acesso e entrada', 'Para os convidados', () => push('/guest-page')),
+        if (isOwner) ('Organizadores', 'Convidar quem ajuda', () => push('/organizadores')),
       ]),
       ('Conteúdo', [
-        ('Galeria', '', () => push('/gallery')),
-        if (fourth == _Fourth.gifts) ('Lista de presentes', '', () => push('/gift-list')),
-        if (fourth == _Fourth.tickets) ('Bilhetes', '', () => push('/bilhetes')),
-        ('Serviços tratados', '', () => push('/service-preferences')),
+        if (canEvento) ('Galeria', '', () => push('/gallery')),
+        if (canEvento && fourth == _Fourth.gifts) ('Lista de presentes', '', () => push('/gift-list')),
+        if (canBilhetes && fourth == _Fourth.tickets) ('Bilhetes', '', () => push('/bilhetes')),
+        if (canOrcamento) ('Serviços tratados', '', () => push('/service-preferences')),
       ]),
       ('Arquivo', [
-        ('Eventos arquivados e apagados', '', () => push('/eventos-arquivados')),
+        if (isOwner) ('Eventos arquivados e apagados', '', () => push('/eventos-arquivados')),
       ]),
     ];
 
@@ -2828,7 +2838,7 @@ class _EventSettingsPageState extends State<_EventSettingsPage> {
               const SizedBox(height: 4),
               const Text('Tudo sobre este evento, organizado por tema.',
                   style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              for (final (title, rows) in groups) ...[
+              for (final (title, rows) in groups) if (rows.isNotEmpty) ...[
                 Padding(
                   padding: const EdgeInsets.only(top: 18, bottom: 8, left: 2),
                   child: Text(title.toUpperCase(),
@@ -3359,6 +3369,9 @@ class _NextSteps extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Painel de tarefas: um co-organizador sem a permissão de tarefas não o vê.
+    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    if (!perms.can(OrganizerPerm.tarefas)) return const SizedBox.shrink();
     final s = ref.watch(taskEngineControllerProvider);
     final done = s.systemDone.length;
     final total = done + s.systemActive.length;
