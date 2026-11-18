@@ -25,6 +25,7 @@ import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/wedding/organizers.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../core/tasks/task_engine_controller.dart';
@@ -98,6 +99,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
     ref.invalidate(guestWeddingsProvider);
     ref.invalidate(publicEventsProvider);
     ref.invalidate(_pendingInvitesProvider);
+    ref.invalidate(myOrganizerInvitesProvider);
     ref.invalidate(_orgSummaryProvider);
     ref.invalidate(_guestStepsProvider);
     await ref.read(publicEventsProvider.future);
@@ -140,9 +142,13 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
     // evento e ainda não disse se vai) — 2026-11-11.
     final pendingIds = ref.watch(_pendingInvitesProvider).value ?? const <String>{};
     final pending = [for (final w in guest) if (pendingIds.contains(w.weddingId)) w];
+    // Convites para co-organizar, dirigidos a mim e por responder (migração
+    // 202) — aparecem aqui, como os convites de convidado.
+    final orgInvites = ref.watch(myOrganizerInvitesProvider).value ?? const <OrganizerInvite>[];
 
     final content = <Widget>[
       if (pending.isNotEmpty) _Pad(_InviteNotice(wedding: pending.first, more: pending.length - 1)),
+      for (final inv in orgInvites) _Pad(_OrganizerInviteNotice(invite: inv)),
       // Igual ao mockup "Página de eventos" (2026-11-11): o cartão verde
       // com 3 tipos e "Recebeste um convite?", com ou sem eventos.
       const _Pad(_CelebrateCard()),
@@ -1066,6 +1072,58 @@ class _InviteNotice extends StatelessWidget {
                   style: const TextStyle(fontSize: 15, height: 1.25, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               if (date != null)
                 Text(date, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+            ]),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+            child: const Text('Ver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+/// "Convite para organizar": quem te convidou, para que evento, e o botão
+/// para ir ver e aceitar (migração 202). Mesma linha verde dos convites (§7).
+class _OrganizerInviteNotice extends StatelessWidget {
+  final OrganizerInvite invite;
+  const _OrganizerInviteNotice({required this.invite});
+
+  @override
+  Widget build(BuildContext context) {
+    final inviter = capFirst((invite.inviterName ?? 'Alguém').trim());
+    final event = (invite.eventName ?? '').trim();
+    return SnappyTap(
+      onTap: () => context.go('/juntar/${invite.token}'),
+      child: AlertOutline(
+        tone: AlertTone.invite,
+        radius: 22,
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+        child: Row(children: [
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(color: Color(0xFFE6EDE1), shape: BoxShape.circle),
+            child: const Icon(Hi.envelope, size: 18, color: Color(0xFF3F7A4F)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              const Text('CONVITE PARA ORGANIZAR',
+                  style: TextStyle(fontSize: 11, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+              Text(
+                  event.isEmpty
+                      ? '$inviter convidou-te para a organização de um evento'
+                      : '$inviter convidou-te para a organização de $event',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 15, height: 1.25, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ]),
           ),
           const SizedBox(width: 10),

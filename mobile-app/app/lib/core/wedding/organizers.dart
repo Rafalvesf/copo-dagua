@@ -132,3 +132,32 @@ final organizerInviteCandidatesProvider =
 Future<void> inviteOrganizer(String weddingId, String userId) async {
   await supabase.rpc('invite_organizer', params: {'p_wedding': weddingId, 'p_user': userId});
 }
+
+/// Um convite para co-organizar um evento, dirigido a mim e ainda por
+/// responder — aparece na aba dos eventos (migração 202).
+class OrganizerInvite {
+  final String token;
+  final String weddingId;
+  final String? eventName;
+  final String? inviterName;
+  const OrganizerInvite({required this.token, required this.weddingId, this.eventName, this.inviterName});
+}
+
+/// Convites de organização que recebi e ainda não respondi (para a aba dos
+/// eventos, como os convites de convidado).
+final myOrganizerInvitesProvider = FutureProvider.autoDispose<List<OrganizerInvite>>((ref) async {
+  try {
+    final r = await supabase.rpc('my_organizer_invites') as List;
+    return [
+      for (final m in r.cast<Map>())
+        OrganizerInvite(
+          token: m['token'] as String,
+          weddingId: m['wedding_id'] as String,
+          eventName: (m['event_name'] as String?)?.trim().isNotEmpty ?? false ? (m['event_name'] as String).trim() : null,
+          inviterName: (m['inviter_name'] as String?)?.trim().isNotEmpty ?? false ? (m['inviter_name'] as String).trim() : null,
+        ),
+    ];
+  } catch (_) {
+    return const [];
+  }
+});
