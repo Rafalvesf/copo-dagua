@@ -611,8 +611,20 @@ class ProgramItem {
   /// parceiro escolhido na app; vazio = sem foto (mostra o avatar por nome).
   final String partnerAvatarUrl;
 
+  /// Id do perfil do parceiro escolhido (`partner_profiles.id`). Serve para
+  /// saber se o parceiro já aceitou (tem reserva ativa) — enquanto não tiver,
+  /// a etapa fica "à espera que aceite". Vazio = parceiro escrito à mão ou sem
+  /// parceiro (2026-11-18).
+  final String partnerId;
+
   const ProgramItem(
-      {this.time = '', this.title = '', this.place = '', this.date = '', this.partner = '', this.partnerAvatarUrl = ''});
+      {this.time = '',
+      this.title = '',
+      this.place = '',
+      this.date = '',
+      this.partner = '',
+      this.partnerAvatarUrl = '',
+      this.partnerId = ''});
 
   factory ProgramItem.fromJson(Map<String, dynamic> j) => ProgramItem(
         time: (j['time'] as String?) ?? '',
@@ -621,6 +633,7 @@ class ProgramItem {
         date: (j['date'] as String?) ?? '',
         partner: (j['partner'] as String?) ?? '',
         partnerAvatarUrl: (j['partner_avatar'] as String?) ?? '',
+        partnerId: (j['partner_id'] as String?) ?? '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -630,9 +643,17 @@ class ProgramItem {
         if (date.trim().isNotEmpty) 'date': date.trim(),
         if (partner.trim().isNotEmpty) 'partner': partner.trim(),
         if (partnerAvatarUrl.trim().isNotEmpty) 'partner_avatar': partnerAvatarUrl.trim(),
+        if (partnerId.trim().isNotEmpty) 'partner_id': partnerId.trim(),
       };
 
-  ProgramItem copyWith({String? time, String? title, String? place, String? date, String? partner, String? partnerAvatarUrl}) =>
+  ProgramItem copyWith(
+          {String? time,
+          String? title,
+          String? place,
+          String? date,
+          String? partner,
+          String? partnerAvatarUrl,
+          String? partnerId}) =>
       ProgramItem(
         time: time ?? this.time,
         title: title ?? this.title,
@@ -640,6 +661,7 @@ class ProgramItem {
         date: date ?? this.date,
         partner: partner ?? this.partner,
         partnerAvatarUrl: partnerAvatarUrl ?? this.partnerAvatarUrl,
+        partnerId: partnerId ?? this.partnerId,
       );
 
   bool get isEmpty =>
