@@ -27,6 +27,7 @@ import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/organizers.dart';
 import '../../../core/supabase/supabase_config.dart';
+import '../../wedding/widgets/event_program_section.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -162,6 +163,10 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
               : _InvitedEventCard(wedding: guest[i - own.length]),
         ),
       ],
+      // Programa do evento ativo, aqui na aba dos Eventos (pedido do Rafael,
+      // 2026-11-18). Só para quem organiza; esconde-se sozinho quando não há
+      // programa.
+      if (organizer && activeId != null) EventProgramSection(weddingId: activeId),
       const _Title('Descobrir', subtitle: 'Eventos abertos a que podes ir'),
       Padding(
         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 0),
