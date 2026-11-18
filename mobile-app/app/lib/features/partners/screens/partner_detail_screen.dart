@@ -217,7 +217,12 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       } catch (_) {}
       ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
       ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
-      if (mounted) _comingSoon('Pedido enviado! ${widget.partner.name} aceita ou recusa.');
+      if (mounted) {
+        await _showRequestSent(
+          title: 'Reserva pedida',
+          body: '${widget.partner.name} aceita ou recusa — avisamos-te assim que responder.',
+        );
+      }
     } on PostgrestException catch (e) {
       if (!mounted) return;
       if (e.code == 'PGRST202' || e.code == '42883') {
@@ -272,7 +277,12 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       } catch (_) {}
       ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
       ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
-      if (mounted) _comingSoon('Pedido enviado! ${widget.partner.name} aceita ou recusa.');
+      if (mounted) {
+        await _showRequestSent(
+          title: 'Reserva pedida',
+          body: '${widget.partner.name} aceita ou recusa — avisamos-te assim que responder.',
+        );
+      }
     } on PostgrestException catch (e) {
       if (!mounted) return;
       if (e.code == 'PGRST202' || e.code == '42883') {
@@ -383,6 +393,77 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// Popup de confirmação depois de enviar um pedido/reserva (pedido do
+  /// Rafael, 2026-11-18): "Reserva pedida" com um só botão "OK". O pagamento
+  /// do sinal só acontece mais tarde, quando o parceiro aceita (no aceite).
+  Future<void> _showRequestSent({required String title, required String body}) async {
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: EdgeInsets.fromLTRB(20, 14, 20, 24 + MediaQuery.of(ctx).viewInsets.bottom),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(color: const Color(0xFFD8D3C8), borderRadius: BorderRadius.circular(999)),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Center(
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(color: Color(0xFFE6EDE1), shape: BoxShape.circle),
+                  child: const Icon(Hi.check, size: 30, color: Color(0xFF3F7A4F)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 8),
+              Text(body,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF57534E))),
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 52,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.ink,
+                    foregroundColor: Colors.white,
+                    shape: const StadiumBorder(),
+                    textStyle: const TextStyle(
+                        fontFamily: AppTheme.fontFamily,
+                        fontFamilyFallback: AppTheme.fontFamilyFallback,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700),
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('OK'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _openChat() async {
     final wedding = ref.read(weddingControllerProvider).wedding;
     if (wedding == null || _openingChat) return;
@@ -469,8 +550,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
       ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
       if (mounted) {
-        _comingSoon(
-          'Pedido de orçamento enviado! O parceiro vai responder em breve.',
+        await _showRequestSent(
+          title: 'Pedido enviado',
+          body: 'O parceiro vai responder em breve com uma proposta.',
         );
       }
     } on PostgrestException catch (e) {
