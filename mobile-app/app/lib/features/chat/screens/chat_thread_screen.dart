@@ -24,6 +24,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/money.dart';
 import '../../partners/screens/partner_detail_screen.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
@@ -381,6 +382,51 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
     if (mounted) setState(() => _bookingState = booking);
   }
 
+  /// Depois de aceitar a proposta: folha de "pagar ou pagar depois". A mais de
+  /// 3 dias do prazo não deixa pagar já (só "OK"); a 3 dias ou menos mostra
+  /// "Pagar €sinal" (ou o total, se não houver sinal). "Pagar" abre o
+  /// pagamento que já existe; "Pagar depois"/"OK" fecham.
+  Future<void> _showPayOrLater() async {
+    final msg = widget.message;
+    final total = msg.proposalPrice ?? 0;
+    final sinal = msg.proposalDepositAmount ?? 0;
+    final hasSinal = sinal > 0 && sinal < total;
+    final payAmount = hasSinal ? sinal : total;
+
+    DateTime? deadline;
+    try {
+      final r = await supabase
+          .from('bookings')
+          .select('choice_deadline')
+          .eq('proposal_id', msg.proposalId!)
+          .maybeSingle();
+      final d = r?['choice_deadline'];
+      if (d is String) deadline = DateTime.tryParse(d);
+    } catch (_) {}
+    if (!mounted) return;
+    final days = deadline?.difference(DateTime.now()).inDays;
+    final canPayNow = days == null || days <= 3;
+    final pct = (widget.fee(ref) ?? const FeeConfig()).effectivePct(total);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => _PayOrLaterSheet(
+        title: (msg.proposalTitle ?? '').trim().isEmpty ? 'Reserva' : msg.proposalTitle!.trim(),
+        total: total,
+        sinal: hasSinal ? sinal : null,
+        payAmount: payAmount,
+        canPayNow: canPayNow,
+        onPay: () {
+          Navigator.of(ctx).pop();
+          _openPay(pct);
+        },
+        onLater: () => Navigator.of(ctx).pop(),
+      ),
+    );
+  }
+
   Future<void> _accept() async {
     // Partilhar com os outros organizadores ou guardar em segredo (2026-10-21).
     final secret = await askHirePrivacy(context, ref.read(weddingControllerProvider).wedding?.id, 'este parceiro');
@@ -392,7 +438,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       ref.invalidate(pendingProposalsProvider);
       ref.invalidate(coupleBookingsProvider);
       setState(() => _accepted = true);
-      _acceptedFeedback();
+      await _showPayOrLater();
     } on PostgrestException catch (e) {
       // `P0001` = já não está `sent`. Verifica o estado real em vez de
       // assumir logo um erro — se já foi aceite (ex: pelas Reservas,
@@ -528,4 +574,112 @@ class _QuickReply extends StatelessWidget {
           child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ),
       );
+}
+
+/// Folha "pagar ou pagar depois" a seguir a aceitar uma proposta
+/// (mockup «Parceiro — Reservar», artboard Reservar-pagar, 2026-11-17).
+/// A 3 dias ou menos do prazo deixa pagar já; a mais de 3 dias é só "OK".
+class _PayOrLaterSheet extends StatelessWidget {
+  final String title;
+  final double total;
+  final double? sinal;
+  final double payAmount;
+  final bool canPayNow;
+  final VoidCallback onPay;
+  final VoidCallback onLater;
+  const _PayOrLaterSheet({
+    required this.title,
+    required this.total,
+    required this.sinal,
+    required this.payAmount,
+    required this.canPayNow,
+    required this.onPay,
+    required this.onLater,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+        decoration: BoxDecoration(
+          color: AppTheme.background,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: const Color(0xFFE4DFD4)),
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 14),
+              decoration: BoxDecoration(color: const Color(0xFFD8D3C8), borderRadius: BorderRadius.circular(999)),
+            ),
+          ),
+          Text(canPayNow ? 'Paga para confirmar' : 'Reservado!',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 6),
+          Text(
+            canPayNow
+                ? 'Falta pouco para o prazo. Paga para confirmar.'
+                : 'Guardámos a tua reserva. Ainda não é preciso pagar.',
+            style: const TextStyle(fontSize: 14, height: 1.5, color: AppTheme.inkMuted),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 2),
+              Text('Total ${euros(total)}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              if (sinal != null) ...[
+                const Divider(height: 22, color: Color(0xFFECE7DC)),
+                Row(children: [
+                  const Expanded(
+                      child: Text('Sinal para confirmar', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+                  Text(euros(sinal!), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ]),
+              ],
+            ]),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 52,
+            child: FilledButton(
+              onPressed: canPayNow ? onPay : onLater,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.ink,
+                foregroundColor: Colors.white,
+                shape: const StadiumBorder(),
+                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+              child: Text(canPayNow ? 'Pagar ${euros(payAmount)}' : 'OK'),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: onLater,
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.ink,
+              minimumSize: const Size(0, 36),
+              textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            ),
+            child: const Text('Pagar depois'),
+          ),
+          if (!canPayNow) ...[
+            const SizedBox(height: 6),
+            const Text('Avisamos-te 3 dias antes do prazo para pagares!',
+                textAlign: TextAlign.center, style: TextStyle(fontSize: 13, height: 1.5, color: AppTheme.inkMuted)),
+          ],
+        ]),
+      ),
+    );
+  }
 }
