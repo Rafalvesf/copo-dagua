@@ -22,6 +22,15 @@ Widget _caps(String text) => Padding(
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
     );
 
+/// Resumo curto das permissões, mostrado quando "O que pode fazer" está
+/// recolhido (ex.: "Pode tudo", "Só bilhetes e entradas", "3 de 6").
+String _permsSummary(OrganizerPerms perms, int total) {
+  if (perms.count >= total) return 'Pode tudo';
+  if (perms.count == 0) return 'Sem acessos';
+  if (perms.count == 1 && perms.can(OrganizerPerm.bilhetes)) return 'Só bilhetes e entradas';
+  return '${perms.count} de $total';
+}
+
 BoxDecoration _card() => BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), boxShadow: _soft);
 
 /// Organizadores do evento (migração 159): o dono escolhe o que cada
@@ -226,6 +235,9 @@ class _CollaboratorCard extends ConsumerStatefulWidget {
 
 class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
   OrganizerPerms? _local;
+  // "O que pode fazer" começa recolhido (pedido 2026-11-18): a lista é
+  // longa, por isso mostra só o resumo até se tocar para abrir.
+  bool _open = false;
   bool _saving = false;
 
   Future<void> _set(OrganizerPerms next) async {
@@ -303,9 +315,25 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
           else if (widget.editable)
             _RemoveButton(onTap: _remove, label: 'Retirar ${o.name}'),
         ]),
-        if (widget.editable) ...[
-          const Divider(height: 28, color: Color(0xFFECE7DC)),
-          _caps('O QUE PODE FAZER'),
+        const Divider(height: 28, color: Color(0xFFECE7DC)),
+        // Cabeçalho recolhível: resumo à direita + chevron para abrir/fechar.
+        InkWell(
+          onTap: () => setState(() => _open = !_open),
+          borderRadius: BorderRadius.circular(10),
+          child: Row(children: [
+            _caps('O QUE PODE FAZER'),
+            const Spacer(),
+            Text(_permsSummary(perms, total),
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            const SizedBox(width: 8),
+            AnimatedRotation(
+              turns: _open ? 0.5 : 0,
+              duration: const Duration(milliseconds: 150),
+              child: const Icon(Icons.keyboard_arrow_down_rounded, size: 22, color: AppTheme.inkMuted),
+            ),
+          ]),
+        ),
+        if (_open && widget.editable) ...[
           const SizedBox(height: 10),
           // Presets rápidos (filtro §6): ativo verde, inativo branco.
           Row(children: [
@@ -332,9 +360,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
               onTap: _saving ? null : () => _set(perms.withPerm(OrganizerPerm.values[i], !perms.can(OrganizerPerm.values[i]))),
             ),
           ],
-        ] else ...[
-          const Divider(height: 28, color: Color(0xFFECE7DC)),
-          _caps('O QUE PODE FAZER'),
+        ] else if (_open) ...[
           const SizedBox(height: 4),
           for (var i = 0; i < OrganizerPerm.values.length; i++) ...[
             if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
