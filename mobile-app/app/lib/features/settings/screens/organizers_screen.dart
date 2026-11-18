@@ -503,6 +503,22 @@ class _InviteCard extends ConsumerStatefulWidget {
 
 class _InviteCardState extends ConsumerState<_InviteCard> {
   bool _busy = false;
+  final Set<String> _invited = {};
+
+  Future<void> _inviteFriend(InviteCandidate c) async {
+    setState(() => _invited.add(c.id));
+    try {
+      await inviteOrganizer(widget.wedding.id, c.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Convite enviado a ${c.name}.')));
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _invited.remove(c.id));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível enviar o convite.')));
+      }
+    }
+  }
 
   Future<String?> _link() async {
     try {
@@ -540,16 +556,38 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isWedding = widget.wedding.eventType == EventType.wedding;
+    final candidates = ref.watch(organizerInviteCandidatesProvider(widget.wedding.id)).value ?? const <InviteCandidate>[];
+    final hasFriends = candidates.isNotEmpty;
     return Container(
       decoration: _card(),
       padding: const EdgeInsets.all(18),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(isWedding ? 'Convidar o teu par ou outro organizador' : 'Convidar outro organizador',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const Text('Convidar para organizar',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 4),
-        const Text('Envia o link a quem vai organizar contigo. Cada link serve para uma pessoa.',
-            style: TextStyle(fontSize: 13, height: 1.45, color: AppTheme.inkMuted)),
+        Text(
+            hasFriends
+                ? 'Convida amigos que já segues na app, ou envia um link a quem quiseres.'
+                : 'Envia o link a quem vai organizar contigo. Cada link serve para uma pessoa.',
+            style: const TextStyle(fontSize: 13, height: 1.45, color: AppTheme.inkMuted)),
+        if (hasFriends) ...[
+          const SizedBox(height: 16),
+          _caps('AMIGOS QUE SEGUES'),
+          const SizedBox(height: 2),
+          for (var i = 0; i < candidates.length; i++) ...[
+            if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
+            _FriendInviteRow(
+              candidate: candidates[i],
+              invited: _invited.contains(candidates[i].id),
+              onInvite: () => _inviteFriend(candidates[i]),
+            ),
+          ],
+          const Divider(height: 28, color: Color(0xFFECE7DC)),
+          _caps('OU POR LINK'),
+          const SizedBox(height: 2),
+          const Text('Para quem ainda não está na app. Cada link serve para uma pessoa.',
+              style: TextStyle(fontSize: 13, height: 1.45, color: AppTheme.inkMuted)),
+        ],
         const SizedBox(height: 14),
         Row(children: [
           Expanded(
@@ -581,6 +619,61 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
             ),
           ),
         ]),
+      ]),
+    );
+  }
+}
+
+/// Linha de um amigo que segues, com botão "Convidar" (ou "Convidado" depois).
+class _FriendInviteRow extends StatelessWidget {
+  final InviteCandidate candidate;
+  final bool invited;
+  final VoidCallback onInvite;
+  const _FriendInviteRow({required this.candidate, required this.invited, required this.onInvite});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(children: [
+        _Avatar(candidate.name),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(candidate.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(
+                candidate.username != null && candidate.username!.isNotEmpty ? '@${candidate.username}' : 'Já se seguem',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          ]),
+        ),
+        const SizedBox(width: 10),
+        if (invited)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            child: Text('Convidado',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+          )
+        else
+          SizedBox(
+            height: 36,
+            child: FilledButton(
+              onPressed: onInvite,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.ink,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                minimumSize: const Size(0, 36),
+                shape: const StadiumBorder(),
+                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+              child: const Text('Convidar'),
+            ),
+          ),
       ]),
     );
   }
