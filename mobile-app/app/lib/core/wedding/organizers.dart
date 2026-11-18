@@ -98,3 +98,37 @@ Future<void> setOrganizerPermissions(String collaboratorId, OrganizerPerms perms
 Future<void> removeOrganizer(String collaboratorId) async {
   await supabase.rpc('remove_organizer', params: {'p_collaborator': collaboratorId});
 }
+
+/// Um amigo que segues (seguir recíproco) que ainda não organiza o evento —
+/// candidato a ser convidado para co-organizar (migração 200).
+class InviteCandidate {
+  final String id;
+  final String name;
+  final String? avatarUrl;
+  final String? username;
+  const InviteCandidate({required this.id, required this.name, this.avatarUrl, this.username});
+}
+
+/// Amigos (seguir recíproco) que podes convidar para organizar este evento.
+final organizerInviteCandidatesProvider =
+    FutureProvider.autoDispose.family<List<InviteCandidate>, String>((ref, weddingId) async {
+  try {
+    final r = await supabase.rpc('organizer_invite_candidates', params: {'p_wedding': weddingId}) as List;
+    return [
+      for (final m in r.cast<Map>())
+        InviteCandidate(
+          id: m['id'] as String,
+          name: ((m['full_name'] as String?)?.trim().isNotEmpty ?? false) ? (m['full_name'] as String).trim() : 'Sem nome',
+          avatarUrl: m['avatar_url'] as String?,
+          username: m['username'] as String?,
+        ),
+    ];
+  } catch (_) {
+    return const [];
+  }
+});
+
+/// Convida um amigo para organizar: cria o convite e notifica-o (aceita no link).
+Future<void> inviteOrganizer(String weddingId, String userId) async {
+  await supabase.rpc('invite_organizer', params: {'p_wedding': weddingId, 'p_user': userId});
+}
