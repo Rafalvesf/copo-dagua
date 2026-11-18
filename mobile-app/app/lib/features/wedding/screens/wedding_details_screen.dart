@@ -468,9 +468,10 @@ class _PageBody extends ConsumerWidget {
       EventProgramSection(weddingId: wedding.id),
       _StatBlocks(wedding: wedding),
       _InviteCodeCard(wedding: wedding),
-      _Suggestions(wedding: wedding),
       const _BookingsSection(),
       _ManageList(wedding: wedding),
+      // "Sugestões para ti" fica em último (pedido do Rafael, 2026-11-18).
+      _Suggestions(wedding: wedding),
     ];
     final padding = EdgeInsets.fromLTRB(0, classic ? 0 : 40 + MediaQuery.paddingOf(context).top, 0, 140);
     if (!scrollable) {
