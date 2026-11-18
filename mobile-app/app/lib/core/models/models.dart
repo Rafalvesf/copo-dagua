@@ -607,7 +607,12 @@ class ProgramItem {
   /// parceiro (etapa à mão, p.ex. "Passeio no parque").
   final String partner;
 
-  const ProgramItem({this.time = '', this.title = '', this.place = '', this.date = '', this.partner = ''});
+  /// Foto do parceiro escolhido (cover_photo_url), quando a etapa tem um
+  /// parceiro escolhido na app; vazio = sem foto (mostra o avatar por nome).
+  final String partnerAvatarUrl;
+
+  const ProgramItem(
+      {this.time = '', this.title = '', this.place = '', this.date = '', this.partner = '', this.partnerAvatarUrl = ''});
 
   factory ProgramItem.fromJson(Map<String, dynamic> j) => ProgramItem(
         time: (j['time'] as String?) ?? '',
@@ -615,6 +620,7 @@ class ProgramItem {
         place: (j['place'] as String?) ?? '',
         date: (j['date'] as String?) ?? '',
         partner: (j['partner'] as String?) ?? '',
+        partnerAvatarUrl: (j['partner_avatar'] as String?) ?? '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -623,14 +629,17 @@ class ProgramItem {
         'place': place.trim(),
         if (date.trim().isNotEmpty) 'date': date.trim(),
         if (partner.trim().isNotEmpty) 'partner': partner.trim(),
+        if (partnerAvatarUrl.trim().isNotEmpty) 'partner_avatar': partnerAvatarUrl.trim(),
       };
 
-  ProgramItem copyWith({String? time, String? title, String? place, String? date, String? partner}) => ProgramItem(
+  ProgramItem copyWith({String? time, String? title, String? place, String? date, String? partner, String? partnerAvatarUrl}) =>
+      ProgramItem(
         time: time ?? this.time,
         title: title ?? this.title,
         place: place ?? this.place,
         date: date ?? this.date,
         partner: partner ?? this.partner,
+        partnerAvatarUrl: partnerAvatarUrl ?? this.partnerAvatarUrl,
       );
 
   bool get isEmpty =>
