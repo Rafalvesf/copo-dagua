@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/guest_facing.dart';
+import '../../../shared/widgets/v2_kit.dart';
 
 /// Secção "Programa" do painel do evento (por baixo de "Esta semana").
 ///
@@ -253,6 +254,12 @@ class _ProgramRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
+              // Foto/avatar do parceiro da etapa (plano por nome, como as
+              // pessoas na app). Só quando a etapa tem parceiro.
+              if (item.partner.trim().isNotEmpty) ...[
+                V2Avatar(item.partner.trim(), size: 34),
+                const SizedBox(width: 10),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
