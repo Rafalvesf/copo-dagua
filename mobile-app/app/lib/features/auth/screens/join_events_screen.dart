@@ -43,8 +43,11 @@ class _JoinEventsScreenState extends ConsumerState<JoinEventsScreen> {
       ref.read(pendingPartnerInviteProvider.notifier).set(widget.token);
       return;
     }
-    if (auth.profile?.role != UserRole.couple) {
-      setState(() => _error = 'Este convite é para o par do casal — entra com uma conta de casal.');
+    // Qualquer conta pode organizar (já não há "contas de casal"; os eventos
+    // são de todo o tipo). Um parceiro é que não co-organiza eventos de
+    // clientes — esse continua no seu lado da app.
+    if (auth.profile?.role == UserRole.partner) {
+      setState(() => _error = 'Entra com a tua conta pessoal para organizar — a conta de parceiro é para o teu negócio.');
       return;
     }
     setState(() => _joining = true);
