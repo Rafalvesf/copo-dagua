@@ -669,7 +669,7 @@ class _FriendInviteRow extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 minimumSize: const Size(0, 36),
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
               ),
               child: const Text('Convidar'),
             ),

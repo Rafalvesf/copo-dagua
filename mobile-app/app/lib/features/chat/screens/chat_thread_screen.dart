@@ -658,7 +658,7 @@ class _PayOrLaterSheet extends StatelessWidget {
                 backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
               ),
               child: Text(canPayNow ? 'Pagar ${euros(payAmount)}' : 'OK'),
             ),
@@ -669,7 +669,7 @@ class _PayOrLaterSheet extends StatelessWidget {
             style: TextButton.styleFrom(
               foregroundColor: AppTheme.ink,
               minimumSize: const Size(0, 36),
-              textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
             ),
             child: const Text('Pagar depois'),
           ),
