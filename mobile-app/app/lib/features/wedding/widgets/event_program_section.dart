@@ -105,43 +105,10 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
       builder: (_) => const _AddChooser(),
     );
     if (withPartner == null || !mounted) return;
-
-    // Com um parceiro: escolher um parceiro JÁ reservado no evento (nome +
-    // foto guardados na etapa) e depois dar o nome do momento (pedido do
-    // Rafael, 2026-11-18).
-    if (withPartner) {
-      final partners = await ref.read(bookedPartnersProvider(widget.weddingId).future);
-      if (!mounted) return;
-      if (partners.isEmpty) {
-        final go = await showModalBottomSheet<bool>(
-          context: context,
-          backgroundColor: Colors.transparent,
-          builder: (_) => const _NoPartnersSheet(),
-        );
-        if (go == true && mounted) context.push('/partners');
-        return;
-      }
-      final chosen = await showModalBottomSheet<BookedPartner>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (_) => _PartnerPicker(partners: partners),
-      );
-      if (chosen == null || !mounted) return;
-      // Pede o nome do momento; o parceiro fica fixo (nome + foto escolhidos).
-      final item = await _editItem(
-        ProgramItem(partner: chosen.name, partnerAvatarUrl: chosen.photoUrl ?? ''),
-        partnerMode: true,
-      );
-      if (item != null && !item.isEmpty) {
-        setState(() => _items.add(item));
-        _persist();
-      }
-      return;
-    }
-
-    // Sem parceiro: cria a etapa à mão.
-    final item = await _editItem(const ProgramItem(), partnerMode: false);
+    // "Com um parceiro" abre já o seletor de parceiros; "sem parceiro" vai
+    // direto à etapa à mão. Em qualquer caso dá para juntar/mudar o parceiro
+    // depois, na própria edição (pedido do Rafael, 2026-11-18).
+    final item = await _editItem(const ProgramItem(), autoPickPartner: withPartner);
     if (item != null && !item.isEmpty) {
       setState(() => _items.add(item));
       _persist();
@@ -149,7 +116,7 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
   }
 
   Future<void> _editExisting(int index) async {
-    final edited = await _editItem(_items[index], partnerMode: _items[index].partner.trim().isNotEmpty, allowDelete: true);
+    final edited = await _editItem(_items[index], allowDelete: true);
     if (edited == null) return; // cancelado
     setState(() {
       if (edited.isEmpty) {
@@ -161,12 +128,17 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
     _persist();
   }
 
-  Future<ProgramItem?> _editItem(ProgramItem item, {required bool partnerMode, bool allowDelete = false}) {
+  Future<ProgramItem?> _editItem(ProgramItem item, {bool autoPickPartner = false, bool allowDelete = false}) {
     return showModalBottomSheet<ProgramItem>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _EditSheet(item: item, partnerMode: partnerMode, allowDelete: allowDelete),
+      builder: (_) => _EditSheet(
+        item: item,
+        weddingId: widget.weddingId,
+        autoPickPartner: autoPickPartner,
+        allowDelete: allowDelete,
+      ),
     );
   }
 
@@ -175,6 +147,10 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
     if (_loading) return const SizedBox.shrink();
     final info = _info;
     if (info == null || !info.programAvailable) return const SizedBox.shrink();
+
+    // Parceiros já com reserva ativa (aceites). Uma etapa com um parceiro que
+    // ainda não está aqui fica "à espera que aceite".
+    final confirmed = ref.watch(confirmedPartnerIdsProvider(widget.weddingId)).value ?? const <String>{};
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 0),
@@ -215,6 +191,8 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
                       item: it,
                       first: i == 0,
                       height: _rowHeight,
+                      // Pendente = tem parceiro escolhido que ainda não aceitou.
+                      pending: it.partnerId.trim().isNotEmpty && !confirmed.contains(it.partnerId.trim()),
                       onTap: () => _editExisting(i),
                     );
                   },
@@ -239,12 +217,21 @@ class _ProgramRow extends StatelessWidget {
   final ProgramItem item;
   final bool first;
   final double height;
+  final bool pending;
   final VoidCallback onTap;
-  const _ProgramRow({super.key, required this.index, required this.item, required this.first, required this.height, required this.onTap});
+  const _ProgramRow(
+      {super.key,
+      required this.index,
+      required this.item,
+      required this.first,
+      required this.height,
+      required this.onTap,
+      this.pending = false});
 
   @override
   Widget build(BuildContext context) {
-    final sub = item.partner.trim().isNotEmpty
+    final hasPartner = item.partner.trim().isNotEmpty;
+    final sub = hasPartner
         ? item.partner.trim()
         : (item.place.trim().isNotEmpty ? item.place.trim() : 'Sem parceiro');
     // Linha de altura fixa que estica à largura toda. A divisória é a borda
@@ -283,10 +270,14 @@ class _ProgramRow extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               // Foto/avatar do parceiro da etapa (plano por nome, como as
-              // pessoas na app). Só quando a etapa tem parceiro.
-              if (item.partner.trim().isNotEmpty) ...[
-                V2Avatar(item.partner.trim(), size: 34,
-                    imageUrl: item.partnerAvatarUrl.trim().isEmpty ? null : item.partnerAvatarUrl.trim()),
+              // pessoas na app). Só quando a etapa tem parceiro; esbatido
+              // enquanto o parceiro ainda não aceitou.
+              if (hasPartner) ...[
+                Opacity(
+                  opacity: pending ? 0.5 : 1,
+                  child: V2Avatar(item.partner.trim(), size: 34,
+                      imageUrl: item.partnerAvatarUrl.trim().isEmpty ? null : item.partnerAvatarUrl.trim()),
+                ),
                 const SizedBox(width: 10),
               ],
               Expanded(
@@ -299,8 +290,18 @@ class _ProgramRow extends StatelessWidget {
                         maxLines: 1, overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     const SizedBox(height: 2),
-                    Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    if (pending)
+                      Row(mainAxisSize: MainAxisSize.min, children: [
+                        Container(width: 7, height: 7, margin: const EdgeInsets.only(right: 6),
+                            decoration: const BoxDecoration(color: Color(0xFFF2A01B), shape: BoxShape.circle)),
+                        const Flexible(
+                          child: Text('À espera que aceite', maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                        ),
+                      ])
+                    else
+                      Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   ],
                 ),
               ),
@@ -362,7 +363,7 @@ class _AddChooser extends StatelessWidget {
           const SizedBox(height: 16),
           _ChooserCard(
             title: 'Com um parceiro',
-            subtitle: 'Escreve o nome do parceiro do teu evento',
+            subtitle: 'Escolhe um parceiro do teu evento',
             onTap: () => Navigator.of(context).pop(true),
           ),
           const SizedBox(height: 12),
@@ -410,20 +411,27 @@ class _ChooserCard extends StatelessWidget {
       );
 }
 
-/// Folha "Editar etapa": nome, (parceiro), data e hora.
-class _EditSheet extends StatefulWidget {
+/// Folha "Editar etapa": nome, parceiro (opcional), data e hora. Dá para
+/// juntar um parceiro a qualquer etapa; enquanto o parceiro não aceita (não
+/// tem reserva ativa), a etapa fica "à espera que aceite" (2026-11-18).
+class _EditSheet extends ConsumerStatefulWidget {
   final ProgramItem item;
-  final bool partnerMode;
+  final String weddingId;
+  final bool autoPickPartner;
   final bool allowDelete;
-  const _EditSheet({required this.item, required this.partnerMode, required this.allowDelete});
+  const _EditSheet(
+      {required this.item, required this.weddingId, required this.autoPickPartner, required this.allowDelete});
   @override
-  State<_EditSheet> createState() => _EditSheetState();
+  ConsumerState<_EditSheet> createState() => _EditSheetState();
 }
 
-class _EditSheetState extends State<_EditSheet> {
+class _EditSheetState extends ConsumerState<_EditSheet> {
   late final TextEditingController _name;
   late String _date; // ISO ou ''
   late String _time; // 'HH:mm' ou ''
+  late String _partner; // nome
+  late String _partnerAvatar;
+  late String _partnerId;
 
   @override
   void initState() {
@@ -431,6 +439,15 @@ class _EditSheetState extends State<_EditSheet> {
     _name = TextEditingController(text: widget.item.title);
     _date = widget.item.date;
     _time = widget.item.time;
+    _partner = widget.item.partner;
+    _partnerAvatar = widget.item.partnerAvatarUrl;
+    _partnerId = widget.item.partnerId;
+    // "Com um parceiro": abre já o seletor.
+    if (widget.autoPickPartner && _partner.trim().isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _pickPartner();
+      });
+    }
   }
 
   @override
@@ -464,8 +481,46 @@ class _EditSheetState extends State<_EditSheet> {
     }
   }
 
+  Future<void> _pickPartner() async {
+    final picks = await ref.read(eventPartnerPicksProvider(widget.weddingId).future);
+    if (!mounted) return;
+    if (picks.isEmpty) {
+      final go = await showModalBottomSheet<bool>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (_) => const _NoPartnersSheet(),
+      );
+      if (go == true && mounted) {
+        Navigator.of(context).pop(); // fecha a edição e vai explorar
+        context.push('/partners');
+      }
+      return;
+    }
+    final chosen = await showModalBottomSheet<EventPartnerPick>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _PartnerPicker(picks: picks),
+    );
+    if (chosen == null || !mounted) return;
+    setState(() {
+      _partner = chosen.name;
+      _partnerAvatar = chosen.photoUrl ?? '';
+      _partnerId = chosen.id;
+    });
+  }
+
+  void _removePartner() => setState(() {
+        _partner = '';
+        _partnerAvatar = '';
+        _partnerId = '';
+      });
+
   @override
   Widget build(BuildContext context) {
+    final hasPartner = _partner.trim().isNotEmpty;
+    final confirmed = ref.watch(confirmedPartnerIdsProvider(widget.weddingId)).value ?? const <String>{};
+    final pending = _partnerId.trim().isNotEmpty && !confirmed.contains(_partnerId.trim());
     return _Sheet(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -475,30 +530,73 @@ class _EditSheetState extends State<_EditSheet> {
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 16),
           const _Label('NOME'),
-          _PillField(controller: _name, hint: widget.partnerMode ? 'Ex.: Cerimónia' : 'Ex.: Passeio no parque'),
-          if (widget.partnerMode) ...[
-            const SizedBox(height: 14),
-            const _Label('PARCEIRO'),
-            // Parceiro escolhido (foto + nome), fixo — só se muda o momento.
+          _PillField(controller: _name, hint: hasPartner ? 'Ex.: Jantar' : 'Ex.: Passeio no parque'),
+          const SizedBox(height: 14),
+          const _Label('PARCEIRO'),
+          if (!hasPartner)
+            // Etapa sem parceiro: dá para juntar um.
+            InkWell(
+              onTap: _pickPartner,
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                height: 52,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: AppTheme.ink, width: 1.5),
+                ),
+                child: Row(children: [
+                  const Icon(Icons.person_add_alt_1, size: 20, color: AppTheme.ink),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text('Adicionar parceiro',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  ),
+                  const Icon(Icons.chevron_right, size: 20, color: AppTheme.inkMuted),
+                ]),
+              ),
+            )
+          else
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFECE7DC)),
+                border: Border.all(color: pending ? const Color(0xFFF2A01B) : const Color(0xFFECE7DC), width: pending ? 1.5 : 1),
               ),
               child: Row(children: [
-                V2Avatar(widget.item.partner, size: 34,
-                    imageUrl: widget.item.partnerAvatarUrl.isEmpty ? null : widget.item.partnerAvatarUrl),
+                Opacity(
+                  opacity: pending ? 0.5 : 1,
+                  child: V2Avatar(_partner, size: 34, imageUrl: _partnerAvatar.isEmpty ? null : _partnerAvatar),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(widget.item.partner,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                    Text(_partner,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    if (pending) ...[
+                      const SizedBox(height: 2),
+                      Row(mainAxisSize: MainAxisSize.min, children: [
+                        Container(width: 7, height: 7, margin: const EdgeInsets.only(right: 6),
+                            decoration: const BoxDecoration(color: Color(0xFFF2A01B), shape: BoxShape.circle)),
+                        const Text('À espera que aceite', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                      ]),
+                    ],
+                  ]),
+                ),
+                IconButton(
+                  onPressed: _removePartner,
+                  icon: const Icon(Icons.close, size: 18, color: Color(0xFFC8553D)),
+                  tooltip: 'Remover parceiro',
                 ),
               ]),
             ),
+          if (hasPartner && pending) ...[
+            const SizedBox(height: 8),
+            Text('Se o $_partner aceitar, aparece aqui no programa. Até lá, a etapa fica sem ele.',
+                style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
           ],
           const SizedBox(height: 14),
           Row(
@@ -521,10 +619,11 @@ class _EditSheetState extends State<_EditSheet> {
             child: ElevatedButton(
               onPressed: () => Navigator.of(context).pop(widget.item.copyWith(
                 title: _name.text,
-                // partner + partnerAvatarUrl ficam como vieram (escolhidos no
-                // picker, ou vazios quando é sem parceiro).
                 date: _date,
                 time: _time,
+                partner: _partner,
+                partnerAvatarUrl: _partnerAvatar,
+                partnerId: _partnerId,
               )),
               child: const Text('Guardar'),
             ),
@@ -621,11 +720,11 @@ class _PillButton extends StatelessWidget {
       );
 }
 
-/// Escolher um parceiro JÁ reservado no evento para uma etapa do programa
-/// (mostra nome + foto; 2026-11-18).
+/// Escolher um parceiro do evento para uma etapa: reservados (aceites) ou
+/// com pedido por responder (à espera que aceite). 2026-11-18.
 class _PartnerPicker extends StatelessWidget {
-  final List<BookedPartner> partners;
-  const _PartnerPicker({required this.partners});
+  final List<EventPartnerPick> picks;
+  const _PartnerPicker({required this.picks});
 
   @override
   Widget build(BuildContext context) {
@@ -633,30 +732,40 @@ class _PartnerPicker extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const Text('Escolher parceiro', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 4),
-        const Text('Os parceiros que já reservaste neste evento.',
+        const Text('Parceiros do teu evento. Se ainda não aceitaram, a etapa fica à espera.',
             style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         const SizedBox(height: 12),
         ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 360),
           child: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              for (var i = 0; i < partners.length; i++) ...[
+              for (var i = 0; i < picks.length; i++) ...[
                 if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
                 InkWell(
-                  onTap: () => Navigator.of(context).pop(partners[i]),
+                  onTap: () => Navigator.of(context).pop(picks[i]),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Row(children: [
-                      V2Avatar(partners[i].name, size: 44,
-                          imageUrl: (partners[i].photoUrl?.isEmpty ?? true) ? null : partners[i].photoUrl),
+                      Opacity(
+                        opacity: picks[i].accepted ? 1 : 0.5,
+                        child: V2Avatar(picks[i].name, size: 44,
+                            imageUrl: (picks[i].photoUrl?.isEmpty ?? true) ? null : picks[i].photoUrl),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(partners[i].name,
+                          Text(picks[i].name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                          Text(partners[i].statusLabel, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                          if (picks[i].accepted)
+                            const Text('Reservado', style: TextStyle(fontSize: 13, color: Color(0xFF3F7A4F)))
+                          else
+                            Row(mainAxisSize: MainAxisSize.min, children: [
+                              Container(width: 7, height: 7, margin: const EdgeInsets.only(right: 6),
+                                  decoration: const BoxDecoration(color: Color(0xFFF2A01B), shape: BoxShape.circle)),
+                              const Text('À espera que aceite', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                            ]),
                         ]),
                       ),
                       const Icon(Icons.chevron_right, size: 20, color: AppTheme.inkMuted),
@@ -672,7 +781,7 @@ class _PartnerPicker extends StatelessWidget {
   }
 }
 
-/// Sem parceiros reservados: convida a explorar/reservar primeiro.
+/// Sem parceiros no evento: convida a explorar/pedir primeiro.
 class _NoPartnersSheet extends StatelessWidget {
   const _NoPartnersSheet();
   @override
@@ -682,7 +791,7 @@ class _NoPartnersSheet extends StatelessWidget {
         const Text('Ainda sem parceiros', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 6),
         const Text(
-            'Só podes juntar ao programa parceiros que já reservaste neste evento. Explora e reserva um primeiro.',
+            'Ainda não pediste a nenhum parceiro neste evento. Explora e pede a um; depois escolhe-o aqui e, se aceitar, aparece no programa.',
             style: TextStyle(fontSize: 14, height: 1.5, color: AppTheme.inkMuted)),
         const SizedBox(height: 18),
         SizedBox(

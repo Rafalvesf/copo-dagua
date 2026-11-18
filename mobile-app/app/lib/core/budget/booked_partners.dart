@@ -12,7 +12,8 @@ class BookedPartner {
   final String status;
   final double total;
   final String? photoUrl;
-  const BookedPartner({required this.slug, required this.name, required this.status, required this.total, this.photoUrl});
+  final String? id; // partner_profiles.id (2026-11-18)
+  const BookedPartner({required this.slug, required this.name, required this.status, required this.total, this.photoUrl, this.id});
 
   String get statusLabel => switch (status) {
         'awaiting_deposit' => 'A aguardar sinal',
@@ -30,7 +31,7 @@ final bookedPartnersProvider = FutureProvider.family<List<BookedPartner>, String
   try {
     final rows = await supabase
         .from('bookings')
-        .select('status, total_amount, partner_profiles(business_name, cover_photo_url, partner_profile_categories(partner_categories(slug)))')
+        .select('status, total_amount, partner_profiles(id, business_name, cover_photo_url, partner_profile_categories(partner_categories(slug)))')
         .eq('wedding_id', weddingId)
         .inFilter('status', active);
     final out = <BookedPartner>[];
@@ -46,12 +47,68 @@ final bookedPartnersProvider = FutureProvider.family<List<BookedPartner>, String
         status: r['status'] as String? ?? '',
         total: (r['total_amount'] as num?)?.toDouble() ?? 0,
         photoUrl: pp?['cover_photo_url'] as String?,
+        id: pp?['id'] as String?,
       ));
     }
     return out;
   } catch (_) {
     return const [];
   }
+});
+
+/// Ids dos parceiros com reserva ativa no evento (já "aceites"). Serve para
+/// o programa saber se um parceiro escolhido já aparece ou se ainda está à
+/// espera que aceite (2026-11-18).
+final confirmedPartnerIdsProvider = FutureProvider.family<Set<String>, String>((ref, weddingId) async {
+  final list = await ref.watch(bookedPartnersProvider(weddingId).future);
+  return {for (final b in list) if (b.id != null && b.id!.isNotEmpty) b.id!};
+});
+
+/// Um parceiro do evento que pode entrar numa etapa do programa: já reservado
+/// (`accepted`) ou ainda com pedido por responder (`à espera que aceite`).
+class EventPartnerPick {
+  final String id;
+  final String name;
+  final String? photoUrl;
+  final bool accepted;
+  const EventPartnerPick({required this.id, required this.name, this.photoUrl, required this.accepted});
+}
+
+/// Parceiros do evento para escolher no programa: os reservados (aceites) e os
+/// que têm um pedido por responder (pendentes). Sem repetidos, aceites primeiro.
+final eventPartnerPicksProvider = FutureProvider.family<List<EventPartnerPick>, String>((ref, weddingId) async {
+  final out = <EventPartnerPick>[];
+  final seen = <String>{};
+
+  // 1) Reservados (aceites).
+  try {
+    final booked = await ref.watch(bookedPartnersProvider(weddingId).future);
+    for (final b in booked) {
+      final id = b.id;
+      if (id == null || id.isEmpty || seen.contains(id)) continue;
+      seen.add(id);
+      out.add(EventPartnerPick(id: id, name: b.name, photoUrl: b.photoUrl, accepted: true));
+    }
+  } catch (_) {}
+
+  // 2) Pedidos por responder (pendentes) — ainda sem reserva.
+  try {
+    final rows = await supabase
+        .from('quote_requests')
+        .select('status, partner_profiles(id, business_name, cover_photo_url)')
+        .eq('wedding_id', weddingId)
+        .inFilter('status', ['pending', 'viewed', 'proposal_sent']);
+    for (final r in (rows as List).cast<Map<String, dynamic>>()) {
+      final pp = r['partner_profiles'] as Map<String, dynamic>?;
+      final id = (pp?['id'] as String?) ?? '';
+      final name = (pp?['business_name'] as String?)?.trim() ?? '';
+      if (id.isEmpty || name.isEmpty || seen.contains(id)) continue;
+      seen.add(id);
+      out.add(EventPartnerPick(id: id, name: name, photoUrl: pp?['cover_photo_url'] as String?, accepted: false));
+    }
+  } catch (_) {}
+
+  return out;
 });
 
 /// slug → nomes (sem repetidos).
