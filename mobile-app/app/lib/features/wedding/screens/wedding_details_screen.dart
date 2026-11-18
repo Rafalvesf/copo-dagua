@@ -27,6 +27,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/menu_style.dart';
+import '../../../core/wedding/organizers.dart';
 import '../../guests/screens/guests_list_screen.dart' show shareWeddingInvite;
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/fading_scroll.dart';
@@ -953,32 +954,58 @@ List<_Shortcut> _shortcuts(WidgetRef ref) {
   ];
 }
 
+/// Que permissão um atalho/cartão do painel exige (null = sempre visível).
+/// Segue o mesmo mapa das `PermissionGate` nas rotas (router.dart).
+OrganizerPerm? _permForRoute(String route) {
+  if (route.startsWith('/guests') || route.startsWith('/seating') || route.startsWith('/invite')) {
+    return OrganizerPerm.convidados;
+  }
+  if (route.startsWith('/budget') || route.startsWith('/service-preferences')) return OrganizerPerm.orcamento;
+  if (route.startsWith('/bilhetes')) return OrganizerPerm.bilhetes;
+  if (route.startsWith('/checklist') || route.startsWith('/tasks')) return OrganizerPerm.tarefas;
+  if (route.startsWith('/chat')) return OrganizerPerm.conversas;
+  if (route.startsWith('/gallery') || route.startsWith('/guest-page') || route.startsWith('/gift')) {
+    return OrganizerPerm.evento;
+  }
+  return null; // /bookings e outros sem mapeamento: sempre visíveis.
+}
+
+/// Um co-organizador não vê o que não pode fazer; o dono vê tudo (`can` já
+/// devolve true para o dono). Pedido do Rafael (2026-11-18).
+bool _routeAllowed(String route, OrganizerPerms perms) {
+  final p = _permForRoute(route);
+  return p == null || perms.can(p);
+}
+
 class _QuickLinksRow extends ConsumerWidget {
   const _QuickLinksRow();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = _shortcuts(ref);
+    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    // Esconde os atalhos das secções sem permissão (o dono vê tudo).
+    final items = [for (final s in _shortcuts(ref)) if (_routeAllowed(s.route, perms)) s];
+    if (items.isEmpty) return const SizedBox.shrink();
     final look = _look(context, ref);
     const bg = [0, 1, 1, 0, 0, 1];
     Widget tile(int i) => _QuickLinkTile(
           icon: items[i].icon,
           label: items[i].label,
           subtitle: items[i].subtitle,
-          color: bg[i] == 0 ? look.tint : look.comp,
+          color: bg[i % bg.length] == 0 ? look.tint : look.comp,
           index: i,
           accent: look.accent,
           onTap: () => context.push(items[i].route),
         );
     return Column(
       children: [
-        for (var r = 0; r < 3; r++) ...[
+        for (var r = 0; r * 2 < items.length; r++) ...[
           if (r > 0) const SizedBox(height: 12),
           Row(
             children: [
               Expanded(child: tile(r * 2)),
               const SizedBox(width: 12),
-              Expanded(child: tile(r * 2 + 1)),
+              if (r * 2 + 1 < items.length) Expanded(child: tile(r * 2 + 1)) else const Expanded(child: SizedBox()),
             ],
           ),
         ],
@@ -2569,9 +2596,12 @@ class _StatBlocks extends ConsumerWidget {
         .toSet()
         .length;
     final partners = bookings.map((b) => b.partnerName).toSet().length;
+    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
 
     final boxes = <Widget>[];
     void add(String label, String value, String? of, String sub, String route, {Color? subColor}) {
+      // O co-organizador não vê o cartão de uma secção sem permissão.
+      if (!_routeAllowed(route, perms)) return;
       boxes.add(SnappyTap(
         onTap: () => context.push(route),
         child: Container(
