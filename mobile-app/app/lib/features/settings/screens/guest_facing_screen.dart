@@ -1118,7 +1118,7 @@ class _MomentRow extends StatelessWidget {
                         ],
                       ),
                     ),
-                    PopupMenuButton<String>(
+                    IslandMenuButton<String>(
                       tooltip: 'Opções',
                       icon: const Icon(Hi.ellipsisHorizontal, size: 20, color: AppTheme.inkMuted),
                       onSelected: (v) => switch (v) {

@@ -204,7 +204,7 @@ class _OrganizerItemTile extends ConsumerWidget {
               const Text('Indisponível na loja', style: TextStyle(fontSize: 12.5, color: Color(0xFFB3261E))),
           ]),
         ),
-        PopupMenuButton<String>(
+        IslandMenuButton<String>(
           tooltip: 'Opções',
           onSelected: (v) async {
             if (v == 'edit') {

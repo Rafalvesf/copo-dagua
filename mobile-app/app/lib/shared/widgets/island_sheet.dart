@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../hero_icons.dart';
 
 /// Folhas e diálogos "ilha" (pedido 2026-10-18): um cartão branco a
 /// flutuar, cantos redondos em toda a volta e sombra — nunca encostado ao
@@ -333,4 +334,124 @@ class IslandAlert extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Menu «⋯» em ilha (pedido do Rafael, 2026-11-20: todos os popups iguais,
+/// a nascer na navbar). Mesma forma de usar que o `PopupMenuButton` — mesmos
+/// `itemBuilder` com `PopupMenuItem`, `onSelected`, `icon`/`child` e
+/// `tooltip` — mas as opções abrem numa ilha (`showIslandSheet`) em vez do
+/// menu flutuante do Material.
+class IslandMenuButton<T> extends StatelessWidget {
+  final List<PopupMenuEntry<T>> Function(BuildContext context) itemBuilder;
+  final void Function(T value)? onSelected;
+  final Widget? icon;
+  final Widget? child;
+  final String? tooltip;
+  final EdgeInsetsGeometry? padding;
+
+  /// Aceite só para manter as chamadas antigas; a ilha abre sempre em baixo.
+  final Object? position;
+
+  const IslandMenuButton({
+    super.key,
+    required this.itemBuilder,
+    this.onSelected,
+    this.icon,
+    this.child,
+    this.tooltip,
+    this.padding,
+    this.position,
+  });
+
+  Future<void> _open(BuildContext context) async {
+    final items = itemBuilder(context).whereType<PopupMenuItem<T>>().toList();
+    if (items.isEmpty) return;
+    final picked = await showIslandSheet<_Picked<T>>(
+      context: context,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: AppTheme.borderMuted, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            DecoratedBox(
+              decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < items.length; i++) ...[
+                      if (i > 0) const Divider(height: 1, thickness: 1, color: Color(0xFFECE7DC)),
+                      InkWell(
+                        onTap: items[i].enabled ? () => Navigator.of(ctx).pop(_Picked<T>(items[i].value as T)) : null,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 56),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Opacity(
+                              opacity: items[i].enabled ? 1 : 0.4,
+                              child: DefaultTextStyle.merge(
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                                child: items[i].child ?? const SizedBox.shrink(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 52,
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                style: OutlinedButton.styleFrom(
+                  shape: const StadiumBorder(),
+                  side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                  foregroundColor: AppTheme.ink,
+                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+                child: const Text('Cancelar'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (picked != null) onSelected?.call(picked.value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = child;
+    if (c != null) {
+      final tappable = GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => _open(context), child: c);
+      return tooltip == null ? tappable : Tooltip(message: tooltip!, child: tappable);
+    }
+    return IconButton(
+      tooltip: tooltip,
+      padding: padding ?? const EdgeInsets.all(8),
+      icon: icon ?? const Icon(Hi.ellipsisHorizontal),
+      onPressed: () => _open(context),
+    );
+  }
+}
+
+/// Embrulha o valor escolhido para distinguir «escolheu null» de «fechou».
+class _Picked<T> {
+  final T value;
+  const _Picked(this.value);
 }

@@ -18,6 +18,7 @@ import '../widgets/partner_promotion_card.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../core/partners/partner_pro.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Área do parceiro (fornecedor) — versão mínima. Os módulos reais
 /// (Quotations, Bookings, Calendar, Profile, Contracts, Payouts) estão
@@ -126,7 +127,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                       ),
                     const Spacer(),
                     const PartnerNotificationBell(),
-                    PopupMenuButton<String>(
+                    IslandMenuButton<String>(
                       tooltip: 'Mais opções',
                       onSelected: (value) {
                         if (value == 'logout') {

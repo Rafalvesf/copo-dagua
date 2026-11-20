@@ -259,7 +259,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             tooltip: 'Favorito',
             onTap: () => setState(() => _favorited = !_favorited),
           ),
-          PopupMenuButton<String>(
+          IslandMenuButton<String>(
             tooltip: 'Mais opções',
             padding: EdgeInsets.zero,
             onSelected: (v) {

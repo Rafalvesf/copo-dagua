@@ -277,6 +277,9 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
+        // A mesma largura das caixas de conteúdo, da navbar e dos popups
+        // (DESIGN.md §4, pedido 2026-11-20).
+        insetPadding: const EdgeInsets.fromLTRB(screenMargin, 5, screenMargin, 10),
         backgroundColor: ink,
         contentTextStyle: const TextStyle(
           fontFamily: fontFamily,

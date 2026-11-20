@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/theme/app_theme.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 class GradientMark extends StatelessWidget {
   final double size;
@@ -44,7 +45,7 @@ class AccountSwitcherBadge extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return PopupMenuButton<String>(
+    return IslandMenuButton<String>(
       icon: const GradientMark(size: 40, icon: Hi.buildingStorefront),
       onSelected: (value) {
         if (value == 'logout') {

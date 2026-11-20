@@ -217,8 +217,15 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   fundo branco e sombra da ilha. **Nunca** de canto a canto nem colado ao
   fundo do ecrã. Com o teclado aberto, a ilha sobe por cima dele.
 - **Uma só forma de abrir:** `showIslandSheet` / `showIslandDialog`
-  (`shared/widgets/island_sheet.dart`); diálogos com `IslandAlert`. **Nunca**
-  `showModalBottomSheet`, `showDialog` nem `AlertDialog` diretamente.
+  (`shared/widgets/island_sheet.dart`); diálogos com `IslandAlert`; menus
+  «⋯» com `IslandMenuButton` (mesma forma de usar que o `PopupMenuButton`,
+  as opções abrem numa ilha com «Cancelar» em baixo). **Nunca**
+  `showModalBottomSheet`, `showDialog`, `AlertDialog` nem `PopupMenuButton`
+  diretamente.
+- **Inclui tudo o que abre por cima da página** e não é uma página nova:
+  filtros, favoritos, escolher localidade, notificações, menus «⋯»,
+  confirmações, pedir orçamento/reservar, pagar, editar campos. Os avisos
+  rápidos (snackbars) têm a mesma largura (20 dos lados).
 - **O conteúdo não desenha fundo próprio:** sem `Container` com cor, cantos
   ou margem à volta do popup — a ilha já trata disso. Cartões e caixas
   dentro do popup ficam a `#F2F0EB`, sem sombra (o popup é branco).

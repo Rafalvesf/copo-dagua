@@ -199,7 +199,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                                   if (pkg.description.trim().isNotEmpty) pkg.description.trim(),
                                 ].join(' · '),
                                 onTap: _busy ? null : () => _editPackage(pkg),
-                                trailing: PopupMenuButton<String>(
+                                trailing: IslandMenuButton<String>(
                                   tooltip: 'Mais opções',
                                   padding: EdgeInsets.zero,
                                   icon: const Icon(Hi.ellipsisHorizontal, size: 18, color: AppTheme.inkMuted),
@@ -261,7 +261,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                                     Text('${euros(e.price)}${priceUnitSuffix(e.priceUnit)}',
                                         style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
-                                    PopupMenuButton<String>(
+                                    IslandMenuButton<String>(
                                       tooltip: 'Mais opções',
                                       padding: EdgeInsets.zero,
                                       icon: const Icon(Hi.ellipsisHorizontal, size: 18, color: AppTheme.inkMuted),

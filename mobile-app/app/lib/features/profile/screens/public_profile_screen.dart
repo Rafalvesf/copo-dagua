@@ -13,6 +13,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../events/screens/eventos_screen.dart' show EventPosterCard;
 import '../profile_widgets.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Perfil de outra pessoa (mockup "Perfil de um amigo", 2026-11-12):
 /// Seguir / Mensagem, quem a segue em comum, os próximos eventos
@@ -99,7 +100,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                         ),
                         if (!p.isMe)
-                          PopupMenuButton<String>(
+                          IslandMenuButton<String>(
                             tooltip: 'Mais opções',
                             position: PopupMenuPosition.under,
                             onSelected: (_) => blockProfile(context, ref, p.id, p.name),

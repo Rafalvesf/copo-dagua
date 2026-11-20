@@ -278,7 +278,7 @@ class _TaskTile extends StatelessWidget {
           const SizedBox(width: 8),
         ],
         if (item.category.isNotEmpty) KitTag(item.category, kind: KitTagKind.neutral),
-        PopupMenuButton<String>(
+        IslandMenuButton<String>(
           padding: EdgeInsets.zero,
           tooltip: 'Mais opções',
           icon: const Icon(Hi.ellipsisHorizontal, size: 18, color: AppTheme.inkMuted),
