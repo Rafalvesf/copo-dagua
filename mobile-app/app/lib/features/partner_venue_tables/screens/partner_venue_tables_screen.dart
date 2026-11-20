@@ -78,7 +78,7 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
                   title: '${table.quantity} × Mesa ${table.shape.label.toLowerCase()}',
                   sub: '${table.seats} lugares por mesa',
                   onTap: () => _edit(context, ref, table),
-                  trailing: PopupMenuButton<String>(
+                  trailing: IslandMenuButton<String>(
                     tooltip: 'Mais opções',
                     padding: EdgeInsets.zero,
                     icon: const Icon(Hi.ellipsisHorizontal, size: 18, color: AppTheme.inkMuted),

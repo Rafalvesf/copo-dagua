@@ -396,6 +396,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Envio pelo Resend a partir de Pré-registos: editor de email por blocos com modelos guardados e imagens, data do último envio, histórico e «Deixar de receber».",
     check: { kind: "marker", id: "196" },
   },
+  {
+    file: "203_partner_reference_price.sql",
+    date: "2026-11-20",
+    title: "Valor de referência para quem só faz orçamento",
+    what: "Parceiros que só trabalham por orçamento dizem para que evento é o valor de referência («Bolo de 3 andares para 100 pessoas»); aparece no perfil, na barra de baixo e no popup «Pedir orçamento».",
+    check: { kind: "marker", id: "203" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

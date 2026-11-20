@@ -17,6 +17,7 @@ import '../../../shared/widgets/dense_card.dart' show FeaturedOverlayCard;
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart' show softCard;
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
+import '../../../shared/widgets/address_picker.dart' show AddressField;
 
 /// Lista de presentes (migração 160).
 ///  • Organizador: desejos (bloco de notas do que precisa) e produtos da
@@ -204,7 +205,7 @@ class _OrganizerItemTile extends ConsumerWidget {
               const Text('Indisponível na loja', style: TextStyle(fontSize: 12.5, color: Color(0xFFB3261E))),
           ]),
         ),
-        PopupMenuButton<String>(
+        IslandMenuButton<String>(
           tooltip: 'Opções',
           onSelected: (v) async {
             if (v == 'edit') {
@@ -263,12 +264,15 @@ class _DeliveryAddressCardState extends ConsumerState<_DeliveryAddressCard> {
         const SizedBox(height: 2),
         const Text('Só os parceiros que receberem uma encomenda a veem.', style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
         const SizedBox(height: 8),
-        TextField(
+        // Seletor de moradas com o Google (2026-11-20): a morada inteira.
+        AddressField(
           controller: _c,
-          maxLines: 3,
-          maxLength: 400,
-          decoration: const InputDecoration(hintText: 'Rua, número, código postal, localidade'),
+          hint: 'Rua, número, código postal, localidade',
+          pickerTitle: 'Morada para os presentes',
+          fullAddress: true,
+          fill: AppTheme.background,
         ),
+        const SizedBox(height: 4),
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(

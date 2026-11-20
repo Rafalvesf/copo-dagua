@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import 'floating_bottom_nav.dart' show kNavRadius;
 import 'snappy_tap.dart';
 import 'v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Cabeçalho de uma conversa (redesign 2026-10, igual ao canvas): voltar,
 /// avatar com foto ou iniciais, nome em Bold e uma linha secundária.
@@ -91,7 +92,7 @@ class ChatHeader extends StatelessWidget {
             Expanded(child: onOpenProfile == null ? info : SnappyTap(onTap: onOpenProfile, child: info)),
             if (onReport != null) ...[
               const SizedBox(width: 8),
-              PopupMenuButton<String>(
+              IslandMenuButton<String>(
                 tooltip: 'Mais opções',
                 position: PopupMenuPosition.under,
                 onSelected: (_) => onReport!(),

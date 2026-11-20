@@ -7,6 +7,7 @@ import '../../core/social/social.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/snappy_tap.dart';
 import '../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Peças do Perfil (mockup "Perfil", 2026-11-12).
 
@@ -431,11 +432,9 @@ Future<void> showEditProfileSheet(BuildContext context, WidgetRef ref, PublicPro
   final name = TextEditingController(text: p.name == 'Sem nome' ? '' : p.name);
   final city = TextEditingController(text: p.city ?? '');
   final bio = TextEditingController(text: p.bio ?? '');
-  final saved = await showModalBottomSheet<bool>(
+  final saved = await showIslandSheet<bool>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
     builder: (ctx) => Padding(
       padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.viewInsetsOf(ctx).bottom + 24),
       child: SingleChildScrollView(
@@ -508,10 +507,8 @@ class UsernameEditRow extends ConsumerWidget {
 
 /// "Editar perfil" do parceiro: o @, as informações do negócio e as fotos.
 Future<void> showPartnerEditProfileSheet(BuildContext context) async {
-  final go = await showModalBottomSheet<String>(
+  final go = await showIslandSheet<String>(
     context: context,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
     builder: (ctx) => Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [

@@ -56,7 +56,7 @@ class FloatingBottomNav extends ConsumerWidget {
       // `minimum` garante a margem da ilha mesmo em ambientes sem
       // inset de safe-area real (ex: preview web) — soma-se ao inset
       // real do dispositivo quando existe (ex: home indicator do iOS).
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+      minimum: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 20),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,

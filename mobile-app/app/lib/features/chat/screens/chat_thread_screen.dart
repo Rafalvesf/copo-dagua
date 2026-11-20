@@ -26,6 +26,7 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../partners/screens/partner_detail_screen.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
 /// e contactos do cortejo partilham este mesmo ecrã (ver
@@ -408,9 +409,8 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
     final canPayNow = days == null || days <= 3;
     final pct = (widget.fee(ref) ?? const FeeConfig()).effectivePct(total);
 
-    await showModalBottomSheet<void>(
+    await showIslandSheet<void>(
       context: context,
-      backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => _PayOrLaterSheet(
         title: (msg.proposalTitle ?? '').trim().isEmpty ? 'Reserva' : msg.proposalTitle!.trim(),
@@ -599,16 +599,11 @@ class _PayOrLaterSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Dentro da ilha (showIslandSheet), que dá o fundo, os cantos e a margem.
     return SafeArea(
       top: false,
       child: Container(
-        margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
-        decoration: BoxDecoration(
-          color: AppTheme.background,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: const Color(0xFFE4DFD4)),
-        ),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Center(
             child: Container(
@@ -631,9 +626,8 @@ class _PayOrLaterSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.background,
               borderRadius: BorderRadius.circular(22),
-              boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
             ),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),

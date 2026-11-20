@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException, PostgrestFilterBuilder;
 
 import '../models/models.dart';
 import '../partner_profile/partner_profile_controller.dart';
@@ -19,18 +20,34 @@ final partnersProvider = FutureProvider.family<List<Partner>, String?>((
   ref,
   categorySlug,
 ) async {
-  final rows = await supabase
-      .from('partner_profiles')
-      .select(
-        'id, business_name, description, cover_photo_url, service_areas, nationwide, '
-        'pricing_mode, average_quote_price, featured, partner_service_packages(price, is_starting_price), '
-        'partner_profile_categories(partner_categories(label_pt, slug))',
-      )
-      .eq('status', 'published');
+  final rows = await _selectPartners((q) => q.eq('status', 'published'));
   final partners = rows.map(_partnerFromRow).toList();
   if (categorySlug == null) return partners;
   return partners.where((p) => p.categorySlugs.contains(categorySlug)).toList();
 });
+
+const _partnerColumns =
+    'id, business_name, description, cover_photo_url, service_areas, nationwide, '
+    'pricing_mode, average_quote_price, featured, created_at, years_experience, max_travel_distance_km, '
+    'partner_service_packages(price, is_starting_price), '
+    'partner_profile_categories(partner_categories(label_pt, slug))';
+
+/// Valor de referência de quem só trabalha por orçamento (migração 203).
+const _referenceColumns = ', reference_note';
+
+/// Lê os parceiros com as colunas novas; antes da migração 203 correr,
+/// repete sem elas (a consulta falharia por coluna inexistente).
+Future<List<Map<String, dynamic>>> _selectPartners(
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> Function(
+    PostgrestFilterBuilder<List<Map<String, dynamic>>> q,
+  ) filter,
+) async {
+  try {
+    return await filter(supabase.from('partner_profiles').select(_partnerColumns + _referenceColumns));
+  } on PostgrestException {
+    return await filter(supabase.from('partner_profiles').select(_partnerColumns));
+  }
+}
 
 /// Um único parceiro publicado, por id — usado para abrir o perfil a
 /// partir de sítios que só têm o `partnerId` à mão (ex: o aviso de
@@ -40,18 +57,9 @@ final partnerByIdProvider = FutureProvider.family<Partner?, String>((
   ref,
   partnerId,
 ) async {
-  final row = await supabase
-      .from('partner_profiles')
-      .select(
-        'id, business_name, description, cover_photo_url, service_areas, nationwide, '
-        'pricing_mode, average_quote_price, featured, partner_service_packages(price, is_starting_price), '
-        'partner_profile_categories(partner_categories(label_pt, slug))',
-      )
-      .eq('id', partnerId)
-      .eq('status', 'published')
-      .maybeSingle();
-  if (row == null) return null;
-  return _partnerFromRow(row);
+  final rows = await _selectPartners((q) => q.eq('id', partnerId).eq('status', 'published'));
+  if (rows.isEmpty) return null;
+  return _partnerFromRow(rows.first);
 });
 
 Partner _partnerFromRow(Map<String, dynamic> row) {
@@ -97,6 +105,10 @@ Partner _partnerFromRow(Map<String, dynamic> row) {
     description: row['description'] as String? ?? '',
     imageUrl: row['cover_photo_url'] as String?,
     featured: row['featured'] as bool? ?? false,
+    createdAt: DateTime.tryParse(row['created_at'] as String? ?? ''),
+    yearsExperience: (row['years_experience'] as num?)?.toInt(),
+    maxTravelDistanceKm: (row['max_travel_distance_km'] as num?)?.toInt(),
+    referenceNote: row['pricing_mode'] == 'quote_only' ? (row['reference_note'] as String?)?.trim() : null,
   );
 }
 

@@ -1,7 +1,7 @@
+import 'dart:math' as math;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart';
 import '../../../shared/public_link.dart';
@@ -11,11 +11,10 @@ import '../../../core/pending_deep_link.dart';
 import '../../../shared/widgets/install_app_sheet.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/social/social.dart';
-import '../../profile/profile_widgets.dart' show FollowedByRow, ProfileButton, ProfileCard_Partners;
+import '../../profile/profile_widgets.dart' show FollowedByRow, ProfileButton;
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
-import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/review_tile.dart';
 import '../../../core/page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,11 +32,14 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/organizers.dart';
-import '../../../shared/widgets/scroll_aware_back_button.dart';
 import '../../../shared/widgets/alert_outline.dart';
-import '../../../shared/widgets/buttons.dart';
-import '../../../shared/widgets/form_fields.dart';
 import '../partner_style.dart';
+import '../widgets/partner_cards.dart';
+import '../../../shared/widgets/dense_card.dart' show PriceBox, MiniStats;
+import '../../../shared/widgets/estrela.dart';
+import '../../../shared/widgets/navigation_sheet.dart' show showNavigationSheet;
+import '../../../shared/widgets/venue_map.dart' show VenueMap;
+import '../../../shared/widgets/address_picker.dart' show showAddressPicker;
 import '../../../shared/money.dart';
 import '../../../core/partners/category_figure.dart';
 import '../../../shared/widgets/island_sheet.dart';
@@ -51,6 +53,9 @@ import '../../../core/profile/username.dart';
 /// co-organizador com permissão de tratar de parceiros — `OrganizerPerm.conversas`)
 /// E onde ainda não pedi orçamento nem pacote. Em dúvida (erro), não oferece
 /// (conservador, para nunca sugerir um duplo pedido).
+/// Altura da foto do topo aberta (mockup «Perfil do parceiro»).
+const double _kHeroHeight = 300;
+
 final _partnerBookableEventsProvider =
     FutureProvider.autoDispose.family<List<Wedding>, String>((ref, partnerId) async {
   final myId = ref.watch(authControllerProvider).profile?.id;
@@ -166,10 +171,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     if (bookable.isEmpty) return ref.read(weddingControllerProvider).wedding;
     if (bookable.length == 1) return bookable.first;
     if (!mounted) return null;
-    return showModalBottomSheet<Wedding>(
+    return showIslandSheet<Wedding>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => _EventPickerSheet(
         events: bookable,
         partnerName: widget.partner.name,
@@ -181,9 +185,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// «Pedir este pacote» (188): pacote, extras, pessoas e mensagem. Antes
   /// da migração (função em falta) cai no pedido de orçamento normal com
   /// o pacote na mensagem.
-  Future<void> _requestPackage(ServicePackage pkg, List<ServiceExtra> extras, int people) async {
+  Future<void> _requestPackage(ServicePackage pkg, List<ServiceExtra> extras, int people, {Wedding? event}) async {
     if (_requestingQuote) return;
-    final wedding = await _chooseEvent();
+    final wedding = event ?? await _chooseEvent();
     if (wedding == null || !mounted) return;
     final chosen = extras.where((e) => _selectedExtras.contains(e.id)).toList();
     final summary = [
@@ -218,9 +222,15 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
       ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
       if (mounted) {
+        double each(String unit, double price) => unit == 'person' ? price * people : price;
+        final total = each(pkg.priceUnit, pkg.price) + chosen.fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
         await _showRequestSent(
           title: 'Reserva pedida',
           body: '${widget.partner.name} aceita ou recusa — avisamos-te assim que responder.',
+          recapTitle: [pkg.name, if (chosen.isNotEmpty) '+ ${chosen.length} extra'].join(' '),
+          recapMeta: [wedding.displayNames, if (_eventMeta(wedding).isNotEmpty) _eventMeta(wedding).split(' · ').first].join(' · '),
+          recapValue: pkg.isStartingPrice ? null : euros(total),
+          event: wedding,
         );
       }
     } on PostgrestException catch (e) {
@@ -249,9 +259,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
 
   /// «Reservar mesa» (190): cada um escolhe o seu menu e extras na app.
   /// A reserva não tem sinal; quem paga é decidido em [_eachPays].
-  Future<void> _requestTable(int people) async {
+  Future<void> _requestTable(int people, {Wedding? event}) async {
     if (_requestingQuote) return;
-    final wedding = await _chooseEvent();
+    final wedding = event ?? await _chooseEvent();
     if (wedding == null || !mounted) return;
     final note = _packageMessage.text.trim();
     final summary = 'Mesa para $people pessoas · cada um escolhe${_eachPays ? ' e paga' : ''} o seu';
@@ -281,6 +291,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         await _showRequestSent(
           title: 'Reserva pedida',
           body: '${widget.partner.name} aceita ou recusa — avisamos-te assim que responder.',
+          recapTitle: 'Mesa para $people',
+          recapMeta: wedding.displayNames,
+          recapValue: '0 €',
+          event: wedding,
         );
       }
     } on PostgrestException catch (e) {
@@ -303,72 +317,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     } finally {
       if (mounted) setState(() => _requestingQuote = false);
     }
-  }
-
-  Widget _tableRequest(int people, Color ink, Color muted) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Text('Esta é a carta: cada convidado escolhe o seu menu e os extras na app.',
-            textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: muted)),
-      ),
-      Padding(
-        padding: const EdgeInsets.only(top: 24, bottom: 8),
-        child: Text('MENSAGEM PARA ${widget.partner.name.toUpperCase()}',
-            maxLines: 1, overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: muted)),
-      ),
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-        child: TextField(
-          controller: _packageMessage,
-          minLines: 3,
-          maxLines: 5,
-          maxLength: 300,
-          style: TextStyle(fontSize: 15, color: ink),
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            filled: false,
-            hintText: 'Ex.: mesa comprida junto à janela, um aniversariante…',
-          ),
-        ),
-      ),
-      const SizedBox(height: 16),
-      Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Row(children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Mesa para $people', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
-              Text(_eachPays ? 'Cada um escolhe e paga o seu' : 'Cada um escolhe · pagam vocês',
-                  style: TextStyle(fontSize: 13, color: muted)),
-            ]),
-          ),
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text('0 €', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
-            Text('agora', style: TextStyle(fontSize: 13, color: muted)),
-          ]),
-        ]),
-      ),
-      FilledButton(
-        onPressed: _requestingQuote ? null : () => _requestTable(people),
-        style: FilledButton.styleFrom(
-          backgroundColor: ink,
-          foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(52),
-          shape: const StadiumBorder(),
-          textStyle: TextStyle(
-              fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
-        ),
-        child: const Text('Reservar mesa'),
-      ),
-      const SizedBox(height: 8),
-      Text('${widget.partner.name} aceita ou recusa. A escolha fecha 3 dias antes do evento.',
-          textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: muted)),
-    ]);
   }
 
   @override
@@ -396,76 +344,76 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// Popup de confirmação depois de enviar um pedido/reserva (pedido do
   /// Rafael, 2026-11-18): "Reserva pedida" com um só botão "OK". O pagamento
   /// do sinal só acontece mais tarde, quando o parceiro aceita (no aceite).
-  Future<void> _showRequestSent({required String title, required String body}) async {
+  Future<void> _showRequestSent({
+    required String title,
+    required String body,
+    String? recapTitle,
+    String? recapMeta,
+    String? recapValue,
+    Wedding? event,
+  }) async {
     if (!mounted) return;
-    await showModalBottomSheet<void>(
+    // Mockup «Reserva pedida» (2026-11-20): estrela contente, o resumo do
+    // que se pediu e «Ver conversa» (o pedido já está na conversa) + «OK».
+    final chat = await showIslandSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: AppTheme.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        padding: EdgeInsets.fromLTRB(20, 14, 20, 24 + MediaQuery.of(ctx).viewInsets.bottom),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(color: const Color(0xFFD8D3C8), borderRadius: BorderRadius.circular(999)),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Center(
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(color: Color(0xFFE6EDE1), shape: BoxShape.circle),
-                  child: const Icon(Hi.check, size: 30, color: Color(0xFF3F7A4F)),
-                ),
-              ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Center(child: EstrelaMascot(Estrela.contente, size: 96)),
+            const SizedBox(height: 16),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 6),
+            Text(body,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.inkMuted)),
+            if (recapTitle != null) ...[
               const SizedBox(height: 16),
-              Text(title,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 8),
-              Text(body,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF57534E))),
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 52,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.ink,
-                    foregroundColor: Colors.white,
-                    shape: const StadiumBorder(),
-                    textStyle: const TextStyle(
-                        fontFamily: AppTheme.fontFamily,
-                        fontFamilyFallback: AppTheme.fontFamilyFallback,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+                child: Row(children: [
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                      Text(recapTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      if (recapMeta != null && recapMeta.isNotEmpty)
+                        Text(recapMeta,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    ]),
                   ),
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('OK'),
-                ),
+                  if (recapValue != null) ...[
+                    const SizedBox(width: 10),
+                    Text(recapValue, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  ],
+                ]),
               ),
             ],
-          ),
+            const SizedBox(height: 20),
+            Row(children: [
+              Expanded(child: ProfileButton('Ver conversa', height: 52, onTap: () => Navigator.of(ctx).pop(true))),
+              const SizedBox(width: 8),
+              Expanded(child: ProfileButton('OK', dark: true, height: 52, onTap: () => Navigator.of(ctx).pop(false))),
+            ]),
+          ],
         ),
       ),
     );
+    if (chat == true && mounted) await _openChat(event: event);
   }
 
-  Future<void> _openChat() async {
-    final wedding = ref.read(weddingControllerProvider).wedding;
+  Future<void> _openChat({Wedding? event}) async {
+    final wedding = event ?? ref.read(weddingControllerProvider).wedding;
     if (wedding == null || _openingChat) return;
     setState(() => _openingChat = true);
     try {
@@ -497,19 +445,26 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
 
   Future<void> _requestQuote({String? initialMessage}) async {
     if (_requestingQuote) return;
-    final wedding = await _chooseEvent();
-    if (wedding == null || !mounted) return;
+    final events = await _eventsForSheet();
+    if (!mounted || events.isEmpty) return;
+    final partner = widget.partner;
 
+    // Mockup «Pedir orçamento» (2026-11-20): o valor de referência, o
+    // evento, a data, o local (com o seletor de moradas) e a mensagem.
     final result = await showIslandSheet<_RequestQuoteResult>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _RequestQuoteSheet(
-        initialDate: wedding.weddingDate,
-        initialLocation: wedding.location,
+        partnerName: partner.name,
+        reference: partner.quoteOnly ? partnerReference(partner) : null,
+        referenceNote: partner.referenceNote,
+        events: events,
+        myId: ref.read(authControllerProvider).profile?.id,
         initialMessage: initialMessage,
       ),
     );
     if (result == null || !mounted) return;
+    final wedding = result.event;
 
     setState(() => _requestingQuote = true);
     Funnel.track('quote_request_start', ref: widget.partner.id);
@@ -552,7 +507,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       if (mounted) {
         await _showRequestSent(
           title: 'Pedido enviado',
-          body: 'O parceiro vai responder em breve com uma proposta.',
+          body: '${partner.name} vai responder pelas Mensagens com uma proposta.',
+          recapTitle: 'Pedido de orçamento',
+          recapMeta: wedding.displayNames,
+          event: wedding,
         );
       }
     } on PostgrestException catch (e) {
@@ -666,25 +624,13 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     final avgText = summary.count > 0
         ? summary.average.toStringAsFixed(1).replaceAll('.', ',')
         : '—';
-    final revLabel = summary.count > 0
-        ? '${summary.count} ${summary.count == 1 ? 'avaliação' : 'avaliações'}'
-        : 'Avaliações';
     final stats = ref.watch(partnerPublicStatsProvider(partner.id)).value;
     const ink = AppTheme.ink;
     const muted = Color(0xFF57534E);
     const cream = Color(0xFFF2F0EB);
 
-    Widget chip(String text, {bool green = false}) => Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: green ? const Color(0xFFE6EDE1) : cream,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Text(text,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: green ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733))),
-        );
     Widget sectionTitle(String t, {String? action, VoidCallback? onAction}) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
+          padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
           child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Expanded(child: Text(t, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ink))),
             if (action != null)
@@ -695,41 +641,321 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           ]),
         );
 
-    final mainLabel = widget.selectionMode
-        ? 'Escolher parceiro'
-        : alreadyRelated
-            ? 'Mensagem'
-            : 'Pedir orçamento';
-    void mainAction() {
-      if (pub) return _needAccount();
-      if (widget.selectionMode) return Navigator.of(context).pop(partner);
-      if (alreadyRelated) {
-        _openChat();
-      } else {
-        _requestQuote();
-      }
+    // Mockup «Perfil do parceiro» (2026-11-20), tal e qual: foto no topo
+    // que encolhe com o scroll e fica fixa (voltar, partilhar, favorito e o
+    // resumo do parceiro); cartão de dados; pacotes para escolher; quanto
+    // pode custar (só orçamento); portfólio; onde fica; avaliações; e a
+    // barra fixa em baixo com o preço e o botão principal.
+    final quoteOnly = packages.isEmpty;
+    final reference = quoteOnly ? partnerReference(partner) : null;
+    final portfolioPhotos = <String>[
+      for (final item in portfolio)
+        if (item.mediaType == PortfolioMediaType.image) item.mediaUrl,
+    ];
+    final topPad = MediaQuery.paddingOf(context).top;
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
+    final selPkgBar = !_eachChooses && _selectedPackage != null && _selectedPackage! < packages.length
+        ? packages[_selectedPackage!]
+        : null;
+
+    // --- Barra fixa em baixo ---------------------------------------------
+    (String, String) defaultBox() => quoteOnly
+        ? (reference != null ? ('REFERÊNCIA', '≈ ${euros(reference)}') : ('POR', 'Orçamento'))
+        : (fromPrice == null ? ('POR', 'Orçamento') : ('DESDE', euros(fromPrice)));
+    var barBox = defaultBox();
+    String barLabel;
+    VoidCallback? barAction;
+    if (widget.selectionMode) {
+      barLabel = 'Escolher parceiro';
+      barAction = () => Navigator.of(context).pop(partner);
+    } else if (pub) {
+      barLabel = quoteOnly ? 'Pedir orçamento' : 'Escolher pacote';
+      barAction = _needAccount;
+    } else if (bookable == null) {
+      // Ainda a verificar se dá para reservar: nunca deixa um duplo pedido.
+      barLabel = quoteOnly ? 'Pedir orçamento' : 'Escolher pacote';
+      barAction = null;
+    } else if (!canReserve) {
+      barLabel = 'Mensagem';
+      barAction = _openingChat ? null : _openChat;
+    } else if (quoteOnly) {
+      barLabel = 'Pedir orçamento';
+      barAction = _requestingQuote ? null : () => _requestQuote();
+    } else if (_eachChooses) {
+      barBox = ('MESA PARA $topPeople', '0 €');
+      barLabel = 'Reservar mesa';
+      barAction = _requestingQuote ? null : () => _openTableSheet(topPeople);
+    } else if (selPkgBar != null) {
+      barBox = (
+        selPkgBar.name.toUpperCase(),
+        '${selPkgBar.isStartingPrice ? 'desde ' : ''}${euros(selPkgBar.price)}${priceUnitSuffix(selPkgBar.priceUnit)}',
+      );
+      barLabel = 'Reservar';
+      barAction = _requestingQuote
+          ? null
+          : () => _openReserveSheet(
+                selPkgBar,
+                extras.where((e) => e.appliesTo(selPkgBar.id)).toList(),
+                perPersonMenus ? topPeople : null,
+                weddingGuests,
+              );
+    } else {
+      barLabel = 'Escolher pacote';
+      barAction = _scrollToPackages;
     }
 
-    // Mockup "Perfil do parceiro" (2026-11-12), tal e qual: foto a toda a
-    // largura (300), cartão branco por cima com nome, preço "Desde",
-    // descrição, números, etiquetas, quem segue e os dois botões;
-    // depois Pacotes, Avaliações e Onde fica, em cartões brancos.
+    Widget statusNote() => AlertOutline(
+          tone: relationshipStatus == PartnerRelationshipStatus.booked ? AlertTone.invite : AlertTone.pending,
+          child: Row(children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: relationshipStatus == PartnerRelationshipStatus.booked
+                    ? const Color(0xFF4F6B4A)
+                    : const Color(0xFFF2A01B),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                relationshipStatus == PartnerRelationshipStatus.booked
+                    ? 'Já reservaste ${partner.name} para este evento.'
+                    : 'Já pediste orçamento a ${partner.name} para este evento.',
+                style: const TextStyle(fontSize: 13, color: ink, height: 1.35),
+              ),
+            ),
+          ]),
+        );
+
     return Material(
       color: cream,
       child: Stack(
         children: [
           SingleChildScrollView(
             controller: _scroll,
-            padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 32),
+            padding: EdgeInsets.only(bottom: bottomPad + 130),
             child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _PhotoCarousel(
-              photos: photos,
-              fallbackColor: colorForCategorySlug(partner.primaryCategorySlug),
-              fallbackIcon: iconForCategorySlug(partner.primaryCategorySlug),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Lugar da foto do topo (a foto está fixa por cima, no Stack).
+                const SizedBox(height: _kHeroHeight),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),
+                  child: _PartnerHeadCard(
+                    partner: partner,
+                    priceBox: PriceBox(defaultBox().$1, defaultBox().$2, outlined: true),
+                    ratingText: summary.count > 0 ? avgText : null,
+                    reviewCount: summary.count,
+                    responds: responds,
+                    figureText: figureText,
+                    stats: [
+                      (avgText, 'Nota'),
+                      ('${stats?.followers ?? 0}', 'Seguidores'),
+                      ('${stats?.eventsDone ?? 0}', 'Eventos'),
+                    ],
+                    buttons: widget.selectionMode
+                        ? null
+                        : _PartnerFollow(
+                            partnerId: partner.id,
+                            outlined: true,
+                            onNeedAccount: pub ? _needAccount : null,
+                            second: ProfileButton(
+                              'Mensagem',
+                              onTap: pub ? _needAccount : (_openingChat ? null : _openChat),
+                            ),
+                          ),
+                  ),
+                ),
+                if (onlyMessage || (alreadyRelated && canReserve && relationshipStatus != null))
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
+                    child: statusNote(),
+                  ),
+                if (packages.isNotEmpty) ...[
+                  KeyedSubtree(
+                    key: _packagesKey,
+                    child: sectionTitle(
+                      'Pacotes',
+                      action: canReserve && !_eachChooses ? 'Escolhe um' : '${packages.length} ${packages.length == 1 ? 'pacote' : 'pacotes'}',
+                    ),
+                  ),
+                  // Menus por pessoa (mockup «Restaurante · perfil»): pessoas,
+                  // «Como escolhem» e «Quem paga» antes da carta (190).
+                  if (perPersonMenus)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 16),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                          child: Row(children: [
+                            const Expanded(
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text('Para quantas pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
+                                Text('Do teu evento · podes mudar', style: TextStyle(fontSize: 13, color: muted)),
+                              ]),
+                            ),
+                            _StepButton(icon: Hi.minus, onTap: topPeople > peopleMin ? () => setState(() => _people = topPeople - 1) : null),
+                            SizedBox(width: 44, child: Text('$topPeople', textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink))),
+                            _StepButton(icon: Hi.plus, onTap: topPeople < peopleMax ? () => setState(() => _people = topPeople + 1) : null),
+                          ]),
+                        ),
+                        const KitCaps('Como escolhem'),
+                        KitPills([
+                          KitPill(label: 'Igual para todos', selected: !_eachChooses, onTap: () => setState(() => _eachChooses = false)),
+                          KitPill(
+                            label: 'Cada um escolhe',
+                            selected: _eachChooses,
+                            onTap: () => setState(() {
+                              _eachChooses = true;
+                              _selectedPackage = null;
+                              _selectedExtras.clear();
+                            }),
+                          ),
+                        ], top: 0),
+                        if (_eachChooses)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8),
+                            child: Text('Reservam a mesa e cada convidado escolhe o seu menu e extras na app, antes de pagar.',
+                                style: TextStyle(fontSize: 13, color: muted)),
+                          ),
+                        if (askWhoPays) ...[
+                          const KitCaps('Quem paga'),
+                          KitPills([
+                            KitPill(label: 'Pagamos nós', selected: !_eachPays, onTap: () => setState(() => _eachPays = false)),
+                            KitPill(label: 'Cada um paga o seu', selected: _eachPays, onTap: () => setState(() => _eachPays = true)),
+                          ], top: 0),
+                          if (_eachPays)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                _eachChooses
+                                    ? 'Cada convidado paga a sua parte na app quando escolhe. A reserva é grátis.'
+                                    : 'Cada convidado paga a sua parte na app. O pedido de pagamento chega 3 dias antes.',
+                                style: const TextStyle(fontSize: 13, color: muted),
+                              ),
+                            ),
+                        ],
+                      ]),
+                    ),
+                  RowGroup(children: [
+                    for (var i = 0; i < packages.length; i++)
+                      _PackageRow(
+                        package: packages[i],
+                        first: i == 0,
+                        selected: !_eachChooses && _selectedPackage == i,
+                        onTap: widget.selectionMode
+                            ? null
+                            : pub
+                                ? _needAccount
+                                : !canReserve
+                                    ? _openChat
+                                    : _eachChooses
+                                        ? null
+                                        : () => setState(() => _selectedPackage = _selectedPackage == i ? null : i),
+                      ),
+                  ]),
+                  if (!widget.selectionMode && canReserve)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
+                      child: ProfileButton('Pedir orçamento à medida',
+                          onTap: _requestingQuote ? null : () => _requestQuote()),
+                    ),
+                ],
+                // Só orçamento: quanto pode custar (migração 203).
+                if (quoteOnly && reference != null) ...[
+                  sectionTitle('Quanto pode custar'),
+                  _ReferenceCard(price: reference, note: partner.referenceNote),
+                ],
+                if (portfolioPhotos.isNotEmpty) ...[
+                  sectionTitle(
+                    'Portfólio',
+                    action: 'Ver todos (${portfolioPhotos.length})',
+                    onAction: () => _openPhotos(portfolioPhotos, 0),
+                  ),
+                  SizedBox(
+                    height: 128,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                      itemCount: portfolioPhotos.length,
+                      separatorBuilder: (context, i) => const SizedBox(width: 10),
+                      itemBuilder: (context, i) => SnappyTap(
+                        onTap: () => _openPhotos(portfolioPhotos, i),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(22),
+                          child: SizedBox(
+                            width: 128,
+                            height: 128,
+                            child: SizedNetworkImage(
+                              portfolioPhotos[i],
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Container(color: colorForCategorySlug(partner.primaryCategorySlug)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                if (partner.location.isNotEmpty) ...[
+                  sectionTitle('Onde fica'),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: VenueMap(label: partner.name, address: partner.location, height: 140),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(partner.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
+                      const SizedBox(height: 2),
+                      Text(partner.location, style: const TextStyle(fontSize: 13, color: muted)),
+                      const SizedBox(height: 12),
+                      ProfileButton('Abrir mapa', onTap: () => showNavigationSheet(context, label: partner.name, address: partner.location)),
+                    ]),
+                  ),
+                ],
+                _ReviewsSection(
+                  partnerId: partner.id,
+                  partnerName: partner.name,
+                  partnerAvatarUrl: partner.imageUrl,
+                  title: (count, action, onAction) => sectionTitle('Avaliações', action: action, onAction: onAction),
+                ),
+                if (pub)
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Text(
+                      '"Seguir" e "Pedir orçamento" pedem para entrar ou criar conta, e voltam a esta página.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Topo fixo: a foto encolhe de 300 até à faixa dos botões e fica.
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: _PartnerHero(
+              scroll: _scroll,
+              partner: partner,
+              photo: photos.isEmpty ? null : photos.first,
+              topPad: topPad,
+              metaLine: [
+                if (summary.count > 0) '★ $avgText',
+                partner.primaryCategoryLabel,
+                if (partner.location.isNotEmpty) partner.location.split(', ').first,
+              ].join(' · '),
               favorited: favorited,
               publicView: pub,
+              onBack: () => Navigator.of(context).canPop() ? Navigator.of(context).pop() : context.go('/partners'),
               onShare: () => _share(partner),
               onFavorite: () {
                 if (!favorited) {
@@ -740,458 +966,112 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 ref.read(favoritePartnersControllerProvider.notifier).toggle(partner.id);
               },
             ),
-            // Mesma disposição do perfil de um amigo (pedido 2026-11-12),
-            // com as fotos por cima: cartão de perfil com logótipo,
-            // números, nome, categoria e local, descrição, etiquetas,
-            // quem segue e os dois botões.
-            Transform.translate(
-              offset: const Offset(0, -28),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                // Cabeça própria do parceiro, estilo "Parceiro com pacotes"
-                // (mockup 2026-11-17): nome + caixa de preço em cima, descrição,
-                // três números em caixas com contorno e etiquetas; depois os
-                // botões. Não é o ProfileCard_Users (perfis de amigos).
-                child: ProfileCard_Partners(
-                  name: partner.name,
-                  nameBadge: ProBadge(partner.id),
-                  handleLine:
-                      [partner.primaryCategoryLabel, if (partner.location.isNotEmpty) partner.location].join(' · '),
-                  bio: partner.description,
-                  // Caixa "DESDE €X" / "POR Orçamento" (§6), ao lado do nome.
-                  priceBox: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: ink, width: 1.5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: fromPrice == null
-                        ? const Column(mainAxisSize: MainAxisSize.min, children: [
-                            Text('POR',
-                                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1.5, color: muted)),
-                            Text('Orçamento',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink, height: 1.1)),
-                          ])
-                        : Column(mainAxisSize: MainAxisSize.min, children: [
-                            const Text('DESDE',
-                                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1.5, color: muted)),
-                            Text(euros(fromPrice),
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink, height: 1.1)),
-                          ]),
-                  ),
-                  // Três números em caixas com contorno: nota, seguidores, eventos.
-                  stats: [
-                    (avgText, revLabel),
-                    ('${stats?.followers ?? 0}', 'Seguidores'),
-                    ('${stats?.eventsDone ?? 0}', 'Eventos'),
-                  ],
-                  extra: Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                    FounderBadge(partner.id, long: true),
-                    if (figureText != null) chip(figureText),
-                    // O estado ("Reservado") saiu daqui: é dito no aviso (§7).
-                    if (responds != null) chip(responds, green: true),
-                  ]),
-                  followedBy: widget.selectionMode
-                      ? ProfileButton(mainLabel, dark: true, onTap: mainAction)
-                      : _PartnerFollow(
-                          partnerId: partner.id,
-                          onNeedAccount: pub ? _needAccount : null,
-                          // Com pacotes, o caminho é escolher um pacote (em
-                          // baixo); o orçamento à medida fica em baixo dos
-                          // pacotes (2026-11-15).
-                          second: packages.isNotEmpty && !alreadyRelated
-                              ? null
-                              : ProfileButton(mainLabel, onTap: _requestingQuote || _openingChat ? null : mainAction),
-                        ),
-                ),
-              ),
-            ),
-            // Só Mensagem (nenhum evento livre): explica que já foi escolhido
-            // para este evento. (2026-11-17)
-            if (onlyMessage)
-              Transform.translate(
-                offset: const Offset(0, -28),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                  // Nota de estado em caixa (DESIGN.md §7): branco + linha fina
-                  // + ponto. Amarelo = pedido pendente, verde = já reservado.
-                  child: AlertOutline(
-                    tone: relationshipStatus == PartnerRelationshipStatus.booked
-                        ? AlertTone.invite
-                        : AlertTone.pending,
-                    child: Row(children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: relationshipStatus == PartnerRelationshipStatus.booked
-                              ? const Color(0xFF4F6B4A)
-                              : const Color(0xFFF2A01B),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          relationshipStatus == PartnerRelationshipStatus.booked
-                              ? 'Já reservaste ${partner.name} para este evento.'
-                              : 'Já pediste orçamento a ${partner.name} para este evento.',
-                          style: const TextStyle(fontSize: 13, color: ink, height: 1.35),
-                        ),
-                      ),
-                    ]),
-                  ),
-                ),
-              ),
-            // Sem pacotes e já pedi a este parceiro neste evento, mas há outro
-            // evento livre: a Mensagem fica em cima e aqui em baixo dá para o
-            // reservar para esse outro evento (orçamento à medida). (2026-11-17)
-            if (packages.isEmpty && !widget.selectionMode && alreadyRelated && canReserve)
-              Transform.translate(
-                offset: const Offset(0, -28),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                  // Avisos na própria página (§7), não num cartão pesado: a
-                  // linha fina diz o estado; o botão reserva noutro evento.
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    AlertOutline(
-                      tone: relationshipStatus == PartnerRelationshipStatus.booked
-                          ? AlertTone.invite
-                          : AlertTone.pending,
-                      child: Row(children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: relationshipStatus == PartnerRelationshipStatus.booked
-                                ? const Color(0xFF4F6B4A)
-                                : const Color(0xFFF2A01B),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            relationshipStatus == PartnerRelationshipStatus.booked
-                                ? 'Já reservaste ${partner.name} para este evento.'
-                                : 'Já pediste orçamento a ${partner.name} para este evento.',
-                            style: const TextStyle(fontSize: 13, color: ink, height: 1.35),
-                          ),
-                        ),
-                      ]),
-                    ),
-                    const SizedBox(height: 12),
-                    ProfileButton('Pedir orçamento', dark: true, onTap: _requestingQuote ? null : () => _requestQuote()),
-                    const SizedBox(height: 8),
-                    const Text('Para reservar noutro evento teu.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 13, color: muted, height: 1.4)),
-                  ]),
-                ),
-              ),
-            if (packages.isNotEmpty) ...[
-              Transform.translate(
-                offset: const Offset(0, -28),
-                child: sectionTitle('Pacotes', action: '${packages.length} ${packages.length == 1 ? 'pacote' : 'pacotes'}'),
-              ),
-              Transform.translate(
-                offset: const Offset(0, -28),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    // Menus por pessoa (mockup «Restaurante · perfil»): pessoas,
-                    // «Como escolhem» e «Quem paga» antes da carta (190).
-                    if (perPersonMenus) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                        child: Row(children: [
-                          const Expanded(
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text('Para quantas pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
-                              Text('Do teu evento · podes mudar', style: TextStyle(fontSize: 13, color: muted)),
-                            ]),
-                          ),
-                          _StepButton(icon: Hi.minus, onTap: topPeople > peopleMin ? () => setState(() => _people = topPeople - 1) : null),
-                          SizedBox(width: 44, child: Text('$topPeople', textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink))),
-                          _StepButton(icon: Hi.plus, onTap: topPeople < peopleMax ? () => setState(() => _people = topPeople + 1) : null),
-                        ]),
-                      ),
-                      const KitCaps('Como escolhem'),
-                      KitPills([
-                        KitPill(label: 'Igual para todos', selected: !_eachChooses, onTap: () => setState(() => _eachChooses = false)),
-                        KitPill(
-                          label: 'Cada um escolhe',
-                          selected: _eachChooses,
-                          onTap: () => setState(() {
-                            _eachChooses = true;
-                            _selectedPackage = null;
-                            _selectedExtras.clear();
-                          }),
-                        ),
-                      ], top: 0),
-                      if (_eachChooses)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 8),
-                          child: Text('Reservam a mesa e cada convidado escolhe o seu menu e extras na app, antes de pagar.',
-                              style: TextStyle(fontSize: 13, color: muted)),
-                        ),
-                      if (askWhoPays) ...[
-                        const KitCaps('Quem paga'),
-                        KitPills([
-                          KitPill(label: 'Pagamos nós', selected: !_eachPays, onTap: () => setState(() => _eachPays = false)),
-                          KitPill(label: 'Cada um paga o seu', selected: _eachPays, onTap: () => setState(() => _eachPays = true)),
-                        ], top: 0),
-                        if (_eachPays)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              _eachChooses
-                                  ? 'Cada convidado paga a sua parte na app quando escolhe. A reserva é grátis.'
-                                  : 'Cada convidado paga a sua parte na app. O pedido de pagamento chega 3 dias antes.',
-                              style: const TextStyle(fontSize: 13, color: muted),
-                            ),
-                          ),
-                      ],
-                      const SizedBox(height: 16),
-                    ],
-                    for (var i = 0; i < packages.length; i++)
-                      Padding(
-                        padding: EdgeInsets.only(top: i == 0 ? 0 : 10),
-                        child: PackageChoiceCard(
-                          package: packages[i],
-                          selected: !_eachChooses && _selectedPackage == i,
-                          onTap: widget.selectionMode
-                              ? null
-                              : pub
-                                  ? _needAccount
-                                  : !canReserve
-                                      ? _openChat
-                                      : _eachChooses
-                                          ? null
-                                          : () => setState(() => _selectedPackage = _selectedPackage == i ? null : i),
-                        ),
-                      ),
-                    if (_eachChooses && !widget.selectionMode && canReserve)
-                      _tableRequest(topPeople, ink, muted),
-                    if (!_eachChooses && !widget.selectionMode && canReserve && _selectedPackage != null && _selectedPackage! < packages.length)
-                      Builder(builder: (context) {
-                        final p = packages[_selectedPackage!];
-                        final pkgExtras = extras.where((e) => e.appliesTo(p.id)).toList();
-                        final people = perPersonMenus ? topPeople : (_people ?? weddingGuests ?? p.minPeople ?? 1)
-                            .clamp(p.minPeople ?? 1, p.maxPeople ?? 9999);
-                        double each(String unit, double price) => unit == 'person' ? price * people : price;
-                        final total = each(p.priceUnit, p.price) +
-                            pkgExtras.where((e) => _selectedExtras.contains(e.id)).fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
-                        final label = p.isStartingPrice ? 'Reservar · ${p.name}' : 'Reservar · ${euros(total)}';
-                        TextStyle btn(double size) => TextStyle(
-                            fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: size, fontWeight: FontWeight.w700);
-                        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                          if (!perPersonMenus && (p.perPerson || pkgExtras.any((e) => e.priceUnit == 'person'))) ...[
-                            const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                              child: Row(children: [
-                                const Expanded(
-                                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                    Text('Para quantas pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
-                                    Text('Do teu evento · podes mudar', style: TextStyle(fontSize: 13, color: muted)),
-                                  ]),
-                                ),
-                                _StepButton(icon: Hi.minus, onTap: people > (p.minPeople ?? 1) ? () => setState(() => _people = people - 1) : null),
-                                SizedBox(width: 44, child: Text('$people', textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink))),
-                                _StepButton(icon: Hi.plus, onTap: people < (p.maxPeople ?? 9999) ? () => setState(() => _people = people + 1) : null),
-                              ]),
-                            ),
-                          ],
-                          // Extras só depois de escolher o pacote, e só se o
-                          // parceiro os criou (2026-11-15).
-                          if (pkgExtras.isNotEmpty) ...[
-                            Padding(
-                              padding: const EdgeInsets.only(top: 24, bottom: 12),
-                              child: Text('Juntar ao ${p.name}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ink)),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                              child: Column(children: [
-                                for (var i = 0; i < pkgExtras.length; i++)
-                                  ExtraChoiceRow(
-                                    extra: pkgExtras[i],
-                                    on: _selectedExtras.contains(pkgExtras[i].id),
-                                    last: i == pkgExtras.length - 1,
-                                    onTap: () => setState(() => _selectedExtras.contains(pkgExtras[i].id)
-                                        ? _selectedExtras.remove(pkgExtras[i].id)
-                                        : _selectedExtras.add(pkgExtras[i].id)),
-                                  ),
-                              ]),
-                            ),
-                          ],
-                          const Padding(
-                            padding: EdgeInsets.only(top: 24, bottom: 8),
-                            child: Text('MENSAGEM', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: muted)),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                            child: TextField(
-                              controller: _packageMessage,
-                              minLines: 3,
-                              maxLines: 5,
-                              maxLength: 300,
-                              style: const TextStyle(fontSize: 15, color: ink),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                filled: false,
-                                hintText: 'Opcional · o que o parceiro deve saber',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          if (!p.isStartingPrice)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: Row(children: [
-                                Expanded(
-                                  child: Text(
-                                    [p.name, if (_selectedExtras.isNotEmpty) '+ ${pkgExtras.where((e) => _selectedExtras.contains(e.id)).length} extra', if (p.perPerson) '$people pessoas'].join(' · '),
-                                    style: const TextStyle(fontSize: 13, color: muted),
-                                  ),
-                                ),
-                                Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
-                              ]),
-                            ),
-                          // Reservar a toda a largura, como no mockup "parceiro
-                          // com pacote" (sem caixa branca por trás).
-                          FilledButton(
-                            onPressed: _requestingQuote ? null : () => _requestPackage(p, pkgExtras, people),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: ink,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size.fromHeight(52),
-                              shape: const StadiumBorder(),
-                              textStyle: btn(15),
-                            ),
-                            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-                          ),
-                          // Explicação do pagamento só nos pacotes de preço fixo.
-                          if (!p.isStartingPrice) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              _eachPays
-                                  ? 'Cada convidado paga ${euros(total / people)} na app, 3 dias antes. ${widget.partner.name} aceita ou recusa.'
-                                  : '${widget.partner.name} aceita ou recusa. Se aceitar, pagas para confirmar.',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 13, color: muted),
-                            ),
-                          ],
-                        ]);
-                      }),
-                    if (!widget.selectionMode && canReserve) ...[
-                      const SizedBox(height: 12),
-                      // Secundário (§2): contorno preto 1,5, pílula, 44 — a
-                      // toda a largura, sem caixa branca por trás.
-                      SizedBox(
-                        height: 44,
-                        child: OutlinedButton(
-                          onPressed: pub ? _needAccount : (_requestingQuote ? null : () => _requestQuote()),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: ink,
-                            side: const BorderSide(color: ink, width: 1.5),
-                            shape: const StadiumBorder(),
-                            textStyle: const TextStyle(
-                                fontFamily: AppTheme.fontFamily,
-                                fontFamilyFallback: AppTheme.fontFamilyFallback,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700),
-                          ),
-                          child: const Text('Pedir orçamento à medida'),
-                        ),
-                      ),
-                    ],
-                  ]),
-                ),
-              ),
-            ],
-            Transform.translate(
-              offset: const Offset(0, -28),
-              child: _ReviewsSection(
-                partnerId: partner.id,
-                partnerName: partner.name,
-                partnerAvatarUrl: partner.imageUrl,
-                title: (count, action, onAction) => sectionTitle('Avaliações', action: action, onAction: onAction),
-              ),
-            ),
-            if (partner.location.isNotEmpty)
-              Transform.translate(
-                offset: const Offset(0, -28),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  sectionTitle('Onde fica'),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      Container(
-                        height: 130,
-                        color: const Color(0xFFDDE5D3),
-                        alignment: Alignment.center,
-                        child: const LineIcon(LineIcon.pin, size: 30, color: Color(0xFF4F6B4A), circles: LineIcon.pinCircle),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                        child: Row(children: [
-                          Expanded(
-                            child: Text(partner.location,
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ink)),
-                          ),
-                          const SizedBox(width: 10),
-                          SnappyTap(
-                            onTap: () => launchUrl(
-                              Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent('${partner.name} ${partner.location}')}'),
-                              mode: LaunchMode.externalApplication,
-                            ),
-                            child: Text('Abrir mapa',
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-                          ),
-                        ]),
-                      ),
-                    ]),
-                  ),
-                ]),
-              ),
-            if (pub)
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
-                child: Text(
-                  '"Seguir" e "Pedir orçamento" pedem para entrar ou criar conta, e voltam a esta página.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
-                ),
-              ),
-          ],
-        ),
           ),
-          // Seta de voltar fixa do §6: fica sempre no ecrã, roda ←→↑, sobe ao
-          // topo, e é translúcida sobre a foto — opaca depois de a foto sair.
-          if (!pub)
-            Positioned(
-              left: 20,
-              top: MediaQuery.paddingOf(context).top + 20,
-              child: ScrollAwareBackButton(
-                controller: _scroll,
-                onBack: () => Navigator.of(context).canPop()
-                    ? Navigator.of(context).pop()
-                    : context.go('/partners'),
-                imageExtent: 236,
-              ),
-            ),
+          // Barra fixa: a largura das caixas de conteúdo e os cantos da navbar.
+          Positioned(
+            left: AppTheme.screenMargin,
+            right: AppTheme.screenMargin,
+            bottom: (bottomPad > 20 ? bottomPad : 20),
+            child: _BottomBar(box: barBox, label: barLabel, onTap: barAction),
+          ),
         ],
       ),
     );
+  }
+
+  final _packagesKey = GlobalKey();
+
+  void _scrollToPackages() {
+    final ctx = _packagesKey.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+      alignment: 0.12,
+    );
+  }
+
+  /// Fotos do portfólio a toda a largura, dentro de um popup.
+  void _openPhotos(List<String> photos, int start) {
+    showIslandSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => SizedBox(
+        height: MediaQuery.sizeOf(ctx).height * 0.62,
+        child: PageView.builder(
+          controller: PageController(initialPage: start),
+          itemCount: photos.length,
+          itemBuilder: (context, i) => InteractiveViewer(
+            child: SizedNetworkImage(photos[i], fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink()),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Eventos para escolher nos popups: os reserváveis; sem nenhum, o atual.
+  Future<List<Wedding>> _eventsForSheet() async {
+    final bookable = await ref.read(_partnerBookableEventsProvider(widget.partner.id).future);
+    if (bookable.isNotEmpty) return bookable;
+    final current = ref.read(weddingControllerProvider).wedding;
+    return current == null ? const [] : [current];
+  }
+
+  /// Popup «Reservar <pacote>» (mockup 2026-11-20): evento, pessoas (se o
+  /// preço for por pessoa), extras, mensagem e total; depois envia.
+  Future<void> _openReserveSheet(ServicePackage pkg, List<ServiceExtra> pkgExtras, int? fixedPeople, int? guests) async {
+    final events = await _eventsForSheet();
+    if (!mounted || events.isEmpty) return;
+    final result = await showIslandSheet<_ReserveResult>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => _ReserveSheet(
+        partnerName: widget.partner.name,
+        package: pkg,
+        extras: pkgExtras,
+        events: events,
+        myId: ref.read(authControllerProvider).profile?.id,
+        initialExtras: {..._selectedExtras},
+        initialPeople: fixedPeople ?? _people ?? guests ?? pkg.minPeople ?? 1,
+        peopleFixed: fixedPeople != null,
+        eachPays: _eachPays,
+        message: _packageMessage.text,
+      ),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _selectedExtras
+        ..clear()
+        ..addAll(result.extras);
+      _people = result.people;
+      _packageMessage.text = result.message;
+    });
+    await _requestPackage(pkg, pkgExtras, result.people, event: result.event);
+  }
+
+  /// Popup «Reservar mesa» (cada um escolhe o seu, 190).
+  Future<void> _openTableSheet(int people) async {
+    final events = await _eventsForSheet();
+    if (!mounted || events.isEmpty) return;
+    final result = await showIslandSheet<_ReserveResult>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => _ReserveSheet(
+        partnerName: widget.partner.name,
+        events: events,
+        myId: ref.read(authControllerProvider).profile?.id,
+        initialPeople: people,
+        peopleFixed: true,
+        eachPays: _eachPays,
+        message: _packageMessage.text,
+      ),
+    );
+    if (result == null || !mounted) return;
+    _packageMessage.text = result.message;
+    await _requestTable(people, event: result.event);
   }
 
   Future<void> _share(Partner partner) async {
@@ -1204,152 +1084,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     }
   }
 }
-
-/// Fotos do parceiro (capa + portefólio) a toda a largura da folha, com
-/// a pega por cima, o coração para guardar e o contador "1 / N".
-class _PhotoCarousel extends StatefulWidget {
-  final List<String> photos;
-  final Color fallbackColor;
-  final IconData fallbackIcon;
-  final bool favorited;
-  final VoidCallback onFavorite;
-  final VoidCallback? onShare;
-  final bool publicView;
-
-  const _PhotoCarousel({
-    required this.photos,
-    required this.fallbackColor,
-    required this.fallbackIcon,
-    required this.favorited,
-    required this.onFavorite,
-    this.onShare,
-    this.publicView = false,
-  });
-
-  @override
-  State<_PhotoCarousel> createState() => _PhotoCarouselState();
-}
-
-class _PhotoCarouselState extends State<_PhotoCarousel> {
-  int _page = 0;
-
-  Widget _round(Widget icon, String label, VoidCallback onTap) => Semantics(
-        button: true,
-        label: label,
-        child: SnappyTap(
-          onTap: onTap,
-          child: Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            child: icon,
-          ),
-        ),
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    final photos = widget.photos;
-    final top = MediaQuery.of(context).padding.top;
-    // Mockup "Perfil do parceiro": foto a toda a largura, 300 de altura,
-    // botões brancos redondos e "1 / N fotos" em baixo à esquerda.
-    return SizedBox(
-      height: 300 + top,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Container(
-            color: widget.fallbackColor,
-            child: photos.isEmpty ? Icon(widget.fallbackIcon, color: Colors.white, size: 48) : null,
-          ),
-          if (photos.isNotEmpty)
-            PageView.builder(
-              itemCount: photos.length,
-              onPageChanged: (i) => setState(() => _page = i),
-              itemBuilder: (context, i) => SizedNetworkImage(
-                photos[i],
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-              ),
-            ),
-          if (widget.publicView) ...[
-            // Página pública: marca à esquerda, "Abrir na app" à direita.
-            Positioned(
-              top: top + 20,
-              left: 20,
-              child: Container(
-                height: 44,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                child: const Text('À Nossa!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              ),
-            ),
-            if (kIsWeb)
-              Positioned(
-                top: top + 20,
-                right: 20,
-                child: SnappyTap(
-                  onTap: () {
-                    PendingDeepLink.save(GoRouterState.of(context).uri.toString());
-                    showInstallAppSheet(context);
-                  },
-                  child: Container(
-                    height: 44,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(22)),
-                    child: const Text('Abrir na app',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-                  ),
-                ),
-              ),
-          ] else ...[
-            // O voltar é agora a seta fixa do §6 (fica no ecrã, não no
-            // carrossel). Aqui ficam só partilhar e guardar, à direita.
-            Positioned(
-              top: top + 20,
-              right: 20,
-              child: Row(children: [
-                if (widget.onShare != null) ...[
-                  _round(const LineIcon(LineIcon.share, size: 18, stroke: 2.2), 'Partilhar', widget.onShare!),
-                  const SizedBox(width: 8),
-                ],
-                _round(
-                  LineIcon(LineIcon.heart,
-                      size: 18,
-                      stroke: 2.2,
-                      fill: widget.favorited,
-                      color: widget.favorited ? AppStatusColors.declined : AppTheme.ink),
-                  widget.favorited ? 'Remover dos favoritos' : 'Guardar nos favoritos',
-                  widget.onFavorite,
-                ),
-              ]),
-            ),
-          ],
-          if (photos.isNotEmpty)
-            Positioned(
-              left: 20,
-              bottom: 44,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(999)),
-                child: Text('${_page + 1} / ${photos.length} ${photos.length == 1 ? 'foto' : 'fotos'}',
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-
-
-
-
-
 
 /// Avaliações publicadas do parceiro (`reviews`, 045_reviews.sql) —
 /// mostra o nome e foto do casal autor (`get_review_authors()`,
@@ -1378,10 +1112,14 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
   Widget build(BuildContext context) {
     final reviews = ref.watch(publicReviewsForPartnerProvider(widget.partnerId)).value ?? const <Review>[];
     final shown = _all ? reviews : reviews.take(1).toList();
+    final count = reviews.length;
+    final avg = count == 0 ? 0.0 : reviews.fold<int>(0, (t, r) => t + r.rating) / count;
+    // Mockup (2026-11-20): «Experiência geral» com a nota grande e quantas
+    // avaliações há de cada número de estrelas, em barras verdes.
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       widget.title(
-        reviews.length,
-        reviews.length > 1 && !_all ? 'Ver todas (${reviews.length})' : null,
+        count,
+        count > 1 && !_all ? 'Ver todas ($count)' : null,
         () => setState(() => _all = true),
       ),
       if (reviews.isEmpty)
@@ -1390,68 +1128,161 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
           child: const Text('Ainda sem avaliações.',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF57534E))),
+              style: TextStyle(fontSize: 14, color: Color(0xFF57534E))),
         )
-      else
+      else ...[
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(children: [
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Experiência geral', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text('Com base em $count ${count == 1 ? 'avaliação' : 'avaliações'}',
+                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                ]),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.ink, width: 1.5),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Hi.star, size: 22, color: AppTheme.ink),
+                  const SizedBox(width: 8),
+                  Text(avg.toStringAsFixed(1).replaceAll('.', ','),
+                      style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ]),
+              ),
+            ]),
+            const SizedBox(height: 16),
+            for (var star = 5; star >= 1; star--)
+              Padding(
+                padding: EdgeInsets.only(bottom: star > 1 ? 10 : 0),
+                child: Builder(builder: (context) {
+                  final n = reviews.where((r) => r.rating == star).length;
+                  return Row(children: [
+                    SizedBox(
+                      width: 72,
+                      child: Text('$star ${star == 1 ? 'estrela' : 'estrelas'}',
+                          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    ),
+                    Expanded(
+                      child: Container(
+                        height: 10,
+                        decoration: BoxDecoration(color: const Color(0xFFECE7DC), borderRadius: BorderRadius.circular(5)),
+                        alignment: Alignment.centerLeft,
+                        child: FractionallySizedBox(
+                          widthFactor: n / count,
+                          child: Container(
+                            decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(5)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 28,
+                      child: Text('$n',
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    ),
+                  ]);
+                }),
+              ),
+          ]),
+        ),
+        const SizedBox(height: 10),
         for (final r in shown)
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
             child: ReviewTile(review: r, partnerName: widget.partnerName, partnerAvatarUrl: widget.partnerAvatarUrl),
           ),
+      ],
     ]);
   }
 }
 
 class _RequestQuoteResult {
+  final Wedding event;
   final DateTime? eventDate;
   final String? location;
   final String? message;
 
-  const _RequestQuoteResult({this.eventDate, this.location, this.message});
+  const _RequestQuoteResult({required this.event, this.eventDate, this.location, this.message});
 }
 
-/// Formulário de "Pedir orçamento" — liga o botão "Reservar" ao RPC
-/// real `request_quote()` (`009_quotations_bookings.sql`). Todos os
-/// campos são opcionais (o RPC já trata `null` em cada um), exceto a
-/// regra RN de a data do evento ter de ter pelo menos 7 dias de
-/// antecedência (`p_event_date < current_date + 7` → erro `P0003`) —
-/// aplicada aqui também no `firstDate` do date picker, para o casal
-/// nunca conseguir escolher uma data que o servidor ia recusar.
+/// Popup «Pedir orçamento» (mockup 2026-11-20) — liga ao RPC real
+/// `request_quote()` (`009_quotations_bookings.sql`). Data, local e
+/// mensagem são opcionais; a data tem de ter pelo menos 7 dias de
+/// antecedência (`P0003`), por isso o calendário já não deixa escolher
+/// antes. O local escolhe-se no seletor de moradas.
 class _RequestQuoteSheet extends StatefulWidget {
-  final DateTime? initialDate;
-  final String? initialLocation;
+  final String partnerName;
+  final double? reference;
+  final String? referenceNote;
+  final List<Wedding> events;
+  final String? myId;
   final String? initialMessage;
 
-  const _RequestQuoteSheet({this.initialDate, this.initialLocation, this.initialMessage});
+  const _RequestQuoteSheet({
+    required this.partnerName,
+    this.reference,
+    this.referenceNote,
+    required this.events,
+    this.myId,
+    this.initialMessage,
+  });
 
   @override
   State<_RequestQuoteSheet> createState() => _RequestQuoteSheetState();
 }
 
 class _RequestQuoteSheetState extends State<_RequestQuoteSheet> {
-  late final _location = TextEditingController(
-    text: widget.initialLocation ?? '',
-  );
+  late Wedding _event = widget.events.first;
   late final _message = TextEditingController(text: widget.initialMessage ?? '');
   DateTime? _eventDate;
+  String? _location;
+  String? _locationSub;
 
-  DateTime get _minSelectableDate =>
-      DateTime.now().add(const Duration(days: 7));
+  DateTime get _minSelectableDate => DateTime.now().add(const Duration(days: 7));
 
   @override
   void initState() {
     super.initState();
-    final initial = widget.initialDate;
-    _eventDate = (initial != null && !initial.isBefore(_minSelectableDate))
-        ? initial
-        : null;
+    _fromEvent();
+  }
+
+  /// Data e local vêm do evento escolhido (podem mudar-se).
+  void _fromEvent() {
+    final d = _event.weddingDate;
+    _eventDate = (d != null && !d.isBefore(_minSelectableDate)) ? d : null;
+    final venue = _event.venue?.trim() ?? '';
+    final place = _event.location?.trim() ?? '';
+    _location = venue.isNotEmpty ? venue : (place.isNotEmpty ? place : null);
+    _locationSub = venue.isNotEmpty && place.isNotEmpty ? '$place · do teu evento' : (_location != null ? 'do teu evento' : null);
   }
 
   @override
   void dispose() {
-    _location.dispose();
     _message.dispose();
     super.dispose();
+  }
+
+  Future<void> _changeEvent() async {
+    final picked = await showIslandSheet<Wedding>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _EventPickerSheet(events: widget.events, partnerName: widget.partnerName, myId: widget.myId),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _event = picked;
+        _fromEvent();
+      });
+    }
   }
 
   Future<void> _pickDate() async {
@@ -1464,66 +1295,162 @@ class _RequestQuoteSheetState extends State<_RequestQuoteSheet> {
     if (picked != null) setState(() => _eventDate = picked);
   }
 
+  Future<void> _pickPlace() async {
+    final picked = await showAddressPicker(context, title: 'Onde é o evento?', initialQuery: _location);
+    if (picked != null && mounted) {
+      setState(() {
+        _location = picked.name;
+        _locationSub = picked.secondary;
+      });
+    }
+  }
+
+  Widget _pill({required Widget icon, required Widget child, VoidCallback? onTap, String? label}) => Semantics(
+        button: true,
+        label: label,
+        child: SnappyTap(
+          onTap: onTap,
+          child: Container(
+            height: 52,
+            padding: const EdgeInsets.fromLTRB(16, 0, 14, 0),
+            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+            child: Row(children: [icon, const SizedBox(width: 8), Expanded(child: child)]),
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Pedir orçamento',
-            style: Theme.of(context).textTheme.titleLarge,
+    final d = _eventDate;
+    final dateText = d == null
+        ? 'A combinar'
+        : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Pedir orçamento', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 4),
+              Text('Envia os detalhes do teu evento — ${widget.partnerName} responde pelas Mensagens com uma proposta.',
+                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Envia os detalhes do teu casamento — o parceiro responde diretamente pelo Chat.',
-            style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-          ),
+          const SizedBox(width: 12),
+          const _CloseButton(),
+        ]),
+        if (widget.reference != null) ...[
           const SizedBox(height: 16),
-          InkWell(
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            onTap: _pickDate,
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                labelText: 'Data do evento (opcional)',
-              ),
-              child: Text(
-                _eventDate == null
-                    ? 'A combinar'
-                    : '${_eventDate!.day.toString().padLeft(2, '0')}/${_eventDate!.month.toString().padLeft(2, '0')}/${_eventDate!.year}',
-              ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.ink, width: 1.5),
             ),
-          ),
-          const SizedBox(height: 12),
-          AuthTextField(label: 'Localização (opcional)', controller: _location),
-          const SizedBox(height: 12),
-          AuthTextField(label: 'Mensagem (opcional)', controller: _message),
-          const SizedBox(height: 16),
-          PrimaryButton(
-            label: 'Enviar pedido',
-            onPressed: () {
-              Navigator.of(context).pop(
-                _RequestQuoteResult(
-                  eventDate: _eventDate,
-                  location: _location.text.trim().isEmpty
-                      ? null
-                      : _location.text.trim(),
-                  message: _message.text.trim().isEmpty
-                      ? null
-                      : _message.text.trim(),
-                ),
-              );
-            },
+            child: Row(children: [
+              Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                const Text('REFERÊNCIA',
+                    style: TextStyle(fontSize: 9, letterSpacing: 1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                Text('≈ ${euros(widget.reference!)}',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ]),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(widget.referenceNote ?? 'Indicado pelo parceiro',
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ),
+            ]),
           ),
         ],
-      ),
+        const SizedBox(height: 16),
+        const _Caps('PARA QUE EVENTO'),
+        _EventChoice(event: _event, onChange: widget.events.length > 1 ? _changeEvent : null),
+        const SizedBox(height: 16),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              const _Caps('DATA'),
+              _pill(
+                label: 'Data do evento',
+                onTap: _pickDate,
+                icon: const Icon(Hi.calendar, size: 18, color: AppTheme.inkMuted),
+                child: Text(dateText, maxLines: 1, style: const TextStyle(fontSize: 15, color: AppTheme.ink)),
+              ),
+            ]),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              const _Caps('LOCAL'),
+              _pill(
+                label: 'Escolher local',
+                onTap: _pickPlace,
+                icon: const Icon(Hi.mapPin, size: 18, color: AppTheme.inkMuted),
+                child: Row(children: [
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                      Text(_location ?? 'Escolher local',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 15, color: _location == null ? AppTheme.inkMuted : AppTheme.ink)),
+                      if (_locationSub != null)
+                        Text(_locationSub!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
+                    ]),
+                  ),
+                  const Icon(Hi.chevronRight, size: 16, color: AppTheme.inkMuted),
+                ]),
+              ),
+            ]),
+          ),
+        ]),
+        const SizedBox(height: 16),
+        const _Caps('MENSAGEM'),
+        TextField(
+          controller: _message,
+          minLines: 3,
+          maxLines: 5,
+          maxLength: 500,
+          style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+          decoration: InputDecoration(
+            hintText: 'O que ${widget.partnerName} deve saber: quantidades, estilo, alergias…',
+            hintStyle: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
+            filled: true,
+            fillColor: AppTheme.background,
+            counterText: '',
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 52,
+          child: FilledButton(
+            onPressed: () => Navigator.of(context).pop(_RequestQuoteResult(
+              event: _event,
+              eventDate: _eventDate,
+              location: _location,
+              message: _message.text.trim().isEmpty ? null : _message.text.trim(),
+            )),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.ink,
+              foregroundColor: Colors.white,
+              shape: const StadiumBorder(),
+              textStyle: const TextStyle(
+                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+            child: const Text('Enviar pedido'),
+          ),
+        ),
+      ]),
     );
   }
 }
@@ -1534,9 +1461,12 @@ class _PartnerFollow extends ConsumerStatefulWidget {
   /// Página pública sem sessão: o botão pede para entrar.
   final VoidCallback? onNeedAccount;
 
-  /// Segundo botão ao lado de "Seguir" (mockup: "Pedir orçamento").
+  /// Segundo botão ao lado de "Seguir" (mockup: "Mensagem").
   final Widget? second;
-  const _PartnerFollow({required this.partnerId, this.onNeedAccount, this.second});
+
+  /// «Seguir» com contorno (o botão principal é o da barra de baixo).
+  final bool outlined;
+  const _PartnerFollow({required this.partnerId, this.onNeedAccount, this.second, this.outlined = false});
 
   @override
   ConsumerState<_PartnerFollow> createState() => _PartnerFollowState();
@@ -1558,7 +1488,7 @@ class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
             const SizedBox(height: 12),
           ],
           Row(children: [
-            Expanded(child: ProfileButton('Seguir', dark: true, onTap: widget.onNeedAccount)),
+            Expanded(child: ProfileButton('Seguir', dark: !widget.outlined, onTap: widget.onNeedAccount)),
             if (widget.second != null) ...[const SizedBox(width: 8), Expanded(child: widget.second!)],
           ]),
         ]),
@@ -1581,7 +1511,7 @@ class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
           Expanded(
             child: ProfileButton(
               info.iFollow ? 'A seguir' : 'Seguir',
-              dark: !info.iFollow,
+              dark: !info.iFollow && !widget.outlined,
               onTap: _busy
                   ? null
                   : () async {
@@ -1822,13 +1752,8 @@ class _EventPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
-      decoration: const BoxDecoration(
-        color: AppTheme.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      padding: EdgeInsets.fromLTRB(20, 14, 20, 24 + bottom),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
       child: SafeArea(
         top: false,
         child: Column(
@@ -1851,9 +1776,8 @@ class _EventPickerSheet extends StatelessWidget {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.background,
                 borderRadius: BorderRadius.circular(22),
-                boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
               ),
               clipBehavior: Clip.antiAlias,
               child: Column(
@@ -1907,6 +1831,817 @@ class _EventPickerSheet extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Peças do perfil do parceiro (mockups «Parceiros e perfis», 2026-11-20).
+// ---------------------------------------------------------------------------
+
+/// «12 jun 2027 · Sintra» para a linha do evento nos popups.
+String _eventMeta(Wedding w) {
+  final parts = <String>[];
+  final d = w.weddingDate;
+  if (d != null) {
+    const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    parts.add('${d.day} ${meses[d.month - 1]} ${d.year}');
+  }
+  final place = (w.venue?.isNotEmpty == true) ? w.venue! : (w.location ?? '');
+  if (place.isNotEmpty) parts.add(place);
+  if (w.estimatedGuests != null) parts.add('${w.estimatedGuests} pessoas');
+  return parts.join(' · ');
+}
+
+/// Botão redondo 44 translúcido sobre a foto (DESIGN.md §6: branco a ~55 %
+/// com a sombra suave e o ícone preto 20).
+class _GlassButton extends StatelessWidget {
+  final Widget icon;
+  final String label;
+  final VoidCallback onTap;
+  const _GlassButton({required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: label,
+        excludeFromSemantics: true,
+        child: SnappyTap(
+          onTap: onTap,
+          semanticLabel: label,
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.55),
+              shape: BoxShape.circle,
+              boxShadow: softShadow,
+            ),
+            child: icon,
+          ),
+        ),
+      );
+}
+
+/// Foto do topo que encolhe com o scroll (pedido do Rafael, 2026-11-20):
+/// aberta tem 300, com «Em destaque», o logótipo e o nome a branco; ao
+/// descer encolhe até à faixa dos botões e fica, com o nome e a meta ao
+/// lado da seta. Voltar, partilhar e favorito estão sempre no mesmo sítio
+/// e a seta é sempre «voltar». Reduzida, os cantos de baixo ficam iguais
+/// aos de cima (40).
+class _PartnerHero extends StatelessWidget {
+  final ScrollController scroll;
+  final Partner partner;
+  final String? photo;
+  final double topPad;
+  final String metaLine;
+  final bool favorited;
+  final bool publicView;
+  final VoidCallback onBack;
+  final VoidCallback onShare;
+  final VoidCallback onFavorite;
+
+  const _PartnerHero({
+    required this.scroll,
+    required this.partner,
+    required this.photo,
+    required this.topPad,
+    required this.metaLine,
+    required this.favorited,
+    required this.publicView,
+    required this.onBack,
+    required this.onShare,
+    required this.onFavorite,
+  });
+
+  static const double _bottomRadius = 40;
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: scroll,
+        builder: (context, _) {
+          final y = scroll.hasClients ? math.max(0.0, scroll.offset) : 0.0;
+          final minH = topPad + 68;
+          final range = math.max(1.0, _kHeroHeight - minH);
+          final h = math.max(minH, _kHeroHeight - y);
+          double unit(double v) => v.clamp(0.0, 1.0).toDouble();
+          final big = unit(1 - y / 110);
+          final mini = unit((y - range + 50) / 50);
+          final radius = _bottomRadius * unit((y - range + 60) / 60);
+          final collapsed = h <= minH + 0.5;
+          final corners = BorderRadius.vertical(bottom: Radius.circular(radius));
+          final fallback = colorForCategorySlug(partner.primaryCategorySlug);
+
+          return SizedBox(
+            height: h,
+            child: Stack(children: [
+              // A foto não apanha toques: arrastar nela faz scroll à página.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: corners,
+                      boxShadow: collapsed ? const [BoxShadow(color: Color(0x0F171713), blurRadius: 14, offset: Offset(0, 4))] : null,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: corners,
+                      child: Stack(children: [
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          top: (h - _kHeroHeight) / 2,
+                          height: _kHeroHeight,
+                          child: photo == null
+                              ? Container(
+                                  color: fallback,
+                                  alignment: Alignment.center,
+                                  child: Icon(iconForCategorySlug(partner.primaryCategorySlug),
+                                      size: 64, color: AppTheme.ink.withValues(alpha: 0.28)),
+                                )
+                              : SizedNetworkImage(
+                                  photo!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Container(color: fallback),
+                                ),
+                        ),
+                        // Véu escuro em baixo, para o nome a branco se ler.
+                        const Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          height: 160,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [Color(0x8C171713), Color(0x00171713)],
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (big > 0)
+                          Positioned(
+                            left: AppTheme.screenMargin,
+                            right: AppTheme.screenMargin,
+                            bottom: 20,
+                            child: Opacity(
+                              opacity: big,
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                                if (partner.featured) ...[
+                                  const InfoTag('Em destaque', green: true),
+                                  const SizedBox(height: 12),
+                                ],
+                                Row(children: [
+                                  V2Avatar(partner.name, size: 56),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(partner.name,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white, height: 1.1)),
+                                  ),
+                                ]),
+                              ]),
+                            ),
+                          ),
+                      ]),
+                    ),
+                  ),
+                ),
+              ),
+              // Os botões ficam sempre no mesmo sítio.
+              Positioned(
+                left: AppTheme.screenMargin,
+                right: AppTheme.screenMargin,
+                top: topPad + 8,
+                child: Row(children: [
+                  if (publicView)
+                    Container(
+                      height: 44,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                      child: const Text('À Nossa!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    )
+                  else
+                    _GlassButton(
+                      icon: const Icon(Hi.arrowLeft, size: 20, color: AppTheme.ink),
+                      label: 'Voltar',
+                      onTap: onBack,
+                    ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: IgnorePointer(
+                      child: Opacity(
+                        opacity: mini,
+                        child: Transform.translate(
+                          offset: Offset(0, (1 - mini) * 6),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                            Text(partner.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                            Text(metaLine,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.88))),
+                          ]),
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (publicView) ...[
+                    if (kIsWeb)
+                      SnappyTap(
+                        onTap: () {
+                          PendingDeepLink.save(GoRouterState.of(context).uri.toString());
+                          showInstallAppSheet(context);
+                        },
+                        child: Container(
+                          height: 44,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(22)),
+                          child: const Text('Abrir na app',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                        ),
+                      ),
+                  ] else ...[
+                    const SizedBox(width: 10),
+                    _GlassButton(
+                      icon: const LineIcon(LineIcon.share, size: 20, stroke: 2.2),
+                      label: 'Partilhar',
+                      onTap: onShare,
+                    ),
+                    const SizedBox(width: 10),
+                    _GlassButton(
+                      icon: LineIcon(LineIcon.heart, size: 20, stroke: 2.2, fill: favorited, color: AppTheme.ink),
+                      label: favorited ? 'Remover dos favoritos' : 'Guardar nos favoritos',
+                      onTap: onFavorite,
+                    ),
+                  ],
+                ]),
+              ),
+            ]),
+          );
+        },
+      );
+}
+
+/// Cartão de dados do parceiro por baixo da foto (o nome já está nela):
+/// categoria, nota e zona com a caixa de preço à direita; experiência e
+/// «Responde em ~1 h»; descrição com «Ler mais»; etiquetas; os três
+/// números em caixas com contorno; Seguir e Mensagem.
+class _PartnerHeadCard extends StatefulWidget {
+  final Partner partner;
+  final Widget priceBox;
+  final String? ratingText;
+  final int reviewCount;
+  final String? responds;
+  final String? figureText;
+  final List<(String, String)> stats;
+  final Widget? buttons;
+
+  const _PartnerHeadCard({
+    required this.partner,
+    required this.priceBox,
+    required this.ratingText,
+    required this.reviewCount,
+    required this.responds,
+    required this.figureText,
+    required this.stats,
+    required this.buttons,
+  });
+
+  @override
+  State<_PartnerHeadCard> createState() => _PartnerHeadCardState();
+}
+
+class _PartnerHeadCardState extends State<_PartnerHeadCard> {
+  bool _more = false;
+
+  Widget _line(Widget icon, Widget text) => Row(children: [
+        SizedBox(width: 18, child: icon),
+        const SizedBox(width: 10),
+        Expanded(child: DefaultTextStyle.merge(style: const TextStyle(fontSize: 14, color: AppTheme.ink), child: text)),
+      ]);
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.partner;
+    final travel = p.maxTravelDistanceKm;
+    final where = [
+      if (p.location.isNotEmpty) p.location,
+      if (travel != null && travel > 0) 'até $travel km',
+    ].join(' · ');
+    final bio = p.description.trim();
+    final long = bio.length > 200;
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _line(Icon(iconForCategorySlug(p.primaryCategorySlug), size: 18, color: AppTheme.inkMuted),
+                  Text(p.primaryCategoryLabel)),
+              if (widget.ratingText != null) ...[
+                const SizedBox(height: 10),
+                _line(
+                  const Icon(Hi.star, size: 18, color: AppTheme.ink),
+                  Text.rich(TextSpan(children: [
+                    TextSpan(text: widget.ratingText, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    TextSpan(
+                      text: ' (${widget.reviewCount} ${widget.reviewCount == 1 ? 'avaliação' : 'avaliações'})',
+                      style: const TextStyle(color: AppTheme.inkMuted),
+                    ),
+                  ])),
+                ),
+              ],
+              if (where.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                _line(const Icon(Hi.mapPin, size: 18, color: AppTheme.inkMuted), Text(where)),
+              ],
+            ]),
+          ),
+          const SizedBox(width: 12),
+          widget.priceBox,
+        ]),
+        if (p.yearsExperience != null || widget.responds != null) ...[
+          const SizedBox(height: 10),
+          Row(children: [
+            if (p.yearsExperience != null) ...[
+              const SizedBox(width: 18, child: Icon(Hi.clock, size: 18, color: AppTheme.inkMuted)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text('${p.yearsExperience} ${p.yearsExperience == 1 ? 'ano' : 'anos'} de experiência',
+                    style: const TextStyle(fontSize: 14, color: AppTheme.ink)),
+              ),
+            ] else
+              const Spacer(),
+            if (widget.responds != null) InfoTag(widget.responds!, green: true),
+          ]),
+        ],
+        if (bio.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Text(bio,
+              maxLines: _more || !long ? null : 4,
+              overflow: _more || !long ? null : TextOverflow.ellipsis,
+              textAlign: TextAlign.justify,
+              style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.ink)),
+          if (long && !_more)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SnappyTap(
+                onTap: () => setState(() => _more = true),
+                child: const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Text('Ler mais', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ),
+              ),
+            ),
+        ],
+        const SizedBox(height: 14),
+        Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          ProBadge(p.id),
+          FounderBadge(p.id, long: true),
+          for (final c in p.categoryLabels.skip(1)) InfoTag(c),
+          if (widget.figureText != null) InfoTag(widget.figureText!),
+        ]),
+        const SizedBox(height: 14),
+        MiniStats(widget.stats),
+        if (widget.buttons != null) ...[const SizedBox(height: 16), widget.buttons!],
+      ]),
+    );
+  }
+}
+
+/// Linha de pacote para escolher (mockup): círculo que fica verde com o
+/// visto, nome 16, meta 13 e o preço à direita.
+class _PackageRow extends StatelessWidget {
+  final ServicePackage package;
+  final bool first;
+  final bool selected;
+  final VoidCallback? onTap;
+  const _PackageRow({required this.package, required this.first, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = package;
+    final desc = p.description.trim().split('\n').first;
+    final meta = desc.isNotEmpty ? desc : p.includes.take(2).join(' · ');
+    final price = '${p.isStartingPrice ? 'desde ' : ''}${euros(p.price)}${priceUnitSuffix(p.priceUnit)}';
+    return Semantics(
+      button: onTap != null,
+      selected: selected,
+      child: SnappyTap(
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(border: first ? null : const Border(top: BorderSide(color: Color(0xFFECE7DC)))),
+          child: Row(children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: selected ? AppTheme.accentOliveDark : Colors.white,
+                shape: BoxShape.circle,
+                border: selected ? null : Border.all(color: AppTheme.inkMuted, width: 1.5),
+              ),
+              child: selected ? const Icon(Hi.check, size: 13, color: Colors.white) : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text(p.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                if (meta.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(meta, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                ],
+              ]),
+            ),
+            const SizedBox(width: 12),
+            Text(price, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+/// «Quanto pode custar» de quem só trabalha por orçamento: o valor de
+/// referência que o parceiro indica (40), para que é (migração 203) e a
+/// explicação.
+class _ReferenceCard extends StatelessWidget {
+  final double price;
+  final String? note;
+  const _ReferenceCard({required this.price, this.note});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('VALOR DE REFERÊNCIA',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+          const SizedBox(height: 6),
+          Text('≈ ${euros(price)}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1.1)),
+          if (note != null && note!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(note!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          ],
+          const SizedBox(height: 12),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFECE7DC)),
+          const SizedBox(height: 12),
+          const Text(
+            'Indicado pelo parceiro. O valor final depende do teu evento: pedes orçamento e recebes uma proposta.',
+            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4),
+          ),
+        ]),
+      );
+}
+
+/// Barra fixa em baixo (mockup): branca, cantos 35, com a caixa de preço
+/// e o botão preto 52.
+class _BottomBar extends StatelessWidget {
+  final (String, String) box;
+  final String label;
+  final VoidCallback? onTap;
+  const _BottomBar({required this.box, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        height: 76,
+        padding: const EdgeInsets.fromLTRB(16, 0, 12, 0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(35),
+          boxShadow: AppTheme.navBarShadow,
+        ),
+        child: Row(children: [
+          Container(
+            constraints: const BoxConstraints(maxWidth: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.ink, width: 1.5),
+            ),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(box.$1,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 9, height: 1.2, letterSpacing: 1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              Text(box.$2,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ]),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: SizedBox(
+              height: 52,
+              child: FilledButton(
+                onPressed: onTap,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.ink,
+                  foregroundColor: Colors.white,
+                  shape: const StadiumBorder(),
+                  textStyle: const TextStyle(
+                      fontFamily: AppTheme.fontFamily,
+                      fontFamilyFallback: AppTheme.fontFamilyFallback,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700),
+                ),
+                child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+            ),
+          ),
+        ]),
+      );
+}
+
+/// Título de grupo em maiúsculas (12, espaçamento 2) dos popups.
+class _Caps extends StatelessWidget {
+  final String text;
+  const _Caps(this.text);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+      );
+}
+
+/// Botão de fechar dos popups: círculo 44 `#F2F0EB` com o ×.
+class _CloseButton extends StatelessWidget {
+  const _CloseButton();
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: 'Fechar',
+        excludeFromSemantics: true,
+        child: SnappyTap(
+          onTap: () => Navigator.of(context).maybePop(),
+          semanticLabel: 'Fechar',
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
+            child: const Icon(Hi.xMark, size: 18, color: AppTheme.ink),
+          ),
+        ),
+      );
+}
+
+/// Linha do evento nos popups, com «Mudar» quando há mais do que um.
+class _EventChoice extends StatelessWidget {
+  final Wedding event;
+  final VoidCallback? onChange;
+  const _EventChoice({required this.event, this.onChange});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+        child: Row(children: [
+          V2Avatar(event.displayNames, size: 44, imageUrl: event.coverPhotoUrlCacheBusted),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Text(event.displayNames,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              if (_eventMeta(event).isNotEmpty)
+                Text(_eventMeta(event),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
+          ),
+          if (onChange != null) ...[
+            const SizedBox(width: 10),
+            SnappyTap(
+              onTap: onChange,
+              child: Text('Mudar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+            ),
+          ],
+        ]),
+      );
+}
+
+class _ReserveResult {
+  final Wedding event;
+  final Set<String> extras;
+  final int people;
+  final String message;
+  const _ReserveResult({required this.event, required this.extras, required this.people, required this.message});
+}
+
+/// Popup «Reservar <pacote>» / «Reservar mesa» (mockup 2026-11-20): para
+/// que evento, pessoas (se o preço for por pessoa), extras do pacote,
+/// mensagem, total e o botão; por baixo, o que acontece a seguir.
+class _ReserveSheet extends StatefulWidget {
+  final String partnerName;
+
+  /// `null` = reservar mesa (cada um escolhe o seu).
+  final ServicePackage? package;
+  final List<ServiceExtra> extras;
+  final List<Wedding> events;
+  final String? myId;
+  final Set<String> initialExtras;
+  final int initialPeople;
+  final bool peopleFixed;
+  final bool eachPays;
+  final String message;
+
+  const _ReserveSheet({
+    required this.partnerName,
+    this.package,
+    this.extras = const [],
+    required this.events,
+    this.myId,
+    this.initialExtras = const {},
+    required this.initialPeople,
+    this.peopleFixed = false,
+    this.eachPays = false,
+    this.message = '',
+  });
+
+  @override
+  State<_ReserveSheet> createState() => _ReserveSheetState();
+}
+
+class _ReserveSheetState extends State<_ReserveSheet> {
+  late Wedding _event = widget.events.first;
+  late final Set<String> _extras = {...widget.initialExtras};
+  late int _people = widget.initialPeople;
+  late final _message = TextEditingController(text: widget.message);
+
+  @override
+  void dispose() {
+    _message.dispose();
+    super.dispose();
+  }
+
+  Future<void> _changeEvent() async {
+    final picked = await showIslandSheet<Wedding>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _EventPickerSheet(events: widget.events, partnerName: widget.partnerName, myId: widget.myId),
+    );
+    if (picked != null && mounted) setState(() => _event = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.package;
+    final minP = p?.minPeople ?? 1;
+    final maxP = p?.maxPeople ?? 9999;
+    final people = _people.clamp(minP, maxP);
+    double each(String unit, double price) => unit == 'person' ? price * people : price;
+    final chosen = widget.extras.where((e) => _extras.contains(e.id)).toList();
+    final total = p == null ? 0.0 : each(p.priceUnit, p.price) + chosen.fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
+    final needPeople = p != null && !widget.peopleFixed && (p.perPerson || widget.extras.any((e) => e.priceUnit == 'person'));
+    final desc = p?.description.trim().split('\n').first ?? '';
+    final title = p == null ? 'Reservar mesa' : 'Reservar ${p.name}';
+    final subtitle = p == null
+        ? '${widget.partnerName} · mesa para $people · cada um escolhe${widget.eachPays ? ' e paga' : ''} o seu'
+        : [widget.partnerName, if (desc.isNotEmpty) desc].join(' · ');
+    final buttonLabel = p == null
+        ? 'Reservar mesa'
+        : p.isStartingPrice
+            ? 'Reservar · ${p.name}'
+            : 'Reservar · ${euros(total)}';
+    final after = p == null
+        ? '${widget.partnerName} aceita ou recusa. A escolha fecha 3 dias antes do evento.'
+        : widget.eachPays && !p.isStartingPrice
+            ? 'Cada convidado paga ${euros(total / people)} na app, 3 dias antes. ${widget.partnerName} aceita ou recusa.'
+            : '${widget.partnerName} aceita ou recusa — avisamos-te assim que responder.';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 4),
+              Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
+          ),
+          const SizedBox(width: 12),
+          const _CloseButton(),
+        ]),
+        const SizedBox(height: 16),
+        const _Caps('PARA QUE EVENTO'),
+        _EventChoice(event: _event, onChange: widget.events.length > 1 ? _changeEvent : null),
+        if (needPeople) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+            child: Row(children: [
+              const Expanded(
+                child: Text('Para quantas pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ),
+              _StepButton(icon: Hi.minus, onTap: people > minP ? () => setState(() => _people = people - 1) : null),
+              SizedBox(
+                width: 44,
+                child: Text('$people',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ),
+              _StepButton(icon: Hi.plus, onTap: people < maxP ? () => setState(() => _people = people + 1) : null),
+            ]),
+          ),
+        ],
+        if (p != null && widget.extras.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _Caps('JUNTAR AO ${p.name.toUpperCase()}'),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+            child: Column(children: [
+              for (var i = 0; i < widget.extras.length; i++)
+                ExtraChoiceRow(
+                  extra: widget.extras[i],
+                  on: _extras.contains(widget.extras[i].id),
+                  last: i == widget.extras.length - 1,
+                  onTap: () => setState(() => _extras.contains(widget.extras[i].id)
+                      ? _extras.remove(widget.extras[i].id)
+                      : _extras.add(widget.extras[i].id)),
+                ),
+            ]),
+          ),
+        ],
+        const SizedBox(height: 16),
+        const _Caps('MENSAGEM'),
+        TextField(
+          controller: _message,
+          minLines: 1,
+          maxLines: 4,
+          maxLength: 300,
+          style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+          decoration: InputDecoration(
+            hintText: p == null ? 'Ex.: mesa comprida junto à janela, um aniversariante…' : 'Opcional · o que o parceiro deve saber',
+            hintStyle: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
+            filled: true,
+            fillColor: AppTheme.background,
+            counterText: '',
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(26), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(26), borderSide: BorderSide.none),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(26), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
+          ),
+        ),
+        if (p != null && !p.isStartingPrice) ...[
+          const SizedBox(height: 14),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFECE7DC)),
+          const SizedBox(height: 14),
+          Row(children: [
+            Expanded(
+              child: Text(
+                [p.name, if (chosen.isNotEmpty) '+ ${chosen.length} extra', if (p.perPerson) '$people pessoas'].join(' · '),
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+              ),
+            ),
+            Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ]),
+        ],
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 52,
+          child: FilledButton(
+            onPressed: () => Navigator.of(context).pop(_ReserveResult(
+              event: _event,
+              extras: _extras,
+              people: people,
+              message: _message.text.trim(),
+            )),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.ink,
+              foregroundColor: Colors.white,
+              shape: const StadiumBorder(),
+              textStyle: const TextStyle(
+                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+            child: Text(buttonLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(after, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+      ]),
     );
   }
 }

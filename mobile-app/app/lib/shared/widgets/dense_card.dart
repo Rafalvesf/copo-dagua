@@ -307,14 +307,23 @@ class MiniStats extends StatelessWidget {
 class PriceBox extends StatelessWidget {
   final String label;
   final String value;
-  const PriceBox(this.label, this.value, {super.key});
+
+  /// Com contorno preto 1,5 e cantos 12 (DESIGN.md §6, Preço) — nos
+  /// cartões e no perfil do parceiro (mockups 2026-11-20). Sem contorno é a
+  /// caixa branca por cima das fotos.
+  final bool outlined;
+  const PriceBox(this.label, this.value, {super.key, this.outlined = false});
 
   @override
   Widget build(BuildContext context) => Container(
         // Proporcional à caixa da data (2026-11-12: "um pouco grandes").
         constraints: const BoxConstraints(minWidth: 40),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+        padding: outlined ? const EdgeInsets.symmetric(horizontal: 12, vertical: 5) : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(outlined ? 12 : 10),
+          border: outlined ? Border.all(color: AppTheme.ink, width: 1.5) : null,
+        ),
         // Sem rótulo: "Por orçamento" em duas linhas, como o DESDE
         // (DESIGN.md §6, Preço): POR em cima, Orçamento por baixo.
         child: label.isEmpty

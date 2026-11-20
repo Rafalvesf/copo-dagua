@@ -41,7 +41,7 @@ class PartnerBottomNav extends ConsumerWidget {
     // (pedido 2026-10-17: "as navbars devem ser iguais").
     return SafeArea(
       top: false,
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+      minimum: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 20),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,

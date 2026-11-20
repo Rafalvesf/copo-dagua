@@ -892,6 +892,19 @@ class Partner {
   /// aparece primeiro no carrossel "Em destaque".
   final bool featured;
 
+  /// Quando entrou na app (secção «Novos na À Nossa!»).
+  final DateTime? createdAt;
+  final int? yearsExperience;
+  final int? maxTravelDistanceKm;
+
+  /// Só para quem trabalha por orçamento (migração 203, pedido do Rafael
+  /// 2026-11-20): para que tipo de evento é o valor de referência
+  /// ([averageQuotePrice]) — "Bolo de 3 andares para 100 pessoas".
+  final String? referenceNote;
+
+  /// Trabalha só por orçamento (sem pacotes com preço).
+  bool get quoteOnly => startingPrice == null;
+
   const Partner({
     required this.id,
     required this.name,
@@ -905,6 +918,10 @@ class Partner {
     required this.description,
     this.imageUrl,
     this.featured = false,
+    this.createdAt,
+    this.yearsExperience,
+    this.maxTravelDistanceKm,
+    this.referenceNote,
   });
 
   String get primaryCategoryLabel =>

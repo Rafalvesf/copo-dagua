@@ -4,6 +4,7 @@ import '../../../core/partners/partner_pro.dart';
 import '../../../shared/money.dart';
 import '../widgets/invite_benefits_card.dart';
 import '../../../shared/widgets/onb_kit.dart';
+import '../../../shared/widgets/address_picker.dart' show showAddressPicker;
 import '../../../shared/widgets/page_kit.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../../core/exports/export_files.dart' show deliverFile;
@@ -600,7 +601,24 @@ class _EditEventPageState extends ConsumerState<EditEventPage> {
               await _save();
             },
           ),
-          KitSetRow(label: 'Local', value: v(_venue), onTap: () => _editText('Local', _venue)),
+          KitSetRow(
+            label: 'Local',
+            value: v(_venue),
+            // Seletor de moradas com o Google (2026-11-20).
+            onTap: () async {
+              final picked = await showAddressPicker(
+                context,
+                title: 'Onde é o evento?',
+                initialQuery: _venue.text.trim().isEmpty ? null : _venue.text.trim(),
+              );
+              if (picked == null || !mounted) return;
+              setState(() {
+                _venue.text = picked.name;
+                if (_location.text.trim().isEmpty && picked.city.isNotEmpty) _location.text = picked.city;
+              });
+              await _save();
+            },
+          ),
           KitSetRow(label: 'Frase', value: v(_quote), onTap: () => _editText('Frase de destaque', _quote)),
           if (isWedding)
             KitSetRow(
