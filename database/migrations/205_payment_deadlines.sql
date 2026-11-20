@@ -9,8 +9,11 @@
 --     (janela de reembolso, migrações 112/124).
 --   * Categorias sem sinal (191, pagam tudo de uma vez — restaurantes,
 --     atividades… que se cancelam até 2 h antes): o pagamento único segue
---     o prazo do resto (14 dias por defeito, o parceiro pode pedir até
---     24 h antes) e também só se paga nos 6 dias antes do prazo.
+--     o prazo do resto e também só se paga nos 6 dias antes do prazo.
+--   * Prazo do resto / pagamento único: regra base 14 dias antes (fim do
+--     dia); o parceiro pode baixar até 1 dia. Quem cancela grátis até X h
+--     antes do início conta em horas: N × 24 h antes do início (no mínimo
+--     24 h antes).
 --   * O único prazo que o parceiro ajusta é o do resto / pagamento único.
 --   * Avisos iguais para o sinal e o resto: 6 dias antes do prazo e nos
 --     últimos 3 dias. Sem pagamento no fim do prazo, a reserva cancela
@@ -31,6 +34,58 @@ returns timestamptz language sql immutable set search_path = public, pg_temp as 
           + interval '23 hours 59 minutes') at time zone 'Europe/Lisbon';
 $$;
 
+-- Prazo do resto / pagamento único de uma reserva.
+create or replace function public.final_payment_deadline(p_booking_id uuid)
+returns timestamptz language plpgsql stable security definer set search_path = public, pg_temp as $$
+declare
+  v_partner uuid;
+  v_date date;
+  v_days integer;
+  v_kind text;
+  v_start timestamptz;
+begin
+  select partner_id, event_date into v_partner, v_date from public.bookings where id = p_booking_id;
+  if v_date is null then return null; end if;
+  select final_payment_days into v_days from public.partner_profiles where id = v_partner;
+  v_days := greatest(1, least(14, coalesce(v_days, 14)));
+  select kind into v_kind from public.partner_cancellation_policy(v_partner);
+  if v_kind = 'hours' then
+    v_start := public.booking_event_start(p_booking_id);
+    if v_start is not null then return v_start - make_interval(hours => 24 * v_days); end if;
+  end if;
+  return public.final_payment_due_at(v_date, v_days);
+end;
+$$;
+revoke execute on function public.final_payment_deadline(uuid) from public, anon, authenticated;
+
+create or replace function public.create_final_payment_after_deposit()
+returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  b record;
+begin
+  if new.type <> 'deposit' or new.status <> 'paid' or old.status = 'paid' then
+    return new;
+  end if;
+  select * into b from public.bookings where id = new.booking_id;
+  if b is null or b.total_amount <= b.deposit_amount then
+    return new;
+  end if;
+  if exists (
+    select 1 from public.payments
+    where booking_id = b.id and type = 'final_payment' and status in ('pending', 'overdue', 'paid')
+  ) then
+    return new;
+  end if;
+  insert into public.payments (booking_id, payer_id, partner_id, type, amount, due_at, status)
+  values (
+    b.id, b.couple_id, b.partner_id, 'final_payment', b.total_amount - b.deposit_amount,
+    greatest(now() + interval '2 days', public.final_payment_deadline(b.id)),
+    'pending'
+  );
+  return new;
+end;
+$$;
+
 -- ---------- sinal: até 30 dias antes ----------
 create or replace function public.deposit_due_at(p_event_date date)
 returns timestamptz language sql immutable set search_path = public, pg_temp as $$
@@ -43,16 +98,15 @@ declare
   b record;
 begin
   if new.type <> 'deposit' or new.status <> 'pending' then return new; end if;
-  select bk.event_date, bk.total_amount, bk.deposit_amount, pp.final_payment_days into b
-    from public.bookings bk left join public.partner_profiles pp on pp.id = bk.partner_id
-    where bk.id = new.booking_id;
+  select bk.id, bk.event_date, bk.total_amount, bk.deposit_amount into b
+    from public.bookings bk where bk.id = new.booking_id;
   if b is null or b.event_date is null then
     return new;
   end if;
   if coalesce(b.deposit_amount, 0) >= coalesce(b.total_amount, 0) then
     -- Sem sinal: o pagamento único segue o prazo do resto.
     new.due_at := greatest(coalesce(new.due_at, now() + interval '48 hours'),
-                           public.final_payment_due_at(b.event_date, b.final_payment_days));
+                           public.final_payment_deadline(b.id));
   else
     new.due_at := greatest(coalesce(new.due_at, now() + interval '48 hours'), public.deposit_due_at(b.event_date));
   end if;
