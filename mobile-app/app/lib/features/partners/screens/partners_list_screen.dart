@@ -32,9 +32,6 @@ import '../../../shared/money.dart';
 import '../../../core/partner_profile/partner_location.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/address_picker.dart' show showAddressPicker;
-import '../../../core/chat/presence.dart' show responseLabel;
-import '../../../core/social/social.dart' show partnerPublicStatsProvider;
-import '../widgets/partner_cards.dart' show InfoTag;
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 class PartnersListScreen extends ConsumerStatefulWidget {
@@ -554,7 +551,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 strong: true,
                               ),
                               SnapCarousel(
-                                height: FeaturedOverlayCard.heightWithInfo,
+                                height: FeaturedOverlayCard.height,
                                 itemCount: featuredList.length,
                                 itemBuilder: (context, i) {
                                   final p = featuredList[i];
@@ -747,29 +744,6 @@ class _PartnerPhoto extends StatelessWidget {
       );
 }
 
-/// Informação extra dos cartões (pedido 2026-11-20, dos mockups «Parceiros
-/// e perfis»): quanto tempo demora a responder, quantos eventos já fez e,
-/// sem tempo de resposta, até onde se desloca. Etiquetas pequenas (12).
-class _PartnerInfo extends ConsumerWidget {
-  final Partner partner;
-  const _PartnerInfo(this.partner);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final stats = ref.watch(partnerPublicStatsProvider(partner.id)).value;
-    final response = responseLabel(stats?.responseMinutes);
-    final events = stats?.eventsDone ?? 0;
-    final travel = partner.maxTravelDistanceKm;
-    final tags = <Widget>[
-      if (response != null) InfoTag(response, green: true),
-      if (events > 0) InfoTag('$events ${events == 1 ? 'evento' : 'eventos'}'),
-      if (response == null && travel != null && travel > 0) InfoTag('Desloca-se até $travel km'),
-    ];
-    if (tags.isEmpty) return const SizedBox.shrink();
-    return Wrap(spacing: 6, runSpacing: 4, children: tags);
-  }
-}
-
 /// Destaque: cartão estreito com foto, nota e nome (carrossel).
 class _FeaturedCard extends StatelessWidget {
   final Partner partner;
@@ -791,7 +765,6 @@ class _FeaturedCard extends StatelessWidget {
       price: price,
       title: partner.name,
       subtitle: partner.location.isNotEmpty ? partner.location : partner.primaryCategoryLabel,
-      info: _PartnerInfo(partner),
       // As categorias em todos os cartões (2026-11-11), não só nos que têm
       // mais do que uma.
       chips: (partner.categoryLabels.isEmpty ? [partner.primaryCategoryLabel] : partner.categoryLabels).take(3).toList(),
@@ -858,8 +831,6 @@ class _PartnerCard extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: v2Muted, fontSize: 12),
                   ),
-                  const SizedBox(height: 6),
-                  _PartnerInfo(partner),
                   const SizedBox(height: 6),
                   Text(_priceLabel(partner),
                       maxLines: 1,
