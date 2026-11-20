@@ -9,5 +9,6 @@ bool reloadForNewVersion() {
   final f = _reload;
   if (f == null) return false;
   final r = f.callAsFunction(null);
-  return r is JSBoolean && r.toDart;
+  // `dartify` em vez de `is JSBoolean`: funciona igual em JS e WebAssembly.
+  return r?.dartify() == true;
 }

@@ -338,11 +338,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       tabRoute(
         path: '/partner-home',
-        builder: (context, state) =>l39.PartnerHomeScreen(),
+        builder: (context, state) {
+          // Os outros ecrãs vêm em segundo plano (prefetchAllPages).
+          prefetchAllPages();
+          return l39.PartnerHomeScreen();
+        },
       ),
       tabRoute(
         path: '/guest-home',
-        builder: (context, state) =>l19.GuestHomeScreen(),
+        builder: (context, state) {
+          prefetchAllPages();
+          return l19.GuestHomeScreen();
+        },
       ),
       tabRoute(
         // Variante com `weddingId` explícito — usada só por uma conta
@@ -768,19 +775,45 @@ class _LostRoute extends StatelessWidget {
   }
 }
 
-/// Carrega todos os ecrãs deferred de uma vez (capturas de ecrã/testes).
 /// Página do evento (a principal do organizador): vai buscar o código logo
 /// que o início abre, em segundo plano, para não esperar ao tocar no menu
 /// (2026-11-09: chegava a demorar 5 s só a descarregar o ecrã).
 void prefetchEventPage() {
-  l59.loadLibrary().then((_) => LazyPage.markLoaded([l59.loadLibrary]), onError: (_) {});
+  l59.loadLibrary().then((_) {
+    LazyPage.markLoaded([l59.loadLibrary]);
+    prefetchAllPages();
+  }, onError: (_) {});
 }
 
-Future<void> preloadDeferredPages() async {
-  final loads = <Future<void> Function()>[l1.loadLibrary, l2.loadLibrary, l3.loadLibrary, l4.loadLibrary, l5.loadLibrary, l6.loadLibrary, l7.loadLibrary, l8.loadLibrary, l9.loadLibrary, l10.loadLibrary, l11.loadLibrary, l12.loadLibrary, l13.loadLibrary, l14.loadLibrary, l15.loadLibrary, l16.loadLibrary, l17.loadLibrary, l18.loadLibrary, l20.loadLibrary, l21.loadLibrary, l22.loadLibrary, l23.loadLibrary, l24.loadLibrary, l25.loadLibrary, l26.loadLibrary, l27.loadLibrary, l28.loadLibrary, l30.loadLibrary, l31.loadLibrary, l32.loadLibrary, l33.loadLibrary, l34.loadLibrary, l35.loadLibrary, l36.loadLibrary, l37.loadLibrary, l38.loadLibrary, l40.loadLibrary, l41.loadLibrary, l42.loadLibrary, l43.loadLibrary, l44.loadLibrary, l45.loadLibrary, l46.loadLibrary, l47.loadLibrary, l48.loadLibrary, l49.loadLibrary, l50.loadLibrary, l51.loadLibrary, l52.loadLibrary, l53.loadLibrary, l54.loadLibrary, l55.loadLibrary, l56.loadLibrary, l57.loadLibrary, l58.loadLibrary, l59.loadLibrary, l60.loadLibrary, l61.loadLibrary, l62.loadLibrary];
-  await Future.wait([for (final l in loads) l()]);
-  LazyPage.markLoaded(loads);
+/// Depois de o início abrir, vai buscando os outros ecrãs um a um, em
+/// segundo plano (pedido 2026-11-20: «a app está lenta a mudar de
+/// página»). Assim, ao tocar num menu o ecrã já cá está. Um de cada vez e
+/// com uma pausa no início, para não competir com o que se está a ver.
+bool _prefetching = false;
+void prefetchAllPages() {
+  if (_prefetching) return;
+  _prefetching = true;
+  () async {
+    await Future<void>.delayed(const Duration(seconds: 2));
+    for (final load in _deferredPages) {
+      try {
+        await load();
+        LazyPage.markLoaded([load]);
+      } catch (_) {
+        // Sem rede ou versão nova publicada: o ecrã carrega quando se abrir.
+        return;
+      }
+    }
+  }();
 }
+
+/// Carrega todos os ecrãs deferred de uma vez (capturas de ecrã/testes).
+Future<void> preloadDeferredPages() async {
+  await Future.wait([for (final l in _deferredPages) l()]);
+  LazyPage.markLoaded(_deferredPages);
+}
+
+List<Future<void> Function()> get _deferredPages => <Future<void> Function()>[l1.loadLibrary, l2.loadLibrary, l3.loadLibrary, l4.loadLibrary, l5.loadLibrary, l6.loadLibrary, l7.loadLibrary, l8.loadLibrary, l9.loadLibrary, l10.loadLibrary, l11.loadLibrary, l12.loadLibrary, l13.loadLibrary, l14.loadLibrary, l15.loadLibrary, l16.loadLibrary, l17.loadLibrary, l18.loadLibrary, l20.loadLibrary, l21.loadLibrary, l22.loadLibrary, l23.loadLibrary, l24.loadLibrary, l25.loadLibrary, l26.loadLibrary, l27.loadLibrary, l28.loadLibrary, l30.loadLibrary, l31.loadLibrary, l32.loadLibrary, l33.loadLibrary, l34.loadLibrary, l35.loadLibrary, l36.loadLibrary, l37.loadLibrary, l38.loadLibrary, l40.loadLibrary, l41.loadLibrary, l42.loadLibrary, l43.loadLibrary, l44.loadLibrary, l45.loadLibrary, l46.loadLibrary, l47.loadLibrary, l48.loadLibrary, l49.loadLibrary, l50.loadLibrary, l51.loadLibrary, l52.loadLibrary, l53.loadLibrary, l54.loadLibrary, l55.loadLibrary, l56.loadLibrary, l57.loadLibrary, l58.loadLibrary, l59.loadLibrary, l60.loadLibrary, l61.loadLibrary, l62.loadLibrary];
 
 /// Ecrã de arranque (splash). Mostrado só no primeiro instante, enquanto a
 /// app recupera a sessão guardada — evita que a página «criar conta» pisque

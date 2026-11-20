@@ -45,7 +45,7 @@ jobs:
         run: flutter pub get
 
       - name: Build web
-        run: flutter build web --release --base-href /copo-dagua/pr-${{ github.event.pull_request.number }}/
+        run: flutter build web --release --wasm --base-href /copo-dagua/pr-${{ github.event.pull_request.number }}/
 
       - name: Prepare SPA fallback
         run: cp build/web/index.html build/web/404.html
