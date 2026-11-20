@@ -14,6 +14,7 @@ import 'couple_bookings_screen.dart' show ReviewAction;
 import '../../../core/home/home_providers.dart';
 import '../../../shared/money.dart';
 import '../../payments/open_payment.dart';
+import '../../../core/payments/payments.dart' show payDay;
 import '../../../shared/widgets/dispute_card.dart';
 import '../../../core/bookings/hire_privacy.dart';
 
@@ -131,20 +132,25 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                     if (booking.pendingDepositPaymentId != null)
                       (booking.pendingDepositPaymentId!, booking.depositIsFull ? 'Pagar' : 'Pagar sinal', booking.depositAmount ?? 0),
                     if (booking.pendingFinalPaymentId != null)
-                      (booking.pendingFinalPaymentId!, 'Pagar restante', booking.finalPaymentAmount ?? 0),
+                      (booking.pendingFinalPaymentId!, 'Pagar o resto', booking.finalPaymentAmount ?? 0),
                   ]) ...[
                     const SizedBox(height: 14),
                     SizedBox(
                       height: 54,
                       child: FilledButton(
-                        onPressed: () => openPaymentFlow(context, ref, id),
+                        // O resto só se paga nos 6 dias antes do prazo (migração 204).
+                        onPressed: id == booking.pendingFinalPaymentId && !booking.finalPaymentOpen
+                            ? null
+                            : () => openPaymentFlow(context, ref, id),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.ink,
                           foregroundColor: Colors.white,
                           shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
                         ),
-                        child: Text('$label — ${euros(amountWithCommission(amount, fee), cents: true)}'),
+                        child: Text(id == booking.pendingFinalPaymentId && !booking.finalPaymentOpen
+                            ? 'Pagar o resto a partir de ${payDay(booking.finalPaymentOpensAt!)}'
+                            : '$label — ${euros(amountWithCommission(amount, fee), cents: true)}'),
                       ),
                     ),
                   ],

@@ -121,6 +121,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             weddingId: b.weddingId,
             title: 'Restante · ${b.partnerName}',
             amount: fee(b.finalPaymentAmount ?? 0, b.amount),
+            dueDate: b.finalPaymentDueAt,
           ),
       ],
     ];

@@ -1477,6 +1477,15 @@ class CoupleBooking {
   final String? pendingFinalPaymentId;
   final double? finalPaymentAmount;
 
+  /// Prazo do restante (`payments.due_at`, migração 204): até N dias antes
+  /// do evento (30 por defeito, o parceiro pode baixar até 1).
+  final DateTime? finalPaymentDueAt;
+
+  /// O restante só se paga nos 6 dias antes do prazo (fica cativo até ao
+  /// prazo, dentro dos 7 dias que a Stripe deixa) — migração 204.
+  DateTime? get finalPaymentOpensAt => finalPaymentDueAt?.subtract(const Duration(days: 6));
+  bool get finalPaymentOpen => finalPaymentOpensAt == null || !DateTime.now().isBefore(finalPaymentOpensAt!);
+
   const CoupleBooking({
     required this.id,
     required this.weddingId,
@@ -1492,6 +1501,7 @@ class CoupleBooking {
     this.pendingDepositDueAt,
     this.pendingFinalPaymentId,
     this.finalPaymentAmount,
+    this.finalPaymentDueAt,
     this.paidAmount = 0,
     this.isPrivate = false,
   });

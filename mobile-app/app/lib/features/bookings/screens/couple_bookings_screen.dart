@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import '../../../core/home/home_providers.dart';
 import '../../../core/bookings/hire_privacy.dart';
 import '../../../core/chat/chat_helpers.dart' show PartnerUnavailableException;
-import '../../../core/payments/payments.dart' show PayArgs;
+import '../../../core/payments/payments.dart' show PayArgs, payDay;
 import '../../../core/models/models.dart';
 import '../../../core/reviews/review_providers.dart';
 import '../../../core/wedding/wedding_controller.dart';
@@ -406,7 +406,8 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => _payPending(
+                  // O resto só se paga nos 6 dias antes do prazo (migração 204).
+                  onPressed: !booking.finalPaymentOpen ? null : () => _payPending(
                     booking.pendingFinalPaymentId,
                     deposit: false,
                     amount: amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct),
@@ -418,7 +419,9 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     shape: const StadiumBorder(),
                   ),
                   child: Text(
-                    'Pagar restante — ${euros(amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct), cents: true)}',
+                    booking.finalPaymentOpen
+                        ? 'Pagar o resto — ${euros(amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct), cents: true)}'
+                        : 'Pagar o resto a partir de ${payDay(booking.finalPaymentOpensAt!)}',
                   ),
                 ),
               ),

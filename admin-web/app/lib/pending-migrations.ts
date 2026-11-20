@@ -403,6 +403,20 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Parceiros que só trabalham por orçamento dizem para que evento é o valor de referência («Bolo de 3 andares para 100 pessoas»); aparece no perfil, na barra de baixo e no popup «Pedir orçamento».",
     check: { kind: "marker", id: "203" },
   },
+  {
+    file: "204_final_payment_window.sql",
+    date: "2026-11-20",
+    title: "Prazo do resto: abre 6 dias antes, avisos e cancelamento",
+    what: "O resto só se pode pagar nos 6 dias antes do prazo, com avisos quando abre e 3 dias antes; sem pagamento, a reserva é cancelada e o sinal não é devolvido.",
+    check: { kind: "marker", id: "204" },
+  },
+  {
+    file: "205_payment_deadlines.sql",
+    date: "2026-11-20",
+    title: "Prazos: sinal até 30 dias antes, resto até 14",
+    what: "O sinal paga-se até 30 dias antes do evento (depois disso, 48 h como antes e fica cativo 48 h); o resto até 14 dias antes, e o parceiro pode baixar até 1. Avisos iguais para os dois: 6 dias antes do prazo e nos últimos 3 dias.",
+    check: { kind: "marker", id: "205" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
