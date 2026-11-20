@@ -37,6 +37,7 @@ import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Separador "Eventos" (pedido 2026-11): os eventos da conta — o que
 /// organizo e aqueles a que já tenho acesso — e os eventos públicos
@@ -302,9 +303,9 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
       await showBuyTicketSheet(context, e);
       return;
     }
-    final ok = await showDialog<bool>(
+    final ok = await showIslandDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => IslandAlert(
         title: Text('Entrar em ${e.displayNames}?'),
         content: Text([
           'É um evento aberto a todos. Ficas na lista de convidados e vês o programa, a galeria e as novidades.',

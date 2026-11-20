@@ -23,6 +23,7 @@ import '../../../shared/widgets/venue_map.dart';
 import '../../events/screens/tickets_screens.dart' show openTicketPurchase;
 import '../../guest_home/screens/guest_onboarding_wizard_screen.dart';
 import '../widgets/invite_envelope.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Convite do evento (`/invite/<código>`) — o mesmo para todos, na app e
 /// no browser (canvas "Envelope do convite", 2026-11-07):
@@ -224,11 +225,9 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
 
   Future<String?> _askName(InviteEvent ev, {required bool attending}) {
     final ctrl = TextEditingController();
-    return showModalBottomSheet<String>(
+    return showIslandSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xxl))),
       builder: (sheet) {
         String? error;
         return StatefulBuilder(

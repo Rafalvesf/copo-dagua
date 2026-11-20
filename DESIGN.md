@@ -203,6 +203,30 @@ ecrãs. O resto da app mantém a tabela acima.
     (`wedding_details_screen.dart`, no `Stack` do `_normal`). **Nunca** refazer
     esta seta à mão: ligar o componente.
 
+## 6.1 Popups (folhas e diálogos)
+
+Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
+(organizador, parceiro e convidado), sem exceções.
+
+- **Sempre em ilha, com o tamanho da navbar:** 16 de margem dos lados, 20
+  em baixo (ou a margem segura do telemóvel, se for maior), cantos **35**,
+  fundo branco e sombra da ilha. **Nunca** de canto a canto nem colado ao
+  fundo do ecrã. Com o teclado aberto, a ilha sobe por cima dele.
+- **Uma só forma de abrir:** `showIslandSheet` / `showIslandDialog`
+  (`shared/widgets/island_sheet.dart`); diálogos com `IslandAlert`. **Nunca**
+  `showModalBottomSheet`, `showDialog` nem `AlertDialog` diretamente.
+- **O conteúdo não desenha fundo próprio:** sem `Container` com cor, cantos
+  ou margem à volta do popup — a ilha já trata disso. Cartões e caixas
+  dentro do popup ficam a `#F2F0EB`, sem sombra (o popup é branco).
+- **Animação — a onda da navbar:** ao abrir, uma onda no verde da marca
+  `#4F6B4A` nasce no centro da navbar e cresce em círculo até encher o
+  popup; depois a cor desfaz-se no branco enquanto o conteúdo entra (cerca
+  de 0,56 s). Ao fechar, a onda volta a encolher para a navbar (0,32 s).
+  Com «reduzir movimento» o popup só aparece e desaparece. Esta é a única
+  exceção à regra «verde nunca em botões/fundos»: o verde só existe durante
+  a animação.
+- **Fechar:** tocar fora ou puxar para baixo (se o popup o permitir).
+
 ## 7. Alertas
 
 - **Nunca** fundo amarelo. Todos os alertas, avisos e etiquetas de estado

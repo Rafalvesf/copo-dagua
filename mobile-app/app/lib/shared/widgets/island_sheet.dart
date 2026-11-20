@@ -1,11 +1,21 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 
 /// Folhas e diálogos "ilha" (pedido 2026-10-18): um cartão branco a
-/// flutuar com margem à volta, cantos redondos em toda a volta e sombra —
-/// nunca encostado ao fundo do ecrã. Substitui `showModalBottomSheet` e
-/// `showDialog` em toda a app, com a mesma forma de chamar.
+/// flutuar, cantos redondos em toda a volta e sombra — nunca encostado ao
+/// fundo do ecrã. Substitui `showModalBottomSheet` e `showDialog` em toda
+/// a app, com a mesma forma de chamar.
+///
+/// Pedido do Rafael (2026-11-20): todos os popups têm **o tamanho da
+/// navbar** — 16 dos lados, 20 em baixo (ou a margem segura, se for maior),
+/// cantos 35 — e **nascem na navbar**: uma onda de cor (verde da marca)
+/// sai do centro da navbar e cresce em círculo até encher o popup; depois a
+/// cor desfaz-se no branco à medida que o conteúdo entra. Ao fechar, a onda
+/// volta a encolher para a navbar. Com «reduzir movimento» só aparece e
+/// desaparece.
 Future<T?> showIslandSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
@@ -16,65 +26,207 @@ Future<T?> showIslandSheet<T>({
   ShapeBorder? shape,
   bool isDismissible = true,
 }) {
-  return showModalBottomSheet<T>(
-    context: context,
-    isScrollControlled: true,
-    isDismissible: isDismissible,
-    backgroundColor: Colors.transparent,
-    elevation: 0,
-    barrierColor: const Color(0x52171713),
-    builder: (ctx) {
-      final mq = MediaQuery.of(ctx);
-      final full = mq.size.height - mq.padding.top - 24 - mq.viewInsets.bottom;
-      // Sem isScrollControlled a folha antiga ficava em 9/16 do ecrã.
-      final maxH = isScrollControlled ? full : (full < mq.size.height * 9 / 16 ? full : mq.size.height * 9 / 16);
-      return Padding(
-        padding: EdgeInsets.fromLTRB(12, 0, 12, 12 + mq.padding.bottom + mq.viewInsets.bottom),
+  final navigator = Navigator.of(context);
+  return navigator.push<T>(
+    _IslandRoute<T>(
+      builder: builder,
+      isScrollControlled: isScrollControlled,
+      dismissible: isDismissible,
+      capturedThemes: InheritedTheme.capture(from: context, to: navigator.context),
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    ),
+  );
+}
+
+/// Medidas da navbar (`floating_bottom_nav.dart`: `kNavRadius`, margens
+/// 16/20) — o popup ocupa o mesmo sítio e a onda nasce no centro dela.
+const double kIslandRadius = 35;
+const double _kIslandSide = 16;
+const double _kIslandBottom = 20;
+const double _kNavHeight = 70;
+
+class _IslandRoute<T> extends PopupRoute<T> {
+  _IslandRoute({
+    required this.builder,
+    required this.isScrollControlled,
+    required this.dismissible,
+    required this.capturedThemes,
+    required String barrierLabel,
+  }) : _barrierLabel = barrierLabel;
+
+  final WidgetBuilder builder;
+  final bool isScrollControlled;
+  final bool dismissible;
+  final CapturedThemes capturedThemes;
+  final String _barrierLabel;
+
+  @override
+  Color? get barrierColor => const Color(0x52171713);
+
+  @override
+  bool get barrierDismissible => dismissible;
+
+  @override
+  String? get barrierLabel => _barrierLabel;
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 560);
+
+  @override
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 320);
+
+  @override
+  Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
+    final mq = MediaQuery.of(context);
+    final bottom = math.max(_kIslandBottom, mq.padding.bottom) + mq.viewInsets.bottom;
+    final full = mq.size.height - mq.padding.top - 24 - bottom;
+    // Sem isScrollControlled a folha antiga ficava em 9/16 do ecrã.
+    final maxH = isScrollControlled ? full : math.min(full, mq.size.height * 9 / 16);
+
+    // O conteúdo já não precisa de afastar o teclado nem a barra de baixo
+    // — a ilha trata disso. Caixas de texto cinzentas dentro da folha branca.
+    final content = MediaQuery(
+      data: mq.copyWith(viewInsets: EdgeInsets.zero, padding: EdgeInsets.zero, viewPadding: EdgeInsets.zero),
+      child: Builder(
+        builder: (c) {
+          final t = Theme.of(c);
+          return Theme(
+            data: t.copyWith(inputDecorationTheme: t.inputDecorationTheme.copyWith(fillColor: AppTheme.surface)),
+            child: Builder(builder: builder),
+          );
+        },
+      ),
+    );
+
+    return capturedThemes.wrap(
+      Padding(
+        padding: EdgeInsets.fromLTRB(_kIslandSide, 0, _kIslandSide, bottom),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: maxH < 200 ? 200 : maxH, maxWidth: 560),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: const [
-                    BoxShadow(color: Color(0x2E171713), blurRadius: 40, offset: Offset(0, 16)),
-                    BoxShadow(color: Color(0x14171713), blurRadius: 6, offset: Offset(0, 2)),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  clipBehavior: Clip.antiAlias,
-                  // O conteúdo já não precisa de afastar o teclado nem a
-                  // barra de baixo — a ilha trata disso.
-                  child: MediaQuery(
-                    data: mq.copyWith(
-                      viewInsets: EdgeInsets.zero,
-                      padding: EdgeInsets.zero,
-                      viewPadding: EdgeInsets.zero,
-                    ),
-                    // Caixas de texto cinzentas dentro da folha branca.
-                    child: Builder(
-                      builder: (c) {
-                        final t = Theme.of(c);
-                        return Theme(
-                          data: t.copyWith(inputDecorationTheme: t.inputDecorationTheme.copyWith(fillColor: AppTheme.surface)),
-                          child: Builder(builder: builder),
-                        );
-                      },
-                    ),
-                  ),
-                ),
+              constraints: BoxConstraints(maxHeight: math.max(200, maxH), maxWidth: 560),
+              child: GestureDetector(
+                // Puxar para baixo fecha, como a folha antiga.
+                onVerticalDragEnd: dismissible
+                    ? (d) {
+                        if ((d.primaryVelocity ?? 0) > 700) Navigator.of(context).maybePop();
+                      }
+                    : null,
+                child: _NavGrow(animation: animation, child: content),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  @override
+  Widget buildTransitions(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) =>
+      child;
+}
+
+/// A animação: a onda nasce no centro da navbar e cresce até ser o popup.
+class _NavGrow extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
+
+  const _NavGrow({required this.animation, required this.child});
+
+  static const _shadows = [
+    BoxShadow(color: Color(0x2E171713), blurRadius: 40, offset: Offset(0, 16)),
+    BoxShadow(color: Color(0x14171713), blurRadius: 6, offset: Offset(0, 2)),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(kIslandRadius);
+    if (MediaQuery.of(context).disableAnimations) {
+      return FadeTransition(
+        opacity: animation,
+        child: DecoratedBox(
+          decoration: BoxDecoration(borderRadius: radius, boxShadow: _shadows),
+          child: Material(color: Colors.white, borderRadius: radius, clipBehavior: Clip.antiAlias, child: child),
+        ),
       );
-    },
-  );
+    }
+
+    // Crescer: o círculo da onda, do centro da navbar até cobrir o popup.
+    final grow = CurvedAnimation(
+      parent: animation,
+      curve: const Interval(0, 0.8, curve: Cubic(0.3, 0.7, 0.2, 1)),
+      reverseCurve: const Interval(0, 0.65, curve: Curves.easeInCubic),
+    );
+    // Assentar: a cor da onda desfaz-se no branco e o conteúdo entra.
+    final settle = CurvedAnimation(
+      parent: animation,
+      curve: const Interval(0.45, 1, curve: Curves.easeOut),
+      reverseCurve: const Interval(0.55, 1, curve: Curves.easeIn),
+    );
+    final content = FadeTransition(
+      opacity: settle,
+      child: SlideTransition(
+        position: Tween(begin: const Offset(0, 0.03), end: Offset.zero).animate(settle),
+        child: child,
+      ),
+    );
+
+    return AnimatedBuilder(
+      animation: animation,
+      child: content,
+      builder: (context, content) {
+        final s = settle.value;
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            boxShadow: [
+              for (final b in _shadows)
+                BoxShadow(color: b.color.withValues(alpha: b.color.a * s), blurRadius: b.blurRadius, offset: b.offset),
+            ],
+          ),
+          child: ClipPath(
+            clipper: _WaveClipper(grow.value),
+            child: ClipRRect(
+              borderRadius: radius,
+              child: Stack(
+              children: [
+                Material(color: Colors.white, child: content),
+                if (s < 1)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: ColoredBox(color: AppTheme.accentOliveDark.withValues(alpha: 1 - s)),
+                    ),
+                  ),
+              ],
+            ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Recorte em círculo com centro no meio da navbar. A navbar e o popup
+/// estão ambos a 20 do fundo, por isso o centro dela fica a 35 (metade da
+/// altura) acima do fundo do popup. O raio vai de 0 até ao canto mais longe.
+class _WaveClipper extends CustomClipper<Path> {
+  final double t;
+
+  const _WaveClipper(this.t);
+
+  @override
+  Path getClip(Size size) {
+    final origin = Offset(size.width / 2, size.height - _kNavHeight / 2);
+    final maxR = math.sqrt(origin.dx * origin.dx + origin.dy * origin.dy) + 2;
+    final r = math.max(0.01, maxR * t.clamp(0.0, 1.0).toDouble());
+    return Path()..addOval(Rect.fromCircle(center: origin, radius: r));
+  }
+
+  @override
+  bool shouldReclip(_WaveClipper old) => old.t != t;
 }
 
 /// `showDialog` em forma de ilha (mesma assinatura usada na app).

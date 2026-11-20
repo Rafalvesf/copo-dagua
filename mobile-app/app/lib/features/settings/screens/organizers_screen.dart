@@ -11,6 +11,7 @@ import '../../../shared/public_link.dart';
 import '../../../core/wedding/organizers.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Uma só sombra dos cartões em destaque (DESIGN.md §5).
 const _soft = [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))];
@@ -263,9 +264,9 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
   Future<void> _remove() async {
     final id = widget.organizer.collaboratorId;
     if (id == null) return;
-    final ok = await showDialog<bool>(
+    final ok = await showIslandDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => IslandAlert(
         title: Text('Retirar ${widget.organizer.name}?'),
         content: const Text('Deixa de ver e de organizar este evento.'),
         actions: [

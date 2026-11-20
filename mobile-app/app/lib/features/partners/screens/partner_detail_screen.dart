@@ -166,10 +166,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     if (bookable.isEmpty) return ref.read(weddingControllerProvider).wedding;
     if (bookable.length == 1) return bookable.first;
     if (!mounted) return null;
-    return showModalBottomSheet<Wedding>(
+    return showIslandSheet<Wedding>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => _EventPickerSheet(
         events: bookable,
         partnerName: widget.partner.name,
@@ -398,16 +397,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// do sinal só acontece mais tarde, quando o parceiro aceita (no aceite).
   Future<void> _showRequestSent({required String title, required String body}) async {
     if (!mounted) return;
-    await showModalBottomSheet<void>(
+    await showIslandSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: AppTheme.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        padding: EdgeInsets.fromLTRB(20, 14, 20, 24 + MediaQuery.of(ctx).viewInsets.bottom),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
         child: SafeArea(
           top: false,
           child: Column(
@@ -1822,13 +1816,8 @@ class _EventPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
-      decoration: const BoxDecoration(
-        color: AppTheme.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      padding: EdgeInsets.fromLTRB(20, 14, 20, 24 + bottom),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
       child: SafeArea(
         top: false,
         child: Column(
@@ -1851,9 +1840,8 @@ class _EventPickerSheet extends StatelessWidget {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.background,
                 borderRadius: BorderRadius.circular(22),
-                boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
               ),
               clipBehavior: Clip.antiAlias,
               child: Column(

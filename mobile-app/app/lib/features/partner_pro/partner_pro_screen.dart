@@ -9,6 +9,7 @@ import '../../core/payments/payments.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/gradient_scaffold.dart';
 import '../../shared/widgets/page_header.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Plano Pro do parceiro (migração 161).
 class PartnerProScreen extends ConsumerStatefulWidget {
@@ -61,9 +62,9 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
 
   Future<void> _setCancelling(bool cancel) async {
     if (cancel) {
-      final ok = await showDialog<bool>(
+      final ok = await showIslandDialog<bool>(
         context: context,
-        builder: (c) => AlertDialog(
+        builder: (c) => IslandAlert(
           title: const Text('Cancelar o Premium?'),
           content: const Text('Continuas Premium até ao fim do período que já pagaste. Depois não é renovado.'),
           actions: [

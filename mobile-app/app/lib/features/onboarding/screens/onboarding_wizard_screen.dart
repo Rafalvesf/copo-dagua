@@ -24,6 +24,7 @@ import '../../../shared/widgets/onboarding_exit.dart';
 import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_onboarding/screens/partner_welcome_screen.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Criar evento (mockup "Onboarding", 2026-11-12): uma ou duas perguntas
 /// por ecrã, sem repetir o que já sabemos (nome e telemóvel da conta,
@@ -393,14 +394,12 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     TextInputType? keyboard,
   }) async {
     final c = TextEditingController(text: target.text);
-    final v = await showDialog<String>(
+    final v = await showIslandDialog<String>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) {
           final err = WordFilter.allowed(c.text) ? null : WordFilter.message;
-          return AlertDialog(
-            backgroundColor: AppTheme.background,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          return IslandAlert(
             title: Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             content: OnbField(controller: c, hint: hint, autofocus: true, keyboardType: keyboard, error: err, onChanged: (_) => setD(() {})),
             actions: [

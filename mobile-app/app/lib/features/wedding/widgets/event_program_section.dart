@@ -7,6 +7,7 @@ import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/guest_facing.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Secção "Programa" do painel do evento (por baixo de "Esta semana").
 ///
@@ -99,9 +100,8 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
   }
 
   Future<void> _add() async {
-    final withPartner = await showModalBottomSheet<bool>(
+    final withPartner = await showIslandSheet<bool>(
       context: context,
-      backgroundColor: Colors.transparent,
       builder: (_) => const _AddChooser(),
     );
     if (withPartner == null || !mounted) return;
@@ -129,10 +129,9 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
   }
 
   Future<ProgramItem?> _editItem(ProgramItem item, {bool autoPickPartner = false, bool allowDelete = false}) {
-    return showModalBottomSheet<ProgramItem>(
+    return showIslandSheet<ProgramItem>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => _EditSheet(
         item: item,
         weddingId: widget.weddingId,
@@ -388,8 +387,7 @@ class _ChooserCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(22),
         child: Container(
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22),
-              boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))]),
+          decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
           padding: const EdgeInsets.all(18),
           child: Row(
             children: [
@@ -485,9 +483,8 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
     final picks = await ref.read(eventPartnerPicksProvider(widget.weddingId).future);
     if (!mounted) return;
     if (picks.isEmpty) {
-      final go = await showModalBottomSheet<bool>(
+      final go = await showIslandSheet<bool>(
         context: context,
-        backgroundColor: Colors.transparent,
         builder: (_) => const _NoPartnersSheet(),
       );
       if (go == true && mounted) {
@@ -496,10 +493,9 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
       }
       return;
     }
-    final chosen = await showModalBottomSheet<EventPartnerPick>(
+    final chosen = await showIslandSheet<EventPartnerPick>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => _PartnerPicker(picks: picks),
     );
     if (chosen == null || !mounted) return;
@@ -560,7 +556,7 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.background,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: pending ? const Color(0xFFF2A01B) : const Color(0xFFECE7DC), width: pending ? 1.5 : 1),
               ),
@@ -646,23 +642,17 @@ class _Sheet extends StatelessWidget {
   const _Sheet({required this.child});
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppTheme.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      padding: EdgeInsets.fromLTRB(20, 14, 20, 24 + bottom),
-      child: SafeArea(
-        top: false,
-        child: Column(
+    // Dentro da ilha (showIslandSheet): ela já dá o fundo branco, os cantos
+    // e afasta o teclado.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+      child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFD8D3C8), borderRadius: BorderRadius.circular(999))),
             const SizedBox(height: 14),
-            child,
-          ],
-        ),
+          child,
+        ],
       ),
     );
   }
@@ -690,7 +680,7 @@ class _PillField extends StatelessWidget {
           hintText: hint,
           hintStyle: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppTheme.background,
           contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: BorderSide.none),
         ),
@@ -709,7 +699,7 @@ class _PillButton extends StatelessWidget {
         child: Container(
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 18),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
+          decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(999)),
           child: Row(
             children: [
               Expanded(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, color: AppTheme.ink))),
