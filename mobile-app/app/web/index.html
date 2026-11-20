@@ -140,7 +140,26 @@
        ecrã de abertura aparece, em vez de esperar pelo flutter_bootstrap. -->
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://yknbtsmcmjxzzhijyiav.supabase.co" crossorigin>
-  <link rel="preload" href="main.dart.js" as="script">
+  <!-- O código da app (2026-11-20): só se adianta o main.dart.js quando o
+       browser NÃO corre a versão WebAssembly (aí o Flutter vai buscar o
+       main.dart.wasm) e com a mesma ?v= que o flutter_bootstrap pede — antes
+       o preload era sem ?v= e o telemóvel descarregava o código duas vezes. -->
+  <script>
+    (function () {
+      var wasm = false;
+      try {
+        wasm = typeof WebAssembly === 'object' &&
+          WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 95, 1, 120, 0]));
+      } catch (e) {}
+      if (wasm) return;
+      var b = window.tchinBuild || '';
+      var l = document.createElement('link');
+      l.rel = 'preload';
+      l.as = 'script';
+      l.href = 'main.dart.js' + (b && b.indexOf('__') !== 0 ? '?v=' + b : '');
+      document.head.appendChild(l);
+    })();
+  </script>
   <link rel="preload" href="assets/fonts/MaterialIcons-Regular.otf" as="font" type="font/otf" crossorigin>
   <link rel="preload" href="assets/assets/fonts/louis_george_cafe/LouisGeorgeCafe-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="assets/assets/fonts/louis_george_cafe/LouisGeorgeCafe-Bold.ttf" as="font" type="font/ttf" crossorigin>

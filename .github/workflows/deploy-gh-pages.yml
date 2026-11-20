@@ -62,7 +62,7 @@ jobs:
         run: flutter pub get
 
       - name: Build web
-        run: flutter build web --release --no-tree-shake-icons --pwa-strategy=none --base-href /copo-dagua/ --dart-define=APP_VERSION=$(git rev-parse --short HEAD) --dart-define=GIPHY_KEY=${{ secrets.GIPHY_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN || 'https://368a846af558523e0e4dacd76ba059b6@o4512319391924224.ingest.de.sentry.io/4512319454642256' }}
+        run: flutter build web --release --wasm --no-tree-shake-icons --pwa-strategy=none --base-href /copo-dagua/ --dart-define=APP_VERSION=$(git rev-parse --short HEAD) --dart-define=GIPHY_KEY=${{ secrets.GIPHY_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN || 'https://368a846af558523e0e4dacd76ba059b6@o4512319391924224.ingest.de.sentry.io/4512319454642256' }}
 
       - name: Prepare GitHub Pages fallback
         run: cp build/web/index.html build/web/404.html
@@ -78,6 +78,10 @@ jobs:
         run: |
           V=$(git rev-parse --short HEAD)
           sed -i "s#\"mainJsPath\":\"main.dart.js\"#\"mainJsPath\":\"main.dart.js?v=$V\"#" build/web/flutter_bootstrap.js
+          # Versão WebAssembly (2026-11-20, mais rápida a desenhar): o
+          # mesmo ?v= para o .wasm e o .mjs.
+          sed -i "s#\"mainWasmPath\":\"main.dart.wasm\"#\"mainWasmPath\":\"main.dart.wasm?v=$V\"#" build/web/flutter_bootstrap.js
+          sed -i "s#\"jsSupportRuntimePath\":\"main.dart.mjs\"#\"jsSupportRuntimePath\":\"main.dart.mjs?v=$V\"#" build/web/flutter_bootstrap.js
           sed -i "s#src=\"flutter_bootstrap.js\"#src=\"flutter_bootstrap.js?v=$V\"#" build/web/index.html build/web/404.html
           # Ecrãs deferred desta versão também em v/<versão>/ (ver index.html).
           sed -i "s#__TCHIN_BUILD__#$V#" build/web/index.html build/web/404.html
