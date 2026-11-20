@@ -139,7 +139,8 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                       height: 54,
                       child: FilledButton(
                         // O resto só se paga nos 6 dias antes do prazo (migração 204).
-                        onPressed: id == booking.pendingFinalPaymentId && !booking.finalPaymentOpen
+                        onPressed: (id == booking.pendingFinalPaymentId && !booking.finalPaymentOpen) ||
+                                (id == booking.pendingDepositPaymentId && !booking.depositOpen)
                             ? null
                             : () => openPaymentFlow(context, ref, id),
                         style: FilledButton.styleFrom(
@@ -150,7 +151,9 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                         ),
                         child: Text(id == booking.pendingFinalPaymentId && !booking.finalPaymentOpen
                             ? 'Pagar o resto a partir de ${payDay(booking.finalPaymentOpensAt!)}'
-                            : '$label — ${euros(amountWithCommission(amount, fee), cents: true)}'),
+                            : id == booking.pendingDepositPaymentId && !booking.depositOpen
+                                ? 'Pagar a partir de ${payDay(booking.depositOpensAt!)}'
+                                : '$label — ${euros(amountWithCommission(amount, fee), cents: true)}'),
                       ),
                     ),
                   ],

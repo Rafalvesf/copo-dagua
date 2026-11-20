@@ -384,7 +384,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => _payPending(
+                  onPressed: !booking.depositOpen ? null : () => _payPending(
                     booking.pendingDepositPaymentId,
                     deposit: true,
                     amount: amountWithCommission(booking.depositAmount ?? 0, commissionPct),
@@ -396,7 +396,9 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     shape: const StadiumBorder(),
                   ),
                   child: Text(
-                    '${booking.depositIsFull ? 'Pagar' : 'Pagar sinal'} — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}',
+                    booking.depositOpen
+                        ? '${booking.depositIsFull ? 'Pagar' : 'Pagar sinal'} — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}'
+                        : 'Pagar a partir de ${payDay(booking.depositOpensAt!)}',
                   ),
                 ),
               ),

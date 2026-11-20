@@ -77,23 +77,26 @@ class _PaymentDueSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final tone = toneForDue(due.due);
     final urgent = tone == AlertTone.urgent;
-    final what = due.deposit ? 'o sinal' : 'o resto';
+    final full = due.deposit && due.booking.depositIsFull;
+    final what = full ? ' a reserva' : due.deposit ? ' o sinal' : ' o resto';
     final now = DateTime.now();
     final days = DateTime(due.due.year, due.due.month, due.due.day)
         .difference(DateTime(now.year, now.month, now.day))
         .inDays;
     final headline = urgent
-        ? 'Último aviso: paga $what'
-        : due.deposit
-            ? 'Falta pagar o sinal'
-            : 'Já podes pagar o resto';
+        ? 'Último aviso: paga$what'
+        : full
+            ? 'Já podes pagar'
+            : due.deposit
+                ? 'Falta pagar o sinal'
+                : 'Já podes pagar o resto';
     final sub = urgent
         ? 'Até ${payDay(due.due)} · senão a reserva é cancelada'
         : 'Até ${payDay(due.due)} · faltam $days ${days == 1 ? 'dia' : 'dias'}';
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(due.deposit ? 'Pagar o sinal' : 'Pagar o resto',
+        Text(full ? 'Pagar a reserva' : due.deposit ? 'Pagar o sinal' : 'Pagar o resto',
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 4),
         Text(due.booking.partnerName, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
@@ -120,7 +123,7 @@ class _PaymentDueSheet extends StatelessWidget {
         ]),
         const SizedBox(height: 6),
         Text(
-          due.deposit
+          due.deposit && !full
               ? 'Inclui a taxa de serviço. Com cartão, o sinal fica cativo 48 h.'
               : 'Inclui a taxa de serviço. Sem pagamento até ${payDay(due.due)}, a reserva é cancelada.',
           style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),

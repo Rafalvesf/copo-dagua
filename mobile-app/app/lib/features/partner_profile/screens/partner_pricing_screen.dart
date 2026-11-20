@@ -930,9 +930,9 @@ class _FinalPaymentDaysCardState extends ConsumerState<_FinalPaymentDaysCard> {
         ]),
         const SizedBox(height: 6),
         Text(
-          'O cliente paga o resto até $days ${days == 1 ? 'dia' : 'dias'} antes do evento (14 por defeito). '
+          'O cliente paga o resto (ou o valor todo, se não houver sinal) até $days ${days == 1 ? 'dia (24 h)' : 'dias'} antes do evento — 14 por defeito. '
           'O pagamento abre 6 dias antes desse prazo e, sem pagamento, a reserva é cancelada. '
-          'O sinal paga-se até 30 dias antes.',
+          'O sinal paga-se até 30 dias antes e não se ajusta.',
           style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4),
         ),
       ]),
