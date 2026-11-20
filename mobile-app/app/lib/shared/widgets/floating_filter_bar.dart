@@ -253,7 +253,7 @@ class FloatingFilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 26),
+      minimum: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 26),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,

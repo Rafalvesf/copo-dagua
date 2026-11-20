@@ -91,7 +91,9 @@ ecrãs. O resto da app mantém a tabela acima.
 
 ## 4. Espaços e formas
 
-- Margem lateral das páginas: **20** (`AppTheme.screenMargin`).
+- Margem lateral das páginas: **20** (`AppTheme.screenMargin`). A navbar, as
+  barras flutuantes e os popups usam a mesma: **têm sempre a largura das
+  caixas de conteúdo**.
 - Cartões: branco, cantos **22**, interior 18 (perfil) / 16 (listas), **sem
   linha à volta**.
 - Grupos de linhas (listas, definições): cartão branco cantos 22, interior
@@ -136,7 +138,9 @@ ecrãs. O resto da app mantém a tabela acima.
   seguidores, eventos — em **caixas com contorno** como os `MiniStats`). O
   estado ("Reservado", "Pedido enviado") não é uma etiqueta solta: é dito uma
   só vez no aviso (§7), por baixo da cabeça.
-- **Navbar:** branca, flutuante, margens 16 laterais / 20 em baixo, cantos 35;
+- **Navbar:** branca, flutuante, margens **20 laterais** (a mesma largura das
+  caixas de conteúdo, `AppTheme.screenMargin` — pedido 2026-11-20) / 20 em
+  baixo, cantos 35;
   ícone 24 + texto 11 negrito; inativo `#57534E`, ativo `#171713` com pílula
   `#EDEAE3`.
 - **Ícones:** Heroicons Solid na app; nos ecrãs dos mockups (Perfil,
@@ -208,8 +212,8 @@ ecrãs. O resto da app mantém a tabela acima.
 Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
 (organizador, parceiro e convidado), sem exceções.
 
-- **Sempre em ilha, com o tamanho da navbar:** 16 de margem dos lados, 20
-  em baixo (ou a margem segura do telemóvel, se for maior), cantos **35**,
+- **Sempre em ilha, com o tamanho da navbar:** 20 de margem dos lados (a
+  largura das caixas de conteúdo e da navbar), 20 em baixo (ou a margem segura do telemóvel, se for maior), cantos **35**,
   fundo branco e sombra da ilha. **Nunca** de canto a canto nem colado ao
   fundo do ecrã. Com o teclado aberto, a ilha sobe por cima dele.
 - **Uma só forma de abrir:** `showIslandSheet` / `showIslandDialog`

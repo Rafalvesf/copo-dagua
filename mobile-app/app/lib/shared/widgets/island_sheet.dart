@@ -10,7 +10,7 @@ import '../../core/theme/app_theme.dart';
 /// a app, com a mesma forma de chamar.
 ///
 /// Pedido do Rafael (2026-11-20): todos os popups têm **o tamanho da
-/// navbar** — 16 dos lados, 20 em baixo (ou a margem segura, se for maior),
+/// navbar** — 20 dos lados (a largura das caixas de conteúdo), 20 em baixo (ou a margem segura, se for maior),
 /// cantos 35 — e **nascem na navbar**: uma onda de cor (verde da marca)
 /// sai do centro da navbar e cresce em círculo até encher o popup; depois a
 /// cor desfaz-se no branco à medida que o conteúdo entra. Ao fechar, a onda
@@ -39,9 +39,9 @@ Future<T?> showIslandSheet<T>({
 }
 
 /// Medidas da navbar (`floating_bottom_nav.dart`: `kNavRadius`, margens
-/// 16/20) — o popup ocupa o mesmo sítio e a onda nasce no centro dela.
+/// 20/20 — a mesma largura das caixas de conteúdo) — o popup ocupa o mesmo sítio e a onda nasce no centro dela.
 const double kIslandRadius = 35;
-const double _kIslandSide = 16;
+const double _kIslandSide = AppTheme.screenMargin;
 const double _kIslandBottom = 20;
 const double _kNavHeight = 70;
 
