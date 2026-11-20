@@ -352,10 +352,6 @@ class FeaturedOverlayCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final List<String> chips;
-
-  /// Informação extra por baixo da zona (ex.: «Responde em ~1 h», «37
-  /// eventos») — pedido 2026-11-20.
-  final Widget? info;
   const FeaturedOverlayCard({
     super.key,
     required this.onTap,
@@ -365,13 +361,9 @@ class FeaturedOverlayCard extends StatelessWidget {
     this.badge,
     this.price,
     this.chips = const [],
-    this.info,
   });
 
   static const double height = 268;
-
-  /// Com [info] o cartão cresce o suficiente para a linha extra.
-  static const double heightWithInfo = 298;
 
   @override
   Widget build(BuildContext context) => SnappyTap(
@@ -381,7 +373,7 @@ class FeaturedOverlayCard extends StatelessWidget {
           label: [title, subtitle, if (price != null) '${price!.$1} ${price!.$2}'.trim()].join(', '),
           excludeSemantics: true,
           child: Container(
-            height: info != null ? heightWithInfo : height,
+            height: height,
             clipBehavior: Clip.antiAlias,
             decoration: softCard(radius: 22),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -404,7 +396,6 @@ class FeaturedOverlayCard extends StatelessWidget {
                         style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     const SizedBox(height: 3),
                     if (subtitle.isNotEmpty) MetaRow([(Hi.mapPin, subtitle)]),
-                    if (info != null) ...[const SizedBox(height: 6), info!],
                     const Spacer(),
                     Row(children: [
                       Expanded(child: DenseChipRow([for (final c in chips) DenseChip(c)])),

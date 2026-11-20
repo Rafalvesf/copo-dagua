@@ -244,11 +244,10 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
 
 ## 6.2 Parceiros e perfis (mockups «Parceiros e perfis», 2026-11-20)
 
-- **Página Parceiros** (correção do Rafael, 2026-11-20): fica como estava —
-  a barra de categorias, o carrossel «Em destaque» e os cartões de sempre.
-  Dos mockups só entra a informação extra nos cartões: «Responde em ~1 h»
-  (verde claro), quantos eventos já fez e, sem tempo de resposta, «Desloca-se
-  até X km», em etiquetas 12 por baixo da zona/meta.
+- **Página Parceiros** (correção do Rafael, 2026-11-20): **não muda** — os
+  cartões, os tamanhos e a barra de categorias ficam como estavam. Dos
+  mockups «Parceiros e perfis» só entram o perfil do parceiro (abaixo) e os
+  popups (§6.1).
 - **Topo do perfil do parceiro** (pedido do Rafael): a foto tem 300 e
   **encolhe com o scroll** até à faixa dos botões, que fica **sempre
   visível**. Aberta: «Em destaque», logótipo 56 e nome 28 a branco sobre um
