@@ -56,7 +56,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
 
   Future<void> _setMode(String mode) => _withBusy(() => setPartnerPricingMode(mode));
 
-  Future<void> _saveAveragePrice(double? price) => _withBusy(() => setAverageQuotePrice(price));
+  Future<void> _saveAveragePrice(double? price, String note) => _withBusy(() => setAverageQuotePrice(price, note: note));
 
   Future<void> _addPackage(int currentCount) async {
     final result = await showEditPackageSheet(context);
@@ -181,6 +181,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                               const SizedBox(height: 16),
                               _AverageQuoteField(
                                 initialValue: pricing.averageQuotePrice,
+                                initialNote: pricing.referenceNote,
                                 busy: _busy,
                                 onSave: _saveAveragePrice,
                               ),
@@ -336,11 +337,13 @@ class _SegmentButton extends StatelessWidget {
 /// (`database/migrations/049_partner_average_quote_price.sql`).
 class _AverageQuoteField extends StatefulWidget {
   final double? initialValue;
+  final String? initialNote;
   final bool busy;
-  final ValueChanged<double?> onSave;
+  final void Function(double? price, String note) onSave;
 
   const _AverageQuoteField({
     required this.initialValue,
+    this.initialNote,
     required this.busy,
     required this.onSave,
   });
@@ -353,23 +356,38 @@ class _AverageQuoteFieldState extends State<_AverageQuoteField> {
   late final _price = TextEditingController(
     text: widget.initialValue == null ? '' : widget.initialValue!.toStringAsFixed(0),
   );
+  late final _note = TextEditingController(text: widget.initialNote ?? '');
 
   @override
   void dispose() {
     _price.dispose();
+    _note.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    // Valor de referência (pedido do Rafael, 2026-11-20): aparece aos
+    // clientes em «Quanto pode custar», na barra de baixo e no popup
+    // «Pedir orçamento», com a nota a dizer para que é.
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      TextField(
+        controller: _note,
+        maxLength: 80,
+        decoration: const InputDecoration(
+          labelText: 'Para quê',
+          hintText: 'Ex.: bolo de 3 andares para 100 pessoas',
+        ),
+      ),
+      const SizedBox(height: 8),
+      Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: TextField(
             controller: _price,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: 'Valor médio dos orçamentos (€)'),
+            decoration: const InputDecoration(labelText: 'Valor de referência (€)'),
           ),
         ),
         const SizedBox(width: 12),
@@ -382,13 +400,14 @@ class _AverageQuoteFieldState extends State<_AverageQuoteField> {
                     final v = double.tryParse(_price.text.trim().replaceAll(',', '.'));
                     if (v != null && v > 0 && !await confirmVatIncluded(context, v)) return;
                     if (!mounted) return;
-                    widget.onSave(v);
+                    widget.onSave(v, _note.text);
                   },
             child: const Text('Guardar'),
           ),
         ),
       ],
-    );
+      ),
+    ]);
   }
 }
 

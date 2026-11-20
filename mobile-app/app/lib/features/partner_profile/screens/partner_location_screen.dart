@@ -1,5 +1,4 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/permissions_step.dart' show ensurePermission, AppPermission;
@@ -12,6 +11,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/address_picker.dart' show AddressField;
 
 /// "Localização" do parceiro — usar a localização atual, procurar a
 /// morada ou escrevê-la à mão. Pedido do utilizador (2026-10-17).
@@ -33,8 +33,6 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
   bool _loaded = false;
   bool _locating = false;
   bool _saving = false;
-  Timer? _debounce;
-  List<(String, PartnerLocation)> _results = const [];
 
   @override
   void dispose() {
@@ -43,7 +41,6 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
     _city.dispose();
     _region.dispose();
     _search.dispose();
-    _debounce?.cancel();
     super.dispose();
   }
 
@@ -55,7 +52,6 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
       _region.text = l.region;
       _lat = l.latitude;
       _lng = l.longitude;
-      _results = const [];
     });
   }
 
@@ -80,16 +76,6 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
     } finally {
       if (mounted) setState(() => _locating = false);
     }
-  }
-
-  void _onSearch(String q) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 450), () async {
-      try {
-        final r = await searchAddress(q);
-        if (mounted) setState(() => _results = r);
-      } catch (_) {}
-    });
   }
 
   Future<void> _save() async {
@@ -175,32 +161,13 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                     child: Text('ou procura a morada', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
+                  // Seletor de moradas com o Google (2026-11-20).
+                  AddressField(
                     controller: _search,
-                    onChanged: _onSearch,
-                    decoration: const InputDecoration(
-                      hintText: 'Rua, localidade ou código postal',
-                      prefixIcon: Icon(Hi.magnifyingGlass),
-                    ),
+                    hint: 'Rua, localidade ou código postal',
+                    pickerTitle: 'Morada do negócio',
+                    onPicked: (p) => _fill(p.toPartnerLocation()),
                   ),
-                  for (final (label, loc) in _results)
-                    SnappyTap(
-                      onTap: () {
-                        _search.clear();
-                        _fill(loc);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Hi.mapPin, size: 20, color: AppTheme.inkMuted),
-                            const SizedBox(width: 10),
-                            Expanded(child: Text(label, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.ink))),
-                          ],
-                        ),
-                      ),
-                    ),
                   const SizedBox(height: 20),
                   const Text('MORADA', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFF6E6A63))),
                   const SizedBox(height: 10),

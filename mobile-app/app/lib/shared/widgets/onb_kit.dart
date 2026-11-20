@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
+import 'address_picker.dart' show showAddressPicker;
 import 'island_sheet.dart';
 import 'line_icon.dart';
 import 'snappy_tap.dart';
@@ -649,75 +650,18 @@ Future<String?> showOnbPlaceSheet(
   required String current,
   String? homeZone,
   String? Function(String)? validate,
-}) =>
-    showIslandSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => _PlaceSheet(current: current, homeZone: homeZone, validate: validate),
-    );
-
-class _PlaceSheet extends StatefulWidget {
-  final String current;
-  final String? homeZone;
-  final String? Function(String)? validate;
-  const _PlaceSheet({required this.current, required this.homeZone, required this.validate});
-
-  @override
-  State<_PlaceSheet> createState() => _PlaceSheetState();
+}) async {
+  // Seletor de moradas com o Google (pedido do Rafael, 2026-11-20): em vez
+  // de escrever à mão, procura-se o espaço ou a morada e escolhe-se.
+  final zone = homeZone?.trim() ?? '';
+  final picked = await showAddressPicker(
+    context,
+    title: 'Onde é?',
+    initialQuery: current.trim().isEmpty ? null : current.trim(),
+    shortcut: zone.isNotEmpty && zone != current.trim() ? ('Usar a tua zona', zone) : null,
+  );
+  if (picked == null) return null;
+  final v = picked.label;
+  return validate?.call(v) == null ? v : null;
 }
 
-class _PlaceSheetState extends State<_PlaceSheet> {
-  late final _c = TextEditingController(text: widget.current);
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final err = widget.validate?.call(_c.text);
-    final zone = widget.homeZone?.trim() ?? '';
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const OnbSheetHeader('Onde é?'),
-        const SizedBox(height: 16),
-        OnbField(
-          controller: _c,
-          hint: 'Ex.: Quinta da Ribafria, Sintra',
-          fill: AppTheme.background,
-          autofocus: true,
-          error: err,
-          onChanged: (_) => setState(() {}),
-        ),
-        if (zone.isNotEmpty && zone != _c.text.trim()) ...[
-          const SizedBox(height: 12),
-          SnappyTap(
-            onTap: () => Navigator.of(context).pop(zone),
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 56),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
-              child: Row(children: [
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('Usar a tua zona', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    const SizedBox(height: 2),
-                    Text(zone, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
-                  ]),
-                ),
-                const LineIcon(LineIcon.forward, size: 16, color: AppTheme.inkMuted),
-              ]),
-            ),
-          ),
-        ],
-        const SizedBox(height: 12),
-        const OnbMeta('Escreve o espaço, a cidade ou a morada. Podes mudar mais tarde.'),
-        const SizedBox(height: 16),
-        OnbButton(label: 'Guardar', onPressed: err == null ? () => Navigator.of(context).pop(_c.text.trim()) : null),
-      ]),
-    );
-  }
-}

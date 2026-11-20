@@ -14,6 +14,9 @@ import '../../../shared/widgets/v2_kit.dart';
 import '../../events/screens/eventos_screen.dart' show EventPosterCard;
 import '../profile_widgets.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import 'package:share_plus/share_plus.dart';
+import '../../../shared/public_link.dart';
 
 /// Perfil de outra pessoa (mockup "Perfil de um amigo", 2026-11-12):
 /// Seguir / Mensagem, quem a segue em comum, os próximos eventos
@@ -74,10 +77,26 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
         ),
       );
 
+  Future<void> _share(PublicProfile p) async {
+    final link = publicLink('/u/${p.id}');
+    try {
+      await SharePlus.instance.share(ShareParams(text: '${p.name} na À Nossa!: $link', subject: p.name));
+    } catch (_) {
+      await Clipboard.setData(ClipboardData(text: link));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(publicProfileProvider(widget.profileId));
     final p = async.value;
+    final top = MediaQuery.paddingOf(context).top;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    // Mockup «Perfil do organizador» (2026-11-20): faixa de cor no topo
+    // (sem foto, por isso os botões são os brancos cheios 44), a cabeça do
+    // perfil por cima dela, os próximos eventos num carrossel, quem segue
+    // e a barra fixa em baixo com Mensagem e Seguir.
     return GradientScaffold(
       // Fundo creme liso (mockup).
       gradientOverride: const LinearGradient(colors: [Color(0xFFF2F0EB), Color(0xFFF2F0EB)]),
@@ -85,73 +104,122 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           ? const Center(child: CircularProgressIndicator())
           : p == null
               ? const Center(child: Text('Perfil indisponível.'))
-              : ListView(
-                  padding: EdgeInsets.fromLTRB(0, MediaQuery.paddingOf(context).top + 16, 0, 60),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                      child: Row(children: [
-                        _round(const LineIcon(LineIcon.back, stroke: 2.2), 'Voltar', () => Navigator.of(context).maybePop()),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(p.username?.isNotEmpty == true ? '@${p.username}' : p.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                        ),
-                        if (!p.isMe)
-                          IslandMenuButton<String>(
-                            tooltip: 'Mais opções',
-                            position: PopupMenuPosition.under,
-                            onSelected: (_) => blockProfile(context, ref, p.id, p.name),
-                            itemBuilder: (_) => const [PopupMenuItem(value: 'block', child: Text('Bloquear'))],
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              alignment: Alignment.center,
-                              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                              child: const LineIcon(LineIcon.dots, stroke: 2.4),
+              : Stack(children: [
+                  ListView(
+                    padding: EdgeInsets.only(bottom: p.isMe ? 60 : bottom + 130),
+                    children: [
+                      Container(
+                        height: 200 + top,
+                        color: const Color(0xFFDDE5D3),
+                        padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, top + 8, AppTheme.screenMargin, 0),
+                        alignment: Alignment.topCenter,
+                        child: Row(children: [
+                          _round(const LineIcon(LineIcon.back, stroke: 2.2), 'Voltar', () => Navigator.of(context).maybePop()),
+                          const Spacer(),
+                          _round(const LineIcon(LineIcon.share, size: 20, stroke: 2.2), 'Partilhar perfil', () => _share(p)),
+                          if (!p.isMe) ...[
+                            const SizedBox(width: 10),
+                            IslandMenuButton<String>(
+                              tooltip: 'Mais opções',
+                              onSelected: (_) => blockProfile(context, ref, p.id, p.name),
+                              itemBuilder: (_) => const [PopupMenuItem(value: 'block', child: Text('Bloquear'))],
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                child: const LineIcon(LineIcon.dots, stroke: 2.4),
+                              ),
                             ),
-                          ),
-                      ]),
-                    ),
-                    const SizedBox(height: 18),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                      child: ProfileCard_Users(
-                        avatar: V2Avatar(p.name, size: 76, imageUrl: p.avatarUrl, flat: true),
-                        name: p.name,
-                        handleLine: p.city ?? '',
-                        bio: p.bio,
-                        events: p.events,
-                        followers: p.followers,
-                        following: p.following,
-                        followedBy: FollowedByRow(people: p.mutual, text: followedByLine(p.mutual, p.mutualCount)),
-                        buttons: p.isMe
-                            ? const []
-                            : [
-                                ProfileButton(p.iFollow ? 'A seguir' : (p.followsMe ? 'Seguir também' : 'Seguir'),
-                                    dark: !p.iFollow, onTap: _busy ? null : () => _follow(p)),
-                                ProfileButton('Mensagem', onTap: _busy ? null : () => _message(p)),
-                              ],
+                          ],
+                        ]),
                       ),
-                    ),
-                    if (p.upcoming.isNotEmpty) ...[
-                      const ProfileSectionTitle('Próximos eventos'),
-                      for (final e in p.upcoming)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 12),
-                          child: EventPosterCard(event: e),
+                      Transform.translate(
+                        offset: const Offset(0, -56),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                          child: ProfileCard_Users(
+                            avatar: V2Avatar(p.name, size: 76, imageUrl: p.avatarUrl, flat: true),
+                            name: p.name,
+                            handleLine: [
+                              if (p.username?.isNotEmpty == true) '@${p.username}',
+                              if (p.city?.isNotEmpty == true) p.city!,
+                            ].join(' · '),
+                            bio: p.bio,
+                            events: p.events,
+                            followers: p.followers,
+                            following: p.following,
+                            followedBy: FollowedByRow(people: p.mutual, text: followedByLine(p.mutual, p.mutualCount)),
+                            // Seguir e Mensagem estão na barra de baixo.
+                            buttons: const [],
+                          ),
                         ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin + 2),
-                        child: Text('Só aparecem eventos públicos ou a que foste convidado.',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                      ),
+                      Transform.translate(
+                        offset: const Offset(0, -56),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                          if (p.upcoming.isNotEmpty) ...[
+                            ProfileSectionTitle(
+                              'Próximos eventos',
+                              action: '${p.upcoming.length} ${p.upcoming.length == 1 ? 'evento' : 'eventos'}',
+                            ),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              clipBehavior: Clip.none,
+                              padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                for (var i = 0; i < p.upcoming.length; i++) ...[
+                                  if (i > 0) const SizedBox(width: 12),
+                                  SizedBox(
+                                    width: p.upcoming.length == 1
+                                        ? MediaQuery.sizeOf(context).width - AppTheme.screenMargin * 2
+                                        : 300,
+                                    child: EventPosterCard(event: p.upcoming[i]),
+                                  ),
+                                ],
+                              ]),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.fromLTRB(AppTheme.screenMargin + 2, 12, AppTheme.screenMargin, 0),
+                              child: Text('Só aparecem eventos públicos ou a que foste convidado.',
+                                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                            ),
+                          ],
+                          FollowingSection(profileId: p.id, people: p.followingPeople, partners: p.followingPartners),
+                        ]),
                       ),
                     ],
-                    FollowingSection(profileId: p.id, people: p.followingPeople, partners: p.followingPartners),
-                  ],
-                ),
+                  ),
+                  if (!p.isMe)
+                    Positioned(
+                      left: AppTheme.screenMargin,
+                      right: AppTheme.screenMargin,
+                      bottom: bottom > 20 ? bottom : 20,
+                      child: Container(
+                        height: 76,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(35),
+                          boxShadow: AppTheme.navBarShadow,
+                        ),
+                        child: Row(children: [
+                          Expanded(
+                            child: ProfileButton('Mensagem', height: 52, onTap: _busy ? null : () => _message(p)),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ProfileButton(
+                              p.iFollow ? 'A seguir' : (p.followsMe ? 'Seguir também' : 'Seguir'),
+                              height: 52,
+                              dark: !p.iFollow,
+                              onTap: _busy ? null : () => _follow(p),
+                            ),
+                          ),
+                        ]),
+                      ),
+                    ),
+                ]),
     );
   }
 }

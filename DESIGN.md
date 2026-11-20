@@ -131,13 +131,17 @@ ecrãs. O resto da app mantém a tabela acima.
   por baixo: `DESDE` + `€X`, ou, para quem trabalha por orçamento, `POR` +
   `Orçamento`. A mesma caixa no topo do parceiro e nos cartões de evento e de
   parceiro (`PriceBox`). Nunca "Por orçamento" numa só linha.
-- **Cabeça do perfil:** duas cabeças próprias — `ProfileCard_Users` (amigos, o
-  meu perfil: avatar e os três números em colunas no topo) e
-  `ProfileCard_Partners` (parceiro: a foto já está no topo da página, por isso
-  é nome + caixa de preço em cima, descrição, e os três números — nota,
-  seguidores, eventos — em **caixas com contorno** como os `MiniStats`). O
-  estado ("Reservado", "Pedido enviado") não é uma etiqueta solta: é dito uma
-  só vez no aviso (§7), por baixo da cabeça.
+- **Cabeça do perfil:** `ProfileCard_Users` (amigos, organizadores, o meu
+  perfil: avatar e os três números em colunas no topo). No **parceiro**
+  (mockups «Parceiros e perfis», 2026-11-20) o logótipo e o nome estão na
+  foto do topo (§6.2) e por baixo vem o cartão de dados: categoria, nota
+  (n.º de avaliações) e zona com a caixa de preço à direita; anos de
+  experiência e «Responde em ~1 h»; descrição justificada com «Ler mais»;
+  etiquetas; os três números (nota, seguidores, eventos) em **caixas com
+  contorno** (`MiniStats`); e «Seguir» + «Mensagem» com contorno (o botão
+  preto é o da barra de baixo). O estado ("Reservado", "Pedido enviado")
+  não é uma etiqueta solta: é dito uma só vez no aviso (§7), por baixo da
+  cabeça.
 - **Navbar:** branca, flutuante, margens **20 laterais** (a mesma largura das
   caixas de conteúdo, `AppTheme.screenMargin` — pedido 2026-11-20) / 20 em
   baixo, cantos 35;
@@ -237,6 +241,59 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   exceção à regra «verde nunca em botões/fundos»: o verde só existe durante
   a animação.
 - **Fechar:** tocar fora ou puxar para baixo (se o popup o permitir).
+
+## 6.2 Parceiros e perfis (mockups «Parceiros e perfis», 2026-11-20)
+
+- **Página Parceiros:** localidade (pílula branca 44) e favoritos (redondo
+  44) em cima; título 28 e subtítulo 13; Empresas/Lojas em filtros de pílula
+  38; pesquisa 48 + filtros redondo 48; categorias em **quadrados 82**
+  (cantos 22, ícone num círculo de cor 40, rótulo 12 negrito; escolhido =
+  verde com letra branca). Secções «Em destaque perto de ti» e «Mais bem
+  avaliados» em carrossel, «Novos na À Nossa!» e «Todos os parceiros» em
+  grupos de linhas; «Ver todos» mostra só a lista.
+- **Cartão de parceiro** (`PartnerBigCard`, `features/partners/widgets/
+  partner_cards.dart`): 300 de largura, foto 160 com «Em destaque» (verde
+  claro) à esquerda e a nota numa pílula branca à direita; logótipo 52 a
+  meio da foto e do corpo; nome 19 + coração; meta 13 (categoria · zona;
+  avaliações · eventos); linha tracejada `#ECE7DC`; etiqueta à esquerda e a
+  caixa de preço (`PriceBox(outlined: true)`) à direita. O mesmo cartão em
+  todos os carrosséis.
+- **Topo do perfil do parceiro** (pedido do Rafael): a foto tem 300 e
+  **encolhe com o scroll** até à faixa dos botões, que fica **sempre
+  visível**. Aberta: «Em destaque», logótipo 56 e nome 28 a branco sobre um
+  véu escuro. Reduzida: ao lado da seta fica o nome 16 e a meta 13 a branco,
+  e os cantos de baixo ficam iguais aos de cima (40). Voltar, partilhar e
+  favorito ficam sempre no mesmo sítio e são sempre translúcidos (há sempre
+  foto por trás). **Exceção ao «voltar ao topo» do §6:** aqui a seta é
+  sempre «voltar» (não roda para ↑).
+- **Pacotes:** linhas num grupo com um círculo que fica verde com o visto
+  quando escolhido, nome 16, meta 13 e o preço à direita.
+- **Barra fixa de reserva:** branca, cantos 35, a largura das caixas de
+  conteúdo, sombra da navbar; a caixa de preço à esquerda e o botão preto
+  52. Sem pacote escolhido: «DESDE €X» + «Escolher pacote» (vai aos
+  pacotes); com pacote: o nome e o valor + «Reservar» (abre o popup); só
+  orçamento: «REFERÊNCIA ≈ €X» (ou «POR Orçamento») + «Pedir orçamento»;
+  sem evento livre: «Mensagem».
+- **Só orçamento:** secção «Quanto pode custar» — rótulo 12 em maiúsculas,
+  valor 40, para que é (13) e a explicação. O valor é o que o parceiro
+  indica em «Preços e pacotes» (`average_quote_price`) e a nota é
+  `reference_note` (migração 203).
+- **Popups de reserva:** «Reservar <pacote>» (evento com «Mudar», pessoas,
+  extras, mensagem, total e botão), «Reserva pedida» (estrela contente,
+  resumo, «Ver conversa» + «OK») e «Pedir orçamento» (referência, evento,
+  data, local com o seletor de moradas e mensagem).
+- **Perfil do organizador:** faixa de cor 200 no topo (sem foto: botões
+  brancos cheios 44 — voltar, partilhar, ⋯), a `ProfileCard_Users` por cima
+  dela, «Próximos eventos» em carrossel, «A seguir», e a barra fixa com
+  «Mensagem» (contorno) e «Seguir» (preto) a 52.
+- **Moradas:** todos os campos de local (criar evento, local do evento,
+  morada para convidados, cidade no registo, localização do parceiro,
+  morada de pagamentos, pedir orçamento, procurar parceiros, morada dos
+  presentes) usam o **seletor de moradas** (`AddressField` /
+  `showAddressPicker`, `shared/widgets/address_picker.dart`): pesquisa com
+  sugestões do Google, «Usar a minha localização» e «Confirmar local» com o
+  mapa e a localidade, código postal e distrito preenchidos. **Nunca** uma
+  caixa de texto livre para moradas.
 
 ## 7. Alertas
 

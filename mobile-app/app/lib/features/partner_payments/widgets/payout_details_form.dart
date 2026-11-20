@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/line_icon.dart';
 import '../../../shared/widgets/onb_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/address_picker.dart' show AddressField;
 
 /// Dados para receber pagamentos, pedidos com o UI da própria app
 /// (2026-10-25: "nada de links nem caixas com o site da Stripe"). Os dados
@@ -52,6 +53,7 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
   final _companyNif = TextEditingController();
   final _companyPhone = TextEditingController();
   final _line1 = TextEditingController();
+  final _addrSearch = TextEditingController();
   final _line2 = TextEditingController();
   final _postal = TextEditingController();
   final _city = TextEditingController();
@@ -95,6 +97,7 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
     for (final c in _all) {
       c.dispose();
     }
+    _addrSearch.dispose();
     super.dispose();
   }
 
@@ -423,6 +426,21 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
         ];
       case _Step.address:
         return [
+          // Procurar com o Google preenche a rua, o código postal e a
+          // cidade; ficam editáveis (2026-11-20).
+          const OnbGroupLabel('Procurar morada'),
+          const SizedBox(height: 8),
+          AddressField(
+            controller: _addrSearch,
+            hint: 'Rua, número, localidade',
+            pickerTitle: 'Morada da empresa',
+            onPicked: (p) => setState(() {
+              if (p.addressLine.isNotEmpty) _line1.text = p.addressLine;
+              if (p.postalCode.isNotEmpty) _postal.text = p.postalCode;
+              if (p.city.isNotEmpty) _city.text = p.city;
+            }),
+          ),
+          _gap(),
           OnbField(controller: _line1, label: 'Morada', hint: 'Rua e número'),
           _gap(),
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -12,6 +12,7 @@ import '../../../core/onboarding/intro_answers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/onb_kit.dart';
+import '../../../shared/widgets/address_picker.dart' show AddressField;
 
 /// Início da app, depois de "Começar" (mockup "Onboarding" 2–5,
 /// 2026-11-12): papel → tipos de eventos de interesse → de onde és e
@@ -143,7 +144,20 @@ class _StartFlowScreenState extends ConsumerState<StartFlowScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             OnbField(controller: _country, label: 'País', hint: 'Portugal', maxLength: null),
             const SizedBox(height: 12),
-            OnbField(controller: _city, label: 'Cidade ou região', hint: 'Ex.: Lisboa', error: _cityError),
+            // Seletor de localidades com o Google (2026-11-20).
+            const OnbGroupLabel('Cidade ou região'),
+            const SizedBox(height: 8),
+            AddressField(
+              controller: _city,
+              hint: 'Ex.: Lisboa',
+              pickerTitle: 'De onde és?',
+              citiesOnly: true,
+              onPicked: (_) => setState(() {}),
+            ),
+            if (_cityError != null) ...[
+              const SizedBox(height: 6),
+              OnbMeta(_cityError!),
+            ],
             const SizedBox(height: 20),
             const OnbGroupLabel('Idade'),
             const SizedBox(height: 8),

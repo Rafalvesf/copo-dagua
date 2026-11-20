@@ -29,6 +29,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import '../../guest_home/screens/guest_wedding_details_screen.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/address_picker.dart' show AddressField;
 
 /// "Para os convidados" — tudo o que os convidados veem, num só sítio:
 /// código, quem pode entrar, boas-vindas, programa (linha do tempo),
@@ -686,7 +687,22 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
         ),
       _Field(controller: _venueName, label: 'Nome do local', hint: 'Ex: Quinta do Lago Azul'),
       const SizedBox(height: 10),
-      _Field(controller: _address, label: 'Morada', hint: 'Rua, número, localidade', keyboardType: TextInputType.streetAddress),
+      // Seletor de moradas com o Google (2026-11-20): a morada e o pino do
+      // «Como chegar» ficam certos.
+      AddressField(
+        controller: _address,
+        label: 'Morada',
+        hint: 'Rua, número, localidade',
+        pickerTitle: 'Morada do local',
+        fullAddress: true,
+        onPicked: (p) => setState(() {
+          _venueAddressUsed = _address.text;
+          _lat = p.latitude;
+          _lng = p.longitude;
+          if (_venueName.text.trim().isEmpty && p.name.isNotEmpty) _venueName.text = p.name;
+          _dirty = true;
+        }),
+      ),
       const SizedBox(height: 8),
       Align(
         alignment: Alignment.centerLeft,

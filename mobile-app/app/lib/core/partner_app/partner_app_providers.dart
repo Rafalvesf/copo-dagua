@@ -637,20 +637,34 @@ class PartnerPricingData {
   /// enquanto o parceiro ainda não o preencheu.
   final double? averageQuotePrice;
 
+  /// Para que tipo de evento é o valor de referência (migração 203).
+  final String? referenceNote;
+
   const PartnerPricingData({
     required this.pricingMode,
     required this.packages,
     this.averageQuotePrice,
+    this.referenceNote,
   });
 }
 
 final partnerPricingProvider = FutureProvider<PartnerPricingData>((ref) async {
   final partnerId = _partnerId(ref);
-  final profileRow = await supabase
-      .from('partner_profiles')
-      .select('pricing_mode, average_quote_price')
-      .eq('id', partnerId)
-      .single();
+  Map<String, dynamic> profileRow;
+  try {
+    profileRow = await supabase
+        .from('partner_profiles')
+        .select('pricing_mode, average_quote_price, reference_note')
+        .eq('id', partnerId)
+        .single();
+  } on PostgrestException {
+    // Antes da migração 203 (sem `reference_note`).
+    profileRow = await supabase
+        .from('partner_profiles')
+        .select('pricing_mode, average_quote_price')
+        .eq('id', partnerId)
+        .single();
+  }
   final rows = await supabase
       .from('partner_service_packages')
       .select()
@@ -660,6 +674,7 @@ final partnerPricingProvider = FutureProvider<PartnerPricingData>((ref) async {
     pricingMode: profileRow['pricing_mode'] as String,
     packages: rows.map(_servicePackageFromRow).toList(),
     averageQuotePrice: (profileRow['average_quote_price'] as num?)?.toDouble(),
+    referenceNote: profileRow['reference_note'] as String?,
   );
 });
 
@@ -713,15 +728,17 @@ Future<void> setPartnerPricingMode(String pricingMode) async {
 /// `pricing_mode = 'quote_only'`, mas escreve sem validar isso aqui (o
 /// valor só é lido/mostrado nesse modo, ver `partner_pricing_screen.dart`/
 /// `partner_detail_screen.dart`).
-Future<void> setAverageQuotePrice(double? price) async {
+Future<void> setAverageQuotePrice(double? price, {String? note}) async {
   final partnerId = supabase.auth.currentUser!.id;
-  await supabase
-      .from('partner_profiles')
-      .update({
-        'average_quote_price': price,
-        'updated_at': DateTime.now().toIso8601String(),
-      })
-      .eq('id', partnerId);
+  // A nota (migração 203) vai junto; antes da migração guarda só o valor.
+  await _writeWithFallback(
+    (data) async => await supabase.from('partner_profiles').update(data).eq('id', partnerId),
+    {
+      'average_quote_price': price,
+      'updated_at': DateTime.now().toIso8601String(),
+    },
+    {'reference_note': (note == null || note.trim().isEmpty) ? null : note.trim()},
+  );
 }
 
 /// Insere um pacote — `enforce_partner_package_limit()`
