@@ -39,7 +39,7 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
       if (!mounted) return;
       setState(() {
         _kind = r.kind;
-        _hours = (r.hours ?? 2).clamp(2, 24);
+        _hours = (r.hours ?? 2).clamp(2, 24).toInt();
         _note.text = r.note;
         _loaded = true;
       });
