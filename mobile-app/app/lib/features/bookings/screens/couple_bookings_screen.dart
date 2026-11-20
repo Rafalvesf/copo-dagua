@@ -398,7 +398,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                   child: Text(
                     booking.depositOpen
                         ? '${booking.depositIsFull ? 'Pagar' : 'Pagar sinal'} — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}'
-                        : 'Pagar a partir de ${payDay(booking.depositOpensAt!)}',
+                        : '${booking.depositIsFull ? 'Pagar' : 'Pagar o sinal'} a partir de ${payDay(booking.depositOpensAt!)}',
                   ),
                 ),
               ),

@@ -4,7 +4,8 @@
 --   * Resto: até 14 dias antes do evento por defeito; o parceiro pode
 --     baixar até 1 (`partner_profiles.final_payment_days`). Só se paga nos
 --     6 dias antes do prazo (fica cativo até ao prazo).
---   * Sinal: até 30 dias antes do evento. Reservas aceites depois disso:
+--   * Sinal: até 30 dias antes do evento e, como o resto, só se paga nos 6
+--     dias antes do prazo. Reservas aceites depois disso:
 --     o prazo de sempre (48 h depois de aceite) e o sinal fica cativo 48 h
 --     (janela de reembolso, migrações 112/124).
 --   * Categorias sem sinal (191, pagam tudo de uma vez — restaurantes,
@@ -140,7 +141,7 @@ begin
       insert into public.notifications (wedding_id, profile_id, type, title, subtitle, body, link)
       values (p.wedding_id, p.private_owner, 'payment_due',
               case when p.full_pay then 'Já podes pagar a reserva'
-                   when p.type = 'deposit' then 'Falta pagar o sinal' else 'Já podes pagar o resto' end,
+                   when p.type = 'deposit' then 'Já podes pagar o sinal' else 'Já podes pagar o resto' end,
               coalesce(p.business_name, 'Parceiro'),
               public.fmt_eur(p.amount) || ' até ' || public.fmt_quando(p.due_at) || '.',
               '/bookings');

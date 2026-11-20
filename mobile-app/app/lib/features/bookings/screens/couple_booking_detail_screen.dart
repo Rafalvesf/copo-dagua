@@ -152,7 +152,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                         child: Text(id == booking.pendingFinalPaymentId && !booking.finalPaymentOpen
                             ? 'Pagar o resto a partir de ${payDay(booking.finalPaymentOpensAt!)}'
                             : id == booking.pendingDepositPaymentId && !booking.depositOpen
-                                ? 'Pagar a partir de ${payDay(booking.depositOpensAt!)}'
+                                ? '${booking.depositIsFull ? 'Pagar' : 'Pagar o sinal'} a partir de ${payDay(booking.depositOpensAt!)}'
                                 : '$label — ${euros(amountWithCommission(amount, fee), cents: true)}'),
                       ),
                     ),

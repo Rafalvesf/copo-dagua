@@ -88,7 +88,7 @@ class _PaymentDueSheet extends StatelessWidget {
         : full
             ? 'Já podes pagar'
             : due.deposit
-                ? 'Falta pagar o sinal'
+                ? 'Já podes pagar o sinal'
                 : 'Já podes pagar o resto';
     final sub = urgent
         ? 'Até ${payDay(due.due)} · senão a reserva é cancelada'

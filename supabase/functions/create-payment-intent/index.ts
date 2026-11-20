@@ -103,9 +103,9 @@ Deno.serve(async (req) => {
   // O resto (e o pagamento único das categorias sem sinal) só se paga nos
   // 6 dias antes do prazo (migrações 204/205): assim pode ficar cativo
   // dentro dos 7 dias que a Stripe deixa.
-  const bookingTotal = Number((payment.bookings as unknown as { total_amount?: number } | null)?.total_amount ?? 0);
-  const payInFull = payment.type === "deposit" && Number(payment.amount) >= bookingTotal - 0.005;
-  if ((payment.type === "final_payment" || payInFull) && payment.due_at) {
+  // O sinal também (pedido do Rafael, 2026-11-20): abre 6 dias antes do
+  // seu prazo (30 dias antes do evento) e, pago, fica cativo 48 h.
+  if ((payment.type === "final_payment" || payment.type === "deposit") && payment.due_at) {
     const opensAt = new Date(payment.due_at as string).getTime() - 6 * 24 * 3600 * 1000;
     if (Date.now() < opensAt) {
       return json({ error: "not_open_yet", opens_at: new Date(opensAt).toISOString() }, 409);
