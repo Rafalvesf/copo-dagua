@@ -156,7 +156,7 @@ export default async function DisputeDetailPage(props: PageProps<"/disputes/[id]
                 { label: "Serviço", value: b?.proposals?.title ?? "—" },
                 { label: "Evento", value: fmtDate(b?.event_date) },
                 { label: "Valor", value: b ? eur(Number(b.total_amount)) : "—" },
-                { label: "Sinal", value: b?.proposals?.deposit_refundable === false ? "Não cancelável" : "Cancelável" },
+                { label: "Sinal", value: b?.proposals?.deposit_refundable === false ? "Não reembolsável após aceitação" : "Cancelável nas 48 h" },
               ]}
             />
           </Card>

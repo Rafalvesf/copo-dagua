@@ -602,8 +602,8 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
             Expanded(
               child: Text(
                 proposal.depositRefundable
-                    ? 'Sinal cancelável nas 48 h depois de pagar'
-                    : 'Sinal não cancelável',
+                    ? 'Sinal cancelável apenas nas 48 h depois de pagar'
+                    : 'Sinal não reembolsável depois de o parceiro aceitar',
                 style: TextStyle(
                   fontSize: AppFontSize.xs,
                   fontWeight: FontWeight.w600,

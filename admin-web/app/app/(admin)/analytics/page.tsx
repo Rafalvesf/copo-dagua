@@ -223,7 +223,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
             <MiniStat label="Resposta do parceiro" value={duration(median(responseHours))} hint="mediana, do pedido à proposta" />
             <MiniStat label="Decisão do organizador" value={duration(median(decisionHours))} hint="mediana, da proposta à aceitação" />
             <MiniStat label="Valor médio das propostas" value={avgProposal == null ? "—" : eur(avgProposal)} hint={`${proposalsIn.length} propostas`} />
-            <MiniStat label="Sinal não cancelável" value={pct(nonRefundable, proposalsIn.length)} hint={`${nonRefundable} de ${proposalsIn.length} propostas`} />
+            <MiniStat label="Sinal não reembolsável" value={pct(nonRefundable, proposalsIn.length)} hint={`${nonRefundable} de ${proposalsIn.length} propostas`} />
           </div>
         </div>
       </>
