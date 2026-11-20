@@ -244,20 +244,11 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
 
 ## 6.2 Parceiros e perfis (mockups «Parceiros e perfis», 2026-11-20)
 
-- **Página Parceiros:** localidade (pílula branca 44) e favoritos (redondo
-  44) em cima; título 28 e subtítulo 13; Empresas/Lojas em filtros de pílula
-  38; pesquisa 48 + filtros redondo 48; categorias em **quadrados 82**
-  (cantos 22, ícone num círculo de cor 40, rótulo 12 negrito; escolhido =
-  verde com letra branca). Secções «Em destaque perto de ti» e «Mais bem
-  avaliados» em carrossel, «Novos na À Nossa!» e «Todos os parceiros» em
-  grupos de linhas; «Ver todos» mostra só a lista.
-- **Cartão de parceiro** (`PartnerBigCard`, `features/partners/widgets/
-  partner_cards.dart`): 300 de largura, foto 160 com «Em destaque» (verde
-  claro) à esquerda e a nota numa pílula branca à direita; logótipo 52 a
-  meio da foto e do corpo; nome 19 + coração; meta 13 (categoria · zona;
-  avaliações · eventos); linha tracejada `#ECE7DC`; etiqueta à esquerda e a
-  caixa de preço (`PriceBox(outlined: true)`) à direita. O mesmo cartão em
-  todos os carrosséis.
+- **Página Parceiros** (correção do Rafael, 2026-11-20): fica como estava —
+  a barra de categorias, o carrossel «Em destaque» e os cartões de sempre.
+  Dos mockups só entra a informação extra nos cartões: «Responde em ~1 h»
+  (verde claro), quantos eventos já fez e, sem tempo de resposta, «Desloca-se
+  até X km», em etiquetas 12 por baixo da zona/meta.
 - **Topo do perfil do parceiro** (pedido do Rafael): a foto tem 300 e
   **encolhe com o scroll** até à faixa dos botões, que fica **sempre
   visível**. Aberta: «Em destaque», logótipo 56 e nome 28 a branco sobre um
