@@ -336,6 +336,30 @@ class RowGroup extends StatelessWidget {
       );
 }
 
+/// Uma linha de um grupo de linhas, para listas compridas: o mesmo
+/// aspeto do [RowGroup] (branco, cantos 22, interior 4×16), mas cada linha
+/// é um filho da lista, para a lista só construir as que estão à vista.
+class RowGroupSlice extends StatelessWidget {
+  final bool first;
+  final bool last;
+  final Widget child;
+  const RowGroupSlice({super.key, required this.first, required this.last, required this.child});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+        padding: EdgeInsets.fromLTRB(16, first ? 4 : 0, 16, last ? 4 : 0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(first ? 22 : 0),
+            bottom: Radius.circular(last ? 22 : 0),
+          ),
+        ),
+        child: child,
+      );
+}
+
 /// Título de secção 22 com a ação verde à direita ("Ver todos (12)").
 class SectionHeading extends StatelessWidget {
   final String title;

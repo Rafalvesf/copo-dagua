@@ -532,15 +532,20 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 child: Text('Escolhe um parceiro de ${selectedLabel.toLowerCase()} para esta tarefa.',
                                     style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                               ),
-                            RowGroup(children: [
-                              for (var i = 0; i < partners.length; i++)
-                                PartnerListRow(
+                            // Uma linha por filho da lista (e não um só
+                            // grupo): assim só se constroem as linhas que
+                            // estão no ecrã, mesmo com centenas de parceiros.
+                            for (var i = 0; i < partners.length; i++)
+                              RowGroupSlice(
+                                first: i == 0,
+                                last: i == partners.length - 1,
+                                child: PartnerListRow(
                                   partner: partners[i],
                                   first: i == 0,
                                   badges: badges(partners[i]),
                                   onTap: () => open(partners[i]),
                                 ),
-                            ]),
+                              ),
                           ],
                         ),
                       );
