@@ -40,8 +40,11 @@ Future<void> maybeShowPaymentDue(BuildContext context, WidgetRef ref) async {
   final due = <_Due>[];
   for (final b in bookings) {
     final dd = b.pendingDepositDueAt?.toLocal();
+    // Sinal: aparece sempre que está por pagar — pago, a data fica
+    // garantida; até lá o parceiro pode aceitar outro pedido para esse dia.
+    // Pagamento único (sem sinal): só nos 6 dias antes do prazo.
     if (b.pendingDepositPaymentId != null && dd != null && dd.isAfter(now) &&
-        !now.isBefore(dd.subtract(const Duration(days: 6)))) {
+        (!b.depositIsFull || !now.isBefore(dd.subtract(const Duration(days: 6))))) {
       due.add(_Due(b, b.pendingDepositPaymentId!, true, b.depositAmount ?? 0, dd));
     }
     final fd = b.finalPaymentDueAt;
@@ -92,7 +95,9 @@ class _PaymentDueSheet extends StatelessWidget {
                 : 'Já podes pagar o resto';
     final sub = urgent
         ? 'Até ${payDay(due.due)} · senão a reserva é cancelada'
-        : 'Até ${payDay(due.due)} · faltam $days ${days == 1 ? 'dia' : 'dias'}';
+        : due.deposit && !full && days > 6
+            ? 'Até ${payDay(due.due)} · a data só fica tua quando pagares'
+            : 'Até ${payDay(due.due)} · faltam $days ${days == 1 ? 'dia' : 'dias'}';
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -124,7 +129,7 @@ class _PaymentDueSheet extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           due.deposit && !full
-              ? 'Inclui a taxa de serviço. Com cartão, o sinal fica cativo 48 h.'
+              ? 'Paga já para garantir a data: até pagares, o parceiro pode aceitar outro pedido para esse dia. Com cartão, o sinal fica cativo 48 h.'
               : 'Inclui a taxa de serviço. Sem pagamento até ${payDay(due.due)}, a reserva é cancelada.',
           style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
         ),
