@@ -1464,9 +1464,10 @@ class CoupleBooking {
   /// 191: sem sinal nesta categoria — o primeiro pagamento é o valor todo.
   bool get depositIsFull => amount > 0 && (depositAmount ?? 0) >= amount;
 
-  /// O sinal (ou o pagamento único, sem sinal) só se paga nos 6 dias antes
-  /// do prazo, como o resto (migração 205; pedido do Rafael, 2026-11-20).
-  DateTime? get depositOpensAt => pendingDepositDueAt?.toLocal().subtract(const Duration(days: 6));
+  /// Sem sinal (pagamento único): só se paga nos 6 dias antes do prazo,
+  /// como o resto (migração 205). Com sinal, paga-se quando quiser.
+  DateTime? get depositOpensAt =>
+      depositIsFull ? pendingDepositDueAt?.toLocal().subtract(const Duration(days: 6)) : null;
   bool get depositOpen => depositOpensAt == null || !DateTime.now().isBefore(depositOpensAt!);
 
   /// Prazo do sinal pendente (`payments.due_at`) — para os "Pagamentos
