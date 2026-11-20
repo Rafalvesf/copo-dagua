@@ -359,7 +359,7 @@ class SectionHeading extends StatelessWidget {
             SnappyTap(
               onTap: onAction,
               child: Text(action!,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
             ),
         ]),
       );

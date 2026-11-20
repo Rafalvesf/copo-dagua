@@ -15,7 +15,6 @@ import '../../profile/profile_widgets.dart' show FollowedByRow, ProfileButton;
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
-import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/review_tile.dart';
 import '../../../core/page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -2433,7 +2432,7 @@ class _EventChoice extends StatelessWidget {
             const SizedBox(width: 10),
             SnappyTap(
               onTap: onChange,
-              child: const Text('Mudar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+              child: Text('Mudar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
             ),
           ],
         ]),
