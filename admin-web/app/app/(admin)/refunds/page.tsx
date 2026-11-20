@@ -76,7 +76,7 @@ export default async function RefundsPage() {
       const why = refund
         ? "Tem direito a reembolso — a regra automática ainda não correu ou falhou."
         : m.deposit_refundable === false
-          ? "Sinal não reembolsável (escolha do parceiro)."
+          ? "Sinal não cancelável (escolha do parceiro)."
           : "refund_deposit" in m
             ? `Cancelou depois das ${m.deposit_window_hours ?? 48} h — sinal retido${m.refund_final === false && (m.days_until_event as number) < (m.penalty_days as number) ? "; restante também (menos de " + m.penalty_days + " dias)" : ""}.`
             : m.penalty_applied === true

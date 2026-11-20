@@ -233,7 +233,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
                   onChanged: (v) => setState(() => _depositRefundable = v),
                   activeTrackColor: AppTheme.accentOliveDark,
                   title: Text(
-                    noDeposit ? 'Reembolsável nas primeiras 48 h' : 'Sinal reembolsável',
+                    noDeposit ? 'Cancelável nas primeiras 48 h' : 'Sinal cancelável',
                     style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                   subtitle: Text(

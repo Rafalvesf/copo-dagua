@@ -52,8 +52,8 @@ export default async function SettingsPage() {
                 value: `${(settings as { partner_free_months?: number }).partner_free_months ?? 0} mês(es) + ${(settings as { partner_free_extra_months?: number }).partner_free_extra_months ?? 0} se não vender`,
               },
               { label: "Sinal", value: `${settings.deposit_percentage}% do total` },
-              { label: "Sinal reembolsável", value: `${(settings as { deposit_refund_window_hours?: number }).deposit_refund_window_hours ?? 48} h depois de pagar` },
-              { label: "Restante reembolsável", value: `até ${settings.cancellation_penalty_days} dias antes` },
+              { label: "Sinal cancelável", value: `${(settings as { deposit_refund_window_hours?: number }).deposit_refund_window_hours ?? 48} h depois de pagar` },
+              { label: "Restante cancelável", value: `até ${settings.cancellation_penalty_days} dias antes` },
             ]}
           />
         )}
