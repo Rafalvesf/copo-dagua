@@ -1192,14 +1192,14 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
                   ]);
                 }),
               ),
+            // Os comentários no mesmo cartão, por baixo de uma linha
+            // (mockup «Perfil do parceiro», 2026-11-20).
+            for (final r in shown) ...[
+              const SizedBox(height: 16),
+              ReviewTile(review: r, partnerName: widget.partnerName, partnerAvatarUrl: widget.partnerAvatarUrl, embedded: true),
+            ],
           ]),
         ),
-        const SizedBox(height: 10),
-        for (final r in shown)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-            child: ReviewTile(review: r, partnerName: widget.partnerName, partnerAvatarUrl: widget.partnerAvatarUrl),
-          ),
       ],
     ]);
   }

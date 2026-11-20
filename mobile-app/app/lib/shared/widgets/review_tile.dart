@@ -40,7 +40,13 @@ class ReviewTile extends StatelessWidget {
     this.partnerSide = false,
     this.onRespond,
     this.onReport,
+    this.embedded = false,
   });
+
+  /// Dentro do cartão «Experiência geral» do perfil do parceiro (mockup
+  /// «Perfil do parceiro», 2026-11-20): sem cartão próprio, linha por cima,
+  /// meta «Lisboa · outubro 2026» e o comentário justificado.
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
@@ -52,11 +58,18 @@ class ReviewTile extends StatelessWidget {
             if (r.location != null && r.location!.isNotEmpty) r.location!,
             if (r.estimatedGuests != null) '~${r.estimatedGuests} convidados',
           ].join(' · ')
-        : _date(r.createdAt);
+        : embedded
+            ? [
+                if (r.location != null && r.location!.isNotEmpty) r.location!.split(', ').first,
+                _monthYear(r.weddingDate ?? r.createdAt),
+              ].join(' · ')
+            : _date(r.createdAt);
     return Container(
       // Mockup "Perfil do parceiro" (2026-11-12): cartão branco liso.
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      padding: embedded ? const EdgeInsets.only(top: 16) : const EdgeInsets.all(16),
+      decoration: embedded
+          ? const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFECE7DC))))
+          : BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
           V2Avatar(r.coupleDisplayName, size: partnerSide ? 44 : 40, imageUrl: r.coupleAvatarUrl, flat: true),
@@ -71,7 +84,7 @@ class ReviewTile extends StatelessWidget {
             ]),
           ),
           // Do lado do parceiro as estrelas já estão por baixo (mockup).
-          if (!partnerSide) ...[const SizedBox(width: 8), _RatingChip(r.rating)],
+          if (!partnerSide) ...[const SizedBox(width: 8), _RatingChip(r.rating, ink: embedded)],
         ]),
         if (partnerSide || r.status != 'published') ...[
         const SizedBox(height: 10),
@@ -102,7 +115,8 @@ class ReviewTile extends StatelessWidget {
         if (r.comment != null && r.comment!.trim().isNotEmpty) ...[
           const SizedBox(height: 10),
           Text(r.comment!.trim(),
-              style: const TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: Color(0xFF3A3733))),
+              textAlign: embedded ? TextAlign.justify : TextAlign.start,
+              style: TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: embedded ? AppTheme.ink : const Color(0xFF3A3733))),
         ],
         if (r.response != null && r.response!.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -140,15 +154,21 @@ class ReviewTile extends StatelessWidget {
 
 class _RatingChip extends StatelessWidget {
   final int rating;
-  const _RatingChip(this.rating);
+
+  /// Estrela preta e 12 negrito, como a nota do resumo (mockup).
+  final bool ink;
+  const _RatingChip(this.rating, {this.ink = false});
 
   @override
   Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
-        const LineIcon(LineIcon.star, size: 13, fill: true, color: Color(0xFFC9A24A)),
-        const SizedBox(width: 3),
-        Text('$rating,0', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        LineIcon(LineIcon.star, size: 13, fill: true, color: ink ? AppTheme.ink : const Color(0xFFC9A24A)),
+        SizedBox(width: ink ? 4 : 3),
+        Text('$rating,0', style: TextStyle(fontSize: ink ? 12 : 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       ]);
 }
+
+const _months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+String _monthYear(DateTime d) => '${_months[d.month - 1]} ${d.year}';
 
 /// Resposta do parceiro: ligada à avaliação por uma linha, com a foto do
 /// parceiro e o texto num balão.

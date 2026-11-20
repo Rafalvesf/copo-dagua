@@ -244,10 +244,28 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
 
 ## 6.2 Parceiros e perfis (mockups «Parceiros e perfis», 2026-11-20)
 
-- **Página Parceiros** (correção do Rafael, 2026-11-20): **não muda** — os
-  cartões, os tamanhos e a barra de categorias ficam como estavam. Dos
-  mockups «Parceiros e perfis» só entram o perfil do parceiro (abaixo) e os
-  popups (§6.1).
+- **Página Parceiros** (pedido do Rafael, 2026-11-20, mockup «Parceiros ·
+  cartões novos»): o **topo não muda** (título, localidade, Empresas/Lojas,
+  pesquisa, categorias em pílulas **sem imagens**). Mudam os cartões e as
+  secções:
+  - **Cartão de parceiro** (`PartnerBigCard`, `partner_cards.dart`): branco,
+    cantos 22, sombra suave; foto 150 em cima com a etiqueta à esquerda
+    («Em destaque» verde, «Novo» branca) e a nota (pílula branca com
+    estrela) à direita; logótipo redondo 44 com aro branco 3 a sobrepor o
+    canto da foto; nome 19 + coração; categoria 13; «zona · N anos de
+    experiência» 13; divisória `#ECE7DC`; rodapé com «Responde em ~1 h»
+    (ou «Desloca-se até X km» / «Todo o país») e a caixa de preço.
+  - **Secções em carrossel:** «Em destaque (perto de ti)», «Mais bem
+    avaliados», «Novos na À Nossa!» e as 3 categorias com mais parceiros
+    («Ver todos» escolhe a categoria). Cartões de **330**, 10 entre eles,
+    12 entre o título e os cartões, 24 entre secções.
+  - Por baixo, «N parceiros» + «Filtrar» com o **mesmo cartão a toda a
+    largura**.
+- **Avaliações no perfil do parceiro:** um só cartão branco — «Experiência
+  geral» com a nota 40 numa caixa com contorno, as barras verdes por
+  estrelas e, por baixo de uma linha `#ECE7DC`, os comentários (avatar 40,
+  nome 16, «zona · mês ano» 13, nota 12 com estrela preta, texto 14
+  justificado). «Ver todas (N)» mostra o resto no mesmo cartão.
 - **Topo do perfil do parceiro** (pedido do Rafael): a foto tem 300 e
   **encolhe com o scroll** até à faixa dos botões, que fica **sempre
   visível**. Aberta: «Em destaque», logótipo 56 e nome 28 a branco sobre um
