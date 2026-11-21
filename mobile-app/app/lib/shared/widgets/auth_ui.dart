@@ -70,8 +70,8 @@ class AuthBackButton extends StatelessWidget {
         child: Container(
           width: 44,
           height: 44,
-          decoration: const BoxDecoration(color: _fieldFill, shape: BoxShape.circle),
-          child: const Icon(Hi.chevronLeft, color: AppTheme.ink),
+          decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+          child: const Icon(Hi.chevronLeft, size: 20, color: Colors.white),
         ),
       ),
     );

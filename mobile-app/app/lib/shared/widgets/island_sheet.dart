@@ -322,7 +322,7 @@ Future<bool> askLeaveIsland(BuildContext context) async {
   return r ?? false;
 }
 
-/// Botão redondo 44 dos popups (`#F2F0EB`, ícone 20): o «×» de fechar à
+/// Botão redondo 44 dos popups (preto, ícone branco sólido 20, DESIGN.md §2): o «×» de fechar à
 /// direita do título e o voltar à esquerda (DESIGN.md §6.1).
 class IslandRoundButton extends StatelessWidget {
   final IconData icon;
@@ -343,8 +343,8 @@ class IslandRoundButton extends StatelessWidget {
             width: 44,
             height: 44,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
-            child: Icon(icon, size: 20, color: AppTheme.ink),
+            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+            child: Icon(icon, size: 20, color: Colors.white),
           ),
         ),
       );

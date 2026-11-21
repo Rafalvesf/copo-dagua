@@ -3171,9 +3171,7 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
   }
 
   Widget _round(IconData icon, String label, VoidCallback onTap) {
-    // DESIGN.md §6: translúcido só enquanto tem a foto de capa por trás;
-    // quando o herói é só cor (sem foto), é o branco cheio 44 do §2.
-    final translucent = widget.wedding.coverPhotoUrlCacheBusted != null;
+    // DESIGN.md §2: preto 44 com o ícone branco sólido, sobre a foto também.
     return Semantics(
       button: true,
       label: label,
@@ -3182,12 +3180,8 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
         child: Container(
           width: 44,
           height: 44,
-          decoration: BoxDecoration(
-            color: translucent ? Colors.white.withValues(alpha: 0.55) : Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-          ),
-          child: Icon(icon, size: 20, color: AppTheme.ink),
+          decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+          child: Icon(icon, size: 20, color: Colors.white),
         ),
       ),
     );

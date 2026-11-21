@@ -948,8 +948,10 @@ class _Step extends StatelessWidget {
           child: Container(
             width: 36,
             height: 36,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            child: Icon(icon, size: 16, color: onTap == null ? const Color(0xFFCFC8B8) : AppTheme.ink),
+            // Botão redondo preto, ícone branco (DESIGN.md §2); sem ação fica esbatido.
+            decoration: BoxDecoration(
+                color: onTap == null ? AppTheme.ink.withValues(alpha: 0.25) : AppTheme.ink, shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: Colors.white),
           ),
         ),
       );

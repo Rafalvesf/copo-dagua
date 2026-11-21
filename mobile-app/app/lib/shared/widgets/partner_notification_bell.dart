@@ -1,6 +1,5 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
-import 'line_icon.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -33,9 +32,9 @@ class PartnerNotificationBell extends ConsumerWidget {
           child: Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
             child: Stack(children: [
-              const Center(child: LineIcon(LineIcon.bell)),
+              const Center(child: Icon(Hi.bell, size: 20, color: Colors.white)),
               if (unread > 0)
                 Positioned(
                   top: 9,
@@ -43,7 +42,7 @@ class PartnerNotificationBell extends ConsumerWidget {
                   child: Container(
                     width: 9,
                     height: 9,
-                    decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle),
+                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
                   ),
                 ),
             ]),

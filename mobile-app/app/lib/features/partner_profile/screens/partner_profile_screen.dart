@@ -1,6 +1,5 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/line_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../shared/public_link.dart';
@@ -78,8 +77,8 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                             width: 44,
                             height: 44,
                             alignment: Alignment.center,
-                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                            child: const LineIcon(LineIcon.gear, circles: LineIcon.gearCircle),
+                            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                            child: const Icon(Hi.cog6Tooth, size: 20, color: Colors.white),
                           ),
                         ),
                       ),

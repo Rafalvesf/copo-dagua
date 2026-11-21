@@ -124,7 +124,7 @@ class _RoundButton extends StatelessWidget {
           button: true,
           label: label,
           child: Material(
-            color: Colors.white,
+            color: AppTheme.ink,
             shape: const CircleBorder(),
             elevation: 0,
             child: InkWell(
@@ -133,7 +133,7 @@ class _RoundButton extends StatelessWidget {
               child: SizedBox(
                 width: 44,
                 height: 44,
-                child: Icon(icon, size: 20, color: AppTheme.ink),
+                child: Icon(icon, size: 20, color: Colors.white),
               ),
             ),
           ),
