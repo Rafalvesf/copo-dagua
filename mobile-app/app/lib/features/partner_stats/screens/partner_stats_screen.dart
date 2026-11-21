@@ -151,7 +151,7 @@ class _Dashboard extends StatelessWidget {
           const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               LineAreaChart(
                 values: [for (final p in a.revenueSeries) p.value],
@@ -248,7 +248,7 @@ class _Dashboard extends StatelessWidget {
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
             child: SimpleBarChart(
             values: [for (final p in a.requestsByWeek) p.value],
             labels: [
@@ -270,7 +270,7 @@ class _Dashboard extends StatelessWidget {
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
             child: Column(children: [
               _FunnelRow(label: 'Pedidos recebidos', value: a.requests, total: a.requests),
               const SizedBox(height: 14),
@@ -282,7 +282,7 @@ class _Dashboard extends StatelessWidget {
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
             child: Row(
               children: [
                 const StickerIcon(Hi.starOutline),
@@ -450,7 +450,7 @@ class _KpiTile extends StatelessWidget {
     final sub = caption ?? deltaText;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -544,7 +544,7 @@ class _ProInsights extends ConsumerWidget {
           borderRadius: BorderRadius.circular(22),
           child: Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
             child: Row(children: [
               Icon(Hi.lockClosed, color: green),
               const SizedBox(width: 12),
@@ -567,7 +567,7 @@ class _ProInsights extends ConsumerWidget {
     Widget tile(String label, String value, [String? sub]) => Expanded(
           child: Container(
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
               const SizedBox(height: 4),
@@ -600,7 +600,7 @@ class _ProInsights extends ConsumerWidget {
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
             child: SimpleBarChart(
               values: [for (final w in st.viewsByWeek) w.views.toDouble()],
               labels: [for (final w in st.viewsByWeek) '${w.start.day}/${w.start.month}'],

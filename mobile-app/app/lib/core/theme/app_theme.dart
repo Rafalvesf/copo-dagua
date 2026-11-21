@@ -27,6 +27,14 @@ class AppTheme {
   static const background = Color(0xFFF2F2F2);
   static const ink = Color(0xFF171713);
 
+  /// Linha entre blocos e entre linhas de uma lista (pedido 2026-11-21: sem
+  /// caixas brancas, o conteúdo fica no fundo separado por linhas).
+  static const line = Color(0xFFD9D9D9);
+
+  /// Contorno das caixas brancas que ficam (destaques, cartões): sempre a
+  /// linha preta 1,5 dos botões de contorno (pedido 2026-11-21).
+  static const cardBorder = Border.fromBorderSide(BorderSide(color: ink, width: 1.5));
+
   /// Texto secundário (legendas, descrições). Cinzento quente — antes era
   /// igual a [ink], o que deixava a app com um só nível de texto.
   static const inkMuted = Color(0xFF57534E);

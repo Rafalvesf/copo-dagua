@@ -136,7 +136,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
           KitSection('Juntar ao ${pkg!.name}'),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
             child: Column(children: [
               for (var i = 0; i < pkgExtras.length; i++)
                 ExtraChoiceRow(

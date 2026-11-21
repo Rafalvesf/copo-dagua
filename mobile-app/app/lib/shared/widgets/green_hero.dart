@@ -30,7 +30,7 @@ class GreenHero extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -87,13 +87,18 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 24, bottom: 12),
-      child: Row(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        // Uma linha antes de cada bloco (pedido 2026-11-21).
+        const Divider(height: 1, thickness: 1, color: AppTheme.line),
+        const SizedBox(height: 16),
+        Row(
         children: [
           // Títulos de secção como "Os meus eventos" / "Descobrir" (22, negrito).
           Text(text, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           if (trailing != null) ...[const SizedBox(width: 8), Expanded(child: Align(alignment: Alignment.centerRight, child: trailing!))],
         ],
       ),
+      ]),
     );
   }
 }

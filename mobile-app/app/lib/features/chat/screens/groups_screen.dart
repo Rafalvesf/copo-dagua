@@ -622,7 +622,7 @@ class _RsvpCardState extends State<_RsvpCard> {
         : '${widget.name} ${going ? 'disse que vai' : 'disse que não vai'}';
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Row(children: [
         V2Avatar(widget.name, size: 44, imageUrl: widget.avatarUrl, flat: true),
         const SizedBox(width: 12),

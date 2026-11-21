@@ -10,7 +10,7 @@ import 'v2_kit.dart';
 // parceiro», «Páginas do convidado», 2026-11-14), iguais em todas: um só
 // tamanho por elemento (DESIGN.md §3).
 
-const _divider = Color(0xFFD9D9D9);
+const _divider = AppTheme.line;
 const _track = Color(0xFFECE9E2);
 
 /// Página com a margem lateral 20 em todos os blocos, menos os que vão
@@ -274,12 +274,17 @@ class KitCaps extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: EdgeInsets.only(top: top, bottom: 8),
-        child: Row(children: [
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          // Uma linha antes de cada bloco (pedido 2026-11-21).
+          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          const SizedBox(height: 16),
+          Row(children: [
           Expanded(
             child: Text(text.toUpperCase(),
                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
           ),
           ?trailing,
+        ]),
         ]),
       );
 }
@@ -337,7 +342,9 @@ class KitSummary extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         margin: const EdgeInsets.only(top: 20),
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        // O resumo do topo é o destaque da página: caixa branca com o
+        // contorno preto 1,5 (2026-11-21).
+        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(kicker.toUpperCase(),
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
@@ -404,7 +411,11 @@ class KitSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: EdgeInsets.only(top: top, bottom: 12),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          // Uma linha antes de cada bloco (pedido 2026-11-21).
+          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          const SizedBox(height: 16),
+          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           Expanded(
             child: Text(title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
@@ -414,6 +425,7 @@ class KitSection extends StatelessWidget {
               child: Text(action!,
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
             ),
+        ]),
         ]),
       );
 }
@@ -496,11 +508,9 @@ class KitGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
+        // Sem caixa: as linhas ficam no fundo, separadas por traços (2026-11-21).
         margin: EdgeInsets.only(top: top),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: shadow
-            ? softCard(radius: 22)
-            : BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(children: [
           for (var i = 0; i < rows.length; i++) ...[
             if (i > 0) const Divider(height: 1, thickness: 1, color: _divider),

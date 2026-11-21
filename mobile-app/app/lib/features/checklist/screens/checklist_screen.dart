@@ -177,7 +177,7 @@ class _DateShortcut extends StatelessWidget {
         height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
         child: Text(
           formatShortDatePt(DateTime.now()),
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),

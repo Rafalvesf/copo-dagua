@@ -15,14 +15,14 @@ export 'sticker_icon.dart' show StickerIcon, DateSticker;
 /// (sem linha), mosaicos de cor suave com o autocolante branco, pílulas
 /// e listas agrupadas.
 
-const softShadow = [
-  BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
-];
+/// Sem sombras nos cartões (pedido 2026-11-21): as caixas brancas levam o
+/// contorno preto 1,5 ([AppTheme.cardBorder]).
+const softShadow = <BoxShadow>[];
 
 BoxDecoration softCard({double radius = 22, Color color = Colors.white}) => BoxDecoration(
       color: color,
       borderRadius: BorderRadius.circular(radius),
-      boxShadow: softShadow,
+      border: color == Colors.white ? AppTheme.cardBorder : null,
     );
 
 const _tileColors = [Color(0xFFDCE4D8), Color(0xFFF3EBDD), Color(0xFFF3EBDD), Color(0xFFDCE4D8)];
@@ -286,12 +286,17 @@ class V2Caps extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(top: 24, bottom: 12),
-        child: Text(text.toUpperCase(),
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1, color: v2Muted)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          // Uma linha antes de cada bloco (pedido 2026-11-21).
+          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          const SizedBox(height: 16),
+          Text(text.toUpperCase(),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1, color: v2Muted)),
+        ]),
       );
 }
 
-/// Cartão com linhas separadas por um traço fino.
+/// Linhas no fundo, separadas por um traço fino (sem caixa, 2026-11-21).
 class V2Group extends StatelessWidget {
   final List<Widget> rows;
   const V2Group(this.rows, {super.key});
@@ -299,11 +304,10 @@ class V2Group extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-      decoration: softCard(),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Column(children: [
         for (var i = 0; i < rows.length; i++) ...[
-          if (i > 0) const Divider(height: 1, color: Color(0xFFEEF2EC)),
+          if (i > 0) const Divider(height: 1, thickness: 1, color: AppTheme.line),
           rows[i],
         ],
       ]),

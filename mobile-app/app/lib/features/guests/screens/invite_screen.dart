@@ -212,7 +212,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
             const KitSection('Por link'),
             Container(
               padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+              decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 const Text('Para quem ainda não está na app',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),

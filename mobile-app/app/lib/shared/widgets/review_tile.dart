@@ -69,7 +69,7 @@ class ReviewTile extends StatelessWidget {
       padding: embedded ? const EdgeInsets.only(top: 16) : const EdgeInsets.all(16),
       decoration: embedded
           ? const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFD9D9D9))))
-          : BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          : BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
           V2Avatar(r.coupleDisplayName, size: partnerSide ? 44 : 40, imageUrl: r.coupleAvatarUrl, flat: true),
@@ -270,7 +270,7 @@ class ReviewSummaryCard extends StatelessWidget {
     final counts = {for (var s = 1; s <= 5; s++) s: reviews.where((r) => r.rating == s).length};
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Row(children: [
         Column(children: [
           Text(avg.toStringAsFixed(1).replaceAll('.', ','),

@@ -66,6 +66,7 @@ class MonthCalendarGrid extends StatelessWidget {
       decoration: BoxDecoration(
         // Cartão branco, cantos 22, sem linha à volta (DESIGN §4).
         color: Colors.white,
+        border: AppTheme.cardBorder,
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(

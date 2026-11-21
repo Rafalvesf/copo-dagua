@@ -128,7 +128,7 @@ class ProfileCard_Users extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(18),
         // Sem sombra (mockup).
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
             if (avatar != null) ...[
@@ -233,6 +233,7 @@ class ProfileCard_Partners extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
+          border: AppTheme.cardBorder,
           borderRadius: BorderRadius.circular(22),
           boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
         ),
@@ -378,7 +379,7 @@ class _FollowingSectionState extends ConsumerState<FollowingSection> {
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
             child: Column(children: [
               for (var i = 0; i < shown.length; i++)
                 Container(

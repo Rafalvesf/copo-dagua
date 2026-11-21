@@ -897,7 +897,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                    decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16),
@@ -1115,7 +1115,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
           child: const Text('Ainda sem avaliações.',
               style: TextStyle(fontSize: 15, color: Color(0xFF57534E))),
         )
@@ -1123,7 +1123,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Row(children: [
               Expanded(
@@ -1737,7 +1737,7 @@ class _PartnerHero extends StatelessWidget {
                       height: 44,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
                       child: const Text('À Nossa!', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     )
                   else
@@ -1855,7 +1855,7 @@ class _PartnerHeadCardState extends State<_PartnerHeadCard> {
     final long = bio.length > 200;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
@@ -2005,7 +2005,7 @@ class _ReferenceCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         margin: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('VALOR DE REFERÊNCIA',
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),

@@ -166,12 +166,12 @@ class SettingsGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      // Sem caixa: linhas no fundo, separadas por traços (2026-11-21).
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         children: [
           for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const Divider(height: 1, thickness: 1, color: Color(0xFFD9D9D9)),
+            if (i > 0) const Divider(height: 1, thickness: 1, color: AppTheme.line),
             children[i],
           ],
         ],

@@ -55,7 +55,7 @@ class HeroSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
         child: Column(children: [
           EstrelaMascot(star, size: 150),
           const SizedBox(height: 8),
@@ -105,7 +105,7 @@ class CompareTable extends StatelessWidget {
         SizedBox(width: w, child: Text(t.toUpperCase(), textAlign: TextAlign.center, style: _caps));
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Column(children: [
         SizedBox(height: 40, child: Row(children: [const Spacer(), head(without, 64), head(with_, 96)])),
         for (final (name, a, b) in rows)
@@ -181,6 +181,7 @@ class FeaturedCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
+          border: AppTheme.cardBorder,
           borderRadius: BorderRadius.circular(22),
           boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
         ),

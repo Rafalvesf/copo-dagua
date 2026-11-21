@@ -143,7 +143,7 @@ class GuestShortcutsRow extends StatelessWidget {
             onTap: it.onTap,
             child: Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+              decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Container(
                   width: 40,
@@ -315,7 +315,7 @@ class GuestPlaceCard extends ConsumerWidget {
       const KitCaps('Como chegar', top: 0),
       Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         // Mockup «Páginas do convidado»: nome 16, local 13 e «Como chegar» 44.
         Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),

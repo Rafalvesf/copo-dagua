@@ -278,7 +278,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
         Container(
           margin: const EdgeInsets.only(top: 20),
           padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
           child: Row(children: [
             V2Avatar(guest.name, size: 76),
             const SizedBox(width: 14),

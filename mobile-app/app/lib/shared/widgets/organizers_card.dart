@@ -30,7 +30,7 @@ class GuestOrganizersCard extends ConsumerWidget {
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
           child: Column(
             children: [
               for (final (i, o) in shown.indexed) ...[

@@ -139,7 +139,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           const Text('DOS ANFITRIÕES',
                               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
@@ -173,7 +173,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [

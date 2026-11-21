@@ -86,7 +86,7 @@ class _PartnerAvailabilityScreenState extends ConsumerState<PartnerAvailabilityS
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                    decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
                     child: Column(
                       children: [
                         _switch(Hi.calendarDays, 'Aceitar novos pedidos', 'Recebe pedidos de orçamento dos clientes.', _accepting,
