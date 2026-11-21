@@ -452,6 +452,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "A cada 5 pessoas convidadas que já pagaram na app, quem convidou tem a taxa de serviço 2 pontos mais baixa numa transação (4 % + 1 € → 2 % + 1 €; 6 % + 1 € → 4 % + 1 €). 10 convidados = 2 transações. Substitui os 50 % do prémio de convites; os 50 % da 1.ª transação ficam. Na app aparece a oferta no pagamento e nas Definições. Depois de aplicar, publicar a função create-payment-intent.",
     check: { kind: "marker", id: "210" },
   },
+  {
+    file: "211_complete_guest_onboarding_per_event.sql",
+    date: "2026-11-21",
+    title: "Onboarding do convidado só no evento certo",
+    what: "Quem tinha dois convites por responder e acabava o onboarding de um ficava com a mesma resposta no outro. Agora o onboarding só responde ao evento em que foi feito. A app nova já manda o evento; a antiga continua a funcionar como antes.",
+    check: { kind: "marker", id: "211" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
