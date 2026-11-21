@@ -6,6 +6,8 @@ import '../widgets/invite_benefits_card.dart';
 import '../../../shared/widgets/onb_kit.dart';
 import '../../../shared/widgets/address_picker.dart' show showAddressPicker;
 import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/premium_kit.dart';
+import '../../../shared/widgets/dense_card.dart' show MiniStats;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../../core/exports/export_files.dart' show deliverFile;
 import '../../../core/notifications/push.dart';
@@ -400,7 +402,6 @@ class PartnerAccountSections extends ConsumerWidget {
             _Row(icon: Hi.calendarDays, label: 'Calendário e datas bloqueadas', onTap: () => context.push('/partner-calendar')),
           ],
         ),
-        const _ProSection(),
         const _InviteSection(),
         const _SectionTitle('Conta'),
         const _AccountSection(),
@@ -709,47 +710,59 @@ class _InviteSection extends StatelessWidget {
 class _ProSection extends ConsumerWidget {
   const _ProSection();
 
+  static String _pts(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');
+
+  /// O Premium em destaque, no topo das Definições do parceiro (mockups
+  /// «Definições · Pagamentos e Premium», 2026-11-21; DESIGN.md §6.3).
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pro = ref.watch(myPartnerProProvider).value;
     if (pro == null || (!pro.active && !pro.enabled)) return const SizedBox.shrink();
-    final stats = pro.active ? ref.watch(partnerAnalyticsProvider(AnalyticsPeriod.month)).value : null;
-    final saving = stats == null ? null : stats.revenue * pro.feeDiscount / 100;
-    String d(DateTime t) => '${t.day.toString().padLeft(2, '0')}/${t.month.toString().padLeft(2, '0')}/${t.year}';
-    final monthly = pro.interval == 'year' ? pro.priceYearly / 12 : pro.priceMonthly;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const _SectionTitle('Plano Pro'),
-      _Group(children: [
-        if (pro.active) ...[
-          _Row(
-            icon: Hi.sparkles,
-            label: 'Mensalidade',
-            value: pro.interval == 'gift'
-                ? (pro.until == null ? 'Oferta' : 'Oferta até ${d(pro.until!)}')
-                : '${euros(monthly)}/mês${pro.interval == 'year' ? ' (anual)' : ''}',
-            onTap: () => context.push('/partner-pro'),
-          ),
+    const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    String d(DateTime t) => '${t.day} ${months[t.month - 1]}';
+    void open() => context.push('/partner-pro');
+    final Widget card;
+    if (pro.active) {
+      final stats = ref.watch(partnerAnalyticsProvider(AnalyticsPeriod.month)).value;
+      final saving = stats == null ? null : stats.revenue * pro.feeDiscount / 100;
+      final until = pro.until;
+      final price = pro.interval == 'year' ? '${euros(pro.priceYearly)}/ano' : '${euros(pro.priceMonthly)}/mês';
+      card = FeaturedCard(
+        tag: until == null
+            ? 'Ativo'
+            : pro.interval == 'gift'
+                ? 'Oferta até ${d(until)}'
+                : pro.hasSubscription
+                    ? 'Renova a ${d(until)}'
+                    : 'Até ${d(until)}',
+        title: 'És Premium',
+        meta: pro.interval == 'gift' ? 'Oferta da À Nossa!.' : pro.hasSubscription ? 'Depois $price, até cancelares.' : 'Não é renovado.',
+        children: [
           if (saving != null)
-            _Row(
-              icon: Hi.banknotes,
-              label: 'Poupaste na taxa este mês',
-              value: euros(saving),
-              onTap: () => context.push('/partner-stats'),
-            ),
-          _Row(
-            icon: Hi.cog6Tooth,
-            label: 'Gerir subscrição',
-            value: pro.until == null ? 'Ativo' : 'Até ${d(pro.until!)}',
-            onTap: () => context.push('/partner-pro'),
-          ),
-        ] else
-          _Row(
-            icon: Hi.sparkles,
-            label: 'Passar a Pro',
-            value: '${euros(pro.priceMonthly)}/mês',
-            onTap: () => context.push('/partner-pro'),
-          ),
-      ]),
+            NumberCard(label: 'Poupaste este mês', number: euros(saving), unit: 'na taxa de serviço', color: AppTheme.background),
+          PillButton('Gerir subscrição', outlined: true, height: 44, onPressed: open),
+        ],
+      );
+    } else {
+      final trial = pro.trialAvailable;
+      final m = pro.trialMonths;
+      card = FeaturedCard(
+        tag: trial ? '$m ${m == 1 ? 'mês' : 'meses'} grátis' : '${euros(pro.priceMonthly)}/mês',
+        title: 'À Nossa! Premium',
+        meta: 'Pagas menos taxa, apareces primeiro e sabes mais.',
+        children: [
+          MiniStats([
+            ('−${_pts(pro.feeDiscount)} %', 'taxa'),
+            ('+${_pts(pro.proPromotionExtraPct)} %', 'destaque'),
+            ('Sem limite', 'produtos'),
+          ]),
+          PillButton(trial ? 'Experimentar $m ${m == 1 ? 'mês' : 'meses'} grátis' : 'Ser Premium', height: 44, onPressed: open),
+        ],
+      );
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const _SectionTitle('Premium'),
+      card,
     ]);
   }
 }
@@ -765,6 +778,7 @@ class _PartnerSettings extends ConsumerWidget {
     return _SettingsPage(
       title: 'Definições',
       children: [
+        const _ProSection(),
         const _SectionTitle('Negócio'),
         _Group(
           children: [
@@ -799,7 +813,7 @@ class _PartnerSettings extends ConsumerWidget {
         const _SectionTitle('Pagamentos'),
         _Group(
           children: [
-            _Row(icon: Hi.creditCard, label: 'Pagamentos e conta Stripe', onTap: () => context.push('/partner-payments')),
+            _Row(icon: Hi.creditCard, label: 'Pagamentos', onTap: () => context.push('/partner-payments')),
             _Row(icon: Hi.documentText, label: 'Contratos', onTap: () => context.push('/partner-contracts')),
           ],
         ),
