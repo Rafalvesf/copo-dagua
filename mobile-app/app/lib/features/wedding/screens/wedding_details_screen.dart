@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import '../../events/widgets/event_actions_sheet.dart';
 import '../../settings/screens/settings_screen.dart' show EditEventPage, PanelPage;
 import '../widgets/event_program_section.dart';
+import '../widgets/organizer_suggestions.dart';
+import '../../guest_home/widgets/guest_dashboard.dart' show DashSummary, DashNow, DashAllDone, DashTasksEmpty, DashPhotos, DashButton36, dashWhenAt;
+import '../../../shared/widgets/page_kit.dart' show KitCaps, KitGroup, KitRow, KitTag, KitTagKind;
 import '../../../shared/text_case.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../shared/widgets/alert_outline.dart';
@@ -464,15 +467,11 @@ class _PageBody extends ConsumerWidget {
             _ => _ClotheslineTop(wedding: wedding),
           },
         ),
-      _NextSteps(wedding: wedding),
-      // Programa do evento — logo a seguir a "Esta semana" (2026-11-17).
-      EventProgramSection(weddingId: wedding.id),
-      _StatBlocks(wedding: wedding),
-      _InviteCodeCard(wedding: wedding),
-      const _BookingsSection(),
-      _ManageList(wedding: wedding),
-      // "Sugestões para ti" fica em último (pedido do Rafael, 2026-11-18).
-      _Suggestions(wedding: wedding),
+      // Painel novo (mockups «Painel do organizador», 2026-11-21): resumo,
+      // para fazer, sugestões, programa, números, reservas, convite e gerir.
+      // As tarefas pré-feitas («Próximos passos») e o carrossel de
+      // sugestões de parceiros saíram.
+      _OrgBody(wedding: wedding),
     ];
     final padding = EdgeInsets.fromLTRB(0, classic ? 0 : 40 + MediaQuery.paddingOf(context).top, 0, 140);
     if (!scrollable) {
@@ -3196,94 +3195,93 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
     ].join(' · ');
     // Altura das horas e da bateria: a capa começa por trás delas.
     final inset = MediaQuery.paddingOf(context).top;
-    return Stack(
-      children: [
-        Positioned(
-          left: 0,
-          right: 0,
-          top: 0,
-          height: 230 + inset,
-          child: SnappyTap(
+    // Capa como a do painel do convidado (mockups «Painel do organizador»,
+    // 2026-11-21): foto com o véu escuro, o tipo, o nome e a data/local a
+    // branco em baixo; partilhar e ⋯ à direita (a seta de voltar é a fixa
+    // do §6). Tocar na foto muda a capa.
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(40)),
+      child: SizedBox(
+        height: 260 + inset,
+        child: Stack(fit: StackFit.expand, children: [
+          SnappyTap(
             onTap: _uploading ? null : _pickBanner,
-            child: Stack(fit: StackFit.expand, children: [
-              if (photo != null)
-                SizedNetworkImage(photo, fit: BoxFit.cover, errorBuilder: (context, error, stack) => Container(color: look.tint))
-              else
-                Container(
-                  color: look.tint,
-                  alignment: Alignment.center,
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Hi.photo, size: 28, color: look.accent),
-                    const SizedBox(height: 10),
-                    // Pílula do tamanho do texto (antes ocupava a largura toda).
-                    Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
-                      child: const Center(
-                        widthFactor: 1,
-                        child: Text('Pôr foto de capa', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            child: photo != null
+                ? SizedNetworkImage(photo, fit: BoxFit.cover, errorBuilder: (context, error, stack) => Container(color: look.tint))
+                : Container(
+                    color: look.tint,
+                    alignment: Alignment.center,
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Hi.photo, size: 28, color: look.accent),
+                      const SizedBox(height: 10),
+                      Container(
+                        height: 36,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+                        child: const Center(
+                          widthFactor: 1,
+                          child: Text('Pôr foto de capa', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        ),
                       ),
-                    ),
-                  ]),
+                    ]),
+                  ),
+          ),
+          if (photo != null)
+            const IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: [0, 0.35, 1],
+                    colors: [Color(0x26171713), Color(0x00171713), Color(0x8C171713)],
+                  ),
                 ),
-              if (_uploading)
-                Container(
-                  color: Colors.black.withValues(alpha: 0.35),
-                  alignment: Alignment.center,
-                  child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                ),
+              ),
+            ),
+          if (_uploading)
+            Container(
+              color: Colors.black.withValues(alpha: 0.35),
+              alignment: Alignment.center,
+              child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+            ),
+          Positioned(
+            left: AppTheme.screenMargin,
+            right: AppTheme.screenMargin,
+            top: 12 + inset,
+            child: Row(children: [
+              const Spacer(),
+              _round(Hi.arrowUpOnSquare, 'Partilhar o convite', () => shareWeddingInvite(context, w)),
+              const SizedBox(width: 8),
+              // Arquivar ou apagar o evento (185).
+              _round(Hi.ellipsisHorizontal, 'Mais opções', () => showEventActionsSheet(context, ref,
+                  weddingId: w.id,
+                  name: capFirst(w.displayNames),
+                  isOwner: w.ownerId == ref.read(authControllerProvider).profile?.id)),
             ]),
           ),
-        ),
-        Positioned(
-          left: 16,
-          right: 16,
-          top: 12 + inset,
-          child: Row(children: [
-            // A seta de voltar é agora a seta fixa do overlay (DESIGN.md §6),
-            // que fica sempre no ecrã e sobe ao topo. Aqui fica só o ⋯.
-            const Spacer(),
-            // Arquivar ou apagar o evento (185).
-            _round(Hi.ellipsisHorizontal, 'Mais opções', () => showEventActionsSheet(context, ref,
-                weddingId: w.id,
-                name: capFirst(w.displayNames),
-                isOwner: w.ownerId == ref.read(authControllerProvider).profile?.id)),
-          ]),
-        ),
-        Padding(
-          padding: EdgeInsets.only(top: 202 + inset),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 26, AppTheme.screenMargin, 0),
-            decoration: const BoxDecoration(
-              color: _sheetColor,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+          Positioned(
+            left: AppTheme.screenMargin,
+            right: AppTheme.screenMargin,
+            bottom: 22,
+            child: IgnorePointer(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                 Text(w.typeLabel.toUpperCase(),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 11, letterSpacing: 3, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                const SizedBox(height: 6),
-                Text(w.displayNames,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 32, height: 1.1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                    style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: photo != null ? Colors.white : AppTheme.inkMuted)),
+                const SizedBox(height: 4),
+                Text(capFirst(w.displayNames),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: photo != null ? Colors.white : AppTheme.ink)),
                 if (place.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(place,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                  const SizedBox(height: 4),
+                  Text(place, style: TextStyle(fontSize: 13, color: photo != null ? Colors.white : AppTheme.inkMuted)),
                 ],
-                if (w.weddingDate != null && w.panelShows('countdown')) ...[
-                  const SizedBox(height: 18),
-                  _MinimalCountdown(date: w.weddingDate!),
-                ],
-              ],
+              ]),
             ),
           ),
-        ),
-      ],
+        ]),
+      ),
     );
   }
 }
@@ -3535,4 +3533,320 @@ class _StatusPill extends StatelessWidget {
       child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: fg)),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Painel do organizador (mockups «Painel do organizador», pedido do Rafael,
+// 2026-11-21): muito semelhante ao painel do convidado. Resumo com quanto
+// falta e como estão os convidados (com a linha preta, como no convidado);
+// «Para fazer» só com o que existe mesmo (sem as tarefas pré-feitas);
+// sugestões que nunca repetem o «Para fazer»; programa, números, reservas,
+// convite e gerir. No dia, o «Agora»; depois, «Foi há N dias» e as fotos.
+// ---------------------------------------------------------------------------
+
+/// Escolher a foto de capa (a capa e a sugestão «Pôr foto de capa»).
+Future<void> _pickCoverPhoto(BuildContext context, WidgetRef ref) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final file = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+  if (file == null || !context.mounted) return;
+  final rawBytes = await file.readAsBytes();
+  if (!context.mounted) return;
+  final adjusted = await showPhotoAdjustScreen(context, imageBytes: rawBytes);
+  if (adjusted == null) return;
+  try {
+    await ref.read(weddingControllerProvider.notifier).uploadBannerBytes(adjusted);
+  } catch (_) {
+    messenger.showSnackBar(const SnackBar(content: Text('Não foi possível carregar a foto.')));
+  }
+}
+
+/// Uma linha do «Para fazer»: ponto da cor do prazo, título, meta e o botão.
+Widget _orgTaskRow(BuildContext context, {required String title, required String sub, required String action, required VoidCallback onTap, bool urgent = false}) =>
+    KitRow(
+      lead: Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(color: urgent ? const Color(0xFFC8553D) : const Color(0xFFF2A01B), shape: BoxShape.circle),
+      ),
+      title: title,
+      sub: sub,
+      trailing: DashButton36(action, onTap: onTap),
+    );
+
+class _OrgBody extends ConsumerWidget {
+  final Wedding wedding;
+  const _OrgBody({required this.wedding});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final w = wedding;
+    final info = ref.watch(orgGuestFacingProvider(w.id)).value;
+    final program = info?.program ?? const <ProgramItem>[];
+    final (label, big, unit) = dashWhenAt(w.weddingDate, info?.ceremonyTime);
+    final now = DateTime.now();
+    final days = w.weddingDate == null
+        ? null
+        : DateTime(w.weddingDate!.year, w.weddingDate!.month, w.weddingDate!.day).difference(DateTime(now.year, now.month, now.day)).inDays;
+    final isToday = days == 0;
+    final isPast = days != null && days < 0;
+
+    final guests = ref.watch(guestsControllerProvider).guests;
+    final going = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).toList();
+    final notGoing = guests.where((g) => g.rsvpStatus == RsvpStatus.declined).length;
+    final pending = guests.where((g) => g.rsvpStatus == RsvpStatus.pending).length;
+    final photos = ref.watch(weddingGalleryPhotosProvider(w.id)).value ?? const <GalleryPhoto>[];
+    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+
+    // Resumo: como estão os convidados.
+    String? who;
+    String? whoSub;
+    String change = 'Ver';
+    bool filled = false;
+    VoidCallback? onChange;
+    if (guests.isEmpty) {
+      who = 'Ainda sem convidados';
+      whoSub = 'Partilha o convite ou junta-os à mão';
+      change = 'Convidar';
+      filled = true;
+      onChange = () => shareWeddingInvite(context, w);
+    } else if (isPast) {
+      who = '${going.length} ${going.length == 1 ? 'foi' : 'foram'}';
+      whoSub = photos.isEmpty ? 'De ${guests.length} convidados' : '${photos.length} ${photos.length == 1 ? 'foto partilhada' : 'fotos partilhadas'} pelos convidados';
+      change = photos.isEmpty ? 'Ver' : 'Ver fotos';
+      onChange = () => context.push(photos.isEmpty ? '/guests' : '/gallery');
+    } else {
+      who = '${going.length} ${going.length == 1 ? 'vai' : 'vão'}';
+      whoSub = [pending > 0 ? '$pending por responder' : 'Todos responderam', if (notGoing > 0) '$notGoing não ${notGoing == 1 ? 'vai' : 'vão'}'].join(' · ');
+      change = pending > 0 ? 'Lembrar' : 'Ver';
+      onChange = pending > 0 ? () => _openRemind(context, ref) : () => context.push('/guests');
+    }
+
+    // «Para fazer»: só o que existe mesmo — pagamentos com prazo, propostas
+    // dos parceiros e pedidos para entrar.
+    final tasks = <Widget>[];
+    if (perms.can(OrganizerPerm.tarefas)) {
+      for (final (e, payId) in _duePayments(ref).where((p) => p.$1.weddingId == w.id).take(3)) {
+        final left = e.dueDate!.difference(now).inDays;
+        tasks.add(_orgTaskRow(
+          context,
+          title: e.title,
+          sub: '${euros(e.amount, cents: payId != null)} · ${left < 0 ? 'o prazo já passou' : left == 0 ? 'até hoje' : left <= 3 ? 'faltam $left ${left == 1 ? 'dia' : 'dias'}' : 'até ${_shortDay(e.dueDate!)}'}',
+          action: 'Pagar',
+          urgent: toneForDue(e.dueDate) == AlertTone.urgent,
+          onTap: () => payId != null ? openPaymentFlow(context, ref, payId) : context.push('/budget'),
+        ));
+      }
+      for (final p in ref.watch(pendingProposalsProvider).value ?? const <ReceivedProposal>[]) {
+        if (p.weddingId != w.id) continue;
+        tasks.add(_orgTaskRow(
+          context,
+          title: 'Proposta de ${p.partnerName}',
+          sub: [euros(p.price), if (p.category?.isNotEmpty == true) p.category!].join(' · '),
+          action: 'Ver',
+          onTap: () => context.push('/bookings'),
+        ));
+      }
+      final requests = ref.watch(joinRequestsProvider(w.id)).value?.length ?? 0;
+      if (requests > 0) {
+        tasks.add(_orgTaskRow(
+          context,
+          title: '$requests ${requests == 1 ? 'pedido para entrar' : 'pedidos para entrar'}',
+          sub: 'Responderam pelo link do convite',
+          action: 'Aceitar',
+          onTap: () => context.push('/guests'),
+        ));
+      }
+    }
+    final bookings = [
+      for (final b in ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[])
+        if (b.weddingId == w.id && b.status != BookingStatus.recusado) b,
+    ];
+
+    final body = <Widget>[];
+    if (isToday && DashNow.started(program)) {
+      body.addAll([const KitCaps('Agora', top: 16, line: false), DashNow(program: program)]);
+    } else {
+      body.add(DashSummary(
+        label: label,
+        big: big,
+        unit: unit,
+        who: who,
+        whoSub: whoSub,
+        whoNames: [for (final g in going.take(3)) g.name.split(' ').first],
+        onChange: onChange,
+        changeLabel: change,
+        changeFilled: filled,
+      ));
+    }
+    if (perms.can(OrganizerPerm.tarefas)) {
+      if (tasks.isNotEmpty) {
+        body.addAll([KitCaps('Para fazer · ${tasks.length}'), KitGroup(tasks)]);
+      } else if (bookings.isNotEmpty || guests.isNotEmpty) {
+        body.addAll([const KitCaps('Para fazer'), const DashAllDone(done: 'Pagamentos em dia e propostas respondidas.')]);
+      } else {
+        body.addAll([const KitCaps('Para fazer'), const DashTasksEmpty(what: 'Pagamentos, pedidos para entrar e propostas dos parceiros.')]);
+      }
+    }
+    body.add(OrgSuggestions(wedding: w, past: isPast, onCover: () => _pickCoverPhoto(context, ref)));
+    if ((isToday || isPast) && photos.isNotEmpty) {
+      body.addAll([
+        const KitCaps('Fotos'),
+        DashPhotos(onOpen: () => context.push('/gallery'), urls: [for (final p in photos) p.imageUrl], count: photos.length),
+      ]);
+    }
+
+    // Sem linha logo a seguir ao destaque (DESIGN.md §4).
+    final hi = body.indexWhere((x) => x is DashSummary || x is DashNow);
+    if (hi >= 0 && hi + 1 < body.length && body[hi + 1] is KitCaps) {
+      final c = body[hi + 1] as KitCaps;
+      body[hi + 1] = KitCaps(c.text, top: 20, trailing: c.trailing, line: false);
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: body),
+      ),
+      if (!isPast) EventProgramSection(weddingId: w.id),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          if (!isPast && !isToday) _OrgNumbers(wedding: w),
+          _OrgBookings(bookings: bookings),
+          if (!isPast) _OrgInvite(wedding: w),
+          _OrgManage(wedding: w),
+        ]),
+      ),
+    ]);
+  }
+}
+
+/// Números (convidados, orçamento, parceiros, e o 4.º do tipo de evento),
+/// em linhas de dinheiro (DESIGN.md §6.3): nome + meta, valor à direita.
+class _OrgNumbers extends ConsumerWidget {
+  final Wedding wedding;
+  const _OrgNumbers({required this.wedding});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final w = wedding;
+    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final guests = ref.watch(guestsControllerProvider).guests;
+    final going = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).length;
+    final notGoing = guests.where((g) => g.rsvpStatus == RsvpStatus.declined).length;
+    final budget = ref.watch(budgetControllerProvider).budget;
+    final bookings = [
+      for (final b in ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[])
+        if (b.weddingId == w.id && b.status != BookingStatus.recusado) b,
+    ];
+    final reserved = bookings.where((b) => b.status == BookingStatus.confirmado || b.status == BookingStatus.concluido).length;
+    final rows = <Widget>[];
+    void add(String title, String sub, String value, String route) {
+      if (!_routeAllowed(route, perms)) return;
+      rows.add(KitRow(
+        title: title,
+        sub: sub,
+        trailing: Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        chevron: true,
+        onTap: () => context.push(route),
+      ));
+    }
+
+    if (guests.isNotEmpty) {
+      add('Convidados', ['$going ${going == 1 ? 'vai' : 'vão'}', '${guests.length - going - notGoing} por responder', if (notGoing > 0) '$notGoing não ${notGoing == 1 ? 'vai' : 'vão'}'].join(' · '),
+          '${guests.length}', '/guests');
+    }
+    final spent = budget?.spent ?? 0;
+    final total = budget?.total ?? 0;
+    if (spent > 0) {
+      add('Orçamento', total > 0 ? 'Gastos de ${euros(total)}' : 'Gastos', euros(spent), '/budget');
+    } else if (total > 0) {
+      add('Orçamento', 'Por gastar', euros(total), '/budget');
+    } else if ((w.estimatedBudget ?? 0) > 0) {
+      add('Orçamento', 'Estimativa', euros(w.estimatedBudget!), '/budget');
+    }
+    if (bookings.isNotEmpty) {
+      final others = bookings.length - reserved;
+      add('Parceiros', ['$reserved ${reserved == 1 ? 'reservado' : 'reservados'}', if (others > 0) '$others por fechar'].join(' · '), '${bookings.length}', '/bookings');
+    }
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const KitCaps('Números'), KitGroup(rows)]);
+  }
+}
+
+/// Reservas: uma linha por parceiro com o estado numa etiqueta.
+class _OrgBookings extends StatelessWidget {
+  final List<CoupleBooking> bookings;
+  const _OrgBookings({required this.bookings});
+
+  @override
+  Widget build(BuildContext context) {
+    if (bookings.isEmpty) return const SizedBox.shrink();
+    KitTag tagFor(BookingStatus s) => switch (s) {
+          BookingStatus.confirmado => const KitTag('Confirmada'),
+          BookingStatus.concluido => const KitTag('Concluída'),
+          BookingStatus.aceite => const KitTag('Falta o sinal', kind: KitTagKind.pending),
+          BookingStatus.emAnalise => const KitTag('Em análise', kind: KitTagKind.neutral),
+          _ => const KitTag('Pedido enviado', kind: KitTagKind.neutral),
+        };
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const KitCaps('Reservas'),
+      KitGroup([
+        for (final b in bookings)
+          KitRow(
+            title: b.partnerName,
+            sub: [if (b.category?.isNotEmpty == true) b.category!, '${b.serviceDate.day} ${monthNamesPt[b.serviceDate.month - 1].substring(0, 3).toLowerCase()}'].join(' · '),
+            trailing: tagFor(b.status),
+            onTap: () => context.push('/bookings'),
+          ),
+      ]),
+    ]);
+  }
+}
+
+/// Convite: o código (toca para copiar), «Partilhar» e «Ver como convidado».
+class _OrgInvite extends StatelessWidget {
+  final Wedding wedding;
+  const _OrgInvite({required this.wedding});
+
+  @override
+  Widget build(BuildContext context) {
+    final code = wedding.guestCode;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const KitCaps('Convite'),
+      KitGroup([
+        KitRow(
+          title: code ?? 'O convite',
+          sub: code == null ? 'Envia o link do convite' : 'Código para entrar · toca para copiar o link',
+          trailing: DashButton36('Partilhar', outlined: true, onTap: () => shareWeddingInvite(context, wedding)),
+          onTap: code == null
+              ? null
+              : () {
+                  copyText(wedding.inviteUrl ?? code);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link do convite copiado.')));
+                },
+        ),
+        if (code != null) KitRow(title: 'Ver como convidado', chevron: true, onTap: () => context.push('/invite/$code')),
+      ]),
+    ]);
+  }
+}
+
+/// Gerir: a entrada para as Definições do evento (organizadas por temas).
+class _OrgManage extends StatelessWidget {
+  final Wedding wedding;
+  const _OrgManage({required this.wedding});
+
+  @override
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        const KitCaps('Gerir'),
+        KitGroup([
+          KitRow(
+            title: 'Definições do evento',
+            sub: 'Detalhes, convidados, conteúdo e arquivo',
+            chevron: true,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EventSettingsPage(wedding: wedding))),
+          ),
+        ]),
+      ]);
 }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/budget/booked_partners.dart';
 import '../../../core/models/models.dart';
+import '../../../shared/widgets/page_kit.dart' show KitCaps;
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/guest_facing.dart';
 import '../../../shared/widgets/v2_kit.dart';
@@ -158,9 +159,8 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
         children: [
           // Título como grupo em maiúsculas (a força de "O EVENTO" nas
           // Definições), sem o botão "+" (adicionar é o botão em baixo).
-          const Text('PROGRAMA',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
-          const SizedBox(height: 8),
+          // Título de secção com a linha de 2 px (painel novo, 2026-11-21).
+          const KitCaps('Programa'),
           const Text('O dia ao minuto. Arrasta para reordenar.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           const SizedBox(height: 12),
           if (_items.isEmpty)
