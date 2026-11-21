@@ -231,7 +231,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         try {
           final paymentId = await supabase.rpc('prepay_request_deposit', params: {'p_quote_request_id': quoteId});
           if (paymentId is String && mounted) {
-            await openPaymentFlow(context, ref, paymentId);
+            // Pago → volta logo aqui para o fim «Reserva pedida» (com a
+            // estrela de parabéns), em vez de ir para Reservas.
+            await openPaymentFlow(context, ref, paymentId, onPaid: (c) => Navigator.of(c).pop());
             final row = await supabase.from('payments').select('status').eq('id', paymentId).maybeSingle();
             depositPaid = row?['status'] == 'paid';
           }

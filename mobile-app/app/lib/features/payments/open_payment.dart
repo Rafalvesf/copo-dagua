@@ -12,7 +12,10 @@ import '../../core/supabase/supabase_config.dart';
 /// sítio da app (tarefas, orçamento, pagamentos próximos, detalhe da
 /// reserva) — 2026-10-19. Antes cada sítio mandava para as Reservas e o
 /// casal tinha de procurar o botão.
-Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String paymentId) async {
+/// [onPaid]: o que fazer quando fica pago, em vez do ecrã «Pago» (ex.: o
+/// sinal pago ao pedir volta ao perfil do parceiro, que mostra o fim do
+/// pedido com a estrela de parabéns).
+Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String paymentId, {void Function(BuildContext context)? onPaid}) async {
   Map<String, dynamic>? row;
   try {
     row = await supabase
@@ -53,6 +56,7 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
       kind: row['type'] as String,
       amount: amountWithCommission((row['amount'] as num).toDouble(), pct),
       baseAmount: (row['amount'] as num).toDouble(),
+      onPaid: onPaid,
       onChat: _chatOpener(
         weddingId: (row['bookings'] as Map?)?['wedding_id'] as String?,
         partnerId: row['partner_id'] as String?,
