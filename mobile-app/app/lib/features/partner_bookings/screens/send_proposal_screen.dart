@@ -356,9 +356,7 @@ class _DepositPreview extends ConsumerWidget {
           ],
           const SizedBox(height: 4),
           Text(
-            feeCfg.isFree
-                ? 'O cliente paga a taxa de serviço por cima do teu valor. Oferta de lançamento: não pagas taxa de serviço até ${_d(feeCfg.freeUntil!)}. Depois: ${feeCfg.describe((v) => euros(v))} do valor da reserva, mais 1 € por pagamento (IVA incluído).'
-                : !feeCfg.isZero
+            !feeCfg.isZero
                 ? 'O cliente paga a taxa de serviço por cima do teu valor. A tua é de ${feeCfg.describe((v) => euros(v))} do valor da reserva, mais 1 € por pagamento. ${full ? 'Sem sinal: o cliente paga tudo ao aceitar e recebes 3 dias depois do evento.' : 'Recebes o sinal 48 h depois de o cliente o pagar e o restante 3 dias depois do evento.'} Valores com IVA incluído.'
                 : 'A taxa de serviço é paga pelo cliente, por cima do teu valor — recebes o valor por inteiro.',
             style: const TextStyle(fontSize: AppFontSize.sm, height: 1.35, color: AppTheme.inkMuted),
@@ -369,4 +367,3 @@ class _DepositPreview extends ConsumerWidget {
   }
 }
 
-String _d(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';

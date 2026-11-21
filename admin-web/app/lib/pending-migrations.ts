@@ -417,6 +417,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O sinal paga-se até 30 dias antes do evento (depois disso, 48 h como antes e fica cativo 48 h); o resto até 14 dias antes, e o parceiro pode baixar até 1. Avisos iguais para os dois: 6 dias antes do prazo e nos últimos 3 dias.",
     check: { kind: "marker", id: "205" },
   },
+  {
+    file: "208_no_free_months.sql",
+    date: "2026-11-21",
+    title: "Sem meses sem taxa",
+    what: "Os parceiros novos e os fundadores pagam a taxa desde a primeira reserva: os meses sem taxa passam a 0. Fica só o cliente trazido pelo próprio parceiro (a cada 5, sem comissão do parceiro).",
+    check: { kind: "marker", id: "208" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

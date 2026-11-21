@@ -7,7 +7,6 @@ import { initialActionState } from "@/components/ActionButtons";
 export type GrowthSettings = {
   updated_at: string;
   founder_slots?: number;
-  founder_free_months?: number;
   founder_featured_slots?: number;
   founder_featured_months?: number;
   referral_zero_fee?: boolean;
@@ -30,7 +29,6 @@ export function GrowthForm({ settings }: { settings: GrowthSettings }) {
     <form key={settings.updated_at} action={formAction} className="stack" style={{ gap: 18 }}>
       <h3 style={{ margin: 0, fontSize: 15 }}>Parceiros Fundadores</h3>
       <Num name="founder_slots" label="Vagas de fundador" suffix="primeiros parceiros publicados" value={settings.founder_slots ?? 100} />
-      <Num name="founder_free_months" label="Meses sem taxa para fundadores" suffix="meses" value={settings.founder_free_months ?? 3} />
       <Num name="founder_featured_slots" label="Fundadores com destaque grátis" suffix="primeiros" value={settings.founder_featured_slots ?? 50} />
       <Num name="founder_featured_months" label="Duração do destaque grátis" suffix="meses" value={settings.founder_featured_months ?? 6} />
 

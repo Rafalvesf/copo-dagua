@@ -202,20 +202,15 @@ Deno.serve(async (req) => {
   const totalChargeCents = partnerAmountCents + applicationFeeCents;
   // Escalões sobre o valor total da reserva (migração 126); cada pagamento
   // leva a parte proporcional. Sem escalões, a percentagem fixa (123).
-  // Parceiros novos: sem taxa nos primeiros `partner_free_months` meses
-  // (2 desde a migração 135; o mês extra para quem não vende,
-  // `partner_free_extra_months`, ficou a 0 — migrações 127/128).
-  // Migração 151: fundadores têm `founder_free_months`; dos clientes
-  // trazidos pelo próprio parceiro (link /p/CODIGO, antes de qualquer
-  // pedido), a cada `referral_free_every` (5) um fica sem comissão do parceiro.
+  // Nunca há meses sem taxa (pedido do Rafael, 2026-11-21; migração 208).
+  // Só dos clientes trazidos pelo próprio parceiro (link /p/CODIGO, antes de
+  // qualquer pedido), a cada `referral_free_every` (5) um fica sem comissão
+  // do parceiro (migração 151).
   const coupleId = (payment.bookings as unknown as { couple_id?: string } | null)?.couple_id ?? null;
   // Plano Pro (migração 161): comissão 1 ponto mais baixa, cliente
   // trazido sem comissão a cada 3 (em vez de 5) e destaque a +4%.
   const isPro = await partnerIsPro(admin, payment.partner_id as string);
-  const partnerFree =
-    (await partnerIsFree(admin, payment.partner_id as string, partner.created_at, sett,
-      await founderNumber(admin, payment.partner_id as string))) ||
-    (await isReferredClient(admin, payment.partner_id as string, coupleId, sett, isPro));
+  const partnerFree = await isReferredClient(admin, payment.partner_id as string, coupleId, sett, isPro);
   // Migração 155: reserva que veio do destaque pago do parceiro → +6%.
   const promoExtraPct = partnerFree ? 0 : await promotionExtraPct(admin, payment.booking_id as string);
   // O crédito do parceiro só se gasta quando ele paga taxa.
@@ -347,35 +342,6 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-// Oferta de lançamento do parceiro (migrações 127/128).
-// deno-lint-ignore no-explicit-any
-async function partnerIsFree(
-  admin: any,
-  partnerId: string,
-  createdAtRaw: string | undefined,
-  sett: Record<string, unknown>,
-  founderNo: number | null = null,
-) {
-  const baseMonths = Number(sett.partner_free_months ?? 0);
-  const months = founderNo != null ? Math.max(baseMonths, Number(sett.founder_free_months ?? 0)) : baseMonths;
-  const extra = Number(sett.partner_free_extra_months ?? 0);
-  if (!createdAtRaw || months <= 0) return false;
-  const c = new Date(createdAtRaw);
-  const base = new Date(c.getFullYear(), c.getMonth() + months, c.getDate());
-  const now = Date.now();
-  if (now < base.getTime()) return true;
-  if (extra <= 0) return false;
-  const ext = new Date(c.getFullYear(), c.getMonth() + months + extra, c.getDate());
-  if (now >= ext.getTime()) return false;
-  const { count } = await admin
-    .from("payments")
-    .select("id", { count: "exact", head: true })
-    .eq("partner_id", partnerId)
-    .eq("status", "paid")
-    .lt("paid_at", base.toISOString());
-  return (count ?? 0) === 0;
-}
-
 // Cliente trazido pelo próprio parceiro (migração 151): a cada N (5)
 // clientes válidos, o N.º fica sem comissão do parceiro.
 // deno-lint-ignore no-explicit-any
@@ -390,14 +356,6 @@ async function isReferredClient(admin: any, partnerId: string, coupleId: string 
     .maybeSingle();
   const seq = Number(data?.seq ?? 0);
   return data?.valid === true && seq > 0 && seq % every === 0;
-}
-
-// N.º de fundador (migração 151); sem a migração, null.
-// deno-lint-ignore no-explicit-any
-async function founderNumber(admin: any, partnerId: string): Promise<number | null> {
-  const { data, error } = await admin.from("partner_profiles").select("founder_number").eq("id", partnerId).maybeSingle();
-  if (error) return null;
-  return (data?.founder_number as number | null | undefined) ?? null;
 }
 
 // +% de uma reserva que veio do destaque pago (migração 155); sem a

@@ -10,26 +10,23 @@ class FeeConfig {
   final List<({double? upTo, double pct})> tiers;
   final double flatPct;
 
-  /// Parceiro: sem taxa até esta data (lançamento, migração 127).
-  final DateTime? freeUntil;
+  // Sem meses sem taxa (pedido do Rafael, 2026-11-21: «nunca oferecemos a
+  // app sem taxa»; migração 208).
+  const FeeConfig({this.tiers = const [], this.flatPct = 0});
 
-  const FeeConfig({this.tiers = const [], this.flatPct = 0, this.freeUntil});
-
-  static FeeConfig parse(Object? raw, {double flatPct = 0, DateTime? freeUntil}) {
+  static FeeConfig parse(Object? raw, {double flatPct = 0}) {
     final tiers = <({double? upTo, double pct})>[
       if (raw is List)
         for (final t in raw.whereType<Map>())
           if (t['pct'] is num) (upTo: (t['up_to'] as num?)?.toDouble(), pct: (t['pct'] as num).toDouble()),
     ];
-    return FeeConfig(tiers: tiers, flatPct: flatPct, freeUntil: freeUntil);
+    return FeeConfig(tiers: tiers, flatPct: flatPct);
   }
 
-  bool get isFree => freeUntil != null && DateTime.now().isBefore(freeUntil!);
-  bool get isZero => isFree || (tiers.isEmpty && flatPct <= 0);
+  bool get isZero => tiers.isEmpty && flatPct <= 0;
 
   /// Taxa sobre o valor total de uma reserva.
   double feeFor(double total) {
-    if (isFree) return 0;
     final cents = (total * 100).round();
     if (tiers.isEmpty) return (cents * flatPct / 100).round() / 100;
     var fee = 0.0;
@@ -48,7 +45,6 @@ class FeeConfig {
   /// Percentagem efetiva de uma reserva com este valor total — a mesma
   /// para o sinal e para o restante dessa reserva.
   double effectivePct(double total) {
-    if (isFree) return 0;
     if (tiers.isEmpty) return flatPct;
     if (total <= 0) return tiers.first.pct;
     return feeFor(total) / total * 100;
@@ -56,7 +52,6 @@ class FeeConfig {
 
   /// Parte da taxa de um pagamento (sinal/restante) de uma reserva.
   double feeForPayment(double payment, double bookingTotal) {
-    if (isFree) return 0;
     if (tiers.isEmpty) return ((payment * 100).round() * flatPct / 100).round() / 100 + kFixedFee;
     if (bookingTotal <= 0) return 0;
     final f = (feeFor(bookingTotal) * 100 * payment / bookingTotal).round() / 100 + kFixedFee;

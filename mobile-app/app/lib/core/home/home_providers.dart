@@ -305,47 +305,14 @@ final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
   ref.watch(authControllerProvider.select((s) => s.profile?.id));
   try {
     final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
-    // Parceiros novos: sem taxa nos primeiros `partner_free_months` meses
-    // (2 desde a migração 135; o mês extra para quem não vende,
-    // `partner_free_extra_months`, ficou a 0). Mesma regra que
-    // `create-payment-intent`.
-    DateTime? freeUntil;
-    var months = (row['partner_free_months'] as num?)?.toInt() ?? 0;
-    final extra = (row['partner_free_extra_months'] as num?)?.toInt() ?? 0;
     final uid = supabase.auth.currentUser?.id;
-    // Parceiros Fundadores (migração 151): `founder_free_months`.
-    if (uid != null) {
-      try {
-        final f = await supabase.from('partner_profiles').select('founder_number').eq('id', uid).maybeSingle();
-        final founderMonths = (row['founder_free_months'] as num?)?.toInt() ?? 0;
-        if (f?['founder_number'] != null && founderMonths > months) months = founderMonths;
-      } catch (_) {}
-    }
-    if (months > 0 && uid != null) {
-      final me = await supabase.from('partner_profiles').select('created_at').eq('id', uid).maybeSingle();
-      final created = DateTime.tryParse('${me?['created_at'] ?? ''}')?.toLocal();
-      if (created != null) {
-        final base = DateTime(created.year, created.month + months, created.day);
-        freeUntil = base;
-        if (extra > 0 && !DateTime.now().isBefore(base)) {
-          final sales = await supabase
-              .from('payments')
-              .select('id')
-              .eq('partner_id', uid)
-              .eq('status', 'paid')
-              .lt('paid_at', base.toUtc().toIso8601String())
-              .limit(1);
-          if ((sales as List).isEmpty) freeUntil = DateTime(created.year, created.month + months + extra, created.day);
-        }
-      }
-    }
     var feeBase = FeeConfig.parse(row['partner_fee_tiers'],
-        flatPct: (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0, freeUntil: freeUntil);
+        flatPct: (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0);
     // Migração 180: a taxa do parceiro depende do país dele.
     if (uid != null) {
       final rates = await ref.read(partnerFeeRatesProvider(uid).future);
       if (rates != null) {
-        feeBase = FeeConfig(tiers: rates.partner.tiers, flatPct: rates.partner.flatPct, freeUntil: freeUntil);
+        feeBase = FeeConfig(tiers: rates.partner.tiers, flatPct: rates.partner.flatPct);
       }
     }
     // Plano Pro (migração 161): comissão `pro_fee_discount` pontos mais baixa.
@@ -358,7 +325,6 @@ final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
           return FeeConfig(
             tiers: [for (final t in feeBase.tiers) (upTo: t.upTo, pct: (t.pct - d) < 0 ? 0.0 : t.pct - d)],
             flatPct: (feeBase.flatPct - d) < 0 ? 0 : feeBase.flatPct - d,
-            freeUntil: feeBase.freeUntil,
           );
         }
       } catch (_) {}
