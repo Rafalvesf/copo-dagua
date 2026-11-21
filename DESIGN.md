@@ -206,7 +206,7 @@ ecrãs. O resto da app mantém a tabela acima.
   de linhas (avatar 44, nome 16, meta 13, etiqueta à direita).
 - **Barra de progresso** (`AppProgressBar`, `shared/widgets/app_progress.dart`,
   pedido do Rafael 2026-11-21): **em toda a app**, a barra verde leva **a
-  estrela (o ícone novo da app) na ponta** e é **animada quando o progresso
+  estrela (o ícone novo da app) em cima da ponta**, como quem anda nela, e é **animada quando o progresso
   muda** — a barra cresce e a estrela dá um saltinho até ao sítio novo (e
   enche desde o início ao aparecer). Com «reduzir movimento» muda sem
   animação. Espessura 10 nos resumos e no onboarding, 6–8 nas linhas.

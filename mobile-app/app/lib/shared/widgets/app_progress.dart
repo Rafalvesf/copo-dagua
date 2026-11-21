@@ -6,7 +6,7 @@ import '../../core/theme/app_theme.dart';
 import 'estrela.dart';
 
 /// Barra de progresso da app (pedido do Rafael, 2026-11-21, DESIGN.md §6):
-/// a barra verde com **a estrela (o ícone novo da app) na ponta**, e
+/// a barra verde com **a estrela (o ícone novo da app) em cima da ponta**, e
 /// **animada quando o progresso muda** — a barra cresce e a estrela dá um saltinho até ao sítio
 /// novo. Com «reduzir movimento», muda sem animação. Usar sempre esta em vez
 /// de `LinearProgressIndicator` com valor.
@@ -71,12 +71,13 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    final star = math.max(22.0, widget.height * 2.6);
+    // A estrela vai em cima da ponta da barra, como quem anda nela.
+    final star = math.max(24.0, widget.height * 3);
     final starW = star * 384 / 350;
     final color = widget.color ?? AppTheme.accentOliveDark;
     final track = widget.track ?? const Color(0xFFE0E0E0);
     return SizedBox(
-      height: star,
+      height: star + widget.height,
       child: LayoutBuilder(builder: (context, box) {
         final w = box.maxWidth;
         return AnimatedBuilder(
@@ -91,7 +92,7 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
               Positioned(
                 left: 0,
                 right: 0,
-                top: (star - widget.height) / 2,
+                top: star,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(widget.height / 2),
                   child: SizedBox(
@@ -111,7 +112,7 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
               ),
               Positioned(
                 left: left,
-                top: -6 * hop,
+                top: 2 - 6 * hop,
                 child: Transform.rotate(
                   angle: 0.18 * math.sin(t * math.pi * 2) * hop,
                   child: EstrelaMascot(Estrela.feliz, size: starW, cycles: 0, semanticLabel: ''),
