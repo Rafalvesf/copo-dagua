@@ -1036,13 +1036,48 @@ final _pendingInvitesProvider = FutureProvider<Set<String>>((ref) async {
 
 /// "Convite por responder": quem convidou, para quê e o botão para ir
 /// confirmar.
-class _InviteNotice extends StatelessWidget {
+class _InviteNotice extends ConsumerStatefulWidget {
   final GuestWedding wedding;
   final int more;
   const _InviteNotice({required this.wedding, required this.more});
 
   @override
+  ConsumerState<_InviteNotice> createState() => _InviteNoticeState();
+}
+
+class _InviteNoticeState extends ConsumerState<_InviteNotice> {
+  bool _busy = false;
+
+  // «Vou / Não vou» só aqui (pedido 2026-11-21): o painel do evento e o
+  // assistente já não perguntam (só o RSVP pelo link). «Vou» abre o painel,
+  // que segue para o assistente (quem vai contigo, idades, alergias).
+  Future<void> _answer(bool going) async {
+    final id = widget.wedding.weddingId;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    try {
+      final guest = await ref.read(myGuestRowProvider(id).future);
+      if (guest == null) throw StateError('sem convite');
+      await setMyRsvp(guest, going);
+      ref.invalidate(myGuestRowProvider(id));
+      ref.invalidate(_pendingInvitesProvider);
+      if (!mounted) return;
+      if (going) {
+        context.go('/guest-home/$id');
+      } else {
+        messenger.showSnackBar(const SnackBar(content: Text('Os anfitriões ficam a saber.')));
+      }
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Não deu para guardar a resposta. Tenta outra vez.')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final wedding = widget.wedding;
+    final more = widget.more;
     final two = wedding.partnerName2 != null && wedding.partnerName2!.isNotEmpty;
     final noun = wedding.eventType.noun;
     final fem = noun.startsWith('festa') || noun.startsWith('comunhão') || noun.startsWith('renovação');
@@ -1056,7 +1091,8 @@ class _InviteNotice extends StatelessWidget {
         tone: AlertTone.invite,
         radius: 22,
         padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-        child: Row(children: [
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
           Container(
             width: 40,
             height: 40,
@@ -1077,18 +1113,31 @@ class _InviteNotice extends StatelessWidget {
                 Text(date, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
             ]),
           ),
-          const SizedBox(width: 10),
-          Container(
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
-            child: const Text('Ver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
-          ),
+        ]),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: _btn('Não vou', outlined: true, onTap: _busy ? null : () => _answer(false))),
+          const SizedBox(width: 8),
+          Expanded(child: _btn('Vou', onTap: _busy ? null : () => _answer(true))),
+        ]),
         ]),
       ),
     );
   }
+
+  Widget _btn(String label, {bool outlined = false, VoidCallback? onTap}) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: outlined ? Colors.white : AppTheme.ink,
+            borderRadius: BorderRadius.circular(18),
+            border: outlined ? Border.all(color: AppTheme.ink, width: 1.5) : null,
+          ),
+          child: Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: outlined ? AppTheme.ink : Colors.white)),
+        ),
+      );
 }
 
 /// "Convite para organizar": quem te convidou, para que evento, e o botão

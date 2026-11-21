@@ -106,6 +106,9 @@ class GuestHomeScreen extends ConsumerWidget {
                 ref.watch(myGuestRowProvider(wedding.weddingId)).whenData((guest) {
                   if (guest != null &&
                       guest.onboardingCompletedAt == null &&
+                      // Só depois de «Vou» na página dos eventos: o
+                      // assistente já não pergunta se vais (2026-11-21).
+                      guest.rsvpStatus == RsvpStatus.confirmed &&
                       // Por conta e evento: antes era só o evento, e quem criava
                       // uma conta nova no mesmo separador (depois de testar
                       // com outra conta) nunca via o onboarding (2026-10-17).
@@ -290,7 +293,8 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           ].join(' · ');
 
     final presents = show(GuestSection.presentes)
-        ? KitRow(title: 'Presentes', sub: isPast ? 'Ainda dá para oferecer' : null, trailing: const Text('Lista', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)), chevron: true, onTap: () => context.go('/guest-gifts/$id'))
+        // «Oferece um presente», como no «Não vou»; dentro de «Mais» (2026-11-21).
+        ? KitRow(title: 'Oferece um presente', sub: 'Lista de presentes ou envelope', trailing: const Text('Lista', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)), chevron: true, onTap: () => context.go('/guest-gifts/$id'))
         : null;
     final stay = offers.isEmpty
         ? null
@@ -345,12 +349,8 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           onChange: going ? editAnswer : null,
         ));
       }
-      if (guest != null && !going) {
-        body.addAll([
-          const KitCaps('O teu convite'),
-          GuestAnswerCard(guest: guest, weddingId: id),
-        ]);
-      }
+      // «O teu convite» saiu (2026-11-21): o «Vou / Não vou» está só na
+      // página principal dos eventos (e no RSVP pelo link).
       if (pass.ticket != null) {
         body.addAll([
           const SizedBox(height: 16),
@@ -367,7 +367,13 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
         body.addAll([const KitCaps('Para fazer'), DashTasksEmpty(star: !nothing)]);
       }
       if (nothing) {
-        body.add(DashWaiting(hosts: wedding.displayNames.replaceAll(' & ', ' e ')));
+        // Linha antes da estrela «à espera» (2026-11-21).
+        body.addAll([
+          const SizedBox(height: 12),
+          const Divider(height: 2, thickness: 2, color: AppTheme.sectionLine),
+          const SizedBox(height: 16),
+          DashWaiting(hosts: wedding.displayNames.replaceAll(' & ', ' e ')),
+        ]);
       }
       if (photosOn && isToday) body.addAll([const KitCaps('Fotos'), DashPhotos(onOpen: openPhotos, urls: photoUrls, count: photos.length)]);
       if (table != null) {
@@ -390,7 +396,7 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
     }
 
     // Sem linha logo a seguir à caixa branca de destaque (2026-11-21).
-    final hi = body.indexWhere((w) => w is DashSummary || w is DashNow || w.key == const ValueKey('resposta'));
+    final hi = body.indexWhere((w) => w is DashSummary || w is DashNow);
     if (hi >= 0 && hi + 1 < body.length && body[hi + 1] is KitCaps) {
       final c = body[hi + 1] as KitCaps;
       body[hi + 1] = KitCaps(c.text, top: 20, trailing: c.trailing, line: false);
