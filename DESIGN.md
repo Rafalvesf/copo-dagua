@@ -452,8 +452,11 @@ nunca só o desconto («−2 %»), quando se sabe o valor.
   «Aparecem aqui as tuas tarefas», §4; uma tarefa por reserva — escolher o
   menu e pagar a parte vão juntos, «Escolher e pagar») → no dia FOTOS → **A tua mesa** (o número no
   centro do círculo com as pessoas à volta; tu a preto) → PROGRAMA (o mesmo
-  desenho do organizador) → DRESS CODE (cabide) → MAIS («Oferece um presente» · lista ou
-  envelope, alojamento) → ANFITRIÕES (Mensagem) → **COMO CHEGAR, sempre em último**
+  desenho do organizador; cada momento com o seu ícone 34 — foto/iniciais do
+  parceiro escolhido ou, sem parceiro, as iniciais do local) → DRESS CODE
+  (cabide; as bolinhas das cores 22 + os nomes, se o organizador as escolheu)
+  → MAIS («Oferece um presente» · lista ou
+  envelope; «Alojamento e transporte» · onde ficar e como lá chegar) → ANFITRIÕES (Mensagem) → **COMO CHEGAR, sempre em último**
   (vista de mapa com o pino — `VenueMap`, em todo o «Como chegar» da app —,
   «Copiar morada» + «Abrir mapa», que pergunta com que app).
 - **Só aparece o que existe:** mesa por revelar, programa sem nenhum

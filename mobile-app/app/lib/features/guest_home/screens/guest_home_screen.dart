@@ -300,6 +300,7 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
         ? null
         : KitRow(
             title: 'Alojamento e transporte',
+            sub: 'Onde ficar e como lá chegar',
             trailing: Text('${offers.length} ${offers.length == 1 ? 'opção' : 'opções'}', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             chevron: true,
             onTap: () => context.push('/guest-stay/$id'),
@@ -335,7 +336,7 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
         hosts,
       ]);
     } else {
-      final nothing = !hasTodo && tables.isEmpty && table == null && program.isEmpty && dress.isEmpty && !hasPlace;
+      final nothing = !hasTodo && tables.isEmpty && table == null && program.isEmpty && dress.isEmpty && wedding.themeColors.isEmpty && !hasPlace;
       if (started) {
         body.addAll([const KitCaps('Agora', top: 16, line: false), DashNow(program: program)]);
       } else {
@@ -389,7 +390,9 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           DashProgram(program: program, live: isToday, onAll: () => context.push('/guest-wedding-details', extra: wedding)),
         ]);
       }
-      if (dress.isNotEmpty) body.addAll([const KitCaps('Dress code'), DashDressCode(text: dress)]);
+      if (dress.isNotEmpty || wedding.themeColors.isNotEmpty) {
+        body.addAll([const KitCaps('Dress code'), DashDressCode(text: dress, colors: wedding.themeColors)]);
+      }
       if (more.isNotEmpty) body.addAll([const KitCaps('Mais'), KitGroup(more)]);
       body.add(hosts);
       if (placeBlock != null) body.add(placeBlock);
