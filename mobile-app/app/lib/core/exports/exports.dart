@@ -200,6 +200,8 @@ Future<ReportData> loadPartnerReport() async {
       .from('payments')
       .select('booking_id, type, status, amount, paid_at, due_at, provider')
       .eq('partner_id', uid)
+      // Sinais pagos ao pedir ainda sem reserva (migração 207) ficam de fora.
+      .not('booking_id', 'is', null)
       .order('created_at');
   return _assemble(business, 'Lucros e clientes', rows, pays, partnerSide: true);
 }

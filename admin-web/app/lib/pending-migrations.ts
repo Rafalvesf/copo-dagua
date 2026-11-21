@@ -417,6 +417,34 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O sinal paga-se até 30 dias antes do evento (depois disso, 48 h como antes e fica cativo 48 h); o resto até 14 dias antes, e o parceiro pode baixar até 1. Avisos iguais para os dois: 6 dias antes do prazo e nos últimos 3 dias.",
     check: { kind: "marker", id: "205" },
   },
+  {
+    file: "206_proposal_extras_and_refusal.sql",
+    date: "2026-11-21",
+    title: "Propostas: extras depois de aceitar e recusar com motivo",
+    what: "Depois de aceitar uma proposta, antes de pagar o sinal, a app mostra os extras do parceiro e junta-os ao total e ao sinal. «Recusar» a proposta pergunta o motivo, que fica guardado e segue para o parceiro na conversa.",
+    check: { kind: "marker", id: "206" },
+  },
+  {
+    file: "207_pay_deposit_with_request.sql",
+    date: "2026-11-21",
+    title: "Pagar o sinal ao pedir a reserva",
+    what: "No fim do pedido de reserva dá para pagar já o sinal: fica cativo no cartão até o parceiro responder (48 h). Se aceitar, passa a ser o sinal da reserva e ela fica confirmada logo; se recusar ou não responder, é libertado. Depois de aplicar, publicar as funções create-payment-intent e release-partner-funds.",
+    check: { kind: "marker", id: "207" },
+  },
+  {
+    file: "208_no_free_months.sql",
+    date: "2026-11-21",
+    title: "Sem meses sem taxa",
+    what: "Os parceiros novos e os fundadores pagam a taxa desde a primeira reserva: os meses sem taxa passam a 0. Fica só o cliente trazido pelo próprio parceiro (a cada 5, sem comissão do parceiro).",
+    check: { kind: "marker", id: "208" },
+  },
+  {
+    file: "209_pro_free_trial.sql",
+    date: "2026-11-21",
+    title: "Premium grátis 3 meses com cartão",
+    what: "O parceiro põe o cartão e fica Premium já, sem pagar nada durante 3 meses (uma só vez); depois a subscrição é cobrada nesse cartão, até cancelar. Os meses ajustam-se em Definições › Premium. Depois de aplicar, publicar a função partner-pro.",
+    check: { kind: "marker", id: "209" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

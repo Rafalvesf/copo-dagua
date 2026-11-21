@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
     .select(
-      "id, booking_id, payer_id, partner_id, amount, type, status, due_at, provider_payment_id, bookings(booking_number, total_amount, couple_id), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name, created_at)",
+      "id, booking_id, quote_request_id, payer_id, partner_id, amount, type, status, due_at, provider_payment_id, bookings(booking_number, total_amount, couple_id), quote_requests(total_amount, couple_id), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name, created_at)",
     )
     .eq("id", paymentId)
     .single();
@@ -103,8 +103,12 @@ Deno.serve(async (req) => {
   // O resto (e o pagamento único das categorias sem sinal) só se paga nos
   // 6 dias antes do prazo (migrações 204/205): assim pode ficar cativo
   // dentro dos 7 dias que a Stripe deixa.
-  const bookingTotal = Number((payment.bookings as unknown as { total_amount?: number } | null)?.total_amount ?? 0);
-  const payInFull = payment.type === "deposit" && Number(payment.amount) >= bookingTotal - 0.005;
+  // Sinal pago ao pedir (207): ainda sem reserva, o total vem do pedido.
+  const bookingTotal = Number(
+    (payment.bookings as unknown as { total_amount?: number } | null)?.total_amount ??
+      (payment.quote_requests as unknown as { total_amount?: number } | null)?.total_amount ?? 0,
+  );
+  const payInFull = payment.type === "deposit" && bookingTotal > 0 && Number(payment.amount) >= bookingTotal - 0.005;
   if ((payment.type === "final_payment" || payInFull) && payment.due_at) {
     const opensAt = new Date(payment.due_at as string).getTime() - 6 * 24 * 3600 * 1000;
     if (Date.now() < opensAt) {
@@ -177,8 +181,11 @@ Deno.serve(async (req) => {
   // Taxa do parceiro (migração 123): gravada aqui, descontada na libertação.
   const partnerFeePct = Number((settings as Record<string, unknown> | null)?.partner_fee_percentage ?? 0);
   const partnerAmountCents = Math.round((payment.amount as number) * 100);
+  // Sinal pago ao pedir (migração 207): ainda sem reserva — o total é o do
+  // pedido (pacote + extras).
+  const request = payment.quote_requests as unknown as { total_amount?: number; couple_id?: string } | null;
   const bookingTotalCents = Math.round(
-    Number((payment.bookings as unknown as { total_amount?: number } | null)?.total_amount ?? payment.amount) * 100,
+    Number((payment.bookings as unknown as { total_amount?: number } | null)?.total_amount ?? request?.total_amount ?? payment.amount) * 100,
   );
   const sett = (settings as Record<string, unknown> | null) ?? {};
   // Taxa do organizador por escalões (migração 127), parte proporcional
@@ -225,7 +232,7 @@ Deno.serve(async (req) => {
   // Migração 151: fundadores têm `founder_free_months`; dos clientes
   // trazidos pelo próprio parceiro (link /p/CODIGO, antes de qualquer
   // pedido), a cada `referral_free_every` (5) um fica sem comissão do parceiro.
-  const coupleId = (payment.bookings as unknown as { couple_id?: string } | null)?.couple_id ?? null;
+  const coupleId = (payment.bookings as unknown as { couple_id?: string } | null)?.couple_id ?? request?.couple_id ?? null;
   // Plano Pro (migração 161): comissão 1 ponto mais baixa, cliente
   // trazido sem comissão a cada 3 (em vez de 5) e destaque a +4%.
   const isPro = await partnerIsPro(admin, payment.partner_id as string);
@@ -234,7 +241,15 @@ Deno.serve(async (req) => {
       await founderNumber(admin, payment.partner_id as string))) ||
     (await isReferredClient(admin, payment.partner_id as string, coupleId, sett, isPro));
   // Migração 155: reserva que veio do destaque pago do parceiro → +6%.
-  const promoExtraPct = partnerFree ? 0 : await promotionExtraPct(admin, payment.booking_id as string);
+  // Sinal pago ao pedir (migração 207): ainda sem reserva, conta-se a
+  // partir do pedido (`request_promotion_extra`).
+  const promoExtraPct = partnerFree
+    ? 0
+    : payment.booking_id
+    ? await promotionExtraPct(admin, payment.booking_id as string)
+    : payment.quote_request_id
+    ? await requestPromotionExtraPct(admin, payment.quote_request_id as string)
+    : 0;
   // O crédito do parceiro só se gasta quando ele paga taxa.
   const partnerDiscountPct = partnerFree ? 0 : await takeFeeCredit(admin, payment.partner_id as string, payment.id as string);
   const partnerFeeCents = partnerFree ? 0 : discounted(Math.min(
@@ -289,15 +304,18 @@ Deno.serve(async (req) => {
         : method === "multibanco"
         ? { payment_method_data: { type: "multibanco", billing_details: { email: user.email ?? undefined } }, confirm: true }
         : {}),
-      description: `${label} — reserva ${bookingNumber} · ${partner.business_name}`.trim(),
+      description: (bookingNumber
+        ? `${label} — reserva ${bookingNumber} · ${partner.business_name}`
+        : `${label} — pedido de reserva · ${partner.business_name}`).trim(),
       receipt_email: user.email ?? undefined,
       // Pagamento antecipado (2026-10-25, migração 119): o dinheiro fica na
       // À Nossa! e só é transferido ao parceiro 3 dias depois do evento,
       // sem disputa (`release-partner-funds`). Antes ia logo para o parceiro.
-      transfer_group: payment.booking_id as string,
+      ...(payment.booking_id ? { transfer_group: payment.booking_id as string } : {}),
       metadata: {
         payment_id: payment.id,
-        booking_id: payment.booking_id,
+        booking_id: (payment.booking_id as string | null) ?? "",
+        quote_request_id: (payment.quote_request_id as string | null) ?? "",
         kind: "booking_payment",
         partner_account: partner.stripe_account_id ?? "",
         partner_amount_cents: String(partnerAmountCents),
@@ -425,6 +443,19 @@ async function founderNumber(admin: any, partnerId: string): Promise<number | nu
 async function promotionExtraPct(admin: any, bookingId: string): Promise<number> {
   try {
     const { data, error } = await admin.rpc("booking_promotion_extra", { p_booking: bookingId });
+    if (error) return 0;
+    const v = Number(data ?? 0);
+    return Number.isFinite(v) && v > 0 ? v : 0;
+  } catch {
+    return 0;
+  }
+}
+
+// O mesmo para o sinal pago ao pedir (migração 207). Sem a migração, 0.
+// deno-lint-ignore no-explicit-any
+async function requestPromotionExtraPct(admin: any, quoteRequestId: string): Promise<number> {
+  try {
+    const { data, error } = await admin.rpc("request_promotion_extra", { p_quote_request: quoteRequestId });
     if (error) return 0;
     const v = Number(data ?? 0);
     return Number.isFinite(v) && v > 0 ? v : 0;

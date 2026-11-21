@@ -9,6 +9,7 @@ import '../../../core/partners/favorite_partners_controller.dart';
 import '../../../core/social/social.dart' show partnerPublicStatsProvider;
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
+import '../../../shared/text_case.dart';
 import '../../../shared/widgets/dense_card.dart' show PriceBox;
 import '../../../shared/widgets/sized_network_image.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -164,38 +165,55 @@ class FavoriteHeart extends ConsumerWidget {
   }
 }
 
-/// Cartão grande de parceiro para os carrosséis (mockup «Parceiros»):
-/// foto com «Em destaque» e a nota; logótipo a meio da foto e do corpo;
-/// nome 19, coração, meta 13; linha tracejada; etiqueta e caixa de preço.
+/// Cartão de parceiro da página Parceiros (mockup «Parceiros · cartões
+/// novos», 2026-11-20): foto com a etiqueta («Em destaque», «Novo») e a
+/// nota; logótipo redondo a sobrepor o canto da foto; nome 19 com o
+/// coração; categoria e «zona · N anos de experiência» a 13; divisória e
+/// rodapé com «Responde em ~1 h» (ou a zona que serve) e a caixa de preço.
+/// O mesmo cartão nos carrosséis ([width] 330) e na lista (toda a largura).
 class PartnerBigCard extends ConsumerWidget {
   final Partner partner;
   final VoidCallback onTap;
   final bool highlighted;
 
-  const PartnerBigCard({super.key, required this.partner, required this.onTap, this.highlighted = false});
+  /// Largura fixa (carrossel); `null` = a largura que houver (lista).
+  final double? width;
 
-  static const double width = 300;
-  static const double height = 342;
-  static const double _photo = 160;
+  /// Ao lado do nome (Pro, fundador).
+  final Widget? badges;
+
+  const PartnerBigCard({super.key, required this.partner, required this.onTap, this.highlighted = false, this.width = carouselWidth, this.badges});
+
+  static const double carouselWidth = 330;
+  static const double height = 322;
+  static const double _photo = 150;
+
+  /// Novo na app: entrou há menos de 30 dias.
+  static bool isNew(Partner p) => p.createdAt != null && DateTime.now().difference(p.createdAt!).inDays < 30;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(partnerPublicStatsProvider(partner.id)).value;
     final rating = ratingLabel(partner);
     final price = partnerPrice(partner);
-    final meta2 = [
-      if (partner.reviewCount > 0) '${partner.reviewCount} ${partner.reviewCount == 1 ? 'avaliação' : 'avaliações'}',
-      if ((stats?.eventsDone ?? 0) > 0) '${stats!.eventsDone} ${stats.eventsDone == 1 ? 'evento' : 'eventos'}',
+    final area = partner.location.split(', ').first;
+    final years = partner.yearsExperience;
+    final meta = [
+      if (area.isNotEmpty) area,
+      if (years != null && years > 0) '$years ${years == 1 ? 'ano' : 'anos'} de experiência',
     ].join(' · ');
     final response = responseLabel(stats?.responseMinutes);
     final travel = partner.maxTravelDistanceKm;
-    final tag = response != null
-        ? InfoTag(response, green: true)
-        : partner.location == 'Âmbito nacional'
-            ? const InfoTag('Todo o país')
-            : travel != null && travel > 0
-                ? InfoTag('Desloca-se até $travel km')
-                : null;
+    final foot = partner.location == 'Âmbito nacional'
+        ? 'Todo o país'
+        : travel != null && travel > 0
+            ? 'Desloca-se até $travel km'
+            : null;
+    final badge = highlighted || partner.featured
+        ? const InfoTag('Em destaque', green: true)
+        : isNew(partner)
+            ? const InfoTag('Novo', onPhoto: true)
+            : null;
 
     return SnappyTap(
       onTap: onTap,
@@ -210,51 +228,74 @@ class PartnerBigCard extends ConsumerWidget {
               height: _photo,
               child: Stack(fit: StackFit.expand, children: [
                 PartnerPhoto(partner),
-                if (highlighted || partner.featured)
-                  const Positioned(left: 12, top: 12, child: InfoTag('Em destaque', green: true)),
+                if (badge != null) Positioned(left: 12, top: 12, child: badge),
                 if (rating != null) Positioned(right: 12, top: 12, child: RatingPill(rating)),
               ]),
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 32, 10, 0),
+                padding: const EdgeInsets.fromLTRB(16, 28, 10, 0),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(
-                      child: Text(partner.name,
+                  Row(children: [
+                    Flexible(
+                      child: Text(capFirst(partner.name),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
+                    if (badges != null) ...[const SizedBox(width: 6), badges!],
+                    const Spacer(),
                     FavoriteHeart(partner),
                   ]),
-                  const SizedBox(height: 2),
-                  Text(_meta(partner),
+                  Text(partner.primaryCategoryLabel,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                  if (meta2.isNotEmpty) ...[
+                  if (meta.isNotEmpty) ...[
                     const SizedBox(height: 2),
-                    Text(meta2, maxLines: 1, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    Text(meta,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   ],
                 ]),
               ),
             ),
-            const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: DashedDivider()),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(height: 1, thickness: 1, color: Color(0xFFECE7DC)),
+            ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
               child: Row(children: [
-                if (tag != null) Flexible(child: tag) else const Spacer(),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: response != null
+                        ? InfoTag(response, green: true)
+                        : foot != null
+                            ? Text(foot,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))
+                            : const SizedBox.shrink(),
+                  ),
+                ),
                 const SizedBox(width: 8),
-                if (tag != null) const Spacer(),
                 PriceBox(price.$1, price.$2, outlined: true),
               ]),
             ),
           ]),
+          // Logótipo redondo a sobrepor o canto da foto (aro branco para se
+          // destacar da foto).
           Positioned(
-            left: 16,
-            top: _photo - 26,
-            child: V2Avatar(partner.name, size: 52),
+            left: 12,
+            top: _photo - 22,
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              child: V2Avatar(partner.name, size: 44, imageUrl: partner.imageUrl),
+            ),
           ),
         ]),
       ),
@@ -405,7 +446,7 @@ class PartnerCarousel extends StatelessWidget {
           clipBehavior: Clip.none,
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 20),
           itemCount: partners.length,
-          separatorBuilder: (context, i) => const SizedBox(width: 12),
+          separatorBuilder: (context, i) => const SizedBox(width: 10),
           itemBuilder: (context, i) => PartnerBigCard(
             partner: partners[i],
             highlighted: highlighted.contains(partners[i].id),
