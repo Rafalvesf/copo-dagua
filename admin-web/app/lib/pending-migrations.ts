@@ -445,6 +445,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O parceiro põe o cartão e fica Premium já, sem pagar nada durante 3 meses (uma só vez); depois a subscrição é cobrada nesse cartão, até cancelar. Os meses ajustam-se em Definições › Premium. Depois de aplicar, publicar a função partner-pro.",
     check: { kind: "marker", id: "209" },
   },
+  {
+    file: "210_invite_fee_points.sql",
+    date: "2026-11-21",
+    title: "Convites: taxa 2 % mais baixa a cada 5",
+    what: "A cada 5 pessoas convidadas que já pagaram na app, quem convidou tem a taxa de serviço 2 pontos mais baixa numa transação (4 % + 1 € → 2 % + 1 €; 6 % + 1 € → 4 % + 1 €). 10 convidados = 2 transações. Substitui os 50 % do prémio de convites; os 50 % da 1.ª transação ficam. Na app aparece a oferta no pagamento e nas Definições. Depois de aplicar, publicar a função create-payment-intent.",
+    check: { kind: "marker", id: "210" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

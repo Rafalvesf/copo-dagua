@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/home/home_providers.dart';
+import '../../../core/invites/invites.dart';
 import '../../../core/payments/payments.dart';
 import '../../../core/payments/stripe_element.dart';
 import '../../../core/tasks/task_engine_controller.dart';
@@ -54,6 +55,10 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   String? _error;
   int? _amountCents;
   double _discountPct = 0;
+  // Prémio de convites (migração 210): pontos a menos na percentagem.
+  double _discountPoints = 0;
+  // A taxa desta transação, como fica (ex.: «2 % + 1 €»).
+  String? _feeNow;
   MultibancoRef? _mb;
   Timer? _poll;
 
@@ -230,6 +235,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           if (!mounted) return;
           _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
+      _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
           setState(() {
             _mb = info.multibanco;
             _step = info.multibanco == null ? _Step.select : _Step.multibanco;
@@ -298,6 +305,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       final before = _amountCents ?? (a.amount * 100).round();
       _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
+      _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
       if (pmId != null && info.cardRegion != null && info.cardRegion != 'EEA' && info.amountCents > before) {
         final ok = await _confirmCardFee(info);
         if (!mounted) return;
@@ -345,6 +354,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         final info = await a.createIntent(PayMethod.wallet);
         _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
+      _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
         return info.clientSecret;
       } catch (e) {
         _fail(e, _Step.select);
@@ -373,6 +384,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       if (!mounted) return;
       _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
+      _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
       if (info.status == 'succeeded') return _done();
       setState(() => _step = _Step.mbWayWaiting);
       _startPolling();
@@ -550,7 +563,11 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       child: Column(children: [
         if (base != null && total > base) ...[
           line(a.title, euros(base, cents: true)),
-          line(_discountPct > 0 ? 'Taxa de serviço (−${_discountPct.toStringAsFixed(0)} %)' : 'Taxa de serviço',
+          line(_discountPct > 0
+                  ? 'Taxa de serviço (−${_discountPct.toStringAsFixed(0)} %)'
+                  : _discountPoints > 0
+                      ? 'Taxa de serviço (${_feeNow ?? '−${_pts(_discountPoints)} %'} · oferta)'
+                      : 'Taxa de serviço',
               euros(total - base, cents: true)),
           const Divider(height: 8, color: Color(0xFFECE7DC)),
           const SizedBox(height: 8),
@@ -560,6 +577,35 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           const Spacer(),
           Text(_amountLabel, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
+        if (_discountPoints > 0) _inviteOffer(),
+      ]),
+    );
+  }
+
+  static String _eur(double v) => v == v.roundToDouble() ? '${v.toStringAsFixed(0)} €' : '${v.toStringAsFixed(2).replaceAll('.', ',')} €';
+
+  static String _pts(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');
+
+  /// Oferta de convites (pedido 2026-11-21): quantas pessoas convidou e em
+  /// quantas transações ainda tem a taxa mais baixa (esta incluída).
+  Widget _inviteOffer() {
+    final s = ref.watch(myInviteStatsProvider).value;
+    final times = s == null ? 0 : s.credits;
+    final who = s == null || s.counted <= 0 ? '' : 'Convidaste ${s.counted} ${s.counted == 1 ? 'pessoa' : 'pessoas'} que já ${s.counted == 1 ? 'pagou' : 'pagaram'} na app. ';
+    final fee = _feeNow ?? '${_pts(_discountPoints)} % mais baixa';
+    final when = times > 1 ? 'Tens a taxa a $fee em $times transações, esta incluída.' : 'Nesta transação a taxa fica a $fee.';
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: const BoxDecoration(color: Color(0xFFE6EDE1), borderRadius: BorderRadius.all(Radius.circular(999))),
+          child: const Text('Oferta', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text('$who$when', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, height: 1.35)),
+        ),
       ]),
     );
   }
