@@ -11,7 +11,7 @@ import '../../../core/chat/chat_helpers.dart' show PartnerUnavailableException, 
 import '../../../core/supabase/supabase_config.dart';
 import '../../payments/booking_extras_sheet.dart';
 import '../widgets/reject_proposal.dart';
-import '../../../core/payments/payments.dart' show PayArgs;
+import '../../../core/payments/payments.dart' show PayArgs, payDay;
 import '../../../core/models/models.dart';
 import '../../../core/reviews/review_providers.dart';
 import '../../../core/wedding/wedding_controller.dart';
@@ -387,7 +387,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => _payPending(
+                  onPressed: !booking.depositOpen ? null : () => _payPending(
                     booking.pendingDepositPaymentId,
                     deposit: true,
                     amount: amountWithCommission(booking.depositAmount ?? 0, commissionPct),
@@ -399,9 +399,18 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     shape: const StadiumBorder(),
                   ),
                   child: Text(
-                    '${booking.depositIsFull ? 'Pagar' : 'Pagar sinal'} — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}',
+                    booking.depositOpen
+                        ? '${booking.depositIsFull ? 'Pagar' : 'Pagar sinal'} — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}'
+                        : 'Pagar a partir de ${payDay(booking.depositOpensAt!)}',
                   ),
                 ),
+              ),
+            ],
+            if (needsDeposit && !booking.depositIsFull) ...[
+              const SizedBox(height: 6),
+              const Text(
+                'A data só fica garantida com o sinal pago: até lá, o parceiro pode aceitar outro pedido para esse dia.',
+                style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.35),
               ),
             ],
             if (needsFinalPayment) ...[
@@ -409,7 +418,8 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => _payPending(
+                  // O resto só se paga nos 6 dias antes do prazo (migração 204).
+                  onPressed: !booking.finalPaymentOpen ? null : () => _payPending(
                     booking.pendingFinalPaymentId,
                     deposit: false,
                     amount: amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct),
@@ -421,7 +431,9 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     shape: const StadiumBorder(),
                   ),
                   child: Text(
-                    'Pagar restante — ${euros(amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct), cents: true)}',
+                    booking.finalPaymentOpen
+                        ? 'Pagar o resto — ${euros(amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct), cents: true)}'
+                        : 'Pagar o resto a partir de ${payDay(booking.finalPaymentOpensAt!)}',
                   ),
                 ),
               ),
@@ -632,8 +644,8 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
             Expanded(
               child: Text(
                 proposal.depositRefundable
-                    ? 'Sinal reembolsável se cancelares nas 48 h depois de pagar'
-                    : 'Sinal não reembolsável',
+                    ? 'Sinal cancelável apenas nas 48 h depois de pagar'
+                    : 'Sinal não reembolsável depois de o parceiro aceitar',
                 style: TextStyle(
                   fontSize: AppFontSize.xs,
                   fontWeight: FontWeight.w600,

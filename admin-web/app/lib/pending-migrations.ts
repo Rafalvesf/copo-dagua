@@ -404,20 +404,6 @@ export const MIGRATIONS: PendingMigration[] = [
     check: { kind: "marker", id: "203" },
   },
   {
-    file: "206_proposal_extras_and_refusal.sql",
-    date: "2026-11-21",
-    title: "Propostas: extras depois de aceitar e recusar com motivo",
-    what: "Depois de aceitar uma proposta, antes de pagar o sinal, a app mostra os extras do parceiro e junta-os ao total e ao sinal. «Recusar» a proposta pergunta o motivo, que fica guardado e segue para o parceiro na conversa.",
-    check: { kind: "marker", id: "206" },
-  },
-  {
-    file: "207_pay_deposit_with_request.sql",
-    date: "2026-11-21",
-    title: "Pagar o sinal ao pedir a reserva",
-    what: "No fim do pedido de reserva dá para pagar já o sinal: fica cativo no cartão até o parceiro responder (48 h). Se aceitar, passa a ser o sinal da reserva e ela fica confirmada logo; se recusar ou não responder, é libertado. Depois de aplicar, publicar as funções create-payment-intent e release-partner-funds.",
-    check: { kind: "marker", id: "207" },
-  },
-  {
     file: "204_final_payment_window.sql",
     date: "2026-11-20",
     title: "Prazo do resto: abre 6 dias antes, avisos e cancelamento",

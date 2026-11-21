@@ -89,6 +89,7 @@ CoupleBooking _coupleBookingFromRow(Map<String, dynamic> row) {
     pendingDepositDueAt: pendingDeposit['due_at'] == null ? null : DateTime.tryParse(pendingDeposit['due_at'] as String),
     pendingFinalPaymentId: pendingFinalPayment['id'] as String?,
     finalPaymentAmount: (pendingFinalPayment['amount'] as num?)?.toDouble(),
+    finalPaymentDueAt: pendingFinalPayment['due_at'] == null ? null : DateTime.tryParse(pendingFinalPayment['due_at'] as String)?.toLocal(),
     paidAmount: payments
         .cast<Map<String, dynamic>>()
         .where((p) => p['status'] == 'paid')

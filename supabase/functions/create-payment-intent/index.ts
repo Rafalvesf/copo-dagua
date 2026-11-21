@@ -76,11 +76,17 @@ Deno.serve(async (req) => {
   if (typeof paymentId !== "string" || !method) {
     return json({ error: "validation_error" }, 400);
   }
+  // Pagamentos de reservas podem ter de ser devolvidos: só cartão (e Apple
+  // Pay / Google Pay), que ficam cativos. MB WAY e Multibanco cobram logo e
+  // um reembolso perde a taxa da Stripe (pedido do Rafael, 2026-11-20).
+  if (method === "mb_way" || method === "multibanco") {
+    return json({ error: "method_not_allowed" }, 409);
+  }
 
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
     .select(
-      "id, booking_id, quote_request_id, payer_id, partner_id, amount, type, status, provider_payment_id, bookings(booking_number, total_amount, couple_id), quote_requests(total_amount, couple_id), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name, created_at)",
+      "id, booking_id, quote_request_id, payer_id, partner_id, amount, type, status, due_at, provider_payment_id, bookings(booking_number, total_amount, couple_id), quote_requests(total_amount, couple_id), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name, created_at)",
     )
     .eq("id", paymentId)
     .single();
@@ -93,6 +99,21 @@ Deno.serve(async (req) => {
     payment.status !== "pending"
   ) {
     return json({ error: "invalid_state" }, 409);
+  }
+  // O resto (e o pagamento único das categorias sem sinal) só se paga nos
+  // 6 dias antes do prazo (migrações 204/205): assim pode ficar cativo
+  // dentro dos 7 dias que a Stripe deixa.
+  // Sinal pago ao pedir (207): ainda sem reserva, o total vem do pedido.
+  const bookingTotal = Number(
+    (payment.bookings as unknown as { total_amount?: number } | null)?.total_amount ??
+      (payment.quote_requests as unknown as { total_amount?: number } | null)?.total_amount ?? 0,
+  );
+  const payInFull = payment.type === "deposit" && bookingTotal > 0 && Number(payment.amount) >= bookingTotal - 0.005;
+  if ((payment.type === "final_payment" || payInFull) && payment.due_at) {
+    const opensAt = new Date(payment.due_at as string).getTime() - 6 * 24 * 3600 * 1000;
+    if (Date.now() < opensAt) {
+      return json({ error: "not_open_yet", opens_at: new Date(opensAt).toISOString() }, 409);
+    }
   }
 
   const partner = payment.partner_profiles as unknown as {
@@ -271,8 +292,10 @@ Deno.serve(async (req) => {
       currency: "eur",
       ...(pmId ? { payment_method: pmId } : {}),
       ...(holdDeposit ? { capture_method: "manual" as const } : {}),
+      // «all» = o formulário da Stripe: só cartões (Apple Pay e Google
+      // Pay incluídos), para poder cativar.
       ...(method === "all"
-        ? { automatic_payment_methods: { enabled: true, allow_redirects: "never" as const } }
+        ? { payment_method_types: ["card"] }
         : { payment_method_types: [method] }),
       // MB WAY e Multibanco confirmados já aqui: a app não mostra nenhum
       // formulário da Stripe.

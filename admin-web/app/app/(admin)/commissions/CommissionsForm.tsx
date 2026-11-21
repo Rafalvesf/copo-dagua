@@ -83,8 +83,8 @@ export function CommissionsForm({ settings }: { settings: PlatformSettings }) {
       {(settings as unknown as { deposit_refund_window_hours?: number }).deposit_refund_window_hours !== undefined && (
         <NumberField
           name="deposit_refund_window_hours"
-          label="Sinal reembolsável durante"
-          hint="Se o organizador cancelar dentro deste tempo depois de pagar o sinal, o sinal é devolvido (comissão incluída) — desde que o parceiro o tenha marcado como reembolsável na proposta. Depois disso, o sinal fica com o parceiro."
+          label="Sinal cancelável durante"
+          hint="Se o organizador cancelar dentro deste tempo depois de pagar o sinal, o sinal é devolvido (comissão incluída) — desde que o parceiro o tenha marcado como cancelável na proposta. Depois disso, o sinal fica com o parceiro."
           suffix="horas depois de pagar"
           defaultValue={(settings as unknown as { deposit_refund_window_hours: number }).deposit_refund_window_hours}
           min={0}
@@ -93,7 +93,7 @@ export function CommissionsForm({ settings }: { settings: PlatformSettings }) {
       )}
       <NumberField
         name="cancellation_penalty_days"
-        label="Restante reembolsável até"
+        label="Restante cancelável até"
         hint="Se o organizador cancelar com pelo menos estes dias de antecedência, o restante que já pagou é devolvido. Com menos, não é. Se for o parceiro a cancelar, devolve-se sempre tudo."
         suffix="dias antes do evento"
         defaultValue={settings.cancellation_penalty_days}

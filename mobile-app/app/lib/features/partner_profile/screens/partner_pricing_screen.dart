@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/partner_profile/partner_profile_controller.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_mark.dart';
@@ -282,6 +283,8 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                           }),
                         ],
                       ],
+                      const SizedBox(height: 16),
+                      const _FinalPaymentDaysCard(),
                     ],
                   );
                 },
@@ -847,6 +850,92 @@ class _EditExtraSheetState extends State<_EditExtraSheet> {
           ]),
         ),
       ),
+    );
+  }
+}
+
+/// Prazo do resto (migrações 204/205): até quantos dias antes do evento o
+/// cliente tem de pagar o resto — 14 por defeito, pode baixar até 1. O
+/// pagamento abre 6 dias antes desse prazo. Pedido do Rafael, 2026-11-20.
+final _finalPaymentDaysProvider = FutureProvider.autoDispose<int?>((ref) async {
+  final id = supabase.auth.currentUser?.id;
+  if (id == null) return null;
+  try {
+    final row = await supabase.from('partner_profiles').select('final_payment_days').eq('id', id).maybeSingle();
+    return (row?['final_payment_days'] as num?)?.toInt() ?? 14;
+  } catch (_) {
+    return null; // migração 205 por correr
+  }
+});
+
+class _FinalPaymentDaysCard extends ConsumerStatefulWidget {
+  const _FinalPaymentDaysCard();
+
+  @override
+  ConsumerState<_FinalPaymentDaysCard> createState() => _FinalPaymentDaysCardState();
+}
+
+class _FinalPaymentDaysCardState extends ConsumerState<_FinalPaymentDaysCard> {
+  int? _days;
+
+  Future<void> _set(int days) async {
+    final id = supabase.auth.currentUser?.id;
+    if (id == null) return;
+    setState(() => _days = days);
+    try {
+      await supabase.from('partner_profiles').update({'final_payment_days': days}).eq('id', id);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível guardar. Tenta novamente.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loaded = ref.watch(_finalPaymentDaysProvider).value;
+    if (loaded == null && _days == null) return const SizedBox.shrink();
+    final days = _days ?? loaded!;
+    Widget step(IconData icon, String label, int? to) => Semantics(
+          button: true,
+          label: label,
+          child: SnappyTap(
+            onTap: to == null ? null : () => _set(to),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
+              child: Icon(icon, size: 16, color: to == null ? AppTheme.inkMuted : AppTheme.ink),
+            ),
+          ),
+        );
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          const Expanded(
+            child: Text('Prazo para pagar o resto',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+          step(Hi.minus, 'Menos um dia', days > 1 ? days - 1 : null),
+          SizedBox(
+            width: 72,
+            child: Text('$days ${days == 1 ? 'dia' : 'dias'}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+          step(Hi.plus, 'Mais um dia', days < 14 ? days + 1 : null),
+        ]),
+        const SizedBox(height: 6),
+        Text(
+          'O cliente paga o resto (ou o valor todo, se não houver sinal) até $days ${days == 1 ? 'dia (24 h)' : 'dias'} antes do evento — 14 por defeito. '
+          'O pagamento abre 6 dias antes desse prazo e, sem pagamento, a reserva é cancelada. '
+          'O sinal paga-se até 30 dias antes e não se ajusta.',
+          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4),
+        ),
+      ]),
     );
   }
 }

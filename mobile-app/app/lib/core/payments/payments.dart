@@ -262,5 +262,12 @@ String payErrorMessage(String code) => switch (code) {
   'invalid_phone' => 'O número de telemóvel não é válido.',
   'declined' => 'O MB WAY recusou o pedido. Confirma o número e se tens o MB WAY ativo.',
   'not_configured' => 'Os pagamentos na app ainda estão a ser configurados.',
+  'not_open_yet' => 'Este pagamento só abre 6 dias antes do prazo. Avisamos-te quando abrir.',
+  'method_not_allowed' => 'Nas reservas só dá para pagar com cartão, Apple Pay ou Google Pay.',
   _ => 'Não foi possível iniciar o pagamento. Tenta novamente.',
 };
+
+const _monthsShort = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+/// «7 mai»: dia e mês curtos, para prazos de pagamento.
+String payDay(DateTime d) => '${d.day} ${_monthsShort[d.month - 1]}';

@@ -19,7 +19,9 @@ class PartnerCancellationScreen extends ConsumerStatefulWidget {
 }
 
 class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationScreen> {
-  static const _hourChoices = [2, 6, 24, 48, 168, 720];
+  // Quem cancela grátis até X h antes pode escolher até 24 h antes
+  // (pedido do Rafael, 2026-11-20).
+  static const _hourChoices = [2, 6, 12, 24];
 
   late final _profile = ref.read(authControllerProvider).profile!;
   late final String? _slug =
@@ -37,7 +39,7 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
       if (!mounted) return;
       setState(() {
         _kind = r.kind;
-        _hours = r.hours ?? 2;
+        _hours = (r.hours ?? 2).clamp(2, 24).toInt();
         _note.text = r.note;
         _loaded = true;
       });

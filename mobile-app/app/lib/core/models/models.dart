@@ -1464,6 +1464,12 @@ class CoupleBooking {
   /// 191: sem sinal nesta categoria — o primeiro pagamento é o valor todo.
   bool get depositIsFull => amount > 0 && (depositAmount ?? 0) >= amount;
 
+  /// Sem sinal (pagamento único): só se paga nos 6 dias antes do prazo,
+  /// como o resto (migração 205). Com sinal, paga-se quando quiser.
+  DateTime? get depositOpensAt =>
+      depositIsFull ? pendingDepositDueAt?.toLocal().subtract(const Duration(days: 6)) : null;
+  bool get depositOpen => depositOpensAt == null || !DateTime.now().isBefore(depositOpensAt!);
+
   /// Prazo do sinal pendente (`payments.due_at`) — para os "Pagamentos
   /// próximos" do menu.
   final DateTime? pendingDepositDueAt;
@@ -1476,6 +1482,15 @@ class CoupleBooking {
   /// fazer (ainda não concluído, já pago, ou o sinal já cobria tudo).
   final String? pendingFinalPaymentId;
   final double? finalPaymentAmount;
+
+  /// Prazo do restante (`payments.due_at`, migração 204): até N dias antes
+  /// do evento (30 por defeito, o parceiro pode baixar até 1).
+  final DateTime? finalPaymentDueAt;
+
+  /// O restante só se paga nos 6 dias antes do prazo (fica cativo até ao
+  /// prazo, dentro dos 7 dias que a Stripe deixa) — migração 204.
+  DateTime? get finalPaymentOpensAt => finalPaymentDueAt?.subtract(const Duration(days: 6));
+  bool get finalPaymentOpen => finalPaymentOpensAt == null || !DateTime.now().isBefore(finalPaymentOpensAt!);
 
   const CoupleBooking({
     required this.id,
@@ -1492,6 +1507,7 @@ class CoupleBooking {
     this.pendingDepositDueAt,
     this.pendingFinalPaymentId,
     this.finalPaymentAmount,
+    this.finalPaymentDueAt,
     this.paidAmount = 0,
     this.isPrivate = false,
   });
