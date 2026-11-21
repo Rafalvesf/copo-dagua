@@ -170,7 +170,7 @@ class DashSummary extends StatelessWidget {
             const SizedBox(height: 12),
             Row(children: [
               SizedBox(
-                width: 32.0 + 22 * (math.min(whoNames.length, 3) - 1).clamp(0, 2),
+                width: 32.0 + 22 * (math.min(whoNames.length, 3) - 1).clamp(0, 2).toDouble(),
                 height: 32,
                 child: Stack(children: [
                   for (final (i, n) in whoNames.take(3).indexed)
@@ -241,7 +241,7 @@ class _DashNowState extends State<DashNow> {
     if (cur < 0) return const SizedBox.shrink();
     final current = timed[cur];
     final next = cur + 1 < timed.length ? timed[cur + 1] : null;
-    final progress = next == null ? 1.0 : ((nowMin - current.$2) / (next.$2 - current.$2)).clamp(0.0, 1.0);
+    final progress = next == null ? 1.0 : ((nowMin - current.$2) / (next.$2 - current.$2)).clamp(0.0, 1.0).toDouble();
     String hm(int m) => '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
     return Container(
       padding: const EdgeInsets.all(18),
