@@ -312,7 +312,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
                   ),
                   alignment: Alignment.center,
                   child: on
-                      ? Container(width: 12, height: 12, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.accentOliveDark))
+                      ? Container(width: 12, height: 12, decoration: BoxDecoration(shape: BoxShape.circle, color: AppTheme.accentOliveDark))
                       : null,
                 ),
                 const SizedBox(width: 12),

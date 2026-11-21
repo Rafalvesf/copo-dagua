@@ -47,7 +47,7 @@ class RejectProposalSheet extends StatefulWidget {
   State<RejectProposalSheet> createState() => _RejectProposalSheetState();
 }
 
-class RejectProposalSheetState extends State<RejectProposalSheet> {
+class _RejectProposalSheetState extends State<RejectProposalSheet> {
   static const _reasons = [
     ('price', 'O preço', 'Ficou acima do que queríamos gastar'),
     ('date', 'A data ou o horário', 'Não dá para o nosso evento'),
@@ -108,7 +108,7 @@ class RejectProposalSheetState extends State<RejectProposalSheet> {
                         border: _code == code ? null : Border.all(color: AppTheme.inkMuted, width: 1.5),
                       ),
                       child: _code == code
-                          ? Container(width: 12, height: 12, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.accentOliveDark))
+                          ? Container(width: 12, height: 12, decoration: BoxDecoration(shape: BoxShape.circle, color: AppTheme.accentOliveDark))
                           : null,
                     ),
                     const SizedBox(width: 12),

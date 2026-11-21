@@ -45,7 +45,6 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import '../../partner_pro/partner_pro_screen.dart' show ProBadge;
-import '../../../core/profile/username.dart';
 
 
 /// Eventos onde ainda dá para reservar este parceiro: elegíveis (sou dono, ou
@@ -2071,76 +2070,3 @@ class _BottomBar extends StatelessWidget {
       );
 }
 
-/// Título de grupo em maiúsculas (12, espaçamento 2) dos popups.
-class _Caps extends StatelessWidget {
-  final String text;
-  const _Caps(this.text);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Text(text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
-      );
-}
-
-/// Botão de fechar dos popups: círculo 44 `#F2F0EB` com o ×.
-class _CloseButton extends StatelessWidget {
-  const _CloseButton();
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-        message: 'Fechar',
-        excludeFromSemantics: true,
-        child: SnappyTap(
-          onTap: () => Navigator.of(context).maybePop(),
-          semanticLabel: 'Fechar',
-          child: Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
-            child: const Icon(Hi.xMark, size: 18, color: AppTheme.ink),
-          ),
-        ),
-      );
-}
-
-/// Linha do evento nos popups, com «Mudar» quando há mais do que um.
-class _EventChoice extends StatelessWidget {
-  final Wedding event;
-  final VoidCallback? onChange;
-  const _EventChoice({required this.event, this.onChange});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
-        child: Row(children: [
-          V2Avatar(event.displayNames, size: 44, imageUrl: event.coverPhotoUrlCacheBusted),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-              Text(event.displayNames,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              if (_eventMeta(event).isNotEmpty)
-                Text(_eventMeta(event),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            ]),
-          ),
-          if (onChange != null) ...[
-            const SizedBox(width: 10),
-            SnappyTap(
-              onTap: onChange,
-              child: Text('Mudar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-            ),
-          ],
-        ]),
-      );
-}

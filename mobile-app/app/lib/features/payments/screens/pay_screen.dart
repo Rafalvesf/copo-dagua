@@ -96,7 +96,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           .maybeSingle();
       if (r == null || !mounted) return;
       final b = r['bookings'] as Map?;
-      final raw = r['due_at'] ?? (a.isGuestShare ? b?['choice_deadline'] : null);
+      final raw = r['due_at'] ?? ((a.isGuestShare && b != null) ? b['choice_deadline'] : null);
       final due = raw == null ? null : DateTime.tryParse(raw.toString())?.toLocal();
       final dep = (b?['deposit_amount'] as num?)?.toDouble() ?? 0;
       final tot = (b?['total_amount'] as num?)?.toDouble() ?? 0;
