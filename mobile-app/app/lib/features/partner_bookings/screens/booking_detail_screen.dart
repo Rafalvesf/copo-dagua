@@ -111,7 +111,7 @@ Expanded(child: ScrollingHeader(
                   Container(
                     margin: const EdgeInsets.only(top: 20),
                     padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
                     child: Row(children: [
                       V2Avatar(booking.clientName, size: 76, imageUrl: booking.clientAvatarUrl),
                       const SizedBox(width: 14),
@@ -173,7 +173,7 @@ Expanded(child: ScrollingHeader(
                     const KitCaps('Mensagem do cliente', top: 20),
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
                       child: Text('«${booking.messageFromCouple!.trim()}»',
                           style: const TextStyle(fontSize: 16, height: 1.45, color: AppTheme.ink)),
                     ),
@@ -501,7 +501,7 @@ class BookingChoicesSummary extends ConsumerWidget {
         const KitCaps('O que escolheram', top: 20),
         Container(
           padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
               Text('${choices.length}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1)),
@@ -540,7 +540,7 @@ class BookingChoicesSummary extends ConsumerWidget {
       const KitCaps('Valores', top: 20),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
         child: Column(children: [
           if (booking.eachChooses) line('Total até agora', euros(sum), bold: true) else line('Total', euros(booking.totalAmount ?? 0), bold: true),
           if (booking.eachPays) line('Já pago', '${euros(paid.amount)} · ${paid.count} ${paid.count == 1 ? 'pessoa' : 'pessoas'}'),

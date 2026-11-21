@@ -27,12 +27,15 @@ class AppTheme {
   static const background = Color(0xFFF2F2F2);
   static const ink = Color(0xFF171713);
 
-  /// Linha entre blocos e entre linhas de uma lista (pedido 2026-11-21: sem
-  /// caixas brancas, o conteúdo fica no fundo separado por linhas).
-  static const line = Color(0xFFD9D9D9);
+  /// Linha fina (1 px) entre elementos da mesma secção — linhas de uma lista
+  /// (pedido 2026-11-21).
+  static const line = Color(0xFFE3E3E3);
 
-  /// Contorno das caixas brancas que ficam (destaques, cartões): sempre a
-  /// linha preta 1,5 dos botões de contorno (pedido 2026-11-21).
+  /// Linha mais grossa (2 px) entre secções diferentes (pedido 2026-11-21).
+  static const sectionLine = Color(0xFFCFCFCF);
+
+  /// Contorno preto 1,5 do destaque do painel do convidado (o resumo / o
+  /// agora / a tua resposta) — só aí (pedido 2026-11-21).
   static const cardBorder = Border.fromBorderSide(BorderSide(color: ink, width: 1.5));
 
   /// Texto secundário (legendas, descrições). Cinzento quente — antes era

@@ -1222,7 +1222,6 @@ class _TaskRow extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
-          border: AppTheme.cardBorder,
           borderRadius: BorderRadius.circular(20),
           boxShadow: _softShadow,
         ),
@@ -1501,7 +1500,6 @@ class _BookingsSection extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: AppTheme.cardBorder,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: _softShadow,
                 ),
@@ -2846,7 +2844,7 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
                 ),
                 Container(
-                  decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
                   clipBehavior: Clip.antiAlias,
                   child: Material(
                     type: MaterialType.transparency,

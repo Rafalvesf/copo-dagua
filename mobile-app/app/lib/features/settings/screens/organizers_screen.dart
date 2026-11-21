@@ -32,7 +32,7 @@ String _permsSummary(OrganizerPerms perms, int total) {
   return '${perms.count} de $total';
 }
 
-BoxDecoration _card() => BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22), boxShadow: _soft);
+BoxDecoration _card() => BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), boxShadow: _soft);
 
 /// Organizadores do evento (migração 159): o dono escolhe o que cada
 /// co-organizador pode fazer, ou retira-o. Os outros veem o que podem.

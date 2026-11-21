@@ -167,7 +167,7 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
             _EmptyCard(onAdd: _add)
           else
             Container(
-              decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22), boxShadow: _shadow),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), boxShadow: _shadow),
               clipBehavior: Clip.antiAlias,
               // Caixa com altura exata (linhas × _rowHeight): dá à
               // ReorderableListView limites fixos, por isso não precisa de
@@ -325,7 +325,7 @@ class _EmptyCard extends StatelessWidget {
   const _EmptyCard({required this.onAdd});
   @override
   Widget build(BuildContext context) => Container(
-        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22),
             boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))]),
         padding: const EdgeInsets.all(18),
         child: Column(

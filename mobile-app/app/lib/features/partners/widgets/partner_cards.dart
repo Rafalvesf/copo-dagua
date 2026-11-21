@@ -220,7 +220,7 @@ class PartnerBigCard extends ConsumerWidget {
       child: Container(
         width: width,
         height: height,
-        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22), boxShadow: softShadow),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), boxShadow: softShadow),
         clipBehavior: Clip.antiAlias,
         child: Stack(children: [
           Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -372,7 +372,7 @@ class RowGroup extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         margin: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
         child: Column(mainAxisSize: MainAxisSize.min, children: children),
       );
 }

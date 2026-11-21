@@ -308,8 +308,9 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
     if (declined) {
       // Disse que não vai: só a resposta, presentes e anfitriões.
       body.addAll([
-        const KitCaps('A tua resposta', top: 16),
+        const KitCaps('A tua resposta', top: 16, line: false),
         Container(
+          key: const ValueKey('resposta'),
           padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
           decoration: dashHighlight(),
           child: Row(children: [
@@ -328,14 +329,14 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
     } else if (isPast) {
       // Depois do evento: as fotos em primeiro, presentes e anfitriões.
       body.addAll([
-        if (photosOn) ...[const KitCaps('Fotos', top: 16), DashPhotos(onOpen: openPhotos, urls: photoUrls, count: photos.length)],
+        if (photosOn) ...[const KitCaps('Fotos', top: 16, line: false), DashPhotos(onOpen: openPhotos, urls: photoUrls, count: photos.length)],
         if (presents != null) ...[const KitCaps('Depois do evento'), KitGroup([presents])],
         hosts,
       ]);
     } else {
       final nothing = !hasTodo && tables.isEmpty && table == null && program.isEmpty && dress.isEmpty && !hasPlace;
       if (started) {
-        body.addAll([const KitCaps('Agora', top: 16), DashNow(program: program)]);
+        body.addAll([const KitCaps('Agora', top: 16, line: false), DashNow(program: program)]);
       } else {
         body.add(DashSummary(
           label: label,
@@ -370,8 +371,8 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       if (photosOn && isToday) body.addAll([const KitCaps('Fotos'), DashPhotos(onOpen: openPhotos, urls: photoUrls, count: photos.length)]);
       if (table != null) {
         body.addAll([
-          const SizedBox(height: 24),
-          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          const SizedBox(height: 12),
+          const Divider(height: 2, thickness: 2, color: AppTheme.sectionLine),
           DashTable(table: table, mates: mates, onTap: openTable),
         ]);
       }
@@ -384,7 +385,16 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       if (dress.isNotEmpty) body.addAll([const KitCaps('Dress code'), DashDressCode(text: dress)]);
       if (more.isNotEmpty) body.addAll([const KitCaps('Mais'), KitGroup(more)]);
       body.add(hosts);
-      if (placeBlock != null) body.addAll([const SizedBox(height: 24), placeBlock]);
+      if (placeBlock != null) body.add(placeBlock);
+    }
+
+    // Sem linha logo a seguir à caixa branca de destaque (2026-11-21).
+    final hi = body.indexWhere((w) => w is DashSummary || w is DashNow || w.key == const ValueKey('resposta'));
+    if (hi >= 0 && hi + 1 < body.length && body[hi + 1] is KitCaps) {
+      final c = body[hi + 1] as KitCaps;
+      body[hi + 1] = KitCaps(c.text, top: 20, trailing: c.trailing, line: false);
+    } else if (hi >= 0 && hi + 2 < body.length && body[hi + 1] is SizedBox && body[hi + 2] is Divider) {
+      body.removeAt(hi + 2);
     }
 
     return ListView(

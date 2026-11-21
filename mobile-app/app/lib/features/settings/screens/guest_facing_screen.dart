@@ -2086,7 +2086,7 @@ class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
 const _heroGreen = Color(0xFF3F5A3B);
 
 // Cartão branco liso, cantos 22, sem linha nem sombra (DESIGN.md §4).
-BoxDecoration _whiteCard() => BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22));
+BoxDecoration _whiteCard() => BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22));
 
 /// Cartão verde: código em grande, Partilhar convite e Ver como convidado.
 class _CodeHero extends ConsumerWidget {
@@ -2102,7 +2102,7 @@ class _CodeHero extends ConsumerWidget {
     const btnText = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700);
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const Text('CÓDIGO DO EVENTO',
             style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
