@@ -14,6 +14,7 @@ import '../../../core/chat/presence.dart';
 import '../../../core/social/social.dart' show followPerson;
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/moderation/moderation.dart';
+import '../../../shared/widgets/page_kit.dart' show KitTag;
 import '../../../core/theme/app_theme.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/chat_header.dart';
@@ -294,7 +295,17 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
   }
 
   Future<void> _menu() async {
-    final people = ref.read(groupPeopleProvider(widget.group.id)).value?.values.toList() ?? const <EventPerson>[];
+    final people = <EventPerson>[...?ref.read(groupPeopleProvider(widget.group.id)).value?.values];
+    // Os anfitriões (quem organiza) aparecem em primeiro, como na lista de
+    // convidados (212); a etiqueta diz quem são.
+    final hosts = widget.group.weddingId.isEmpty
+        ? const <String>{}
+        : {
+            for (final p in await ref.read(eventPeopleProvider(widget.group.weddingId).future).catchError((_) => const <EventPerson>[]))
+              if (p.role == 'organizador') p.id,
+          };
+    if (!mounted) return;
+    people.sort((a, b) => (hosts.contains(a.id) ? 0 : 1).compareTo(hosts.contains(b.id) ? 0 : 1));
     final action = await showIslandSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -312,6 +323,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                     contentPadding: EdgeInsets.zero,
                     leading: V2Avatar(p.name, size: 38, imageUrl: p.avatarUrl, flat: true),
                     title: Text(p.name),
+                    trailing: hosts.contains(p.id) ? const KitTag('Anfitrião') : null,
                   ),
               ]),
             ),
@@ -320,7 +332,8 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
               icon: const Icon(Hi.userPlus),
               label: const Text('Adicionar pessoas'),
             ),
-            if (widget.group.isMine)
+            // O grupo do evento não se apaga: vive enquanto o evento existir.
+            if (widget.group.isMine && !widget.group.isEventAll)
               TextButton.icon(
                 onPressed: () => Navigator.of(context).pop('delete'),
                 style: TextButton.styleFrom(foregroundColor: const Color(0xFFA3412E)),
@@ -402,7 +415,12 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
           // Conversa direta (192): o nome da outra pessoa; tocar abre o perfil.
           child: ChatHeader(
             name: widget.group.isDirect ? (others.firstOrNull?.name ?? 'Conversa') : widget.group.name,
-            subtitle: widget.group.isDirect ? 'Mensagem direta' : subtitle,
+            // Grupo do evento (212): a descrição do evento por baixo do nome.
+            subtitle: widget.group.isDirect
+                ? 'Mensagem direta'
+                : widget.group.isEventAll && widget.group.description?.isNotEmpty == true
+                    ? widget.group.description!
+                    : subtitle,
             onOpenProfile: widget.group.isDirect
                 ? () {
                     final o = others.firstOrNull;
@@ -412,7 +430,10 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
             leading: SizedBox(
               width: 46,
               height: 44,
-              child: others.isEmpty
+              // Grupo do evento (212): a foto do evento.
+              child: widget.group.isEventAll
+                  ? V2Avatar(widget.group.name, size: 44, imageUrl: widget.group.photoUrl, flat: true)
+                  : others.isEmpty
                   ? const V2Avatar('Grupo', size: 44, flat: true)
                   : others.length == 1
                       ? V2Avatar(others[0].name, size: 44, imageUrl: others[0].avatarUrl, flat: true)

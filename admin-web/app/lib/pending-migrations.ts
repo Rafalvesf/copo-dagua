@@ -459,6 +459,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Quem tinha dois convites por responder e acabava o onboarding de um ficava com a mesma resposta no outro. Agora o onboarding só responde ao evento em que foi feito. A app nova já manda o evento; a antiga continua a funcionar como antes.",
     check: { kind: "marker", id: "211" },
   },
+  {
+    file: "212_event_group_on_create.sql",
+    date: "2026-11-21",
+    title: "Grupo do evento criado com o evento",
+    what: "Cada evento passa a ter logo o seu grupo com toda a gente, com a foto, o nome e a descrição do evento (acompanha quando o evento muda); os anfitriões aparecem em primeiro. Cria o grupo para os eventos que já existem. É para lá que vai o «Agradecer aos convidados» do painel do organizador.",
+    check: { kind: "marker", id: "212" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

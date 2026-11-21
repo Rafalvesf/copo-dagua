@@ -1368,7 +1368,9 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
             Expense(
               id: 'booking:${b.id}:deposit',
               weddingId: b.weddingId,
-              title: 'Sinal · ${b.partnerName}',
+              // Restaurantes (e outras categorias sem sinal, 191): paga-se tudo
+            // de uma vez — não há sinal.
+            title: '${b.depositIsFull ? 'Pagamento' : 'Sinal'} · ${b.partnerName}',
               amount: amountWithCommission(b.depositAmount ?? 0, orgFee.effectivePct(b.amount)),
               dueDate: b.pendingDepositDueAt ?? DateTime.now(),
             ),
@@ -3635,7 +3637,12 @@ class _OrgBody extends ConsumerWidget {
         final parts = e.id.split(':');
         final booking = parts.length == 3 && parts.first == 'booking' ? allBookings.where((b) => b.id == parts[1]).firstOrNull : null;
         final menus = booking != null && booking.organizerChoosesMenus;
-        final what = parts.length == 3 && parts[2] == 'final' ? 'o restante' : 'o sinal';
+        // Restaurantes não têm sinal: paga-se tudo de uma vez (191).
+        final what = parts.length == 3 && parts[2] == 'final'
+            ? 'o restante'
+            : booking?.depositIsFull == true
+                ? 'o pagamento'
+                : 'o sinal';
         tasks.add(_orgTaskRow(
           context,
           title: menus ? booking.partnerName : e.title,
@@ -3793,10 +3800,11 @@ class _OrgBookings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (bookings.isEmpty) return const SizedBox.shrink();
-    KitTag tagFor(BookingStatus s) => switch (s) {
+    // Restaurantes não têm sinal (191): «Por pagar».
+    KitTag tagFor(CoupleBooking b) => switch (b.status) {
           BookingStatus.confirmado => const KitTag('Confirmada'),
           BookingStatus.concluido => const KitTag('Concluída'),
-          BookingStatus.aceite => const KitTag('Falta o sinal', kind: KitTagKind.pending),
+          BookingStatus.aceite => KitTag(b.depositIsFull ? 'Por pagar' : 'Falta o sinal', kind: KitTagKind.pending),
           BookingStatus.emAnalise => const KitTag('Em análise', kind: KitTagKind.neutral),
           _ => const KitTag('Pedido enviado', kind: KitTagKind.neutral),
         };
@@ -3807,7 +3815,7 @@ class _OrgBookings extends StatelessWidget {
           KitRow(
             title: b.partnerName,
             sub: [if (b.category?.isNotEmpty == true) b.category!, '${b.serviceDate.day} ${monthNamesPt[b.serviceDate.month - 1].substring(0, 3).toLowerCase()}'].join(' · '),
-            trailing: tagFor(b.status),
+            trailing: tagFor(b),
             onTap: () => context.push('/bookings'),
           ),
       ]),
