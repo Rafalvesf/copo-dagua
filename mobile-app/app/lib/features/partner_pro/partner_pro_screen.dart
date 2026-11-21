@@ -60,6 +60,28 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
     ));
   }
 
+  /// Premium grátis (migração 209): põe o cartão e fica Premium já; só paga
+  /// no fim dos meses grátis, se não cancelar antes. Só com cartão.
+  void _startTrial(PartnerPro pro) {
+    final yearly = _yearly;
+    final months = pro.trialMonths;
+    context.push('/pay', extra: PayArgs(
+      paymentId: '',
+      partnerName: 'À Nossa!',
+      kind: 'pro',
+      amount: 0,
+      titleOverride: 'Premium · $months ${months == 1 ? 'mês' : 'meses'} grátis',
+      actionLabel: 'Começar $months ${months == 1 ? 'mês' : 'meses'} grátis',
+      methods: const [PayMethod.card],
+      // Cria primeiro o método de pagamento com o cartão escrito.
+      cardFee: true,
+      create: (m, {phone, paymentMethodId}) => startProTrial(yearly: yearly, paymentMethodId: paymentMethodId),
+      state: proPayState,
+      onPaid: (ctx) => ctx.pushReplacement('/partner-pro?ok=1'),
+      errorText: (c) => ProError(c).message,
+    ));
+  }
+
   Future<void> _setCancelling(bool cancel) async {
     if (cancel) {
       final ok = await showIslandDialog<bool>(
@@ -181,10 +203,24 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
                 ),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: _busy ? null : () => _subscribe(pro),
+                onPressed: _busy ? null : () => pro.trialAvailable ? _startTrial(pro) : _subscribe(pro),
                 style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(52), shape: const StadiumBorder()),
-                child: Text(_busy ? 'A abrir…' : 'Ser Premium'),
+                child: Text(_busy
+                    ? 'A abrir…'
+                    : pro.trialAvailable
+                        ? 'Experimentar ${pro.trialMonths} ${pro.trialMonths == 1 ? 'mês' : 'meses'} grátis'
+                        : 'Ser Premium'),
               ),
+              if (pro.trialAvailable)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Pões o cartão e ficas Premium já. Não pagas nada durante ${pro.trialMonths} ${pro.trialMonths == 1 ? 'mês' : 'meses'}; '
+                    'depois, ${_yearly ? '${giftEuros(pro.priceYearly)}/ano' : '${giftEuros(pro.priceMonthly)}/mês'}, até cancelares. Cancelas quando quiseres.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 13, height: 1.35, color: AppTheme.inkMuted),
+                  ),
+                ),
             ] else if (pro.hasSubscription) ...[
               // Gerir dentro da app, sem página da Stripe (2026-11-09).
               if (_cancelling)

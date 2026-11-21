@@ -66,6 +66,10 @@ class PayArgs {
   final String? titleOverride;
   final String Function(String code)? errorText;
 
+  /// Texto do botão do cartão em vez de «Pagar X» (Premium grátis com
+  /// cartão, migração 209: «Começar 3 meses grátis»).
+  final String? actionLabel;
+
   const PayArgs({
     required this.paymentId,
     required this.partnerName,
@@ -80,6 +84,7 @@ class PayArgs {
     this.titleOverride,
     this.errorText,
     this.cardFee = false,
+    this.actionLabel,
   });
 
   /// Reserva (sinal ou restante) — tem regra de cancelamento.

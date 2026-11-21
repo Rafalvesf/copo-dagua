@@ -98,6 +98,9 @@ export default async function SettingsPage() {
               { label: "Vagas de fundador", value: `${g.founder_slots}` },
               { label: "Sem comissão a cada", value: `${g.referral_free_every} clientes (mín. ${g.referral_min_booking} €)` },
               { label: "Premium", value: `${g.pro_price_monthly} €/mês · ${g.pro_price_yearly} €/ano · −${g.pro_fee_discount}% de comissão · cliente grátis a cada ${g.pro_referral_free_every} · destaque +${g.pro_promotion_extra_pct}%` },
+              ...((g as { pro_trial_months?: number }).pro_trial_months !== undefined
+                ? [{ label: "Premium grátis com cartão", value: `${(g as { pro_trial_months?: number }).pro_trial_months} meses (uma vez)` }]
+                : []),
             ]}
           />
         )}

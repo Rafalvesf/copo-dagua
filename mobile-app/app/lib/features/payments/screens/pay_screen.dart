@@ -90,6 +90,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   /// Chave pública + Apple Pay / Google Pay disponível neste telemóvel.
   Future<void> _prepare() async {
     if (!_stripe.supported) return;
+    // Só cartão (ex.: Premium grátis, migração 209): sem Apple/Google Pay.
+    if (a.methods != null && !a.methods!.contains(PayMethod.wallet)) return;
     final pk = await stripePublishableKey();
     if (pk == null || !mounted) return;
     _pk = pk;
@@ -230,6 +232,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           return;
         }
       }
+      // Já feito no servidor (Premium grátis com cartão: nada a cobrar agora).
+      if (info.status == 'succeeded') return _done();
       final r = await _stripe.payCard(info.clientSecret, _email, paymentMethodId: pmId);
       _handleResult(r, back: _Step.card);
     } catch (e) {
@@ -689,12 +693,12 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         if (_method == PayMethod.wallet) {
           button = _stripe.walletButton(_payWallet) ?? _SheetButton(label: 'Pagar com $_walletName', onTap: _payWallet);
         } else {
-          button = _SheetButton(label: _method == PayMethod.card ? 'Pagar $_amountLabel' : 'Continuar', onTap: _continue);
+          button = _SheetButton(label: _method == PayMethod.card ? (a.actionLabel ?? 'Pagar $_amountLabel') : 'Continuar', onTap: _continue);
         }
         extras.add(const _SecureNote('Pagamento seguro pela Stripe, dentro da app.'));
         if (a.isBooking && !a.isGuestShare) extras.add(_CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit' && !_full));
       case _Step.card:
-        button = _SheetButton(label: 'Pagar $_amountLabel', onTap: _cardMounted && _card.complete ? _payCard : null);
+        button = _SheetButton(label: a.actionLabel ?? 'Pagar $_amountLabel', onTap: _cardMounted && _card.complete ? _payCard : null);
         extras.add(const _SecureNote('O número do cartão vai direto para a Stripe.'));
       case _Step.confirming:
         button = const _SheetButton(label: 'A pagar…', busy: true);
