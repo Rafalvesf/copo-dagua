@@ -6,14 +6,16 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/address_picker.dart' show AddressField;
+import '../../../shared/widgets/island_sheet.dart' show IslandBackButton, IslandCloseButton;
 import '../../../shared/widgets/snappy_tap.dart';
 
 /// Pedido de reserva em passos (mockups «Reservar por categoria»,
-/// 2026-11-20): 1 Para que evento? · 2 Confirma as pessoas · 3 Quem paga?
-/// (só onde faz sentido) · 4 o que falta saber (horas, entrega, partida…)
-/// · 5 Tudo certo? → «Pedir reserva». O dia, o local e as pessoas vêm do
-/// evento e não voltam a ser perguntados. Os extras e o pagamento vêm
-/// depois de o parceiro aceitar.
+/// 2026-11-20/21) — o mesmo fluxo em todas as categorias: Para que evento?
+/// · Confirma as pessoas · Quem paga? (só onde faz sentido) · o que falta
+/// saber (horas, entrega, partida…) · Tudo certo? · Queres juntar alguma
+/// coisa? (extras) · Pedir reserva. O dia, o local e as pessoas vêm do
+/// evento e não voltam a ser perguntados; a reserva só é pedida depois dos
+/// extras. O voltar é sempre o círculo no canto de cima (DESIGN.md §6.1).
 
 /// Que perguntas faz o passo «quando», conforme a categoria do parceiro.
 enum ReserveKind { mesa, atividade, espaco, servico, encomenda, transporte }
@@ -44,7 +46,21 @@ class ReserveFlowResult {
 
   /// O que foi respondido no passo «quando», já em texto («Hora · 20:00»).
   final List<(String, String)> details;
-  const ReserveFlowResult({required this.event, required this.adults, required this.children, required this.eachPays, required this.details});
+
+  /// Extras escolhidos no passo «Queres juntar alguma coisa?».
+  final List<ServiceExtra> extras;
+
+  /// Pedido de orçamento: a mensagem para o parceiro.
+  final String? message;
+  const ReserveFlowResult({
+    required this.event,
+    required this.adults,
+    required this.children,
+    required this.eachPays,
+    required this.details,
+    this.extras = const [],
+    this.message,
+  });
 
   int get people => adults + children;
 
@@ -89,6 +105,9 @@ String _day(DateTime d) {
   return '${w[0].toUpperCase()}${w.substring(1)}, ${d.day} ${_months[d.month - 1]}';
 }
 
+/// «Sáb, 12 jun» — para os textos dos popups de reserva.
+String reserveShortDay(DateTime d) => _day(d);
+
 String _place(Wedding w) => (w.venue?.trim().isNotEmpty == true) ? w.venue!.trim() : (w.location ?? '').trim();
 
 String _eventLine(Wedding w) => [
@@ -108,7 +127,32 @@ class ReserveFlowSheet extends StatefulWidget {
   final ServicePackage? package;
   final List<Wedding> events;
 
-  const ReserveFlowSheet({super.key, required this.partnerName, required this.kind, this.package, required this.events});
+  /// Extras do parceiro que se aplicam ao pacote (ou à mesa).
+  final List<ServiceExtra> extras;
+
+  /// Percentagem do sinal do parceiro (`partner_deposit_pct`, 191): 100 =
+  /// sem sinal, paga-se tudo de uma vez nos 6 dias antes do prazo.
+  final double depositPct;
+
+  /// Pedido de orçamento (só orçamento): o mesmo fluxo, sem pacote nem
+  /// extras — acaba em «Pedir orçamento» e o parceiro responde com uma
+  /// proposta. [reference] é o valor de referência do parceiro.
+  final bool quote;
+  final double? reference;
+  final String? initialMessage;
+
+  const ReserveFlowSheet({
+    super.key,
+    required this.partnerName,
+    required this.kind,
+    this.package,
+    required this.events,
+    this.extras = const [],
+    this.depositPct = 30,
+    this.quote = false,
+    this.reference,
+    this.initialMessage,
+  });
 
   @override
   State<ReserveFlowSheet> createState() => _ReserveFlowSheetState();
@@ -125,6 +169,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
   String? _loadedFor;
 
   bool _eachPays = false;
+  final Set<String> _extras = {};
 
   // O que falta saber (passo «quando»).
   String? _time;
@@ -137,16 +182,43 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
   String? _returnTime;
   int _seats = 0;
   final _departure = TextEditingController();
+  late final _message = TextEditingController(text: widget.initialMessage ?? '');
 
   @override
   void dispose() {
     _departure.dispose();
+    _message.dispose();
     super.dispose();
   }
 
-  bool get _asksWhoPays => reserveAsksWhoPays(widget.kind, _event);
+  bool get _asksWhoPays => !widget.quote && reserveAsksWhoPays(widget.kind, _event);
 
-  List<String> get _steps => ['event', 'people', if (_asksWhoPays) 'pays', 'when', 'confirm'];
+  List<String> get _steps => [
+        'event',
+        'people',
+        if (_asksWhoPays) 'pays',
+        'when',
+        'confirm',
+        if (!widget.quote && widget.extras.isNotEmpty) 'extras',
+        if (!widget.quote) 'request',
+      ];
+
+  int get _people => _adults + _children;
+
+  double _amount(String unit, double price) => unit == 'person' ? price * _people : price;
+
+  /// Total do pacote, ou `null` se o preço é «desde» ou é uma mesa.
+  double? get _packageTotal {
+    final p = widget.package;
+    if (p == null || p.isStartingPrice) return null;
+    return _amount(p.priceUnit, p.price);
+  }
+
+  double get _extrasTotal => widget.extras
+      .where((e) => _extras.contains(e.id))
+      .fold<double>(0, (t, e) => t + _amount(e.priceUnit, e.price));
+
+  bool get _noDeposit => widget.depositPct >= 100;
 
   Future<void> _loadPeople() async {
     if (_loadedFor == _event.id) return;
@@ -172,8 +244,18 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
     if (_step > 0) setState(() => _step--);
   }
 
+  ReserveFlowResult get _result => ReserveFlowResult(
+        event: _event,
+        adults: _adults,
+        children: _children,
+        eachPays: _asksWhoPays && _eachPays,
+        details: _details,
+        extras: widget.extras.where((e) => _extras.contains(e.id)).toList(),
+        message: _message.text.trim().isEmpty ? null : _message.text.trim(),
+      );
+
   // ---------- o que foi respondido ----------
-  List<(String, String)> get _details => switch (widget.kind) {
+  List<(String, String)> get _details => widget.quote ? [if (_time != null) ('Começa às', _time!)] : switch (widget.kind) {
         ReserveKind.mesa => [if (_time != null) ('Hora', _time!)],
         ReserveKind.atividade => [if (_time != null) ('Sessão', _time!)],
         ReserveKind.espaco => [
@@ -196,7 +278,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
           ],
       };
 
-  bool get _whenReady => switch (widget.kind) {
+  bool get _whenReady => widget.quote || switch (widget.kind) {
         ReserveKind.encomenda => _window != null,
         ReserveKind.transporte => _time != null && _departure.text.trim().isNotEmpty,
         _ => _time != null,
@@ -315,6 +397,21 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
   List<Widget> _eventStep() {
     final p = widget.package;
     return [
+      if (widget.quote) ...[
+        _caps('PEDIDO'),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), border: Border.all(color: AppTheme.ink, width: 1.5)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Só orçamento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(
+              [if (widget.reference != null) 'Referência ≈ ${euros(widget.reference!)}', 'responde com uma proposta'].join(' · '),
+              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+            ),
+          ]),
+        ),
+        const SizedBox(height: 16),
+      ],
       if (p != null) ...[
         _caps('PACOTE'),
         Container(
@@ -358,7 +455,9 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
           _counter('Cadeirinhas', 'Para crianças pequenas', _seats, (v) => setState(() => _seats = v), max: _children),
       ]),
       const SizedBox(height: 12),
-      if (n != ev)
+      // Mais do que no evento: avisa e pergunta qual está certo. Menos é
+      // normal (nem todos vão): só uma linha neutra.
+      if (n > ev)
         Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), border: Border.all(color: const Color(0xFFF2A01B), width: 1.5)),
@@ -373,7 +472,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
               const SizedBox(width: 10),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Selecionaste ${n > ev ? 'mais' : 'menos'} convidados do que no evento',
+                  const Text('Selecionaste mais convidados do que no evento',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   Text('No evento há $ev. Qual está certo?', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 ]),
@@ -388,6 +487,8 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
             }),
           ]),
         )
+      else if (n < ev)
+        _note('$n de $ev do evento')
       else
         _note('Do evento e das respostas dos convidados · $n', green: true),
       const SizedBox(height: 10),
@@ -410,6 +511,33 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
 
   List<Widget> _whenStep() {
     const gap = SizedBox(height: 16);
+    if (widget.quote) {
+      return [
+        _caps('COMEÇA ÀS'),
+        _pills(_times(9, 22), _time, (v) => setState(() => _time = _time == v ? null : v)),
+        gap,
+        _caps('MENSAGEM'),
+        TextField(
+          controller: _message,
+          minLines: 3,
+          maxLines: 6,
+          maxLength: 1000,
+          textCapitalization: TextCapitalization.sentences,
+          style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+          decoration: InputDecoration(
+            hintText: 'O que procuras, o estilo, o que é importante para vocês…',
+            filled: true,
+            fillColor: AppTheme.background,
+            counterText: '',
+            contentPadding: const EdgeInsets.all(16),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
+          ),
+        ),
+      ];
+    }
     switch (widget.kind) {
       case ReserveKind.mesa:
         return [_caps('HORA'), _pills(_times(12, 22), _time, (v) => setState(() => _time = v))];
@@ -466,7 +594,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
     }
   }
 
-  (String, String) get _whenTitle => switch (widget.kind) {
+  (String, String) get _whenTitle => widget.quote ? ('O que procuras?', '') : switch (widget.kind) {
         ReserveKind.mesa || ReserveKind.servico => ('A que horas?', ''),
         ReserveKind.atividade => ('A que horas?', ''),
         ReserveKind.espaco => ('Horário e quartos', ''),
@@ -476,15 +604,16 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
 
   List<Widget> _confirmStep() {
     final p = widget.package;
-    final n = _adults + _children;
     final rows = <(String, String)>[
+      if (p != null) ('Pacote', p.name),
       if (_event.weddingDate != null) ('Quando', _day(_event.weddingDate!)),
       ('Pessoas', '$_adults ${_adults == 1 ? 'adulto' : 'adultos'}${_children > 0 ? ' + $_children ${_children == 1 ? 'criança' : 'crianças'}' : ''}'),
       ..._details,
       if (_asksWhoPays) ('Quem paga', _eachPays ? 'Cada convite paga o seu' : 'Pagamos nós'),
-      if (p != null) ('Pacote', p.name) else ('Menus', 'Cada convidado escolhe o seu'),
+      if (widget.quote && _place(_event).isNotEmpty) ('Onde', _place(_event)),
+      if (p == null && !widget.quote) ('Menus', 'Cada convidado escolhe o seu'),
     ];
-    final total = p == null || p.isStartingPrice ? null : (p.perPerson ? p.price * n : p.price);
+    final total = _packageTotal;
     return [
       _group([
         for (final (k, v) in rows)
@@ -508,12 +637,131 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
           Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
       ],
+      if (widget.quote) ...[
+        if (widget.reference != null) ...[
+          const SizedBox(height: 12),
+          _line('Referência', '≈ ${euros(widget.reference!)}', big: true),
+        ],
+        const SizedBox(height: 12),
+        _note('Não pagas nada agora. ${widget.partnerName} responde com uma proposta; se a aceitares, segue como uma reserva.'),
+      ] else if (p == null) ...[
+        const SizedBox(height: 12),
+        _note('O organizador não escolhe menus: cada convidado escolhe o seu na app.'),
+      ],
+    ];
+  }
+
+  // Extras (antes de pedir: a reserva só é pedida depois dos extras).
+  List<Widget> _extrasStep() {
+    final base = _packageTotal;
+    final total = base == null ? null : base + _extrasTotal;
+    return [
+      _group([
+        for (final e in widget.extras)
+          Semantics(
+            button: true,
+            selected: _extras.contains(e.id),
+            child: SnappyTap(
+              onTap: () => setState(() => _extras.contains(e.id) ? _extras.remove(e.id) : _extras.add(e.id)),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 64),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(children: [
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _extras.contains(e.id) ? AppTheme.accentOliveDark : Colors.white,
+                      border: _extras.contains(e.id) ? null : Border.all(color: AppTheme.inkMuted, width: 1.5),
+                    ),
+                    child: _extras.contains(e.id) ? const Icon(Hi.check, size: 13, color: Colors.white) : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                      Text(e.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      if (e.details.isNotEmpty || e.priceUnit == 'person')
+                        Text(
+                          [
+                            ...e.details,
+                            if (e.priceUnit == 'person') '${euros(e.price)} por pessoa · $_people',
+                          ].join(' · '),
+                          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                        ),
+                    ]),
+                  ),
+                  const SizedBox(width: 10),
+                  Text('+ ${euros(_amount(e.priceUnit, e.price))}',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ]),
+              ),
+            ),
+          ),
+      ]),
+      if (total != null) ...[
+        const SizedBox(height: 16),
+        _line(_noDeposit || widget.package == null ? 'Total' : 'Reserva + extras', euros(total), big: _noDeposit),
+        if (!_noDeposit && widget.package != null && !_eachPays) ...[
+          const SizedBox(height: 6),
+          _line('Sinal (${widget.depositPct.round()} %)', euros(total * widget.depositPct / 100, cents: true), big: true),
+        ],
+      ],
+    ];
+  }
+
+  Widget _line(String label, String value, {bool big = false}) => Row(children: [
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+        Text(value,
+            style: big
+                ? const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)
+                : const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+      ]);
+
+  /// O último passo: o que se paga e quando. Nada se paga aqui (o sinal
+  /// paga-se quando o parceiro aceitar; sem sinal, nos 6 dias antes do
+  /// prazo; cada convite paga a sua parte até 3 dias antes).
+  List<Widget> _requestStep() {
+    final p = widget.package;
+    final base = _packageTotal;
+    final total = base == null ? null : base + _extrasTotal;
+    final chosen = widget.extras.where((e) => _extras.contains(e.id)).toList();
+    final rows = <(String, String)>[
+      if (p != null) (p.name, base == null ? 'desde ${euros(p.price)}${priceUnitSuffix(p.priceUnit)}' : euros(base)) else ('Mesa', 'Grátis'),
+      for (final e in chosen) (e.name, euros(_amount(e.priceUnit, e.price))),
+    ];
+    final due = _event.weddingDate?.subtract(const Duration(days: 3));
+    final String text;
+    if (_asksWhoPays && _eachPays) {
+      text = 'Não pagas nada agora. Cada convite paga a sua parte${due != null ? ' até ${_day(due).toLowerCase()}' : ' até 3 dias antes'}'
+          '${p == null ? ' e cada convidado escolhe o seu menu' : ''}.';
+    } else if (p == null) {
+      text = 'Não pagas nada agora. A mesa é grátis: cada convidado escolhe o seu menu na app.';
+    } else if (_noDeposit) {
+      text = 'Não pagas nada agora. Sem sinal: pagas tudo de uma vez, nos 6 dias antes do prazo. Avisamos-te 6 dias antes do prazo e nos últimos 3 dias.';
+    } else {
+      text = 'Não pagas nada agora. Quando ${widget.partnerName} aceitar, paga o sinal (${widget.depositPct.round()} %) para garantir a data: '
+          'tens até 30 dias antes do evento, mas sem ele podes perder a reserva.';
+    }
+    return [
+      _group([
+        for (final (k, v) in rows)
+          Container(
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(children: [
+              Expanded(child: Text(k, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+              const SizedBox(width: 12),
+              Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ]),
+          ),
+      ]),
+      if (total != null) ...[
+        const SizedBox(height: 12),
+        _line(p!.perPerson ? 'Total previsto' : 'Total', euros(total), big: true),
+      ],
       const SizedBox(height: 12),
-      _note(p == null
-          ? 'Não pagas nada agora. O organizador não escolhe menus: cada convidado escolhe o seu na app${_eachPays ? ' e cada convite paga a sua parte 3 dias antes' : ''}.'
-          : _eachPays
-              ? 'Não pagas nada agora. Cada convite paga a sua parte na app 3 dias antes. ${widget.partnerName} aceita ou recusa.'
-              : 'Não pagas nada agora. ${widget.partnerName} aceita ou recusa e avisamos-te; depois pagas na app.'),
+      _note(text),
     ];
   }
 
@@ -527,6 +775,8 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
       'people' => ('Confirma as pessoas', 'Já vem preenchido do evento.'),
       'pays' => ('Quem paga?', 'Podes mudar até a reserva ser aceite.'),
       'when' => (_whenTitle.$1, [_eventLine(_event), 'do evento'].where((s) => s.isNotEmpty).join(' · ')),
+      'extras' => ('Queres juntar alguma coisa?', '${widget.partnerName} tem extras para ${widget.package == null ? 'a mesa' : 'o teu pacote'}.'),
+      'request' => ('Pedir reserva', widget.partnerName),
       _ => ('Tudo certo?', widget.partnerName),
     };
     final body = switch (st) {
@@ -534,6 +784,8 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
       'people' => _peopleStep(),
       'pays' => _paysStep(),
       'when' => _whenStep(),
+      'extras' => _extrasStep(),
+      'request' => _requestStep(),
       _ => _confirmStep(),
     };
     final canNext = switch (st) {
@@ -543,7 +795,8 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
     };
     final primary = switch (st) {
       'people' => 'Confirmar',
-      'confirm' => 'Pedir reserva',
+      'request' => 'Pedir reserva',
+      'confirm' when widget.quote => 'Pedir orçamento',
       _ => 'Continuar',
     };
     return SingleChildScrollView(
@@ -566,6 +819,10 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         ]),
         const SizedBox(height: 16),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          if (_step > 0) ...[
+            IslandBackButton(onTap: _back),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -576,26 +833,20 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
             ]),
           ),
           const SizedBox(width: 12),
-          Semantics(
-            button: true,
-            label: 'Fechar',
-            child: SnappyTap(
-              onTap: () => Navigator.of(context).pop(),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
-                child: const Icon(Hi.xMark, size: 20, color: AppTheme.ink),
-              ),
-            ),
-          ),
+          const IslandCloseButton(),
         ]),
         const SizedBox(height: 16),
         ...body,
         const SizedBox(height: 20),
+        // Em baixo só ações (o voltar está em cima, DESIGN.md §6.1).
         Row(children: [
-          if (_step > 0) ...[
-            Expanded(child: _Btn('Voltar', outlined: true, onTap: _back)),
+          if (st == 'extras') ...[
+            Expanded(
+              child: _Btn('Sem extras', outlined: true, onTap: () {
+                setState(_extras.clear);
+                _next();
+              }),
+            ),
             const SizedBox(width: 8),
           ],
           Expanded(
@@ -603,14 +854,8 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
             child: _Btn(primary,
                 onTap: !canNext
                     ? null
-                    : st == 'confirm'
-                        ? () => Navigator.of(context).pop(ReserveFlowResult(
-                              event: _event,
-                              adults: _adults,
-                              children: _children,
-                              eachPays: _asksWhoPays && _eachPays,
-                              details: _details,
-                            ))
+                    : st == 'request' || (st == 'confirm' && widget.quote)
+                        ? () => Navigator.of(context).pop(_result)
                         : _next),
           ),
         ]),

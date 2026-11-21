@@ -27,6 +27,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../partners/screens/partner_detail_screen.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
+import '../../payments/booking_extras_sheet.dart';
+import '../../bookings/widgets/reject_proposal.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
 /// e contactos do cortejo partilham este mesmo ecrã (ver
@@ -232,7 +234,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
                             )
                           : message.isProposal
-                          ? _ProposalCard(message: message, partnerId: widget.conversation.partnerId, imageUrl: widget.conversation.avatarUrl, onRequestNew: _openPartnerProfile)
+                          ? _ProposalCard(message: message, partnerId: widget.conversation.partnerId, partnerName: widget.conversation.name, conversationId: widget.conversation.id, imageUrl: widget.conversation.avatarUrl, onRequestNew: _openPartnerProfile)
                           : message.isQuoteRequestNotice
                           ? GestureDetector(
                               onTap: _openPartnerProfile,
@@ -288,8 +290,17 @@ class _ProposalCard extends ConsumerStatefulWidget {
 
   final VoidCallback? onRequestNew;
   final String? partnerId;
+  final String partnerName;
+  final String conversationId;
   final String? imageUrl;
-  const _ProposalCard({required this.message, this.partnerId, this.imageUrl, this.onRequestNew});
+  const _ProposalCard({
+    required this.message,
+    this.partnerId,
+    required this.partnerName,
+    required this.conversationId,
+    this.imageUrl,
+    this.onRequestNew,
+  });
 
   // Taxa do organizador para este parceiro (migração 180).
   FeeConfig? fee(WidgetRef ref, {bool watch = false}) {
@@ -394,19 +405,23 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
     final hasSinal = sinal > 0 && sinal < total;
     final payAmount = hasSinal ? sinal : total;
 
+    // Sem sinal, paga-se tudo de uma vez só nos 6 dias antes do prazo
+    // (regra de 2026-11-20); com sinal paga-se já.
     DateTime? deadline;
     try {
       final r = await supabase
-          .from('bookings')
-          .select('choice_deadline')
-          .eq('proposal_id', msg.proposalId!)
+          .from('payments')
+          .select('due_at, bookings!inner(proposal_id)')
+          .eq('bookings.proposal_id', msg.proposalId!)
+          .eq('status', 'pending')
+          .limit(1)
           .maybeSingle();
-      final d = r?['choice_deadline'];
+      final d = r?['due_at'];
       if (d is String) deadline = DateTime.tryParse(d);
     } catch (_) {}
     if (!mounted) return;
     final days = deadline?.difference(DateTime.now()).inDays;
-    final canPayNow = days == null || days <= 3;
+    final canPayNow = hasSinal || days == null || days <= 6;
     final pct = (widget.fee(ref) ?? const FeeConfig()).effectivePct(total);
 
     await showIslandSheet<void>(
@@ -427,6 +442,26 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
     );
   }
 
+  /// «Recusar» (mockup 2026-11-21): pergunta o motivo (e uma mensagem,
+  /// opcional); o parceiro recebe-os na conversa (migração 206).
+  Future<void> _reject() async {
+    final id = widget.message.proposalId;
+    if (id == null) return;
+    setState(() => _accepting = true);
+    final done = await rejectProposalFlow(
+      context,
+      proposalId: id,
+      partnerName: widget.partnerName,
+      sendMessage: (text) => ref.read(chatThreadControllerProvider(widget.conversationId).notifier).sendText(text),
+    );
+    if (!mounted) return;
+    if (done) ref.invalidate(pendingProposalsProvider);
+    setState(() {
+      _accepting = false;
+      if (done) _unavailable = true;
+    });
+  }
+
   Future<void> _accept() async {
     // Partilhar com os outros organizadores ou guardar em segredo (2026-10-21).
     final secret = await askHirePrivacy(context, ref.read(weddingControllerProvider).wedding?.id, 'este parceiro');
@@ -438,7 +473,22 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       ref.invalidate(pendingProposalsProvider);
       ref.invalidate(coupleBookingsProvider);
       setState(() => _accepted = true);
-      await _showPayOrLater();
+      // Mockup (2026-11-21): aceitar → extras do parceiro → pagar o sinal
+      // (com «Pagar mais tarde» no ecrã de pagar).
+      try {
+        final b = await supabase.from('bookings').select('id').eq('proposal_id', widget.message.proposalId!).maybeSingle();
+        final bookingId = b?['id'] as String?;
+        if (bookingId != null && mounted) await offerBookingExtras(context, bookingId, partnerName: widget.partnerName);
+      } catch (_) {}
+      if (!mounted) return;
+      final msg = widget.message;
+      final total = msg.proposalPrice ?? 0;
+      final sinal = msg.proposalDepositAmount ?? 0;
+      if (sinal > 0 && sinal < total) {
+        await _openPay((widget.fee(ref) ?? const FeeConfig()).effectivePct(total));
+      } else {
+        await _showPayOrLater();
+      }
     } on PostgrestException catch (e) {
       // `P0001` = já não está `sent`. Verifica o estado real em vez de
       // assumir logo um erro — se já foi aceite (ex: pelas Reservas,
@@ -517,7 +567,11 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       deposit: message.proposalDepositAmount == null ? null : withFee(message.proposalDepositAmount!),
       note: pct > 0 ? 'Valores já com a taxa de serviço' : null,
       actions: [
-        ChatCardAction('Ver detalhe', () => context.push('/bookings')),
+        // Por responder: «Recusar» + «Aceitar» (mockup 2026-11-21).
+        if (!_accepted && !_unavailable)
+          ChatCardAction('Recusar', _accepting ? null : _reject)
+        else
+          ChatCardAction('Ver detalhe', () => context.push('/bookings')),
         if (_accepted && _bookingState == 'cancelled')
           // Reserva cancelada: pode pedir uma proposta nova (2026-10-21).
           ChatCardAction('Pedir nova proposta', widget.onRequestNew, primary: true)

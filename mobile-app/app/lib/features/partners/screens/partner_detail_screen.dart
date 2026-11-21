@@ -39,7 +39,6 @@ import '../../../shared/widgets/dense_card.dart' show PriceBox, MiniStats;
 import '../../../shared/widgets/estrela.dart';
 import '../../../shared/widgets/navigation_sheet.dart' show showNavigationSheet;
 import '../../../shared/widgets/venue_map.dart' show VenueMap;
-import '../../../shared/widgets/address_picker.dart' show showAddressPicker;
 import '../../../shared/money.dart';
 import '../../../core/partners/category_figure.dart';
 import '../../../shared/widgets/island_sheet.dart';
@@ -156,6 +155,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// «Quem paga» (190): verdadeiro = cada convidado paga a sua parte.
   bool _eachPays = false;
 
+  /// Percentagem do sinal deste parceiro (`partner_deposit_pct`, 191): 100
+  /// = sem sinal. Lida ao abrir «Reservar».
+  double _depositPct = 30;
+
   @override
   void dispose() {
     _packageMessage.dispose();
@@ -189,7 +192,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     if (_requestingQuote) return;
     final wedding = event ?? await _chooseEvent();
     if (wedding == null || !mounted) return;
-    final chosen = extras.where((e) => _selectedExtras.contains(e.id)).toList();
+    final chosen = flow?.extras ?? extras.where((e) => _selectedExtras.contains(e.id)).toList();
     final summary = [
       'Pacote "${pkg.name}"',
       if (pkg.perPerson) 'para $people pessoas',
@@ -224,9 +227,15 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       if (mounted) {
         double each(String unit, double price) => unit == 'person' ? price * people : price;
         final total = each(pkg.priceUnit, pkg.price) + chosen.fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
+        final due = wedding.weddingDate?.subtract(const Duration(days: 3));
+        final noDeposit = (flow != null) && _depositPct >= 100;
         await _showRequestSent(
           title: 'Reserva pedida',
-          body: 'Não pagas nada agora. ${widget.partner.name} aceita ou recusa e avisamos-te; depois pagas na app.',
+          body: _eachPays
+              ? '${widget.partner.name} aceita ou recusa e avisamos-te. Cada convite paga a sua parte${due != null ? ' até ${reserveShortDay(due).toLowerCase()}' : ''}.'
+              : noDeposit
+                  ? '${widget.partner.name} aceita ou recusa e avisamos-te. Sem sinal: pagas tudo de uma vez, nos 6 dias antes do prazo.'
+                  : '${widget.partner.name} aceita ou recusa e avisamos-te. Depois, paga o sinal para garantir a data.',
           recapTitle: [pkg.name, if (chosen.isNotEmpty) '+ ${chosen.length} extra'].join(' '),
           recapMeta: [wedding.displayNames, if (_eventMeta(wedding).isNotEmpty) _eventMeta(wedding).split(' · ').first].join(' · '),
           recapValue: pkg.isStartingPrice ? null : euros(total),
@@ -290,7 +299,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       if (mounted) {
         await _showRequestSent(
           title: 'Reserva pedida',
-          body: 'Não pagas nada agora. ${widget.partner.name} aceita ou recusa; depois cada convidado escolhe o seu menu na app.',
+          body: '${widget.partner.name} aceita ou recusa e avisamos-te. Depois, cada convidado escolhe o seu menu na app${_eachPays ? ' e cada convite paga a sua parte' : ''}.',
           recapTitle: 'Mesa para $people',
           recapMeta: wedding.displayNames,
           recapValue: 'Grátis',
@@ -449,22 +458,25 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     if (!mounted || events.isEmpty) return;
     final partner = widget.partner;
 
-    // Mockup «Pedir orçamento» (2026-11-20): o valor de referência, o
-    // evento, a data, o local (com o seletor de moradas) e a mensagem.
-    final result = await showIslandSheet<_RequestQuoteResult>(
+    // Mockups «Reservar por categoria» · Só orçamento (2026-11-21): o
+    // mesmo fluxo da reserva — evento, pessoas, o que procuras e «Pedir
+    // orçamento». O dia, o local e as pessoas vêm do evento.
+    final result = await showIslandSheet<ReserveFlowResult>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => _RequestQuoteSheet(
+      builder: (context) => ReserveFlowSheet(
         partnerName: partner.name,
-        reference: partner.quoteOnly ? partnerReference(partner) : null,
-        referenceNote: partner.referenceNote,
+        kind: reserveKindFor(partner.primaryCategorySlug),
         events: events,
-        myId: ref.read(authControllerProvider).profile?.id,
+        quote: true,
+        reference: partner.quoteOnly ? partnerReference(partner) : null,
         initialMessage: initialMessage,
       ),
     );
     if (result == null || !mounted) return;
     final wedding = result.event;
+    final place = (wedding.venue?.trim().isNotEmpty == true) ? wedding.venue!.trim() : wedding.location?.trim();
+    final quoteMessage = [result.summary(), if (result.message != null) result.message!].join('\n');
 
     setState(() => _requestingQuote = true);
     Funnel.track('quote_request_start', ref: widget.partner.id);
@@ -477,15 +489,15 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         params: {
           'p_partner_id': widget.partner.id,
           'p_wedding_id': wedding.id,
-          'p_event_date': result.eventDate?.toIso8601String().split('T').first,
-          'p_location': result.location,
+          'p_event_date': wedding.weddingDate?.toIso8601String().split('T').first,
+          'p_location': (place == null || place.isEmpty) ? null : place,
           // O parceiro define o preço na proposta (`send_proposal_screen.dart`)
           // — o casal deixou de indicar orçamento min./máx. aqui, pedido
           // explícito do utilizador (2026-09-04): só envia o pedido, sem
           // pré-condicionar o valor.
           'p_budget_min': null,
           'p_budget_max': null,
-          'p_message': result.message,
+          'p_message': quoteMessage,
         },
       );
       // Pedido explícito do utilizador: o pedido de orçamento tem de
@@ -496,9 +508,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           weddingId: wedding.id,
           partnerId: widget.partner.id,
           partnerName: widget.partner.name,
-          eventDate: result.eventDate,
-          location: result.location,
-          message: result.message,
+          eventDate: wedding.weddingDate,
+          location: (place == null || place.isEmpty) ? null : place,
+          message: quoteMessage,
         );
       } catch (_) {}
       // O botão passa logo a "Pedido já enviado".
@@ -506,9 +518,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
       if (mounted) {
         await _showRequestSent(
-          title: 'Pedido enviado',
-          body: '${partner.name} vai responder pelas Mensagens com uma proposta.',
-          recapTitle: 'Pedido de orçamento',
+          title: 'Orçamento pedido',
+          body: '${partner.name} responde com uma proposta e avisamos-te. Não pagas nada agora.',
+          recapTitle: 'Só orçamento',
           recapMeta: wedding.displayNames,
           event: wedding,
         );
@@ -982,11 +994,17 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   }
 
   /// Pedido de reserva em passos (mockups «Reservar por categoria»,
-  /// 2026-11-20): evento, pessoas a confirmar, quem paga, o que falta saber
-  /// e «Pedir reserva». Os extras escolhem-se depois de o parceiro aceitar.
+  /// 2026-11-20/21): evento, pessoas a confirmar, quem paga, o que falta
+  /// saber, «Tudo certo?», extras e «Pedir reserva» — o mesmo em todas as
+  /// categorias.
   Future<void> _openReserveSheet(ServicePackage pkg, List<ServiceExtra> pkgExtras, int? fixedPeople, int? guests) async {
     final events = await _eventsForSheet();
     if (!mounted || events.isEmpty) return;
+    try {
+      final pct = await supabase.rpc('partner_deposit_pct', params: {'p_partner_id': widget.partner.id});
+      if (pct is num) _depositPct = pct.toDouble();
+    } catch (_) {}
+    if (!mounted) return;
     final result = await showIslandSheet<ReserveFlowResult>(
       context: context,
       isScrollControlled: true,
@@ -995,6 +1013,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         kind: reserveKindFor(widget.partner.primaryCategorySlug),
         package: pkg,
         events: events,
+        extras: pkgExtras,
+        depositPct: _depositPct,
       ),
     );
     if (result == null || !mounted) return;
@@ -1155,255 +1175,6 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
   }
 }
 
-class _RequestQuoteResult {
-  final Wedding event;
-  final DateTime? eventDate;
-  final String? location;
-  final String? message;
-
-  const _RequestQuoteResult({required this.event, this.eventDate, this.location, this.message});
-}
-
-/// Popup «Pedir orçamento» (mockup 2026-11-20) — liga ao RPC real
-/// `request_quote()` (`009_quotations_bookings.sql`). Data, local e
-/// mensagem são opcionais; a data tem de ter pelo menos 7 dias de
-/// antecedência (`P0003`), por isso o calendário já não deixa escolher
-/// antes. O local escolhe-se no seletor de moradas.
-class _RequestQuoteSheet extends StatefulWidget {
-  final String partnerName;
-  final double? reference;
-  final String? referenceNote;
-  final List<Wedding> events;
-  final String? myId;
-  final String? initialMessage;
-
-  const _RequestQuoteSheet({
-    required this.partnerName,
-    this.reference,
-    this.referenceNote,
-    required this.events,
-    this.myId,
-    this.initialMessage,
-  });
-
-  @override
-  State<_RequestQuoteSheet> createState() => _RequestQuoteSheetState();
-}
-
-class _RequestQuoteSheetState extends State<_RequestQuoteSheet> {
-  late Wedding _event = widget.events.first;
-  late final _message = TextEditingController(text: widget.initialMessage ?? '');
-  DateTime? _eventDate;
-  String? _location;
-  String? _locationSub;
-
-  DateTime get _minSelectableDate => DateTime.now().add(const Duration(days: 7));
-
-  @override
-  void initState() {
-    super.initState();
-    _fromEvent();
-  }
-
-  /// Data e local vêm do evento escolhido (podem mudar-se).
-  void _fromEvent() {
-    final d = _event.weddingDate;
-    _eventDate = (d != null && !d.isBefore(_minSelectableDate)) ? d : null;
-    final venue = _event.venue?.trim() ?? '';
-    final place = _event.location?.trim() ?? '';
-    _location = venue.isNotEmpty ? venue : (place.isNotEmpty ? place : null);
-    _locationSub = venue.isNotEmpty && place.isNotEmpty ? '$place · do teu evento' : (_location != null ? 'do teu evento' : null);
-  }
-
-  @override
-  void dispose() {
-    _message.dispose();
-    super.dispose();
-  }
-
-  Future<void> _changeEvent() async {
-    final picked = await showIslandSheet<Wedding>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _EventPickerSheet(events: widget.events, partnerName: widget.partnerName, myId: widget.myId),
-    );
-    if (picked != null && mounted) {
-      setState(() {
-        _event = picked;
-        _fromEvent();
-      });
-    }
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _eventDate ?? _minSelectableDate,
-      firstDate: _minSelectableDate,
-      lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
-    );
-    if (picked != null) setState(() => _eventDate = picked);
-  }
-
-  Future<void> _pickPlace() async {
-    final picked = await showAddressPicker(context, title: 'Onde é o evento?', initialQuery: _location);
-    if (picked != null && mounted) {
-      setState(() {
-        _location = picked.name;
-        _locationSub = picked.secondary;
-      });
-    }
-  }
-
-  Widget _pill({required Widget icon, required Widget child, VoidCallback? onTap, String? label}) => Semantics(
-        button: true,
-        label: label,
-        child: SnappyTap(
-          onTap: onTap,
-          child: Container(
-            height: 52,
-            padding: const EdgeInsets.fromLTRB(16, 0, 14, 0),
-            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
-            child: Row(children: [icon, const SizedBox(width: 8), Expanded(child: child)]),
-          ),
-        ),
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    final d = _eventDate;
-    final dateText = d == null
-        ? 'A combinar'
-        : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Pedir orçamento', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 4),
-              Text('Envia os detalhes do teu evento — ${widget.partnerName} responde pelas Mensagens com uma proposta.',
-                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            ]),
-          ),
-          const SizedBox(width: 12),
-          const _CloseButton(),
-        ]),
-        if (widget.reference != null) ...[
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.ink, width: 1.5),
-            ),
-            child: Row(children: [
-              Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                const Text('REFERÊNCIA',
-                    style: TextStyle(fontSize: 9, letterSpacing: 1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                Text('≈ ${euros(widget.reference!)}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              ]),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(widget.referenceNote ?? 'Indicado pelo parceiro',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              ),
-            ]),
-          ),
-        ],
-        const SizedBox(height: 16),
-        const _Caps('PARA QUE EVENTO'),
-        _EventChoice(event: _event, onChange: widget.events.length > 1 ? _changeEvent : null),
-        const SizedBox(height: 16),
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              const _Caps('DATA'),
-              _pill(
-                label: 'Data do evento',
-                onTap: _pickDate,
-                icon: const Icon(Hi.calendar, size: 18, color: AppTheme.inkMuted),
-                child: Text(dateText, maxLines: 1, style: const TextStyle(fontSize: 15, color: AppTheme.ink)),
-              ),
-            ]),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 2,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              const _Caps('LOCAL'),
-              _pill(
-                label: 'Escolher local',
-                onTap: _pickPlace,
-                icon: const Icon(Hi.mapPin, size: 18, color: AppTheme.inkMuted),
-                child: Row(children: [
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                      Text(_location ?? 'Escolher local',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 15, color: _location == null ? AppTheme.inkMuted : AppTheme.ink)),
-                      if (_locationSub != null)
-                        Text(_locationSub!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
-                    ]),
-                  ),
-                  const Icon(Hi.chevronRight, size: 16, color: AppTheme.inkMuted),
-                ]),
-              ),
-            ]),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        const _Caps('MENSAGEM'),
-        TextField(
-          controller: _message,
-          minLines: 3,
-          maxLines: 5,
-          maxLength: 500,
-          style: const TextStyle(fontSize: 15, color: AppTheme.ink),
-          decoration: InputDecoration(
-            hintText: 'O que ${widget.partnerName} deve saber: quantidades, estilo, alergias…',
-            hintStyle: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
-            filled: true,
-            fillColor: AppTheme.background,
-            counterText: '',
-            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 52,
-          child: FilledButton(
-            onPressed: () => Navigator.of(context).pop(_RequestQuoteResult(
-              event: _event,
-              eventDate: _eventDate,
-              location: _location,
-              message: _message.text.trim().isEmpty ? null : _message.text.trim(),
-            )),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.ink,
-              foregroundColor: Colors.white,
-              shape: const StadiumBorder(),
-              textStyle: const TextStyle(
-                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
-            ),
-            child: const Text('Enviar pedido'),
-          ),
-        ),
-      ]),
-    );
-  }
-}
 /// Seguidores, amigos que seguem e o botão Seguir / A seguir.
 class _PartnerFollow extends ConsumerStatefulWidget {
   final String partnerId;

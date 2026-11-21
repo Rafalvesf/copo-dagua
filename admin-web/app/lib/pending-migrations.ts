@@ -404,6 +404,13 @@ export const MIGRATIONS: PendingMigration[] = [
     check: { kind: "marker", id: "203" },
   },
   {
+    file: "206_proposal_extras_and_refusal.sql",
+    date: "2026-11-21",
+    title: "Propostas: extras depois de aceitar e recusar com motivo",
+    what: "Depois de aceitar uma proposta, antes de pagar o sinal, a app mostra os extras do parceiro e junta-os ao total e ao sinal. «Recusar» a proposta pergunta o motivo, que fica guardado e segue para o parceiro na conversa.",
+    check: { kind: "marker", id: "206" },
+  },
+  {
     file: "204_final_payment_window.sql",
     date: "2026-11-20",
     title: "Prazo do resto: abre 6 dias antes, avisos e cancelamento",

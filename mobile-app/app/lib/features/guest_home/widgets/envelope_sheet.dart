@@ -123,8 +123,16 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
         ),
         const SizedBox(height: 14),
         Row(children: [
-          Icon(Hi.envelope, color: green),
-          const SizedBox(width: 8),
+          // Voltar sempre em cima, à esquerda do título (DESIGN.md §6.1).
+          if (_step2) ...[
+            IslandBackButton(onTap: () {
+              if (!_sending) setState(() => _step2 = false);
+            }),
+            const SizedBox(width: 12),
+          ] else ...[
+            Icon(Hi.envelope, color: green),
+            const SizedBox(width: 8),
+          ],
           Expanded(
             child: Text(_step2 ? 'Faz a transferência' : 'Envelope digital',
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
@@ -204,7 +212,6 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : const Text('Já fiz a transferência'),
           ),
-          TextButton(onPressed: _sending ? null : () => setState(() => _step2 = false), child: const Text('Voltar')),
         ],
       ]),
     );
