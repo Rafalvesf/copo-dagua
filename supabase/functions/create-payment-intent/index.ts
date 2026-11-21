@@ -220,7 +220,15 @@ Deno.serve(async (req) => {
       await founderNumber(admin, payment.partner_id as string))) ||
     (await isReferredClient(admin, payment.partner_id as string, coupleId, sett, isPro));
   // Migração 155: reserva que veio do destaque pago do parceiro → +6%.
-  const promoExtraPct = partnerFree || !payment.booking_id ? 0 : await promotionExtraPct(admin, payment.booking_id as string);
+  // Sinal pago ao pedir (migração 207): ainda sem reserva, conta-se a
+  // partir do pedido (`request_promotion_extra`).
+  const promoExtraPct = partnerFree
+    ? 0
+    : payment.booking_id
+    ? await promotionExtraPct(admin, payment.booking_id as string)
+    : payment.quote_request_id
+    ? await requestPromotionExtraPct(admin, payment.quote_request_id as string)
+    : 0;
   // O crédito do parceiro só se gasta quando ele paga taxa.
   const partnerDiscountPct = partnerFree ? 0 : await takeFeeCredit(admin, payment.partner_id as string, payment.id as string);
   const partnerFeeCents = partnerFree ? 0 : discounted(Math.min(
@@ -412,6 +420,19 @@ async function founderNumber(admin: any, partnerId: string): Promise<number | nu
 async function promotionExtraPct(admin: any, bookingId: string): Promise<number> {
   try {
     const { data, error } = await admin.rpc("booking_promotion_extra", { p_booking: bookingId });
+    if (error) return 0;
+    const v = Number(data ?? 0);
+    return Number.isFinite(v) && v > 0 ? v : 0;
+  } catch {
+    return 0;
+  }
+}
+
+// O mesmo para o sinal pago ao pedir (migração 207). Sem a migração, 0.
+// deno-lint-ignore no-explicit-any
+async function requestPromotionExtraPct(admin: any, quoteRequestId: string): Promise<number> {
+  try {
+    const { data, error } = await admin.rpc("request_promotion_extra", { p_quote_request: quoteRequestId });
     if (error) return 0;
     const v = Number(data ?? 0);
     return Number.isFinite(v) && v > 0 ? v : 0;

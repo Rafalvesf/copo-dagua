@@ -163,6 +163,81 @@ begin
 end;
 $$;
 
+-- ---------- 4a. Cliente trazido pelo parceiro (migração 151) ----------
+-- O mesmo que o gatilho `count_partner_referral` faz no 1.º pagamento de
+-- uma reserva, para quando esse pagamento foi o sinal pago ao pedir (ainda
+-- sem reserva, o gatilho não o pôde contar).
+create or replace function public.count_partner_referral_for(p_couple uuid, p_partner uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_ref record;
+  v_every integer;
+  v_seq integer;
+begin
+  if p_couple is null or p_partner is null then return; end if;
+  select r.* into v_ref from public.partner_referrals r
+   where r.partner_id = p_partner and r.profile_id = p_couple;
+  if v_ref is null or not v_ref.valid or v_ref.seq is not null then return; end if;
+  select greatest(coalesce(invite_every, 5), 1) into v_every from public.platform_settings where id = 1;
+
+  perform pg_advisory_xact_lock(hashtext('partner_referral_seq:' || p_partner::text));
+  select coalesce(max(pr.seq), 0) + 1 into v_seq from public.partner_referrals pr where pr.partner_id = p_partner;
+  update public.partner_referrals pr set seq = v_seq, counted_at = now()
+   where pr.partner_id = p_partner and pr.profile_id = p_couple and pr.seq is null;
+
+  if v_seq % v_every = 0 then
+    perform public.grant_invite_credit(p_partner);
+  else
+    insert into public.notifications (profile_id, type, title, subtitle, body, link)
+    values (p_partner, 'partner_referral', 'Cliente do teu convite conta',
+            coalesce((select full_name from public.profiles where id = p_couple), 'Um cliente'),
+            'Pagou a primeira reserva contigo. Faltam ' || (v_every - v_seq % v_every) || ' para ganhares 50 % de desconto na taxa.',
+            '/settings');
+  end if;
+end;
+$$;
+revoke execute on function public.count_partner_referral_for(uuid, uuid) from public, anon, authenticated;
+
+-- ---------- 4b. Destaque pago (migração 155) para o sinal pago ao pedir ----------
+-- Igual a `booking_promotion_extra`, mas a partir do pedido (ainda não há
+-- reserva): +X % na taxa do parceiro se o cliente veio do destaque.
+create or replace function public.request_promotion_extra(p_quote_request uuid)
+returns numeric
+language plpgsql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_q record;
+  v_first timestamptz;
+  v_days integer;
+  v_extra numeric;
+begin
+  select q.couple_id, q.partner_id, q.created_at into v_q from public.quote_requests q where q.id = p_quote_request;
+  if v_q is null or v_q.couple_id is null then return 0; end if;
+  select least(v_q.created_at, coalesce(min(q.created_at), v_q.created_at)) into v_first
+    from public.quote_requests q where q.couple_id = v_q.couple_id and q.partner_id = v_q.partner_id;
+  select coalesce(promotion_attribution_days, 30) into v_days from public.platform_settings where id = 1;
+  select pp.extra_pct into v_extra
+    from public.promotion_clicks k join public.partner_promotions pp on pp.id = k.promotion_id
+   where k.profile_id = v_q.couple_id and k.partner_id = v_q.partner_id
+     and k.created_at <= v_first and k.created_at > v_first - make_interval(days => v_days)
+   order by k.created_at desc limit 1;
+  -- Pro (migração 161): destaque mais barato.
+  if coalesce(v_extra, 0) > 0 and public.is_partner_pro(v_q.partner_id) then
+    v_extra := least(v_extra, (select coalesce(pro_promotion_extra_pct, v_extra) from public.platform_settings where id = 1));
+  end if;
+  return coalesce(v_extra, 0);
+end;
+$$;
+revoke execute on function public.request_promotion_extra(uuid) from public, anon, authenticated;
+grant execute on function public.request_promotion_extra(uuid) to service_role;
+
 -- ---------- 4. O parceiro aceita: o sinal pago passa para a reserva ----------
 -- `accept_package_request` cria a reserva e um sinal por pagar. Se o pedido
 -- já tinha um sinal (pago ou a meio de pagar), fica esse: liga-se à reserva
@@ -221,6 +296,9 @@ begin
     insert into public.notifications (partner_id, type, title, subtitle, body, link)
     values (v_bk.partner_id, 'payment_received', 'Sinal recebido', public.couple_label(v_bk.wedding_id),
             public.fmt_eur(v_pre.amount), '/partner-payments');
+    -- Cliente trazido pelo parceiro: conta agora (a taxa acerta-se ao
+    -- libertar, em `release-partner-funds`).
+    perform public.count_partner_referral_for(v_bk.couple_id, v_bk.partner_id);
   end if;
   return null;
 end;
