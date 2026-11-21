@@ -171,7 +171,8 @@ ecrãs. O resto da app mantém a tabela acima.
   continuar enquanto carrega; parada com «reduzir movimento». Onde:
   listas vazias → a dormir; erros → triste; evento criado e pagamento
   feito → parabéns; convites e «vou» → apaixonada; aceitar/juntar →
-  contente; sugestões → ideia; conversas vazias → piscar o olho. Substitui
+  contente; sugestões → ideia; conversas vazias → piscar o olho; Premium → fixe
+  (de óculos, pedido 2026-11-21). Substitui
   as duas taças.
 - **Páginas** (`shared/widgets/page_kit.dart`, canvases «Páginas do
   evento / parceiro / convidado», 2026-11-14): voltar redondo branco 44 numa
@@ -331,6 +332,70 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   sugestões do Google, «Usar a minha localização» e «Confirmar local» com o
   mapa e a localidade, código postal e distrito preenchidos. **Nunca** uma
   caixa de texto livre para moradas.
+
+## 6.3 Moldes fixos — popups e páginas (pedido do Rafael, 2026-11-21)
+
+Para não inventar a cada ecrã: **qualquer popup ou página nova monta-se com
+estes moldes**, tal e qual (mockups «Reservar por categoria», «Pagar ·
+extras e loja» e «Definições · Pagamentos e Premium»). Se nenhum servir,
+perguntar antes.
+
+**Popup (ilha, §6.1) — de cima para baixo, interior 20, espaço 16:**
+1. *(Só em fluxos com passos)* barra verde **10** + «2 DE 5» (12 negrito) à
+   direita.
+2. Cabeçalho: voltar **44** `#F2F0EB` à esquerda (a partir do 2.º passo) ·
+   título **22** negrito + subtítulo **13** `#57534E` · «×» **44**
+   `#F2F0EB` à direita.
+3. Corpo, só com estas peças:
+   - **Grupo** `#F2F0EB`, cantos 22, interior 4×16, linhas separadas por
+     `#ECE7DC` (opções, pessoas, métodos de pagamento, extras). Opção
+     escolhida: círculo verde com o visto; métodos: círculo com ponto.
+   - **Título de grupo** em maiúsculas 12, espaçamento 2 («COMO QUERES
+     PAGAR», «PARA QUEM»).
+   - **Resumo**: grupo com linhas de 48 (rótulo 13 `#57534E`, valor 14
+     negrito) e, por baixo, «A pagar agora» 13 + valor **20** negrito.
+   - **Alerta** do §7 (linha 1,5, ponto, título 16 + frase 13).
+   - **Nota**: uma linha 13 `#57534E` (prazos, o que acontece a seguir).
+   - **Etiqueta** verde («Oferta», «3 meses grátis») antes de uma frase 13.
+   - Pílulas **38** (filtros/escolhas, verdes quando escolhidas); caixas
+     de texto em pílula **52** `#F2F0EB`.
+4. Botões em baixo, **52**: um preto a toda a largura, ou contorno + preto
+   («Pagar mais tarde» + «Pagar · 511,00 €»). Nunca «Voltar» aqui.
+
+**Popup de fim** («Reserva pedida», «Pagamento feito», «És Premium»):
+estrela **120** ao centro (contente para pedidos; parabéns para pagamentos
+e Premium), título **22** ao centro, frase **14** `#57534E` ao centro,
+resumo se houver, e «OK» preto (ou «Ver conversa» + «OK»). Sem «×».
+
+**Página (fundo `#F2F0EB`, margem 20):** voltar branco **44** · título
+**28** à esquerda + subtítulo **13** · blocos separados por títulos de
+grupo em maiúsculas (24 acima, 12 abaixo). Blocos permitidos
+(`shared/widgets/premium_kit.dart`, `page_kit.dart`):
+- **Topo chamativo** (`HeroSummary`): cartão branco, cantos 22, interior
+  18, **sem sombra**, tudo ao centro — estrela **150**, rótulo 12 em
+  maiúsculas, número **40** + unidade 13, etiqueta verde, linha 13.
+- **Cartão de número** (`NumberCard`): rótulo 12 em maiúsculas, número
+  **40** + unidade 13, linha 13 («As contas», «Grátis ainda», «Disponível
+  para receber»).
+- **Sem / Com** (`CompareTable`): grupo branco, cabeçalho SEM/COM em
+  maiúsculas 12, linhas de 56 com o nome 16, o «sem» a 14 `#57534E` e o
+  «com» numa etiqueta verde.
+- **Grupo de linhas** (§4): definições (nome 16, valor 14 + seta, sem
+  ícones, sem texto por baixo) ou dinheiro (nome 16 + meta 13 à esquerda,
+  valor 16 negrito à direita, sem seta).
+- **Cartão em destaque** (`FeaturedCard`, só para o que queremos vender,
+  como o Premium nas Definições, que fica **sempre no topo**): branco,
+  cantos 22, interior 18, sombra suave do §5; estrela **76** à esquerda com
+  etiqueta verde, título **19** e meta 13; por baixo `MiniStats` e/ou um
+  cartão de número `#F2F0EB`; botão **44** (preto para comprar, contorno
+  para gerir).
+- **Barra fixa** (`StickyActionBar`): branca, cantos 35, 20 dos lados e em
+  baixo, sombra da navbar, interior 12; um botão **52** e uma linha 13 ao
+  centro por baixo. Preto para a ação principal; contorno quando a ação
+  não é para incentivar («Cancelar subscrição»).
+
+**Taxas e preços no texto:** dizer sempre a taxa como fica («2 % + 1 €»),
+nunca só o desconto («−2 %»), quando se sabe o valor.
 
 ## 7. Alertas
 

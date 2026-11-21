@@ -16,6 +16,7 @@ export type GrowthSettings = {
   pro_enabled?: boolean;
   pro_price_monthly?: number;
   pro_price_yearly?: number;
+  pro_trial_months?: number;
   free_shop_products?: number;
   gift_fee_percentage?: number;
   pro_fee_discount?: number;
@@ -49,6 +50,10 @@ export function GrowthForm({ settings }: { settings: GrowthSettings }) {
       </label>
       <Num name="pro_price_monthly" label="Premium mensal" suffix="€ / mês" value={settings.pro_price_monthly ?? 19} step={0.01} min={1} />
       <Num name="pro_price_yearly" label="Premium anual" suffix="€ / ano" value={settings.pro_price_yearly ?? 190} step={0.01} min={1} />
+      {/* Migração 209: Premium grátis depois de pôr o cartão (uma só vez). */}
+      {settings.pro_trial_months !== undefined && (
+        <Num name="pro_trial_months" label="Premium grátis com cartão" suffix="meses (0 = sem oferta)" value={settings.pro_trial_months} />
+      )}
       <Num name="pro_fee_discount" label="Premium: desconto na comissão das reservas" suffix="% (5% → 4%)" value={settings.pro_fee_discount ?? 1} step={0.1} />
       <Num name="pro_referral_free_every" label="Premium: sem comissão a cada" suffix="clientes trazidos" value={settings.pro_referral_free_every ?? 3} min={1} />
       <Num name="pro_promotion_extra_pct" label="Premium: comissão extra do destaque" suffix="% (sem Premium, +6%)" value={settings.pro_promotion_extra_pct ?? 4} step={0.1} />

@@ -74,6 +74,12 @@ export async function updateGrowthSettings(
     if (!Number.isFinite(n(k)) || n(k) < 0) return { error: "Valores inválidos — confirma os números introduzidos." };
   }
   if (n("pro_price_monthly") < 1 || n("pro_price_yearly") < 1) return { error: "Os preços do Premium têm de ser pelo menos 1 €." };
+  // Migração 209: só se o campo existir (o formulário só o mostra depois dela).
+  const trialRaw = formData.get("pro_trial_months");
+  const trialMonths = trialRaw == null ? null : Number(trialRaw);
+  if (trialMonths != null && (!Number.isInteger(trialMonths) || trialMonths < 0 || trialMonths > 12)) {
+    return { error: "Os meses grátis do Premium têm de ser entre 0 e 12." };
+  }
   if (n("gift_fee_percentage") > 30) return { error: "A comissão da loja não pode passar de 30%." };
 
   const { error } = await supabase
@@ -89,6 +95,7 @@ export async function updateGrowthSettings(
       pro_enabled: formData.get("pro_enabled") === "on",
       pro_price_monthly: n("pro_price_monthly"),
       pro_price_yearly: n("pro_price_yearly"),
+      ...(trialMonths != null ? { pro_trial_months: trialMonths } : {}),
       free_shop_products: n("free_shop_products"),
       gift_fee_percentage: n("gift_fee_percentage"),
       pro_fee_discount: n("pro_fee_discount"),

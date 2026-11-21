@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/auth/auth_controller.dart';
 import '../../core/gifts/gift_shop.dart' show giftEuros;
+import '../../core/partner_app/partner_analytics.dart';
 import '../../core/partners/partner_pro.dart';
+import '../../core/home/home_providers.dart' show partnerFeeRatesProvider;
 import '../../core/payments/payments.dart';
 import '../../core/theme/app_theme.dart';
+import '../../shared/widgets/estrela.dart';
 import '../../shared/widgets/gradient_scaffold.dart';
-import '../../shared/widgets/page_header.dart';
+import '../../shared/widgets/page_kit.dart';
+import '../../shared/widgets/premium_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
 /// Plano Pro do parceiro (migração 161).
@@ -60,6 +65,28 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
     ));
   }
 
+  /// Premium grátis (migração 209): põe o cartão e fica Premium já; só paga
+  /// no fim dos meses grátis, se não cancelar antes. Só com cartão.
+  void _startTrial(PartnerPro pro) {
+    final yearly = _yearly;
+    final months = pro.trialMonths;
+    context.push('/pay', extra: PayArgs(
+      paymentId: '',
+      partnerName: 'À Nossa!',
+      kind: 'pro',
+      amount: 0,
+      titleOverride: 'Premium · $months ${months == 1 ? 'mês' : 'meses'} grátis',
+      actionLabel: 'Começar $months ${months == 1 ? 'mês' : 'meses'} grátis',
+      methods: const [PayMethod.card],
+      // Cria primeiro o método de pagamento com o cartão escrito.
+      cardFee: true,
+      create: (m, {phone, paymentMethodId}) => startProTrial(yearly: yearly, paymentMethodId: paymentMethodId),
+      state: proPayState,
+      onPaid: (ctx) => ctx.pushReplacement('/partner-pro?ok=1'),
+      errorText: (c) => ProError(c).message,
+    ));
+  }
+
   Future<void> _setCancelling(bool cancel) async {
     if (cancel) {
       final ok = await showIslandDialog<bool>(
@@ -95,118 +122,186 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
 
   String _pts(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');
 
-  String _date(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  static const _months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  String _date(DateTime d) => '${d.day} ${_months[d.month - 1]} ${d.year}';
+
+  bool _celebrated = false;
+
+  /// Voltou do cartão / do pagamento e já é Premium: «És Premium» com a
+  /// estrela de parabéns (mockup «Definições · Pagamentos e Premium»).
+  void _celebrate(PartnerPro pro) {
+    if (_celebrated || !widget.returned || !pro.active) return;
+    _celebrated = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final until = pro.until;
+      final monthly = pro.interval == 'year' ? '${giftEuros(pro.priceYearly)}/ano' : '${giftEuros(pro.priceMonthly)}/mês';
+      showIslandSheet<void>(
+        context: context,
+        builder: (c) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const Center(child: EstrelaMascot(Estrela.parabens, size: 120)),
+            const SizedBox(height: 16),
+            const Text('És Premium', textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 6),
+            Text(
+              until == null
+                  ? 'Já tens tudo o que o Premium dá.'
+                  : pro.hasSubscription
+                      ? 'Até ${_date(until)}. Depois, $monthly, até cancelares.'
+                      : 'Até ${_date(until)}.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, height: 1.4),
+            ),
+            const SizedBox(height: 16),
+            PillButton('OK', onPressed: () => Navigator.of(c).pop()),
+          ]),
+        ),
+      );
+    });
+  }
+
+  /// O mesmo quadro na página e em «Gerir»: o que muda com o Premium.
+  List<(String, String, String)> _compare(PartnerPro pro, double baseFee) => [
+        ('Taxa de serviço', '${_pts(baseFee)} %', '${_pts((baseFee - pro.feeDiscount).clamp(0, 100).toDouble())} %'),
+        ('Destaque', '+${_pts(pro.promotionExtraPct)} %', '+${_pts(pro.proPromotionExtraPct)} %'),
+        ('Produtos na loja', 'Até ${pro.freeShopProducts}', 'Sem limite'),
+        ('Selo Premium', '—', 'Sim'),
+      ];
 
   @override
   Widget build(BuildContext context) {
     final pro = ref.watch(myPartnerProProvider).value ?? const PartnerPro();
-    final green = AppTheme.accentOliveDark;
+    _celebrate(pro);
+    // A taxa do parceiro de que partem as contas (o 1.º escalão, 4 %).
+    final me = ref.watch(authControllerProvider).profile?.id;
+    final rates = me == null ? null : ref.watch(partnerFeeRatesProvider(me)).value;
+    final baseFee = rates?.partner.tiers.isNotEmpty == true ? rates!.partner.tiers.first.pct : (rates?.partner.flatPct ?? 4);
     final monthlyOfYear = pro.priceYearly / 12;
-    final saving = (pro.priceMonthly * 12 - pro.priceYearly).clamp(0, double.infinity);
+    final yearSaving = (pro.priceMonthly * 12 - pro.priceYearly).clamp(0, double.infinity);
+
+    final List<Widget> body;
+    Widget? bar;
+    if (!pro.enabled && !pro.active) {
+      body = [
+        const KitCaps('Premium'),
+        const Text('O Premium ainda não está disponível.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+      ];
+    } else if (!pro.active) {
+      final trial = pro.trialAvailable;
+      final months = pro.trialMonths;
+      final example = 2000 * pro.feeDiscount / 100;
+      final breakEven = pro.feeDiscount <= 0 ? null : pro.priceMonthly / (pro.feeDiscount / 100);
+      body = [
+        HeroSummary(
+          label: 'À Nossa! Premium',
+          number: trial ? '0 €' : giftEuros(_yearly ? monthlyOfYear : pro.priceMonthly),
+          unit: trial ? 'durante $months ${months == 1 ? 'mês' : 'meses'}' : '/mês',
+          tag: trial ? '$months ${months == 1 ? 'mês' : 'meses'} grátis' : null,
+          line: trial
+              ? 'Depois ${giftEuros(pro.priceMonthly)}/mês ou ${giftEuros(pro.priceYearly)}/ano. Cancelas quando quiseres.'
+              : 'Cancelas quando quiseres.',
+        ),
+        const SizedBox(height: 16),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          KitPill(label: 'Mensal · ${giftEuros(pro.priceMonthly)}', selected: !_yearly, onTap: () => setState(() => _yearly = false)),
+          KitPill(label: 'Anual · ${giftEuros(pro.priceYearly)}', selected: _yearly, onTap: () => setState(() => _yearly = true)),
+        ]),
+        if (_yearly && yearSaving > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text('${giftEuros(monthlyOfYear)}/mês · poupas ${giftEuros(yearSaving.toDouble())} por ano',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+          ),
+        const KitCaps('Sem e com Premium'),
+        CompareTable(_compare(pro, baseFee)),
+        const SizedBox(height: 12),
+        NumberCard(
+          label: 'As contas',
+          number: giftEuros(example),
+          unit: 'a menos numa reserva de 2 000 €',
+          line: breakEven == null ? null : 'Com ${giftEuros(breakEven)} de reservas por mês, o Premium já se paga.',
+        ),
+      ];
+      bar = StickyActionBar(
+        button: PillButton(
+          _busy
+              ? 'A abrir…'
+              : trial
+                  ? 'Experimentar $months ${months == 1 ? 'mês' : 'meses'} grátis'
+                  : 'Ser Premium',
+          onPressed: _busy ? null : () => trial ? _startTrial(pro) : _subscribe(pro),
+        ),
+        note: trial ? 'Pões o cartão e ficas Premium já. Hoje pagas 0 €.' : null,
+      );
+    } else {
+      final stats = ref.watch(partnerAnalyticsProvider(AnalyticsPeriod.month)).value;
+      final saving = stats == null ? null : stats.revenue * pro.feeDiscount / 100;
+      final until = pro.until;
+      final days = until == null ? null : until.difference(DateTime.now()).inDays.clamp(0, 9999);
+      final price = pro.interval == 'year' ? '${giftEuros(pro.priceYearly)}/ano' : '${giftEuros(pro.priceMonthly)}/mês';
+      body = [
+        HeroSummary(
+          label: 'Poupaste este mês',
+          number: giftEuros(saving ?? 0),
+          unit: 'na taxa',
+          tag: 'És Premium',
+          line: saving != null && saving > pro.priceMonthly ? 'Mais do que os ${giftEuros(pro.priceMonthly)} do Premium.' : null,
+        ),
+        const KitCaps('Sem e com Premium'),
+        CompareTable(_compare(pro, baseFee)),
+        if (until != null) ...[
+          const SizedBox(height: 12),
+          NumberCard(
+            label: pro.interval == 'gift'
+                ? 'Oferta ainda'
+                : (pro.hasSubscription && !_cancelling)
+                    ? 'Renova em'
+                    : 'Premium ainda',
+            number: '$days',
+            unit: '${days == 1 ? 'dia' : 'dias'} · até ${_date(until)}',
+            line: pro.interval == 'gift'
+                ? 'Oferta da À Nossa!.'
+                : (pro.hasSubscription && !_cancelling)
+                    ? 'Depois $price, até cancelares.'
+                    : 'Depois não é renovado.',
+          ),
+        ],
+      ];
+      if (pro.hasSubscription) {
+        bar = StickyActionBar(
+          button: PillButton(
+            _cancelling ? 'Continuar com o Premium' : 'Cancelar subscrição',
+            outlined: !_cancelling,
+            onPressed: _busy ? null : () => _setCancelling(!_cancelling),
+          ),
+          note: _cancelling && until != null ? 'Cancelado: és Premium até ${_date(until)}.' : 'Continuas Premium até ao fim do período.',
+        );
+      }
+    }
+
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(top: false, 
-        child: ListView(
-          padding: ( const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
+      body: Stack(children: [
+        KitPage(
+          pinnedBack: true,
+          bottom: bar == null ? 40 : 160,
           children: [
-            const PageHeader(title: 'À Nossa! Premium', subtitle: 'Pagas menos taxa de serviço, apareces mais e sabes mais.', centered: true),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(color: green, borderRadius: BorderRadius.circular(AppRadius.lg)),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [
-                  const Icon(Hi.trophy, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Text(pro.active ? 'És Premium' : 'Premium', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
-                ]),
-                const SizedBox(height: 6),
-                Text(
-                  pro.active
-                      ? (pro.interval == 'gift'
-                          ? 'Oferta da À Nossa! até ${pro.until == null ? '—' : _date(pro.until!)}.'
-                          : (pro.hasSubscription
-                              ? 'Renova a ${pro.until == null ? '—' : _date(pro.until!)}.'
-                              : 'Ativo até ${pro.until == null ? '—' : _date(pro.until!)} (subscrição cancelada).'))
-                      : '${giftEuros(pro.priceMonthly)}/mês ou ${giftEuros(pro.priceYearly)}/ano. Cancelas quando quiseres.',
-                  style: TextStyle(fontSize: 14, height: 1.4, color: Colors.white.withValues(alpha: 0.9)),
-                ),
-              ]),
-            ),
-            const SizedBox(height: 16),
-            for (final b in [
-              (Hi.percentBadge, 'Taxa de serviço mais baixa',
-                  '−${_pts(pro.feeDiscount)}% em todas as reservas (ex.: 5% passa a ${_pts(5 - pro.feeDiscount)}%).'),
-              (Hi.megaphone, 'Destaque mais barato',
-                  '+${_pts(pro.proPromotionExtraPct)}% nas reservas que vêm do destaque (sem o Premium, +${_pts(pro.promotionExtraPct)}%).'),
-              (Hi.trophy, 'Selo Premium e mais visibilidade', 'Selo no perfil e na pesquisa, e apareces antes dos outros parceiros.'),
-              (Hi.chartBar, 'Estatísticas detalhadas', 'Visitas ao perfil por semana, pedidos começados e conversão.'),
-              (Hi.buildingStorefront, 'Loja sem limites', 'Se vendes produtos: sem o Premium até ${pro.freeShopProducts}, com o Premium os que quiseres.'),
-            ])
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(color: AppTheme.accentTint, borderRadius: BorderRadius.circular(12)),
-                    child: Icon(b.$1, color: green),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(b.$2, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      Text(b.$3, style: const TextStyle(fontSize: 13, height: 1.35, color: AppTheme.inkMuted)),
-                    ]),
-                  ),
-                ]),
-              ),
-            const SizedBox(height: 8),
-            if (!pro.enabled && !pro.active)
-              const Text('O Premium ainda não está disponível.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.inkMuted))
-            else if (!pro.active) ...[
-              SegmentedButton<bool>(
-                segments: [
-                  ButtonSegment(value: false, label: Text('Mensal · ${giftEuros(pro.priceMonthly)}')),
-                  ButtonSegment(value: true, label: Text('Anual · ${giftEuros(pro.priceYearly)}')),
-                ],
-                selected: {_yearly},
-                onSelectionChanged: (s) => setState(() => _yearly = s.first),
-              ),
-              if (_yearly && saving > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text('${giftEuros(monthlyOfYear)}/mês · poupas ${giftEuros(saving)} por ano',
-                      textAlign: TextAlign.center, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: green)),
-                ),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: _busy ? null : () => _subscribe(pro),
-                style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(52), shape: const StadiumBorder()),
-                child: Text(_busy ? 'A abrir…' : 'Ser Premium'),
-              ),
-            ] else if (pro.hasSubscription) ...[
-              // Gerir dentro da app, sem página da Stripe (2026-11-09).
-              if (_cancelling)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text('Cancelado: termina a ${pro.until == null ? '—' : _date(pro.until!)}.',
-                      textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                ),
-              OutlinedButton(
-                onPressed: _busy ? null : () => _setCancelling(!_cancelling),
-                style: OutlinedButton.styleFrom(foregroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
-                child: Text(_cancelling ? 'Continuar com o Premium' : 'Cancelar subscrição'),
-              ),
-            ],
+            const KitHeader(),
+            KitTitle('Premium', subtitle: pro.active ? 'És Premium' : 'Pagas menos taxa, apareces primeiro e sabes mais.'),
+            const SizedBox(height: 20),
+            ...body,
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
-                child: Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFB3261E))),
+                child: Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: AppStatusColors.declined)),
               ),
           ],
         ),
-      ),
+        if (bar != null) bar,
+      ]),
     );
   }
 }

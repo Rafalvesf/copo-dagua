@@ -24,6 +24,11 @@ class PartnerPro {
   final int proReferralFreeEvery;
   final double promotionExtraPct;
   final double proPromotionExtraPct;
+
+  /// Migração 209: meses de Premium grátis depois de pôr o cartão (uma só
+  /// vez) e se ainda os pode usar.
+  final int trialMonths;
+  final bool trialAvailable;
   const PartnerPro({
     this.enabled = false,
     this.active = false,
@@ -39,6 +44,8 @@ class PartnerPro {
     this.proReferralFreeEvery = 3,
     this.promotionExtraPct = 6,
     this.proPromotionExtraPct = 4,
+    this.trialMonths = 0,
+    this.trialAvailable = false,
   });
 
   bool get shopFull => !active && products >= freeShopProducts;
@@ -64,6 +71,8 @@ final myPartnerProProvider = FutureProvider<PartnerPro>((ref) async {
       proReferralFreeEvery: (r['pro_referral_free_every'] as num?)?.toInt() ?? 3,
       promotionExtraPct: (r['promotion_extra_pct'] as num?)?.toDouble() ?? 6,
       proPromotionExtraPct: (r['pro_promotion_extra_pct'] as num?)?.toDouble() ?? 4,
+      trialMonths: (r['trial_months'] as num?)?.toInt() ?? 0,
+      trialAvailable: r['trial_available'] == true,
     );
   } on PostgrestException {
     return const PartnerPro();
@@ -129,6 +138,9 @@ class ProError implements Exception {
         'pro_disabled' => 'O Premium não está disponível de momento.',
         'portal_unavailable' => 'Não foi possível abrir a gestão da subscrição. Fala connosco no suporte.',
         'no_subscription' => 'Não tens uma subscrição para gerir.',
+        'trial_used' => 'Já usaste os meses grátis do Premium.',
+        'trial_unavailable' => 'Os meses grátis do Premium não estão disponíveis de momento.',
+        'declined' => 'O cartão foi recusado. Experimenta outro cartão.',
         _ => 'Não foi possível abrir o pagamento. Tenta novamente.',
       };
 }
@@ -156,6 +168,24 @@ Future<String> proPortalUrl() => _invoke({'action': 'portal', 'return_url': _bac
 /// Pay (subscrição).
 Future<PaymentIntentInfo> createProIntent({required bool yearly}) async =>
     paymentIntentInfoFromJson(await invokePayFunction('partner-pro', {'action': 'subscribe', 'interval': yearly ? 'year' : 'month'}));
+
+/// Premium grátis com cartão (migração 209): o cartão fica guardado e só é
+/// cobrado no fim dos meses grátis. Não há nada para confirmar no cartão
+/// agora (`status: succeeded`).
+Future<PaymentIntentInfo> startProTrial({required bool yearly, required String? paymentMethodId}) async {
+  if (paymentMethodId == null) throw const ProError('validation_error');
+  try {
+    await supabase.functions.invoke('partner-pro', body: {
+      'action': 'trial',
+      'interval': yearly ? 'year' : 'month',
+      'payment_method': paymentMethodId,
+    });
+  } on FunctionException catch (e) {
+    final d = e.details;
+    throw ProError(d is Map ? (d['error'] as String? ?? 'unknown') : 'unknown');
+  }
+  return const PaymentIntentInfo(status: 'succeeded', clientSecret: '', publishableKey: '', amountCents: 0);
+}
 
 /// `paid` quando o Premium já está ativo.
 Future<(String, MultibancoRef?)> proPayState() async {
