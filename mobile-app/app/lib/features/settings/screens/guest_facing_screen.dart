@@ -18,6 +18,7 @@ import '../../../core/wedding/guest_facing.dart';
 import '../../../core/wedding/pastel_colors.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/wedding_venue.dart';
+import '../../../shared/widgets/venue_map.dart' show VenueMap;
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/guest_widgets.dart' show CompanionLimitRow;
@@ -702,6 +703,11 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
           _dirty = true;
         }),
       ),
+      // Vista de mapa do local, como os convidados a veem (2026-11-21).
+      if (_address.text.trim().isNotEmpty || _lat != null) ...[
+        const SizedBox(height: 12),
+        VenueMap(label: placeName, address: _address.text.trim(), latitude: _lat, longitude: _lng, height: 160),
+      ],
       const SizedBox(height: 8),
       Align(
         alignment: Alignment.centerLeft,

@@ -176,7 +176,9 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   int get _limit => widget.guest.maxCompanions > 0 ? widget.guest.maxCompanions : (widget.guest.plusOneAllowed ? 1 : 0);
 
   List<_Step> get _steps => [
-        _Step.attending,
+        // «Vais?» só no RSVP pelo link (2026-11-21): na app responde-se na
+        // página principal dos eventos, antes de chegar aqui.
+        if (widget.rsvpToken != null) _Step.attending,
         if (_limit > 0) _Step.companions,
         _Step.ages,
         // Menu (carne / peixe / vegetariano) saiu (2026-11-15): cada um

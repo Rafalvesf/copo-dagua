@@ -1,3 +1,4 @@
+import '../../../shared/widgets/venue_map.dart' show VenueMap;
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/v2_kit.dart' show V2Avatar, softCard;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
@@ -318,6 +319,9 @@ class GuestPlaceCard extends ConsumerWidget {
       Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        // Vista de mapa (pedido 2026-11-21): o mapa do local com o pino.
+        VenueMap(label: title, address: address, latitude: lat, longitude: lng, height: 160),
+        const SizedBox(height: 12),
         // Mockup «Páginas do convidado»: nome 16, local 13 e «Como chegar» 44.
         Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         if (address?.isNotEmpty == true && address != title)
@@ -767,10 +771,12 @@ class GuestTablesAlerts extends ConsumerWidget {
     final String cta;
     final VoidCallback onTap;
     if (t.eachChooses && !t.chose) {
-      caps = 'FALTA O TEU MENU';
-      title = t.eachPays ? 'Escolhe o teu menu e paga a tua parte' : 'Escolhe o teu menu';
+      // Uma só tarefa (pedido 2026-11-21): escolher o menu e pagar a parte
+      // vão juntos — «Escolher e pagar».
+      caps = t.eachPays ? 'FALTA ESCOLHER E PAGAR' : 'FALTA O TEU MENU';
+      title = t.eachPays ? 'Menus e a tua parte' : 'Escolhe o teu menu';
       sub = [?until, t.partnerName].join(' · ');
-      cta = 'Escolher';
+      cta = t.eachPays ? 'Escolher e pagar' : 'Escolher';
       onTap = () => context.push('/mesa/$weddingId', extra: t);
     } else if (t.eachChooses) {
       caps = 'FALTA PAGAR';

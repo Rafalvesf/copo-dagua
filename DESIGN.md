@@ -449,23 +449,27 @@ nunca só o desconto («−2 %»), quando se sabe o valor.
   seguir»). Quem disse que não vai: **«A tua resposta»** em caixa branca
   com «Mudar».
 - **Ordem:** PARA FAZER (sempre: as tarefas, «Está tudo tratado» ou
-  «Aparecem aqui as tuas tarefas», §4; quem ainda não respondeu vê antes o
-  convite com «Responder») → no dia FOTOS → **A tua mesa** (o número no
+  «Aparecem aqui as tuas tarefas», §4; uma tarefa por reserva — escolher o
+  menu e pagar a parte vão juntos, «Escolher e pagar») → no dia FOTOS → **A tua mesa** (o número no
   centro do círculo com as pessoas à volta; tu a preto) → PROGRAMA (o mesmo
-  desenho do organizador) → DRESS CODE (cabide) → MAIS (presentes,
-  alojamento) → ANFITRIÕES (Mensagem) → **COMO CHEGAR, sempre em último**
-  (mapa, «Copiar morada» + «Abrir mapa», que pergunta com que app).
+  desenho do organizador) → DRESS CODE (cabide) → MAIS («Oferece um presente» · lista ou
+  envelope, alojamento) → ANFITRIÕES (Mensagem) → **COMO CHEGAR, sempre em último**
+  (vista de mapa com o pino — `VenueMap`, em todo o «Como chegar» da app —,
+  «Copiar morada» + «Abrir mapa», que pergunta com que app).
 - **Só aparece o que existe:** mesa por revelar, programa sem nenhum
   momento, dress code vazio, nada para fazer, sem local → essas secções não
   aparecem; o que o organizador desliga também não. O programa já não se
   pode desligar. As **fotos só aparecem no dia** (e depois).
-- **Sem nada ainda:** «Para fazer» vazio, a estrela a dormir com «Ainda à
-  espera dos anfitriões», presentes (se ligados) e anfitriões.
+- **Sem nada ainda:** «Para fazer» vazio, uma linha de secção e a estrela a
+  dormir com «Ainda à espera dos anfitriões», presentes (se ligados) e anfitriões.
 - **Não vou:** o resumo «Faltam…» com «Não vais · Mudar» (§4), presentes e
   anfitriões. «Mudar» e «Alterar» abrem a página «A tua resposta» (§4).
 - **Depois do evento:** as fotos em primeiro, agradecer, presentes e
   anfitriões; o programa e o mapa saem.
-- «Vou / Não vou» só na página principal dos eventos.
+- «Vou / Não vou» só na página principal dos eventos (no aviso «Convite por
+  responder», com «Não vou» de contorno e «Vou» preto) — e no RSVP pelo link.
+  O painel do evento não tem «O teu convite» e o assistente do convidado não
+  pergunta se vais: abre depois de «Vou» (quem vai contigo, idades, alergias).
 
 ## 7. Alertas
 
@@ -483,7 +487,7 @@ nunca só o desconto («−2 %»), quando se sabe o valor.
   depois fica parada. Amarelo e verde 3 vezes (2 s / 2,4 s), vermelho 4 vezes
   (1,4 s). Nunca a piscar sem parar.
 - Convite: uma linha fina (envelope num círculo verde claro, "CONVITE POR
-  RESPONDER" 11, frase 15 negrito, data 13, botão preto "Ver" 36), nunca um
+  RESPONDER" 11, frase 15 negrito, data 13, e por baixo «Não vou» com contorno + «Vou» preto, 36), nunca um
   bloco verde cheio.
 
 ## 8. Texto e tom
