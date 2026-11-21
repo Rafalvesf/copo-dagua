@@ -63,7 +63,7 @@ export async function updateGrowthSettings(
   const { userId } = await requireAdmin();
   const supabase = await createClient();
   const n = (k: string) => Number(formData.get(k));
-  const ints = ["founder_slots", "founder_free_months", "founder_featured_slots", "founder_featured_months", "referral_free_every", "free_shop_products", "pro_referral_free_every"];
+  const ints = ["founder_slots", "founder_featured_slots", "founder_featured_months", "referral_free_every", "free_shop_products", "pro_referral_free_every"];
   for (const k of ints) {
     if (!Number.isInteger(n(k)) || n(k) < 0) return { error: "Valores inválidos — confirma os números introduzidos." };
   }
@@ -86,7 +86,6 @@ export async function updateGrowthSettings(
     .from("platform_settings")
     .update({
       founder_slots: n("founder_slots"),
-      founder_free_months: n("founder_free_months"),
       founder_featured_slots: n("founder_featured_slots"),
       founder_featured_months: n("founder_featured_months"),
       referral_zero_fee: formData.get("referral_zero_fee") === "on",

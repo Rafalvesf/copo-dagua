@@ -43,7 +43,7 @@ const DEFAULTS: Record<NlKind, Omit<Design, "id">> = {
       { type: "title", text: "Olá {primeiro_nome}!" },
       {
         type: "text",
-        text: "Obrigado por registares {negocio} na À Nossa!. Vimos que trabalhas em {categorias}, na zona de {cidade}.\n\nOs primeiros 100 parceiros ficam **Parceiros Fundadores**, com 3 meses sem taxa de serviço. Avisamos-te assim que a app estiver nas lojas.",
+        text: "Obrigado por registares {negocio} na À Nossa!. Vimos que trabalhas em {categorias}, na zona de {cidade}.\n\nOs primeiros 100 parceiros ficam **Parceiros Fundadores**. Avisamos-te assim que a app estiver nas lojas.",
       },
       { type: "text", text: "Até já,\nRafael" },
     ],
