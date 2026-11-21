@@ -72,13 +72,16 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     // A estrela vai em cima da ponta da barra, como quem anda nela.
-    final star = math.max(24.0, widget.height * 3);
-    final starW = star * 384 / 350;
+    // Grande o suficiente para se ver bem (pedido 2026-11-21: «muito pequeno»).
+    final starW = math.max(40.0, widget.height * 6.8);
+    final starH = starW * 350 / 384;
+    // A base da estrela (com a sombra) assenta em cima da barra.
+    final barTop = starH * 0.77;
     // Preta, para dar contraste com a estrela verde (pedido 2026-11-21).
     final color = widget.color ?? AppTheme.ink;
     final track = widget.track ?? const Color(0xFFE0E0E0);
     return SizedBox(
-      height: star + widget.height,
+      height: barTop + widget.height,
       child: LayoutBuilder(builder: (context, box) {
         final w = box.maxWidth;
         return AnimatedBuilder(
@@ -93,7 +96,7 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
               Positioned(
                 left: 0,
                 right: 0,
-                top: star,
+                top: barTop,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(widget.height / 2),
                   child: SizedBox(
@@ -113,7 +116,7 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
               ),
               Positioned(
                 left: left,
-                top: 2 - 6 * hop,
+                top: -6 * hop,
                 child: Transform.rotate(
                   angle: 0.18 * math.sin(t * math.pi * 2) * hop,
                   child: EstrelaMascot(Estrela.feliz, size: starW, cycles: 0, semanticLabel: ''),
