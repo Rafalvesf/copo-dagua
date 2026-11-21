@@ -445,6 +445,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O parceiro põe o cartão e fica Premium já, sem pagar nada durante 3 meses (uma só vez); depois a subscrição é cobrada nesse cartão, até cancelar. Os meses ajustam-se em Definições › Premium. Depois de aplicar, publicar a função partner-pro.",
     check: { kind: "marker", id: "209" },
   },
+  {
+    file: "211_invite_menus_child_seats.sql",
+    date: "2026-11-21",
+    title: "Menus por convite e cadeirinhas",
+    what: "Na mesa em que cada um escolhe, quem recebe o convite escolhe o menu de cada pessoa do seu convite; o organizador vê «Menus da mesa» e pode lembrar quem falta. Na resposta ao convite, quem leva crianças diz quantas cadeirinhas precisam; o transporte mostra-as. Pode aplicar-se antes ou depois da 210.",
+    check: { kind: "marker", id: "211" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
