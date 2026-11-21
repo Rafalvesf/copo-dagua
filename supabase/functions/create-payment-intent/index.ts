@@ -186,15 +186,18 @@ Deno.serve(async (req) => {
       return json({ error: "card_error" }, 400);
     }
   }
+  // Migração 193: 50 % na taxa de serviço da 1.ª transação; migração
+  // 210: prémio de convites = 2 pontos a menos na percentagem (4 % + 1 €
+  // → 2 % + 1 €; 6 % + 1 € → 4 % + 1 €). Reserva um crédito do pagador e
+  // outro do parceiro.
+  const payerCredit = await takeFeeDiscount(admin, user.id, payment.id as string);
+  const payerDiscountPct = payerCredit.pct;
   const feeFor = (tiers: FeeTier[]) => paymentFeeCents(
     partnerAmountCents,
     Math.max(bookingTotalCents, partnerAmountCents),
-    tiers,
-    commissionPct,
+    proTiers(tiers, payerCredit.points),
+    Math.max(0, commissionPct - payerCredit.points),
   ) + fixedCents;
-  // Migração 193: 50 % na taxa de serviço (1.ª transação ou prémio de
-  // convites) — reserva um crédito do pagador e outro do parceiro.
-  const payerDiscountPct = await takeFeeCredit(admin, user.id, payment.id as string);
   const discounted = (cents: number, pct: number) => Math.round(cents * (1 - pct / 100));
   const applicationFeeCents = discounted(feeFor(organizerTiersForCard(sett, region)), payerDiscountPct);
   const baseChargeCents = partnerAmountCents + discounted(feeFor(organizerTiersForCard(sett, "EEA")), payerDiscountPct);
@@ -219,14 +222,16 @@ Deno.serve(async (req) => {
   // Migração 155: reserva que veio do destaque pago do parceiro → +6%.
   const promoExtraPct = partnerFree ? 0 : await promotionExtraPct(admin, payment.booking_id as string);
   // O crédito do parceiro só se gasta quando ele paga taxa.
-  const partnerDiscountPct = partnerFree ? 0 : await takeFeeCredit(admin, payment.partner_id as string, payment.id as string);
+  const partnerCredit = partnerFree ? { pct: 0, points: 0 } : await takeFeeDiscount(admin, payment.partner_id as string, payment.id as string);
+  const partnerDiscountPct = partnerCredit.pct;
+  const partnerPoints = (isPro ? Number(sett.pro_fee_discount ?? 1) : 0) + partnerCredit.points;
   const partnerFeeCents = partnerFree ? 0 : discounted(Math.min(
     partnerAmountCents,
     paymentFeeCents(
       partnerAmountCents,
       Math.max(bookingTotalCents, partnerAmountCents),
-      proTiers(partnerTiers, isPro ? Number(sett.pro_fee_discount ?? 1) : 0),
-      Math.max(0, partnerFeePct - (isPro ? Number(sett.pro_fee_discount ?? 1) : 0)),
+      proTiers(partnerTiers, partnerPoints),
+      Math.max(0, partnerFeePct - partnerPoints),
     ) + Math.round((partnerAmountCents * promoExtraPct) / 100) + fixedCents,
   ), partnerDiscountPct);
   const bookingNumber = (payment.bookings as unknown as { booking_number: string } | null)?.booking_number ?? "";
@@ -334,6 +339,7 @@ Deno.serve(async (req) => {
     base_amount_cents: baseChargeCents,
     card_region: region,
     fee_discount_pct: payerDiscountPct,
+    fee_discount_points: payerCredit.points,
     email: user.email ?? null,
     status: intent.status,
     ...(mbNew ? { multibanco: { entity: mbNew.entity, reference: mbNew.reference, expires_at: mbNew.expires_at } } : {}),
@@ -428,6 +434,24 @@ async function partnerIsPro(admin: any, partnerId: string): Promise<boolean> {
 
 // Escalões do parceiro com o desconto do Pro (nunca abaixo de 0%).
 // deno-lint-ignore no-explicit-any
+/// Migração 210: crédito em percentagem (boas-vindas) ou em pontos
+/// (convites). Antes da 210, só a percentagem (`take_fee_credit`).
+async function takeFeeDiscount(admin: any, profileId: string | null, paymentId: string): Promise<{ pct: number; points: number }> {
+  if (!profileId) return { pct: 0, points: 0 };
+  try {
+    const { data, error } = await admin.rpc("take_fee_discount", { p_profile: profileId, p_payment: paymentId });
+    if (error) return { pct: await takeFeeCredit(admin, profileId, paymentId), points: 0 };
+    const pct = Number((data as Record<string, unknown> | null)?.pct ?? 0);
+    const points = Number((data as Record<string, unknown> | null)?.points ?? 0);
+    return {
+      pct: Number.isFinite(pct) && pct > 0 && pct <= 100 ? pct : 0,
+      points: Number.isFinite(points) && points > 0 && points <= 100 ? points : 0,
+    };
+  } catch {
+    return { pct: 0, points: 0 };
+  }
+}
+
 async function takeFeeCredit(admin: any, profileId: string | null, paymentId: string): Promise<number> {
   if (!profileId) return 0;
   try {

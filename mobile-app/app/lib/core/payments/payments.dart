@@ -137,6 +137,7 @@ PaymentIntentInfo paymentIntentInfoFromJson(Map<String, dynamic> d) {
     baseAmountCents: (d['base_amount_cents'] as num?)?.toInt(),
     cardRegion: d['card_region'] as String?,
     feeDiscountPct: (d['fee_discount_pct'] as num?)?.toDouble() ?? 0,
+    feeDiscountPoints: (d['fee_discount_points'] as num?)?.toDouble() ?? 0,
   );
 }
 
@@ -172,6 +173,10 @@ class PaymentIntentInfo {
 
   /// 193: desconto na taxa de serviço (1.ª transação ou convites), em %.
   final double feeDiscountPct;
+
+  /// 210: prémio de convites — pontos tirados à percentagem da taxa
+  /// (4 % + 1 € → 2 % + 1 €).
+  final double feeDiscountPoints;
   const PaymentIntentInfo({
     this.status,
     required this.clientSecret,
@@ -182,6 +187,7 @@ class PaymentIntentInfo {
     this.baseAmountCents,
     this.cardRegion,
     this.feeDiscountPct = 0,
+    this.feeDiscountPoints = 0,
   });
 }
 
@@ -217,6 +223,7 @@ Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method
     baseAmountCents: (d['base_amount_cents'] as num?)?.toInt(),
     cardRegion: d['card_region'] as String?,
     feeDiscountPct: (d['fee_discount_pct'] as num?)?.toDouble() ?? 0,
+    feeDiscountPoints: (d['fee_discount_points'] as num?)?.toDouble() ?? 0,
   );
 }
 

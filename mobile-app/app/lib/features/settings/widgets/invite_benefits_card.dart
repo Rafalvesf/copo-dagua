@@ -21,6 +21,10 @@ class InviteBenefitsCard extends ConsumerWidget {
     final link = inviteLink(code);
     final green = AppTheme.accentOliveDark;
     final pct = s.creditPct.toStringAsFixed(0);
+    // Prémio de convites em pontos (migração 210): 4 % + 1 € → 2 % + 1 €.
+    final pts = s.creditPoints == s.creditPoints.roundToDouble()
+        ? s.creditPoints.toStringAsFixed(0)
+        : s.creditPoints.toStringAsFixed(1).replaceAll('.', ',');
 
     Future<void> share() => SharePlus.instance.share(ShareParams(
           text: s.isPartner
@@ -43,7 +47,7 @@ class InviteBenefitsCard extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 12),
             child: Wrap(spacing: 8, runSpacing: 8, children: [
               if (s.isFounder) KitTag('Parceiro Fundador #${s.founderNumber}'),
-              if (s.credits > 0) KitTag(s.credits == 1 ? '$pct % na próxima transação' : '${s.credits} descontos de $pct %'),
+              if (s.credits > 0) KitTag(s.credits == 1 ? 'Taxa −$pts % na próxima transação' : 'Taxa −$pts % em ${s.credits} transações'),
               if (s.welcome) KitTag('$pct % na 1.ª transação'),
             ]),
           ),
@@ -52,7 +56,8 @@ class InviteBenefitsCard extends ConsumerWidget {
         const SizedBox(height: 4),
         Text(
           'A cada ${s.step} pessoas que entram pelo teu link e fazem o primeiro pagamento, '
-          'ganhas $pct % de desconto na taxa de serviço da tua próxima transação.',
+          'a taxa de serviço desce $pts % numa transação (ex.: 4 % + 1 € passa a 2 % + 1 €). '
+          '${s.step * 2} pessoas, 2 transações; e assim por diante.',
           style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
         ),
         const SizedBox(height: 14),

@@ -7,8 +7,9 @@ import '../supabase/supabase_config.dart';
 /// Convites e descontos na taxa de serviço (migração 193, pedido
 /// 2026-11-16): parceiros e organizadores convidam pelo seu link; cada
 /// convidado conta quando faz o 1.º pagamento; a cada 5, quem convidou
-/// ganha 50 % de desconto na taxa de serviço da próxima transação. Contas
-/// novas têm 50 % na 1.ª transação.
+/// tem a taxa de serviço 2 pontos mais baixa numa transação (migração 210:
+/// 4 % + 1 € → 2 % + 1 €; 6 % + 1 € → 4 % + 1 €). Contas novas têm 50 % na
+/// 1.ª transação.
 String inviteLink(String code) => publicLink('/p/$code');
 
 class InviteStats {
@@ -30,6 +31,9 @@ class InviteStats {
   final int credits;
   final double creditPct;
 
+  /// 210: pontos tirados à taxa por cada prémio de convites (2).
+  final double creditPoints;
+
   /// Ainda tem o desconto da 1.ª transação.
   final bool welcome;
 
@@ -43,6 +47,7 @@ class InviteStats {
     this.step = 5,
     this.credits = 0,
     this.creditPct = 50,
+    this.creditPoints = 2,
     this.welcome = false,
   });
 
@@ -69,6 +74,7 @@ final myInviteStatsProvider = FutureProvider<InviteStats?>((ref) async {
       step: (r['step'] as num?)?.toInt() ?? 5,
       credits: (r['credits'] as num?)?.toInt() ?? 0,
       creditPct: (r['credit_pct'] as num?)?.toDouble() ?? 50,
+      creditPoints: (r['credit_points'] as num?)?.toDouble() ?? 2,
       welcome: r['welcome'] == true,
     );
   } catch (_) {
