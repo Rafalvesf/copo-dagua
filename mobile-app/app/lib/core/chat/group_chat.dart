@@ -24,6 +24,12 @@ class ChatGroup {
   /// Conversa direta entre duas pessoas (192): sem evento (`weddingId`
   /// vazio); mostra-se com o nome e a foto da outra pessoa.
   final bool isDirect;
+
+  /// O grupo do evento (189/212): nasce com o evento, com o nome, a foto
+  /// (capa) e a descrição do evento; os anfitriões em primeiro.
+  final bool isEventAll;
+  final String? photoUrl;
+  final String? description;
   const ChatGroup({
     required this.id,
     required this.weddingId,
@@ -33,6 +39,9 @@ class ChatGroup {
     this.unread = false,
     this.createdBy,
     this.isDirect = false,
+    this.isEventAll = false,
+    this.photoUrl,
+    this.description,
   });
 
   bool get isMine => createdBy != null && createdBy == supabase.auth.currentUser?.id;
@@ -95,7 +104,7 @@ Duration? _noRetry(int count, Object error) => null;
 final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, String>((ref, weddingId) async {
   final rows = await supabase
       .from('chat_groups')
-      .select('id, wedding_id, name, last_message, last_message_at, created_at, created_by')
+      .select('*')
       .eq('wedding_id', weddingId)
       .order('last_message_at', ascending: false, nullsFirst: false);
   final reads = await supabase.from('chat_group_members').select('group_id, last_read_at').eq('profile_id', _me);
@@ -117,6 +126,9 @@ final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, St
           unread: last != null && (read == null || last.isAfter(read)),
           createdBy: r['created_by'] as String?,
           isDirect: r['is_direct'] == true,
+          isEventAll: r['is_event_all'] == true,
+          photoUrl: r['photo_url'] as String?,
+          description: r['description'] as String?,
         );
       }(),
   ];
@@ -154,6 +166,9 @@ final myChatGroupsProvider = FutureProvider.autoDispose<List<ChatGroup>>((ref) a
             unread: r['last_message_at'] != null && (read == null || last.isAfter(read)),
             createdBy: r['created_by'] as String?,
             isDirect: r['is_direct'] == true,
+            isEventAll: r['is_event_all'] == true,
+            photoUrl: r['photo_url'] as String?,
+            description: r['description'] as String?,
           );
         }(),
   ];
@@ -308,7 +323,7 @@ Future<ChatGroup?> openEventGroup(String weddingId) async {
     if (id is! String) return null;
     final r = await supabase
         .from('chat_groups')
-        .select('id, wedding_id, name, last_message, last_message_at, created_at, created_by')
+        .select('*')
         .eq('id', id)
         .maybeSingle();
     if (r == null) return null;
@@ -319,6 +334,9 @@ Future<ChatGroup?> openEventGroup(String weddingId) async {
       lastMessage: r['last_message'] as String?,
       lastMessageAt: r['last_message_at'] == null ? null : DateTime.parse(r['last_message_at'] as String),
       createdBy: r['created_by'] as String?,
+      isEventAll: true,
+      photoUrl: r['photo_url'] as String?,
+      description: r['description'] as String?,
     );
   } catch (_) {
     return null;

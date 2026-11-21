@@ -512,11 +512,20 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
     «Ver parceiros» só sem nenhuma reserva.
   - **Partilhar o convite** (há convidados e ninguém respondeu) · **Juntar o
     local** (sem local) · **Revelar as mesas** (todos sentados, mesas ainda
-    escondidas) · **Dress code** (sem estilo nem cores) · **Lista de
+    escondidas; pergunta «Revelar as mesas?» e os convidados passam a ver já
+    a mesa deles) · **Dress code** (sem estilo nem cores) · **Lista de
     presentes** (ligada e vazia) · **Pôr foto de capa** (sem foto) ·
     **Convidar quem organiza contigo** (só um organizador) · depois do
-    evento, **Agradecer aos convidados**. O programa vazio é pedido pela
-    própria secção Programa.
+    evento, **Agradecer aos convidados** (abre o grupo do evento). O programa
+    vazio é pedido pela própria secção Programa.
+- **Grupo do evento** (pedido do Rafael, 2026-11-21, migração 212): nasce
+  com o evento, com toda a gente (anfitriões, quem organiza e convidados com
+  conta); tem a **foto** (a capa), o **nome** e a **descrição** do evento
+  («Casamento · 12 jun 2027 · Quinta do Freixo»), que acompanham o evento;
+  os **anfitriões aparecem em primeiro** na lista de membros, com a etiqueta
+  «Anfitrião»; não se apaga.
+- **Restaurantes não têm sinal** (191): paga-se tudo de uma vez — «Menus e o
+  pagamento (300 €)», etiqueta «Por pagar» (nunca «Falta o sinal»).
 - **Ordem:** resumo → PARA FAZER → SUGESTÕES → (no dia e depois) FOTOS →
   PROGRAMA → NÚMEROS (linhas de dinheiro: convidados, orçamento, parceiros)
   → RESERVAS (estado em etiqueta; «Falta o sinal» pendente) → CONVITE

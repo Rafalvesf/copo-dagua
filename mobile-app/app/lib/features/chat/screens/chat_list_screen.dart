@@ -295,7 +295,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           it.id,
           it,
           MessageRow(
-            avatar: _GroupAvatar(people: people),
+            // Grupo do evento (212): a foto do evento.
+            avatar: it.isEventAll
+                ? V2Avatar(it.name, size: 52, imageUrl: it.photoUrl, flat: true)
+                : _GroupAvatar(people: people),
             title: it.name,
             time: messageTime(it.lastMessageAt),
             preview: it.lastMessage ??
