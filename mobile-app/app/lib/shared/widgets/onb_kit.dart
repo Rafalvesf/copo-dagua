@@ -8,13 +8,14 @@ import 'island_sheet.dart';
 import '../hero_icons.dart';
 import 'line_icon.dart';
 import 'snappy_tap.dart';
+import 'app_progress.dart';
 
 /// Peças do onboarding (mockup "Onboarding", 2026-11-12), com os
 /// tamanhos do DESIGN.md: título 28, subtítulo 14, botões 52, filtros 38,
 /// cartões cantos 22, grupos 12 com espaçamento 2.
 
 const _green = Color(0xFF4F6B4A);
-const _track = Color(0xFFE2DED5);
+const _track = Color(0xFFE0E0E0);
 
 /// Barra de progresso (10, verde) com a percentagem à direita.
 class OnbProgress extends StatelessWidget {
@@ -24,26 +25,17 @@ class OnbProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(end: value.clamp(0, 1)),
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-      builder: (context, v, _) => Row(children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: LinearProgressIndicator(value: v, minHeight: 10, backgroundColor: _track, color: _green),
-          ),
-        ),
-        const SizedBox(width: 12),
-        SizedBox(
-          width: 34,
-          child: Text('${(value * 100).round()}%',
-              textAlign: TextAlign.right,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: labelColor)),
-        ),
-      ]),
-    );
+    return Row(children: [
+      // A barra da app: a estrela na ponta e animada (DESIGN.md §6, 2026-11-21).
+      Expanded(child: AppProgressBar(value: value, height: 10, track: _track)),
+      const SizedBox(width: 12),
+      SizedBox(
+        width: 34,
+        child: Text('${(value * 100).round()}%',
+            textAlign: TextAlign.right,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: labelColor)),
+      ),
+    ]);
   }
 }
 
@@ -391,7 +383,7 @@ class OnbRows extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Column(children: [
         for (var i = 0; i < rows.length; i++)
           SnappyTap(
@@ -399,7 +391,7 @@ class OnbRows extends StatelessWidget {
             child: Container(
               constraints: const BoxConstraints(minHeight: 56),
               decoration: BoxDecoration(
-                  border: i < rows.length - 1 ? const Border(bottom: BorderSide(color: Color(0xFFECE7DC))) : null),
+                  border: i < rows.length - 1 ? const Border(bottom: BorderSide(color: Color(0xFFD9D9D9))) : null),
               child: Row(children: [
                 Text(rows[i].$1, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(width: 12),

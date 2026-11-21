@@ -165,7 +165,7 @@ class _PartnerChatThreadScreenState
                   ),
           ),
           ColoredBox(
-            color: const Color(0xFFF2F0EB),
+            color: const Color(0xFFF2F2F2),
             child: ChatTypingLine(typingLine(ref.watch(typingNowProvider('c:${widget.conversation.id}')))),
           ),
           ChatComposer(

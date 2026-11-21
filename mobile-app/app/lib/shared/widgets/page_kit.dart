@@ -5,13 +5,13 @@ import '../hero_icons.dart';
 import 'scroll_aware_back_button.dart';
 import 'snappy_tap.dart';
 import 'v2_kit.dart';
+import 'app_progress.dart';
 
 // Peças das páginas redesenhadas (canvas «Páginas do evento», «Páginas do
 // parceiro», «Páginas do convidado», 2026-11-14), iguais em todas: um só
 // tamanho por elemento (DESIGN.md §3).
 
-const _divider = Color(0xFFECE7DC);
-const _track = Color(0xFFECE9E2);
+const _divider = AppTheme.line;
 
 /// Página com a margem lateral 20 em todos os blocos, menos os que vão
 /// de ponta a ponta (carrosséis), cujo tipo está em [bleed].
@@ -258,7 +258,7 @@ class KitTitle extends StatelessWidget {
           Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1.15)),
           if (subtitle != null) ...[
             const SizedBox(height: 6),
-            Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4)),
+            Text(subtitle!, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted, height: 1.4)),
           ],
         ]),
       );
@@ -274,12 +274,17 @@ class KitCaps extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: EdgeInsets.only(top: top, bottom: 8),
-        child: Row(children: [
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          // Uma linha antes de cada bloco (pedido 2026-11-21).
+          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          const SizedBox(height: 16),
+          Row(children: [
           Expanded(
             child: Text(text.toUpperCase(),
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
           ),
           ?trailing,
+        ]),
         ]),
       );
 }
@@ -290,26 +295,9 @@ class KitBar extends StatelessWidget {
   final double height;
   const KitBar(this.value, {super.key, this.height = 10});
 
+  // A barra da app: a estrela na ponta e animada (DESIGN.md §6, 2026-11-21).
   @override
-  Widget build(BuildContext context) => ClipRRect(
-        borderRadius: BorderRadius.circular(height / 2),
-        child: SizedBox(
-          height: height,
-          width: double.infinity,
-          child: Stack(children: [
-            const Positioned.fill(child: ColoredBox(color: _track)),
-            FractionallySizedBox(
-              widthFactor: value.clamp(0, 1).toDouble(),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.accentOliveDark,
-                  borderRadius: BorderRadius.circular(height / 2),
-                ),
-              ),
-            ),
-          ]),
-        ),
-      );
+  Widget build(BuildContext context) => AppProgressBar(value: value, height: height);
 }
 
 /// Cartão de resumo do topo: rótulo em maiúsculas, número 40, unidade 13,
@@ -337,10 +325,12 @@ class KitSummary extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         margin: const EdgeInsets.only(top: 20),
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        // O resumo do topo é o destaque da página: caixa branca com o
+        // contorno preto 1,5 (2026-11-21).
+        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(kicker.toUpperCase(),
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
           const SizedBox(height: 8),
           Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
             Flexible(
@@ -358,7 +348,7 @@ class KitSummary extends StatelessWidget {
                 child: Text(unit!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
               ),
             ],
           ]),
@@ -369,7 +359,7 @@ class KitSummary extends StatelessWidget {
           ],
           if (footer != null) ...[
             const SizedBox(height: 10),
-            Text(footer!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            Text(footer!, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           ],
           ?extra,
         ]),
@@ -387,9 +377,9 @@ class KitLegend extends StatelessWidget {
   Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
         Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
-        Text(count, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(count, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
       ]);
 }
 
@@ -404,16 +394,21 @@ class KitSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: EdgeInsets.only(top: top, bottom: 12),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          // Uma linha antes de cada bloco (pedido 2026-11-21).
+          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          const SizedBox(height: 16),
+          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           Expanded(
-            child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            child: Text(title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
           if (action != null)
             SnappyTap(
               onTap: onAction,
               child: Text(action!,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
             ),
+        ]),
         ]),
       );
 }
@@ -442,7 +437,7 @@ class KitPill extends StatelessWidget {
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Text(label,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
               if (count != null) ...[
                 const SizedBox(width: 8),
                 Container(
@@ -456,7 +451,7 @@ class KitPill extends StatelessWidget {
                   ),
                   child: Text('$count',
                       style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: selected ? AppTheme.accentOliveDark : Colors.white)),
                 ),
@@ -496,11 +491,9 @@ class KitGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
+        // Sem caixa: as linhas ficam no fundo, separadas por traços (2026-11-21).
         margin: EdgeInsets.only(top: top),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: shadow
-            ? softCard(radius: 22)
-            : BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(children: [
           for (var i = 0; i < rows.length; i++) ...[
             if (i > 0) const Divider(height: 1, thickness: 1, color: _divider),
@@ -544,7 +537,7 @@ class KitRow extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 17,
                     fontWeight: FontWeight.w700,
                     color: done ? const Color(0xFF8A847B) : AppTheme.ink,
                     decoration: done ? TextDecoration.lineThrough : null,
@@ -554,7 +547,7 @@ class KitRow extends StatelessWidget {
                 Text(sub!,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.35)),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted, height: 1.35)),
               ],
             ]),
           ),
@@ -580,14 +573,14 @@ class KitSetRow extends StatelessWidget {
     final row = ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 56),
       child: Row(children: [
-        Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(label, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(width: 12),
         Expanded(
           child: Text(value ?? '',
               textAlign: TextAlign.right,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+              style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
         ),
         if (trailing != null) ...[const SizedBox(width: 8), trailing!],
         if (onTap != null && trailing == null) ...[
@@ -638,7 +631,7 @@ class KitTag extends StatelessWidget {
           Container(width: 6, height: 6, decoration: BoxDecoration(color: line, shape: BoxShape.circle)),
           const SizedBox(width: 6),
         ],
-        Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
+        Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: fg)),
       ]),
     );
   }
@@ -703,7 +696,7 @@ class KitAlert extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: Text(text,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1.35)),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1.35)),
         ),
         if (action != null) ...[
           const SizedBox(width: 10),
@@ -715,7 +708,7 @@ class KitAlert extends StatelessWidget {
               minimumSize: const Size(0, 36),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               shape: const StadiumBorder(),
-              textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700),
+              textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(action!),

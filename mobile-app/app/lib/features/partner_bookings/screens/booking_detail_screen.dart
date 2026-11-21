@@ -25,6 +25,7 @@ import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
 import '../../../shared/widgets/dispute_card.dart';
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 class BookingDetailScreen extends ConsumerStatefulWidget {
   final Booking booking;
@@ -110,17 +111,17 @@ Expanded(child: ScrollingHeader(
                   Container(
                     margin: const EdgeInsets.only(top: 20),
                     padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                    decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
                     child: Row(children: [
                       V2Avatar(booking.clientName, size: 76, imageUrl: booking.clientAvatarUrl),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text(booking.eventType.label.toUpperCase(),
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
                           const SizedBox(height: 6),
                           Text(booking.clientName,
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                           const SizedBox(height: 6),
                           if (booking.proposalSent && booking.status != BookingStatus.confirmado && booking.status != BookingStatus.concluido)
                             const KitTag('Proposta enviada', kind: KitTagKind.neutral)
@@ -145,7 +146,7 @@ Expanded(child: ScrollingHeader(
                     const Padding(
                       padding: EdgeInsets.fromLTRB(4, 8, 4, 0),
                       child: Text('É o texto do teu pacote tal como estava quando pediram. Se o mudares depois, este pedido não muda.',
-                          style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                          style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                     ),
                   ],
                   const KitCaps('O pedido', top: 20),
@@ -172,9 +173,9 @@ Expanded(child: ScrollingHeader(
                     const KitCaps('Mensagem do cliente', top: 20),
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
                       child: Text('«${booking.messageFromCouple!.trim()}»',
-                          style: const TextStyle(fontSize: 15, height: 1.45, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 16, height: 1.45, color: AppTheme.ink)),
                     ),
                   ],
                   // Convidados, menus, alergias e mesas do evento (migração 140).
@@ -182,7 +183,7 @@ Expanded(child: ScrollingHeader(
                     const SizedBox(height: 18),
                     const Padding(
                       padding: EdgeInsets.only(left: 4, bottom: 8),
-                      child: Text('Informação do evento', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      child: Text('Informação do evento', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     PartnerEventBrief(bookingId: booking.id),
                   ],
@@ -191,7 +192,7 @@ Expanded(child: ScrollingHeader(
                     const SizedBox(height: 18),
                     const Padding(
                       padding: EdgeInsets.only(left: 4, bottom: 8),
-                      child: Text('Documentos', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      child: Text('Documentos', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     ExportCard(
                       reportLabel: 'Resumo da reserva',
@@ -232,7 +233,7 @@ Expanded(child: ScrollingHeader(
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.ink,
                           shape: const StadiumBorder(),
-                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
                         ),
                         child: const Text('Aceitar pacote'),
                       ),
@@ -244,7 +245,7 @@ Expanded(child: ScrollingHeader(
                               ? 'Fica reservado. Cada convidado paga ${euros((booking.totalAmount ?? 0) / ((booking.people ?? 1) < 1 ? 1 : booking.people!))} na app, 3 dias antes.'
                               : 'Ao aceitar, o cliente paga para confirmar a reserva.',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                          style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                     ),
                   ] else if (booking.canAcceptTable && !booking.proposalSent) ...[
                     // Mesa «cada um escolhe» (190): aceitar reserva já, sem sinal.
@@ -266,7 +267,7 @@ Expanded(child: ScrollingHeader(
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.ink,
                           shape: const StadiumBorder(),
-                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
                         ),
                         child: const Text('Aceitar pedido'),
                       ),
@@ -274,7 +275,7 @@ Expanded(child: ScrollingHeader(
                     const Padding(
                       padding: EdgeInsets.only(top: 8, bottom: 10),
                       child: Text('Fica reservado na tua agenda. Cada convidado escolhe o seu menu na app; vês aqui o que escolheram.',
-                          textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                          textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                     ),
                   ] else if (booking.fromQuoteRequest && !booking.proposalSent) ...[
                     SizedBox(
@@ -288,7 +289,7 @@ Expanded(child: ScrollingHeader(
                           backgroundColor: AppTheme.ink,
                           shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
-                            fontSize: 15,
+                            fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -481,8 +482,8 @@ class BookingChoicesSummary extends ConsumerWidget {
     Widget line(String a, String b, {bool bold = false}) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(children: [
-            Expanded(child: Text(a, style: TextStyle(fontSize: 14, fontWeight: bold ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink))),
-            Text(b, style: TextStyle(fontSize: bold ? 16 : 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Expanded(child: Text(a, style: TextStyle(fontSize: 15, fontWeight: bold ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink))),
+            Text(b, style: TextStyle(fontSize: bold ? 17 : 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ]),
         );
     final byMenu = <String, int>{};
@@ -500,7 +501,7 @@ class BookingChoicesSummary extends ConsumerWidget {
         const KitCaps('O que escolheram', top: 20),
         Container(
           padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
               Text('${choices.length}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1)),
@@ -508,20 +509,12 @@ class BookingChoicesSummary extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(people > 0 ? 'de $people já escolheram' : 'já escolheram',
-                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
               ),
             ]),
             if (people > 0) ...[
               const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(5),
-                child: LinearProgressIndicator(
-                  value: (choices.length / people).clamp(0, 1).toDouble(),
-                  minHeight: 10,
-                  backgroundColor: const Color(0xFFECE7DC),
-                  color: AppTheme.accentOliveDark,
-                ),
-              ),
+              AppProgressBar(value: (choices.length / people).clamp(0, 1).toDouble(), height: 10, track: const Color(0xFFD9D9D9)),
             ],
             if (byMenu.isNotEmpty) ...[
               const SizedBox(height: 10),
@@ -530,7 +523,7 @@ class BookingChoicesSummary extends ConsumerWidget {
             ],
             if (allergies.isNotEmpty) ...[
               const SizedBox(height: 6),
-              Text('Alergias: ${allergies.join(' · ')}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              Text('Alergias: ${allergies.join(' · ')}', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             ],
           ]),
         ),
@@ -540,14 +533,14 @@ class BookingChoicesSummary extends ConsumerWidget {
             booking.choiceDeadlineLabel == null
                 ? 'Cada escolha guarda o texto do menu tal como estava.'
                 : 'Cada escolha guarda o texto do menu tal como estava. A escolha fecha ${booking.choiceDeadlineLabel}.',
-            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+            style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
           ),
         ),
       ],
       const KitCaps('Valores', top: 20),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
         child: Column(children: [
           if (booking.eachChooses) line('Total até agora', euros(sum), bold: true) else line('Total', euros(booking.totalAmount ?? 0), bold: true),
           if (booking.eachPays) line('Já pago', '${euros(paid.amount)} · ${paid.count} ${paid.count == 1 ? 'pessoa' : 'pessoas'}'),
@@ -561,7 +554,7 @@ class BookingChoicesSummary extends ConsumerWidget {
                   ? 'Cada convidado paga a sua parte quando escolhe.'
                   : 'Cada convidado paga a sua parte na app, 3 dias antes.')
               : 'Pagam os organizadores, depois de a escolha fechar.',
-          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
         ),
       ),
     ]);
@@ -610,40 +603,40 @@ class _ChosenPackageCard extends StatelessWidget {
         ]),
         const SizedBox(height: 10),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(child: Text('${p['name'] ?? 'Pacote'}', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+          Expanded(child: Text('${p['name'] ?? 'Pacote'}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink))),
           Text('${starting ? 'desde ' : ''}${euros(price)}${priceUnitSuffix(unit)}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
         for (final l in includes)
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text('•  $l', style: const TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF3A3733))),
+            child: Text('•  $l', style: const TextStyle(fontSize: 14, height: 1.4, color: Color(0xFF3A3733))),
           ),
         if ((p['excludes'] as String?)?.trim().isNotEmpty == true)
           Padding(
             padding: const EdgeInsets.only(top: 6),
-            child: Text('Não inclui: ${p['excludes']}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            child: Text('Não inclui: ${p['excludes']}', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           ),
         for (final e in booking.extrasSnapshot) ...[
-          Container(height: 1, margin: const EdgeInsets.symmetric(vertical: 10), color: const Color(0xFFECE7DC)),
+          Container(height: 1, margin: const EdgeInsets.symmetric(vertical: 10), color: const Color(0xFFD9D9D9)),
           Row(children: [
-            Expanded(child: Text('+ ${e['name']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            Expanded(child: Text('+ ${e['name']}', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink))),
             Text('${euros((e['price'] as num?)?.toDouble() ?? 0)}${priceUnitSuffix(e['price_unit'] as String? ?? 'total')}',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ]),
           if ((e['details'] as List?)?.isNotEmpty == true)
-            Text((e['details'] as List).join(' · '), style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            Text((e['details'] as List).join(' · '), style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
         ],
         if (!starting && booking.totalAmount != null) ...[
-          Container(height: 1, margin: const EdgeInsets.symmetric(vertical: 10), color: const Color(0xFFECE7DC)),
-          Text(line(unit, price), style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          Container(height: 1, margin: const EdgeInsets.symmetric(vertical: 10), color: const Color(0xFFD9D9D9)),
+          Text(line(unit, price), style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           for (final e in booking.extrasSnapshot)
             Text('${e['name']}: ${line(e['price_unit'] as String? ?? 'total', (e['price'] as num?)?.toDouble() ?? 0)}',
-                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           const SizedBox(height: 6),
           Row(children: [
-            const Expanded(child: Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-            Text(euros(booking.totalAmount!), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const Expanded(child: Text('Total', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            Text(euros(booking.totalAmount!), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ]),
         ],
       ]),

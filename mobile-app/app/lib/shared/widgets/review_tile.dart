@@ -7,6 +7,7 @@ import 'line_icon.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import 'v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 String _date(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
@@ -68,8 +69,8 @@ class ReviewTile extends StatelessWidget {
       // Mockup "Perfil do parceiro" (2026-11-12): cartão branco liso.
       padding: embedded ? const EdgeInsets.only(top: 16) : const EdgeInsets.all(16),
       decoration: embedded
-          ? const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFECE7DC))))
-          : BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          ? const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFD9D9D9))))
+          : BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
           V2Avatar(r.coupleDisplayName, size: partnerSide ? 44 : 40, imageUrl: r.coupleAvatarUrl, flat: true),
@@ -79,8 +80,8 @@ class ReviewTile extends StatelessWidget {
               Text(r.coupleDisplayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(meta, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             ]),
           ),
           // Do lado do parceiro as estrelas já estão por baixo (mockup).
@@ -93,14 +94,14 @@ class ReviewTile extends StatelessWidget {
             Icon(i <= r.rating ? Hi.star : Hi.starOutline, size: 18, color: const Color(0xFFF2B33D)),
           if (partnerSide) ...[
             const SizedBox(width: 8),
-            Text(_date(r.createdAt), style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            Text(_date(r.createdAt), style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           ],
           if (r.status != 'published') ...[
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: r.status == 'flagged' ? AppStatusColors.declined.withValues(alpha: 0.12) : const Color(0xFFF2F0EB),
+                color: r.status == 'flagged' ? AppStatusColors.declined.withValues(alpha: 0.12) : const Color(0xFFF2F2F2),
                 borderRadius: BorderRadius.circular(99),
               ),
               child: Text(r.status == 'flagged' ? 'Denunciada' : 'Removida',
@@ -116,7 +117,7 @@ class ReviewTile extends StatelessWidget {
           const SizedBox(height: 10),
           Text(r.comment!.trim(),
               textAlign: embedded ? TextAlign.justify : TextAlign.start,
-              style: TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: embedded ? AppTheme.ink : const Color(0xFF3A3733))),
+              style: TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w600, color: embedded ? AppTheme.ink : const Color(0xFF3A3733))),
         ],
         if (r.response != null && r.response!.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -143,7 +144,7 @@ class ReviewTile extends StatelessWidget {
             if (onReport != null && r.status == 'published')
               SnappyTap(
                 onTap: onReport,
-                child: const Text('Denunciar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                child: const Text('Denunciar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
           ]),
         ],
@@ -163,7 +164,7 @@ class _RatingChip extends StatelessWidget {
   Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
         LineIcon(LineIcon.star, size: 13, fill: true, color: ink ? AppTheme.ink : const Color(0xFFC9A24A)),
         SizedBox(width: ink ? 4 : 3),
-        Text('$rating,0', style: TextStyle(fontSize: ink ? 12 : 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text('$rating,0', style: TextStyle(fontSize: ink ? 13 : 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       ]);
 }
 
@@ -198,7 +199,7 @@ class _Reply extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.fromLTRB(12, 9, 12, 10),
                 decoration: const BoxDecoration(
-                  color: Color(0xFFF2F0EB),
+                  color: Color(0xFFF2F2F2),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(4),
                     topRight: Radius.circular(16),
@@ -241,7 +242,7 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: const Color(0xFFF2F0EB),
+        color: const Color(0xFFF2F2F2),
         shape: const StadiumBorder(),
         child: InkWell(
           customBorder: const StadiumBorder(),
@@ -270,7 +271,7 @@ class ReviewSummaryCard extends StatelessWidget {
     final counts = {for (var s = 1; s <= 5; s++) s: reviews.where((r) => r.rating == s).length};
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Row(children: [
         Column(children: [
           Text(avg.toStringAsFixed(1).replaceAll('.', ','),
@@ -292,15 +293,7 @@ class ReviewSummaryCard extends StatelessWidget {
                   SizedBox(width: 12, child: Text('$s', style: const TextStyle(fontSize: AppFontSize.xs, color: v2Muted))),
                   const SizedBox(width: 6),
                   Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(99),
-                      child: LinearProgressIndicator(
-                        value: n == 0 ? 0 : counts[s]! / n,
-                        minHeight: 7,
-                        backgroundColor: const Color(0xFFF2F0EB),
-                        color: AppTheme.accentOliveDark,
-                      ),
-                    ),
+                    child: AppProgressBar(value: n == 0 ? 0 : counts[s]! / n, height: 7, track: const Color(0xFFF2F2F2)),
                   ),
                   const SizedBox(width: 8),
                   SizedBox(width: 18, child: Text('${counts[s]}', textAlign: TextAlign.right, style: const TextStyle(fontSize: AppFontSize.xs, color: v2Muted))),

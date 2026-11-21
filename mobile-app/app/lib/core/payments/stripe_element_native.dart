@@ -38,7 +38,7 @@ class _NativeStripePay implements StripePay {
     return CardField(
       enablePostalCode: false,
       countryCode: 'PT',
-      style: const TextStyle(fontSize: 16, color: AppTheme.ink, fontFamily: 'LouisGeorgeCafe'),
+      style: const TextStyle(fontSize: 17, color: AppTheme.ink, fontFamily: 'LouisGeorgeCafe'),
       cursorColor: AppTheme.accentOliveDark,
       decoration: const InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.zero),
       onCardChanged: (d) {

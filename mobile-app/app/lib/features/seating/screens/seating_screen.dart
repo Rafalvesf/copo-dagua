@@ -24,6 +24,7 @@ import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 enum _PlanView { plan, list }
 
@@ -615,7 +616,7 @@ class _TableCell extends StatelessWidget {
                   child: Center(
                     child: locked
                         ? const Icon(Hi.lockClosed, size: 16, color: AppTheme.inkMuted)
-                        : Text('$count/$seatsPerTable', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
+                        : Text('$count/$seatsPerTable', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: fg)),
                   ),
                 ),
               ),
@@ -767,7 +768,7 @@ class _TableListView extends StatelessWidget {
                           ),
                           child: locked
                               ? const Icon(Hi.lockClosed, size: 18, color: AppTheme.inkMuted)
-                              : Text('${index + 1}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c)),
+                              : Text('${index + 1}', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: c)),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -788,15 +789,7 @@ class _TableListView extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 6),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(999),
-                              child: LinearProgressIndicator(
-                                value: count / seatsPerTable,
-                                minHeight: 6,
-                                backgroundColor: const Color(0xFFEEF2EC),
-                                color: c,
-                              ),
-                            ),
+                            AppProgressBar(value: count / seatsPerTable, height: 6, color: c, track: const Color(0xFFEEF2EC)),
                           ],
                         ),
                       ),
@@ -973,7 +966,7 @@ class _SelectedTableCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(state.nameFor(index), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                    Text(state.nameFor(index), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                     Text('${state.shapeFor(index).label} · ${seated.length} de $seatsPerTable lugares',
                         style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
                   ],

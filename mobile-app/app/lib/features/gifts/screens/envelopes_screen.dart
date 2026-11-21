@@ -60,7 +60,7 @@ class EnvelopesScreen extends ConsumerWidget {
               const Text(
                 'Os convidados transferem diretamente para o vosso IBAN (em Para os convidados › Presentes). '
                 'Marquem "Chegou" quando o virem no banco.',
-                style: TextStyle(fontSize: 12.5, height: 1.4, color: AppTheme.inkMuted),
+                style: TextStyle(fontSize: 13.5, height: 1.4, color: AppTheme.inkMuted),
               ),
               const SizedBox(height: 14),
               if (list.isEmpty)
@@ -78,19 +78,19 @@ class EnvelopesScreen extends ConsumerWidget {
                       Row(children: [
                         Expanded(
                           child: Text(e.guestName,
-                              style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                              style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                         ),
                         Text(envelopeEuros(e.amount),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                       ]),
                       Text(
                         '${e.createdAt.day.toString().padLeft(2, '0')}/${e.createdAt.month.toString().padLeft(2, '0')}/${e.createdAt.year}',
-                        style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
+                        style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                       ),
                       if ((e.message ?? '').isNotEmpty) ...[
                         const SizedBox(height: 8),
                         Text('«${e.message}»',
-                            style: const TextStyle(fontSize: 14, height: 1.4, fontStyle: FontStyle.italic, color: AppTheme.ink)),
+                            style: const TextStyle(fontSize: 15, height: 1.4, fontStyle: FontStyle.italic, color: AppTheme.ink)),
                       ],
                       const SizedBox(height: 10),
                       Wrap(spacing: 8, runSpacing: 8, children: [

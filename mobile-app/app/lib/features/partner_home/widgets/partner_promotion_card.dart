@@ -140,7 +140,7 @@ class _PartnerPromotionCardState extends ConsumerState<PartnerPromotionCard> {
           Icon(Hi.sparkles, color: green, size: 20),
           const SizedBox(width: 8),
           const Expanded(
-            child: Text('Destaque', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+            child: Text('Destaque', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: AppTheme.ink)),
           ),
           if (p.on)
             Container(
@@ -198,7 +198,7 @@ class _Stat extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(color: const Color(0xFFF4F2EC), borderRadius: BorderRadius.circular(14)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          Text(value, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: AppTheme.ink)),
           Text(label, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
         ]),
       );

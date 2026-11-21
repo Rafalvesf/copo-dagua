@@ -52,7 +52,7 @@ class InviteBenefitsCard extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (s.isFounder || s.credits > 0 || s.welcome)
           Padding(
@@ -67,13 +67,13 @@ class InviteBenefitsCard extends ConsumerWidget {
             ]),
           ),
         Text(s.isPartner ? 'Convida os teus clientes' : 'Convida amigos',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 4),
         Text(
           'A cada ${s.step} pessoas que entram pelo teu link e fazem o primeiro pagamento, '
           'a taxa de serviço desce $pts % numa transação (ex.: 4 % + 1 € passa a 2 % + 1 €). '
           '${s.step * 2} pessoas, 2 transações; e assim por diante.',
-          style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
         ),
         const SizedBox(height: 14),
         Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
@@ -81,7 +81,7 @@ class InviteBenefitsCard extends ConsumerWidget {
           const SizedBox(width: 8),
           Padding(
             padding: const EdgeInsets.only(bottom: 4),
-            child: Text('de ${s.step} convidados', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            child: Text('de ${s.step} convidados', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           ),
         ]),
         const SizedBox(height: 10),
@@ -92,7 +92,7 @@ class InviteBenefitsCard extends ConsumerWidget {
               child: Container(
                 height: 10,
                 decoration: BoxDecoration(
-                  color: i <= s.progress ? green : const Color(0xFFECE7DC),
+                  color: i <= s.progress ? green : const Color(0xFFD9D9D9),
                   borderRadius: BorderRadius.circular(5),
                 ),
               ),
@@ -102,7 +102,7 @@ class InviteBenefitsCard extends ConsumerWidget {
         if (s.pending > 0) ...[
           const SizedBox(height: 8),
           Text('${s.pending} ${s.pending == 1 ? 'entrou e ainda não pagou' : 'entraram e ainda não pagaram'}.',
-              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
         ],
         const SizedBox(height: 14),
         Container(
@@ -111,12 +111,12 @@ class InviteBenefitsCard extends ConsumerWidget {
           decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(24)),
           child: Row(children: [
             Expanded(
-              child: Text(link, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: AppTheme.ink)),
+              child: Text(link, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, color: AppTheme.ink)),
             ),
             TextButton(
               onPressed: copy,
               style: TextButton.styleFrom(foregroundColor: AppTheme.ink),
-              child: const Text('Copiar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+              child: const Text('Copiar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
             ),
           ]),
         ),
@@ -129,7 +129,7 @@ class InviteBenefitsCard extends ConsumerWidget {
             minimumSize: const Size.fromHeight(44),
             shape: const StadiumBorder(),
             textStyle: const TextStyle(
-                fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
+                fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
           ),
           child: const Text('Partilhar convite'),
         ),

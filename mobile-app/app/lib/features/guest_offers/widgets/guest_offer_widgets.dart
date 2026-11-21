@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/guest_offers/guest_offers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/sticker_icon.dart';
+import '../../../shared/widgets/app_progress.dart';
 
 export '../../../shared/widgets/sticker_icon.dart' show StickerIcon;
 
@@ -26,18 +27,9 @@ class ThinProgress extends StatelessWidget {
   final double value;
   const ThinProgress(this.value, {super.key});
 
+  // A barra da app: a estrela na ponta e animada (DESIGN.md §6, 2026-11-21).
   @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
-      child: LinearProgressIndicator(
-        value: value.clamp(0.0, 1.0),
-        minHeight: 6,
-        backgroundColor: const Color(0xFFEEF2EC),
-        color: AppTheme.accentOliveDark,
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AppProgressBar(value: value, height: 6);
 }
 
 class StatusChip extends StatelessWidget {

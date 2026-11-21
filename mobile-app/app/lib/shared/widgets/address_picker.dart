@@ -258,10 +258,10 @@ class _AddressPickerState extends State<_AddressPicker> {
   Widget _header(String title, {String? subtitle}) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             if (subtitle != null) ...[
               const SizedBox(height: 4),
-              Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              Text(subtitle, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             ],
           ]),
         ),
@@ -289,7 +289,7 @@ class _AddressPickerState extends State<_AddressPicker> {
           child: Text.rich(TextSpan(children: [
             TextSpan(text: 'com tecnologia '),
             TextSpan(text: 'Google', style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
-          ]), style: TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
+          ]), style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
         )
       : const SizedBox.shrink();
 
@@ -311,10 +311,10 @@ class _AddressPickerState extends State<_AddressPicker> {
             autofocus: true,
             onChanged: _onChanged,
             textInputAction: TextInputAction.search,
-            style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+            style: const TextStyle(fontSize: 16, color: AppTheme.ink),
             decoration: InputDecoration(
               hintText: widget.citiesOnly ? 'Ex.: Lisboa' : 'Ex.: Quinta da Ribafria, Sintra',
-              hintStyle: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
+              hintStyle: const TextStyle(fontSize: 16, color: AppTheme.inkMuted),
               prefixIcon: const Icon(Hi.magnifyingGlass, size: 18, color: AppTheme.inkMuted),
               suffixIcon: _query.text.isEmpty
                   ? null
@@ -350,7 +350,7 @@ class _AddressPickerState extends State<_AddressPicker> {
                 ),
                 const SizedBox(width: 12),
                 const Text('Usar a minha localização',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ]),
             ),
           ),
@@ -371,8 +371,8 @@ class _AddressPickerState extends State<_AddressPicker> {
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                       Text(widget.shortcut!.$1,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      Text(widget.shortcut!.$2, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      Text(widget.shortcut!.$2, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                     ]),
                   ),
                 ]),
@@ -381,14 +381,14 @@ class _AddressPickerState extends State<_AddressPicker> {
           if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text(_error!, style: const TextStyle(fontSize: 13, color: AppStatusColors.declined)),
+              child: Text(_error!, style: const TextStyle(fontSize: 14, color: AppStatusColors.declined)),
             ),
           const SizedBox(height: 8),
           if (_results.isNotEmpty)
             const Padding(
               padding: EdgeInsets.only(bottom: 4),
               child: Text('SUGESTÕES',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
             ),
           Expanded(
             child: _loading && _results.isEmpty
@@ -402,7 +402,7 @@ class _AddressPickerState extends State<_AddressPicker> {
                         child: Container(
                           constraints: const BoxConstraints(minHeight: 64),
                           decoration: BoxDecoration(
-                            border: i == 0 ? null : const Border(top: BorderSide(color: Color(0xFFECE7DC))),
+                            border: i == 0 ? null : const Border(top: BorderSide(color: Color(0xFFD9D9D9))),
                           ),
                           child: Row(children: [
                             Container(
@@ -418,12 +418,12 @@ class _AddressPickerState extends State<_AddressPicker> {
                                 Text(r.name,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                                 if (r.secondary.isNotEmpty)
                                   Text(r.secondary,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                                      style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                               ]),
                             ),
                           ]),
@@ -442,11 +442,11 @@ class _AddressPickerState extends State<_AddressPicker> {
     final p = _picked!;
     Widget row(String label, String value, {bool first = false}) => Container(
           constraints: const BoxConstraints(minHeight: 44),
-          decoration: BoxDecoration(border: first ? null : const Border(top: BorderSide(color: Color(0xFFECE7DC)))),
+          decoration: BoxDecoration(border: first ? null : const Border(top: BorderSide(color: Color(0xFFD9D9D9)))),
           child: Row(children: [
-            Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             const Spacer(),
-            Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ]),
         );
     final rows = <(String, String)>[
@@ -470,10 +470,10 @@ class _AddressPickerState extends State<_AddressPicker> {
           ),
         ),
         const SizedBox(height: 12),
-        Text(p.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(p.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         if (p.secondary.isNotEmpty || p.address.isNotEmpty)
           Text(p.secondary.isNotEmpty ? p.secondary : p.address,
-              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
         if (rows.isNotEmpty) ...[
           const SizedBox(height: 12),
           Container(
@@ -494,7 +494,7 @@ class _AddressPickerState extends State<_AddressPicker> {
               foregroundColor: Colors.white,
               shape: const StadiumBorder(),
               textStyle: const TextStyle(
-                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
             ),
             child: const Text('Usar este local'),
           ),
@@ -505,7 +505,7 @@ class _AddressPickerState extends State<_AddressPicker> {
             onTap: () => setState(() => _picked = null),
             child: const Padding(
               padding: EdgeInsets.all(8),
-              child: Text('Procurar outro', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              child: Text('Procurar outro', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
           ),
         ),
@@ -565,7 +565,7 @@ class AddressField extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(label!.toUpperCase(),
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
           ),
         Semantics(
           button: true,
@@ -586,7 +586,7 @@ class AddressField extends StatelessWidget {
                       controller.text.trim().isEmpty ? hint : controller.text.trim(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 15, color: controller.text.trim().isEmpty ? AppTheme.inkMuted : AppTheme.ink),
+                      style: TextStyle(fontSize: 16, color: controller.text.trim().isEmpty ? AppTheme.inkMuted : AppTheme.ink),
                     ),
                   ),
                 ),

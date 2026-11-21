@@ -192,12 +192,12 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
   Widget _notActive(ConnectStatus s) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
           child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Recebe pagamentos na app', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text('Recebe pagamentos na app', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             SizedBox(height: 6),
             Text('Os clientes pagam dentro da À Nossa! e o dinheiro vai para a tua conta.',
-                style: TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                style: TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           ]),
         ),
         const SectionTitle('Como funciona'),
@@ -228,6 +228,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
+          border: AppTheme.cardBorder,
           borderRadius: BorderRadius.circular(22),
           boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
         ),
@@ -236,10 +237,10 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
             child: Text(s.active ? 'Pagamentos ativos' : 'Em verificação',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
           ),
           const SizedBox(height: 10),
-          const Text('Disponível para receber', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+          const Text('Disponível para receber', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           const SizedBox(height: 6),
           Text(_eur(s.availableCents), style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 8),
@@ -249,7 +250,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
               if (!s.manualPayouts && s.bankLast4 != null) 'Vai sozinho para a conta ···· ${s.bankLast4} ${_nextAuto(s.payoutSchedule)}.',
               if (s.manualPayouts && s.bankLast4 != null) 'Levantas para a conta ···· ${s.bankLast4}.',
             ].join(' '),
-            style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
+            style: const TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
           ),
           // Em automático também se pode levantar já (pedido 2026-11-14).
           if (!s.manualPayouts && s.payoutsEnabled && s.availableCents > 0) ...[
@@ -328,7 +329,7 @@ class _Rows extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
         child: Column(children: [
           for (final (i, r) in rows.indexed)
             GestureDetector(
@@ -337,18 +338,18 @@ class _Rows extends StatelessWidget {
               child: Container(
                 constraints: const BoxConstraints(minHeight: 56),
                 decoration: i < rows.length - 1
-                    ? const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFECE7DC))))
+                    ? const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFD9D9D9))))
                     : null,
                 child: Row(children: [
                   Expanded(
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(r.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      Text(r.title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                       if (r.sub != null && r.sub!.isNotEmpty)
-                        Text(r.sub!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                        Text(r.sub!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                     ]),
                   ),
                   if (r.value != null && r.value!.isNotEmpty)
-                    Text(r.value!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                    Text(r.value!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                   if (r.onTap != null) ...[
                     const SizedBox(width: 6),
                     const LineIcon(LineIcon.forward, size: 16, color: AppTheme.inkMuted, stroke: 1.8),
@@ -405,7 +406,7 @@ class _ToReceive extends ConsumerWidget {
       Text(
         'O sinal é libertado 48 h depois de o cliente o pagar; o restante, 3 dias depois do evento.'
         '${feeCfg.isZero ? '' : ' Valores antes da taxa da À Nossa! (${feeCfg.describe((v) => euros(v))} do valor da reserva, IVA incluído), descontada nessa altura.'}',
-        style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
+        style: const TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
       ),
     ]);
   }
@@ -575,7 +576,7 @@ class _OwedNote extends ConsumerWidget {
         padding: const EdgeInsets.all(12),
         child: Text(
           'Taxas de serviço de reservas que cancelaste: ${euros(owed, cents: true)}. São descontadas nos próximos pagamentos.',
-          style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.ink),
+          style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.ink),
         ),
       ),
     );

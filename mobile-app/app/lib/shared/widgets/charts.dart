@@ -273,7 +273,7 @@ class _LineAreaPainter extends CustomPainter {
         style: const TextStyle(
           fontFamily: AppTheme.fontFamily,
           fontFamilyFallback: AppTheme.fontFamilyFallback,
-          fontSize: 10,
+          fontSize: 11,
           color: AppTheme.inkMuted,
         ),
       ),
@@ -416,7 +416,7 @@ class _SimpleBarChartState extends State<SimpleBarChart> {
                         Text(
                           widget.labels[i],
                           style: const TextStyle(
-                            fontSize: 10,
+                            fontSize: 11,
                             color: AppTheme.inkMuted,
                           ),
                         ),

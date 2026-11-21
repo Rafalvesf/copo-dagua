@@ -117,7 +117,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                               ),
                               child: Row(mainAxisSize: MainAxisSize.min, children: [
                                 Text(label,
-                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
+                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
                                 if (count != null && count > 0) ...[
                                   const SizedBox(width: 6),
                                   Container(
@@ -127,7 +127,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(color: on ? Colors.white : AppTheme.ink, borderRadius: BorderRadius.circular(10)),
                                     child: Text('$count',
-                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: on ? AppTheme.accentOliveDark : Colors.white)),
+                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: on ? AppTheme.accentOliveDark : Colors.white)),
                                   ),
                                 ],
                               ]),
@@ -149,7 +149,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 4, 18, AppTheme.screenMargin, 8),
                                 child: Text(names[k],
-                                    style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                                    style: const TextStyle(fontSize: 13, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                               ),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),

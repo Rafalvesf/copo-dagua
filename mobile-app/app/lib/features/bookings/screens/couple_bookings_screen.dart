@@ -31,6 +31,7 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../core/payments/refunds.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../partners/screens/partner_detail_screen.dart';
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 /// Reservas do lado do casal — lê `coupleBookingsProvider`
 /// (`core/home/home_providers.dart`), mesmos dados mock que alimentam
@@ -364,15 +365,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
             ),
             if (booking.paidAmount > 0) ...[
               const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: booking.amount <= 0 ? 1 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0),
-                  minHeight: 5,
-                  backgroundColor: AppTheme.borderMuted,
-                  color: AppTheme.accentOliveDark,
-                ),
-              ),
+              AppProgressBar(value: booking.amount <= 0 ? 1 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0), height: 5, track: AppTheme.borderMuted),
               const SizedBox(height: 6),
               Text(
                 booking.remainingAmount > 0.009
@@ -410,7 +403,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               const SizedBox(height: 6),
               const Text(
                 'A data só fica garantida com o sinal pago: até lá, o parceiro pode aceitar outro pedido para esse dia.',
-                style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.35),
+                style: TextStyle(fontSize: 14, color: AppTheme.inkMuted, height: 1.35),
               ),
             ],
             if (needsFinalPayment) ...[

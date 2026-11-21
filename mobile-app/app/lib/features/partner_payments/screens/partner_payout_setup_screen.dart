@@ -107,7 +107,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
               Container(
                 constraints: const BoxConstraints(minHeight: 60),
                 decoration: i < steps.length - 1
-                    ? const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFECE7DC))))
+                    ? const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFD9D9D9))))
                     : null,
                 child: Row(children: [
                   Container(
@@ -115,13 +115,13 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
                     height: 32,
                     decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
                     alignment: Alignment.center,
-                    child: Text('${i + 1}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    child: Text('${i + 1}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(t, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      Text(sub, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                      Text(t, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      Text(sub, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                     ]),
                   ),
                 ]),
@@ -135,7 +135,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
               OnbGroupLabel('Quando recebes'),
               SizedBox(height: 6),
               Text('O sinal chega 48 h depois de pago. O resto, 3 dias depois do evento, se ninguém reportar um problema.',
-                  style: TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.ink)),
+                  style: TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.ink)),
             ]),
           ),
         ],
@@ -183,10 +183,10 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
               SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Em verificação', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text('Em verificação', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   SizedBox(height: 4),
                   Text('Já podes receber pedidos e enviar propostas. Avisamos-te quando os pagamentos ficarem ativos.',
-                      style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                      style: TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                 ]),
               ),
             ]),
@@ -197,16 +197,16 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
-              child: const Text('Pagamentos ativos', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+              child: const Text('Pagamentos ativos', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
             ),
           ),
         if (s.bankLast4 != null) ...[
           const SizedBox(height: 12),
           _WhiteBox(
             child: Row(children: [
-              const Text('Conta', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+              const Text('Conta', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
               const Spacer(),
-              Text('IBAN ···· ${s.bankLast4}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.ink)),
+              Text('IBAN ···· ${s.bankLast4}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.ink)),
             ]),
           ),
         ],
@@ -223,7 +223,7 @@ class _WhiteBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: padding,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
         child: child,
       );
 }
@@ -242,7 +242,7 @@ class _Warn extends StatelessWidget {
       child: Row(children: [
         Container(width: 8, height: 8, decoration: const BoxDecoration(color: red, shape: BoxShape.circle)),
         const SizedBox(width: 10),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.ink))),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.ink))),
       ]),
     );
   }

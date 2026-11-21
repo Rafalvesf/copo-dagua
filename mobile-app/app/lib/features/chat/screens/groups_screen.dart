@@ -92,7 +92,7 @@ class GroupsScreen extends ConsumerWidget {
                                 Container(
                                   width: 48,
                                   height: 48,
-                                  decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
+                                  decoration: const BoxDecoration(color: Color(0xFFF2F2F2), shape: BoxShape.circle),
                                   child: Icon(Hi.userGroup, color: AppTheme.accentOliveDark),
                                 ),
                                 const SizedBox(width: 12),
@@ -440,7 +440,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
         ),
         Expanded(
           child: ColoredBox(
-          color: const Color(0xFFF2F0EB),
+          color: const Color(0xFFF2F2F2),
           child: thread.loading && thread.messages.isEmpty
               ? const Center(child: CircularProgressIndicator())
               : ChatEventIsland(
@@ -521,7 +521,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                                   Padding(
                                     padding: const EdgeInsets.only(left: 4, bottom: 3),
                                     child: Text(sender?.name ?? '',
-                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: ChatBubble.senderColor(sender?.name ?? ''))),
+                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: ChatBubble.senderColor(sender?.name ?? ''))),
                                   ),
                                 content,
                               ],
@@ -538,7 +538,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(seenBy > 0 ? '$hhmm · Visto por $seenBy' : hhmm,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                       ),
                     ]);
                   },
@@ -547,7 +547,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
           ),
         ),
         ColoredBox(
-          color: const Color(0xFFF2F0EB),
+          color: const Color(0xFFF2F2F2),
           child: ChatTypingLine(typingLine(ref.watch(typingNowProvider('g:${widget.group.id}')))),
         ),
         ChatComposer(
@@ -622,26 +622,26 @@ class _RsvpCardState extends State<_RsvpCard> {
         : '${widget.name} ${going ? 'disse que vai' : 'disse que não vai'}';
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Row(children: [
         V2Avatar(widget.name, size: 44, imageUrl: widget.avatarUrl, flat: true),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 2),
             Row(children: [
-              Text(hhmm, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              Text(hhmm, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  color: going ? const Color(0xFFE6EDE1) : const Color(0xFFF2F0EB),
+                  color: going ? const Color(0xFFE6EDE1) : const Color(0xFFF2F2F2),
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(going ? 'Vai' : 'Não vai',
                     style: TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w700, color: going ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733))),
+                        fontSize: 13, fontWeight: FontWeight.w700, color: going ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733))),
               ),
             ]),
           ]),
@@ -657,7 +657,7 @@ class _RsvpCardState extends State<_RsvpCard> {
                     shape: const StadiumBorder(),
                     side: const BorderSide(color: AppTheme.ink, width: 1.5),
                     foregroundColor: AppTheme.ink,
-                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                    textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('A seguir'),
                 )
@@ -669,7 +669,7 @@ class _RsvpCardState extends State<_RsvpCard> {
                     shape: const StadiumBorder(),
                     backgroundColor: AppTheme.ink,
                     foregroundColor: Colors.white,
-                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                    textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Seguir'),
                 ),

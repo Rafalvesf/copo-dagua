@@ -117,6 +117,7 @@ class _JoinEventsScreenState extends ConsumerState<JoinEventsScreen> {
                         extra: Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
+                            border: AppTheme.cardBorder,
                             borderRadius: BorderRadius.circular(22),
                             boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
                           ),

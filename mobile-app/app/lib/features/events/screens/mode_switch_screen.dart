@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 /// Modo em que uma conta que organiza está a usar a app: a organizar o
 /// seu evento ou a acompanhar o evento de outra pessoa como convidado.
@@ -126,15 +127,7 @@ class _ModeSwitchScreenState extends State<ModeSwitchScreen> with SingleTickerPr
                   width: 120,
                   child: AnimatedBuilder(
                     animation: _anim,
-                    builder: (context, _) => ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
-                      child: LinearProgressIndicator(
-                        value: _anim.value,
-                        minHeight: 3,
-                        backgroundColor: AppTheme.borderMuted,
-                        color: AppTheme.accentOliveDark,
-                      ),
-                    ),
+                    builder: (context, _) => AppProgressBar(value: _anim.value, height: 3, track: AppTheme.borderMuted),
                   ),
                 ),
               ],

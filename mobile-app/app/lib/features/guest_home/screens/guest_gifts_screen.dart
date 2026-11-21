@@ -139,14 +139,14 @@ class GuestGiftsScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           const Text('DOS ANFITRIÕES',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
                           const SizedBox(height: 8),
                           Text(
                             '«${message?.isNotEmpty == true ? message! : 'A vossa presença é o melhor presente. Se quiserem mesmo oferecer algo, deixamos aqui as opções.'}»',
-                            style: const TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                            style: const TextStyle(fontSize: 16, height: 1.45, fontWeight: FontWeight.w700, color: AppTheme.ink),
                           ),
                         ]),
                       ),
@@ -173,7 +173,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -183,12 +183,12 @@ class GuestGiftsScreen extends ConsumerWidget {
                               Expanded(
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                   const Text('Envelope digital',
-                                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                                   Text(
                                       iban?.isNotEmpty == true
                                           ? 'Transferência direta para os anfitriões'
                                           : 'Os anfitriões ainda não indicaram um IBAN',
-                                      style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                                 ]),
                               ),
                             ]),
@@ -226,7 +226,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(iban!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.3, color: AppTheme.ink)),
+                                            Text(iban!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.3, color: AppTheme.ink)),
                                           ],
                                         ),
                                       ),
@@ -236,7 +236,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                                 ),
                               )
                             else
-                              const Text('Os anfitriões ainda não indicaram um IBAN.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                              const Text('Os anfitriões ainda não indicaram um IBAN.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                             if (wedding != null) _MyEnvelopes(weddingId: wedding.weddingId),
                           ],
                         ),
@@ -266,7 +266,7 @@ class _MyEnvelopes extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Os teus envelopes', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const Text('Os teus envelopes', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 4),
         for (final e in list)
           Padding(
@@ -278,7 +278,7 @@ class _MyEnvelopes extends ConsumerWidget {
               Expanded(
                 child: Text(
                   '${envelopeEuros(e.amount)} · ${e.received ? 'recebido pelos anfitriões' : 'enviado'}',
-                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
                 ),
               ),
             ]),

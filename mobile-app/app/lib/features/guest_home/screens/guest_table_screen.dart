@@ -107,7 +107,7 @@ class GuestTableScreen extends ConsumerWidget {
                                 alignment: Alignment.center,
                                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                                   Text(tableNumber == null ? '—' : '$tableNumber',
-                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                                      style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
                                   if (groups.isNotEmpty)
                                     SizedBox(
                                       width: 90,
@@ -115,7 +115,7 @@ class GuestTableScreen extends ConsumerWidget {
                                           textAlign: TextAlign.center,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(fontSize: 11, color: AppTheme.accentOliveDark)),
+                                          style: TextStyle(fontSize: 12, color: AppTheme.accentOliveDark)),
                                     ),
                                 ]),
                               ),
@@ -135,7 +135,7 @@ class GuestTableScreen extends ConsumerWidget {
                                       Text(me ? 'Tu' : roster[k].fullName.split(' ').first,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(fontSize: 10, fontWeight: me ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink)),
+                                          style: TextStyle(fontSize: 11, fontWeight: me ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink)),
                                     ]),
                                   ),
                                 );
@@ -159,7 +159,7 @@ class GuestTableScreen extends ConsumerWidget {
                         ),
                       const SizedBox(height: 2),
                       const Text('Os anfitriões ainda podem mudar a disposição até ao dia.',
-                          style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                          style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                     ],
                   );
                 },

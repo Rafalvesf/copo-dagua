@@ -17,6 +17,7 @@ import '../../payments/open_payment.dart';
 import '../../../core/payments/payments.dart' show payDay;
 import '../../../shared/widgets/dispute_card.dart';
 import '../../../core/bookings/hire_privacy.dart';
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 /// Detalhes de uma reserva já confirmada/concluída — antes disto, tocar
 /// numa reserva em `couple_bookings_screen.dart` só mostrava "em
@@ -102,15 +103,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                               style: const TextStyle(fontSize: AppFontSize.md, color: v2Muted)),
                         ]),
                         const SizedBox(height: 10),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(99),
-                          child: LinearProgressIndicator(
-                            value: booking.amount <= 0 ? 0 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0),
-                            minHeight: 9,
-                            backgroundColor: const Color(0xFFF2F0EB),
-                            color: AppTheme.accentOliveDark,
-                          ),
-                        ),
+                        AppProgressBar(value: booking.amount <= 0 ? 0 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0), height: 9, track: const Color(0xFFF2F2F2)),
                         const SizedBox(height: 16),
                         _InfoRow(label: 'Data', value: dateLabel),
                         const SizedBox(height: 10),

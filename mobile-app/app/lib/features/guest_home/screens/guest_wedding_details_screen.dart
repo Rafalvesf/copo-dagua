@@ -63,15 +63,15 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                         // Mockup «Páginas do convidado» → Programa.
                         Container(
                           padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
                           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             const Text('DOS ANFITRIÕES',
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
                             const SizedBox(height: 8),
                             Text('«${wedding.welcomeMessage}»',
-                                style: const TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                style: const TextStyle(fontSize: 16, height: 1.45, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                             const SizedBox(height: 6),
-                            Text(wedding.displayNames, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                            Text(wedding.displayNames, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                           ]),
                         ),
                       ],
@@ -80,7 +80,7 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                         trailing: wedding.weddingDate == null
                             ? null
                             : Text(formatWeddingDateCaps(wedding.weddingDate!),
-                                style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                       ),
                       // Linha do tempo com o momento atual marcado no dia
                       // e o local com Como chegar (canvas 2026-11-07).
@@ -102,7 +102,7 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                               lead: SizedBox(
                                 width: 44,
                                 child: Text(it.time,
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                               ),
                               title: it.title,
                               sub: it.place.isEmpty ? null : it.place,
@@ -132,7 +132,7 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                         Text(
                           '«${wedding.quote}»',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: AppTheme.inkMuted, fontSize: 14),
+                          style: const TextStyle(color: AppTheme.inkMuted, fontSize: 15),
                         ),
                       ],
                     ],
@@ -190,16 +190,16 @@ class _ProgramCard extends StatelessWidget {
           SizedBox(
             width: 58,
             child: Text(time,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
           ),
           StickerIcon(_icon, size: 36, turns: StickerIcon.tilt(index)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               if (title.isNotEmpty)
-                Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               if (subtitle.isNotEmpty)
-                Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),
           ),
         ]),
@@ -229,7 +229,7 @@ class _PlaceCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(999)),
           child: const Text('Como chegar',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
         ),
       ),
     );

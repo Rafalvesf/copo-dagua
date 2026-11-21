@@ -73,7 +73,7 @@ class SettingsScreen extends ConsumerWidget {
 // resto" (parceiro e organizador usam os mesmos componentes).
 // Mockup "Definições (botão)" (2026-11-12): fundo creme, grupos brancos
 // de cantos 22, linhas de 56 sem ícones, títulos de secção espaçados.
-const _pageBackground = Color(0xFFF2F0EB);
+const _pageBackground = Color(0xFFF2F2F2);
 
 class _SettingsPage extends StatelessWidget {
   final String title;
@@ -144,7 +144,7 @@ class SettingsSectionTitle extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(4, 20, 4, 12),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted),
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted),
       ),
     );
   }
@@ -166,12 +166,12 @@ class SettingsGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      // Sem caixa: linhas no fundo, separadas por traços (2026-11-21).
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         children: [
           for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const Divider(height: 1, thickness: 1, color: Color(0xFFECE7DC)),
+            if (i > 0) const Divider(height: 1, thickness: 1, color: AppTheme.line),
             children[i],
           ],
         ],
@@ -215,7 +215,7 @@ class SettingsRow extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: color ?? AppTheme.ink),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: color ?? AppTheme.ink),
             ),
           ),
           if (value != null) ...[
@@ -227,7 +227,7 @@ class SettingsRow extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
               ),
             ),
           ],
@@ -259,7 +259,7 @@ class _SignOut extends ConsumerWidget {
             borderRadius: BorderRadius.circular(26),
             border: Border.all(color: AppTheme.ink, width: 1.5),
           ),
-          child: const Text('Terminar sessão', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          child: const Text('Terminar sessão', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ),
       ),
     ).withVersion();
@@ -516,7 +516,7 @@ class _EditEventPageState extends ConsumerState<EditEventPage> {
         builder: (sheet, setSheet) => Padding(
           padding: EdgeInsets.fromLTRB(20, 22, 20, 20 + MediaQuery.viewInsetsOf(sheet).bottom),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 14),
             OnbField(
               controller: tmp,
@@ -534,7 +534,7 @@ class _EditEventPageState extends ConsumerState<EditEventPage> {
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(52),
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               child: const Text('Guardar'),
             ),
@@ -671,8 +671,8 @@ class PanelPage extends ConsumerWidget {
     };
     Widget tile(String key, String label, String sub, {bool indent = false}) => SwitchListTile(
           contentPadding: EdgeInsets.only(left: indent ? 32 : 4, right: 4),
-          title: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          subtitle: Text(sub, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          title: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          subtitle: Text(sub, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           value: w.panelShows(key),
           onChanged: (v) => c.setPanelShown(key, v),
         );
@@ -684,7 +684,7 @@ class PanelPage extends ConsumerWidget {
       title: 'Painel do evento',
       children: [
         const Text('Escolhe o que aparece no painel. Esconder não apaga nada.',
-            style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+            style: TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
         const SizedBox(height: 8),
         tile('countdown', 'Contagem decrescente', 'Dias, horas, minutos e segundos'),
         if (canFourth)
@@ -969,7 +969,7 @@ class _AccountSection extends ConsumerWidget {
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             const Text(
               'Opcional. Aparecem nas faturas da taxa de serviço. Sem NIF, a fatura sai como consumidor final.',
-              style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.35),
+              style: TextStyle(fontSize: 14, color: AppTheme.inkMuted, height: 1.35),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -1027,7 +1027,7 @@ class _AccountSection extends ConsumerWidget {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 4, 20, 8),
-                child: Text('Pessoas bloqueadas', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                child: Text('Pessoas bloqueadas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
               ),
               if (current.isEmpty)
                 const Padding(padding: EdgeInsets.all(20), child: Text('Não tens ninguém bloqueado.')),
@@ -1186,8 +1186,8 @@ class _PushRowState extends State<_PushRow> {
       child: Row(children: [
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            const Text('Notificações', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            Text(sub, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+            const Text('Notificações', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(sub, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           ]),
         ),
         Switch.adaptive(
@@ -1217,7 +1217,7 @@ class HiddenEventsScreen extends ConsumerWidget {
           const Padding(
             padding: EdgeInsets.only(top: 20),
             child: Text('Não tens eventos arquivados nem apagados.',
-                style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                style: TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
           ),
         if (archived.isNotEmpty) ...[
           const SettingsSectionTitle('Arquivados'),
@@ -1230,7 +1230,7 @@ class HiddenEventsScreen extends ConsumerWidget {
             padding: EdgeInsets.fromLTRB(4, 10, 4, 0),
             child: Text(
               'Os apagados não aparecem a ninguém. Restaura-os quando quiseres, ou apaga-os de vez se não tiverem pedidos a parceiros, bilhetes ou presentes.',
-              style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
+              style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
             ),
           ),
         ],
@@ -1283,7 +1283,7 @@ class _HiddenEventRowState extends ConsumerState<_HiddenEventRow> {
             borderRadius: BorderRadius.circular(18),
             border: dark ? null : Border.all(color: AppTheme.ink, width: 1.5),
           ),
-          child: Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: dark ? Colors.white : AppTheme.ink)),
+          child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: dark ? Colors.white : AppTheme.ink)),
         ),
       );
 
@@ -1300,8 +1300,8 @@ class _HiddenEventRowState extends ConsumerState<_HiddenEventRow> {
               Text(e.name.isEmpty ? 'Evento' : capFirst(e.name),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              if (date != null) Text(date, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              if (date != null) Text(date, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             ]),
           ),
           const SizedBox(width: 10),
@@ -1315,14 +1315,14 @@ class _HiddenEventRowState extends ConsumerState<_HiddenEventRow> {
               child: SnappyTap(
                 onTap: _busy ? null : () => setState(() => _confirmPurge = true),
                 child: const Text('Apagar de vez',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppStatusColors.declined)),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppStatusColors.declined)),
               ),
             )
           else
             Row(children: [
               const Expanded(
                 child: Text('Apagar de vez? Não dá para desfazer.',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppStatusColors.declined)),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppStatusColors.declined)),
               ),
               _pill('Não', onTap: () => setState(() => _confirmPurge = false)),
               const SizedBox(width: 6),

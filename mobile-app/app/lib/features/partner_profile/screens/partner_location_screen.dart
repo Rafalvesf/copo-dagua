@@ -137,15 +137,15 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                     child: Container(
                       // Mockup «Páginas do parceiro» → Localização: linha branca.
                       padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
                       child: Row(
                         children: [
                           const Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Usar a minha localização', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                                Text('Preenche a morada automaticamente.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                                Text('Usar a minha localização', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                Text('Preenche a morada automaticamente.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                               ],
                             ),
                           ),
@@ -158,7 +158,7 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                   ),
                   const SizedBox(height: 18),
                   const Center(
-                    child: Text('ou procura a morada', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                    child: Text('ou procura a morada', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                   ),
                   const SizedBox(height: 12),
                   // Seletor de moradas com o Google (2026-11-20).

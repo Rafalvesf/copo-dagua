@@ -51,7 +51,7 @@ class MessageRow extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            border: last ? null : const Border(bottom: BorderSide(color: Color(0xFFECE7DC))),
+            border: last ? null : const Border(bottom: BorderSide(color: Color(0xFFD9D9D9))),
           ),
           child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
             SizedBox(
@@ -84,7 +84,7 @@ class MessageRow extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 17,
                             fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w700,
                             color: AppTheme.ink)),
                   ),
@@ -92,7 +92,7 @@ class MessageRow extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(time!,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: hasUnread ? AppTheme.accentOliveDark : AppTheme.inkMuted,
                         )),
@@ -115,7 +115,7 @@ class MessageRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w600,
                         color: hasUnread ? AppTheme.ink : AppTheme.inkMuted,
                       ),
@@ -130,7 +130,7 @@ class MessageRow extends StatelessWidget {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(10)),
                       child: Text('$unread',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
                     ),
                   ],
                 ]),
@@ -162,18 +162,18 @@ class MessageChip extends StatelessWidget {
         tone: AlertTone.pending,
         radius: 999,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: Text(text, maxLines: 1, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        child: Text(text, maxLines: 1, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       );
     }
     final (bg, fg) = switch (tone) {
       MessageChipTone.warn => (const Color(0xFFF7EACA), const Color(0xFF5A3E0C)),
       MessageChipTone.done => (const Color(0xFFE6EDE1), const Color(0xFF3F7A4F)),
-      MessageChipTone.plain => (const Color(0xFFF2F0EB), const Color(0xFF3A3733)),
+      MessageChipTone.plain => (const Color(0xFFF2F2F2), const Color(0xFF3A3733)),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(text, maxLines: 1, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
+      child: Text(text, maxLines: 1, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
     );
   }
 }

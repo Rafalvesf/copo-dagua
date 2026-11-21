@@ -53,7 +53,7 @@ class GradientScaffold extends StatelessWidget {
       case AppBackground.mood:
         return null;
       case AppBackground.cream:
-        return const LinearGradient(colors: [Color(0xFFF2F0EB), Color(0xFFF2F0EB)]);
+        return const LinearGradient(colors: [Color(0xFFF2F2F2), Color(0xFFF2F2F2)]);
     }
   }
 

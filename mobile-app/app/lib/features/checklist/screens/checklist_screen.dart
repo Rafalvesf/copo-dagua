@@ -177,10 +177,10 @@ class _DateShortcut extends StatelessWidget {
         height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
         child: Text(
           formatShortDatePt(DateTime.now()),
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
         ),
       ),
     );
@@ -241,7 +241,7 @@ class _StatusGroup extends StatelessWidget {
               onTap: onToggleExpand,
               child: Text(
                 expanded ? 'Ver menos' : 'Ver todas (${sorted.length})',
-                style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 14),
+                style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 15),
               ),
             ),
           ),

@@ -102,9 +102,9 @@ class _PaymentDueSheet extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(full ? 'Pagar a reserva' : due.deposit ? 'Pagar o sinal' : 'Pagar o resto',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 4),
-        Text(due.booking.partnerName, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        Text(due.booking.partnerName, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
         const SizedBox(height: 16),
         AlertOutline(
           tone: tone,
@@ -115,23 +115,23 @@ class _PaymentDueSheet extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(headline, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text(sub, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                Text(headline, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(sub, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
               ]),
             ),
           ]),
         ),
         const SizedBox(height: 16),
         Row(children: [
-          const Expanded(child: Text('A pagar', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
-          Text(euros(total, cents: true), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const Expanded(child: Text('A pagar', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted))),
+          Text(euros(total, cents: true), style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
         const SizedBox(height: 6),
         Text(
           due.deposit && !full
               ? 'Paga já para garantir a data: até pagares, o parceiro pode aceitar outro pedido para esse dia. Com cartão, o sinal fica cativo 48 h.'
               : 'Inclui a taxa de serviço. Sem pagamento até ${payDay(due.due)}, a reserva é cancelada.',
-          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
         ),
         const SizedBox(height: 20),
         Row(children: [
@@ -145,7 +145,7 @@ class _PaymentDueSheet extends StatelessWidget {
                   shape: const StadiumBorder(side: BorderSide(color: AppTheme.ink, width: 1.5)),
                   color: Colors.white,
                 ),
-                child: const Text('Mais tarde', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                child: const Text('Mais tarde', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
             ),
           ),
@@ -159,7 +159,7 @@ class _PaymentDueSheet extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: const ShapeDecoration(shape: StadiumBorder(), color: AppTheme.ink),
                 child: Text('Pagar ${euros(total, cents: true)}',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
               ),
             ),
           ),

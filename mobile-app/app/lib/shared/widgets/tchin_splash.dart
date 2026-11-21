@@ -98,7 +98,7 @@ class TchinSplash extends StatelessWidget {
                           ),
                       ],
                     ),
-                    style: const TextStyle(fontSize: 13, color: Color(0xFFDDE5D3)),
+                    style: const TextStyle(fontSize: 14, color: Color(0xFFDDE5D3)),
                   ),
                 ),
               ),
@@ -147,7 +147,7 @@ class TchinSplash extends StatelessWidget {
                     opacity: taglineOpacity,
                     child: Text(
                       greeting!,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
+                      style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -156,7 +156,7 @@ class TchinSplash extends StatelessWidget {
                   opacity: taglineOpacity,
                   child: Text(
                     tagline,
-                    style: const TextStyle(fontSize: 15, color: Color(0xFFDDE5D3)),
+                    style: const TextStyle(fontSize: 16, color: Color(0xFFDDE5D3)),
                   ),
                 ),
                 if (greeting != null && !farewell) ...[

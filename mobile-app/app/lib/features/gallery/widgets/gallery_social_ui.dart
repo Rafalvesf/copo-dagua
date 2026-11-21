@@ -308,7 +308,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                         children: [
                           Row(
                             children: [
-                              Flexible(child: Text(name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14))),
+                              Flexible(child: Text(name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15))),
                               if (m.authorIsCouple) ...[
                                 const SizedBox(width: 6),
                                 const V2Chip('Anfitrião'),
@@ -409,7 +409,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                   TextSpan(text: '$name ', style: const TextStyle(fontWeight: FontWeight.w700)),
                   TextSpan(text: widget.photo.caption),
                 ]),
-                style: const TextStyle(fontSize: 14, height: 1.43, color: AppTheme.ink),
+                style: const TextStyle(fontSize: 15, height: 1.43, color: AppTheme.ink),
               ),
             ],
             if (comments > 0) ...[
@@ -419,14 +419,14 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                 onTap: () => showGalleryComments(context, weddingId: widget.weddingId, photoId: widget.photo.id),
                 child: Text(
                   comments == 1 ? 'Ver 1 comentário' : 'Ver os $comments comentários',
-                  style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
+                  style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
                 ),
               ),
             ],
             const SizedBox(height: 6),
             Text(
               _stamp(widget.photo.createdAt),
-              style: const TextStyle(fontSize: 11, letterSpacing: 0.7, color: Color(0xFF6E6A63)),
+              style: const TextStyle(fontSize: 12, letterSpacing: 0.7, color: Color(0xFF6E6A63)),
             ),
           ],
         ],
@@ -456,7 +456,7 @@ class _LikedBy extends ConsumerWidget {
     if (likers.isEmpty) {
       return Padding(
         padding: const EdgeInsets.only(top: 6),
-        child: Text(likes == 1 ? '1 gosto' : '$likes gostos', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        child: Text(likes == 1 ? '1 gosto' : '$likes gostos', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       );
     }
     final others = likes - 1;
@@ -491,7 +491,7 @@ class _LikedBy extends ConsumerWidget {
               ]),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+              style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
             ),
           ),
         ],
@@ -524,7 +524,7 @@ class _CommentPreview extends ConsumerWidget {
                 ]),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 14, height: 1.43, color: AppTheme.ink),
+                style: const TextStyle(fontSize: 15, height: 1.43, color: AppTheme.ink),
               ),
             ),
         ],
@@ -557,7 +557,7 @@ class _Action extends StatelessWidget {
               Icon(icon, size: 25, color: color),
               if (label != null) ...[
                 const SizedBox(width: 5),
-                Text(label!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(label!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ],
             ],
           ),
@@ -703,7 +703,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                                               ),
                                               TextSpan(text: c.body),
                                             ]),
-                                            style: const TextStyle(fontSize: 14, color: AppTheme.ink),
+                                            style: const TextStyle(fontSize: 15, color: AppTheme.ink),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
@@ -744,7 +744,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                         _text.text = '${_text.text}$e';
                         _text.selection = TextSelection.collapsed(offset: _text.text.length);
                       },
-                      child: Padding(padding: const EdgeInsets.all(6), child: Text(e, style: const TextStyle(fontSize: 22))),
+                      child: Padding(padding: const EdgeInsets.all(6), child: Text(e, style: const TextStyle(fontSize: 23))),
                     ),
                 ],
               ),
@@ -870,7 +870,7 @@ class _MemberSheet extends ConsumerWidget {
                                 m.isCouple
                                     ? 'Casal'
                                     : (m.groupLabel?.isNotEmpty == true ? 'Convidado · ${m.groupLabel}' : 'Convidado'),
-                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
                               ),
                             ),
                           ],

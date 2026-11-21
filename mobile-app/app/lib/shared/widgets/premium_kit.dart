@@ -8,8 +8,8 @@ import 'page_kit.dart' show KitTag, KitTagKind;
 /// Premium», 2026-11-21; DESIGN.md §6.3). Usar estes em vez de refazer à
 /// mão: o mesmo bloco tem sempre o mesmo aspeto.
 
-const _caps = TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted);
-const _meta = TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, height: 1.4);
+const _caps = TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted);
+const _meta = TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, height: 1.4);
 
 /// Número grande (40) com a unidade (13) ao lado.
 class BigNumber extends StatelessWidget {
@@ -55,7 +55,7 @@ class HeroSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
         child: Column(children: [
           EstrelaMascot(star, size: 150),
           const SizedBox(height: 8),
@@ -105,19 +105,19 @@ class CompareTable extends StatelessWidget {
         SizedBox(width: w, child: Text(t.toUpperCase(), textAlign: TextAlign.center, style: _caps));
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
       child: Column(children: [
         SizedBox(height: 40, child: Row(children: [const Spacer(), head(without, 64), head(with_, 96)])),
         for (final (name, a, b) in rows)
           Container(
             constraints: const BoxConstraints(minHeight: 56),
-            decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFECE7DC)))),
+            decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFD9D9D9)))),
             child: Row(children: [
-              Expanded(child: Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+              Expanded(child: Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink))),
               SizedBox(
                 width: 64,
                 child: Text(a, textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
               ),
               SizedBox(width: 96, child: Center(child: KitTag(b))),
             ]),
@@ -181,6 +181,7 @@ class FeaturedCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
+          border: AppTheme.cardBorder,
           borderRadius: BorderRadius.circular(22),
           boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
         ),
@@ -192,7 +193,7 @@ class FeaturedCard extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 KitTag(tag, kind: tagKind),
                 const SizedBox(height: 4),
-                Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 Text(meta, style: _meta),
               ]),
             ),

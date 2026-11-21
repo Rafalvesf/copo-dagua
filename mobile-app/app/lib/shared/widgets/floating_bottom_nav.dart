@@ -197,7 +197,7 @@ class _NavIcon extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFFEDEAE3) : Colors.transparent,
+          color: active ? const Color(0xFFEBEBEB) : Colors.transparent,
           borderRadius: BorderRadius.circular(kNavRadius - 10),
         ),
         child: Column(
@@ -232,7 +232,7 @@ class _NavIcon extends StatelessWidget {
             Text(label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color)),
           ],
         ),
       ),

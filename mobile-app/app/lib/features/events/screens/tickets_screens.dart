@@ -120,13 +120,13 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text('Bilhetes · ${e.displayNames}',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 4),
-            Text('${euroLabel(unit)} por pessoa', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+            Text('${euroLabel(unit)} por pessoa', style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
             const SizedBox(height: 20),
             Row(
               children: [
-                const Expanded(child: Text('Quantos?', style: TextStyle(fontSize: 16, color: AppTheme.ink))),
+                const Expanded(child: Text('Quantos?', style: TextStyle(fontSize: 17, color: AppTheme.ink))),
                 IconButton.outlined(
                   tooltip: 'Menos',
                   onPressed: _qty > 1 && !_busy ? () => setState(() => _qty--) : null,
@@ -136,7 +136,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
                   width: 44,
                   child: Text('$_qty',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
                 IconButton.outlined(
                   tooltip: 'Mais',
@@ -147,12 +147,12 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
             ),
             const Divider(height: 28),
             Row(children: [
-              const Expanded(child: Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700))),
-              Text(euroLabel(unit * _qty), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+              const Expanded(child: Text('Total', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700))),
+              Text(euroLabel(unit * _qty), style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700)),
             ]),
             if (_error != null) ...[
               const SizedBox(height: 10),
-              Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13)),
+              Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 14)),
             ],
             const SizedBox(height: 16),
             FilledButton(
@@ -244,7 +244,7 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
                         ? 'Se pagaste com Multibanco ou MB WAY, pode demorar uns minutos. Avisamos quando ficar confirmado.'
                         : '',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 15, height: 1.4, color: AppTheme.inkMuted),
+                style: const TextStyle(fontSize: 16, height: 1.4, color: AppTheme.inkMuted),
               ),
               if (ticket != null) ...[
                 const SizedBox(height: 18),
@@ -388,8 +388,8 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
   Widget _line(String label, String value, {bool strong = false}) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(children: [
-          Expanded(child: Text(label, style: TextStyle(fontSize: 14, color: strong ? AppTheme.ink : AppTheme.inkMuted))),
-          Text(value, style: TextStyle(fontSize: strong ? 17 : 14, fontWeight: strong ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink)),
+          Expanded(child: Text(label, style: TextStyle(fontSize: 15, color: strong ? AppTheme.ink : AppTheme.inkMuted))),
+          Text(value, style: TextStyle(fontSize: strong ? 18 : 15, fontWeight: strong ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink)),
         ]),
       );
 
@@ -411,7 +411,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
               decoration: softCard(),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 const Text('RECEBER PAGAMENTOS',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
                 const SizedBox(height: 6),
                 if (statusAsync.isLoading && s == null)
                   const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator()))
@@ -424,10 +424,10 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                             : s.needsData
                                 ? 'Faltam alguns dados para a Stripe.'
                                 : 'A Stripe está a verificar os teus dados.',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink),
                   ),
                   if (s?.bankLast4 != null)
-                    Text('IBAN terminado em ${s!.bankLast4}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    Text('IBAN terminado em ${s!.bankLast4}', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                   const SizedBox(height: 12),
                   if (s == null || !s.active)
                     FilledButton(
@@ -445,7 +445,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                 decoration: softCard(),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                   Text('VENDAS · ${wedding!.displayNames.toUpperCase()}',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
                   const SizedBox(height: 8),
                   _line('Bilhetes vendidos', '${summary.sold}'),
                   _line('Total pago pelos convidados', euroLabel(summary.gross)),
@@ -466,7 +466,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                 padding: const EdgeInsets.all(16),
                 decoration: softCard(),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  const Text('SALDO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
+                  const Text('SALDO', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
                   const SizedBox(height: 8),
                   _line('Disponível', euroLabel(s.availableCents / 100), strong: true),
                   _line('A caminho (ainda em processamento)', euroLabel(s.pendingCents / 100)),
@@ -484,7 +484,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
             const Text(
               'Quem compra paga só o preço do bilhete. Do que recebes descontamos a taxa de serviço. '
               'Se reembolsares um bilhete ou cancelares o evento, quem comprou recebe tudo de volta e a taxa de serviço não é devolvida.',
-              style: TextStyle(fontSize: 12.5, height: 1.45, color: AppTheme.inkMuted),
+              style: TextStyle(fontSize: 13.5, height: 1.45, color: AppTheme.inkMuted),
             ),
             // Visível também depois de cancelar, enquanto houver bilhetes por reembolsar (repetir falhas).
             if (wedding != null && summary != null && ((ref.watch(eventIsPublicProvider(wedding.id)).value ?? false) || summary.sold > 0)) ...[
@@ -524,7 +524,7 @@ class _TicketList extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
       decoration: softCard(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const Text('BILHETES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
+        const Text('BILHETES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
         const SizedBox(height: 4),
         for (final t in rows)
           Padding(
@@ -536,13 +536,13 @@ class _TicketList extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 14.5,
+                        fontSize: 15.5,
                         fontWeight: FontWeight.w700,
                         color: t.refunded ? AppTheme.inkMuted : AppTheme.ink,
                         decoration: t.refunded ? TextDecoration.lineThrough : null,
                       )),
                   Text('${t.quantity} × · ${euroLabel(t.amount)}${t.refunded ? ' · reembolsado' : ''}${t.checkedInAt != null ? ' · entrou às ${t.checkedInAt!.hour.toString().padLeft(2, '0')}:${t.checkedInAt!.minute.toString().padLeft(2, '0')}' : ''}',
-                      style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
                 ]),
               ),
               if (!t.refunded)

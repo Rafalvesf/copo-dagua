@@ -245,7 +245,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             child: Column(children: [
               V2RoundButton(icon: icon, tooltip: label, onTap: onTap),
               const SizedBox(height: 6),
-              Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
             ]),
           ),
         );
@@ -278,17 +278,17 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
         Container(
           margin: const EdgeInsets.only(top: 20),
           padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
           child: Row(children: [
             V2Avatar(guest.name, size: 76),
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(guest.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(guest.name, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(height: 4),
                 Text(
                   [guest.group.isEmpty ? 'Convidado' : guest.group, if (guest.ageGroup != 'adult') ageGroupLabel(guest.ageGroup)].join(' · '),
-                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
                 ),
                 const SizedBox(height: 8),
                 SnappyTap(
@@ -355,7 +355,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
               foregroundColor: Colors.white,
               minimumSize: const Size.fromHeight(52),
               shape: const StadiumBorder(),
-              textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+              textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
             ),
             child: const Text('Editar convidado'),
           ),
@@ -370,7 +370,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
               minimumSize: const Size.fromHeight(52),
               side: const BorderSide(color: AppStatusColors.declined, width: 1.5),
               shape: const StadiumBorder(),
-              textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+              textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
             ),
             child: const Text('Remover convidado'),
           ),

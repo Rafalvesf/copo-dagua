@@ -71,16 +71,16 @@ class _RejectProposalSheetState extends State<RejectProposalSheet> {
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Recusar a proposta?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Text('Recusar a proposta?', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 4),
-              Text(widget.partnerName, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              Text(widget.partnerName, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             ]),
           ),
           const SizedBox(width: 12),
           const IslandCloseButton(),
         ]),
         const SizedBox(height: 16),
-        const Text('PORQUÊ?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+        const Text('PORQUÊ?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
         const SizedBox(height: 8),
         for (final (code, title, sub) in _reasons)
           Padding(
@@ -115,11 +115,11 @@ class _RejectProposalSheetState extends State<RejectProposalSheet> {
                     Expanded(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(title,
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _code == code ? Colors.white : AppTheme.ink)),
+                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: _code == code ? Colors.white : AppTheme.ink)),
                         if (sub.isNotEmpty)
                           Text(sub,
                               style: TextStyle(
-                                  fontSize: 13, color: _code == code ? Colors.white.withValues(alpha: 0.85) : AppTheme.inkMuted)),
+                                  fontSize: 14, color: _code == code ? Colors.white.withValues(alpha: 0.85) : AppTheme.inkMuted)),
                       ]),
                     ),
                   ]),
@@ -128,7 +128,7 @@ class _RejectProposalSheetState extends State<RejectProposalSheet> {
             ),
           ),
         const SizedBox(height: 8),
-        const Text('MENSAGEM (OPCIONAL)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+        const Text('MENSAGEM (OPCIONAL)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
         const SizedBox(height: 8),
         TextField(
           controller: _note,
@@ -136,7 +136,7 @@ class _RejectProposalSheetState extends State<RejectProposalSheet> {
           maxLines: 5,
           maxLength: 500,
           textCapitalization: TextCapitalization.sentences,
-          style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+          style: const TextStyle(fontSize: 16, color: AppTheme.ink),
           decoration: InputDecoration(
             hintText: 'Uma palavra para ${widget.partnerName}…',
             filled: true,
@@ -151,7 +151,7 @@ class _RejectProposalSheetState extends State<RejectProposalSheet> {
         ),
         const SizedBox(height: 8),
         Text('${widget.partnerName} recebe o motivo e a mensagem na conversa.',
-            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
         const SizedBox(height: 20),
         SizedBox(
           height: 52,
@@ -169,7 +169,7 @@ class _RejectProposalSheetState extends State<RejectProposalSheet> {
               disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.35),
               disabledForegroundColor: Colors.white,
               shape: const StadiumBorder(),
-              textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             child: const Text('Recusar proposta'),
           ),

@@ -144,7 +144,7 @@ class _AttachOption extends StatelessWidget {
             Container(
               width: 58,
               height: 58,
-              decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(18)),
+              decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(18)),
               child: Icon(icon, color: AppTheme.accentOliveDark, size: 26),
             ),
             const SizedBox(height: 6),
@@ -315,11 +315,11 @@ class ChatAttachmentView extends StatelessWidget {
               fit: BoxFit.cover,
               loadingBuilder: (c, child, p) => p == null
                   ? child
-                  : Container(width: maxW, height: 180, color: const Color(0xFFF2F0EB), child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
+                  : Container(width: maxW, height: 180, color: const Color(0xFFF2F2F2), child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
               errorBuilder: (c, e, s) => Container(
                 width: maxW,
                 height: 120,
-                color: const Color(0xFFF2F0EB),
+                color: const Color(0xFFF2F2F2),
                 child: const Icon(Hi.photo, color: AppTheme.inkMuted),
               ),
             ),
@@ -335,7 +335,7 @@ class ChatAttachmentView extends StatelessWidget {
         constraints: BoxConstraints(maxWidth: maxW),
         padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
         decoration: BoxDecoration(
-          color: isMe ? AppTheme.accentOliveDark : const Color(0xFFF2F0EB),
+          color: isMe ? AppTheme.accentOliveDark : const Color(0xFFF2F2F2),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [

@@ -136,7 +136,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
           KitSection('Juntar ao ${pkg!.name}'),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
             child: Column(children: [
               for (var i = 0; i < pkgExtras.length; i++)
                 ExtraChoiceRow(
@@ -159,10 +159,10 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
               Expanded(
                 child: Text(
                   [pkg.name, if (_extras.isNotEmpty) '+ ${_extras.length} extra'].join(' · '),
-                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
                 ),
               ),
-              Text(euros(amount), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(euros(amount), style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ]),
           ),
         FilledButton(
@@ -172,7 +172,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(52),
             shape: const StadiumBorder(),
-            textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
           child: Text(pkg == null
               ? 'Escolhe um menu'
@@ -186,7 +186,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
               ? 'Pagas a tua parte na app. A taxa de serviço é paga por quem paga.'
               : 'Pagam os organizadores. Podes mudar até a escolha fechar.',
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
         ),
       ]),
     );
