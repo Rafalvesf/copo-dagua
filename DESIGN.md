@@ -121,7 +121,7 @@ ecrãs. O resto da app mantém a tabela acima.
 - **«Para fazer» — sempre com um de três estados** (regra do Rafael,
   2026-11-21, para toda a app — organizador, parceiro e convidado): a
   **lista** das tarefas (com o número no título, «PARA FAZER · 2»); **feito**
-  — estrela contente + «Está tudo tratado» e o que ficou feito («Menus
+  — estrela a piscar o olho + «Está tudo tratado» e o que ficou feito («Menus
   escolhidos e a tua parte paga.»); **ainda sem tarefas** — estrela a dormir
   + «Aparecem aqui as tuas tarefas» e o que vai aparecer («Menus para
   escolher e a tua parte para pagar.»). A secção nunca some sem explicação.
@@ -212,7 +212,8 @@ ecrãs. O resto da app mantém a tabela acima.
   continuar enquanto carrega; parada com «reduzir movimento». Onde:
   listas vazias → a dormir; erros → triste; evento criado e pagamento
   feito → parabéns; convites e «vou» → apaixonada; aceitar/juntar →
-  contente; sugestões → ideia; conversas vazias → piscar o olho; Premium → fixe
+  contente; sugestões → ideia; conversas vazias e «Está tudo tratado» → piscar o olho; barra de
+  progresso → feliz; Premium → fixe
   (de óculos, pedido 2026-11-21). Substitui
   as duas taças.
 - **Páginas** (`shared/widgets/page_kit.dart`, canvases «Páginas do
