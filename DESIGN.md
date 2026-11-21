@@ -43,7 +43,13 @@ contadores). **Nunca** para botões.
 - Altura: **52** a toda a largura; **44** dentro de cartões; **36** nas linhas
   de lista ("A seguir", "Ver evento"); **34** nas respostas rápidas.
 - Texto: 15 negrito (52), 14 negrito (44), 13 negrito (36/34).
-- Botão redondo (voltar, sino, definições, ⋯): círculo branco **44**, ícone 20.
+- **Botão redondo** (voltar, sino, conversa, partilhar, favorito,
+  definições, ⋯, fechar «×»): **círculo preto `#171713` 44 com o ícone
+  branco e sólido 20** (Heroicons Solid), sem sombra. **Em toda a app**
+  (organizador, parceiro e convidado): nas páginas, sobre fotos e nos popups
+  — nunca branco, cinzento ou translúcido (pedido do Rafael, 2026-11-21).
+  Contador por cima (p. ex. mensagens por ler): pílula branca 20 com o
+  número 12 negrito preto e aro preto 2.
 - "+" de criar: círculo preto 44, "+" branco.
 
 ## 3. Letra
@@ -149,14 +155,15 @@ ecrãs. O resto da app mantém a tabela acima.
   `#EDEAE3`.
 - **Ícones:** Heroicons Solid na app; nos ecrãs dos mockups (Perfil,
   Mensagens, Conversa, Definições, Parceiro) os ícones de traço dos mockups
-  (`LineIcon`). Sem emojis (exceção: o "Parabéns! 🎉" do criar evento).
+  (`LineIcon`) — menos dentro dos botões redondos, que levam sempre o ícone
+  branco sólido (§2). Sem emojis (exceção: o "Parabéns! 🎉" do criar evento).
 - **Conversa:** bolha minha preta / dele branca, cantos 18 com o canto do lado
   a 6; dia numa pílula `#E9E5DC`; "hh:mm · Visto"; ilha do evento flutuante
   com cantos da navbar, esconde-se no scroll.
 - **Onboarding** (`shared/widgets/onb_kit.dart`, mockup "Onboarding"
   2026-11-12): barra de progresso verde de **10** com a percentagem (12
   negrito) à direita — começa sempre em 20%; botão de voltar redondo
-  branco 44; "1 DE 4" como título de grupo (13); título 32, subtítulo 17
+  preto 44 (§2); "1 DE 4" como título de grupo (13); título 32, subtítulo 17
   (escala de primeiro contacto, §3);
   caixas de texto em pílula branca **52** (texto 15, contador 13 à
   direita, erro = linha vermelha 1,5 + ponto + frase 13); cartões de
@@ -175,8 +182,8 @@ ecrãs. O resto da app mantém a tabela acima.
   (de óculos, pedido 2026-11-21). Substitui
   as duas taças.
 - **Páginas** (`shared/widgets/page_kit.dart`, canvases «Páginas do
-  evento / parceiro / convidado», 2026-11-14): voltar redondo branco 44 numa
-  linha com as ações à direita («+» preto 44, ⋯ branco 44); título de página
+  evento / parceiro / convidado», 2026-11-14): voltar redondo preto 44 numa
+  linha com as ações à direita («+» preto 44, ⋯ preto 44); título de página
   28 à esquerda por baixo e subtítulo 13; filtros em pílula 38 **em cima**
   (com contador); **resumo do topo** branco (cantos 22, interior 18, sem
   sombra): rótulo 12 em maiúsculas, número 40, unidade 13, barra verde 10 e
@@ -184,30 +191,21 @@ ecrãs. O resto da app mantém a tabela acima.
   de linhas (avatar 44, nome 16, meta 13, etiqueta à direita).
 - **Emojis:** só no "Parabéns! 🎉" do fim do criar evento (pedido do
   Rafael, 2026-11-12). Em mais lado nenhum.
-- **Botões redondos sobre imagens e «voltar ao topo»** (pedido do Rafael,
-  2026-11-16): um botão redondo (voltar/sair, definições, sino, ⋯) é
-  **translúcido só quando — e enquanto — tem uma imagem por trás** (foto de
-  capa, herói com foto): branco a ~55 % com a sombra suave e o ícone preto 20
-  bem legível. **Em mais lado nenhum:** sobre o fundo liso (`#F2F0EB`), sobre
-  branco, ou depois de o cabeçalho deixar de assentar na imagem, é o **branco
-  cheio 44** do §2. Ou seja, a transparência é decidida por "há imagem por
-  trás agora?", não pela quantidade de scroll.
+- **Botões redondos sobre imagens e «voltar ao topo»**: sobre fotos (capa,
+  herói) os botões redondos são os **pretos cheios 44** do §2, como em todo
+  o lado — já não há botões translúcidos (pedido do Rafael, 2026-11-21;
+  substitui a regra da transparência de 2026-11-16).
   Em **todas** as páginas que fazem scroll (com imagem ou sem), a **seta de
   voltar** (canto superior esquerdo) muda com o scroll: ao descer, o ícone
   **roda de ← para ↑** e o toque passa a **subir a página até ao topo** (com
   animação) em vez de voltar atrás; ao chegar ao topo, volta a ser a seta de
-  voltar (←). A transparência é independente disto e segue só a regra de cima:
-  onde há imagem por trás, a seta é translúcida no topo (sobre a imagem) e fica
-  branco opaco depois de a imagem sair de trás; onde não há imagem, é sempre o
-  branco cheio 44. Os restantes botões (definições, ⋯) não mudam de ação; só
-  deixam de ser translúcidos quando a imagem sai de trás deles. A transição
-  (rotação do ícone e, onde se aplique, a transparência) é sempre animada,
-  nunca instantânea.
+  voltar (←). Os restantes botões (definições, ⋯) não mudam. A rotação é
+  sempre animada, nunca instantânea.
   - **Componente:** a seta fixa é o `ScrollAwareBackButton`
     (`shared/widgets/scroll_aware_back_button.dart`): recebe o
     `ScrollController` da lista do ecrã, a ação de voltar e `imageExtent` (os px
-    de scroll em que ainda há imagem por trás; 0 = sem imagem, nunca
-    translúcido). Fica num overlay fixo por cima da lista (não desce com ela).
+    de scroll em que ainda há imagem por trás — já não muda o aspeto, o
+    botão é sempre preto). Fica num overlay fixo por cima da lista (não desce com ela).
     Todo o ecrã com scroll usa-o — o painel do evento já o usa
     (`wedding_details_screen.dart`, no `Stack` do `_normal`). **Nunca** refazer
     esta seta à mão: ligar o componente.
@@ -249,7 +247,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   pergunta não tem «×».
 - **Voltar — sempre no mesmo sítio** (pedido do Rafael, 2026-11-20, regra
   da consistência): nos popups com passos, a partir do 2.º passo, o voltar é
-  um **círculo 44 `#F2F0EB` com a seta ← 20, no canto superior esquerdo**, ao
+  um **círculo preto 44 com a seta ← branca 20 (§2), no canto superior esquerdo**, ao
   lado do título (o «×» de fechar fica à direita). **Nunca** um botão
   «Voltar» em baixo: os botões de baixo são só ações (um preto a toda a
   largura, ou contorno + preto, p. ex. «Pagar mais tarde» + «Pagar»). Vale
@@ -284,8 +282,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   visível**. Aberta: «Em destaque», logótipo 56 e nome 28 a branco sobre um
   véu escuro. Reduzida: ao lado da seta fica o nome 16 e a meta 13 a branco,
   e os cantos de baixo ficam iguais aos de cima (40). Voltar, partilhar e
-  favorito ficam sempre no mesmo sítio e são sempre translúcidos (há sempre
-  foto por trás). **Exceção ao «voltar ao topo» do §6:** aqui a seta é
+  favorito ficam sempre no mesmo sítio e são os pretos 44 do §2. **Exceção ao «voltar ao topo» do §6:** aqui a seta é
   sempre «voltar» (não roda para ↑).
 - **Pacotes:** linhas num grupo com um círculo que fica verde com o visto
   quando escolhido, nome 16, meta 13 e o preço à direita.
@@ -320,8 +317,8 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   todo, a reserva é cancelada; o convidado que não paga sai da reserva (os
   outros vão na mesma). A taxa de serviço só entra no passo de pagar e
   diz-se antes: «+ taxa de serviço no passo seguinte».
-- **Perfil do organizador:** faixa de cor 200 no topo (sem foto: botões
-  brancos cheios 44 — voltar, partilhar, ⋯), a `ProfileCard_Users` por cima
+- **Perfil do organizador:** faixa de cor 200 no topo (botões
+  pretos 44 do §2 — voltar, partilhar, ⋯), a `ProfileCard_Users` por cima
   dela, «Próximos eventos» em carrossel, «A seguir», e a barra fixa com
   «Mensagem» (contorno) e «Seguir» (preto) a 52.
 - **Moradas:** todos os campos de local (criar evento, local do evento,
@@ -343,9 +340,9 @@ perguntar antes.
 **Popup (ilha, §6.1) — de cima para baixo, interior 20, espaço 16:**
 1. *(Só em fluxos com passos)* barra verde **10** + «2 DE 5» (12 negrito) à
    direita.
-2. Cabeçalho: voltar **44** `#F2F0EB` à esquerda (a partir do 2.º passo) ·
-   título **22** negrito + subtítulo **13** `#57534E` · «×» **44**
-   `#F2F0EB` à direita.
+2. Cabeçalho: voltar **44** preto à esquerda (a partir do 2.º passo) ·
+   título **22** negrito + subtítulo **13** `#57534E` · «×» **44** preto
+   à direita (ícones brancos sólidos 20, §2).
 3. Corpo, só com estas peças:
    - **Grupo** `#F2F0EB`, cantos 22, interior 4×16, linhas separadas por
      `#ECE7DC` (opções, pessoas, métodos de pagamento, extras). Opção
@@ -367,7 +364,7 @@ estrela **120** ao centro (contente para pedidos; parabéns para pagamentos
 e Premium), título **22** ao centro, frase **14** `#57534E` ao centro,
 resumo se houver, e «OK» preto (ou «Ver conversa» + «OK»). Sem «×».
 
-**Página (fundo `#F2F0EB`, margem 20):** voltar branco **44** · título
+**Página (fundo `#F2F0EB`, margem 20):** voltar preto **44** · título
 **28** à esquerda + subtítulo **13** · blocos separados por títulos de
 grupo em maiúsculas (24 acima, 12 abaixo). Blocos permitidos
 (`shared/widgets/premium_kit.dart`, `page_kit.dart`):

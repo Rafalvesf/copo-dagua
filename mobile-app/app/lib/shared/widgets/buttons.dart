@@ -68,8 +68,7 @@ class ArrowCtaButton extends StatelessWidget {
   }
 }
 
-/// Botão circular translúcido — o padrão de "voltar"/"favorito" usado
-/// sobre os cartões de destaque na referência visual.
+/// Botão circular preto com o ícone branco (DESIGN.md §2).
 class CircleIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
@@ -87,8 +86,8 @@ class CircleIconButton extends StatelessWidget {
     this.semanticLabel,
     this.onTap,
     this.size = 36,
-    this.background = Colors.white,
-    this.foreground = AppTheme.ink,
+    this.background = AppTheme.ink,
+    this.foreground = Colors.white,
     this.shadow = true,
   });
 

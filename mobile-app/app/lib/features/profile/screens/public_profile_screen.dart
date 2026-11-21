@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +7,6 @@ import '../../../core/chat/group_chat.dart' show openDirectChat, DirectChatUnava
 
 import '../../../core/moderation/moderation.dart' show blockProfile;
 import '../../../core/social/social.dart';
-import '../../../shared/widgets/line_icon.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -71,7 +71,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             width: 44,
             height: 44,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
             child: icon,
           ),
         ),
@@ -114,9 +114,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                         padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, top + 8, AppTheme.screenMargin, 0),
                         alignment: Alignment.topCenter,
                         child: Row(children: [
-                          _round(const LineIcon(LineIcon.back, stroke: 2.2), 'Voltar', () => Navigator.of(context).maybePop()),
+                          _round(const Icon(Hi.chevronLeft, size: 20, color: Colors.white), 'Voltar', () => Navigator.of(context).maybePop()),
                           const Spacer(),
-                          _round(const LineIcon(LineIcon.share, size: 20, stroke: 2.2), 'Partilhar perfil', () => _share(p)),
+                          _round(const Icon(Hi.arrowUpOnSquare, size: 20, color: Colors.white), 'Partilhar perfil', () => _share(p)),
                           if (!p.isMe) ...[
                             const SizedBox(width: 10),
                             IslandMenuButton<String>(
@@ -127,8 +127,8 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                                 width: 44,
                                 height: 44,
                                 alignment: Alignment.center,
-                                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                child: const LineIcon(LineIcon.dots, stroke: 2.4),
+                                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                                child: const Icon(Hi.ellipsisHorizontal, size: 20, color: Colors.white),
                               ),
                             ),
                           ],

@@ -1,5 +1,6 @@
 import '../../core/moderation/word_filter.dart';
 import 'package:flutter/material.dart';
+import '../hero_icons.dart';
 import 'line_icon.dart';
 
 import '../../core/models/models.dart';
@@ -356,8 +357,8 @@ class ChatComposer extends StatelessWidget {
                     width: 44,
                     height: 44,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
-                    child: const LineIcon(LineIcon.plus, stroke: 2.4),
+                    decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                    child: const Icon(Hi.plus, size: 20, color: Colors.white),
                   ),
                 ),
                 const SizedBox(width: 8),

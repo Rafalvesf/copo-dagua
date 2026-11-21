@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart';
 import '../../../shared/public_link.dart';
-import '../../../shared/widgets/line_icon.dart';
 import '../../../core/chat/presence.dart' show responseLabel;
 import '../../../core/pending_deep_link.dart';
 import '../../../shared/widgets/install_app_sheet.dart';
@@ -1574,8 +1573,8 @@ String _eventMeta(Wedding w) {
   return parts.join(' · ');
 }
 
-/// Botão redondo 44 translúcido sobre a foto (DESIGN.md §6: branco a ~55 %
-/// com a sombra suave e o ícone preto 20).
+/// Botão redondo 44 sobre a foto: preto com o ícone branco sólido 20, como
+/// em todo o lado (DESIGN.md §2, pedido 2026-11-21).
 class _GlassButton extends StatelessWidget {
   final Widget icon;
   final String label;
@@ -1593,11 +1592,7 @@ class _GlassButton extends StatelessWidget {
             width: 44,
             height: 44,
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.55),
-              shape: BoxShape.circle,
-              boxShadow: softShadow,
-            ),
+            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
             child: icon,
           ),
         ),
@@ -1747,7 +1742,7 @@ class _PartnerHero extends StatelessWidget {
                     )
                   else
                     _GlassButton(
-                      icon: const Icon(Hi.arrowLeft, size: 20, color: AppTheme.ink),
+                      icon: const Icon(Hi.arrowLeft, size: 20, color: Colors.white),
                       label: 'Voltar',
                       onTap: onBack,
                     ),
@@ -1791,13 +1786,13 @@ class _PartnerHero extends StatelessWidget {
                   ] else ...[
                     const SizedBox(width: 10),
                     _GlassButton(
-                      icon: const LineIcon(LineIcon.share, size: 20, stroke: 2.2),
+                      icon: const Icon(Hi.arrowUpOnSquare, size: 20, color: Colors.white),
                       label: 'Partilhar',
                       onTap: onShare,
                     ),
                     const SizedBox(width: 10),
                     _GlassButton(
-                      icon: LineIcon(LineIcon.heart, size: 20, stroke: 2.2, fill: favorited, color: AppTheme.ink),
+                      icon: Icon(favorited ? Hi.heart : Hi.heartOutline, size: 20, color: Colors.white),
                       label: favorited ? 'Remover dos favoritos' : 'Guardar nos favoritos',
                       onTap: onFavorite,
                     ),

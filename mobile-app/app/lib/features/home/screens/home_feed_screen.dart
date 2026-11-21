@@ -1,7 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../payments/payment_due_prompt.dart';
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/line_icon.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:share_plus/share_plus.dart';
 import '../../../core/social/social.dart';
@@ -154,7 +153,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                   TourAnchor(
                                     id: 'bell',
                                     child: _RoundIcon(
-                                      icon: const LineIcon(LineIcon.bell),
+                                      icon: const Icon(Hi.bell, size: 20, color: Colors.white),
                                       tip: 'Notificações',
                                       onTap: () => _openNotifications(context),
                                     ),
@@ -166,7 +165,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                       child: Container(
                                         width: 9,
                                         height: 9,
-                                        decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle),
+                                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
                                       ),
                                     ),
                                 ],
@@ -174,7 +173,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                             else
                               const PartnerNotificationBell(round: true),
                             const SizedBox(width: 10),
-                            _RoundIcon(icon: const LineIcon(LineIcon.gear, circles: LineIcon.gearCircle), tip: 'Definições', onTap: () => context.push('/conta')),
+                            _RoundIcon(icon: const Icon(Hi.cog6Tooth, size: 20, color: Colors.white), tip: 'Definições', onTap: () => context.push('/conta')),
                           ],
                         ),
                         ),
@@ -628,7 +627,7 @@ class _RoundIcon extends StatelessWidget {
             width: 44,
             height: 44,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
             child: icon,
           ),
         ),

@@ -5,6 +5,7 @@ import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import 'address_picker.dart' show showAddressPicker;
 import 'island_sheet.dart';
+import '../hero_icons.dart';
 import 'line_icon.dart';
 import 'snappy_tap.dart';
 
@@ -60,9 +61,9 @@ class OnbBackButton extends StatelessWidget {
           child: Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
             alignment: Alignment.center,
-            child: const LineIcon(LineIcon.back, size: 20, stroke: 1.8),
+            child: const Icon(Hi.chevronLeft, size: 20, color: Colors.white),
           ),
         ),
       );
@@ -483,7 +484,6 @@ class OnbTypeGrid extends StatelessWidget {
 
 // ---- Folhas do passo "Quando e onde?" (mockup Ev3b / Ev3c, 2026-11-14) ----
 
-const _close = 'M6 6l12 12M18 6L6 18';
 const _months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 const _monthsShort = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const _weekdays = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
@@ -505,16 +505,15 @@ class OnbSheetHeader extends StatelessWidget {
         const SizedBox(height: 14),
         Row(children: [
           Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-          _SheetRound(path: _close, onTap: () => Navigator.of(context).pop(), size: 18),
+          _SheetRound(icon: Hi.xMark, onTap: () => Navigator.of(context).pop()),
         ]),
       ]);
 }
 
 class _SheetRound extends StatelessWidget {
-  final String path;
+  final IconData icon;
   final VoidCallback? onTap;
-  final double size;
-  const _SheetRound({required this.path, required this.onTap, this.size = 18});
+  const _SheetRound({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) => SnappyTap(
@@ -522,11 +521,12 @@ class _SheetRound extends StatelessWidget {
         child: Opacity(
           opacity: onTap == null ? 0.35 : 1,
           child: Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
+            // Botão redondo preto 44, ícone branco sólido 20 (DESIGN.md §2).
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
             alignment: Alignment.center,
-            child: LineIcon(path, size: size, color: AppTheme.ink),
+            child: Icon(icon, size: 20, color: Colors.white),
           ),
         ),
       );
@@ -587,7 +587,7 @@ class _DateSheetState extends State<_DateSheet> {
         const SizedBox(height: 16),
         Row(children: [
           _SheetRound(
-            path: LineIcon.back,
+            icon: Hi.chevronLeft,
             onTap: _month.isAfter(_firstMonth) ? () => setState(() => _month = DateTime(_month.year, _month.month - 1)) : null,
           ),
           Expanded(
@@ -595,7 +595,7 @@ class _DateSheetState extends State<_DateSheet> {
                 textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
           _SheetRound(
-            path: LineIcon.forward,
+            icon: Hi.chevronRight,
             onTap: _month.isBefore(_lastMonth) ? () => setState(() => _month = DateTime(_month.year, _month.month + 1)) : null,
           ),
         ]),

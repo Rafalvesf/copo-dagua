@@ -2127,8 +2127,8 @@ class _CodeHero extends ConsumerWidget {
               child: Container(
                 width: 44,
                 height: 44,
-                decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
-                child: const Icon(Hi.documentDuplicate, size: 20, color: AppTheme.ink),
+                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                child: const Icon(Hi.documentDuplicate, size: 20, color: Colors.white),
               ),
             ),
         ]),

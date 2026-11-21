@@ -368,7 +368,7 @@ class V2SetRow extends StatelessWidget {
   }
 }
 
-/// Botão redondo branco (ou verde) de cabeçalho.
+/// Botão redondo de cabeçalho: preto 44, ícone branco sólido 20 (DESIGN.md §2).
 class V2RoundButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
@@ -387,14 +387,10 @@ class V2RoundButton extends StatelessWidget {
         child: Container(
           width: 44,
           height: 44,
-          decoration: BoxDecoration(
-            color: solid ? AppTheme.ink : Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: solid
-                ? const [BoxShadow(color: Color(0x594F6B4A), blurRadius: 14, offset: Offset(0, 6))]
-                : softShadow,
-          ),
-          child: Icon(icon, size: solid ? 22 : 20, color: solid ? Colors.white : AppTheme.ink),
+          // Preto com o ícone branco sólido 20, em toda a app (DESIGN.md §2,
+          // pedido 2026-11-21). `solid` fica por compatibilidade.
+          decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+          child: Icon(icon, size: 20, color: Colors.white),
         ),
       ),
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'line_icon.dart';
+import '../hero_icons.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'floating_bottom_nav.dart' show kNavRadius;
@@ -73,7 +73,8 @@ class ChatHeader extends StatelessWidget {
               width: 44,
               height: 44,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
+              // Botão redondo preto, ícone branco sólido (DESIGN.md §2).
+              decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
               child: icon,
             ),
           ),
@@ -87,7 +88,7 @@ class ChatHeader extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(
           children: [
-            roundBtn(const LineIcon(LineIcon.back, stroke: 2.2), 'Voltar', () => Navigator.of(context).maybePop()),
+            roundBtn(const Icon(Hi.chevronLeft, size: 20, color: Colors.white), 'Voltar', () => Navigator.of(context).maybePop()),
             const SizedBox(width: 10),
             Expanded(child: onOpenProfile == null ? info : SnappyTap(onTap: onOpenProfile, child: info)),
             if (onReport != null) ...[
@@ -101,8 +102,8 @@ class ChatHeader extends StatelessWidget {
                   width: 44,
                   height: 44,
                   alignment: Alignment.center,
-                  decoration: const BoxDecoration(color: Color(0xFFF2F0EB), shape: BoxShape.circle),
-                  child: const LineIcon(LineIcon.dots, stroke: 2.4),
+                  decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                  child: const Icon(Hi.ellipsisHorizontal, size: 20, color: Colors.white),
                 ),
               ),
             ],

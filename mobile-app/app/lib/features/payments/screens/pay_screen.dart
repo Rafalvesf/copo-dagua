@@ -504,8 +504,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
               Row(children: [
                 if (_canGoBack) ...[
                   _SheetRound(
-                    icon: LineIcon.back,
-                    color: AppTheme.background,
+                    icon: Hi.chevronLeft,
                     label: 'Voltar',
                     onTap: _step == _Step.confirming ? null : _backToSelect,
                   ),
@@ -515,7 +514,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                   child: Text(_sheetTitle,
                       style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
-                _SheetRound(icon: _closePath, color: Colors.white, label: 'Fechar', onTap: () => context.pop()),
+                _SheetRound(icon: Hi.xMark, label: 'Fechar', onTap: () => context.pop()),
               ]),
               Flexible(
                 child: SingleChildScrollView(
@@ -531,7 +530,6 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     );
   }
 
-  static const _closePath = 'M6 6l12 12M18 6L6 18';
 
   Widget _partnerRow() {
     final name = a.partnerName.trim();
@@ -929,11 +927,10 @@ class _WhiteCard extends StatelessWidget {
 
 /// Botão redondo 36 do topo da folha (voltar / fechar).
 class _SheetRound extends StatelessWidget {
-  final String icon;
-  final Color color;
+  final IconData icon;
   final String label;
   final VoidCallback? onTap;
-  const _SheetRound({required this.icon, required this.color, required this.label, this.onTap});
+  const _SheetRound({required this.icon, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -942,11 +939,12 @@ class _SheetRound extends StatelessWidget {
         child: SnappyTap(
           onTap: onTap,
           child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            // Botão redondo preto 44, ícone branco sólido 20 (DESIGN.md §2/§6.3).
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
             alignment: Alignment.center,
-            child: LineIcon(icon, size: 18, color: AppTheme.ink),
+            child: Icon(icon, size: 20, color: Colors.white),
           ),
         ),
       );

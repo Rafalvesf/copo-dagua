@@ -11,13 +11,10 @@ import '../hero_icons.dart';
 ///  - o toque deixa de ser "voltar" e passa a **subir a página até ao topo**;
 ///  - ao chegar ao topo, volta a ser a seta de voltar.
 ///
-/// Transparência (independente do scroll): **translúcido só enquanto há
-/// imagem por trás** — enquanto a capa/herói ainda está atrás do botão
-/// (`controller.offset < imageExtent`), é branco a ~55% com a sombra suave e
-/// o ícone preto; quando a imagem sai de trás, fica o **branco cheio 44** do
-/// §2. Com `imageExtent <= 0` (sem imagem) é sempre branco cheio.
+/// Aspeto: o **preto 44 com o ícone branco** do §2, sempre — sobre fotos
+/// também (pedido 2026-11-21; já não há botões translúcidos).
 ///
-/// A transição (rotação e transparência) é sempre animada.
+/// A rotação é sempre animada.
 class ScrollAwareBackButton extends StatefulWidget {
   /// Controlador da lista/scroll do ecrã. É por ele que lemos o offset e
   /// subimos ao topo.
@@ -27,7 +24,8 @@ class ScrollAwareBackButton extends StatefulWidget {
   final VoidCallback onBack;
 
   /// Distância de scroll (px) durante a qual ainda há imagem por trás do
-  /// botão. 0 = não há imagem → nunca translúcido.
+  /// botão. Já não muda o aspeto (o botão é sempre preto); fica para quem a
+  /// passa.
   final double imageExtent;
 
   /// A partir de quantos px o ícone roda para ↑ e o toque sobe ao topo.
@@ -81,8 +79,6 @@ class _ScrollAwareBackButtonState extends State<ScrollAwareBackButton> {
   @override
   Widget build(BuildContext context) {
     final scrolled = _offset > widget.rotateAfter;
-    // Translúcido só enquanto a imagem ainda está por trás do botão.
-    final overImage = widget.imageExtent > 0 && _offset < widget.imageExtent;
 
     return Semantics(
       button: true,
@@ -101,17 +97,15 @@ class _ScrollAwareBackButtonState extends State<ScrollAwareBackButton> {
           duration: const Duration(milliseconds: 200),
           width: 44,
           height: 44,
-          decoration: BoxDecoration(
-            color: overImage ? Colors.white.withValues(alpha: 0.55) : Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-          ),
+          // Sempre preto com o ícone branco, sobre fotos também (DESIGN.md §2,
+          // pedido 2026-11-21).
+          decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
           child: AnimatedRotation(
             // ← (chevron para a esquerda) + 90° no sentido dos ponteiros = ↑.
             turns: scrolled ? 0.25 : 0,
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOut,
-            child: const Icon(Hi.chevronLeft, size: 20, color: AppTheme.ink),
+            child: const Icon(Hi.chevronLeft, size: 20, color: Colors.white),
           ),
         ),
       ),

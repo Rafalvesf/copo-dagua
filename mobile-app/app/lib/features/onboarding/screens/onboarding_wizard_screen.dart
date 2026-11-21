@@ -800,13 +800,10 @@ class _RoundStep extends StatelessWidget {
           child: Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(
-              color: dark ? AppTheme.ink : Colors.white,
-              shape: BoxShape.circle,
-              border: dark ? null : Border.all(color: AppTheme.ink, width: 1.5),
-            ),
+            // Botão redondo preto, ícone branco (DESIGN.md §2, 2026-11-21).
+            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
             alignment: Alignment.center,
-            child: LineIcon(path, size: 20, color: dark ? Colors.white : AppTheme.ink),
+            child: LineIcon(path, size: 20, color: Colors.white, stroke: 2.4),
           ),
         ),
       );
