@@ -7,7 +7,7 @@ import 'estrela.dart';
 
 /// Barra de progresso da app (pedido do Rafael, 2026-11-21, DESIGN.md §6):
 /// a barra **verde clarinha** (`AppTheme.progress`) com **a estrela (o ícone novo da app) em cima da ponta**, e
-/// **animada quando o progresso muda** — a barra cresce e a estrela dá um saltinho até ao sítio
+/// a barra passa pelo meio da estrela; **animada quando o progresso muda** — a barra cresce e a estrela dá um saltinho até ao sítio
 /// novo. Com «reduzir movimento», muda sem animação. Usar sempre esta em vez
 /// de `LinearProgressIndicator` com valor.
 class AppProgressBar extends StatefulWidget {
@@ -71,20 +71,24 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    // A estrela vai em cima da ponta da barra, como quem anda nela.
+    // A estrela vai em cima da ponta da barra, como quem anda nela, e
+    // anima como as outras mascotes (3 vezes ao aparecer, 2026-11-21).
     // Grande o suficiente para se ver bem (pedido 2026-11-21: «muito pequeno»).
     final starW = math.max(40.0, widget.height * 6.8);
     final starH = starW * 350 / 384;
-    // No desenho (350 de altura) o corpo da estrela vai de 68 a 301: o
-    // vazio de cima sai (fica só uma folga para o saltinho) e as pontas de
-    // baixo assentam em cima da barra, sem sombra (2026-11-21).
+    // No desenho (350 de altura) o corpo da estrela vai de 68 a 301 (meio
+    // em 184,5). A barra passa pelo meio da estrela e o meio da estrela fica
+    // na ponta do progresso — no início, bem no começo da barra (pedido
+    // 2026-11-21). O vazio de cima sai (fica uma folga para o saltinho).
     final topCut = starH * 56 / 350;
-    final barTop = starH * 301 / 350 - topCut;
+    final starMid = starH * 184.5 / 350 - topCut;
+    final barTop = starMid - widget.height / 2;
+    final boxH = math.max(barTop + widget.height, starH * 301 / 350 - topCut);
     // Verde clarinho (pedido 2026-11-21).
     final color = widget.color ?? AppTheme.progress;
     final track = widget.track ?? const Color(0xFFE0E0E0);
     return SizedBox(
-      height: barTop + widget.height,
+      height: boxH,
       child: LayoutBuilder(builder: (context, box) {
         final w = box.maxWidth;
         return AnimatedBuilder(
@@ -94,7 +98,7 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
             final t = _c.value;
             // Saltinho enquanto anda; parada no fim.
             final hop = _c.isAnimating ? math.sin(t * math.pi) : 0.0;
-            final left = (w * v - starW / 2).clamp(0.0, math.max(0.0, w - starW)).toDouble();
+            final left = w * v - starW / 2;
             return Stack(clipBehavior: Clip.none, children: [
               Positioned(
                 left: 0,
@@ -122,7 +126,7 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
                 top: -topCut - 6 * hop,
                 child: Transform.rotate(
                   angle: 0.18 * math.sin(t * math.pi * 2) * hop,
-                  child: EstrelaMascot(Estrela.feliz, size: starW, cycles: 0, semanticLabel: '', shadow: false),
+                  child: EstrelaMascot(Estrela.feliz, size: starW, semanticLabel: '', shadow: false),
                 ),
               ),
             ]);

@@ -361,7 +361,7 @@ class DashTable extends StatelessWidget {
   }
 }
 
-/// «Está tudo tratado» com a estrela contente.
+/// «Está tudo tratado» com a estrela a piscar o olho (pedido 2026-11-21).
 class DashAllDone extends StatelessWidget {
   const DashAllDone({super.key});
 
@@ -369,7 +369,7 @@ class DashAllDone extends StatelessWidget {
   Widget build(BuildContext context) => const Padding(
         padding: EdgeInsets.symmetric(vertical: 6),
         child: Row(children: [
-          EstrelaMascot(Estrela.contente, size: 64, semanticLabel: ''),
+          EstrelaMascot(Estrela.piscar, size: 64, semanticLabel: ''),
           SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
