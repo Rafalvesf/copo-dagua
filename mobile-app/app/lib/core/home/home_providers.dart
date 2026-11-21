@@ -40,19 +40,20 @@ final coupleBookingsProvider = FutureProvider<List<CoupleBooking>>((ref) async {
   const cols = 'id, wedding_id, partner_id, event_date, total_amount, deposit_amount, status, '
       'partner_profiles(business_name, cover_photo_url, partner_profile_categories(partner_categories(label_pt))), '
       'payments(id, type, status, amount, due_at)';
-  List<dynamic> rows;
-  try {
-    rows = await supabase
-        .from('bookings')
-        .select('$cols, private_owner')
-        .eq('couple_id', userId)
-        .order('event_date', ascending: true);
-  } on PostgrestException {
-    // Migração 116 (contratações em segredo) ainda por correr.
-    rows = await supabase.from('bookings').select(cols).eq('couple_id', userId).order('event_date', ascending: true);
+  // Do mais novo para o mais antigo: choice_mode (190, para saber se o
+  // organizador escolhe os menus) e private_owner (116, contratações em
+  // segredo); cada nível cai para o anterior se a migração não correu.
+  List<dynamic>? rows;
+  for (final extra in [', private_owner, choice_mode', ', private_owner', '']) {
+    try {
+      rows = await supabase.from('bookings').select('$cols$extra').eq('couple_id', userId).order('event_date', ascending: true);
+      break;
+    } on PostgrestException {
+      if (extra.isEmpty) rethrow;
+    }
   }
 
-  return rows.cast<Map<String, dynamic>>().map<CoupleBooking>(_coupleBookingFromRow).toList();
+  return rows!.cast<Map<String, dynamic>>().map<CoupleBooking>(_coupleBookingFromRow).toList();
 });
 
 CoupleBooking _coupleBookingFromRow(Map<String, dynamic> row) {
@@ -86,6 +87,7 @@ CoupleBooking _coupleBookingFromRow(Map<String, dynamic> row) {
     status: mapRealBookingStatus(row['status'] as String),
     pendingDepositPaymentId: pendingDeposit['id'] as String?,
     depositAmount: (row['deposit_amount'] as num?)?.toDouble(),
+    choiceMode: (row['choice_mode'] as String?) ?? 'same',
     pendingDepositDueAt: pendingDeposit['due_at'] == null ? null : DateTime.tryParse(pendingDeposit['due_at'] as String),
     pendingFinalPaymentId: pendingFinalPayment['id'] as String?,
     finalPaymentAmount: (pendingFinalPayment['amount'] as num?)?.toDouble(),
