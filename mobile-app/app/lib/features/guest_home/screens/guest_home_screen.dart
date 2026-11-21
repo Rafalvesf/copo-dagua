@@ -1,11 +1,9 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
-import 'dart:async';
 
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart' show openTicketPurchase;
 import 'package:copo_dagua_app/core/events/tickets.dart';
 import 'package:copo_dagua_app/core/events/event_pass.dart';
 import 'package:copo_dagua_app/features/events/screens/ticket_pass_screens.dart' show TicketPassCard;
-import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import 'package:flutter/material.dart';
 import '../../../core/chat/group_chat.dart' show openEventGroup;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,11 +21,12 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
-import '../../../shared/widgets/mascot.dart';
-import '../../../shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'guest_table_screen.dart';
 import '../widgets/guest_home_sections.dart';
+import '../widgets/guest_dashboard.dart';
+import '../../../core/guest_home/event_tables.dart';
+import '../../../shared/widgets/page_kit.dart';
 
 /// Home de quem se regista com `UserRole.guest` («Começar» → convidado) — pedido explícito do utilizador (mockup de
 /// referência): página de aterragem "O nosso casamento" (foto de capa,
@@ -177,199 +176,226 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _GuestHomeBody extends ConsumerWidget {
+class _GuestHomeBody extends ConsumerStatefulWidget {
   final GuestWedding wedding;
   final int eventCount;
 
   const _GuestHomeBody({required this.wedding, required this.eventCount});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Redesign 2026-11-07 (canvas "Convidados · Ecrãs melhorados": Início
-    // do evento e É hoje!).
+  ConsumerState<_GuestHomeBody> createState() => _GuestHomeBodyState();
+}
+
+class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
+  final _placeKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
+    // Painel do convidado novo (mockups «Painel do convidado», 2026-11-21;
+    // DESIGN.md §6.4). Só aparece o que existe; «Como chegar» sempre em
+    // último; o destaque (resumo / agora / a tua resposta) numa caixa branca.
+    final wedding = widget.wedding;
+    final id = wedding.weddingId;
     final date = wedding.weddingDate;
     final now = DateTime.now();
-    final isToday = date != null && date.year == now.year && date.month == now.month && date.day == now.day;
-    final guest = ref.watch(myGuestRowProvider(wedding.weddingId)).value;
-    final passOpts = ref.watch(myEventPassProvider(wedding.weddingId)).value?.sections ?? const GuestSections();
-    // A mesa só aparece quando o organizador quer (2026-11-08).
-    final tableShown = passOpts.tableVisible(wedding.weddingDate);
-    final table = tableShown ? ref.watch(mySeatingTableProvider(wedding.weddingId)).value : null;
-    final mates = table == null || !passOpts.tableMates
-        ? 0
-        : (ref.watch(myTableRosterProvider(wedding.weddingId)).value?.length ?? 0);
+    final today = DateTime(now.year, now.month, now.day);
+    final day = date == null ? null : DateTime(date.year, date.month, date.day);
+    final isToday = day != null && day == today;
+    final isPast = day != null && day.isBefore(today);
+    final guest = ref.watch(myGuestRowProvider(id)).value;
+    final pass = ref.watch(myEventPassProvider(id)).value ?? const EventPass();
+    final sections = pass.sections;
+    final show = sections.shows;
+    final going = guest?.rsvpStatus == RsvpStatus.confirmed;
+    final declined = guest?.rsvpStatus == RsvpStatus.declined;
+    // A mesa só aparece depois de revelada e atribuída.
+    final tableShown = show(GuestSection.mesa) && sections.tableVisible(date);
+    final table = tableShown ? ref.watch(mySeatingTableProvider(id)).value : null;
+    final mates = table == null || !sections.tableMates
+        ? const <TableMate>[]
+        : (ref.watch(myTableRosterProvider(id)).value ?? const <TableMate>[]);
     final companions =
         guest == null ? const <GuestCompanion>[] : (ref.watch(guestCompanionsProvider(guest.id)).value ?? const <GuestCompanion>[]);
-    // O que o organizador deixa ver e o meu bilhete (migração 158).
-    final pass = ref.watch(myEventPassProvider(wedding.weddingId)).value ?? const EventPass();
-    final show = pass.sections.shows;
+    final tables = ref.watch(myEventTablesProvider(id)).value ?? const <EventTable>[];
+    final hasTodo = tables.any((t) => t.needsAction);
+    final offersOn = ref.watch(guestOffersEnabledProvider).asData?.value ?? false;
+    final offers = offersOn && show(GuestSection.estadia)
+        ? (ref.watch(guestOffersProvider(id)).asData?.value ?? const <GuestOffer>[])
+        : const <GuestOffer>[];
+    final program = wedding.program;
+    final dress = wedding.dressCode?.trim() ?? '';
     final place = [
       if (wedding.venue?.isNotEmpty == true) wedding.venue!,
       if (wedding.location?.isNotEmpty == true) wedding.location!,
     ].join(', ');
+    final hasPlace = place.isNotEmpty || wedding.venueAddress?.isNotEmpty == true;
+    final started = isToday && DashNow.started(program);
+    final photosOn = show(GuestSection.galeria) && (isToday || isPast);
+    final groupOn = going && show(GuestSection.grupos);
+
+    void openPhotos() => context.go('/guest-gallery/$id');
+    void openTable() => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => GuestTableScreen(weddingId: id, tableNumber: table)),
+        );
+    void editAnswer() => context.push('/guest-presenca/$id');
+    Future<void> openGroup() async {
+      final g = await openEventGroup(id);
+      if (!context.mounted) return;
+      if (g != null) {
+        context.push('/group/${g.id}', extra: g);
+      } else {
+        context.push('/groups/$id');
+      }
+    }
+
+    void goToPlace() {
+      final c = _placeKey.currentContext;
+      if (c != null) Scrollable.ensureVisible(c, duration: const Duration(milliseconds: 420), curve: Curves.easeOutCubic);
+    }
+
+    // «Vais com…» (ou «Vais só tu»), com as alergias e as cadeirinhas.
     final withNames = [
       for (final c in companions) c.name.split(' ').first,
       if (companions.isEmpty && guest?.plusOneName?.isNotEmpty == true) guest!.plusOneName!.split(' ').first,
     ];
-    final goingWith = guest?.rsvpStatus == RsvpStatus.confirmed && withNames.isNotEmpty
-        ? 'Vais com ${withNames.length == 1 ? withNames.first : '${withNames.length} pessoas'}'
+    String? who;
+    String? whoSub;
+    if (going) {
+      who = withNames.isEmpty
+          ? 'Vais só tu'
+          : 'Vais com ${withNames.length == 1 ? withNames.first : '${withNames.sublist(0, withNames.length - 1).join(', ')} e ${withNames.last}'}';
+      final allergies = [
+        if (guest?.dietaryRestrictions?.isNotEmpty == true) 1,
+        for (final c in companions)
+          if (c.allergies.isNotEmpty) 1,
+      ].length;
+      whoSub = withNames.isEmpty
+          ? 'Podes juntar alguém'
+          : (allergies == 0 ? 'Sem alergias' : '$allergies ${allergies == 1 ? 'alergia' : 'alergias'}');
+    }
+
+    final (label, big, unit) = dashWhen(wedding);
+    final title = isToday ? 'É hoje!' : wedding.displayNames;
+    final meta = isToday
+        ? [wedding.displayNames, if (place.isNotEmpty) place].join(' · ')
+        : [
+            if (date != null) (isPast ? 'Foi a ${date.day} ${monthNamesPt[date.month - 1].substring(0, 3).toLowerCase()} ${date.year}' : '${formatShortDatePt(date)} ${date.year}'),
+            if (place.isNotEmpty) place,
+          ].join(' · ');
+
+    final presents = show(GuestSection.presentes)
+        ? KitRow(title: 'Presentes', sub: isPast ? 'Ainda dá para oferecer' : null, trailing: const Text('Lista', style: TextStyle(fontSize: 15, color: AppTheme.inkMuted)), chevron: true, onTap: () => context.go('/guest-gifts/$id'))
         : null;
+    final stay = offers.isEmpty
+        ? null
+        : KitRow(
+            title: 'Alojamento e transporte',
+            trailing: Text('${offers.length} ${offers.length == 1 ? 'opção' : 'opções'}', style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
+            chevron: true,
+            onTap: () => context.push('/guest-stay/$id'),
+          );
+    final more = [?presents, ?stay];
+    final hosts = GuestOrganizersCard(organizers: wedding.organizers);
+    final placeBlock = hasPlace ? KeyedSubtree(key: _placeKey, child: GuestPlaceCard(wedding: wedding)) : null;
 
-    void openTable() => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => GuestTableScreen(weddingId: wedding.weddingId, tableNumber: table)),
-        );
-    void openPhotos() => context.go('/guest-gallery/${wedding.weddingId}');
-
-    final shortcuts = [
-      if (show(GuestSection.programa))
-        GuestShortcut(Hi.clock, 'Programa',
-            wedding.program.isEmpty ? 'Horários' : '${wedding.program.length} momentos', const Color(0xFFDDE5D3),
-            () => context.push('/guest-wedding-details', extra: wedding)),
-      if (show(GuestSection.mesa))
-        GuestShortcut(Hi.tableCells, table == null ? 'Mesa' : 'Mesa $table',
-            !tableShown
-                ? (passOpts.tableReveal == 'day' ? 'no dia' : '1 semana antes')
-                : table == null
-                    ? 'por atribuir'
-                    : (mates > 0 ? '$mates pessoas' : 'ver mesa'),
-            const Color(0xFFF2D98D),
-            openTable),
-      if (show(GuestSection.presentes))
-        GuestShortcut(Hi.gift, 'Presentes', 'lista', const Color(0xFFF3C9CF),
-            () => context.go('/guest-gifts/${wedding.weddingId}')),
-      if (show(GuestSection.galeria))
-        GuestShortcut(Hi.rectangleStack, 'Fotos', isToday ? 'partilhar' : 'no dia', const Color(0xFFDCE4F0), openPhotos),
-    ];
-
-    final tail = <Widget>[
-      if (show(GuestSection.grupos) || show(GuestSection.estadia)) const SizedBox(height: 22),
-      // Grupo do evento no estilo das Mensagens (mockup 2026-11-15).
-      if (show(GuestSection.grupos)) GuestGroupRow(onTap: () async {
-                // Grupo «todos» do evento (189); antes da migração, a lista de grupos.
-                final g = await openEventGroup(wedding.weddingId);
-                if (!context.mounted) return;
-                if (g != null) {
-                  context.push('/group/${g.id}', extra: g);
-                } else {
-                  context.push('/groups/${wedding.weddingId}');
-                }
-              }),
-      if (show(GuestSection.estadia)) _StayCard(weddingId: wedding.weddingId),
-    ];
-
-    // Mockup «Páginas do convidado» → Início (2026-11-15): capa do
-    // organizador no topo; depois a resposta e «Como chegar»; só depois
-    // os quadrados.
-    final body = <Widget>[
-        if (isToday) ...[
-          SizedBox(height: MediaQuery.paddingOf(context).top + 20),
-          const Row(children: [GuestEventsPill(), Spacer(), PartnerNotificationBell()]),
+    final body = <Widget>[];
+    if (declined) {
+      // Disse que não vai: só a resposta, presentes e anfitriões.
+      body.addAll([
+        const KitCaps('A tua resposta', top: 16),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+          decoration: dashHighlight(),
+          child: Row(children: [
+            const Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Não vais', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text('Podes mudar a resposta.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+              ]),
+            ),
+            DashButton36('Mudar', onTap: editAnswer),
+          ]),
+        ),
+        if (presents != null) ...[const KitCaps('Presentes'), KitGroup([presents])],
+        hosts,
+      ]);
+    } else if (isPast) {
+      // Depois do evento: as fotos em primeiro, presentes e anfitriões.
+      body.addAll([
+        if (photosOn) ...[const KitCaps('Fotos', top: 16), DashPhotos(onOpen: openPhotos)],
+        if (presents != null) ...[const KitCaps('Depois do evento'), KitGroup([presents])],
+        hosts,
+      ]);
+    } else {
+      final nothing = !hasTodo && tables.isEmpty && table == null && program.isEmpty && dress.isEmpty && !hasPlace;
+      if (started) {
+        body.addAll([const KitCaps('Agora', top: 16), DashNow(program: program)]);
+      } else {
+        body.add(DashSummary(
+          label: label,
+          big: big,
+          unit: unit,
+          who: who,
+          whoSub: whoSub,
+          whoNames: ['Tu', ...withNames],
+          onChange: going ? editAnswer : null,
+        ));
+      }
+      if (guest != null && !going) {
+        body.addAll([
+          const KitCaps('O teu convite'),
+          GuestAnswerCard(guest: guest, weddingId: id),
+        ]);
+      }
+      if (pass.ticket != null) {
+        body.addAll([
           const SizedBox(height: 16),
-          GuestTodayHero(wedding: wedding),
-          if (show(GuestSection.programa) && wedding.program.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            GuestNowCard(program: wedding.program),
-          ],
-          if (show(GuestSection.mesa)) ...[
-            const SizedBox(height: 14),
-            GuestBigTableCard(table: table, mates: mates, onTap: openTable),
-          ],
-          if (pass.ticket != null) ...[
-            const SizedBox(height: 14),
-            TicketPassCard(ticket: pass.ticket!, eventName: wedding.displayNames),
-          ],
-          if (show(GuestSection.galeria)) ...[
-            const SizedBox(height: 14),
-            GuestPhotosCta(onTap: openPhotos),
-          ],
-          if (show(GuestSection.programa) && wedding.program.isNotEmpty) ...[
-            const SizedBox(height: 22),
-            const Text('Hoje', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(height: 10),
-            GuestTimeline(program: wedding.program, live: true),
-          ],
-          const SizedBox(height: 14),
-          GuestPlaceCard(wedding: wedding),
-        ] else ...[
-          // Menu por escolher / parte por pagar (190), antes da resposta.
-          GuestTablesAlerts(weddingId: wedding.weddingId),
-          if (guest != null) ...[
-            const SizedBox(height: 4),
-            GuestAnswerCard(guest: guest, weddingId: wedding.weddingId),
-          ],
-          const SizedBox(height: 22),
-          GuestPlaceCard(wedding: wedding),
-          const SizedBox(height: 18),
-          GuestShortcutsRow(items: shortcuts),
-          if (pass.ticket != null) ...[
-            const SizedBox(height: 14),
-            TicketPassCard(ticket: pass.ticket!, eventName: wedding.displayNames),
-          ],
-          if (show(GuestSection.programa) && wedding.program.isNotEmpty) ...[
-            const SizedBox(height: 22),
-            GuestDayStrip(wedding: wedding),
-          ],
-        ],
-        GuestOrganizersCard(organizers: wedding.organizers),
-        ...tail,
-    ];
+          TicketPassCard(ticket: pass.ticket!, eventName: wedding.displayNames),
+        ]);
+      }
+      if (going && hasTodo) {
+        body.addAll([KitCaps(isToday ? 'Para fazer' : 'Para fazer · ${tables.where((t) => t.needsAction).length}'), GuestTablesAlerts(weddingId: id)]);
+      } else if (going && tables.isNotEmpty) {
+        body.addAll([const KitCaps('Para fazer'), const DashAllDone()]);
+      }
+      if (nothing) {
+        body.add(DashWaiting(hosts: wedding.displayNames.replaceAll(' & ', ' e ')));
+      }
+      if (photosOn && isToday) body.addAll([const KitCaps('Fotos'), DashPhotos(onOpen: openPhotos)]);
+      if (table != null) {
+        body.addAll([
+          const SizedBox(height: 24),
+          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          DashTable(table: table, mates: mates, onTap: openTable),
+        ]);
+      }
+      if (program.isNotEmpty) {
+        body.addAll([
+          KitCaps(isToday ? 'Programa de hoje' : 'Programa'),
+          DashProgram(program: program, live: isToday, onAll: () => context.push('/guest-wedding-details', extra: wedding)),
+        ]);
+      }
+      if (dress.isNotEmpty) body.addAll([const KitCaps('Dress code'), DashDressCode(text: dress)]);
+      if (more.isNotEmpty) body.addAll([const KitCaps('Mais'), KitGroup(more)]);
+      body.add(hosts);
+      if (placeBlock != null) body.addAll([const SizedBox(height: 24), placeBlock]);
+    }
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 130),
       children: [
-        if (!isToday) GuestCover(wedding: wedding, hero: GuestHero(wedding: wedding, place: place, goingWith: goingWith)),
+        DashCover(
+          wedding: wedding,
+          title: title,
+          meta: meta,
+          onExit: () => context.canPop() ? context.pop() : context.go('/eventos?tab=meus'),
+          onGroup: groupOn ? openGroup : null,
+          onMap: hasPlace && !declined && !isPast ? goToPlace : null,
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: body),
         ),
-      ],
-    );
-  }
-}
-
-class _CountdownCard extends StatefulWidget {
-  final DateTime? weddingDate;
-
-  const _CountdownCard({required this.weddingDate});
-
-  @override
-  State<_CountdownCard> createState() => _CountdownCardState();
-}
-
-class _CountdownCardState extends State<_CountdownCard> {
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final date = widget.weddingDate;
-    if (date == null) return const SizedBox.shrink();
-
-    final remaining = date.difference(DateTime.now());
-    if (remaining.isNegative) {
-      return const Text('É hoje!',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg, color: Colors.white));
-    }
-    return Row(
-      children: [
-        Expanded(child: _CountdownBox(value: remaining.inDays, label: 'DIAS')),
-        const SizedBox(width: 8),
-        Expanded(child: _CountdownBox(value: remaining.inHours % 24, label: 'HORAS')),
-        const SizedBox(width: 8),
-        Expanded(child: _CountdownBox(value: remaining.inMinutes % 60, label: 'MIN')),
       ],
     );
   }
@@ -418,116 +444,6 @@ class GuestWeddingCard extends StatelessWidget {
                 style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
               ),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CountdownBox extends StatelessWidget {
-  final int value;
-  final String label;
-
-  const _CountdownBox({required this.value, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          height: 44,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
-          child: Text(
-            '$value',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 19, color: AppTheme.accentOliveDark),
-          ),
-        ),
-        const SizedBox(height: 5),
-        Text(label,
-            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
-      ],
-    );
-  }
-}
-
-/// Alojamento e transporte que o organizador preparou (só aparece quando
-/// há alguma opção). O convidado reserva e paga na app.
-class _StayCard extends ConsumerWidget {
-  final String weddingId;
-  const _StayCard({required this.weddingId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final enabled = ref.watch(guestOffersEnabledProvider).asData?.value ?? false;
-    if (!enabled) return const _StayLockedCard();
-    final offers = ref.watch(guestOffersProvider(weddingId)).asData?.value ?? const <GuestOffer>[];
-    if (offers.isEmpty) return const SizedBox.shrink();
-    final hasLodging = offers.any((o) => o.kind == GuestOfferKind.lodging);
-    final hasTransport = offers.any((o) => o.kind == GuestOfferKind.transport);
-    final subtitle = [if (hasLodging) 'Quartos com desconto', if (hasTransport) 'lugar no transporte'].join(' e ');
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: SnappyTap(
-        onTap: () => context.push('/guest-stay/$weddingId'),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: softCard(),
-          child: Row(
-            children: [
-              StickerIcon(hasLodging ? Hi.homeModern : Hi.truck, turns: StickerIcon.tilt(4)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Alojamento e transporte',
-                        style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    const SizedBox(height: 2),
-                    Text('$subtitle · reserva e paga aqui',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-                  ],
-                ),
-              ),
-              const Icon(Hi.chevronRight, color: AppTheme.inkMuted),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Enquanto a funcionalidade está bloqueada: o mesmo cartão com cadeado.
-class _StayLockedCard extends StatelessWidget {
-  const _StayLockedCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: softCard(),
-        child: Row(
-          children: [
-            const StickerIcon(Hi.lockClosed, color: AppTheme.inkMuted),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Alojamento e transporte',
-                      style: TextStyle(fontSize: AppFontSize.base + 1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                  SizedBox(height: 2),
-                  Text('Em breve: reserva e paga aqui', style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-                ],
-              ),
-            ),
-            V2Chip('Em breve', tone: V2Tone.grey),
           ],
         ),
       ),

@@ -7,6 +7,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import 'v2_kit.dart';
+import 'page_kit.dart';
 
 /// «Quem organiza» no Início do convidado (2026-11-15: "um botão ver
 /// perfil para os organizadores o seguirem, e vice-versa"): cada
@@ -23,18 +24,15 @@ class GuestOrganizersCard extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 24, bottom: 12),
-          child: Text('QUEM ORGANIZA',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
-        ),
+        // Painel do convidado (2026-11-21): «Anfitriões», sem caixa, com a
+        // linha antes do bloco.
+        const KitCaps('Anfitriões'),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Column(
             children: [
               for (final (i, o) in shown.indexed) ...[
-                if (i > 0) const Divider(height: 1, thickness: 1, color: Color(0xFFD9D9D9)),
+                if (i > 0) const Divider(height: 1, thickness: 1, color: AppTheme.line),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(

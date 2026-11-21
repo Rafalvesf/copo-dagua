@@ -443,7 +443,6 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
       _Part(
         icon: Hi.clock,
         title: 'Programa',
-        section: GuestSection.programa,
         status: _info.programAvailable
             ? (moments.isEmpty
                 ? 'Falta juntar os momentos'
@@ -2066,7 +2065,9 @@ class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
           ),
         ]),
         const SizedBox(height: 4),
-        for (final sec in GuestSection.values)
+        // O programa já não se desliga (2026-11-21): só aparece quando tem
+        // pelo menos um momento.
+        for (final sec in GuestSection.values.where((x) => x != GuestSection.programa))
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             secondary: Icon(sec.icon, color: sections.shows(sec) ? green : AppTheme.inkMuted),

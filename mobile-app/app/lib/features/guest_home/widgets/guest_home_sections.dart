@@ -37,11 +37,11 @@ const guestPageGradient = LinearGradient(
   colors: [Color(0xFFE9E8E4), Colors.white],
 );
 
-/// Cartão branco com a sombra suave, sem linha à volta (DESIGN.md §4/§5).
+/// Caixa branca: contorno preto 1,5, sem sombra (DESIGN.md §4/§5, 2026-11-21).
 BoxDecoration guestCard({double radius = 22}) => BoxDecoration(
       color: Colors.white,
+      border: AppTheme.cardBorder,
       borderRadius: BorderRadius.circular(radius),
-      boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
     );
 
 /// "17:00", "17h00", "17h" → minutos desde a meia-noite.
@@ -314,36 +314,16 @@ class GuestPlaceCard extends ConsumerWidget {
     final copyable = address?.isNotEmpty == true ? address! : title;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       const KitCaps('Como chegar', top: 0),
-      Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+      // Sem caixa (2026-11-21): o conteúdo fica no fundo.
+      Padding(
+      padding: const EdgeInsets.only(bottom: 4),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         // Mockup «Páginas do convidado»: nome 16, local 13 e «Como chegar» 44.
         Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         if (address?.isNotEmpty == true && address != title)
           Text(address!, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
-        if (wedding.dressCode?.isNotEmpty == true) ...[
-          const SizedBox(height: 10),
-          Text('Dress code: ${wedding.dressCode}',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        ],
         const SizedBox(height: 12),
         Row(children: [
-          Expanded(
-            child: FilledButton(
-              onPressed: () => showNavigationSheet(context, label: title, address: address, latitude: lat, longitude: lng),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(0, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
-              ),
-              child: const Text('Abrir no mapa', maxLines: 1),
-            ),
-          ),
-          const SizedBox(width: 8),
           Expanded(
             child: OutlinedButton(
               onPressed: () async {
@@ -360,6 +340,21 @@ class GuestPlaceCard extends ConsumerWidget {
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
               ),
               child: const Text('Copiar morada', maxLines: 1),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: FilledButton(
+              onPressed: () => showNavigationSheet(context, label: title, address: address, latitude: lat, longitude: lng),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.ink,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 44),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: const StadiumBorder(),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+              child: const Text('Abrir mapa', maxLines: 1),
             ),
           ),
         ]),
