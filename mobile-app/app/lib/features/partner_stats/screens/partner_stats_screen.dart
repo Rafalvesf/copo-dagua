@@ -14,6 +14,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 const _monthsShort = [
   'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
@@ -510,15 +511,7 @@ class _FunnelRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            child: LinearProgressIndicator(
-              value: pct,
-              minHeight: 10,
-              backgroundColor: AppTheme.borderMuted,
-              color: AppTheme.accentOliveDark,
-            ),
-          ),
+          AppProgressBar(value: pct, height: 10, color: AppTheme.accentOliveDark, track: AppTheme.borderMuted),
         ],
       ),
     );

@@ -8,13 +8,14 @@ import 'island_sheet.dart';
 import '../hero_icons.dart';
 import 'line_icon.dart';
 import 'snappy_tap.dart';
+import 'app_progress.dart';
 
 /// Peças do onboarding (mockup "Onboarding", 2026-11-12), com os
 /// tamanhos do DESIGN.md: título 28, subtítulo 14, botões 52, filtros 38,
 /// cartões cantos 22, grupos 12 com espaçamento 2.
 
 const _green = Color(0xFF4F6B4A);
-const _track = Color(0xFFE2DED5);
+const _track = Color(0xFFE0E0E0);
 
 /// Barra de progresso (10, verde) com a percentagem à direita.
 class OnbProgress extends StatelessWidget {
@@ -24,26 +25,17 @@ class OnbProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(end: value.clamp(0, 1)),
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-      builder: (context, v, _) => Row(children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: LinearProgressIndicator(value: v, minHeight: 10, backgroundColor: _track, color: _green),
-          ),
-        ),
-        const SizedBox(width: 12),
-        SizedBox(
-          width: 34,
-          child: Text('${(value * 100).round()}%',
-              textAlign: TextAlign.right,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: labelColor)),
-        ),
-      ]),
-    );
+    return Row(children: [
+      // A barra da app: a estrela na ponta e animada (DESIGN.md §6, 2026-11-21).
+      Expanded(child: AppProgressBar(value: value, height: 10, color: _green, track: _track)),
+      const SizedBox(width: 12),
+      SizedBox(
+        width: 34,
+        child: Text('${(value * 100).round()}%',
+            textAlign: TextAlign.right,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: labelColor)),
+      ),
+    ]);
   }
 }
 

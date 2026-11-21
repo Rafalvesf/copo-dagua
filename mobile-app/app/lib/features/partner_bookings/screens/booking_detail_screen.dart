@@ -25,6 +25,7 @@ import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
 import '../../../shared/widgets/dispute_card.dart';
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 class BookingDetailScreen extends ConsumerStatefulWidget {
   final Booking booking;
@@ -513,15 +514,7 @@ class BookingChoicesSummary extends ConsumerWidget {
             ]),
             if (people > 0) ...[
               const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(5),
-                child: LinearProgressIndicator(
-                  value: (choices.length / people).clamp(0, 1).toDouble(),
-                  minHeight: 10,
-                  backgroundColor: const Color(0xFFD9D9D9),
-                  color: AppTheme.accentOliveDark,
-                ),
-              ),
+              AppProgressBar(value: (choices.length / people).clamp(0, 1).toDouble(), height: 10, color: AppTheme.accentOliveDark, track: const Color(0xFFD9D9D9)),
             ],
             if (byMenu.isNotEmpty) ...[
               const SizedBox(height: 10),

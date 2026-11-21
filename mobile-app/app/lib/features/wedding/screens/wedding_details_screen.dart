@@ -51,6 +51,7 @@ import '../../../core/events/tickets.dart' show ticketSummaryProvider;
 import '../../../core/partners/promotions.dart' show featuredForMeProvider, FeaturedPick, trackPromotionClick;
 import '../../../core/partners/partner_providers.dart' show partnerByIdProvider;
 import '../../partners/screens/partner_detail_screen.dart' show PartnerDetailScreen;
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 
 /// Cor escolhida pelo organizador (verde-eucalipto por defeito, 098) e
@@ -2498,10 +2499,7 @@ class _PlanningBar extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(value: pct, minHeight: 8, color: _green, backgroundColor: const Color(0xFFE2DED4)),
-        ),
+        AppProgressBar(value: pct, height: 8, color: _green, track: const Color(0xFFE2DED4)),
       ],
     );
   }
@@ -3394,10 +3392,7 @@ class _NextSteps extends ConsumerWidget {
             ]),
             if (total > 0) ...[
               const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(value: done / total, minHeight: 8, color: _green, backgroundColor: const Color(0xFFE2DED4)),
-              ),
+              AppProgressBar(value: done / total, height: 8, color: _green, track: const Color(0xFFE2DED4)),
             ],
             const SizedBox(height: 6),
             for (final (i, it) in items.indexed)

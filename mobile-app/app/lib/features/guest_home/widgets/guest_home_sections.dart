@@ -23,6 +23,7 @@ import '../../../shared/widgets/sized_network_image.dart';
 import '../../../shared/widgets/partner_notification_bell.dart';
 import '../../../shared/utils_clipboard.dart';
 import 'guest_events_pill.dart';
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 // Ecrãs do convidado redesenhados (canvas "Convidados · Ecrãs
 // melhorados", 2026-11-07): capa verde, atalhos coloridos, a tua resposta,
@@ -556,15 +557,7 @@ class _GuestNowCardState extends State<GuestNowCard> {
             style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
           ),
           const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 7,
-              backgroundColor: const Color(0xFFE9E8E4),
-              valueColor: const AlwaysStoppedAnimation(guestButtonGreen),
-            ),
-          ),
+          AppProgressBar(value: progress, height: 7, color: guestButtonGreen, track: const Color(0xFFE9E8E4)),
         ],
         if (next != null) ...[
           const SizedBox(height: 12),

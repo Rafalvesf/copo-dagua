@@ -5,6 +5,7 @@ import 'alert_outline.dart';
 import '../../core/theme/app_theme.dart';
 import 'snappy_tap.dart';
 import 'v2_kit.dart' show softCard;
+import 'app_progress.dart';
 
 /// Peças dos cartões compactos (mockup "Cartões densos", 2026-11-11):
 /// menos espaço vazio, mais informação útil em cada cartão.
@@ -138,15 +139,7 @@ class ProgressLine extends StatelessWidget {
           Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.accentOliveDark)),
         ]),
         const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: progress.clamp(0, 1).toDouble(),
-            minHeight: 8,
-            color: AppTheme.accentOliveDark,
-            backgroundColor: kTrackBg,
-          ),
-        ),
+        AppProgressBar(value: progress, height: 8, track: kTrackBg),
       ]);
 }
 

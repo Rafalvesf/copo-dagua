@@ -10,6 +10,7 @@ import '../../../shared/widgets/alert_outline.dart' show AlertTone, toneForDue;
 import '../../../shared/widgets/pay_later_sheet.dart';
 import '../../../shared/widgets/island_sheet.dart' show IslandBackButton, IslandCloseButton;
 import '../../../shared/widgets/snappy_tap.dart';
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 /// Pedido de reserva em passos (mockups «Reservar por categoria»,
 /// 2026-11-20/21) — o mesmo fluxo em todas as categorias: Para que evento?
@@ -867,15 +868,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(5),
-              child: LinearProgressIndicator(
-                value: (_step + 1) / steps.length,
-                minHeight: 10,
-                backgroundColor: const Color(0xFFD9D9D9),
-                color: AppTheme.accentOliveDark,
-              ),
-            ),
+            child: AppProgressBar(value: (_step + 1) / steps.length, height: 10, color: AppTheme.accentOliveDark, track: const Color(0xFFD9D9D9)),
           ),
           const SizedBox(width: 10),
           Text('${_step + 1} DE ${steps.length}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),

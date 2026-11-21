@@ -5,13 +5,13 @@ import '../hero_icons.dart';
 import 'scroll_aware_back_button.dart';
 import 'snappy_tap.dart';
 import 'v2_kit.dart';
+import 'app_progress.dart';
 
 // Peças das páginas redesenhadas (canvas «Páginas do evento», «Páginas do
 // parceiro», «Páginas do convidado», 2026-11-14), iguais em todas: um só
 // tamanho por elemento (DESIGN.md §3).
 
 const _divider = AppTheme.line;
-const _track = Color(0xFFECE9E2);
 
 /// Página com a margem lateral 20 em todos os blocos, menos os que vão
 /// de ponta a ponta (carrosséis), cujo tipo está em [bleed].
@@ -295,26 +295,9 @@ class KitBar extends StatelessWidget {
   final double height;
   const KitBar(this.value, {super.key, this.height = 10});
 
+  // A barra da app: a estrela na ponta e animada (DESIGN.md §6, 2026-11-21).
   @override
-  Widget build(BuildContext context) => ClipRRect(
-        borderRadius: BorderRadius.circular(height / 2),
-        child: SizedBox(
-          height: height,
-          width: double.infinity,
-          child: Stack(children: [
-            const Positioned.fill(child: ColoredBox(color: _track)),
-            FractionallySizedBox(
-              widthFactor: value.clamp(0, 1).toDouble(),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.accentOliveDark,
-                  borderRadius: BorderRadius.circular(height / 2),
-                ),
-              ),
-            ),
-          ]),
-        ),
-      );
+  Widget build(BuildContext context) => AppProgressBar(value: value, height: height);
 }
 
 /// Cartão de resumo do topo: rótulo em maiúsculas, número 40, unidade 13,

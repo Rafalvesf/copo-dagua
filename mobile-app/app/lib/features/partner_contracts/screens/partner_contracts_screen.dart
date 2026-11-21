@@ -16,6 +16,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../core/exports/exports.dart' show bookingRef;
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 /// Um contrato = uma reserva com a proposta que o casal aceitou: o que
 /// foi combinado (título, descrição, condições), o valor e o estado dos
@@ -196,10 +197,7 @@ class _ContractCard extends StatelessWidget {
               style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
             ),
             const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(value: progress, minHeight: 5, backgroundColor: AppTheme.borderMuted, color: AppTheme.accentOliveDark),
-            ),
+            AppProgressBar(value: progress, height: 5, color: AppTheme.accentOliveDark, track: AppTheme.borderMuted),
             const SizedBox(height: 6),
             Text(
               'Recebido ${euros(c.paid, cents: true)} de ${euros(c.total, cents: true)}',

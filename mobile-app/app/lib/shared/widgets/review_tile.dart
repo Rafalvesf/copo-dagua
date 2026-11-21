@@ -7,6 +7,7 @@ import 'line_icon.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import 'v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 String _date(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
@@ -292,15 +293,7 @@ class ReviewSummaryCard extends StatelessWidget {
                   SizedBox(width: 12, child: Text('$s', style: const TextStyle(fontSize: AppFontSize.xs, color: v2Muted))),
                   const SizedBox(width: 6),
                   Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(99),
-                      child: LinearProgressIndicator(
-                        value: n == 0 ? 0 : counts[s]! / n,
-                        minHeight: 7,
-                        backgroundColor: const Color(0xFFF2F2F2),
-                        color: AppTheme.accentOliveDark,
-                      ),
-                    ),
+                    child: AppProgressBar(value: n == 0 ? 0 : counts[s]! / n, height: 7, color: AppTheme.accentOliveDark, track: const Color(0xFFF2F2F2)),
                   ),
                   const SizedBox(width: 8),
                   SizedBox(width: 18, child: Text('${counts[s]}', textAlign: TextAlign.right, style: const TextStyle(fontSize: AppFontSize.xs, color: v2Muted))),

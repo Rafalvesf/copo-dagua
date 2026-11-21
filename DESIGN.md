@@ -18,8 +18,9 @@ cores, sombras ou tamanhos à mão quando já existe um.
 
 | Uso | Cor | Token |
 |---|---|---|
-| Fundo de **todas** as páginas | `#F2F0EB` (cinzento claro quente, liso, sem degradê) | `AppTheme.background`, `AppBackground.*` |
-| Cartões, grupos, barras | `#FFFFFF` | — |
+| Fundo de **todas** as páginas | `#F2F2F2` (cinzento claro **neutro**, liso, sem degradê — pedido 2026-11-21: «um cinzento não esverdeado») | `AppTheme.background`, `AppBackground.*` |
+| Caixas brancas que ficam (destaques, cartões), barras, popups | `#FFFFFF` | — |
+| Linha entre blocos e entre linhas de listas | `#D9D9D9`, 1 px | `AppTheme.line` |
 | Texto principal | `#171713` | `AppTheme.ink` |
 | Texto secundário / ícones inativos | `#57534E` | `AppTheme.inkMuted` |
 | Verde da marca | `#4F6B4A` | `AppTheme.accentOliveDark` |
@@ -27,9 +28,8 @@ cores, sombras ou tamanhos à mão quando já existe um.
 | Alerta pendente (linha) | `#F2A01B` | `AlertTone.pending` |
 | Alerta urgente (linha) | `#C8553D` | `AlertTone.urgent` |
 | Alerta de convite (linha) | `#4F6B4A` | `AlertTone.invite` |
-| Etiqueta neutra | fundo `#F2F0EB`, texto `#3A3733` | — |
-| Divisórias dentro de cartões | `#ECE7DC`, 1 px | — |
-| Pílula ativa da navbar | `#EDEAE3` | — |
+| Etiqueta neutra / quadrado de ícone | fundo `#E6E6E6`, texto `#3A3733` | — |
+| Pílula ativa da navbar | `#EBEBEB` | — |
 | Erro / recusado | `#C8553D` | `AppStatusColors.declined` |
 
 **Verde só para seleção, progresso e etiquetas** (filtro ativo, barras,
@@ -42,7 +42,7 @@ contadores). **Nunca** para botões.
 - Sempre em **pílula** (`StadiumBorder`).
 - Altura: **52** a toda a largura; **44** dentro de cartões; **36** nas linhas
   de lista ("A seguir", "Ver evento"); **34** nas respostas rápidas.
-- Texto: 15 negrito (52), 14 negrito (44), 13 negrito (36/34).
+- Texto: 16 negrito (52), 15 negrito (44), 14 negrito (36/34).
 - **Botão redondo** (voltar, sino, conversa, partilhar, favorito,
   definições, ⋯, fechar «×»): **círculo preto `#171713` 44 com o ícone
   branco e sólido 20** (Heroicons Solid), sem sombra. **Em toda a app**
@@ -62,6 +62,12 @@ eventos", no perfil de um amigo e em qualquer outro sítio; uma linha de lista
 há tamanhos intermédios (12,5, 13,5, 17…). Antes de escrever um tamanho,
 ver nesta tabela qual é o do elemento.
 
+**Escala +1 (pedido do Rafael, 2026-11-21: «aumenta o texto ligeiramente»):**
+a tabela abaixo já está com +1. **Todos os outros tamanhos de texto ≤ 22
+escritos neste documento sobem também 1** (13 → 14, 14 → 15, 16 → 17,
+19 → 20, 22 → 23…). O 28, o 40 e a escala de primeiro contacto (32/17)
+ficam como estão.
+
 **Maiúscula:** o título dos cartões e linhas de eventos começa sempre com
 letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
 (`capFirst` em `shared/text_case.dart`).
@@ -74,17 +80,17 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
 | Elemento | Tamanho | Peso |
 |---|---|---|
 | Título de página ("Eventos", "Perfil", "Mensagens") — à esquerda | 28 | negrito |
-| Título de secção ("Os meus eventos", "Descobrir", "Pacotes") | 22 | negrito |
-| Ação da secção ("Ver todos (3)") | 14 | negrito, verde |
-| Nome no cartão de perfil | 20 | negrito |
-| Título de cartão de evento/parceiro | 19 | negrito |
-| Título de linha de lista (nome, conversa, pacote) | 16 | negrito |
-| Corpo / descrição | 14 | normal (justificado nas descrições) |
-| Mensagem (bolha) | 15 | normal |
-| Subtítulo / meta (data, local, "Vai a 2 eventos") | 13 | normal, `#57534E` |
-| Etiqueta / chip | 12 | negrito |
-| Título de grupo em maiúsculas ("HOJE", "CONTA") | 12, espaçamento 2 | negrito, `#57534E` |
-| Texto da navbar | 11 | negrito |
+| Título de secção ("Os meus eventos", "Descobrir", "Pacotes") | 23 | negrito |
+| Ação da secção ("Ver todos (3)") | 15 | negrito, verde |
+| Nome no cartão de perfil | 21 | negrito |
+| Título de cartão de evento/parceiro | 20 | negrito |
+| Título de linha de lista (nome, conversa, pacote) | 17 | negrito |
+| Corpo / descrição | 15 | normal (justificado nas descrições) |
+| Mensagem (bolha) | 16 | normal |
+| Subtítulo / meta (data, local, "Vai a 2 eventos") | 14 | normal, `#57534E` |
+| Etiqueta / chip | 13 | negrito |
+| Título de grupo em maiúsculas ("HOJE", "CONTA") | 13, espaçamento 2 | negrito, `#57534E` |
+| Texto da navbar | 12 | negrito |
 
 **Páginas de primeiro contacto** (onboarding e páginas/estados públicos —
 `shared/widgets/onb_kit.dart` e `shared/widgets/public_state.dart`:
@@ -100,23 +106,32 @@ ecrãs. O resto da app mantém a tabela acima.
 - Margem lateral das páginas: **20** (`AppTheme.screenMargin`). A navbar, as
   barras flutuantes e os popups usam a mesma: **têm sempre a largura das
   caixas de conteúdo**.
-- Cartões: branco, cantos **22**, interior 18 (perfil) / 16 (listas), **sem
-  linha à volta**.
-- Grupos de linhas (listas, definições): cartão branco cantos 22, interior
-  4×16, linhas separadas por `#ECE7DC`.
+- **Sem caixas brancas** (pedido do Rafael, 2026-11-21): o conteúdo fica
+  direto no fundo `#F2F2F2`. **Uma linha `#D9D9D9` antes de cada bloco**
+  (os títulos de secção e de grupo já a trazem: `KitSection`, `KitCaps`,
+  `V2Caps`, `SectionTitle`) e entre as linhas de uma lista.
+- **Grupos de linhas** (listas, definições, «Mais»): sem caixa e sem
+  interior lateral — as linhas alinham com a margem 20, separadas por
+  `#D9D9D9` (`KitGroup`, `V2Group`, `SettingsGroup`).
+- **A caixa branca que fica leva sempre a linha preta 1,5** (como os botões
+  de contorno, «Mensagem»), cantos **22**, interior 18, **sem sombra**
+  (`AppTheme.cardBorder`, `softCard`). Só para o que deve destacar-se: o
+  resumo do topo de uma página (`KitSummary`, `HeroSummary`), cartões de
+  evento/parceiro, o cartão de perfil e o cartão em destaque. Numa página,
+  idealmente um só destaque.
+- Tudo o que se toca tem de parecer tocável: seta à direita ou botão (36,
+  preto ou com contorno). Nunca texto verde como botão.
 - Linha de definições: altura mínima 56, nome 16 negrito à esquerda, valor 14
   `#57534E` + seta à direita. **Sem ícones** nas linhas.
 - Espaço entre título de secção e conteúdo: 12.
 
 ## 5. Sombras
 
-- **Uma só sombra** para cartões em destaque (cartões de evento/parceiro,
-  lista de conversas, cartão do parceiro): `0 6 18 rgba(23,23,19,0.06)` —
-  `BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))`
-  (`softShadow` / `softCard`).
-- Cartão de perfil, grupos de definições, "A seguir": **sem sombra**.
-- Cabeçalho de conversa: `0 4 14 rgba(23,23,19,0.06)`.
-- Navbar: `0 8 24 rgba(23,23,19,0.12)`.
+- **Cartões sem sombra** (pedido 2026-11-21): a caixa branca separa-se do
+  fundo pela linha preta 1,5 (§4). `softShadow` ficou vazio.
+- Ficam só as sombras do que flutua: cabeçalho de conversa
+  `0 4 14 rgba(23,23,19,0.06)`; navbar, barras fixas e popups
+  `0 8 24 rgba(23,23,19,0.12)`.
 - Nunca sombras duplas nem mais escuras.
 
 ## 6. Componentes
@@ -152,13 +167,13 @@ ecrãs. O resto da app mantém a tabela acima.
   caixas de conteúdo, `AppTheme.screenMargin` — pedido 2026-11-20) / 20 em
   baixo, cantos 35;
   ícone 24 + texto 11 negrito; inativo `#57534E`, ativo `#171713` com pílula
-  `#EDEAE3`.
+  `#EBEBEB`.
 - **Ícones:** Heroicons Solid na app; nos ecrãs dos mockups (Perfil,
   Mensagens, Conversa, Definições, Parceiro) os ícones de traço dos mockups
   (`LineIcon`) — menos dentro dos botões redondos, que levam sempre o ícone
   branco sólido (§2). Sem emojis (exceção: o "Parabéns! 🎉" do criar evento).
 - **Conversa:** bolha minha preta / dele branca, cantos 18 com o canto do lado
-  a 6; dia numa pílula `#E9E5DC`; "hh:mm · Visto"; ilha do evento flutuante
+  a 6; dia numa pílula `#E6E6E6`; "hh:mm · Visto"; ilha do evento flutuante
   com cantos da navbar, esconde-se no scroll.
 - **Onboarding** (`shared/widgets/onb_kit.dart`, mockup "Onboarding"
   2026-11-12): barra de progresso verde de **10** com a percentagem (12
@@ -185,10 +200,18 @@ ecrãs. O resto da app mantém a tabela acima.
   evento / parceiro / convidado», 2026-11-14): voltar redondo preto 44 numa
   linha com as ações à direita («+» preto 44, ⋯ preto 44); título de página
   28 à esquerda por baixo e subtítulo 13; filtros em pílula 38 **em cima**
-  (com contador); **resumo do topo** branco (cantos 22, interior 18, sem
-  sombra): rótulo 12 em maiúsculas, número 40, unidade 13, barra verde 10 e
+  (com contador); **resumo do topo** branco (cantos 22, interior 18, contorno preto
+  1,5, sem sombra): rótulo 12 em maiúsculas, número 40, unidade 13, barra verde 10 e
   etiquetas ou uma linha 13 por baixo — nunca cartão verde; listas em grupos
   de linhas (avatar 44, nome 16, meta 13, etiqueta à direita).
+- **Barra de progresso** (`AppProgressBar`, `shared/widgets/app_progress.dart`,
+  pedido do Rafael 2026-11-21): **em toda a app**, a barra verde leva **a
+  estrela (o ícone novo da app) na ponta** e é **animada quando o progresso
+  muda** — a barra cresce e a estrela dá um saltinho até ao sítio novo (e
+  enche desde o início ao aparecer). Com «reduzir movimento» muda sem
+  animação. Espessura 10 nos resumos e no onboarding, 6–8 nas linhas.
+  `KitBar`, `OnbProgress`, `ProgressLine` e `ThinProgress` já a usam;
+  **nunca** `LinearProgressIndicator` com valor (só o de carregar, sem valor).
 - **Emojis:** só no "Parabéns! 🎉" do fim do criar evento (pedido do
   Rafael, 2026-11-12). Em mais lado nenhum.
 - **Botões redondos sobre imagens e «voltar ao topo»**: sobre fotos (capa,
@@ -231,7 +254,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   rápidos (snackbars) têm a mesma largura (20 dos lados).
 - **O conteúdo não desenha fundo próprio:** sem `Container` com cor, cantos
   ou margem à volta do popup — a ilha já trata disso. Cartões e caixas
-  dentro do popup ficam a `#F2F0EB`, sem sombra (o popup é branco).
+  dentro do popup ficam a `#F2F2F2`, sem sombra (o popup é branco).
 - **Animação — a onda da navbar:** ao abrir, uma onda no verde da marca
   `#4F6B4A` nasce no centro da navbar e cresce em círculo até encher o
   popup; depois a cor desfaz-se no branco enquanto o conteúdo entra (cerca
@@ -260,11 +283,11 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   pesquisa, categorias em pílulas **sem imagens**). Mudam os cartões e as
   secções:
   - **Cartão de parceiro** (`PartnerBigCard`, `partner_cards.dart`): branco,
-    cantos 22, sombra suave; foto 150 em cima com a etiqueta à esquerda
+    cantos 22, contorno preto 1,5, sem sombra (§4); foto 150 em cima com a etiqueta à esquerda
     («Em destaque» verde, «Novo» branca) e a nota (pílula branca com
     estrela) à direita; logótipo redondo 44 com aro branco 3 a sobrepor o
     canto da foto; nome 19 + coração; categoria 13; «zona · N anos de
-    experiência» 13; divisória `#ECE7DC`; rodapé com «Responde em ~1 h»
+    experiência» 13; divisória `#D9D9D9`; rodapé com «Responde em ~1 h»
     (ou «Desloca-se até X km» / «Todo o país») e a caixa de preço.
   - **Secções em carrossel:** «Em destaque (perto de ti)», «Mais bem
     avaliados», «Novos na À Nossa!» e as 3 categorias com mais parceiros
@@ -274,7 +297,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
     largura**.
 - **Avaliações no perfil do parceiro:** um só cartão branco — «Experiência
   geral» com a nota 40 numa caixa com contorno, as barras verdes por
-  estrelas e, por baixo de uma linha `#ECE7DC`, os comentários (avatar 40,
+  estrelas e, por baixo de uma linha `#D9D9D9`, os comentários (avatar 40,
   nome 16, «zona · mês ano» 13, nota 12 com estrela preta, texto 14
   justificado). «Ver todas (N)» mostra o resto no mesmo cartão.
 - **Topo do perfil do parceiro** (pedido do Rafael): a foto tem 300 e
@@ -344,8 +367,8 @@ perguntar antes.
    título **22** negrito + subtítulo **13** `#57534E` · «×» **44** preto
    à direita (ícones brancos sólidos 20, §2).
 3. Corpo, só com estas peças:
-   - **Grupo** `#F2F0EB`, cantos 22, interior 4×16, linhas separadas por
-     `#ECE7DC` (opções, pessoas, métodos de pagamento, extras). Opção
+   - **Grupo** `#F2F2F2`, cantos 22, interior 4×16, linhas separadas por
+     `#D9D9D9` (opções, pessoas, métodos de pagamento, extras). Opção
      escolhida: círculo verde com o visto; métodos: círculo com ponto.
    - **Título de grupo** em maiúsculas 12, espaçamento 2 («COMO QUERES
      PAGAR», «PARA QUEM»).
@@ -355,7 +378,7 @@ perguntar antes.
    - **Nota**: uma linha 13 `#57534E` (prazos, o que acontece a seguir).
    - **Etiqueta** verde («Oferta», «3 meses grátis») antes de uma frase 13.
    - Pílulas **38** (filtros/escolhas, verdes quando escolhidas); caixas
-     de texto em pílula **52** `#F2F0EB`.
+     de texto em pílula **52** `#F2F2F2`.
 4. Botões em baixo, **52**: um preto a toda a largura, ou contorno + preto
    («Pagar mais tarde» + «Pagar · 511,00 €»). Nunca «Voltar» aqui.
 
@@ -364,17 +387,17 @@ estrela **120** ao centro (contente para pedidos; parabéns para pagamentos
 e Premium), título **22** ao centro, frase **14** `#57534E` ao centro,
 resumo se houver, e «OK» preto (ou «Ver conversa» + «OK»). Sem «×».
 
-**Página (fundo `#F2F0EB`, margem 20):** voltar preto **44** · título
+**Página (fundo `#F2F2F2`, margem 20):** voltar preto **44** · título
 **28** à esquerda + subtítulo **13** · blocos separados por títulos de
 grupo em maiúsculas (24 acima, 12 abaixo). Blocos permitidos
 (`shared/widgets/premium_kit.dart`, `page_kit.dart`):
 - **Topo chamativo** (`HeroSummary`): cartão branco, cantos 22, interior
-  18, **sem sombra**, tudo ao centro — estrela **150**, rótulo 12 em
+  18, contorno preto 1,5, **sem sombra**, tudo ao centro — estrela **150**, rótulo 12 em
   maiúsculas, número **40** + unidade 13, etiqueta verde, linha 13.
 - **Cartão de número** (`NumberCard`): rótulo 12 em maiúsculas, número
   **40** + unidade 13, linha 13 («As contas», «Grátis ainda», «Disponível
   para receber»).
-- **Sem / Com** (`CompareTable`): grupo branco, cabeçalho SEM/COM em
+- **Sem / Com** (`CompareTable`): grupo branco com contorno, cabeçalho SEM/COM em
   maiúsculas 12, linhas de 56 com o nome 16, o «sem» a 14 `#57534E` e o
   «com» numa etiqueta verde.
 - **Grupo de linhas** (§4): definições (nome 16, valor 14 + seta, sem
@@ -382,9 +405,9 @@ grupo em maiúsculas (24 acima, 12 abaixo). Blocos permitidos
   valor 16 negrito à direita, sem seta).
 - **Cartão em destaque** (`FeaturedCard`, só para o que queremos vender,
   como o Premium nas Definições, que fica **sempre no topo**): branco,
-  cantos 22, interior 18, sombra suave do §5; estrela **76** à esquerda com
+  cantos 22, interior 18, contorno preto 1,5 e sem sombra (§4); estrela **76** à esquerda com
   etiqueta verde, título **19** e meta 13; por baixo `MiniStats` e/ou um
-  cartão de número `#F2F0EB`; botão **44** (preto para comprar, contorno
+  cartão de número `#F2F2F2`; botão **44** (preto para comprar, contorno
   para gerir).
 - **Barra fixa** (`StickyActionBar`): branca, cantos 35, 20 dos lados e em
   baixo, sombra da navbar, interior 12; um botão **52** e uma linha 13 ao
@@ -393,6 +416,36 @@ grupo em maiúsculas (24 acima, 12 abaixo). Blocos permitidos
 
 **Taxas e preços no texto:** dizer sempre a taxa como fica («2 % + 1 €»),
 nunca só o desconto («−2 %»), quando se sabe o valor.
+
+## 6.4 Painel do convidado (mockups «Painel do convidado», 2026-11-21)
+
+- **Topo:** foto do evento com, à esquerda, só a **seta para sair** (não há
+  «Os meus eventos» aqui); à direita o **grupo do evento** (conversa dos
+  convidados, com o contador; só para quem vai e com grupos ligados) e
+  **«Como chegar»** (pin; leva ao mapa; só com local). Sem sino aqui.
+- **Resumo** (o destaque da página, caixa branca com contorno): «FALTAM N
+  dias · data · hora» (véspera: «AMANHÃ 16:00»; no dia antes de começar:
+  «COMEÇA DAQUI A 3 h») e, para quem vai, sempre a linha **«Vais com…»** (ou
+  «Vais só tu») com «Alterar» (botão com contorno). No dia, durante o
+  evento, o destaque é o **«Agora»** (o momento, a barra de progresso e «A
+  seguir»). Quem disse que não vai: **«A tua resposta»** em caixa branca
+  com «Mudar».
+- **Ordem:** PARA FAZER (ou o convite com «Responder», ou «Está tudo
+  tratado» com a estrela) → no dia FOTOS → **A tua mesa** (o número no
+  centro do círculo com as pessoas à volta; tu a preto) → PROGRAMA (o mesmo
+  desenho do organizador) → DRESS CODE (cabide) → MAIS (presentes,
+  alojamento) → ANFITRIÕES (Mensagem) → **COMO CHEGAR, sempre em último**
+  (mapa, «Copiar morada» + «Abrir mapa», que pergunta com que app).
+- **Só aparece o que existe:** mesa por revelar, programa sem nenhum
+  momento, dress code vazio, nada para fazer, sem local → essas secções não
+  aparecem; o que o organizador desliga também não. O programa já não se
+  pode desligar. As **fotos só aparecem no dia** (e depois).
+- **Sem nada ainda:** a estrela a dormir com «Ainda à espera dos
+  anfitriões», presentes (se ligados) e anfitriões.
+- **Não vou:** só a resposta (Mudar), presentes e anfitriões.
+- **Depois do evento:** as fotos em primeiro, agradecer, presentes e
+  anfitriões; o programa e o mapa saem.
+- «Vou / Não vou» só na página principal dos eventos.
 
 ## 7. Alertas
 
