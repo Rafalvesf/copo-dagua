@@ -764,7 +764,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                 ? (a.kind == 'deposit'
                     ? (_full
                         ? '${a.partnerName} está reservado e pago.'
-                        : '${a.partnerName} está reservado. O resto paga-se até 30 dias antes.')
+                        : '${a.partnerName} está reservado. O resto paga-se mais perto do evento e avisamos-te.')
                     : 'Está tudo pago a ${a.partnerName}.')
                 : 'Pagamento feito.',
             textAlign: TextAlign.center,
