@@ -155,3 +155,102 @@ final bookingChoicesProvider = FutureProvider.autoDispose.family<List<BookingCho
     return const [];
   }
 });
+
+/// Uma pessoa do meu convite (migração 211): eu (`self`) ou um
+/// acompanhante (`c:<nome>`).
+class InvitePerson {
+  final String key;
+  final String name;
+  final String ageGroup;
+  final bool self;
+  const InvitePerson(this.key, this.name, this.ageGroup, this.self);
+  bool get isChild => ageGroup == 'child';
+}
+
+/// As pessoas do meu convite. Antes da migração 211, só eu.
+final invitePeopleProvider = FutureProvider.autoDispose.family<List<InvitePerson>, String>((ref, weddingId) async {
+  try {
+    final res = await supabase.rpc('my_invite_people', params: {'p_wedding_id': weddingId});
+    return [
+      for (final r in (res as List).whereType<Map>())
+        InvitePerson(r['key'] as String, (r['name'] as String?) ?? 'Tu', (r['age_group'] as String?) ?? 'adult', r['self'] == true),
+    ];
+  } catch (_) {
+    return const [InvitePerson('self', 'Tu', 'adult', true)];
+  }
+});
+
+/// Guarda o menu de cada pessoa do meu convite (211). `menus`: chave da
+/// pessoa → id do menu. Devolve o pagamento a fazer (cada um paga) ou null.
+Future<({String? paymentId, double amount})> chooseInviteMenus({
+  required String bookingId,
+  required Map<String, String> menus,
+  required List<String> extraIds,
+  String? allergies,
+}) async {
+  final res = await supabase.rpc('choose_invite_menus', params: {
+    'p_booking_id': bookingId,
+    'p_menus': [for (final e in menus.entries) {'key': e.key, 'package_id': e.value}],
+    'p_extra_ids': extraIds,
+    'p_allergies': allergies,
+  });
+  final m = Map<String, dynamic>.from(res as Map);
+  return (paymentId: m['payment_id'] as String?, amount: (m['amount'] as num).toDouble());
+}
+
+/// Um convite em «Menus da mesa» (organizador, 211).
+class MenuInvite {
+  final String name;
+  final String? others;
+  final int people;
+  final int chosen;
+  final bool hasApp;
+  final bool mine;
+  final double? amount;
+  const MenuInvite(this.name, this.others, this.people, this.chosen, this.hasApp, this.mine, this.amount);
+  bool get done => chosen >= people;
+}
+
+class BookingMenus {
+  final DateTime? deadline;
+  final int people;
+  final int chosen;
+  final double total;
+  final List<MenuInvite> invites;
+  final bool iChose;
+  const BookingMenus(this.deadline, this.people, this.chosen, this.total, this.invites, this.iChose);
+}
+
+/// «Menus da mesa»: quantos já escolheram, por convite. null antes da 211.
+final bookingMenusProvider = FutureProvider.autoDispose.family<BookingMenus?, String>((ref, bookingId) async {
+  try {
+    final r = Map<String, dynamic>.from(await supabase.rpc('booking_menus', params: {'p_booking_id': bookingId}) as Map);
+    return BookingMenus(
+      r['deadline'] == null ? null : DateTime.tryParse(r['deadline'] as String),
+      (r['people'] as num?)?.toInt() ?? 0,
+      (r['chosen'] as num?)?.toInt() ?? 0,
+      (r['total'] as num?)?.toDouble() ?? 0,
+      [
+        for (final i in (r['invites'] as List? ?? const []).whereType<Map>())
+          MenuInvite(
+            (i['name'] as String?) ?? 'Convidado',
+            i['others'] as String?,
+            (i['people'] as num?)?.toInt() ?? 1,
+            (i['chosen'] as num?)?.toInt() ?? 0,
+            i['has_app'] == true,
+            i['mine'] == true,
+            (i['amount'] as num?)?.toDouble(),
+          ),
+      ],
+      r['i_chose'] == true,
+    );
+  } catch (_) {
+    return null;
+  }
+});
+
+/// «Lembrar»: avisa quem confirmou e ainda não escolheu. Devolve quantos.
+Future<int> remindMenuChoices(String bookingId) async {
+  final n = await supabase.rpc('remind_menu_choices', params: {'p_booking_id': bookingId});
+  return (n as num?)?.toInt() ?? 0;
+}

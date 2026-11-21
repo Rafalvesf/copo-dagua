@@ -31,6 +31,7 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../core/payments/refunds.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../partners/screens/partner_detail_screen.dart';
+import '../widgets/menus_da_mesa.dart';
 
 /// Reservas do lado do casal — lê `coupleBookingsProvider`
 /// (`core/home/home_providers.dart`), mesmos dados mock que alimentam
@@ -382,6 +383,8 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                 style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
               ),
             ],
+            // «Menus da mesa» (211): cada convite escolhe os seus.
+            if (booking.eachChooses && booking.status == BookingStatus.confirmado) MenusDaMesaLine(booking: booking),
             if (needsDeposit) ...[
               const SizedBox(height: 12),
               SizedBox(

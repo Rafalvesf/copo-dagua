@@ -135,6 +135,31 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   final List<_Person> _companions = [];
   WeddingSide? _side;
 
+  /// Cadeirinhas para o transporte (migração 211): quantas das crianças do
+  /// convite precisam. O transporte do evento conta-as («Pedidas pelos
+  /// convidados»).
+  int _childSeats = 0;
+  int get _kids => _companions.where((c) => c.isChild).length;
+
+  Future<void> _loadChildSeats() async {
+    try {
+      final n = await supabase.rpc('my_child_seats', params: {'p_token': widget.rsvpToken, 'p_wedding_id': widget.weddingId});
+      if (mounted) setState(() => _childSeats = (n as num?)?.toInt() ?? 0);
+    } catch (_) {}
+  }
+
+  Future<void> _saveChildSeats() async {
+    try {
+      await supabase.rpc('set_my_child_seats', params: {
+        'p_token': widget.rsvpToken,
+        'p_wedding_id': widget.weddingId,
+        'p_count': _childSeats.clamp(0, _kids),
+      });
+    } catch (_) {
+      // Antes da migração 211: a resposta fica guardada na mesma.
+    }
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -159,6 +184,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
     }
     final plusOne = widget.guest.plusOneName?.trim();
     if (_companions.isEmpty && plusOne != null && plusOne.isNotEmpty) _companions.add(_Person(name: plusOne));
+    _loadChildSeats();
   }
 
   GuestWedding? get _wedding {
@@ -249,6 +275,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
           'p_message': null,
           'p_companions': [for (final c in _companions) _companionJson(c)],
           });
+          if (attending) await _saveChildSeats();
         } catch (_) {
           // Enquanto a função nova não está no servidor: a resposta de
           // sempre (confirma/recusa, nomes dos acompanhantes, alergias).
@@ -310,6 +337,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
               ),
           ],
         );
+        await _saveChildSeats();
       }
       ref.invalidate(myGuestRowProvider(widget.weddingId));
       if (!mounted) return;
@@ -656,7 +684,16 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                       _ => 'adult',
                     };
                     if (p.menu != null && !(p.isChild ? _childMenus : _adultMenus).contains(p.menu)) p.menu = null;
+                    if (_childSeats > _kids) _childSeats = _kids;
                   }),
+                ),
+              // Cadeirinhas (211): só quando há crianças no convite.
+              if (_kids > 0)
+                _PersonChoices(
+                  title: 'Cadeirinhas para o transporte',
+                  options: [for (var i = 0; i <= _kids; i++) i == 0 ? 'Nenhuma' : '$i'],
+                  selected: {_childSeats.clamp(0, _kids) == 0 ? 'Nenhuma' : '${_childSeats.clamp(0, _kids)}'},
+                  onTap: (o) => setState(() => _childSeats = o == 'Nenhuma' ? 0 : int.parse(o)),
                 ),
             ],
           ),

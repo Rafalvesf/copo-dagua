@@ -37,7 +37,7 @@ final coupleBookingsProvider = FutureProvider<List<CoupleBooking>>((ref) async {
   ]).then((done) {
     if (done.any((d) => d) && ref.mounted) ref.invalidateSelf();
   }));
-  const cols = 'id, wedding_id, partner_id, event_date, total_amount, deposit_amount, status, '
+  const cols = 'id, wedding_id, partner_id, event_date, total_amount, deposit_amount, status, choice_mode, '
       'partner_profiles(business_name, cover_photo_url, partner_profile_categories(partner_categories(label_pt))), '
       'payments(id, type, status, amount, due_at)';
   List<dynamic> rows;
@@ -94,6 +94,7 @@ CoupleBooking _coupleBookingFromRow(Map<String, dynamic> row) {
         .where((p) => p['status'] == 'paid')
         .fold<double>(0, (sum, p) => sum + (p['amount'] as num).toDouble()),
     isPrivate: row['private_owner'] != null,
+    choiceMode: (row['choice_mode'] as String?) ?? 'same',
   );
 }
 

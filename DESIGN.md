@@ -301,6 +301,16 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   todo, a reserva é cancelada; o convidado que não paga sai da reserva (os
   outros vão na mesma). A taxa de serviço só entra no passo de pagar e
   diz-se antes: «+ taxa de serviço no passo seguinte».
+- **Menus da mesa** (mockups «Reservar por categoria», 2026-11-21): quando
+  cada convite escolhe, quem recebe o convite escolhe o menu de cada pessoa
+  do seu convite («Para quem» em pílulas 38, depois a carta); o organizador
+  nunca escolhe pelos outros. Em Reservas, a linha «Menus da mesa» (alerta
+  amarelo enquanto faltam, «14 de 22 · fecha a 9 jun», botão «Ver» 36) abre
+  o popup com a barra verde 10, os convites (etiqueta «Escolhido», «1 de 3»,
+  «Por escolher») e o total previsto, «Lembrar» (contorno) + «O meu menu».
+- **Cadeirinhas:** na resposta ao convite, quem leva crianças diz quantas
+  cadeirinhas precisam; no transporte a linha diz «Pedidas pelos convidados
+  · N».
 - **Perfil do organizador:** faixa de cor 200 no topo (sem foto: botões
   brancos cheios 44 — voltar, partilhar, ⋯), a `ProfileCard_Users` por cima
   dela, «Próximos eventos» em carrossel, «A seguir», e a barra fixa com
