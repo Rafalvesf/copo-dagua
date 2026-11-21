@@ -1,0 +1,62 @@
+((a,b)=>{a[b]=a[b]||{}})(self,"$__dart_deferred_initializers__")
+$__dart_deferred_initializers__.current=function(a,b,c,$){var C,A,F={
+aiv(d){var y
+switch(d){case"photography":y=A.hC
+break
+case"videography":y=D.NR
+break
+case"catering":y=A.eh
+break
+case"cake":y=A.la
+break
+case"music_dj":y=D.hb
+break
+case"flowers_decor":y=A.bL
+break
+case"venue":y=A.hE
+break
+case"beauty":y=E.k_
+break
+case"officiant":y=A.uY
+break
+case"invitations":y=A.jZ
+break
+case"rentals":y=A.pZ
+break
+case"transport":y=A.hc
+break
+case"wedding_planner":y=A.jW
+break
+case"restaurants":y=A.eh
+break
+case"bars_nightlife":y=G.h9
+break
+case"adventure_activities":y=A.Db
+break
+case"experiences_tours":y=H.D8
+break
+case"games_escape":y=B.NN
+break
+case"lodging":y=A.hE
+break
+case"spa_wellness":y=A.bL
+break
+case"kids_entertainment":y=E.k_
+break
+case"bands_musicians":y=B.aA9
+break
+case"photobooth_entertainment":y=A.hC
+break
+default:y=A.eh
+break}return y}},B,G,H,D,E
+C=c[0]
+A=c[2]
+F=a.updateHolder(c[157],F)
+B=c[406]
+G=c[306]
+H=c[409]
+D=c[201]
+E=c[405]
+var z=a.updateTypes([]);(function constants(){B.NN=new C.aQ(57445,"HeroiconsSolid",null,!1)
+B.aA9=new C.aQ(57447,"HeroiconsSolid",null,!1)})()};
+(a=>{a["Ocqc0/ICjSdpV7LVqIiLlIAOz0s="]=a.current})($__dart_deferred_initializers__);
