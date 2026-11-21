@@ -363,18 +363,20 @@ class DashTable extends StatelessWidget {
 
 /// «Está tudo tratado» com a estrela a piscar o olho (pedido 2026-11-21).
 class DashAllDone extends StatelessWidget {
-  const DashAllDone({super.key});
+  /// O que ficou feito (o organizador tem outro texto).
+  final String done;
+  const DashAllDone({super.key, this.done = 'Menus escolhidos e a tua parte paga.'});
 
   @override
-  Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 6),
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(children: [
-          EstrelaMascot(Estrela.piscar, size: 64, semanticLabel: ''),
-          SizedBox(width: 12),
+          const EstrelaMascot(Estrela.piscar, size: 64, semanticLabel: ''),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Está tudo tratado', style: _title17),
-              Text('Menus escolhidos e a tua parte paga.', style: _meta),
+              const Text('Está tudo tratado', style: _title17),
+              Text(done, style: _meta),
             ]),
           ),
         ]),
@@ -385,7 +387,10 @@ class DashAllDone extends StatelessWidget {
 /// estados de uma secção).
 class DashTasksEmpty extends StatelessWidget {
   final bool star;
-  const DashTasksEmpty({super.key, this.star = true});
+
+  /// O que vai aparecer (o organizador tem outro texto).
+  final String what;
+  const DashTasksEmpty({super.key, this.star = true, this.what = 'Menus para escolher e a tua parte para pagar.'});
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -395,10 +400,10 @@ class DashTasksEmpty extends StatelessWidget {
             const EstrelaMascot(Estrela.dormir, size: 64, semanticLabel: ''),
             const SizedBox(width: 12),
           ],
-          const Expanded(
+          Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Aparecem aqui as tuas tarefas', style: _title17),
-              Text('Menus para escolher e a tua parte para pagar.', style: _meta),
+              const Text('Aparecem aqui as tuas tarefas', style: _title17),
+              Text(what, style: _meta),
             ]),
           ),
         ]),
@@ -653,13 +658,17 @@ Widget _big(String label, VoidCallback onTap, {bool outlined = false}) => Snappy
     );
 
 /// Quando é, para o resumo: (rótulo, número grande, unidade).
-(String, String, String) dashWhen(GuestWedding w) {
-  final date = w.weddingDate;
+(String, String, String) dashWhen(GuestWedding w) => dashWhenAt(w.weddingDate, w.ceremonyTime);
+
+/// O mesmo para qualquer evento (data e hora de início); depois do evento,
+/// «Foi há N dias» (painel do organizador, 2026-11-21).
+(String, String, String) dashWhenAt(DateTime? date, String? time) {
   if (date == null) return ('Quando', '—', 'Data por anunciar');
   final today = DateTime.now();
   final days = DateTime(date.year, date.month, date.day).difference(DateTime(today.year, today.month, today.day)).inDays;
   final day = formatShortDatePt(date).toLowerCase().replaceFirstMapped(RegExp(r'^.'), (m) => m[0]!.toUpperCase());
-  final start = w.ceremonyTime?.isNotEmpty == true ? w.ceremonyTime! : null;
+  final start = time?.isNotEmpty == true ? time! : null;
+  if (days < 0) return ('Foi há', '${-days}', [-days == 1 ? 'dia' : 'dias', day].join(' · '));
   if (days == 1) return ('Amanhã', start ?? day, start == null ? '' : day);
   if (days == 0) {
     final m = start == null ? null : programMinutes(start);

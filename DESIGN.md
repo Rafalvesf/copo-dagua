@@ -115,9 +115,9 @@ ecrãs. O resto da app mantém a tabela acima.
   `V2Group`, `SettingsGroup`).
 - **Cartões** (evento, parceiro, perfil, resumos): brancos, cantos 22,
   interior 18, com a sombra suave do §5 e **sem linha à volta**. A **linha
-  preta 1,5 só no destaque do painel do convidado** (o resumo «Faltam…», o
-  «Agora» e «A tua resposta», §6.4) — em mais lado nenhum (pedido do Rafael,
-  2026-11-21: «apenas na parte do convite»).
+  preta 1,5 só no destaque dos painéis do evento** — convidado (o resumo
+  «Faltam…», o «Agora» e «A tua resposta», §6.4) e organizador (o resumo e o
+  «Agora», §6.5) — em mais lado nenhum (pedidos do Rafael, 2026-11-21).
 - **«Para fazer» — sempre com um de três estados** (regra do Rafael,
   2026-11-21, para toda a app — organizador, parceiro e convidado): a
   **lista** das tarefas (com o número no título, «PARA FAZER · 2»); **feito**
@@ -148,7 +148,7 @@ ecrãs. O resto da app mantém a tabela acima.
   cartão do parceiro, resumos): `0 6 18 rgba(23,23,19,0.06)` —
   `BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))`
   (`softShadow` / `softCard`).
-- O destaque do painel do convidado não tem sombra (tem a linha preta, §4).
+- O destaque dos painéis do evento (convidado e organizador) não tem sombra (tem a linha preta, §4).
 - Cabeçalho de conversa: `0 4 14 rgba(23,23,19,0.06)`.
 - Navbar, barras fixas e popups: `0 8 24 rgba(23,23,19,0.12)`.
 - Nunca sombras duplas nem mais escuras.
@@ -478,6 +478,47 @@ nunca só o desconto («−2 %»), quando se sabe o valor.
   responder», com «Não vou» de contorno e «Vou» preto) — e no RSVP pelo link.
   O painel do evento não tem «O teu convite» e o assistente do convidado não
   pergunta se vais: abre depois de «Vou» (quem vai contigo, idades, alergias).
+
+## 6.5 Painel do organizador (mockups «Painel do organizador», 2026-11-21)
+
+Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
+
+- **Capa:** a foto com o véu, o tipo, o nome 28 e a data/local a branco em
+  baixo; a seta fixa de voltar (§6) à esquerda; **partilhar** e **⋯** pretos
+  44 à direita. Tocar na foto muda a capa.
+- **Resumo** (destaque, linha preta 1,5): «FALTAM N dias · data · hora» e,
+  por baixo, os convidados — «48 vão» + «60 por responder · 12 não vão» com
+  «Lembrar» (contorno); todos responderam → «Ver»; sem convidados → «Ainda
+  sem convidados» + «Convidar» (preto); depois do evento → «FOI HÁ N dias»,
+  «108 foram» + as fotos. No dia, a decorrer, o destaque é o **«Agora»**.
+- **Para fazer** (os três estados do §4): **sem tarefas pré-feitas** — só o
+  que existe mesmo: pagamentos com prazo («Pagar»), propostas dos parceiros
+  («Ver») e pedidos para entrar («Aceitar»), com o ponto da cor do prazo
+  (§7). Feito: «Pagamentos em dia e propostas respondidas.»; vazio:
+  «Pagamentos, pedidos para entrar e propostas dos parceiros.»
+- **Sugestões:** **nunca repetem o «Para fazer»** nem o resto do painel; cada
+  uma só aparece quando se aplica; sem nenhuma, a secção não aparece:
+  - **Ver parceiros** — as categorias que o tipo de evento costuma precisar
+    e ainda sem reserva nem proposta (no máximo duas no texto; abre os
+    parceiros nessa categoria). Casamento/renovação: espaço, catering,
+    fotografia, música, bolo, flores; batizado/comunhão: espaço ou
+    restaurante, bolo, fotografia, decoração; aniversário/festa: espaço ou
+    restaurante, bolo, música/animação; noivado/chá de bebé: restaurante ou
+    espaço, bolo, decoração; festa de curso: espaço, música, transporte;
+    empresa: espaço ou restaurante, catering, transporte; os outros tipos:
+    «Ver parceiros» só sem nenhuma reserva.
+  - **Partilhar o convite** (há convidados e ninguém respondeu) · **Juntar o
+    local** (sem local) · **Revelar as mesas** (todos sentados, mesas ainda
+    escondidas) · **Dress code** (sem estilo nem cores) · **Lista de
+    presentes** (ligada e vazia) · **Pôr foto de capa** (sem foto) ·
+    **Convidar quem organiza contigo** (só um organizador) · depois do
+    evento, **Agradecer aos convidados**. O programa vazio é pedido pela
+    própria secção Programa.
+- **Ordem:** resumo → PARA FAZER → SUGESTÕES → (no dia e depois) FOTOS →
+  PROGRAMA → NÚMEROS (linhas de dinheiro: convidados, orçamento, parceiros)
+  → RESERVAS (estado em etiqueta; «Falta o sinal» pendente) → CONVITE
+  (código, «Partilhar», «Ver como convidado») → GERIR (Definições do
+  evento). Depois do evento, o programa, os números e o convite saem.
 
 ## 7. Alertas
 
